@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['vddrcurrmax',['vddRCurrMax',['../group__sdhc__card__std__def.html#aafd413edf2fcf429b743a8d31a2a2b43',1,'sdcard_csd_t']]],
+  ['vddrcurrmin',['vddRCurrMin',['../group__sdhc__card__std__def.html#a408dffb261b39ccc7b656ec4b6aa15d7',1,'sdcard_csd_t']]],
+  ['vddwcurrmax',['vddWCurrMax',['../group__sdhc__card__std__def.html#a020eb49901d0d905aae7b23f649329d7',1,'sdcard_csd_t']]],
+  ['vddwcurrmin',['vddWCurrMin',['../group__sdhc__card__std__def.html#a91deeae27118a9e8a4807a0a2b9bc39a',1,'sdcard_csd_t']]],
+  ['virtual_5fchn_5fto_5fdmamux_5fchn',['VIRTUAL_CHN_TO_DMAMUX_CHN',['../group__edma__driver.html#ga46e69802a3047dce07c1075d7049b3a3',1,'fsl_edma_driver.h']]],
+  ['virtual_5fchn_5fto_5fdmamux_5fmodule_5fregbase',['VIRTUAL_CHN_TO_DMAMUX_MODULE_REGBASE',['../group__edma__driver.html#ga5dea015770302df2f22a45a07104ec2e',1,'fsl_edma_driver.h']]],
+  ['virtual_5fchn_5fto_5fedma_5fchn',['VIRTUAL_CHN_TO_EDMA_CHN',['../group__edma__driver.html#ga92d18817e1451a961d81c8d4357501d6',1,'fsl_edma_driver.h']]],
+  ['virtual_5fchn_5fto_5fedma_5fmodule_5fregbase',['VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE',['../group__edma__driver.html#ga2153971dae04c6beaa8f793ba70b6700',1,'fsl_edma_driver.h']]],
+  ['vllsprot',['vllsProt',['../group__smc__hal.html#a01f189a40509322158f1544519435752',1,'smc_power_mode_protection_config_t']]],
+  ['vlpprot',['vlpProt',['../group__smc__hal.html#a30f76e4b1b6ee4ce25f02374cf0a5ef0',1,'smc_power_mode_protection_config_t']]],
+  ['vref_5fhal',['Vref_hal',['../group__vref__hal.html',1,'']]],
+  ['vref_5fhal_5fgetbuffmode',['VREF_HAL_GetBuffMode',['../group__vref__hal.html#ga4a3a21d877e38df227322ff706d01efa',1,'fsl_vref_hal.h']]],
+  ['vref_5fhal_5fgettrimval',['VREF_HAL_GetTrimVal',['../group__vref__hal.html#ga747f51da4f9db3467a5b4db9b20cbf60',1,'fsl_vref_hal.h']]],
+  ['vref_5fhal_5finit',['VREF_HAL_Init',['../group__vref__hal.html#ga98374bdb05e1a6895f80c46e324f9b4f',1,'fsl_vref_hal.h']]],
+  ['vref_5fhal_5fisinternalregulatorenabled',['VREF_HAL_IsInternalRegulatorEnabled',['../group__vref__hal.html#ga814bad9aca6970abb610c7164b437c4a',1,'fsl_vref_hal.h']]],
+  ['vref_5fhal_5fisinternalvoltrefstable',['VREF_HAL_IsInternalVoltRefStable',['../group__vref__hal.html#gaca35bf09882ba3af00ac814394049a5a',1,'fsl_vref_hal.h']]],
+  ['vref_5fhal_5fisvrefenabled',['VREF_HAL_IsVrefEnabled',['../group__vref__hal.html#ga875238eec32d2b4a0268911c15fd8b63',1,'fsl_vref_hal.h']]],
+  ['vref_5fhal_5fsetbuffmode',['VREF_HAL_SetBuffMode',['../group__vref__hal.html#ga3db9f2aa718db2e324177a29db63c9ca',1,'fsl_vref_hal.h']]],
+  ['vref_5fhal_5fsetinternalregulatorcmd',['VREF_HAL_SetInternalRegulatorCmd',['../group__vref__hal.html#gac6efac497c81dd8011e21f1ffa75cb81',1,'fsl_vref_hal.h']]],
+  ['vref_5fhal_5fsettrimval',['VREF_HAL_SetTrimVal',['../group__vref__hal.html#ga1b4514e2962925d5a013e1f078e94b01',1,'fsl_vref_hal.h']]],
+  ['vref_5fhal_5fsetvrefcmd',['VREF_HAL_SetVrefCmd',['../group__vref__hal.html#gaefd85917811c6ac46e71260b723812d2',1,'fsl_vref_hal.h']]],
+  ['vref_5fmode_5ft',['vref_mode_t',['../group__vref__hal.html#gaafb89948e5beed3d9db0aa5d6a0b0579',1,'fsl_vref_hal.h']]],
+  ['vref_5fstatus_5ft',['vref_status_t',['../group__vref__hal.html#ga304cf65eb8b57f5ceafb3d3974125e7f',1,'fsl_vref_hal.h']]]
+];

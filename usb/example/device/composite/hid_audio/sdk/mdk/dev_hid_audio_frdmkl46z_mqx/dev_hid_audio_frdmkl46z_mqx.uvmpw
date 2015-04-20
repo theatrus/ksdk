@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ProjectWorkspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_mpw.xsd">
+  <SchemaVersion>1.0</SchemaVersion>
+  <Header>### uVision Project, (C) Keil Software</Header>
+  <WorkspaceName>WorkSpace</WorkspaceName>
+<project><PathAndName>../../../../../../../../rtos/mqx/mqx/build/mdk/mqx_frdmkl46z/mqx_frdmkl46z.uvproj</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../rtos/mqx/mqx_stdlib/build/mdk/mqx_stdlib_frdmkl46z/mqx_stdlib_frdmkl46z.uvproj</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../usb_core/device/build/mdk/usbd_sdk_frdmkl46z_mqx/usbd_sdk_frdmkl46z_mqx.uvproj</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../lib/ksdk_mqx_lib/mdk/KL46Z4/ksdk_mqx_lib.uvproj</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>dev_hid_audio_frdmkl46z_mqx.uvproj</PathAndName><NodeIsActive>1</NodeIsActive></project></ProjectWorkspace>

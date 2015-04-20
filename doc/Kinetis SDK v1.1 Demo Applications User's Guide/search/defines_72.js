@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['ratio',['RATIO',['../adc__hw__trigger_8c.html#a7e8b3c8482e593df0ace933ad3de22ee',1,'adc_hw_trigger.c']]],
+  ['read_5ffactory_5fmargin',['READ_FACTORY_MARGIN',['../flash__demo_8h.html#a1d4159a8322bd4f794155b1ccaef0694',1,'flash_demo.h']]],
+  ['read_5fnormal_5fmargin',['READ_NORMAL_MARGIN',['../flash__demo_8h.html#a5079e5761d0df05d80ceb21476a365e2',1,'flash_demo.h']]],
+  ['read_5fuser_5fmargin',['READ_USER_MARGIN',['../flash__demo_8h.html#aa64c89181a486036e2d68d20c76dc12f',1,'flash_demo.h']]],
+  ['rt1_5fadc_5fchl',['RT1_ADC_CHL',['../thermistor__lab_2src_2main_8c.html#a9ab034ec81886ec634938cb082d33257',1,'main.c']]],
+  ['rt1offth',['RT1OFFTH',['../thermistor__lab_2src_2main_8c.html#ab624b9557b42f06d29d5aab8053acb2b',1,'main.c']]],
+  ['rt1onth',['RT1ONTH',['../thermistor__lab_2src_2main_8c.html#ab57809f282928afcc53f52acebc277ee',1,'main.c']]],
+  ['rt2_5fadc_5fchl',['RT2_ADC_CHL',['../thermistor__lab_2src_2main_8c.html#a64cbe22e7a93763aa6c122de296fe5a1',1,'main.c']]],
+  ['rt2offth',['RT2OFFTH',['../thermistor__lab_2src_2main_8c.html#a9cc5c6aa794e5a7f645773a8979580d1',1,'main.c']]],
+  ['rt2onth',['RT2ONTH',['../thermistor__lab_2src_2main_8c.html#a6635ea121bf30c81918b90b9ea354cec',1,'main.c']]],
+  ['rt3_5fadc_5fchl',['RT3_ADC_CHL',['../thermistor__lab_2src_2main_8c.html#a9abe996c6125b33c64e44abac0593789',1,'main.c']]],
+  ['rt3offth',['RT3OFFTH',['../thermistor__lab_2src_2main_8c.html#a27b0e58c8b9d02acb8ec7bcd5f1aae03',1,'main.c']]],
+  ['rt3onth',['RT3ONTH',['../thermistor__lab_2src_2main_8c.html#a5511ebe05ecb5868cc9bc86cc9d6357f',1,'main.c']]],
+  ['rt4_5fadc_5fchl',['RT4_ADC_CHL',['../thermistor__lab_2src_2main_8c.html#a38dfc9e5420f5b6d5e196879a5d288f3',1,'main.c']]],
+  ['rt4offth',['RT4OFFTH',['../thermistor__lab_2src_2main_8c.html#ab51b43b572fd2aca7a38492a63a30308',1,'main.c']]],
+  ['rt4onth',['RT4ONTH',['../thermistor__lab_2src_2main_8c.html#aaefb7de0ebf442dd7b2c23137d291417',1,'main.c']]]
+];

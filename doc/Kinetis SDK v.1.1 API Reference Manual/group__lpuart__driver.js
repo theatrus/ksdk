@@ -1,0 +1,66 @@
+var group__lpuart__driver =
+[
+    [ "lpuart_state_t", "group__lpuart__driver.html#structlpuart__state__t", [
+      [ "txBuff", "group__lpuart__driver.html#a79927fda606bbb12346d53ff7f765ac5", null ],
+      [ "rxBuff", "group__lpuart__driver.html#a1f05e6e6e1d4f81d07e99872e659f2bd", null ],
+      [ "txSize", "group__lpuart__driver.html#a9df841a1813731cfd4a6b9d24d200e3f", null ],
+      [ "rxSize", "group__lpuart__driver.html#a2deadfc3116883447f3c48f44604e71e", null ],
+      [ "isTxBusy", "group__lpuart__driver.html#a984904d546bdca3a938543ec21f9eebf", null ],
+      [ "isRxBusy", "group__lpuart__driver.html#aceb9bc59aa86d1828ba8cb159d7fa953", null ],
+      [ "isTxBlocking", "group__lpuart__driver.html#aab191956c24287f40c1248bb39622cff", null ],
+      [ "isRxBlocking", "group__lpuart__driver.html#acaf7d16fb526a357d3f2debc79b862b7", null ],
+      [ "txIrqSync", "group__lpuart__driver.html#a68e12f88dc53743327f093db788ccbe1", null ],
+      [ "rxIrqSync", "group__lpuart__driver.html#ad4396a435b923aa96c7d135c5af35098", null ],
+      [ "rxCallback", "group__lpuart__driver.html#aa41155f86d7c5044c34076e18dbcb911", null ],
+      [ "rxCallbackParam", "group__lpuart__driver.html#a682b85e3a1e70ecccd7d443a0fec961a", null ]
+    ] ],
+    [ "lpuart_user_config_t", "group__lpuart__driver.html#structlpuart__user__config__t", [
+      [ "clockSource", "group__lpuart__driver.html#adf5616486d24dfa8d0d7a10bfdbf910e", null ],
+      [ "baudRate", "group__lpuart__driver.html#a838c0f0439ea4d5bed2b0bf908ee9b74", null ],
+      [ "parityMode", "group__lpuart__driver.html#ac6e3ed134826929f1a2bfbbb7126690f", null ],
+      [ "stopBitCount", "group__lpuart__driver.html#ad566a09f6a9edf689eb83e7ad7802072", null ],
+      [ "bitCountPerChar", "group__lpuart__driver.html#a20608b8b3f959345c6f5d69db967b76c", null ]
+    ] ],
+    [ "lpuart_edma_state_t", "group__lpuart__driver.html#structlpuart__edma__state__t", [
+      [ "isTxBusy", "group__lpuart__driver.html#a6631de98722ba199382ba16d42d2b79e", null ],
+      [ "isRxBusy", "group__lpuart__driver.html#a4c83bc7dc02ad3a233d69f08be30a873", null ],
+      [ "isTxBlocking", "group__lpuart__driver.html#a9ae19f11bd76bc1fe0c290cc50de4726", null ],
+      [ "isRxBlocking", "group__lpuart__driver.html#a090267e2e6e06304aa02197fa18e3e3e", null ],
+      [ "txIrqSync", "group__lpuart__driver.html#a80e910501014d0cb82c5ae247ff53902", null ],
+      [ "rxIrqSync", "group__lpuart__driver.html#abedae58f55b129c8e97ee0d236ee4d81", null ],
+      [ "edmaLpuartTx", "group__lpuart__driver.html#aa75e1ab75755e98d854eafa916ada999", null ],
+      [ "edmaLpuartRx", "group__lpuart__driver.html#ac40f68885bc04eb3866f895510d9ddd0", null ]
+    ] ],
+    [ "lpuart_edma_user_config_t", "group__lpuart__driver.html#structlpuart__edma__user__config__t", [
+      [ "clockSource", "group__lpuart__driver.html#a6a774b677bc2c328d56d0cf924cf9b2e", null ],
+      [ "baudRate", "group__lpuart__driver.html#acb2483eabdfc3a2d23d35008ae67a666", null ],
+      [ "parityMode", "group__lpuart__driver.html#aaee6726a0fb8a404c2d69b574683586c", null ],
+      [ "stopBitCount", "group__lpuart__driver.html#afdbc013e0149b7012950e316a8a54c0f", null ],
+      [ "bitCountPerChar", "group__lpuart__driver.html#ac70443e806978dbb0384edfb605120bb", null ]
+    ] ],
+    [ "lpuart_rx_callback_t", "group__lpuart__driver.html#gae0e1521e8a5c398ded255b4e36b41e4d", null ],
+    [ "LPUART_DRV_Init", "group__lpuart__driver.html#gaa2018ae76bd49730483a8baae25c53f6", null ],
+    [ "LPUART_DRV_Deinit", "group__lpuart__driver.html#gaaabb7bc0806f2b42b93b15c9816539b2", null ],
+    [ "LPUART_DRV_InstallRxCallback", "group__lpuart__driver.html#gadd244afb53632ae945f06eb26c8f75ed", null ],
+    [ "LPUART_DRV_SendDataBlocking", "group__lpuart__driver.html#ga39f1029b67e998a3d6bb37713a92c07a", null ],
+    [ "LPUART_DRV_SendData", "group__lpuart__driver.html#ga324abd6831da2a38d37f02e6e407364d", null ],
+    [ "LPUART_DRV_GetTransmitStatus", "group__lpuart__driver.html#gad07fff86ac66ba3ad124d9f6667bf4c8", null ],
+    [ "LPUART_DRV_AbortSendingData", "group__lpuart__driver.html#ga6220d004196297778a295f18ae6f7a56", null ],
+    [ "LPUART_DRV_ReceiveDataBlocking", "group__lpuart__driver.html#gae3fbdc9c2c35d844a32f72a4621429e9", null ],
+    [ "LPUART_DRV_ReceiveData", "group__lpuart__driver.html#ga83af85267fa43659a6b30ee73ae4666e", null ],
+    [ "LPUART_DRV_GetReceiveStatus", "group__lpuart__driver.html#ga8fd64e4e817e5a212da5d7aebe9e41e4", null ],
+    [ "LPUART_DRV_AbortReceivingData", "group__lpuart__driver.html#gaa4d27bb305848e284ec7378b380ca755", null ],
+    [ "LPUART_DRV_EdmaInit", "group__lpuart__driver.html#ga2e4a5a1c2e9f2dbae1752397b89e7e3e", null ],
+    [ "LPUART_DRV_EdmaDeinit", "group__lpuart__driver.html#ga1f600f79635ad4cf0edfcd24c7e4f192", null ],
+    [ "LPUART_DRV_EdmaSendDataBlocking", "group__lpuart__driver.html#ga952e9ea150c1ed05cc9e5b099d8f8052", null ],
+    [ "LPUART_DRV_EdmaSendData", "group__lpuart__driver.html#gadabd0e9c30fd7a50a7a03e11632526a3", null ],
+    [ "LPUART_DRV_EdmaGetTransmitStatus", "group__lpuart__driver.html#ga3f5df97b1be4b65125d6ac45db6efdcb", null ],
+    [ "LPUART_DRV_EdmaAbortSendingData", "group__lpuart__driver.html#gac702acc3061f98fe54f5ae3148ae3271", null ],
+    [ "LPUART_DRV_EdmaReceiveDataBlocking", "group__lpuart__driver.html#ga4b4b255b05556b358ee97805fc67bf42", null ],
+    [ "LPUART_DRV_EdmaReceiveData", "group__lpuart__driver.html#ga2e1167a6579821c40895f749a9544033", null ],
+    [ "LPUART_DRV_EdmaGetReceiveStatus", "group__lpuart__driver.html#ga09d3edd194a36db527e10ca22c5fc831", null ],
+    [ "LPUART_DRV_EdmaAbortReceivingData", "group__lpuart__driver.html#ga07f856d5aa814e920a03d126349936db", null ],
+    [ "g_lpuartBaseAddr", "group__lpuart__driver.html#ga86587746fb5ea724211340f7aa4aabe0", null ],
+    [ "g_lpuartRxTxIrqId", "group__lpuart__driver.html#ga45549fb65a548f24a3ca8b26002d6273", null ],
+    [ "g_lpuartBaseAddr", "group__lpuart__driver.html#ga86587746fb5ea724211340f7aa4aabe0", null ]
+];
