@@ -1,6 +1,6 @@
 # Freescale Kinetis SDK
 
-This is a mirror of most of the Kinetis SDK version 1.1.0.
+This is a mirror of most of the Kinetis SDK version 1.2.0.
 
 The SDK sources are govered by the following license, as given in
 every source file:
