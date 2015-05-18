@@ -33,12 +33,13 @@
 #include "fsl_lpsci_driver.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_LPSCI_COUNT
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Pointer to lpsci runtime state structure */
-extern void * g_lpsciStatePtr[HW_UART0_INSTANCE_COUNT];
+extern void * g_lpsciStatePtr[UART0_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Private Functions
@@ -83,9 +84,9 @@ lpsci_status_t LPSCI_DRV_Init(uint32_t instance,
                               const lpsci_user_config_t * lpsciUserConfig)
 {
     assert(lpsciStatePtr && lpsciUserConfig);
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    UART0_Type * base = g_lpsciBase[instance];
     uint32_t lpsciSourceClock;
 
     /* Exit if current instance is already initialized. */
@@ -107,7 +108,7 @@ lpsci_status_t LPSCI_DRV_Init(uint32_t instance,
     CLOCK_SYS_SetLpsciSrc(instance, lpsciUserConfig->clockSource);
 
     /* Initialize LPSCI to a known state. */
-    LPSCI_HAL_Init(baseAddr);
+    LPSCI_HAL_Init(base);
 
     /* Create Semaphore for txIrq and rxIrq. */
     OSA_SemaCreate(&lpsciStatePtr->txIrqSync, 0);
@@ -116,19 +117,19 @@ lpsci_status_t LPSCI_DRV_Init(uint32_t instance,
     lpsciSourceClock = CLOCK_SYS_GetLpsciFreq(instance);
 
     /* Initialize LPSCI baud rate, bit count, parity and stop bit. */
-    LPSCI_HAL_SetBaudRate(baseAddr, lpsciSourceClock, lpsciUserConfig->baudRate);
-    LPSCI_HAL_SetBitCountPerChar(baseAddr, lpsciUserConfig->bitCountPerChar);
-    LPSCI_HAL_SetParityMode(baseAddr, lpsciUserConfig->parityMode);
+    LPSCI_HAL_SetBaudRate(base, lpsciSourceClock, lpsciUserConfig->baudRate);
+    LPSCI_HAL_SetBitCountPerChar(base, lpsciUserConfig->bitCountPerChar);
+    LPSCI_HAL_SetParityMode(base, lpsciUserConfig->parityMode);
 #if FSL_FEATURE_LPSCI_HAS_STOP_BIT_CONFIG_SUPPORT
-    LPSCI_HAL_SetStopBitCount(baseAddr, lpsciUserConfig->stopBitCount);
+    LPSCI_HAL_SetStopBitCount(base, lpsciUserConfig->stopBitCount);
 #endif
 
     /* Enable LPSCI interrupt on NVIC level. */
     INT_SYS_EnableIRQ(g_lpsciRxTxIrqId[instance]);
 
     /* Finally, enable the LPSCI transmitter and receiver*/
-    LPSCI_HAL_EnableTransmitter(baseAddr);
-    LPSCI_HAL_EnableReceiver(baseAddr);
+    LPSCI_HAL_EnableTransmitter(base);
+    LPSCI_HAL_EnableReceiver(base);
 
     return kStatus_LPSCI_Success;
 }
@@ -140,22 +141,28 @@ lpsci_status_t LPSCI_DRV_Init(uint32_t instance,
  * and the transmitter/receiver.
  *
  *END**************************************************************************/
-void LPSCI_DRV_Deinit(uint32_t instance)
+lpsci_status_t LPSCI_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    /* Exit if current instance is already de-initialized or is gated.*/
+    if ((!g_lpsciStatePtr[instance]) || (!CLOCK_SYS_GetLpsciGateCmd(instance)))
+    {
+        return kStatus_LPSCI_Fail;
+    }
+
+    UART0_Type * base = g_lpsciBase[instance];
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
 
     /* Wait until the data is completely shifted out of shift register */
-    while(!(LPSCI_HAL_IsTxComplete(baseAddr))) { }
+    while(!(UART0_BRD_S1_TC(base))) { }
 
     /* Disable the interrupt */
     INT_SYS_DisableIRQ(g_lpsciRxTxIrqId[instance]);
 
     /* Disable TX and RX */
-    LPSCI_HAL_DisableTransmitter(baseAddr);
-    LPSCI_HAL_DisableReceiver(baseAddr);
+    LPSCI_HAL_DisableTransmitter(base);
+    LPSCI_HAL_DisableReceiver(base);
 
     /* Destroy TX and RX sema. */
     OSA_SemaDestroy(&lpsciState->txIrqSync);
@@ -165,7 +172,9 @@ void LPSCI_DRV_Deinit(uint32_t instance)
     g_lpsciStatePtr[instance] = NULL;
 
     /* Gate LPSCI module clock */
-    CLOCK_SYS_DisableUartClock(instance);
+    CLOCK_SYS_DisableLpsciClock(instance);
+
+    return kStatus_LPSCI_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -174,16 +183,16 @@ void LPSCI_DRV_Deinit(uint32_t instance)
  * Description   : Install receive data callback function.
  *
  *END**************************************************************************/
-lpsci_rx_callback_t LPSCI_DRV_InstallRxCallback(uint32_t instance, 
-                                                lpsci_rx_callback_t function, 
-                                                uint8_t * rxBuff, 
+lpsci_rx_callback_t LPSCI_DRV_InstallRxCallback(uint32_t instance,
+                                                lpsci_rx_callback_t function,
+                                                uint8_t * rxBuff,
                                                 void * callbackParam,
                                                 bool alwaysEnableRxIrq)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    assert(instance < UART0_INSTANCE_COUNT);
+    UART0_Type * base = g_lpsciBase[instance];
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
-    
+
     lpsci_rx_callback_t currentCallback = lpsciState->rxCallback;
     lpsciState->rxCallback = function;
     lpsciState->rxCallbackParam = callbackParam;
@@ -191,7 +200,30 @@ lpsci_rx_callback_t LPSCI_DRV_InstallRxCallback(uint32_t instance,
 
     /* Enable/Disable the receive data full interrupt */
     lpsciState->isRxBusy = true;
-    LPSCI_HAL_SetRxDataRegFullIntCmd(baseAddr, alwaysEnableRxIrq);
+    UART0_BWR_C2_RIE(base, alwaysEnableRxIrq);
+
+    return currentCallback;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : LPSCI_DRV_InstallTxCallback
+ * Description   : Install transmit data callback function, pass in NULL pointer
+ * as callback will uninstall.
+ *
+ *END**************************************************************************/
+lpsci_tx_callback_t LPSCI_DRV_InstallTxCallback(uint32_t instance,
+                                              lpsci_tx_callback_t function,
+                                              uint8_t * txBuff,
+                                              void * callbackParam)
+{
+    assert(instance < UART0_INSTANCE_COUNT);
+    lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
+
+    lpsci_tx_callback_t currentCallback = lpsciState->txCallback;
+    lpsciState->txCallback = function;
+    lpsciState->txCallbackParam = callbackParam;
+    lpsciState->txBuff = txBuff;
 
     return currentCallback;
 }
@@ -200,7 +232,7 @@ lpsci_rx_callback_t LPSCI_DRV_InstallRxCallback(uint32_t instance,
  *
  * Function Name : LPSCI_DRV_SendDataBlocking
  * Description   : This function sends data out through the LPSCI module using a
- * blocking method. It does not return until the transmit is complete. 
+ * blocking method. It does not return until the transmit is complete.
  *
  *END**************************************************************************/
 lpsci_status_t LPSCI_DRV_SendDataBlocking(uint32_t instance,
@@ -209,9 +241,9 @@ lpsci_status_t LPSCI_DRV_SendDataBlocking(uint32_t instance,
                                           uint32_t timeout)
 {
     assert(txBuff);
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    UART0_Type * base = g_lpsciBase[instance];
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
     lpsci_status_t retVal = kStatus_LPSCI_Success;
     osa_status_t syncStatus;
@@ -232,10 +264,10 @@ lpsci_status_t LPSCI_DRV_SendDataBlocking(uint32_t instance,
         if (syncStatus != kStatus_OSA_Success)
         {
             /* Disable the transmitter data register empty interrupt */
-            LPSCI_HAL_SetTxDataRegEmptyIntCmd(baseAddr, false);
+            UART0_BWR_C2_TIE(base, 0U);
 
             /* Update the information of the module driver state */
-            lpsciState->isTxBusy = false; 
+            lpsciState->isTxBusy = false;
 
             retVal = kStatus_LPSCI_Timeout;
         }
@@ -260,7 +292,7 @@ lpsci_status_t LPSCI_DRV_SendData(uint32_t instance,
                                   uint32_t txSize)
 {
     assert(txBuff);
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
     lpsci_status_t retVal = kStatus_LPSCI_Success;
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
@@ -269,7 +301,7 @@ lpsci_status_t LPSCI_DRV_SendData(uint32_t instance,
 
     /* Start the transmission process*/
     retVal = LPSCI_DRV_StartSendData(instance, txBuff, txSize);
-    
+
     return retVal;
 }
 
@@ -286,7 +318,7 @@ lpsci_status_t LPSCI_DRV_SendData(uint32_t instance,
 lpsci_status_t LPSCI_DRV_GetTransmitStatus(uint32_t instance,
                                            uint32_t * bytesRemaining)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
     lpsci_status_t retVal = kStatus_LPSCI_Success;
@@ -313,7 +345,7 @@ lpsci_status_t LPSCI_DRV_GetTransmitStatus(uint32_t instance,
  *END**************************************************************************/
 lpsci_status_t LPSCI_DRV_AbortSendingData(uint32_t instance)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
 
@@ -342,9 +374,9 @@ lpsci_status_t LPSCI_DRV_ReceiveDataBlocking(uint32_t instance,
                                              uint32_t timeout)
 {
     assert(rxBuff);
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    UART0_Type * base = g_lpsciBase[instance];
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
     lpsci_status_t retVal = kStatus_LPSCI_Success;
     osa_status_t syncStatus;
@@ -364,11 +396,11 @@ lpsci_status_t LPSCI_DRV_ReceiveDataBlocking(uint32_t instance,
         if (syncStatus != kStatus_OSA_Success)
         {
             /* Disable the receive data full and overrun interrupt */
-            LPSCI_HAL_SetTxDataRegEmptyIntCmd(baseAddr, false);
-            LPSCI_HAL_SetIntMode(baseAddr, kLpsciIntRxOverrun, false);
+            UART0_BWR_C2_TIE(base, 0U);
+            LPSCI_HAL_SetIntMode(base, kLpsciIntRxOverrun, false);
 
             /* Update the information of the module driver state */
-            lpsciState->isTxBusy = false; 
+            lpsciState->isTxBusy = false;
 
             retVal = kStatus_LPSCI_Timeout;
         }
@@ -393,7 +425,7 @@ lpsci_status_t LPSCI_DRV_ReceiveData(uint32_t instance,
                                      uint32_t rxSize)
 {
     assert(rxBuff);
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
     lpsci_status_t retVal = kStatus_LPSCI_Success;
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
@@ -401,7 +433,7 @@ lpsci_status_t LPSCI_DRV_ReceiveData(uint32_t instance,
     lpsciState->isRxBlocking = false;
 
     retVal = LPSCI_DRV_StartReceiveData(instance, rxBuff, rxSize);
-    
+
     return retVal;
 }
 
@@ -418,7 +450,7 @@ lpsci_status_t LPSCI_DRV_ReceiveData(uint32_t instance,
 lpsci_status_t LPSCI_DRV_GetReceiveStatus(uint32_t instance,
                                           uint32_t * bytesRemaining)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
     lpsci_status_t retVal = kStatus_LPSCI_Success;
     uint32_t rxSize = lpsciState->rxSize;
@@ -444,7 +476,7 @@ lpsci_status_t LPSCI_DRV_GetReceiveStatus(uint32_t instance,
  *END**************************************************************************/
 lpsci_status_t LPSCI_DRV_AbortReceivingData(uint32_t instance)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
 
     /* Check if a transfer is running. */
@@ -469,7 +501,7 @@ lpsci_status_t LPSCI_DRV_AbortReceivingData(uint32_t instance)
 void LPSCI_DRV_IRQHandler(uint32_t instance)
 {
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    UART0_Type * base = g_lpsciBase[instance];
 
     /* Exit the ISR if no transfer is happening for this instance. */
     if ((!lpsciState->isTxBusy) && (!lpsciState->isRxBusy))
@@ -478,11 +510,10 @@ void LPSCI_DRV_IRQHandler(uint32_t instance)
     }
 
     /* Handle Rx Data Register Full interrupt */
-    if((LPSCI_HAL_GetRxDataRegFullIntCmd(baseAddr))
-      && (LPSCI_HAL_IsRxDataRegFull(baseAddr)))
+    if((UART0_BRD_C2_RIE(base)) && (UART0_BRD_S1_RDRF(base)))
     {
         /* Get data and put in receive buffer */
-        LPSCI_HAL_Getchar(baseAddr, lpsciState->rxBuff);
+        LPSCI_HAL_Getchar(base, lpsciState->rxBuff);
 
         /* Invoke callback if there is one */
         if (lpsciState->rxCallback != NULL)
@@ -503,17 +534,28 @@ void LPSCI_DRV_IRQHandler(uint32_t instance)
     }
 
     /* Handle Tx Data Register Empty interrupt */
-    if((LPSCI_HAL_GetTxDataRegEmptyIntCmd(baseAddr))
-      && (LPSCI_HAL_IsTxDataRegEmpty(baseAddr)))
+    if((UART0_BRD_C2_TIE(base)) && (UART0_BRD_S1_TDRE(base)))
     {
         /* Check to see if there are any more bytes to send */
         if (lpsciState->txSize)
         {
             /* Transmit data and update tx size/buff. */
-            LPSCI_HAL_Putchar(baseAddr, *(lpsciState->txBuff));
-            ++lpsciState->txBuff; 
-            --lpsciState->txSize;
+            LPSCI_HAL_Putchar(base, *(lpsciState->txBuff));
 
+            /* Invoke callback if there is one */
+            if (lpsciState->txCallback != NULL)
+            {
+                /* The callback MUST set the txSize to 0 if the
+                 * transmit is ended.*/
+                lpsciState->txCallback(instance, lpsciState);
+            }
+            else
+            {
+                ++lpsciState->txBuff;
+                --lpsciState->txSize;
+            }
+
+            /* Check and see if this was the last byte */
             if (lpsciState->txSize == 0)
             {
                 /* Complete the transfer and disable the interrupt */
@@ -523,30 +565,30 @@ void LPSCI_DRV_IRQHandler(uint32_t instance)
     }
 
     /* Handle receive overrun interrupt */
-    if (LPSCI_HAL_GetStatusFlag(baseAddr, kLpsciRxOverrun))
+    if (LPSCI_HAL_GetStatusFlag(base, kLpsciRxOverrun))
     {
         /* Clear the flag, OR the rxDataRegFull will not be set any more */
-        LPSCI_HAL_ClearStatusFlag(baseAddr, kLpsciRxOverrun);
+        LPSCI_HAL_ClearStatusFlag(base, kLpsciRxOverrun);
     }
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : LPSCI_DRV_CompleteSendData
- * Description   : Finish up a transmit by completing the process of sending 
- * data and disabling the interrupt. 
+ * Description   : Finish up a transmit by completing the process of sending
+ * data and disabling the interrupt.
  * This is not a public API as it is called from other driver functions.
  *
  *END**************************************************************************/
 static void LPSCI_DRV_CompleteSendData(uint32_t instance)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    UART0_Type * base = g_lpsciBase[instance];
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
 
     /* Disable the transmitter data register empty interrupt */
-    LPSCI_HAL_SetTxDataRegEmptyIntCmd(baseAddr, false);
+    UART0_BWR_C2_TIE(base, 0U);
 
     /* Signal the synchronous completion object. */
     if (lpsciState->isTxBlocking)
@@ -555,7 +597,7 @@ static void LPSCI_DRV_CompleteSendData(uint32_t instance)
     }
 
     /* Update the information of the module driver state */
-    lpsciState->isTxBusy = false; 
+    lpsciState->isTxBusy = false;
 }
 
 /*FUNCTION**********************************************************************
@@ -570,9 +612,9 @@ static lpsci_status_t LPSCI_DRV_StartSendData(uint32_t instance,
                                               const uint8_t * txBuff,
                                               uint32_t txSize)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    UART0_Type * base = g_lpsciBase[instance];
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
 
     /* Check that we're not busy sending data from a previous function call. */
@@ -591,11 +633,8 @@ static lpsci_status_t LPSCI_DRV_StartSendData(uint32_t instance,
     lpsciState->txSize = txSize;
     lpsciState->isTxBusy = true;
 
-    /* Make sure the transmit data register is empty and ready for data */
-    while(!LPSCI_HAL_IsTxDataRegEmpty(baseAddr)) { }
-
     /* Enable the transmitter data register empty interrupt.*/
-    LPSCI_HAL_SetTxDataRegEmptyIntCmd(baseAddr, true);
+    UART0_BWR_C2_TIE(base, 1U);
 
     return kStatus_LPSCI_Success;
 }
@@ -604,20 +643,20 @@ static lpsci_status_t LPSCI_DRV_StartSendData(uint32_t instance,
  *
  * Function Name : LPSCI_DRV_CompleteReceiveData
  * Description   : Finish up a receive by completing the process of receiving data
- * and disabling the interrupt. 
+ * and disabling the interrupt.
  * This is not a public API as it is called from other driver functions.
  *
  *END**************************************************************************/
 static void LPSCI_DRV_CompleteReceiveData(uint32_t instance)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    UART0_Type * base = g_lpsciBase[instance];
 
     /* Disable receive data full and overrun interrupt */
-    LPSCI_HAL_SetRxDataRegFullIntCmd(baseAddr, false);
-    LPSCI_HAL_SetIntMode(baseAddr, kLpsciIntRxOverrun, false);
+    UART0_BWR_C2_RIE(base, 0U);
+    LPSCI_HAL_SetIntMode(base, kLpsciIntRxOverrun, false);
 
     /* Signal the synchronous completion object. */
     if (lpsciState->isRxBlocking)
@@ -633,7 +672,7 @@ static void LPSCI_DRV_CompleteReceiveData(uint32_t instance)
  *
  * Function Name : LPSCI_DRV_StartReceiveData
  * Description   : Initiate (start) a receive by beginning the process of
- * receiving data and enabling the interrupt. 
+ * receiving data and enabling the interrupt.
  * This is not a public API as it is called from other driver functions.
  *
  *END**************************************************************************/
@@ -641,10 +680,10 @@ static lpsci_status_t LPSCI_DRV_StartReceiveData(uint32_t instance,
                                                  uint8_t * rxBuff,
                                                  uint32_t rxSize)
 {
-    assert(instance < HW_UART0_INSTANCE_COUNT);
+    assert(instance < UART0_INSTANCE_COUNT);
 
     lpsci_state_t * lpsciState = (lpsci_state_t *)g_lpsciStatePtr[instance];
-    uint32_t baseAddr = g_lpsciBaseAddr[instance];
+    UART0_Type * base = g_lpsciBase[instance];
 
     /* Check that we're not busy receiving data from a previous function call. */
     if ((lpsciState->isRxBusy) && (!lpsciState->rxCallback))
@@ -663,14 +702,15 @@ static lpsci_status_t LPSCI_DRV_StartReceiveData(uint32_t instance,
     lpsciState->isRxBusy = true;
 
     /* Enable the receive data overrun interrupt */
-    LPSCI_HAL_SetIntMode(baseAddr, kLpsciIntRxOverrun, true);
+    LPSCI_HAL_SetIntMode(base, kLpsciIntRxOverrun, true);
 
     /* Enable the receive data full interrupt */
-    LPSCI_HAL_SetRxDataRegFullIntCmd(baseAddr, true);
+    UART0_BWR_C2_RIE(base, 1U);
 
     return kStatus_LPSCI_Success;
 }
 
+#endif /* FSL_FEATURE_SOC_LPSCI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

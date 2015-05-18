@@ -40,6 +40,17 @@
  * Declarations
  ******************************************************************************/
 
+/*! @brief Bare Metal does not use timer. */
+#define FSL_OSA_BM_TIMER_NONE   0U
+
+/*! @brief Bare Metal uses LPTMR as timer. */
+#define FSL_OSA_BM_TIMER_LPTMER 1U
+
+/*! @brief Configure what timer is used in Bare Metal. */
+#ifndef FSL_OSA_BM_TIMER_CONFIG
+#define FSL_OSA_BM_TIMER_CONFIG FSL_OSA_BM_TIMER_LPTMER
+#endif
+
 /*! @brief Type for an semaphore */
 typedef struct Semaphore
 {
@@ -115,6 +126,12 @@ typedef msg_queue_t*  msg_queue_handler_t;
 
 /*! @brief OSA's time range in millisecond, OSA time wraps if exceeds this value. */
 #define FSL_OSA_TIME_RANGE 0xFFFFU
+
+/*! @brief The default interrupt handler installed in vector table. */
+#define OSA_DEFAULT_INT_HANDLER  ((osa_int_handler_t)(&DefaultISR))
+
+/*! @brief The default interrupt handler installed in vector table. */
+extern void DefaultISR(void);
 
 /*!
  * @name Thread management

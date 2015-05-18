@@ -31,8 +31,10 @@
 #include <string.h>
 #include <assert.h>
 #include "fsl_dspi_slave_driver.h"
-#include "fsl_interrupt_manager.h"
 #include "fsl_clock_manager.h"
+#include "fsl_interrupt_manager.h"
+
+#if FSL_FEATURE_SOC_DSPI_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -49,14 +51,9 @@ typedef enum _dspi_event_flags {
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-/*! @brief Table of base addresses for DSPI instances. */
-extern const uint32_t g_dspiBaseAddr[];
-
-/*! @brief Table to save DSPI IRQ enum numbers defined in CMSIS header file. */
-extern const IRQn_Type g_dspiIrqId[HW_SPI_INSTANCE_COUNT];
 
 /* Pointer to runtime state structure.*/
-extern void * g_dspiStatePtr[HW_SPI_INSTANCE_COUNT];
+extern void * g_dspiStatePtr[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Code
@@ -86,29 +83,32 @@ static void DSPI_DRV_SlaveStartTransfer(uint32_t instance,
  * This is not a public API as it is called from other driver functions.
  */
 static void DSPI_DRV_SlaveFillUpTxFifo(uint32_t instance);
-/*!
- * @brief DSPI Slave Generic IRQ handler.
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : DSPI_DRV_SlaveIRQHandler
+ * Description   : DSPI Slave Generic IRQ handler.
  *
  * This handler check errors of driver and it puts data into Tx FIFO, gets data
  * from Rx FIFO whenever data transmitting/received.
- * This is not a public API as it is called whenever an interrupt occurs.
- */
+ *
+ *END**************************************************************************/
 void DSPI_DRV_SlaveIRQHandler(uint32_t instance)
 {
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
     dspi_slave_state_t *dspiState = (dspi_slave_state_t *)g_dspiStatePtr[instance];
     uint8_t nBytes;
 
     /* Calculate number of bytes in a frame */
-    nBytes = dspiState->bitsPerFrame >> 3;      /* Number of bytes is bits/frame devide 8 */
+    nBytes = dspiState->bitsPerFrame >> 3;      /* Number of bytes is bits/frame divide 8 */
     if ((dspiState->bitsPerFrame & 0x07) != 0)  /* Bits/frame module 8 is not zero */
     {
         nBytes += 1;
     }
 
-    /* Because SPI protocol is sync, so the number of byte that slave received from master is real
-     * number of byte that slave transmitted to master. So we only monitor received size to know
-     * when transferring is completed.
+    /* Because SPI protocol is synchronous, the number of bytes that that slave received from the
+     * master is the actual number of bytes that the slave transmitted to the master. So we only
+     * monitor the received size to know when the transfer is complete.
      */
     if (dspiState->remainingReceiveByteCount > 0)
     {
@@ -116,16 +116,16 @@ void DSPI_DRV_SlaveIRQHandler(uint32_t instance)
         uint32_t dataReceived;
         uint32_t dataSend = 0;
 
-        while (DSPI_HAL_GetStatusFlag(baseAddr, kDspiRxFifoDrainRequest))
+        while (DSPI_HAL_GetStatusFlag(base, kDspiRxFifoDrainRequest))
         {
             /* Have received data in the buffer. */
-            dataReceived = DSPI_HAL_ReadData(baseAddr);
+            dataReceived = DSPI_HAL_ReadData(base);
             /* clear the rx fifo drain request, needed for non-DMA applications as this flag
              * will remain set even if the rx fifo is empty. By manually clearing this flag, it
              * either remain clear if no more data is in the fifo, or it will set if there is
              * more data in the fifo.
              */
-            DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoDrainRequest);
+            DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoDrainRequest);
 
             /* If bits/frame is one byte */
             if (nBytes == 1)
@@ -147,7 +147,7 @@ void DSPI_DRV_SlaveIRQHandler(uint32_t instance)
                 --dspiState->remainingSendByteCount;
             }
             /* If bits/frame is 2 bytes */
-            else if (nBytes == 2)
+            else
             {
                 /* With multibytes frame receiving, we only receive till the received size
                  * matches user request. Other bytes will be ignored.
@@ -182,113 +182,15 @@ void DSPI_DRV_SlaveIRQHandler(uint32_t instance)
                 }
                 dspiState->remainingSendByteCount -= 2;
             }
-            /* If bits/frame is 3 bytes */
-            else if (nBytes == 3)
-            {
-                /* With multibytes frame receiving, we only receive till the received size
-                 * matches user request. Other bytes will be ignored.
-                 */
-                if (dspiState->receiveBuffer)
-                {
-                    /* Receive buffer is not null, store first byte into it */
-                    *dspiState->receiveBuffer = dataReceived;
-                    ++dspiState->receiveBuffer;
 
-                    if (--dspiState->remainingReceiveByteCount > 0)
-                    {
-                        /* Receive buffer is not null, store second byte into it */
-                        *dspiState->receiveBuffer = dataReceived >> 8;
-                        ++dspiState->receiveBuffer;
-                    }
-
-                    if (--dspiState->remainingReceiveByteCount > 0)
-                    {
-                        /* Receive buffer is not null, store third byte into it */
-                        *dspiState->receiveBuffer = dataReceived >> 16;
-                        ++dspiState->receiveBuffer;
-                    }
-
-                    /* Decrease remaining receive byte count */
-                    --dspiState->remainingReceiveByteCount;
-                }
-                else
-                {
-                    /* receive buffer is null, just decrease remaining byte count */
-                    dspiState->remainingReceiveByteCount -= 3;
-                }
-                if (dspiState->sendBuffer)
-                {
-                    dataSend = *dspiState->sendBuffer;
-                    ++dspiState->sendBuffer;
-                    dataSend |= (uint32_t)(*dspiState->sendBuffer) << 8;
-                    ++dspiState->sendBuffer;
-                    dataSend |= (uint32_t)(*dspiState->sendBuffer) << 16;
-                    ++dspiState->sendBuffer;
-                }
-                dspiState->remainingSendByteCount -= 3;
-            }
-            /* If bits/frame is 4 bytes */
-            else
-            {
-                /* With multibytes frame receiving, we only receive till the received size
-                 * matches user request. Other bytes will be ignored.
-                 */
-                if (dspiState->receiveBuffer)
-                {
-                    /* Receive buffer is not null, store first byte into it */
-                    *dspiState->receiveBuffer = dataReceived;
-                    ++dspiState->receiveBuffer;
-
-                    if (--dspiState->remainingReceiveByteCount > 0)
-                    {
-                        /* Receive buffer is not null, store second byte into it */
-                        *dspiState->receiveBuffer = dataReceived >> 8;
-                        ++dspiState->receiveBuffer;
-                    }
-
-                    if (--dspiState->remainingReceiveByteCount > 0)
-                    {
-                        /* Receive buffer is not null, store third byte into it */
-                        *dspiState->receiveBuffer = dataReceived >> 16;
-                        ++dspiState->receiveBuffer;
-                    }
-
-                    if (--dspiState->remainingReceiveByteCount > 0)
-                    {
-                        /* Receive buffer is not null, store fourth byte into it */
-                        *dspiState->receiveBuffer = dataReceived >> 24;
-                        ++dspiState->receiveBuffer;
-                    }
-
-                    /* Decrease remaining receive byte count */
-                    --dspiState->remainingReceiveByteCount;
-                }
-                else
-                {
-                    /* receive buffer is null, just decrease remaining byte count */
-                    dspiState->remainingReceiveByteCount -= 4;
-                }
-                if (dspiState->sendBuffer)
-                {
-                    dataSend = *dspiState->sendBuffer;
-                    ++dspiState->sendBuffer;
-                    dataSend |= (uint32_t)(*dspiState->sendBuffer) << 8;
-                    ++dspiState->sendBuffer;
-                    dataSend |= (uint32_t)(*dspiState->sendBuffer) << 16;
-                    ++dspiState->sendBuffer;
-                    dataSend |= (uint32_t)(*dspiState->sendBuffer) << 24;
-                    ++dspiState->sendBuffer;
-                }
-                dspiState->remainingSendByteCount -= 4;
-            }
             if (dspiState->sendBuffer == NULL)
             {
                 dataSend = dspiState->dummyPattern;
             }
             /* Write the data to the DSPI data register */
-            DSPI_HAL_WriteDataSlavemode(baseAddr, dataSend);
+            DSPI_HAL_WriteDataSlavemode(base, dataSend);
             /* try to clear TFFF by writing a one to it; it will not clear if TX FIFO not full */
-            DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoFillRequest);
+            DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoFillRequest);
             if (dspiState->remainingReceiveByteCount <= 0)
             {
                 break;
@@ -304,19 +206,19 @@ void DSPI_DRV_SlaveIRQHandler(uint32_t instance)
     }
 
     /* catch tx fifo underflow conditions, service only if tx under flow interrupt enabled */
-    if ((DSPI_HAL_GetStatusFlag(baseAddr, kDspiTxFifoUnderflow)) &&
-        (DSPI_HAL_GetIntMode(baseAddr, kDspiTxFifoUnderflow)))
+    if ((DSPI_HAL_GetStatusFlag(base, kDspiTxFifoUnderflow)) &&
+        (DSPI_HAL_GetIntMode(base, kDspiTxFifoUnderflow)))
     {
-        DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoUnderflow);
+        DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoUnderflow);
         /* Change state to error and clear flag */
         dspiState->status = kStatus_DSPI_Error;
         dspiState->errorCount++;
     }
     /* catch rx fifo overflow conditions, service only if rx over flow interrupt enabled */
-    if ((DSPI_HAL_GetStatusFlag(baseAddr, kDspiRxFifoOverflow)) &&
-        (DSPI_HAL_GetIntMode(baseAddr, kDspiRxFifoOverflow)))
+    if ((DSPI_HAL_GetStatusFlag(base, kDspiRxFifoOverflow)) &&
+        (DSPI_HAL_GetIntMode(base, kDspiRxFifoOverflow)))
     {
-        DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoOverflow);
+        DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoOverflow);
         /* Change state to error and clear flag */
         dspiState->status = kStatus_DSPI_Error;
         dspiState->errorCount++;
@@ -335,7 +237,7 @@ dspi_status_t DSPI_DRV_SlaveInit(uint32_t instance,
                                  const dspi_slave_user_config_t * slaveConfig)
 {
     dspi_status_t errorCode = kStatus_DSPI_Success;
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* Check parameter pointer is not NULL */
     if ((dspiState == NULL) || (slaveConfig == NULL))
@@ -350,9 +252,9 @@ dspi_status_t DSPI_DRV_SlaveInit(uint32_t instance,
     }
 
     /* Check bits/frame number */
-    if (slaveConfig->dataConfig.bitsPerFrame > 32)
+    if (slaveConfig->dataConfig.bitsPerFrame > 16)
     {
-        return kStatus_DSPI_Initialized;
+        return kStatus_DSPI_OutOfRange;
     }
 
     /* Clear the run-time state struct for this instance. */
@@ -381,36 +283,36 @@ dspi_status_t DSPI_DRV_SlaveInit(uint32_t instance,
     CLOCK_SYS_EnableSpiClock(instance);
 
     /* Reset the DSPI module, which also disables the DSPI module */
-    DSPI_HAL_Init(baseAddr);
+    DSPI_HAL_Init(base);
 
     /* Set to slave mode. */
-    DSPI_HAL_SetMasterSlaveMode(baseAddr, kDspiSlave);
+    DSPI_HAL_SetMasterSlaveMode(base, kDspiSlave);
 
-    errorCode = DSPI_HAL_SetDataFormat(baseAddr, kDspiCtar0, &slaveConfig->dataConfig);
+    errorCode = DSPI_HAL_SetDataFormat(base, kDspiCtar0, &slaveConfig->dataConfig);
 
     /* Enable fifo operation (regardless of FIFO depth) */
-    DSPI_HAL_SetFifoCmd(baseAddr, true, true);
+    DSPI_HAL_SetFifoCmd(base, true, true);
 
     /* DSPI system enable */
-    DSPI_HAL_Enable(baseAddr);
+    DSPI_HAL_Enable(base);
 
     /* flush the fifos */
-    DSPI_HAL_SetFlushFifoCmd(baseAddr, true, true);
+    DSPI_HAL_SetFlushFifoCmd(base, true, true);
 
     /* Configure IRQ state structure, so irq handler can point to the correct state structure */
     g_dspiStatePtr[instance] = dspiState;
 
     /* Clear the Tx FIFO Fill Flag (TFFF) status bit */
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoFillRequest);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoFillRequest);
 
     /* Enable the interrupt */
     INT_SYS_EnableIRQ(g_dspiIrqId[instance]);
 
     /* Enable the module */
-    DSPI_HAL_Enable(baseAddr);
+    DSPI_HAL_Enable(base);
 
     /* Start the transfer process in the hardware */
-    DSPI_HAL_StartTransfer(baseAddr);
+    DSPI_HAL_StartTransfer(base);
 
     return errorCode;
 }
@@ -422,27 +324,27 @@ dspi_status_t DSPI_DRV_SlaveInit(uint32_t instance,
  * Resets the DSPI peripheral, disables the interrupt to the core, and gates its clock.
  *
  *END**************************************************************************/
-void DSPI_DRV_SlaveDeinit(uint32_t instance)
+dspi_status_t DSPI_DRV_SlaveDeinit(uint32_t instance)
 {
     /* instantiate local variable of type dspi_slave_state_t and equate it to the
      * pointer to state
      */
     dspi_slave_state_t * dspiState = (dspi_slave_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* Validate function parameters */
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     if (!dspiState)
     {
-        return;
+        return kStatus_DSPI_NonInit;
     }
 
     /* disable the interrupt */
     INT_SYS_DisableIRQ(g_dspiIrqId[instance]);
 
     /* Stop the transfer process in the slave */
-    DSPI_HAL_StopTransfer(baseAddr);
+    DSPI_HAL_StopTransfer(base);
 
     /* Wait until the DSPI run status signals that is has halted before shutting
      * down the module and before gating off the DSPI clock source.  Otherwise, if the DSPI
@@ -454,10 +356,10 @@ void DSPI_DRV_SlaveDeinit(uint32_t instance)
      * select signal (it should be high if slave select active low or it should be low if
      * slave select is active high).
      */
-    while((DSPI_HAL_GetStatusFlag(baseAddr, kDspiTxAndRxStatus))) { }
+    while((DSPI_HAL_GetStatusFlag(base, kDspiTxAndRxStatus))) { }
 
     /* Restore the module to defaults then power it down. This also disables the DSPI module. */
-    DSPI_HAL_Init(baseAddr);
+    DSPI_HAL_Init(base);
 
     /* Gate the clock for DSPI. */
     CLOCK_SYS_DisableSpiClock(instance);
@@ -467,6 +369,8 @@ void DSPI_DRV_SlaveDeinit(uint32_t instance)
 
     /* Clear state pointer. */
     g_dspiStatePtr[instance] = NULL;
+
+    return kStatus_DSPI_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -480,7 +384,7 @@ void DSPI_DRV_SlaveDeinit(uint32_t instance)
 static void DSPI_DRV_SlaveFillUpTxFifo(uint32_t instance)
 {
     dspi_slave_state_t * dspiState = (dspi_slave_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
     uint32_t transmitData = 0; /* Maximum supported data bit length in slave mode is 32-bits */
     uint8_t nBytes = 0;
 
@@ -494,7 +398,7 @@ static void DSPI_DRV_SlaveFillUpTxFifo(uint32_t instance)
     /* Service the transmitter, if transmit buffer provided, transmit the data,
      * else transmit dummy pattern
      */
-    while(DSPI_HAL_GetStatusFlag(baseAddr, kDspiTxFifoFillRequest))
+    while(DSPI_HAL_GetStatusFlag(base, kDspiTxFifoFillRequest))
     {
         /* transmit data */
         if(dspiState->remainingSendByteCount > 0)
@@ -518,7 +422,7 @@ static void DSPI_DRV_SlaveFillUpTxFifo(uint32_t instance)
                 --dspiState->remainingSendByteCount;
             }
             /* bits/frame is 2 bytes */
-            else if (nBytes == 2)
+            else
             {
                 /* With multibytes per frame transmission, the transmit frame contains data from
                  * transmit buffer until sent size matches user request. Other bytes will set to
@@ -554,119 +458,6 @@ static void DSPI_DRV_SlaveFillUpTxFifo(uint32_t instance)
                     transmitData = dspiState->dummyPattern;
                 }
             }
-            /* bits/frame is 3 bytes */
-            else if (nBytes == 3)
-            {
-                /* With multibytes per frame transmission, the transmit frame contains data from
-                 * transmit buffer until sent size matches user request. Other bytes will set to
-                 * dummy pattern value.
-                 */
-
-                if (dspiState->sendBuffer)
-                {
-                    /* Update first byte of transmit data and transmit pointer */
-                    transmitData = *dspiState->sendBuffer;
-                    dspiState->sendBuffer++;
-
-                    /* Check if send completed, decrease remaining size */
-                    if(--dspiState->remainingSendByteCount > 0)
-                    {
-                        /* Update second byte of transmit data and transmit pointer */
-                        transmitData |= (uint32_t)(*dspiState->sendBuffer) << 8;
-                        dspiState->sendBuffer++;
-                    }
-                    else
-                    {
-                        /* Update second byte of transmit data to second byte of dummy pattern */
-                        transmitData |= dspiState->dummyPattern & 0xFF00;
-                    }
-
-                    /* Check if send completed, decrease remaining size */
-                    if(--dspiState->remainingSendByteCount > 0)
-                    {
-                        /* Update third byte of transmit data and transmit pointer */
-                        transmitData |= (uint32_t)(*dspiState->sendBuffer) << 16;
-                        dspiState->sendBuffer++;
-                    }
-                    else
-                    {
-                        /* Update third byte of transmit data to third byte of dummy pattern */
-                        transmitData |= dspiState->dummyPattern & 0xFF0000;
-                    }
-
-                    /* Decrease remaining size */
-                    --dspiState->remainingSendByteCount;
-                }
-                else
-                {
-                    transmitData = dspiState->dummyPattern;
-                    /* Decrease remaining size */
-                    dspiState->remainingSendByteCount -= 3;
-                }
-            }
-            /* bits/frame is 4 bytes */
-            else
-            {
-                /* With multibytes per frame transmission, the transmit frame contains data from
-                 * transmit buffer until sent size matches user request. Other bytes will set to
-                 * dummy pattern value.
-                 */
-
-                if (dspiState->sendBuffer)
-                {
-                    /* Update first byte of transmit data and transmit pointer */
-                    transmitData = *dspiState->sendBuffer;
-                    dspiState->sendBuffer++;
-
-                    /* Check if send completed, decrease remaining size */
-                    if(--dspiState->remainingSendByteCount > 0)
-                    {
-                        /* Update second byte of transmit data and transmit pointer */
-                        transmitData |= (uint32_t)(*dspiState->sendBuffer) << 8;
-                        dspiState->sendBuffer++;
-                    }
-                    else
-                    {
-                        /* Update second byte of transmit data to second byte of dummy pattern */
-                        transmitData |= dspiState->dummyPattern & 0xFF00;
-                    }
-
-                    /* Check if send completed, decrease remaining size */
-                    if(--dspiState->remainingSendByteCount > 0)
-                    {
-                        /* Update third byte of transmit data and transmit pointer */
-                        transmitData |= (uint32_t)(*dspiState->sendBuffer) << 16;
-                        dspiState->sendBuffer++;
-                    }
-                    else
-                    {
-                        /* Update third byte of transmit data to third byte of dummy pattern */
-                        transmitData |= dspiState->dummyPattern & 0xFF0000;
-                    }
-
-                    /* Check if send completed, decrease remaining size */
-                    if(--dspiState->remainingSendByteCount > 0)
-                    {
-                        /* Update fourth byte of transmit data and transmit pointer */
-                        transmitData |= (uint32_t)(*dspiState->sendBuffer) << 24;
-                        dspiState->sendBuffer++;
-                    }
-                    else
-                    {
-                        /* Update fourth byte of transmit data to fourth byte of dummy pattern */
-                        transmitData |= dspiState->dummyPattern & 0xFF000000;
-                    }
-
-                    /* Decrease remaining size */
-                    --dspiState->remainingSendByteCount;
-                }
-                else
-                {
-                    transmitData = dspiState->dummyPattern;
-                    /* Decrease remaining size */
-                    dspiState->remainingSendByteCount -= 4;
-                }
-            }
         }
         else
         {
@@ -675,9 +466,9 @@ static void DSPI_DRV_SlaveFillUpTxFifo(uint32_t instance)
         }
 
         /* Write the data to the DSPI data register */
-        DSPI_HAL_WriteDataSlavemode(baseAddr, transmitData);
+        DSPI_HAL_WriteDataSlavemode(base, transmitData);
         /* try to clear TFFF by writing a one to it; it will not clear if TX FIFO not full */
-        DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoFillRequest);
+        DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoFillRequest);
     }
 }
 
@@ -694,7 +485,7 @@ static void DSPI_DRV_SlaveStartTransfer(uint32_t instance,
                                         uint32_t transferCount)
 {
     dspi_slave_state_t * dspiState = (dspi_slave_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* Save information about the transfer for use by the ISR. */
     dspiState->isTransferInProgress = true;
@@ -707,39 +498,39 @@ static void DSPI_DRV_SlaveStartTransfer(uint32_t instance,
     dspiState->errorCount = 0;
 
     /* Restart the transfer by stop then start again, this will clear out the shift register */
-    DSPI_HAL_StopTransfer(baseAddr);
+    DSPI_HAL_StopTransfer(base);
 
     /* flush the fifos */
-    DSPI_HAL_SetFlushFifoCmd(baseAddr, true, true);
+    DSPI_HAL_SetFlushFifoCmd(base, true, true);
 
     /* Clear status flags that may have been set from previous transfers */
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxComplete);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiEndOfQueue);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoUnderflow);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoFillRequest);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoOverflow);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoDrainRequest);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxComplete);
+    DSPI_HAL_ClearStatusFlag(base, kDspiEndOfQueue);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoUnderflow);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoFillRequest);
+    DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoOverflow);
+    DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoDrainRequest);
 
     /* Clear the transfer count */
-    DSPI_HAL_PresetTransferCount(baseAddr, 0);
+    DSPI_HAL_PresetTransferCount(base, 0);
 
     /* Start the transfer, make sure to do this before filling the FIFO */
-    DSPI_HAL_StartTransfer(baseAddr);
+    DSPI_HAL_StartTransfer(base);
 
     /* Prepare data to transmit */
     DSPI_DRV_SlaveFillUpTxFifo(instance);
 
     /* Enable RX FIFO drain request, the slave only use this interrupt */
-    DSPI_HAL_SetRxFifoDrainDmaIntMode(baseAddr, kDspiGenerateIntReq, true);
+    DSPI_HAL_SetRxFifoDrainDmaIntMode(base, kDspiGenerateIntReq, true);
     if(receiveBuffer)
     {
         /* RX FIFO overflow request enable */
-        DSPI_HAL_SetIntMode(baseAddr, kDspiRxFifoOverflow, true);
+        DSPI_HAL_SetIntMode(base, kDspiRxFifoOverflow, true);
     }
     if (sendBuffer)
     {
         /* TX FIFO underflow request enable */
-        DSPI_HAL_SetIntMode(baseAddr, kDspiTxFifoUnderflow, true);
+        DSPI_HAL_SetIntMode(base, kDspiTxFifoUnderflow, true);
     }
 }
 
@@ -753,7 +544,7 @@ static void DSPI_DRV_SlaveStartTransfer(uint32_t instance,
 static void DSPI_DRV_SlaveCompleteTransfer(uint32_t instance)
 {
     dspi_slave_state_t * dspiState = (dspi_slave_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* The transfer is complete. */
     dspiState->isTransferInProgress = false;
@@ -764,16 +555,16 @@ static void DSPI_DRV_SlaveCompleteTransfer(uint32_t instance)
 
     /* Disable interrupt requests */
     /* RX FIFO Drain request: RFDF_RE */
-    DSPI_HAL_SetRxFifoDrainDmaIntMode(baseAddr, kDspiGenerateIntReq, false);
+    DSPI_HAL_SetRxFifoDrainDmaIntMode(base, kDspiGenerateIntReq, false);
 
     /* Disable TX FIFO Fill request */
-    DSPI_HAL_SetTxFifoFillDmaIntMode(baseAddr, kDspiGenerateIntReq, false);
+    DSPI_HAL_SetTxFifoFillDmaIntMode(base, kDspiGenerateIntReq, false);
 
     /* TX FIFO underflow request disable */
-    DSPI_HAL_SetIntMode(baseAddr, kDspiTxFifoUnderflow, false);
+    DSPI_HAL_SetIntMode(base, kDspiTxFifoUnderflow, false);
 
     /* RX FIFO overflow request disable */
-    DSPI_HAL_SetIntMode(baseAddr, kDspiRxFifoOverflow, false);
+    DSPI_HAL_SetIntMode(base, kDspiRxFifoOverflow, false);
 
     /* Update DSPI status */
     dspiState->status = kStatus_DSPI_Success;
@@ -797,7 +588,7 @@ dspi_status_t DSPI_DRV_SlaveTransfer(uint32_t instance,
     dspi_slave_state_t * dspiState = (dspi_slave_state_t *)g_dspiStatePtr[instance];
 
     /* Check validation of parameters */
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     /* Check driver initialization and idle */
     if(!dspiState)
@@ -853,7 +644,7 @@ dspi_status_t DSPI_DRV_SlaveTransferBlocking(uint32_t instance,
     dspi_status_t result = kStatus_DSPI_Success;
 
     /* Check validation of parameters */
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     /* Check driver initialization and idle */
     if(!dspiState)
@@ -935,7 +726,7 @@ dspi_status_t DSPI_DRV_SlaveAbortTransfer(uint32_t instance)
     dspi_slave_state_t * dspiState = (dspi_slave_state_t *)g_dspiStatePtr[instance];
 
     /* Check instance is valid or not */
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     /* Check driver is initialized */
     if (!dspiState)
@@ -969,18 +760,20 @@ dspi_status_t DSPI_DRV_SlaveGetTransferStatus(uint32_t instance, uint32_t * fram
 {
     /* instantiate local variable of type dspi_slave_state_t and point to global state */
     dspi_slave_state_t * dspiState = (dspi_slave_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* Fill in the bytes transferred if required */
     if (framesTransferred)
     {
-        *framesTransferred = DSPI_HAL_GetTransferCount(baseAddr);
+        *framesTransferred = DSPI_HAL_GetTransferCount(base);
     }
 
     /* return success if non transferring is in progress */
     return ((dspiState->isTransferInProgress) ? kStatus_DSPI_Busy : kStatus_DSPI_Success);
 }
 
+#endif /* FSL_FEATURE_SOC_DSPI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/
+

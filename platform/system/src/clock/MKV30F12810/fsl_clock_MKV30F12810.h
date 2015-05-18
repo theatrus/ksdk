@@ -33,6 +33,7 @@
 
 #include "fsl_mcg_hal.h"
 #include "fsl_mcg_hal_modes.h"
+#include "fsl_osc_hal.h"
 
 /*! @addtogroup clock_manager_kv30f12810 */
 /*! @{*/
@@ -48,39 +49,10 @@
 /*! @brief FTM external clock frequency(FTM_CLK).  */
 extern uint32_t g_ftmClkFreq[FTM_EXT_CLK_COUNT];
 
-/*!
- * @brief OSC Initialization Configuration Structure
- *
- * Defines the configuration data structure to initialize the OSC.
- */
-typedef struct OscUserConfig
-{
-    bool enableExternalRef;                 /*!< Enable OSCERCLK.             */
-    bool enableExternalRefInStop;           /*!< Enable OSCERCLK in stop mode.*/
-    mcg_high_gain_osc_select_t hgo;         /*!< High gain oscillator select. */
-    mcg_external_ref_clock_select_t erefs;  /*!< External reference select.   */
-    uint32_t freq;                          /*!< External clock frequency.    */
-#if (defined(DOXYGEN_OUTPUT) && (DOXYGEN_OUTPUT))
-} osc_user_config_kv30f12810_t;
-#else
-} osc_user_config_t;
-#endif
-
-/*! @brief OSC configuration for OSCERCLK. */
-typedef struct OscerConfig
-{
-    bool Enable;       /*!< OSCERCLK enable or not.              */
-    bool EnableInStop; /*!< OSCERCLK enable or not in stop mode. */
-#if (defined(DOXYGEN_OUTPUT) && (DOXYGEN_OUTPUT))
-} oscer_config_kv30f12810_t;
-#else
-} oscer_config_t;
-#endif
-
 /*!@brief SIM configuration structure for dynamic clock setting. */
 typedef struct SimConfig
 {
-    clock_pllfll_sel_t PllFllSel;  /*!< PLL/FLL/IRC48M selection.    */
+    clock_pllfll_sel_t pllFllSel;  /*!< PLL/FLL/IRC48M selection.    */
     clock_er32k_src_t  er32kSrc;   /*!< ERCLK32K source selection.   */
     uint8_t outdiv1, outdiv2, outdiv3, outdiv4; /*!< OUTDIV setting. */
 #if (defined(DOXYGEN_OUTPUT) && (DOXYGEN_OUTPUT))
@@ -88,18 +60,6 @@ typedef struct SimConfig
 #else
 } sim_config_t;
 #endif
-
-/*! @brief Default clock configuration number. */
-#define CLOCK_CONFIG_NUM             3
-
-/*! @brief Clock configuration index for VLPR mode. */
-#define CLOCK_CONFIG_INDEX_FOR_VLPR  0
-
-/*! @brief Clock configuration index for RUN mode. */
-#define CLOCK_CONFIG_INDEX_FOR_RUN   1
-
-/*! @brief Clock configuration index for HSRUN mode. */
-#define CLOCK_CONFIG_INDEX_FOR_HSRUN   2
 
 /*! @}*/
 
@@ -123,7 +83,7 @@ extern "C" {
  */
 static inline void CLOCK_SYS_SetOutDiv1(uint8_t outdiv1)
 {
-    CLOCK_HAL_SetOutDiv1(SIM_BASE, outdiv1);
+    CLOCK_HAL_SetOutDiv1(SIM, outdiv1);
 }
 
 /*!
@@ -135,7 +95,7 @@ static inline void CLOCK_SYS_SetOutDiv1(uint8_t outdiv1)
  */
 static inline uint8_t CLOCK_SYS_GetOutDiv1(void)
 {
-    return CLOCK_HAL_GetOutDiv1(SIM_BASE);
+    return CLOCK_HAL_GetOutDiv1(SIM);
 }
 
 /*!
@@ -147,7 +107,7 @@ static inline uint8_t CLOCK_SYS_GetOutDiv1(void)
  */
 static inline void CLOCK_SYS_SetOutDiv2(uint8_t outdiv2)
 {
-    CLOCK_HAL_SetOutDiv2(SIM_BASE, outdiv2);
+    CLOCK_HAL_SetOutDiv2(SIM, outdiv2);
 }
 
 /*!
@@ -159,7 +119,7 @@ static inline void CLOCK_SYS_SetOutDiv2(uint8_t outdiv2)
  */
 static inline uint8_t CLOCK_SYS_GetOutDiv2(void)
 {
-    return CLOCK_HAL_GetOutDiv2(SIM_BASE);
+    return CLOCK_HAL_GetOutDiv2(SIM);
 }
 
 /*!
@@ -171,7 +131,7 @@ static inline uint8_t CLOCK_SYS_GetOutDiv2(void)
  */
 static inline void CLOCK_SYS_SetOutDiv4(uint8_t outdiv4)
 {
-    CLOCK_HAL_SetOutDiv4(SIM_BASE, outdiv4);
+    CLOCK_HAL_SetOutDiv4(SIM, outdiv4);
 }
 
 /*!
@@ -183,7 +143,7 @@ static inline void CLOCK_SYS_SetOutDiv4(uint8_t outdiv4)
  */
 static inline uint8_t CLOCK_SYS_GetOutDiv4(void)
 {
-    return CLOCK_HAL_GetOutDiv4(SIM_BASE);
+    return CLOCK_HAL_GetOutDiv4(SIM);
 }
 
 /*!
@@ -199,7 +159,7 @@ static inline uint8_t CLOCK_SYS_GetOutDiv4(void)
 static inline void CLOCK_SYS_SetOutDiv(uint8_t outdiv1, uint8_t outdiv2,
                                        uint8_t outdiv3, uint8_t outdiv4)
 {
-    CLOCK_HAL_SetOutDiv(SIM_BASE, outdiv1, outdiv2, outdiv3, outdiv4);
+    CLOCK_HAL_SetOutDiv(SIM, outdiv1, outdiv2, outdiv3, outdiv4);
 }
 
 /*!
@@ -215,7 +175,7 @@ static inline void CLOCK_SYS_SetOutDiv(uint8_t outdiv1, uint8_t outdiv2,
 static inline void CLOCK_SYS_GetOutDiv(uint8_t *outdiv1, uint8_t *outdiv2,
                                        uint8_t *outdiv3, uint8_t *outdiv4)
 {
-    CLOCK_HAL_GetOutDiv(SIM_BASE, outdiv1, outdiv2, outdiv3, outdiv4);
+    CLOCK_HAL_GetOutDiv(SIM, outdiv1, outdiv2, outdiv3, outdiv4);
 }
 
 /*!
@@ -237,7 +197,7 @@ uint32_t CLOCK_SYS_GetPllFllClockFreq(void);
  */
 static inline void CLOCK_SYS_SetPllfllSel(clock_pllfll_sel_t setting)
 {
-    CLOCK_HAL_SetPllfllSel(SIM_BASE, setting);
+    CLOCK_HAL_SetPllfllSel(SIM, setting);
 }
 
 /*!
@@ -250,7 +210,7 @@ static inline void CLOCK_SYS_SetPllfllSel(clock_pllfll_sel_t setting)
  */
 static inline clock_pllfll_sel_t CLOCK_SYS_GetPllfllSel(void)
 {
-    return CLOCK_HAL_GetPllfllSel(SIM_BASE);
+    return CLOCK_HAL_GetPllfllSel(SIM);
 }
 
 /*!
@@ -262,7 +222,7 @@ static inline clock_pllfll_sel_t CLOCK_SYS_GetPllfllSel(void)
  */
 static inline uint32_t CLOCK_SYS_GetFixedFreqClockFreq(void)
 {
-    return CLOCK_HAL_GetFixedFreqClk(MCG_BASE);
+    return CLOCK_HAL_GetFixedFreqClk(MCG);
 }
 
 /*!
@@ -274,7 +234,7 @@ static inline uint32_t CLOCK_SYS_GetFixedFreqClockFreq(void)
  */
 static inline uint32_t CLOCK_SYS_GetInternalRefClockFreq(void)
 {
-    return CLOCK_HAL_GetInternalRefClk(MCG_BASE);
+    return CLOCK_HAL_GetInternalRefClk(MCG);
 }
 
 /*!
@@ -295,7 +255,7 @@ uint32_t CLOCK_SYS_GetExternalRefClock32kFreq(void);
  */
 static inline void CLOCK_SYS_SetExternalRefClock32kSrc(clock_er32k_src_t src)
 {
-    CLOCK_HAL_SetExternalRefClock32kSrc(SIM_BASE, src);
+    CLOCK_HAL_SetExternalRefClock32kSrc(SIM, src);
 }
 
 /*!
@@ -307,7 +267,7 @@ static inline void CLOCK_SYS_SetExternalRefClock32kSrc(clock_er32k_src_t src)
  */
 static inline clock_er32k_src_t CLOCK_SYS_GetExternalRefClock32kSrc(void)
 {
-    return CLOCK_HAL_GetExternalRefClock32kSrc(SIM_BASE);
+    return CLOCK_HAL_GetExternalRefClock32kSrc(SIM);
 }
 
 /*!
@@ -350,7 +310,7 @@ uint32_t CLOCK_SYS_GetWdogFreq(uint32_t instance, clock_wdog_src_t wdogSrc);
  */
 static inline clock_trace_src_t CLOCK_SYS_GetTraceSrc(uint32_t instance)
 {
-    return CLOCK_HAL_GetTraceClkSrc(SIM_BASE);
+    return CLOCK_HAL_GetTraceClkSrc(SIM);
 }
 
 /*!
@@ -362,7 +322,7 @@ static inline clock_trace_src_t CLOCK_SYS_GetTraceSrc(uint32_t instance)
  */
 static inline void CLOCK_SYS_SetTraceSrc(uint32_t instance, clock_trace_src_t src)
 {
-    CLOCK_HAL_SetTraceClkSrc(SIM_BASE, src);
+    CLOCK_HAL_SetTraceClkSrc(SIM, src);
 }
 
 /*!
@@ -529,7 +489,7 @@ static inline uint32_t CLOCK_SYS_GetAdcAltFreq(uint32_t instance)
  */
 static inline uint32_t CLOCK_SYS_GetAdcAlt2Freq(uint32_t instance)
 {
-    return CPU_INTERNAL_IRC_48M; 
+    return CPU_INTERNAL_IRC_48M;
 }
 
 /*!
@@ -543,6 +503,19 @@ static inline uint32_t CLOCK_SYS_GetAdcAlt2Freq(uint32_t instance)
 static inline uint32_t CLOCK_SYS_GetFtmFixedFreq(uint32_t instance)
 {
     return CLOCK_SYS_GetFixedFreqClockFreq();
+}
+
+/*!
+ * @brief Gets FTM's system clock frequency.
+ *
+ * This function gets the FTM's system clock frequency.
+ *
+ * @param instance module device instance
+ * @return Current frequency.
+ */
+static inline uint32_t CLOCK_SYS_GetFtmSystemClockFreq(uint32_t instance)
+{
+    return CLOCK_SYS_GetBusClockFreq();
 }
 
 /*!
@@ -565,7 +538,7 @@ uint32_t CLOCK_SYS_GetFtmExternalFreq(uint32_t instance);
  */
 static inline sim_ftm_clk_sel_t CLOCK_SYS_GetFtmExternalSrc(uint32_t instance)
 {
-    return SIM_HAL_GetFtmExternalClkPinMode(SIM_BASE, instance);
+    return SIM_HAL_GetFtmExternalClkPinMode(SIM, instance);
 }
 
 /*!
@@ -579,7 +552,7 @@ static inline sim_ftm_clk_sel_t CLOCK_SYS_GetFtmExternalSrc(uint32_t instance)
 static inline void CLOCK_SYS_SetFtmExternalSrc(uint32_t instance,
                                                sim_ftm_clk_sel_t ftmSrc)
 {
-    SIM_HAL_SetFtmExternalClkPinMode(SIM_BASE, instance, ftmSrc);
+    SIM_HAL_SetFtmExternalClkPinMode(SIM, instance, ftmSrc);
 }
 
 /*!
@@ -611,7 +584,7 @@ static inline uint32_t CLOCK_SYS_GetGpioFreq(uint32_t instance)
  */
 static inline void CLOCK_SYS_EnableDmaClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGateDma0);
+    SIM_HAL_EnableClock(SIM, kSimClockGateDma0);
 }
 
 /*!
@@ -622,7 +595,7 @@ static inline void CLOCK_SYS_EnableDmaClock(uint32_t instance)
  */
 static inline void CLOCK_SYS_DisableDmaClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGateDma0);
+    SIM_HAL_DisableClock(SIM, kSimClockGateDma0);
 }
 
 /*!
@@ -634,7 +607,7 @@ static inline void CLOCK_SYS_DisableDmaClock(uint32_t instance)
  */
 static inline bool CLOCK_SYS_GetDmaGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGateDma0);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGateDma0);
 }
 
 /*!
@@ -645,7 +618,7 @@ static inline bool CLOCK_SYS_GetDmaGateCmd(uint32_t instance)
  */
 static inline void CLOCK_SYS_EnableDmamuxClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGateDmamux0);
+    SIM_HAL_EnableClock(SIM, kSimClockGateDmamux0);
 }
 
 /*!
@@ -656,7 +629,7 @@ static inline void CLOCK_SYS_EnableDmamuxClock(uint32_t instance)
  */
 static inline void CLOCK_SYS_DisableDmamuxClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGateDmamux0);
+    SIM_HAL_DisableClock(SIM, kSimClockGateDmamux0);
 }
 
 /*!
@@ -668,7 +641,7 @@ static inline void CLOCK_SYS_DisableDmamuxClock(uint32_t instance)
  */
 static inline bool CLOCK_SYS_GetDmamuxGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGateDmamux0);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGateDmamux0);
 }
 
 /*!
@@ -704,7 +677,7 @@ bool CLOCK_SYS_GetPortGateCmd(uint32_t instance);
  */
 static inline void CLOCK_SYS_EnableEwmClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGateEwm0);
+    SIM_HAL_EnableClock(SIM, kSimClockGateEwm0);
 }
 
 /*!
@@ -715,7 +688,7 @@ static inline void CLOCK_SYS_EnableEwmClock(uint32_t instance)
  */
 static inline void CLOCK_SYS_DisableEwmClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGateEwm0);
+    SIM_HAL_DisableClock(SIM, kSimClockGateEwm0);
 }
 
 /*!
@@ -727,7 +700,7 @@ static inline void CLOCK_SYS_DisableEwmClock(uint32_t instance)
  */
 static inline bool CLOCK_SYS_GetEwmGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGateEwm0);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGateEwm0);
 }
 
 /*!
@@ -738,7 +711,7 @@ static inline bool CLOCK_SYS_GetEwmGateCmd(uint32_t instance)
  */
 static inline void CLOCK_SYS_EnableFtfClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGateFtf0);
+    SIM_HAL_EnableClock(SIM, kSimClockGateFtf0);
 }
 
 /*!
@@ -749,7 +722,7 @@ static inline void CLOCK_SYS_EnableFtfClock(uint32_t instance)
  */
 static inline void CLOCK_SYS_DisableFtfClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGateFtf0);
+    SIM_HAL_DisableClock(SIM, kSimClockGateFtf0);
 }
 
 /*!
@@ -761,7 +734,7 @@ static inline void CLOCK_SYS_DisableFtfClock(uint32_t instance)
  */
 static inline bool CLOCK_SYS_GetFtfGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGateFtf0);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGateFtf0);
 }
 
 /*!
@@ -772,7 +745,7 @@ static inline bool CLOCK_SYS_GetFtfGateCmd(uint32_t instance)
  */
 static inline void CLOCK_SYS_EnableCrcClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGateCrc0);
+    SIM_HAL_EnableClock(SIM, kSimClockGateCrc0);
 }
 
 /*!
@@ -783,7 +756,7 @@ static inline void CLOCK_SYS_EnableCrcClock(uint32_t instance)
  */
 static inline void CLOCK_SYS_DisableCrcClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGateCrc0);
+    SIM_HAL_DisableClock(SIM, kSimClockGateCrc0);
 }
 
 /*!
@@ -795,7 +768,7 @@ static inline void CLOCK_SYS_DisableCrcClock(uint32_t instance)
  */
 static inline bool CLOCK_SYS_GetCrcGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGateCrc0);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGateCrc0);
 }
 
 /*!
@@ -831,7 +804,7 @@ bool CLOCK_SYS_GetAdcGateCmd(uint32_t instance);
  */
 static inline void CLOCK_SYS_EnableCmpClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGateCmp);
+    SIM_HAL_EnableClock(SIM, kSimClockGateCmp);
 }
 
 /*!
@@ -842,7 +815,7 @@ static inline void CLOCK_SYS_EnableCmpClock(uint32_t instance)
  */
 static inline void CLOCK_SYS_DisableCmpClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGateCmp);
+    SIM_HAL_DisableClock(SIM, kSimClockGateCmp);
 }
 
 /*!
@@ -854,7 +827,7 @@ static inline void CLOCK_SYS_DisableCmpClock(uint32_t instance)
  */
 static inline bool CLOCK_SYS_GetCmpGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGateCmp);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGateCmp);
 }
 
 /*!
@@ -890,7 +863,7 @@ bool CLOCK_SYS_GetDacGateCmd(uint32_t instance);
  */
 static inline void CLOCK_SYS_EnableVrefClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGateVref0);
+    SIM_HAL_EnableClock(SIM, kSimClockGateVref0);
 }
 
 /*!
@@ -901,7 +874,7 @@ static inline void CLOCK_SYS_EnableVrefClock(uint32_t instance)
  */
 static inline void CLOCK_SYS_DisableVrefClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGateVref0);
+    SIM_HAL_DisableClock(SIM, kSimClockGateVref0);
 }
 
 /*!
@@ -913,7 +886,7 @@ static inline void CLOCK_SYS_DisableVrefClock(uint32_t instance)
  */
 static inline bool CLOCK_SYS_GetVrefGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGateVref0);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGateVref0);
 }
 
 /*!
@@ -924,7 +897,7 @@ static inline bool CLOCK_SYS_GetVrefGateCmd(uint32_t instance)
  */
 static inline void CLOCK_SYS_EnablePdbClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGatePdb0);
+    SIM_HAL_EnableClock(SIM, kSimClockGatePdb0);
 }
 
 /*!
@@ -935,7 +908,7 @@ static inline void CLOCK_SYS_EnablePdbClock(uint32_t instance)
  */
 static inline void CLOCK_SYS_DisablePdbClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGatePdb0);
+    SIM_HAL_DisableClock(SIM, kSimClockGatePdb0);
 }
 
 /*!
@@ -947,7 +920,7 @@ static inline void CLOCK_SYS_DisablePdbClock(uint32_t instance)
  */
 static inline bool CLOCK_SYS_GetPdbGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGatePdb0);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGatePdb0);
 }
 
 /*!
@@ -983,7 +956,7 @@ bool CLOCK_SYS_GetFtmGateCmd(uint32_t instance);
  */
 static inline void CLOCK_SYS_EnablePitClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGatePit0);
+    SIM_HAL_EnableClock(SIM, kSimClockGatePit0);
 }
 
 /*!
@@ -994,7 +967,7 @@ static inline void CLOCK_SYS_EnablePitClock(uint32_t instance)
  */
 static inline void CLOCK_SYS_DisablePitClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGatePit0);
+    SIM_HAL_DisableClock(SIM, kSimClockGatePit0);
 }
 
 /*!
@@ -1006,7 +979,7 @@ static inline void CLOCK_SYS_DisablePitClock(uint32_t instance)
  */
 static inline bool CLOCK_SYS_GetPitGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGatePit0);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGatePit0);
 }
 
 /*!
@@ -1015,9 +988,9 @@ static inline bool CLOCK_SYS_GetPitGateCmd(uint32_t instance)
  * This function enables the clock for LPTIMER module.
  * @param instance module device instance
  */
-static inline void CLOCK_SYS_EnableLptimerClock(uint32_t instance)
+static inline void CLOCK_SYS_EnableLptmrClock(uint32_t instance)
 {
-    SIM_HAL_EnableClock(SIM_BASE, kSimClockGateLptmr0);
+    SIM_HAL_EnableClock(SIM, kSimClockGateLptmr0);
 }
 
 /*!
@@ -1026,9 +999,9 @@ static inline void CLOCK_SYS_EnableLptimerClock(uint32_t instance)
  * This function disables the clock for LPTIMER module.
  * @param instance module device instance
  */
-static inline void CLOCK_SYS_DisableLptimerClock(uint32_t instance)
+static inline void CLOCK_SYS_DisableLptmrClock(uint32_t instance)
 {
-    SIM_HAL_DisableClock(SIM_BASE, kSimClockGateLptmr0);
+    SIM_HAL_DisableClock(SIM, kSimClockGateLptmr0);
 }
 
 /*!
@@ -1038,9 +1011,9 @@ static inline void CLOCK_SYS_DisableLptimerClock(uint32_t instance)
  * @param instance module device instance
  * @return state true - ungated(Enabled), false - gated (Disabled)
  */
-static inline bool CLOCK_SYS_GetLptimerGateCmd(uint32_t instance)
+static inline bool CLOCK_SYS_GetLptmrGateCmd(uint32_t instance)
 {
-    return SIM_HAL_GetGateCmd(SIM_BASE, kSimClockGateLptmr0);
+    return SIM_HAL_GetGateCmd(SIM, kSimClockGateLptmr0);
 }
 
 /*!
@@ -1117,23 +1090,6 @@ void CLOCK_SYS_DisableUartClock(uint32_t instance);
  * @return state true - ungated(Enabled), false - gated (Disabled)
  */
 bool CLOCK_SYS_GetUartGateCmd(uint32_t instance);
-
-/*!
- * @brief Initialize OSC0.
- *
- * This function initializes OSC0 according to board configuration.
- *
- * @param  config Pointer to the OSC configuration structure.
- * @return kClockManagerSuccess on success.
- */
-clock_manager_error_code_t CLOCK_SYS_Osc0Init(osc_user_config_t *config);
-
-/*!
- * @brief Deinitialize OSC0.
- *
- * This function deinitializes OSC0.
- */
-void CLOCK_SYS_Osc0Deinit(void);
 
 /*!
  * @brief Set the FTM external clock frequency(FTM_CLKx).

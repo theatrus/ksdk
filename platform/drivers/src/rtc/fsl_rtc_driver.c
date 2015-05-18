@@ -31,6 +31,8 @@
 #include "fsl_rtc_driver.h"
 #include "fsl_clock_manager.h"
 
+#if FSL_FEATURE_SOC_RTC_COUNT
+
 /*!
  * @addtogroup rtc_driver
  * @{
@@ -53,26 +55,28 @@ static rtc_repeat_alarm_state_t *s_rtcRepeatAlarmState = NULL;
 /*FUNCTION**********************************************************************
  *
  * Function Name : RTC_DRV_Init
- * Description   : initializes the Real Time Clock module
+ * Description   : Initializes the Real Time Clock module
  * This function will initialize the Real Time Clock module.
  *
  *END**************************************************************************/
 
-void RTC_DRV_Init(uint32_t instance)
+rtc_status_t RTC_DRV_Init(uint32_t instance)
 {
-    uint32_t rtcBaseAddr = g_rtcBaseAddr[instance];
+    RTC_Type *rtcBase = g_rtcBase[instance];
 
     /* Enable clock gate to RTC module */
     CLOCK_SYS_EnableRtcClock(0U);
 
     /* Initialize the general configuration for RTC module.*/
-    RTC_HAL_Init(rtcBaseAddr);
-    RTC_HAL_Enable(rtcBaseAddr);
+    RTC_HAL_Init(rtcBase);
+    RTC_HAL_Enable(rtcBase);
 
     NVIC_ClearPendingIRQ(g_rtcIrqId[instance]);
     NVIC_ClearPendingIRQ(g_rtcSecondsIrqId[instance]);
     INT_SYS_EnableIRQ(g_rtcIrqId[instance]);
     INT_SYS_EnableIRQ(g_rtcSecondsIrqId[instance]);
+
+    return kStatusRtcSuccess;
 }
 
 /*FUNCTION**********************************************************************
@@ -89,23 +93,30 @@ void RTC_DRV_Deinit(uint32_t instance)
     INT_SYS_DisableIRQ(g_rtcSecondsIrqId[instance]);
 
     /* Disable the RTC counter */
-    RTC_HAL_Disable(g_rtcBaseAddr[instance]);
+    RTC_HAL_Disable(g_rtcBase[instance]);
 
     /* Disable clock gate to RTC module */
     CLOCK_SYS_DisableRtcClock(0U);
     s_rtcRepeatAlarmState = NULL;
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_IsCounterEnabled
+ * Description   : Checks whether the RTC is enabled.
+ * The function checks the TCE bit in the RTC control register.
+ *
+ *END**************************************************************************/
 bool RTC_DRV_IsCounterEnabled(uint32_t instance)
 {
-    return RTC_HAL_IsCounterEnabled(g_rtcBaseAddr[instance]);
+    return RTC_HAL_IsCounterEnabled(g_rtcBase[instance]);
 }
 
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : RTC_DRV_SetDatetime
- * Description   : sets the RTC date and time according to the given time struct.
+ * Description   : Sets the RTC date and time according to the given time struct.
  * This function will set the RTC date and time according to the given time
  * struct, if start_after_set is true, the RTC oscillator will be enabled and
  * the counter will start.
@@ -114,9 +125,11 @@ bool RTC_DRV_IsCounterEnabled(uint32_t instance)
 bool RTC_DRV_SetDatetime(uint32_t instance, rtc_datetime_t *datetime)
 {
     assert(datetime);
-    uint32_t rtcBaseAddr = g_rtcBaseAddr[instance];
+    RTC_Type *rtcBase = g_rtcBase[instance];
     uint32_t srcClock = 0;
     uint32_t seconds = 0;
+    uint16_t preScaler = 0;
+    uint64_t tmp = 0;
 
     /* Return error if the time provided is not valid */
     if (!(RTC_HAL_IsDatetimeCorrectFormat(datetime)))
@@ -130,18 +143,25 @@ bool RTC_DRV_SetDatetime(uint32_t instance, rtc_datetime_t *datetime)
     {
         /* As the seconds register will not increment every second, we need to adjust the value
          * programmed to the seconds register */
-        seconds = seconds / (32768U / srcClock);
+        tmp = (uint64_t)seconds * (uint64_t)srcClock;
+        preScaler = (uint32_t)(tmp & 0x7FFFU);
+        seconds = (uint32_t)(tmp >> 15U);
     }
     /* Set time in seconds */
-    RTC_HAL_SetDatetimeInsecs(rtcBaseAddr, seconds);
-
+    RTC_HAL_EnableCounter(rtcBase, false);
+    /* Set seconds counter*/
+    RTC_HAL_SetSecsReg(rtcBase, seconds);
+    /* Set time counter*/
+    RTC_HAL_SetPrescaler(rtcBase, preScaler);
+     /* Enable the counter*/
+    RTC_HAL_EnableCounter(rtcBase, true);
     return true;
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : RTC_DRV_GetDatetime
- * Description   : gets the actual RTC time and stores it in the given time struct.
+ * Description   : Gets the actual RTC time and stores it in the given time struct.
  * This function will get the actual RTC time and stores it in the given time
  * struct.
  *
@@ -150,11 +170,12 @@ void RTC_DRV_GetDatetime(uint32_t instance, rtc_datetime_t *datetime)
 {
     assert(datetime);
 
-    uint32_t rtcBaseAddr = g_rtcBaseAddr[instance];
+    RTC_Type *rtcBase = g_rtcBase[instance];
     uint32_t seconds = 0;
     uint32_t srcClock = 0;
+    uint64_t tmp = 0;
 
-    RTC_HAL_GetDatetimeInSecs(rtcBaseAddr, &seconds);
+    RTC_HAL_GetDatetimeInSecs(rtcBase, &seconds);
 
     if ((srcClock = CLOCK_SYS_GetRtcFreq(0U)) != 32768U)
     {
@@ -162,14 +183,22 @@ void RTC_DRV_GetDatetime(uint32_t instance, rtc_datetime_t *datetime)
          * increment every second, therefore the seconds register value needs to be adjusted.
          * to get actual seconds. We then add the prescaler register value to the seconds.
          */
-        seconds = (seconds * (32768U / srcClock)) + (RTC_HAL_GetPrescaler(rtcBaseAddr) / srcClock);
+        tmp = (uint64_t)seconds << 15U;
+        tmp |= (uint64_t)(RTC_HAL_GetPrescaler(rtcBase) & 0x7FFFU);
+        seconds = tmp / srcClock;
     }
     RTC_HAL_ConvertSecsToDatetime(&seconds, datetime);
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_SetSecsIntCmd
+ * Description   : Enables or disables the RTC seconds interrupt.
+ *
+ *END**************************************************************************/
 void RTC_DRV_SetSecsIntCmd(uint32_t instance, bool secondsEnable)
 {
-    RTC_HAL_SetSecsIntCmd(g_rtcBaseAddr[instance], secondsEnable);
+    RTC_HAL_SetSecsIntCmd(g_rtcBase[instance], secondsEnable);
 }
 
 /*FUNCTION**********************************************************************
@@ -184,10 +213,11 @@ bool RTC_DRV_SetAlarm(uint32_t instance, rtc_datetime_t *alarmTime, bool enableA
 {
     assert(alarmTime);
 
-    uint32_t rtcBaseAddr = g_rtcBaseAddr[instance];
+    RTC_Type *rtcBase = g_rtcBase[instance];
     uint32_t srcClock = 0;
     uint32_t alrmSeconds = 0;
     uint32_t currSeconds = 0;
+    uint64_t tmp = 0;
 
     /* Return error if the alarm time provided is not valid */
     if (!(RTC_HAL_IsDatetimeCorrectFormat(alarmTime)))
@@ -198,13 +228,14 @@ bool RTC_DRV_SetAlarm(uint32_t instance, rtc_datetime_t *alarmTime, bool enableA
     RTC_HAL_ConvertDatetimeToSecs(alarmTime, &alrmSeconds);
 
     /* Get the current time */
-    currSeconds = RTC_HAL_GetSecsReg(rtcBaseAddr);
+    currSeconds = RTC_HAL_GetSecsReg(rtcBase);
 
-    if ((srcClock = CLOCK_SYS_GetRtcFreq(0U)) != 32768U)
+    if ((srcClock = CLOCK_SYS_GetRtcFreq(instance)) != 32768U)
     {
         /* As the seconds register will not increment every second, we need to adjust the value
          * programmed to the alarm register */
-        alrmSeconds = alrmSeconds / (32768U / srcClock);
+        tmp = (uint64_t)alrmSeconds * (uint64_t)srcClock;
+        alrmSeconds = (uint32_t)(tmp >> 15U);
     }
 
     /* Make sure the alarm is for a future time */
@@ -214,17 +245,17 @@ bool RTC_DRV_SetAlarm(uint32_t instance, rtc_datetime_t *alarmTime, bool enableA
     }
 
     /* set alarm in seconds*/
-    RTC_HAL_SetAlarmReg(rtcBaseAddr, alrmSeconds);
+    RTC_HAL_SetAlarmReg(rtcBase, alrmSeconds);
 
     /* Activate or deactivate the Alarm interrupt based on user choice */
-    RTC_HAL_SetAlarmIntCmd(rtcBaseAddr, enableAlarmInterrupt);
+    RTC_HAL_SetAlarmIntCmd(rtcBase, enableAlarmInterrupt);
 
     return true;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : rtc_get_alarm
+ * Function Name : RTC_DRV_GetAlarm
  * Description   : returns the RTC alarm time.
  * This function will first get alarm time in seconds, then convert the seconds to
  * date time.
@@ -238,7 +269,7 @@ void RTC_DRV_GetAlarm(uint32_t instance, rtc_datetime_t *date)
     uint32_t srcClock = 0;
 
     /* Get alarm in seconds  */
-    alrmSeconds = RTC_HAL_GetAlarmReg(g_rtcBaseAddr[instance]);
+    alrmSeconds = RTC_HAL_GetAlarmReg(g_rtcBase[instance]);
 
     if ((srcClock = CLOCK_SYS_GetRtcFreq(0U)) != 32768U)
     {
@@ -249,6 +280,14 @@ void RTC_DRV_GetAlarm(uint32_t instance, rtc_datetime_t *date)
     RTC_HAL_ConvertSecsToDatetime(&alrmSeconds, date);
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_InitRepeatAlarm
+ * Description   : Initializes the RTC repeat alarm state structure.
+ * The RTC driver uses this user-provided structure to store the alarm state
+ * information.
+ *
+ *END**************************************************************************/
 void RTC_DRV_InitRepeatAlarm(uint32_t instance, rtc_repeat_alarm_state_t *repeatAlarmState)
 {
     assert(repeatAlarmState);
@@ -258,6 +297,12 @@ void RTC_DRV_InitRepeatAlarm(uint32_t instance, rtc_repeat_alarm_state_t *repeat
     s_rtcRepeatAlarmState = repeatAlarmState;
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_SetAlarmRepeat
+ * Description   : Sets an alarm that is periodically repeated.
+ *
+ *END**************************************************************************/
 bool RTC_DRV_SetAlarmRepeat(uint32_t instance, rtc_datetime_t *alarmTime, rtc_datetime_t *alarmRepInterval)
 {
     assert(s_rtcRepeatAlarmState);
@@ -274,48 +319,91 @@ bool RTC_DRV_SetAlarmRepeat(uint32_t instance, rtc_datetime_t *alarmTime, rtc_da
     return true;
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_DeinitRepeatAlarm
+ * Description   : De-initializes the RTC repeat alarm state structure.
+ *
+ *END**************************************************************************/
 void RTC_DRV_DeinitRepeatAlarm(uint32_t instance)
 {
     s_rtcRepeatAlarmState = NULL;
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_SetAlarmIntCmd
+ * Description   : Enables or disables the alarm interrupt.
+ *
+ *END**************************************************************************/
 void RTC_DRV_SetAlarmIntCmd(uint32_t instance, bool alarmEnable)
 {
-    RTC_HAL_SetAlarmIntCmd(g_rtcBaseAddr[instance], alarmEnable);
+    RTC_HAL_SetAlarmIntCmd(g_rtcBase[instance], alarmEnable);
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_GetAlarmIntCmd
+ * Description   : Reads the alarm interrupt.
+ *
+ *END**************************************************************************/
 bool RTC_DRV_GetAlarmIntCmd(uint32_t instance)
 {
-    return RTC_HAL_ReadAlarmInt(g_rtcBaseAddr[instance]);
+    return RTC_HAL_ReadAlarmInt(g_rtcBase[instance]);
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_IsAlarmPending
+ * Description   : Reads the alarm status to see if the alarm has triggered.
+ *
+ *END**************************************************************************/
 bool RTC_DRV_IsAlarmPending(uint32_t instance)
 {
     /* Return alarm time and status (triggered or not) */
-    return RTC_HAL_HasAlarmOccured(g_rtcBaseAddr[instance]);
+    return RTC_HAL_HasAlarmOccured(g_rtcBase[instance]);
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_SetTimeCompensation
+ * Description   : Writes the compensation value to the RTC compensation register.
+ *
+ *END**************************************************************************/
 void RTC_DRV_SetTimeCompensation(uint32_t instance, uint32_t compensationInterval,
                                             uint32_t compensationTime)
 {
-    uint32_t rtcBaseAddr = g_rtcBaseAddr[instance];
+    RTC_Type *rtcBase = g_rtcBase[instance];
 
-    RTC_HAL_SetCompensationIntervalRegister(rtcBaseAddr, compensationInterval);
-    RTC_HAL_SetTimeCompensationRegister(rtcBaseAddr, compensationTime);
+    RTC_HAL_SetCompensationIntervalRegister(rtcBase, compensationInterval);
+    RTC_HAL_SetTimeCompensationRegister(rtcBase, compensationTime);
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_GetTimeCompensation
+ * Description   : Reads the compensation value from the RTC compensation register.
+ *
+ *END**************************************************************************/
 void RTC_DRV_GetTimeCompensation(uint32_t instance, uint32_t *compensationInterval,
                                             uint32_t *compensationTime)
 {
-    uint32_t rtcBaseAddr = g_rtcBaseAddr[instance];
+    RTC_Type *rtcBase = g_rtcBase[instance];
 
-    *compensationInterval = RTC_HAL_GetCompensationIntervalCounter(rtcBaseAddr);
-    *compensationTime = RTC_HAL_GetTimeCompensationValue(rtcBaseAddr);
+    *compensationInterval = RTC_HAL_GetCompensationIntervalCounter(rtcBase);
+    *compensationTime = RTC_HAL_GetTimeCompensationValue(rtcBase);
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_AlarmIntAction
+ * Description   : Action to take when an RTC alarm interrupt is triggered. To receive
+ * alarms periodically, the RTC_TAR register is updated using the repeat interval.
+ *
+ *END**************************************************************************/
 void RTC_DRV_AlarmIntAction(uint32_t instance)
 {
-    uint32_t rtcBaseAddr = g_rtcBaseAddr[instance];
+    RTC_Type *rtcBase = g_rtcBase[instance];
 
     if (s_rtcRepeatAlarmState != NULL)
     {
@@ -329,31 +417,41 @@ void RTC_DRV_AlarmIntAction(uint32_t instance)
     else
     {
         /* Writing to the alarm register clears the TAF flag in the Status register */
-        RTC_HAL_SetAlarmReg(rtcBaseAddr, 0x0);
-        RTC_HAL_SetAlarmIntCmd(rtcBaseAddr, false);
+        RTC_HAL_SetAlarmReg(rtcBase, 0x0);
+        RTC_HAL_SetAlarmIntCmd(rtcBase, false);
     }
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RTC_DRV_SecsIntAction
+ * Description   : Action to take when an RTC seconds interrupt is triggered.
+ * Disables the time seconds interrupt (TSIE) bit.
+ *
+ *END**************************************************************************/
 void RTC_DRV_SecsIntAction(uint32_t instance)
 {
-    RTC_HAL_SetSecsIntCmd(g_rtcBaseAddr[instance], false);
+    RTC_HAL_SetSecsIntCmd(g_rtcBase[instance], false);
 }
 
 #if FSL_FEATURE_RTC_HAS_MONOTONIC
+
 /*FUNCTION**********************************************************************
  *
- * Function Name : rtc_increment_monotonic
- * Description   : increments monotonic counter by one.
+ * Function Name : RTC_DRV_IncrementMonotonic
+ * Description   : Increments monotonic counter by one.
  * This function will increment monotonic counter by one.
  *
  *END**************************************************************************/
 bool RTC_DRV_IncrementMonotonic(uint32_t instance)
 {
-    return RTC_HAL_IncrementMonotonicCounter(g_rtcBaseAddr[instance]);
+    return RTC_HAL_IncrementMonotonicCounter(g_rtcBase[instance]);
 }
 #endif
 
 /*! @}*/
+
+#endif /* FSL_FEATURE_SOC_RTC_COUNT */
 
 /*******************************************************************************
  * EOF

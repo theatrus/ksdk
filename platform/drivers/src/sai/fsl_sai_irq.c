@@ -29,8 +29,9 @@
  */
 
 #include "fsl_sai_driver.h"
+#if FSL_FEATURE_SOC_I2S_COUNT
 
-extern sai_state_t * volatile sai_state_ids[HW_I2S_INSTANCE_COUNT][2];
+extern sai_state_t * volatile sai_state_ids[I2S_INSTANCE_COUNT][2];
 
 /*************************************************************************
  * Code
@@ -74,6 +75,7 @@ void I2S1_Rx_IRQHandler(void)
 }
 #endif /*defined K70F12_SERIES */
 #endif /* FSL_FEATURE_SAI_INT_SPURCE_NUM */
+#endif
 
 /*************************************************************************
  * EOF

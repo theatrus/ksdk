@@ -37,7 +37,7 @@
 #include "fsl_lpuart_hal.h"
 #include "fsl_clock_manager.h"
 
-/*! 
+/*!
  * @addtogroup lpuart_driver
  * @{
  */
@@ -47,19 +47,22 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for LPUART instances. */
-extern const uint32_t g_lpuartBaseAddr[HW_LPUART_INSTANCE_COUNT];
+extern LPUART_Type * const g_lpuartBase[LPUART_INSTANCE_COUNT];
 
 /*! @brief Table to save LPUART IRQ enumeration numbers defined in the CMSIS header file */
-extern const IRQn_Type g_lpuartRxTxIrqId[HW_LPUART_INSTANCE_COUNT];
+extern const IRQn_Type g_lpuartRxTxIrqId[LPUART_INSTANCE_COUNT];
 
 /*******************************************************************************
- * Definitions  
+ * Definitions
  ******************************************************************************/
 
 /*! @brief LPUART receive callback function type. */
 typedef void (* lpuart_rx_callback_t)(uint32_t instance, void * lpuartState);
 
-/*! 
+/*! @brief UART transmit callback function type */
+typedef void (* lpuart_tx_callback_t)(uint32_t instance, void * lpuartState);
+
+/*!
  * @brief Runtime state of the LPUART driver.
  *
  * Note that the caller provides memory for the driver state structures during
@@ -78,20 +81,24 @@ typedef struct LpuartState {
     semaphore_t rxIrqSync;           /*!< Used to wait for ISR to complete its Rx business.*/
     lpuart_rx_callback_t rxCallback; /*!< Callback to invoke after receiving byte.*/
     void * rxCallbackParam;          /*!< Receive callback parameter pointer.*/
+    lpuart_tx_callback_t txCallback; /*!< Callback to invoke after transmitting byte.*/
+    void * txCallbackParam;          /*!< Transmit callback parameter pointer.*/
 } lpuart_state_t;
 
-/*! @brief LPUART configuration structure*/
+/*! @brief LPUART configuration structure 
+ * @internal gui name="Configuration" id="Configuration" 
+ */
 typedef struct LpuartUserConfig {
-    clock_lpuart_src_t clockSource;      /*!< LPUART clock source in fsl_sim_hal_<device>.h */
-    uint32_t baudRate;                   /*!< LPUART baud rate*/
-    lpuart_parity_mode_t parityMode;     /*!< parity mode, disabled (default), even, odd */
-    lpuart_stop_bit_count_t stopBitCount;/*!< number of stop bits, 1 stop bit (default) or 2 stop bits*/
+    clock_lpuart_src_t clockSource;      /*!< LPUART clock source @internal gui name="Clock source" id="ClockSource" */
+    uint32_t baudRate;                   /*!< LPUART baud rate @internal gui name="Baud rate" id="BaudRate" */
+    lpuart_parity_mode_t parityMode;     /*!< parity mode, disabled (default), even, odd @internal gui name="Parity mode" id="Parity" */
+    lpuart_stop_bit_count_t stopBitCount;/*!< number of stop bits, 1 stop bit (default) or 2 stop bits @internal gui name="Stop bits" id="StopBits" */
     lpuart_bit_count_per_char_t bitCountPerChar; /*!< number of bits, 8-bit (default) or 9-bit in a
-                                                   char (up to 10-bits in some LPUART instances.*/
+                                                   char (up to 10-bits in some LPUART instances. @internal gui name="Bits per char" id="DataBits" */
 } lpuart_user_config_t;
 
 /*******************************************************************************
- * API 
+ * API
  ******************************************************************************/
 
 #if defined(__cplusplus)
@@ -121,24 +128,44 @@ lpuart_status_t LPUART_DRV_Init(uint32_t instance, lpuart_state_t * lpuartStateP
  * @brief Shuts down the LPUART by disabling interrupts and transmitter/receiver.
  *
  * @param instance  LPUART instance number
+ * @return An error code or kStatus_LPUART_Success
  */
-void LPUART_DRV_Deinit(uint32_t instance);
+lpuart_status_t LPUART_DRV_Deinit(uint32_t instance);
 
 /*!
  * @brief Installs callback function for the LPUART receive.
+ *
+ * @note After a callback is installed, it bypasses part of the LPUART IRQHandler logic.
+ * Therefore, the callback needs to handle the indexes of txBuff and txSize.
  *
  * @param instance The LPUART instance number.
  * @param function The LPUART receive callback function.
  * @param rxBuff The receive buffer used inside IRQHandler. This buffer must be kept as long as the callback is alive.
  * @param callbackParam The LPUART receive callback parameter pointer.
- * @param alwaysEnableRxIrq Whether always enable Rx IRQ or not.
+ * @param alwaysEnableRxIrq Whether always enable receive IRQ or not.
  * @return Former LPUART receive callback function pointer.
  */
-lpuart_rx_callback_t LPUART_DRV_InstallRxCallback(uint32_t instance, 
-                                                lpuart_rx_callback_t function, 
-                                                uint8_t * rxBuff, 
+lpuart_rx_callback_t LPUART_DRV_InstallRxCallback(uint32_t instance,
+                                                lpuart_rx_callback_t function,
+                                                uint8_t * rxBuff,
                                                 void * callbackParam,
                                                 bool alwaysEnableRxIrq);
+/*!
+ * @brief Installs callback function for the LPUART transmit.
+ *
+ * @note After a callback is installed, it bypasses part of the LPUART IRQHandler logic.
+ * Therefore, the callback needs to handle the indexes of txBuff and txSize.
+ *
+ * @param instance The LPUART instance number.
+ * @param function The LPUART transmit callback function.
+ * @param txBuff The transmit buffer used inside IRQHandler. This buffer must be kept as long as the callback is alive.
+ * @param callbackParam The LPUART transmit callback parameter pointer.
+ * @return Former LPUART transmit callback function pointer.
+ */
+lpuart_tx_callback_t LPUART_DRV_InstallTxCallback(uint32_t instance, 
+                                                  lpuart_tx_callback_t function, 
+                                                  uint8_t * txBuff, 
+                                                  void * callbackParam);
 
 /*!
  * @brief Sends data out through the LPUART module using a blocking method.
@@ -151,14 +178,14 @@ lpuart_rx_callback_t LPUART_DRV_InstallRxCallback(uint32_t instance,
  * @param timeout timeout value for RTOS abstraction sync control
  * @return An error code or kStatus_LPUART_Success
  */
-lpuart_status_t LPUART_DRV_SendDataBlocking(uint32_t instance, 
-                                            const uint8_t * txBuff, 
+lpuart_status_t LPUART_DRV_SendDataBlocking(uint32_t instance,
+                                            const uint8_t * txBuff,
                                             uint32_t txSize,
                                             uint32_t timeout);
 
 /*!
  * @brief Sends data out through the LPUART module using a non-blocking method.
- *  This enablesS an async method for transmitting data. When used with
+ *  This enables an a-sync method for transmitting data. When used with
  *  a non-blocking receive, the LPUART can perform a full duplex operation.
  *  Non-blocking  means that the function returns immediately.
  *  The application has to get the transmit status to know when the transmit is complete.
@@ -211,7 +238,7 @@ lpuart_status_t LPUART_DRV_ReceiveDataBlocking(uint32_t instance,
 
 /*!
  * @brief Gets data from the LPUART module by using a non-blocking method.
- *  This enables an async method for receiving data. When used with
+ *  This enables an a-sync method for receiving data. When used with
  *  a non-blocking transmission, the LPUART can perform a full duplex operation.
  *  Non-blocking means that the function returns immediately.
  *  The application has to get the receive status to know when the receive is complete.

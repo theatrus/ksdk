@@ -107,7 +107,7 @@
 * Solution:
 *
 * The  flash location targeted to program/erase operation must be unprotected. Swap
-* indicator must not be programed/erased except in Update or Update-Erase state.
+* indicator must not be programmed/erased except in Update or Update-Erase state.
 *
 */
 #define FTFx_ERR_PVIOL                     0x0010U
@@ -124,15 +124,15 @@
 *
 */
 #define FTFx_ERR_ACCERR                    0x0020U
-/*! @brief  Can not change protection status
+/*! @brief  Cannot change protection status
 *
 * Possible causes:
 *
-* Violate protection transition
+* Violates protection transition.
 *
 * Solution:
 *
-* In NVM normal mode, protection size cannot be decreased. So, only increasing
+* In NVM normal mode, protection size cannot be decreased. Therefore, the only increasing
 * protection size is permitted if the device is operating in this mode.
 *
 */

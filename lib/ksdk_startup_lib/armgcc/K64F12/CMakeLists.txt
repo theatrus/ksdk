@@ -46,18 +46,22 @@ SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MK64FN1M0VMD12")
 
 # INCLUDE_DIRECTORIES
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MK64F12)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK64F12/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK64F12/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MK64F12)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK64F12/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK64F12/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
 ENDIF()
 
 # ADD_LIBRARY
 ADD_LIBRARY(KsdkStartupLib STATIC
-    "${ProjDirPath}/../../../../platform/startup/MK64F12/system_MK64F12.c"
-    "${ProjDirPath}/../../../../platform/startup/startup.c"
-    "${ProjDirPath}/../../../../platform/startup/startup.h"
+    "${ProjDirPath}/../../../../platform/devices/MK64F12/startup/system_MK64F12.c"
+    "${ProjDirPath}/../../../../platform/devices/startup.c"
+    "${ProjDirPath}/../../../../platform/devices/startup.h"
 )
 
 SET_TARGET_PROPERTIES(KsdkStartupLib PROPERTIES OUTPUT_NAME "libksdk_startup.a")

@@ -54,21 +54,21 @@ typedef struct usb_device_interface_info_struct
     usb_device_interface_struct_t* lphostintf;
     usb_host_driver_info_t*        lpDriverInfo;
     class_map_t*                   lpClassDriverMap;
-    class_handle                    lpClassHandle;
-    uint8_t                         open;
-    uint8_t                         requesting_set_interface;
+    usb_class_handle               lpClassHandle;
+    uint8_t                        open;
+    uint8_t                        requesting_set_interface;
 } usb_device_interface_info_struct_t;
 
 /********************************************************************
 Note that device instance structure keeps data buffers inside it. 
 These buffers are passed to DMA when host does enumeration. This
-means that we must ensure that buffers inside this stucture
+means that we must ensure that buffers inside this structure
 are aligned in PSP cache line size. 
 ********************************************************************/
 /* Fixed-length fields applicable to all devices */
-typedef struct dev_instance
+typedef struct _dev_instance
 {
-    struct dev_instance     *next;             /* next device, or NULL */
+    struct _dev_instance    *next;             /* next device, or NULL */
     usb_host_handle         host;             /* host (several can exist) */
     hub_device_struct_t*    hub_instance;
     uint8_t                 speed;            /* device speed */
@@ -114,31 +114,40 @@ typedef struct dev_instance
 extern "C" {
 #endif
 
-usb_status usb_host_dev_mng_attach(usb_host_handle,hub_device_struct_t*, uint8_t, uint8_t, uint8_t, uint8_t, usb_device_instance_handle*);
-usb_status usb_host_dev_mng_detach(usb_host_handle, uint8_t, uint8_t);
-usb_status usb_host_dev_mng_pre_detach(usb_host_handle, uint8_t, uint8_t);
-usb_device_interface_info_struct_t* usb_host_dev_mng_get_interface_info(usb_device_instance_handle dev_handle, interface_descriptor_t* intf);
-uint8_t usb_host_dev_mng_get_address(usb_device_instance_handle dev_handle);
-uint8_t usb_host_dev_mng_get_hubno(usb_device_instance_handle dev_handle);
-uint8_t usb_host_dev_mng_get_portno(usb_device_instance_handle dev_handle);
-uint8_t usb_host_dev_mng_get_speed(usb_device_instance_handle dev_handle);
-uint8_t usb_host_dev_mng_get_attach_state(usb_device_instance_handle dev_handle);
-uint8_t usb_host_dev_mng_get_level(usb_device_instance_handle dev_handle);
-uint16_t usb_host_dev_mng_get_pid(usb_device_instance_handle dev_handle);
-uint16_t usb_host_dev_mng_get_vid(usb_device_instance_handle dev_handle);
-usb_host_handle usb_host_dev_mng_get_host(usb_device_instance_handle dev_handle);
-usb_pipe_handle usb_host_dev_mng_get_control_pipe(usb_device_instance_handle dev_handle);
-bool  usb_host_dev_mng_check_configuration(usb_device_instance_handle dev_handle);
-usb_status usb_host_dev_mng_parse_configuration_descriptor(usb_device_instance_handle dev_handle);
-bool  usb_host_dev_notify(dev_instance_t* dev_ptr, uint32_t event_code);
+extern usb_status usb_host_dev_mng_attach
+(
+  usb_host_handle  handle,
+  hub_device_struct_t* hub_instance,
+  uint8_t            speed,
+  uint8_t            hub_no,
+  uint8_t            port_no,
+  uint8_t           level,
+  usb_device_instance_handle* handle_ptr 
+);
+extern usb_status usb_host_dev_mng_detach(usb_host_handle handle, uint8_t hub_no, uint8_t port_no);
+extern usb_status usb_host_dev_mng_pre_detach(usb_host_handle handle, uint8_t hub_no, uint8_t port_no);
+extern usb_device_interface_info_struct_t* usb_host_dev_mng_get_interface_info(usb_device_instance_handle dev_handle, interface_descriptor_t* intf);
+extern uint8_t usb_host_dev_mng_get_address(usb_device_instance_handle dev_handle);
+extern uint8_t usb_host_dev_mng_get_hubno(usb_device_instance_handle dev_handle);
+extern uint8_t usb_host_dev_mng_get_portno(usb_device_instance_handle dev_handle);
+extern uint8_t usb_host_dev_mng_get_speed(usb_device_instance_handle dev_handle);
+extern uint8_t usb_host_dev_mng_get_attach_state(usb_device_instance_handle dev_handle);
+extern uint8_t usb_host_dev_mng_get_level(usb_device_instance_handle dev_handle);
+extern uint16_t usb_host_dev_mng_get_pid(usb_device_instance_handle dev_handle);
+extern uint16_t usb_host_dev_mng_get_vid(usb_device_instance_handle dev_handle);
+extern usb_host_handle usb_host_dev_mng_get_host(usb_device_instance_handle dev_handle);
+extern usb_pipe_handle usb_host_dev_mng_get_control_pipe(usb_device_instance_handle dev_handle);
+extern bool  usb_host_dev_mng_check_configuration(usb_device_instance_handle dev_handle);
+extern usb_status usb_host_dev_mng_parse_configuration_descriptor(usb_device_instance_handle dev_handle);
+extern bool  usb_host_dev_notify(dev_instance_t* dev_ptr, uint32_t event_code);
 
-uint8_t usb_host_dev_mng_get_hub_speed(usb_device_instance_handle dev_handle);
-uint8_t usb_host_dev_mng_get_hs_hub_no(usb_device_instance_handle dev_handle);
-uint8_t usb_host_dev_mng_get_hs_port_no(usb_device_instance_handle dev_handle);
+extern uint8_t usb_host_dev_mng_get_hub_speed(usb_device_instance_handle dev_handle);
+extern uint8_t usb_host_dev_mng_get_hs_hub_no(usb_device_instance_handle dev_handle);
+extern uint8_t usb_host_dev_mng_get_hs_port_no(usb_device_instance_handle dev_handle);
+extern uint8_t usb_host_dev_mng_get_hub_thinktime(usb_device_instance_handle dev_handle);
+extern hub_device_struct_t* usb_host_dev_mng_get_hub_handle(usb_device_instance_handle dev_handle);
+extern bool  usb_host_driver_info_match(dev_instance_t* dev_ptr, interface_descriptor_t* intf_ptr, usb_host_driver_info_t* info_ptr);
 
-#ifdef USBCFG_OTG
-extern uint32_t usb_otg_host_on_detach_event(usb_otg_handle  otg_handle);
-#endif
 #ifdef __cplusplus
 }
 #endif

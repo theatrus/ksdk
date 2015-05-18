@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_mpu_hal.h"
+#if FSL_FEATURE_SOC_MPU_COUNT
 
 /*! 
  * @addtogroup mpu_driver
@@ -45,68 +46,10 @@
  *******************************************************************************/
 
 /*! @brief Table of base addresses for MPU instances. */
-extern const uint32_t g_mpuBaseAddr[];
+extern MPU_Type * const g_mpuBase[];
 
  /*! @brief Table to save MPU IRQ enumeration numbers defined in the CMSIS header file. */
-extern const IRQn_Type g_mpuIrqId[HW_MPU_INSTANCE_COUNT];
-
-/*! 
- * @brief Data c for the MPU region access permission initialize
- *
- * This structure is used when calling the MPU_DRV_Init function.
- *
- */
-typedef struct MpuAccessRights{
-    uint32_t m0UserMode           : 3;  /*!< master0 access permission in user mode */
-    uint32_t m0SupervisorMode     : 2;  /*!< master0 access permission in supervisor mode */
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-    uint32_t m0Process_identifier : 1;  /*!< master0 process identifier enable value */
-#else
-    uint32_t reserved1             : 1;
-#endif
-    uint32_t m1UserMode           : 3;  /*!< master1 access permission in user mode */
-    uint32_t m1SupervisorMode     : 2;  /*!< master1 access permission in supervisor mode */
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-    uint32_t m1Process_identifier : 1;  /*!< master1 process identifier enable value */
-#else
-    uint32_t reserved2            : 1;
-#endif
-    uint32_t m2UserMode           : 3;  /*!< master2 access permission in user mode */
-    uint32_t m2SupervisorMode     : 2;  /*!< master2 access permission in supervisor mode */
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-    uint32_t m2Process_identifier : 1;  /*!< master2 process identifier enable value */
-#else
-    uint32_t resreved3            : 1;
-#endif
-    uint32_t m3UserMode           : 3;  /*!< master3 access permission in user mode */
-    uint32_t m3SupervisorMode     : 2;  /*!< master3 access permission in supervisor mode */
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-    uint32_t m3Process_identifier : 1;  /*!< master3 process identifier enable value */
-#else
-    uint32_t reserved4            : 1;
-#endif
-    uint32_t m4WriteControl       : 1;  /*!< master4 write access permission */
-    uint32_t m4ReadControl        : 1;  /*!< master4 read access permission */
-    uint32_t m5WriteControl       : 1;  /*!< master5 write access permission */
-    uint32_t m5ReadControl        : 1;  /*!< master5 read access permission */
-    uint32_t m6WriteControl       : 1;  /*!< master6 write access permission */
-    uint32_t m6ReadControl        : 1;  /*!< master6 read access permission */
-    uint32_t m7WriteControl       : 1;  /*!< master7 write access permission */
-    uint32_t m7ReadControl        : 1;  /*!< master7 read access permission */
-}mpu_access_rights_t;
-
-/*! 
- * @brief Data v for MPU region initialize
- *
- * This structure is used when calling the MPU_DRV_Init function.
- * 
- */
-typedef struct MpuRegionConfig{
-    mpu_region_num      regionNum;     /*!< MPU region number */
-    uint32_t            startAddr;     /*!< memory region start address */
-    uint32_t            endAddr;       /*!< memory region end address */
-    mpu_access_rights_t accessRights;  /*!< all masters access permission */
-}mpu_region_config_t;
+extern const IRQn_Type g_mpuIrqId[MPU_INSTANCE_COUNT];
 
 /*! 
  * @brief Data The section describes the programming interface of the for MPU region initialization
@@ -115,103 +58,117 @@ typedef struct MpuRegionConfig{
  * 
  */
 typedef struct MpuUserConfig{
-    mpu_region_config_t   regionConfig; /*!< region access permission */
-    struct MpuUserConfig  *next;        /*!< pointer to the next structure */
+    mpu_region_config_t  regionConfig;  /*!< region access permission      */
+    struct MpuUserConfig *next;         /*!< pointer to the next structure */
 }mpu_user_config_t;
 
+/*!
+ * @brief MPU driver user call back function.
+ *
+ * The contents of this structure provides a callback function.
+ */
+
+/*******************************************************************************
+ * API
+ *******************************************************************************/
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+/*! 
+ * @name MPU Driver
+ * @{
+ */
+
+  
+/*!
+ * @brief Initializes the MPU driver.
+ *
+ * @param instance The MPU peripheral instance number.
+ * @param userConfigPtr The pointer to the MPU user configure structure, see #mpu_user_config_t.
+ * @param userStatePtr The pointer of run time structure.
+ * @return kStatus_MPU_Success means success. Otherwise, means failure.
+ */
+ mpu_status_t MPU_DRV_Init(uint32_t instance, const mpu_user_config_t *userConfigPtr);
+
+/*!
+ * @brief De-initializes the MPU region.
+ *
+ * @param instance The MPU peripheral instance number.  
+ * @return kStatus_MPU_Success means success. Otherwise, means failure.
+ */
+void MPU_DRV_Deinit(uint32_t instance);
+
+/*!
+ * @brief Configures the MPU region.
+ *
+ * @param instance The MPU peripheral instance number.
+ * @param regionConfigPtr The pointer to the MPU user configure structure, see #mpu_region_config_t.
+ * @return kStatus_MPU_Success means success. Otherwise, means failure.
+ */
+mpu_status_t MPU_DRV_SetRegionConfig(uint32_t instance, const mpu_region_config_t *regionConfigPtr);
+
+/*!
+ * @brief Sets region start address.
+ *
+ * @param instance The MPU peripheral instance number.
+ * @param regionNum The region number.
+ * @param startAddr Region start address.
+ * @param endAddr Region end address.
+ */
+void MPU_DRV_SetRegionAddr(uint32_t instance, mpu_region_num_t regionNum, uint32_t startAddr, uint32_t endAddr);
+
+/*!
+ * @brief Configures low master access permission.
+ *
+ * @param instance The MPU peripheral instance number.
+ * @param regionNum The MPU region number.
+ * @param masterNum The MPU master number.
+ * @param accessRightsPtr A pointer to access permission structure.
+ * @return kStatus_MPU_Success means success. Otherwise, means failure.
+ */
+mpu_status_t MPU_DRV_SetLowMasterAccessRights(uint32_t instance, mpu_region_num_t regionNum, mpu_master_t masterNum, const mpu_low_masters_access_rights_t *accessRightsPtr);
+
+/*!
+ * @brief Configures high master access permission.
+ *
+ * @param instance The MPU peripheral instance number.
+ * @param regionNum The MPU region number.
+ * @param masterNum The MPU master number.
+ * @param accessRightsPtr A pointer to access permission structure.
+ * @return kStatus_MPU_Success means success. Otherwise, means failure.
+ */
+mpu_status_t MPU_DRV_SetHighMasterAccessRights(uint32_t instance, mpu_region_num_t regionNum, mpu_master_t masterNum, const mpu_high_masters_access_rights_t *accessRightsPtr);
+
  /*!
-  * @brief MPU driver user call back function.
-  *
-  * The contents of this structure provides a callback function.
-  */
- 
- /*******************************************************************************
-  * API
-  *******************************************************************************/
- 
- #if defined(__cplusplus)
- extern "C" {
- #endif
- 
- /*! 
-  * @name MPU Driver
-  * @{
-  */
- 
-   
+ * @brief Sets the MPU region valid.
+ *
+ * @param instance The MPU peripheral instance number.
+ * @param regionNum MPU region number.
+ * @param enable Enables or disables region.
+ */
+void MPU_DRV_SetRegionValidCmd(uint32_t instance, mpu_region_num_t regionNum, bool enable);
+
  /*!
-  * @brief Initializes the MPU driver.
-  *
-  * @param instance The MPU peripheral instance number.
-  * @param userConfigPtr The pointer to the MPU user configure structure, see #mpu_user_config_t.
-  * @param userStatePtr The pointer of run time structure.
-  * @return kStatus_MPU_Success means success. Otherwise, means failure.
-  */
-  mpu_status_t MPU_DRV_Init(uint32_t instance, mpu_user_config_t *userConfigPtr);
- 
- /*!
-  * @brief Initializes the MPU region.
-  *
-  * @param instance The MPU peripheral instance number.
-  * @param regionConfigPtr The pointer to the MPU user configure structure, see #mpu_user_config_t.
-  * @return kStatus_MPU_Success means success. Otherwise, means failure.
-  */
- mpu_status_t MPU_DRV_RegionInit(uint32_t instance, mpu_region_config_t *regionConfigPtr);
- 
- /*!
-  * @brief Deinitializes the MPU region.
-  *
-  * @param instance The MPU peripheral instance number.  
-  * @return kStatus_MPU_Success means success. Otherwise, means failure.
-  */
- mpu_status_t MPU_DRV_Deinit(uint32_t instance);
- 
- /*!
-  * @brief Configures the MPU region access permission.
-  *
-  * @param instance The MPU peripheral instance number.
-  * @param regionNum The MPU region number.
-  * @param accessRights A pointer to access permission structure.
-  * @return kStatus_MPU_Success means success. Otherwise, means failure.
-  */
- mpu_status_t MPU_DRV_SetRegionAccessPermission(uint32_t instance, mpu_region_num regionNum, mpu_access_rights_t accessRights);
- 
-  /*!
-  * @brief Gets the MPU region access permission.
-  *
-  * @param instance The MPU peripheral instance number.
-  * @param regionNum The MPU region number.
-  * @return access permission.
-  */
- mpu_access_rights_t MPU_DRV_GetRegionAccessPermission(uint32_t instance, mpu_region_num regionNum);
- 
- /*!
-  * @brief Checks whether the MPU region is valid.
-  *
-  * @param instance The MPU peripheral instance number.
-  * @param regionNum MPU region number.
-  * @return bool value.
-  */
- bool MPU_DRV_IsRegionValid(uint32_t instance, mpu_region_num regionNum);
- 
-  /*!
-  * @brief Sets the MPU region valid.
-  *
-  * @param instance The MPU peripheral instance number.
-  * @param regionNum MPU region number.
-  */
- mpu_status_t MPU_DRV_SetRegionValid(uint32_t instance, mpu_region_num regionNum);
- 
- /*@}*/
- 
- #if defined(__cplusplus)
- }
- #endif
- 
- /*! @}*/
- 
- #endif /* __FSL_MPU_H__*/
- /*******************************************************************************
-  * EOF
-  *******************************************************************************/
+ * @brief Gets the MPU access error detail information.
+ *
+ * @param instance The MPU peripheral instance number.
+ * @param errInfoArrayPtr A pointer to access error info structure.
+ */
+mpu_status_t MPU_DRV_GetDetailErrorAccessInfo(uint32_t instance,  mpu_access_err_info_t *errInfoArrayPtr);
+
+/*@}*/
+
+#if defined(__cplusplus)
+}
+#endif
+
+/*! @}*/
+
+#endif
+#endif /* __FSL_MPU_H__*/
+/*******************************************************************************
+ * EOF
+ *******************************************************************************/
 

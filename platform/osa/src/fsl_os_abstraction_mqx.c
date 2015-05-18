@@ -55,13 +55,19 @@ osa_status_t OSA_TaskCreate(task_t          task,
                          bool            usesFloat,
                          task_handler_t *handler)
 {
-    taskinit_t task_parameters = {
-        .exec       = task,
-        .stacksize  = stackSize,
-        .stackaddr  = stackSize == 0 ? NULL : stackMem,
-        .priority   = PRIORITY_OSA_TO_RTOS(priority),
-        .exec_param = (void *)param,
-    };
+    taskinit_t task_parameters;
+    task_parameters.exec       = task;
+    task_parameters.stacksize  = stackSize;
+    task_parameters.stackaddr  = stackSize == 0 ? NULL : stackMem;
+    task_parameters.priority   = PRIORITY_OSA_TO_RTOS(priority);
+    task_parameters.name       = (char *)name;
+    task_parameters.exec_param = (void *)param;
+    task_parameters.attributes = MQX_AUTO_START_TASK |
+#if MQX_HAS_TIME_SLICE
+                                 MQX_TIME_SLICE_TASK |
+#endif
+                                 (usesFloat ? MQX_FLOATING_POINT_TASK : 0U);
+    task_parameters.time_slice = 0U;
 
     *handler = create_task(&task_parameters);
 
@@ -789,24 +795,16 @@ uint32_t OSA_TimeGetMsec(void)
  * Description   : This function is used to install interrupt handler.
  *
  *END**************************************************************************/
-osa_status_t OSA_InstallIntHandler (int32_t IRQNumber,
-                                                        void (*handler)(void))
+osa_int_handler_t OSA_InstallIntHandler(int32_t IRQNumber,
+                                        osa_int_handler_t handler)
 {
-    // For MISRA 2004 11.1.
 #if defined ( __IAR_SYSTEMS_ICC__ )
 _Pragma ("diag_suppress = Pm138")
 #endif
-    if (!_int_install_isr(IRQNumber, (INT_ISR_FPTR)handler, NULL))
+    return (osa_int_handler_t)_int_install_isr(IRQNumber, (INT_ISR_FPTR)handler, NULL);
 #if defined ( __IAR_SYSTEMS_ICC__ )
-_Pragma ("diag_default = PM138")
+_Pragma ("diag_remark = PM138")
 #endif
-    {
-        return kStatus_OSA_Error;
-    }
-    else
-    {
-        return kStatus_OSA_Success;
-    }
 }
 
 /*FUNCTION**********************************************************************

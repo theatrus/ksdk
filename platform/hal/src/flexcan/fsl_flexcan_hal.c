@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,6 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "fsl_flexcan_hal.h"
+#if FSL_FEATURE_SOC_FLEXCAN_COUNT
 
 /*******************************************************************************
  * Variables
@@ -36,7 +37,14 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
+#define FLEXCAN_RX_FIFO_ID_FILTER_FORMATAB_RTR_SHIFT  (31U)          /*!< FlexCAN RX FIFO ID filter*/
+                                                                     /*! format A&B RTR mask.*/
+#define FLEXCAN_RX_FIFO_ID_FILTER_FORMATAB_IDE_SHIFT  (30U)          /*!< FlexCAN RX FIFO ID filter*/
+                                                                     /*! format A&B IDE mask.*/
+#define FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_RTR_SHIFT  (15U)           /*!< FlexCAN RX FIFO ID filter*/
+                                                                     /*! format B RTR-2 mask.*/
+#define FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_IDE_SHIFT  (14U)           /*!< FlexCAN RX FIFO ID filter*/
+                                                                     /*! format B IDE-2 mask.*/
 #define FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_MASK    (0x3FFFFFFFU)  /*!< FlexCAN RX FIFO ID filter*/
                                                                      /*! format A extended mask.*/
 #define FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_SHIFT   (1U)           /*!< FlexCAN RX FIFO ID filter*/
@@ -51,7 +59,7 @@
                                                                      /*! format B extended mask.*/
 #define FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT2  (0U)           /*!< FlexCAN RX FIFO ID filter*/
                                                                      /*! format B extended mask.*/
-#define FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK    (0x3FF8U)      /*!< FlexCAN RX FIFO ID filter*/
+#define FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK    (0x7FFU)      /*!< FlexCAN RX FIFO ID filter*/
                                                                      /*! format B standard mask.*/
 #define FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT1  (19U)          /*!< FlexCAN RX FIFO ID filter*/
                                                                      /*! format B standard shift1.*/
@@ -79,44 +87,44 @@
  *
  * Function Name : FLEXCAN_HAL_Enable
  * Description   : Enable FlexCAN module.
- * This function will enable FlexCAN module clock.
+ * This function will enable FlexCAN module.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_Enable(uint32_t canBaseAddr)
+flexcan_status_t FLEXCAN_HAL_Enable(CAN_Type * base)
 {
     /* Check for low power mode*/
-    if(BR_CAN_MCR_LPMACK(canBaseAddr))
+    if(CAN_BRD_MCR_LPMACK(base))
     {
         /* Enable clock*/
-        HW_CAN_MCR_CLR(canBaseAddr, BM_CAN_MCR_MDIS);
+        CAN_CLR_MCR(base, CAN_MCR_MDIS_MASK);
         /* Wait until enabled*/
-        while (BR_CAN_MCR_LPMACK(canBaseAddr)){}
+        while (CAN_BRD_MCR_LPMACK(base)){}
     }
 
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : FLEXCAN_HAL_Disable
  * Description   : Disable FlexCAN module.
- * This function will disable FlexCAN module clock.
+ * This function will disable FlexCAN module.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_Disable(uint32_t canBaseAddr)
+flexcan_status_t FLEXCAN_HAL_Disable(CAN_Type * base)
 {
     /* To access the memory mapped registers*/
     /* Entre disable mode (hard reset).*/
-    if(BR_CAN_MCR_MDIS(canBaseAddr) == 0x0)
+    if(CAN_BRD_MCR_MDIS(base) == 0x0)
     {
         /* Clock disable (module)*/
-        BW_CAN_MCR_MDIS(canBaseAddr, 0x1);
+        CAN_BWR_MCR_MDIS(base, 0x1);
 
         /* Wait until disable mode acknowledged*/
-        while (!(BR_CAN_MCR_LPMACK(canBaseAddr))){}
+        while (!(CAN_BRD_MCR_LPMACK(base))){}
     }
 
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -128,25 +136,11 @@ flexcan_status_t FLEXCAN_HAL_Disable(uint32_t canBaseAddr)
  *
  *END**************************************************************************/
 flexcan_status_t FLEXCAN_HAL_SelectClock(
-    uint32_t canBaseAddr,
+    CAN_Type * base,
     flexcan_clk_source_t clk)
 {
-    if (clk == kFlexCanClkSource_Ipbus)
-    {
-        /* Internal bus clock (fsys/2)*/
-        BW_CAN_CTRL1_CLKSRC(canBaseAddr, 0x1);
-    }
-    else if (clk == kFlexCanClkSource_Osc)
-    {
-        /* External clock*/
-        BW_CAN_CTRL1_CLKSRC(canBaseAddr, 0x0);
-    }
-    else
-    {
-       return (kStatus_FLEXCAN_InvalidArgument);
-    }
-
-    return (kStatus_FLEXCAN_Success);
+    CAN_BWR_CTRL1_CLKSRC(base, clk);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -158,42 +152,33 @@ flexcan_status_t FLEXCAN_HAL_SelectClock(
  * if needed, mask all mask bits, and disable all MB interrupts.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_Init(uint32_t canBaseAddr)
+flexcan_status_t FLEXCAN_HAL_Init(CAN_Type * base)
 {
     /* Reset the FLEXCAN*/
-    BW_CAN_MCR_SOFTRST(canBaseAddr, 0x1);
+    CAN_BWR_MCR_SOFTRST(base, 0x1);
 
     /* Wait for reset cycle to complete*/
-    while (BR_CAN_MCR_SOFTRST(canBaseAddr)){}
+    while (CAN_BRD_MCR_SOFTRST(base)){}
 
     /* Set Freeze, Halt*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* check for freeze Ack*/
-    while ((!BR_CAN_MCR_FRZACK(canBaseAddr)) ||
-       (!BR_CAN_MCR_NOTRDY(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* Rx global mask*/
-    HW_CAN_RXMGMASK_WR(canBaseAddr, CAN_ID_EXT(CAN_RXMGMASK_MG_MASK));
+    CAN_WR_RXMGMASK(base, CAN_ID_EXT(CAN_RXMGMASK_MG_MASK));
 
     /* Rx reg 14 mask*/
-    HW_CAN_RX14MASK_WR(canBaseAddr, CAN_ID_EXT(CAN_RX14MASK_RX14M_MASK));
+    CAN_WR_RX14MASK(base, CAN_ID_EXT(CAN_RX14MASK_RX14M_MASK));
 
     /* Rx reg 15 mask*/
-    HW_CAN_RX15MASK_WR(canBaseAddr, CAN_ID_EXT(CAN_RX15MASK_RX15M_MASK));
+    CAN_WR_RX15MASK(base, CAN_ID_EXT(CAN_RX15MASK_RX15M_MASK));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while(BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 
     /* Disable all MB interrupts*/
-    HW_CAN_IMASK1_WR(canBaseAddr, 0x0);
+    CAN_WR_IMASK1(base, 0x0);
 
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -209,32 +194,23 @@ flexcan_status_t FLEXCAN_HAL_Init(uint32_t canBaseAddr)
  *
  *END**************************************************************************/
 void FLEXCAN_HAL_SetTimeSegments(
-    uint32_t canBaseAddr,
-    flexcan_time_segment_t *time_seg)
+    CAN_Type * base,
+    flexcan_time_segment_t *timeSeg)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while(!(BR_CAN_MCR_FRZACK(canBaseAddr))) {}
-
+    FLEXCAN_HAL_EnterFreezeMode(base);
     /* Set FlexCAN time segments*/
-    HW_CAN_CTRL1_CLR(canBaseAddr, (CAN_CTRL1_PROPSEG_MASK | CAN_CTRL1_PSEG2_MASK |
+    CAN_CLR_CTRL1(base, (CAN_CTRL1_PROPSEG_MASK | CAN_CTRL1_PSEG2_MASK |
                                 CAN_CTRL1_PSEG1_MASK | CAN_CTRL1_PRESDIV_MASK) |
                                 CAN_CTRL1_RJW_MASK);
-    HW_CAN_CTRL1_SET(canBaseAddr, (CAN_CTRL1_PROPSEG(time_seg->propseg) |
-                                CAN_CTRL1_PSEG2(time_seg->pseg2) |
-                                CAN_CTRL1_PSEG1(time_seg->pseg1) |
-                                CAN_CTRL1_PRESDIV(time_seg->pre_divider) |
-                                CAN_CTRL1_RJW(time_seg->rjw)));
+    CAN_SET_CTRL1(base, (CAN_CTRL1_PROPSEG(timeSeg->propSeg) |
+                                CAN_CTRL1_PSEG2(timeSeg->phaseSeg2) |
+                                CAN_CTRL1_PSEG1(timeSeg->phaseSeg1) |
+                                CAN_CTRL1_PRESDIV(timeSeg->preDivider) |
+                                CAN_CTRL1_RJW(timeSeg->rJumpwidth)));
 
     /* De-assert Freeze mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while(BR_CAN_MCR_FRZACK(canBaseAddr)){}
+     FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -245,19 +221,19 @@ void FLEXCAN_HAL_SetTimeSegments(
  *
  *END**************************************************************************/
 void FLEXCAN_HAL_GetTimeSegments(
-    uint32_t canBaseAddr,
-    flexcan_time_segment_t *time_seg)
+    CAN_Type * base,
+    flexcan_time_segment_t *timeSeg)
 {
-    time_seg->pre_divider = BR_CAN_CTRL1_PRESDIV(canBaseAddr);
-    time_seg->propseg = BR_CAN_CTRL1_PROPSEG(canBaseAddr);
-    time_seg->pseg1 = BR_CAN_CTRL1_PSEG1(canBaseAddr);
-    time_seg->pseg2 = BR_CAN_CTRL1_PSEG2(canBaseAddr);
-    time_seg->rjw = BR_CAN_CTRL1_RJW(canBaseAddr);
+    timeSeg->preDivider = CAN_BRD_CTRL1_PRESDIV(base);
+    timeSeg->propSeg = CAN_BRD_CTRL1_PROPSEG(base);
+    timeSeg->phaseSeg1 = CAN_BRD_CTRL1_PSEG1(base);
+    timeSeg->phaseSeg2 = CAN_BRD_CTRL1_PSEG2(base);
+    timeSeg->rJumpwidth = CAN_BRD_CTRL1_RJW(base);
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_SetMbTx
+ * Function Name : FLEXCAN_HAL_SetTxMsgBuff
  * Description   : Configure a message buffer for transmission.
  * This function will first check if RX FIFO is enabled. If RX FIFO is enabled,
  * the function will make sure if the MB requested is not occupied by RX FIFO
@@ -266,138 +242,138 @@ void FLEXCAN_HAL_GetTimeSegments(
  * transmission.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_SetMbTx(
-    uint32_t canBaseAddr,
-    uint32_t mb_idx,
-    flexcan_mb_code_status_t *cs,
-    uint32_t msg_id,
-    uint8_t *mb_data)
+flexcan_status_t FLEXCAN_HAL_SetTxMsgBuff(
+    CAN_Type * base,
+    uint32_t msgBuffIdx,
+    flexcan_msgbuff_code_status_t *cs,
+    uint32_t msgId,
+    uint8_t *msgData)
 {
     uint32_t i;
     uint32_t val1, val2 = 1, temp, temp1;
     volatile CAN_Type *flexcan_reg_ptr;
 
-    flexcan_reg_ptr = ((CAN_Type *)canBaseAddr);
+    flexcan_reg_ptr = ((CAN_Type *)base);
     if (NULL == flexcan_reg_ptr)
     {
-        return (kStatus_FLEXCAN_InvalidArgument);
+        return kStatus_FLEXCAN_InvalidArgument;
     }
 
-    if (mb_idx >= BR_CAN_MCR_MAXMB(canBaseAddr))
+    if (msgBuffIdx >= CAN_BRD_MCR_MAXMB(base))
     {
-        return (kStatus_FLEXCAN_OutOfRange);
+        return kStatus_FLEXCAN_OutOfRange;
     }
 
     /* Check if RX FIFO is enabled*/
-    if (BR_CAN_MCR_RFEN(canBaseAddr))
+    if (CAN_BRD_MCR_RFEN(base))
     {
         /* Get the number of RX FIFO Filters*/
-        val1 = (BR_CAN_CTRL2_RFFN(canBaseAddr));
+        val1 = (CAN_BRD_CTRL2_RFFN(base));
         /* Get the number if MBs occupied by RX FIFO and ID filter table*/
         /* the Rx FIFO occupies the memory space originally reserved for MB0-5*/
         /* Every number of RFFN means 8 number of RX FIFO filters*/
         /* and every 4 number of RX FIFO filters occupied one MB*/
-        val2 = 6 + (val1 + 1) * 8 / 4;
+        val2 = RxFifoOcuppiedLastMsgBuff(val1);
 
-        if (mb_idx <= (val2 - 1))
+        if (msgBuffIdx <= val2)
         {
-            return (kStatus_FLEXCAN_InvalidArgument);
+            return kStatus_FLEXCAN_InvalidArgument;
         }
     }
 
     /* Copy user's buffer into the message buffer data area*/
-    if (mb_data != NULL)
+    if (msgData != NULL)
     {
-        flexcan_reg_ptr->MB[mb_idx].WORD0 = 0x0;
-        flexcan_reg_ptr->MB[mb_idx].WORD1 = 0x0;
+        flexcan_reg_ptr->MB[msgBuffIdx].WORD0 = 0x0;
+        flexcan_reg_ptr->MB[msgBuffIdx].WORD1 = 0x0;
 
-        for (i = 0; i < cs->data_length; i++ )
+        for (i = 0; i < cs->dataLen; i++ )
         {
-            temp1 = (*(mb_data + i));
+            temp1 = (*(msgData + i));
             if (i < 4)
             {
                 temp = temp1 << ((3 - i) * 8);
-                flexcan_reg_ptr->MB[mb_idx].WORD0 |= temp;
+                flexcan_reg_ptr->MB[msgBuffIdx].WORD0 |= temp;
             }
             else
             {
                 temp = temp1 << ((7 - i) * 8);
-                flexcan_reg_ptr->MB[mb_idx].WORD1 |= temp;
+                flexcan_reg_ptr->MB[msgBuffIdx].WORD1 |= temp;
             }
         }
     }
 
     /* Set the ID according the format structure*/
-    if (cs->msg_id_type == kFlexCanMbId_Ext)
+    if (cs->msgIdType == kFlexCanMsgIdExt)
     {
         /* ID [28-0]*/
-        flexcan_reg_ptr->MB[mb_idx].ID &= ~(CAN_ID_STD_MASK | CAN_ID_EXT_MASK);
-        flexcan_reg_ptr->MB[mb_idx].ID |= (msg_id & (CAN_ID_STD_MASK | CAN_ID_EXT_MASK));
+        flexcan_reg_ptr->MB[msgBuffIdx].ID &= ~(CAN_ID_STD_MASK | CAN_ID_EXT_MASK);
+        flexcan_reg_ptr->MB[msgBuffIdx].ID |= (msgId & (CAN_ID_STD_MASK | CAN_ID_EXT_MASK));
 
         /* Set IDE*/
-        flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_IDE_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_IDE_MASK;
 
         /* Clear SRR bit*/
-        flexcan_reg_ptr->MB[mb_idx].CS &= ~CAN_CS_SRR_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~CAN_CS_SRR_MASK;
 
         /* Set the length of data in bytes*/
-        flexcan_reg_ptr->MB[mb_idx].CS &= ~CAN_CS_DLC_MASK;
-        flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_DLC(cs->data_length);
+        flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~CAN_CS_DLC_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_DLC(cs->dataLen);
 
         /* Set MB CODE*/
         /* Reset the code*/
-        if (cs->code != kFlexCanTX_NotUsed)
+        if (cs->code != kFlexCanTXNotUsed)
         {
-            if (cs->code == kFlexCanTX_Remote)
+            if (cs->code == kFlexCanTXRemote)
             {
                 /* Set RTR bit*/
-                flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_RTR_MASK;
-                cs->code = kFlexCanTX_Data;
+                flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_RTR_MASK;
+                cs->code = kFlexCanTXData;
             }
 
             /* Reset the code*/
-            flexcan_reg_ptr->MB[mb_idx].CS &= ~(CAN_CS_CODE_MASK);
+            flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~(CAN_CS_CODE_MASK);
 
             /* Activating message buffer*/
-            flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_CODE(cs->code);
+            flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_CODE(cs->code);
         }
     }
-    else if(cs->msg_id_type == kFlexCanMbId_Std)
+    else if(cs->msgIdType == kFlexCanMsgIdStd)
     {
         /* ID[28-18]*/
-        flexcan_reg_ptr->MB[mb_idx].ID &= ~CAN_ID_STD_MASK;
-        flexcan_reg_ptr->MB[mb_idx].ID |= CAN_ID_STD(msg_id);
+        flexcan_reg_ptr->MB[msgBuffIdx].ID &= ~CAN_ID_STD_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].ID |= CAN_ID_STD(msgId);
 
         /* make sure IDE and SRR are not set*/
-        flexcan_reg_ptr->MB[mb_idx].CS &= ~(CAN_CS_IDE_MASK | CAN_CS_SRR_MASK);
+        flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~(CAN_CS_IDE_MASK | CAN_CS_SRR_MASK);
 
         /* Set the length of data in bytes*/
-        flexcan_reg_ptr->MB[mb_idx].CS &= ~CAN_CS_DLC_MASK;
-        flexcan_reg_ptr->MB[mb_idx].CS |= (cs->data_length) << CAN_CS_DLC_SHIFT;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~CAN_CS_DLC_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS |= (cs->dataLen) << CAN_CS_DLC_SHIFT;
 
         /* Set MB CODE*/
-        if (cs->code != kFlexCanTX_NotUsed)
+        if (cs->code != kFlexCanTXNotUsed)
         {
-            if (cs->code == kFlexCanTX_Remote)
+            if (cs->code == kFlexCanTXRemote)
             {
                 /* Set RTR bit*/
-                flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_RTR_MASK;
-                cs->code = kFlexCanTX_Data;
+                flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_RTR_MASK;
+                cs->code = kFlexCanTXData;
             }
 
             /* Reset the code*/
-            flexcan_reg_ptr->MB[mb_idx].CS &= ~CAN_CS_CODE_MASK;
+            flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~CAN_CS_CODE_MASK;
 
             /* Set the code*/
-            flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_CODE(cs->code);
+            flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_CODE(cs->code);
         }
     }
     else
     {
-        return (kStatus_FLEXCAN_InvalidArgument);
+        return kStatus_FLEXCAN_InvalidArgument;
     }
 
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -410,98 +386,98 @@ flexcan_status_t FLEXCAN_HAL_SetMbTx(
  * required for receiving.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_SetMbRx(
-    uint32_t canBaseAddr,
-    uint32_t mb_idx,
-    flexcan_mb_code_status_t *cs,
-    uint32_t msg_id)
+flexcan_status_t FLEXCAN_HAL_SetRxMsgBuff(
+    CAN_Type * base,
+    uint32_t msgBuffIdx,
+    flexcan_msgbuff_code_status_t *cs,
+    uint32_t msgId)
 {
     uint32_t val1, val2 = 1;
     volatile CAN_Type *flexcan_reg_ptr;
 
-    flexcan_reg_ptr = ((CAN_Type *)canBaseAddr);
+    flexcan_reg_ptr = ((CAN_Type *)base);
     if (NULL == flexcan_reg_ptr)
     {
-        return (kStatus_FLEXCAN_InvalidArgument);
+        return kStatus_FLEXCAN_InvalidArgument;
     }
 
-    if (mb_idx >= BR_CAN_MCR_MAXMB(canBaseAddr))
+    if (msgBuffIdx >= CAN_BRD_MCR_MAXMB(base))
     {
-        return (kStatus_FLEXCAN_OutOfRange);
+        return kStatus_FLEXCAN_OutOfRange;
     }
 
     /* Check if RX FIFO is enabled*/
-    if (BR_CAN_MCR_RFEN(canBaseAddr))
+    if (CAN_BRD_MCR_RFEN(base))
     {
         /* Get the number of RX FIFO Filters*/
-        val1 = BR_CAN_CTRL2_RFFN(canBaseAddr);
+        val1 = CAN_BRD_CTRL2_RFFN(base);
         /* Get the number if MBs occupied by RX FIFO and ID filter table*/
         /* the Rx FIFO occupies the memory space originally reserved for MB0-5*/
         /* Every number of RFFN means 8 number of RX FIFO filters*/
         /* and every 4 number of RX FIFO filters occupied one MB*/
-        val2 = 6 + (val1 + 1) * 8 / 4;
+        val2 = RxFifoOcuppiedLastMsgBuff(val1);
 
-        if (mb_idx <= (val2 - 1))
+        if (msgBuffIdx <= val2)
         {
-            return (kStatus_FLEXCAN_InvalidArgument);
+            return kStatus_FLEXCAN_InvalidArgument;
         }
     }
 
     /* Set the ID according the format structure*/
-    if (cs->msg_id_type == kFlexCanMbId_Ext)
+    if (cs->msgIdType == kFlexCanMsgIdExt)
     {
         /* Set IDE*/
-        flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_IDE_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_IDE_MASK;
 
         /* Clear SRR bit*/
-        flexcan_reg_ptr->MB[mb_idx].CS &= ~CAN_CS_SRR_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~CAN_CS_SRR_MASK;
 
         /* Set the length of data in bytes*/
-        flexcan_reg_ptr->MB[mb_idx].CS &= ~CAN_CS_DLC_MASK;
-        flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_DLC(cs->data_length);
+        flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~CAN_CS_DLC_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_DLC(cs->dataLen);
 
         /* ID [28-0]*/
-        flexcan_reg_ptr->MB[mb_idx].ID &= ~(CAN_ID_STD_MASK | CAN_ID_EXT_MASK);
-        flexcan_reg_ptr->MB[mb_idx].ID |= (msg_id & (CAN_ID_STD_MASK | CAN_ID_EXT_MASK));
+        flexcan_reg_ptr->MB[msgBuffIdx].ID &= ~(CAN_ID_STD_MASK | CAN_ID_EXT_MASK);
+        flexcan_reg_ptr->MB[msgBuffIdx].ID |= (msgId & (CAN_ID_STD_MASK | CAN_ID_EXT_MASK));
 
         /* Set MB CODE*/
-        if (cs->code != kFlexCanRX_NotUsed)
+        if (cs->code != kFlexCanRXNotUsed)
         {
-            flexcan_reg_ptr->MB[mb_idx].CS &= ~CAN_CS_CODE_MASK;
-            flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_CODE(cs->code);
+            flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~CAN_CS_CODE_MASK;
+            flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_CODE(cs->code);
         }
     }
-    else if(cs->msg_id_type == kFlexCanMbId_Std)
+    else if(cs->msgIdType == kFlexCanMsgIdStd)
     {
         /* Make sure IDE and SRR are not set*/
-        flexcan_reg_ptr->MB[mb_idx].CS &= ~(CAN_CS_IDE_MASK | CAN_CS_SRR_MASK);
+        flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~(CAN_CS_IDE_MASK | CAN_CS_SRR_MASK);
 
         /* Set the length of data in bytes*/
-        flexcan_reg_ptr->MB[mb_idx].CS &= ~CAN_CS_DLC_MASK;
-        flexcan_reg_ptr->MB[mb_idx].CS |= (cs->data_length) << CAN_CS_DLC_SHIFT;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~CAN_CS_DLC_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].CS |= (cs->dataLen) << CAN_CS_DLC_SHIFT;
 
         /* ID[28-18]*/
-        flexcan_reg_ptr->MB[mb_idx].ID &= ~CAN_ID_STD_MASK;
-        flexcan_reg_ptr->MB[mb_idx].ID |= CAN_ID_STD(msg_id);
+        flexcan_reg_ptr->MB[msgBuffIdx].ID &= ~CAN_ID_STD_MASK;
+        flexcan_reg_ptr->MB[msgBuffIdx].ID |= CAN_ID_STD(msgId);
 
         /* Set MB CODE*/
-        if (cs->code != kFlexCanRX_NotUsed)
+        if (cs->code != kFlexCanRXNotUsed)
         {
-            flexcan_reg_ptr->MB[mb_idx].CS &= ~CAN_CS_CODE_MASK;
-            flexcan_reg_ptr->MB[mb_idx].CS |= CAN_CS_CODE(cs->code);
+            flexcan_reg_ptr->MB[msgBuffIdx].CS &= ~CAN_CS_CODE_MASK;
+            flexcan_reg_ptr->MB[msgBuffIdx].CS |= CAN_CS_CODE(cs->code);
         }
     }
     else
     {
-        return (kStatus_FLEXCAN_InvalidArgument);
+        return kStatus_FLEXCAN_InvalidArgument;
     }
 
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_GetMb
+ * Function Name : FLEXCAN_HAL_GetMsgBuff
  * Description   : Get a message buffer field values.
  * This function will first check if RX FIFO is enabled. If RX FIFO is enabled,
  * the function will make sure if the MB requested is not occupied by RX FIFO
@@ -509,52 +485,52 @@ flexcan_status_t FLEXCAN_HAL_SetMbRx(
  * values and copy the MB data field into user's buffer.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_GetMb(
-    uint32_t canBaseAddr,
-    uint32_t mb_idx,
-    flexcan_mb_t *mb)
+flexcan_status_t FLEXCAN_HAL_GetMsgBuff(
+    CAN_Type * base,
+    uint32_t msgBuffIdx,
+    flexcan_msgbuff_t *msgBuff)
 {
     uint32_t i;
     uint32_t val1, val2 = 1;
     volatile CAN_Type *flexcan_reg_ptr;
 
-    flexcan_reg_ptr = ((CAN_Type *)canBaseAddr);
+    flexcan_reg_ptr = ((CAN_Type *)base);
     if (NULL == flexcan_reg_ptr)
     {
-        return (kStatus_FLEXCAN_InvalidArgument);
+        return kStatus_FLEXCAN_InvalidArgument;
     }
 
-    if (mb_idx >= BR_CAN_MCR_MAXMB(canBaseAddr))
+    if (msgBuffIdx >= CAN_BRD_MCR_MAXMB(base))
     {
-        return (kStatus_FLEXCAN_OutOfRange);
+        return kStatus_FLEXCAN_OutOfRange;
     }
 
     /* Check if RX FIFO is enabled*/
-    if (BR_CAN_MCR_RFEN(canBaseAddr))
+    if (CAN_BRD_MCR_RFEN(base))
     {
         /* Get the number of RX FIFO Filters*/
-        val1 = BR_CAN_CTRL2_RFFN(canBaseAddr);
+        val1 = CAN_BRD_CTRL2_RFFN(base);
         /* Get the number if MBs occupied by RX FIFO and ID filter table*/
         /* the Rx FIFO occupies the memory space originally reserved for MB0-5*/
         /* Every number of RFFN means 8 number of RX FIFO filters*/
         /* and every 4 number of RX FIFO filters occupied one MB*/
-        val2 = 6 + (val1 + 1) * 8 / 4;
+        val2 = RxFifoOcuppiedLastMsgBuff(val1);
 
-        if (mb_idx <= (val2 - 1))
+        if (msgBuffIdx <= val2)
         {
-            return (kStatus_FLEXCAN_InvalidArgument);
+            return kStatus_FLEXCAN_InvalidArgument;
         }
     }
 
     /* Get a MB field values*/
-    mb->cs = flexcan_reg_ptr->MB[mb_idx].CS;
-    if ((mb->cs) & CAN_CS_IDE_MASK)
+    msgBuff->cs = flexcan_reg_ptr->MB[msgBuffIdx].CS;
+    if ((msgBuff->cs) & CAN_CS_IDE_MASK)
     {
-        mb->msg_id = flexcan_reg_ptr->MB[mb_idx].ID;
+        msgBuff->msgId = flexcan_reg_ptr->MB[msgBuffIdx].ID;
     }
     else
     {
-        mb->msg_id = (flexcan_reg_ptr->MB[mb_idx].ID) >> CAN_ID_STD_SHIFT;
+        msgBuff->msgId = (flexcan_reg_ptr->MB[msgBuffIdx].ID) >> CAN_ID_STD_SHIFT;
     }
 
     /* Copy MB data field into user's buffer*/
@@ -562,47 +538,51 @@ flexcan_status_t FLEXCAN_HAL_GetMb(
     {
         if (i < 4)
         {
-            mb->data[3 - i] = ((flexcan_reg_ptr->MB[mb_idx].WORD0) >> (i * 8)) &
+            msgBuff->data[3 - i] = ((flexcan_reg_ptr->MB[msgBuffIdx].WORD0) >> (i * 8)) &
                               FLEXCAN_BYTE_DATA_FIELD_MASK;
         }
         else
         {
-            mb->data[11 - i] = ((flexcan_reg_ptr->MB[mb_idx].WORD1) >> ((i - 4) * 8)) &
+            msgBuff->data[11 - i] = ((flexcan_reg_ptr->MB[msgBuffIdx].WORD1) >> ((i - 4) * 8)) &
                                FLEXCAN_BYTE_DATA_FIELD_MASK;
         }
     }
 
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_LockRxMb
+ * Function Name : FLEXCAN_HAL_LockRxMsgBuff
  * Description   : Lock the RX message buffer.
  * This function will the RX message buffer.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_LockRxMb(
-    uint32_t canBaseAddr,
-    uint32_t mb_idx)
+flexcan_status_t FLEXCAN_HAL_LockRxMsgBuff(
+    CAN_Type * base,
+    uint32_t msgBuffIdx)
 {
     volatile CAN_Type *flexcan_reg_ptr;
+    uint32_t tmp = 1;
 
-    flexcan_reg_ptr = ((CAN_Type *)canBaseAddr);
+    flexcan_reg_ptr = ((CAN_Type *)base);
     if (NULL == flexcan_reg_ptr)
     {
         return (kStatus_FLEXCAN_InvalidArgument);
     }
 
-    if (mb_idx >= BR_CAN_MCR_MAXMB(canBaseAddr))
+    if (msgBuffIdx >= CAN_BRD_MCR_MAXMB(base))
     {
         return (kStatus_FLEXCAN_OutOfRange);
     }
 
     /* Lock the mailbox*/
-    flexcan_reg_ptr->MB[mb_idx].CS;
+		if(tmp)
+		{
+        tmp = flexcan_reg_ptr->MB[msgBuffIdx].CS;
+		}
 
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -612,35 +592,27 @@ flexcan_status_t FLEXCAN_HAL_LockRxMb(
  * This function will enable the Rx FIFO feature.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_EnableRxFifo(uint32_t canBaseAddr, uint32_t numOfFilters, uint32_t maxNumMb)
+void FLEXCAN_HAL_EnableRxFifo(CAN_Type * base, uint32_t numOfFilters)
 {
     uint32_t i;
-
+    uint32_t maxNumMb;
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
-
+    FLEXCAN_HAL_EnterFreezeMode(base);
     /* Enable RX FIFO*/
-    BW_CAN_MCR_RFEN(canBaseAddr, 0x1);
+    CAN_BWR_MCR_RFEN(base, 0x1);
     /* Set the number of the RX FIFO filters needed*/
-    BW_CAN_CTRL2_RFFN(canBaseAddr, numOfFilters);
+    CAN_BWR_CTRL2_RFFN(base, numOfFilters);
     /* RX FIFO global mask*/
-    HW_CAN_RXFGMASK_WR(canBaseAddr, CAN_ID_EXT(CAN_RXFGMASK_FGM_MASK));
+    CAN_WR_RXFGMASK(base, CAN_ID_EXT(CAN_RXFGMASK_FGM_MASK));
+    maxNumMb = CAN_BRD_MCR_MAXMB(base);
     for (i = 0; i < maxNumMb; i++)
     {
         /* RX individual mask*/
-        HW_CAN_RXIMRn_WR(canBaseAddr, i, CAN_ID_EXT(CAN_RXIMR_MI_MASK));
+        CAN_WR_RXIMR(base, i, CAN_ID_EXT(CAN_RXIMR_MI_MASK));
     }
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 
 }
 
@@ -651,83 +623,61 @@ void FLEXCAN_HAL_EnableRxFifo(uint32_t canBaseAddr, uint32_t numOfFilters, uint3
  * This function will disable the Rx FIFO feature.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_DisableRxFifo(uint32_t canBaseAddr)
+void FLEXCAN_HAL_DisableRxFifo(CAN_Type * base)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while(!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
-
+    FLEXCAN_HAL_EnterFreezeMode(base);
     /* Disable RX FIFO*/
-    BW_CAN_MCR_RFEN(canBaseAddr, 0x0);
+    CAN_BWR_MCR_RFEN(base, 0x0);
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_SetRxFifoFiltersNumber
+ * Function Name : FLEXCAN_HAL_SetRxFifoFilterNum
  * Description   : Set the number of Rx FIFO filters.
  * This function will define the number of Rx FIFO filters.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_SetRxFifoFiltersNumber(
-    uint32_t canBaseAddr,
+void FLEXCAN_HAL_SetRxFifoFilterNum(
+    CAN_Type * base,
     uint32_t number)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while(!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* Set the number of RX FIFO ID filters*/
-    BW_CAN_CTRL2_RFFN(canBaseAddr, number);
+    CAN_BWR_CTRL2_RFFN(base, number);
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_SetMaxMbNumber
+ * Function Name : FLEXCAN_HAL_SetMaxMsgBuffNum
  * Description   : Set the number of the last Message Buffers.
  * This function will define the number of the last Message Buffers
  *
 *END**************************************************************************/
-void FLEXCAN_HAL_SetMaxMbNumber(
-    uint32_t canBaseAddr,
-    uint32_t maxNumMb)
+void FLEXCAN_HAL_SetMaxMsgBuffNum(
+    CAN_Type * base,
+    uint32_t maxMsgBuffNum)
 {
     uint32_t i;
     volatile CAN_Type *flexcan_reg_ptr;
 
-    flexcan_reg_ptr = ((CAN_Type *)canBaseAddr);
+    flexcan_reg_ptr = ((CAN_Type *)base);
 
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while(!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
-
+    FLEXCAN_HAL_EnterFreezeMode(base);
     /* Set the maximum number of MBs*/
-    BW_CAN_MCR_MAXMB(canBaseAddr, maxNumMb);
+    CAN_BWR_MCR_MAXMB(base, maxMsgBuffNum);
 
     /* Initialize all message buffers as inactive*/
-    for (i = 0; i < maxNumMb; i++)
+    for (i = 0; i < maxMsgBuffNum; i++)
     {
         flexcan_reg_ptr->MB[i].CS = 0x0;
         flexcan_reg_ptr->MB[i].ID = 0x0;
@@ -736,457 +686,193 @@ void FLEXCAN_HAL_SetMaxMbNumber(
     }
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_SetIdFilterTableElements
- * Description   : Set ID filter table elements.
- * This function will set up ID filter table elements.
+ * Function Name : FLEXCAN_HAL_SetRxFifoFilter
+ * Description   : Confgure RX FIFO ID filter table elements.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_SetIdFilterTableElements(
-    uint32_t canBaseAddr,
-    flexcan_rx_fifo_id_element_format_t id_format,
-    flexcan_id_table_t *id_filter_table)
+flexcan_status_t FLEXCAN_HAL_SetRxFifoFilter(
+    CAN_Type * base,
+    flexcan_rx_fifo_id_element_format_t idFormat,
+    flexcan_id_table_t *idFilterTable)
 {
-    uint32_t i, j, numOfFilters;
+    /* Set RX FIFO ID filter table elements*/
+uint32_t i, j, numOfFilters;
     uint32_t val1 = 0, val2 = 0, val = 0;
     volatile CAN_Type  *flexcan_reg_ptr;
-
-    flexcan_reg_ptr = ((CAN_Type *)canBaseAddr);
+    volatile uint32_t *filterTable;
+    flexcan_reg_ptr = ((CAN_Type *)base);
     if (NULL == flexcan_reg_ptr)
     {
-        return (kStatus_FLEXCAN_InvalidArgument);
+        return kStatus_FLEXCAN_InvalidArgument;
     }
 
-    numOfFilters = BR_CAN_CTRL2_RFFN(canBaseAddr);
-    switch(id_format)
+    numOfFilters = CAN_BRD_CTRL2_RFFN(base);
+    filterTable = (volatile uint32_t *)&(flexcan_reg_ptr->MB[RxFifoOcuppiedFirstMsgBuff]);
+    switch(idFormat)
     {
-        case (kFlexCanRxFifoIdElementFormat_A):
+        case (kFlexCanRxFifoIdElementFormatA):
             /* One full ID (standard and extended) per ID Filter Table element.*/
-            BW_CAN_MCR_IDAM(canBaseAddr, kFlexCanRxFifoIdElementFormat_A);
-            if (id_filter_table->is_remote_mb)
+            CAN_BWR_MCR_IDAM(base, kFlexCanRxFifoIdElementFormatA);
+            if (idFilterTable->isRemoteFrame)
             {
-                val = 1U << 31U;
+                val = FlexCanRxFifoAcceptRemoteFrame << FLEXCAN_RX_FIFO_ID_FILTER_FORMATAB_RTR_SHIFT;
             }
-            if (id_filter_table->is_extended_mb)
+            if (idFilterTable->isExtendedFrame)
             {
-                val |= 1 << 30;
-                j = 0;
-                for (i = 0; i < (numOfFilters + 1) * 8; i += 4)
-                {
-                    flexcan_reg_ptr->MB[6 + i - j * 3].CS = val +
-                                                            ((*(id_filter_table->id_filter + i)) <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_SHIFT &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_MASK);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].ID = val +
-                                                            ((*(id_filter_table->id_filter + i + 1)) <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_SHIFT &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_MASK);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 = val +
-                                                               ((*(id_filter_table->id_filter + i + 2)) <<
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_SHIFT &
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_MASK);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 = val +
-                                                               ((*(id_filter_table->id_filter + i + 3)) <<
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_SHIFT &
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_MASK);
-                    j++;
-                }
+                val |= FlexCanRxFifoAcceptExtFrame << FLEXCAN_RX_FIFO_ID_FILTER_FORMATAB_IDE_SHIFT;
             }
-            else
+            for (i = 0; i < RxFifoFilterElementNum(numOfFilters); i++)
             {
-                j = 0;
-                for (i = 0; i < (numOfFilters + 1) * 8; i += 4)
+                if(idFilterTable->isExtendedFrame)
                 {
-                    flexcan_reg_ptr->MB[6 + i - j * 3].CS = val +
-                                                            ((*(id_filter_table->id_filter + i)) <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_SHIFT &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_MASK);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].ID = val +
-                                                            ((*(id_filter_table->id_filter + i + 1)) <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_SHIFT &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_MASK);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 = val +
-                                                               ((*(id_filter_table->id_filter + i + 2)) <<
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_SHIFT &
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_MASK);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 = val +
-                                                               ((*(id_filter_table->id_filter + i + 3)) <<
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_SHIFT &
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_MASK);
-                    j++;
+                    filterTable[i] = val + ((*(idFilterTable->idFilter + i)) <<
+                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_SHIFT &
+                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_EXT_MASK);
+                }else
+                {
+                    filterTable[i] = val + ((*(idFilterTable->idFilter + i)) <<
+                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_SHIFT &
+                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATA_STD_MASK);
                 }
             }
             break;
-        case (kFlexCanRxFifoIdElementFormat_B):
+        case (kFlexCanRxFifoIdElementFormatB):
             /* Two full standard IDs or two partial 14-bit (standard and extended) IDs*/
             /* per ID Filter Table element.*/
-            BW_CAN_MCR_IDAM(canBaseAddr, kFlexCanRxFifoIdElementFormat_B);
-            if (id_filter_table->is_remote_mb)
+            CAN_BWR_MCR_IDAM(base, kFlexCanRxFifoIdElementFormatB);
+            if (idFilterTable->isRemoteFrame)
             {
-                val1 = 1U << 31U;
-                val2 = 1 << 15;
+                val1 = FlexCanRxFifoAcceptRemoteFrame << FLEXCAN_RX_FIFO_ID_FILTER_FORMATAB_RTR_SHIFT;
+                val2 = FlexCanRxFifoAcceptRemoteFrame << FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_RTR_SHIFT;
             }
-            if (id_filter_table->is_extended_mb)
+            if (idFilterTable->isExtendedFrame)
             {
-                val1 |= 1 << 30;
-                val2 |= 1 << 14;
-                j = 0;
-                for (i = 0; i < (numOfFilters + 1) * 8; i += 8)
-                {
-                    flexcan_reg_ptr->MB[6 + i - j * 3].CS = val1 +
-                                                            ((*(id_filter_table->id_filter + i)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT1);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].CS |= val2 +
-                                                             ((*(id_filter_table->id_filter + i + 1)) &
-                                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK <<
-                                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT2);
-
-                    flexcan_reg_ptr->MB[6 + i - j * 3].ID = val1 +
-                                                            ((*(id_filter_table->id_filter + i + 2)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT1);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].ID |= val2 +
-                                                             ((*(id_filter_table->id_filter + i + 3)) &
-                                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK <<
-                                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT2);
-
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 = val1 +
-                                                               ((*(id_filter_table->id_filter + i + 4)) &
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK <<
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT1);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 |= val2 +
-                                                                ((*(id_filter_table->id_filter + i + 5)) &
-                                                                FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK <<
-                                                                FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT2);
-
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 = val1 +
-                                                               ((*(id_filter_table->id_filter + i + 6)) &
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK <<
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT1);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 |= val2 +
-                                                                ((*(id_filter_table->id_filter + i + 7)) &
-                                                                FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK <<
-                                                                FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT2);
-                    j++;
-                }
+                val1 |= FlexCanRxFifoAcceptExtFrame << FLEXCAN_RX_FIFO_ID_FILTER_FORMATAB_IDE_SHIFT;
+                val2 |= FlexCanRxFifoAcceptExtFrame << FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_IDE_SHIFT;
             }
-            else
-            {
-                j = 0;
-                for (i = 0; i < (numOfFilters + 1) * 8; i += 8)
-                {
-                    flexcan_reg_ptr->MB[6 + i - j * 3].CS = val1 +
-                                                            (((*(id_filter_table->id_filter + i)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT1);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].CS |= val2 +
-                                                             (((*(id_filter_table->id_filter + i + 1)) &
-                                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
-                                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT2);
-
-                    flexcan_reg_ptr->MB[6 + i - j * 3].ID = val1 +
-                                                            (((*(id_filter_table->id_filter + i + 2)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT1);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].ID |= val2 +
-                                                             (((*(id_filter_table->id_filter + i + 3)) &
-                                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
-                                                             FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT2);
-
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 = val1 +
-                                                               (((*(id_filter_table->id_filter + i + 4)) &
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT1);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 |= val2 +
-                                                                (((*(id_filter_table->id_filter + i + 5)) &
-                                                                FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
-                                                                FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT2);
-
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 = val1 +
-                                                               (((*(id_filter_table->id_filter + i + 6)) &
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
-                                                               FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT1);
-                    flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 |= val2 +
-                                                                (((*(id_filter_table->id_filter + i + 7)) &
-                                                                FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
-                                                                FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT2);
-                    j++;
-                }
-            }
-            break;
-        case (kFlexCanRxFifoIdElementFormat_C):
-            /* Four partial 8-bit Standard IDs per ID Filter Table element.*/
-            BW_CAN_MCR_IDAM(canBaseAddr, kFlexCanRxFifoIdElementFormat_C);
             j = 0;
-            for (i = 0; i < (numOfFilters + 1) * 8; i += 16)
+            for (i = 0; i < RxFifoFilterElementNum(numOfFilters); i++)
             {
-                flexcan_reg_ptr->MB[6 + i - j * 3].CS = ((*(id_filter_table->id_filter + i)) &
-                                                        FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                        FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT1);
-                flexcan_reg_ptr->MB[6 + i - j * 3].CS |= ((*(id_filter_table->id_filter + i + 1)) &
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT2);
-                flexcan_reg_ptr->MB[6 + i - j * 3].CS |= ((*(id_filter_table->id_filter + i + 2)) &
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT3);
-                flexcan_reg_ptr->MB[6 + i - j * 3].CS |= ((*(id_filter_table->id_filter + i + 3)) &
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT4);
-
-                flexcan_reg_ptr->MB[6 + i - j * 3].ID = ((*(id_filter_table->id_filter + i + 4)) &
-                                                        FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                        FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT1);
-                flexcan_reg_ptr->MB[6 + i - j * 3].ID |= ((*(id_filter_table->id_filter + i + 5)) &
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT2);
-                flexcan_reg_ptr->MB[6 + i - j * 3].ID |= ((*(id_filter_table->id_filter + i + 6)) &
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT3);
-                flexcan_reg_ptr->MB[6 + i - j * 3].ID |= ((*(id_filter_table->id_filter + i + 7)) &
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                         FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT4);
-
-                flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 = ((*(id_filter_table->id_filter + i + 8)) &
-                                                           FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                           FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT1);
-                flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 |= ((*(id_filter_table->id_filter + i + 9)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT2);
-                flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 |= ((*(id_filter_table->id_filter + i + 10)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT3);
-                flexcan_reg_ptr->MB[6 + i - j * 3].WORD0 |= ((*(id_filter_table->id_filter + i + 11)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT4);
-
-                flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 = ((*(id_filter_table->id_filter + i + 12)) &
-                                                           FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                           FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT1);
-                flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 |= ((*(id_filter_table->id_filter + i + 13)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT2);
-                flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 |= ((*(id_filter_table->id_filter + i + 14)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT3);
-                flexcan_reg_ptr->MB[6 + i - j * 3].WORD1 |= ((*(id_filter_table->id_filter + i + 15)) &
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK <<
-                                                            FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT4);
-
-                j++;
+                if (idFilterTable->isExtendedFrame)
+                {
+                    filterTable[i] = val1 + (((*(idFilterTable->idFilter + j)) &
+                                              FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK) <<
+                                              FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT1);
+                    filterTable[i] |= val2 + (((*(idFilterTable->idFilter + j + 1)) &
+                                              FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_MASK) <<
+                                              FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_EXT_SHIFT2);
+                }else
+                {
+                    filterTable[i] = val1 + (((*(idFilterTable->idFilter + j)) &
+                                              FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
+                                              FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT1);
+                    filterTable[i] |= val2 + (((*(idFilterTable->idFilter + j + 1)) &
+                                              FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_MASK) <<
+                                              FLEXCAN_RX_FIFO_ID_FILTER_FORMATB_STD_SHIFT2);
+                }
+                j = j + 2;
             }
             break;
-        case (kFlexCanRxFifoIdElementFormat_D):
+        case (kFlexCanRxFifoIdElementFormatC):
+            /* Four partial 8-bit Standard IDs per ID Filter Table element.*/
+            CAN_BWR_MCR_IDAM(base, kFlexCanRxFifoIdElementFormatC);
+            j = 0;
+            for (i = 0; i < RxFifoFilterElementNum(numOfFilters); i++)
+            {
+                filterTable[i] = (((*(idFilterTable->idFilter + j)) &
+                                  FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK) <<
+                                  FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT1);
+                filterTable[i] = (((*(idFilterTable->idFilter + j + 1)) &
+                                  FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK) <<
+                                  FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT2);
+                filterTable[i] = (((*(idFilterTable->idFilter + j + 2)) &
+                                  FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK) <<
+                                  FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT3);
+                filterTable[i] = (((*(idFilterTable->idFilter + j + 3)) &
+                                  FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_MASK) <<
+                                  FLEXCAN_RX_FIFO_ID_FILTER_FORMATC_SHIFT4);
+                j = j + 4;
+            }
+            break;
+        case (kFlexCanRxFifoIdElementFormatD):
             /* All frames rejected.*/
-            BW_CAN_MCR_IDAM(canBaseAddr, kFlexCanRxFifoIdElementFormat_D);
+            CAN_BWR_MCR_IDAM(base, kFlexCanRxFifoIdElementFormatD);
             break;
         default:
             return kStatus_FLEXCAN_InvalidArgument;
     }
 
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_SetRxFifo
- * Description   : Confgure RX FIFO ID filter table elements.
+ * Function Name : FLEXCAN_HAL_SetMsgBuffIntCmd
+ * Description   : Enable/Disable the corresponding Message Buffer interrupt.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_SetRxFifo(
-    uint32_t canBaseAddr,
-    flexcan_rx_fifo_id_element_format_t id_format,
-    flexcan_id_table_t *id_filter_table)
-{
-    /* Set RX FIFO ID filter table elements*/
-    return FLEXCAN_HAL_SetIdFilterTableElements(canBaseAddr, id_format, id_filter_table);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_EnableMbInt
- * Description   : Enable the corresponding Message Buffer interrupt.
- *
- *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_EnableMbInt(
-    uint32_t canBaseAddr,
-    uint32_t mb_idx)
+flexcan_status_t FLEXCAN_HAL_SetMsgBuffIntCmd(
+    CAN_Type * base,
+    uint32_t msgBuffIdx, bool enable)
 {
     uint32_t temp;
 
-    if (mb_idx >= BR_CAN_MCR_MAXMB(canBaseAddr))
+    if (msgBuffIdx >= CAN_BRD_MCR_MAXMB(base))
     {
-        return (kStatus_FLEXCAN_OutOfRange);
+        return kStatus_FLEXCAN_OutOfRange;
     }
 
     /* Enable the corresponding message buffer Interrupt*/
-    temp = 0x1 << mb_idx;
-    HW_CAN_IMASK1_SET(canBaseAddr, temp);
-
-    return (kStatus_FLEXCAN_Success);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_DisableMbInt
- * Description   : Disable the corresponding Message Buffer interrupt.
- *
- *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_DisableMbInt(
-    uint32_t canBaseAddr,
-    uint32_t mb_idx)
-{
-    uint32_t temp;
-
-    if (mb_idx >= BR_CAN_MCR_MAXMB(canBaseAddr))
+    temp = 0x1 << msgBuffIdx;
+    if(enable)
     {
-        return (kStatus_FLEXCAN_OutOfRange);
+        CAN_SET_IMASK1(base, temp);
+    }
+    else
+    {
+        CAN_CLR_IMASK1(base, temp);
     }
 
-    /* Disable the corresponding message buffer Interrupt*/
-    temp = 0x1 << mb_idx;
-    HW_CAN_IMASK1_CLR(canBaseAddr, temp);
-
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_EnableErrInt
+ * Function Name : FLEXCAN_HAL_SetErrIntCmd
  * Description   : Enable the error interrupts.
  * This function will enable Error interrupt.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_EnableErrInt(uint32_t canBaseAddr)
+void FLEXCAN_HAL_SetErrIntCmd(CAN_Type * base, flexcan_int_type_t errType, bool enable)
 {
-    /* Enable Error interrupt*/
-    BW_CAN_CTRL1_ERRMSK(canBaseAddr, 0x1);
+    uint32_t temp = errType;
+    if(enable)
+    {
+        if((errType == kFlexCanIntRxwarning)||(errType == kFlexCanIntTxwarning))
+        {
+            CAN_BWR_MCR_WRNEN(base,0x1);
+        }
+        if(errType == kFlexCanIntWakeup)
+        {
+            CAN_BWR_MCR_WAKMSK(base,0x1);
+        }
+        CAN_SET_CTRL1(base,temp);
+    }
+    else
+    {
+        if(errType == kFlexCanIntWakeup)
+        {
+            CAN_BWR_MCR_WAKMSK(base,0x0);
+        }
+        CAN_CLR_CTRL1(base,~temp);
+    }
 }
 
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_DisableErrorInt
- * Description   : Disable the error interrupts.
- * This function will disable Error interrupt.
- *
- *END**************************************************************************/
-void FLEXCAN_HAL_DisableErrInt(uint32_t canBaseAddr)
-{
-    /* Disable Error interrupt*/
-    BW_CAN_CTRL1_ERRMSK(canBaseAddr, 0x0);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_EnableBusOffInt
- * Description   : Enable the Bus off interrupts.
- * This function will enable Bus Off interrupt.
- *
- *END**************************************************************************/
-void FLEXCAN_HAL_EnableBusOffInt(uint32_t canBaseAddr)
-{
-    /* Enable Bus Off interrupt*/
-    BW_CAN_CTRL1_BOFFMSK(canBaseAddr, 0x1);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_DisableBusOffInt
- * Description   : Disable the Bus off interrupts.
- * This function will disable Bus Off interrupt.
- *
- *END**************************************************************************/
-void FLEXCAN_HAL_DisableBusOffInt(uint32_t canBaseAddr)
-{
-    /* Disable Bus Off interrupt*/
-    BW_CAN_CTRL1_BOFFMSK(canBaseAddr, 0x0);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_EnableWakeupInt
- * Description   : Enable the wakeup interrupts.
- * This function will enable Wake up interrupt.
- *
- *END**************************************************************************/
-void FLEXCAN_HAL_EnableWakeupInt(uint32_t canBaseAddr)
-{
-    /* Enable Wake Up interrupt*/
-    BW_CAN_MCR_WAKMSK(canBaseAddr, 1);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_DisableWakeupInt
- * Description   : Disable the wakeup interrupts.
- * This function will disable Wake up interrupt.
- *
- *END**************************************************************************/
-void FLEXCAN_HAL_DisableWakeupInt(uint32_t canBaseAddr)
-{
-    /* Disable Wake Up interrupt*/
-    BW_CAN_MCR_WAKMSK(canBaseAddr, 0);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_EnableTxWarningInt
- * Description   : Enable the TX warning interrupts.
- * This function will enable TX warning interrupt.
- *
- *END**************************************************************************/
-void FLEXCAN_HAL_EnableTxWarningInt(uint32_t canBaseAddr)
-{
-    /* Enable TX warning interrupt*/
-    BW_CAN_CTRL1_TWRNMSK(canBaseAddr, 0x1);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_DisableTxWarningInt
- * Description   : Disable the TX warning interrupts.
- * This function will disable TX warning interrupt.
- *
- *END**************************************************************************/
-void FLEXCAN_HAL_DisableTxWarningInt(uint32_t canBaseAddr)
-{
-    /* Disable TX warning interrupt*/
-    BW_CAN_CTRL1_TWRNMSK(canBaseAddr, 0x0);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_EnableRxWarningInt
- * Description   : Enable the RX warning interrupts.
- * This function will enable RX warning interrupt.
- *
- *END**************************************************************************/
-void FLEXCAN_HAL_EnableRxWarningInt(uint32_t canBaseAddr)
-{
-    /* Enable RX warning interrupt*/
-    BW_CAN_CTRL1_RWRNMSK(canBaseAddr, 0x1);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : FLEXCAN_HAL_DisableRxWarningInt
- * Description   : Disable the RX warning interrupts.
- * This function will disable RX warning interrupt.
- *
- *END**************************************************************************/
-void FLEXCAN_HAL_DisableRxWarningInt(uint32_t canBaseAddr)
-{
-    /* Disable RX warning interrupt*/
-    BW_CAN_CTRL1_RWRNMSK(canBaseAddr, 0x0);
-}
 
 /*FUNCTION**********************************************************************
  *
@@ -1194,13 +880,13 @@ void FLEXCAN_HAL_DisableRxWarningInt(uint32_t canBaseAddr)
  * Description   : Exit of freeze mode.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_ExitFreezeMode(uint32_t canBaseAddr)
+void FLEXCAN_HAL_ExitFreezeMode(CAN_Type * base)
 {
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
+    CAN_BWR_MCR_HALT(base, 0x0);
+    CAN_BWR_MCR_FRZ(base, 0x0);
 
     /* Wait till exit freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    while (CAN_BRD_MCR_FRZACK(base)){}
 }
 
 /*FUNCTION**********************************************************************
@@ -1209,31 +895,31 @@ void FLEXCAN_HAL_ExitFreezeMode(uint32_t canBaseAddr)
  * Description   : Enter the freeze mode.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_EnterFreezeMode(uint32_t canBaseAddr)
+void FLEXCAN_HAL_EnterFreezeMode(CAN_Type * base)
 {
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
+    CAN_BWR_MCR_FRZ(base, 0x1);
+    CAN_BWR_MCR_HALT(base, 0x1);
 
 
     /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    while (!(CAN_BRD_MCR_FRZACK(base))){}
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_GetMbIntFlag
+ * Function Name : FLEXCAN_HAL_GetMsgBuffIntStatusFlag
  * Description   : Get the corresponding message buffer interrupt flag.
  *
  *END**************************************************************************/
-uint8_t FLEXCAN_HAL_GetMbIntFlag(
-    uint32_t canBaseAddr,
-    uint32_t mb_idx)
+uint8_t FLEXCAN_HAL_GetMsgBuffIntStatusFlag(
+    CAN_Type * base,
+    uint32_t msgBuffIdx)
 {
     uint32_t temp;
 
     /* Get the corresponding message buffer interrupt flag*/
-    temp = 0x1 << mb_idx;
-    if (HW_CAN_IFLAG1_RD(canBaseAddr) & temp)
+    temp = 0x1 << msgBuffIdx;
+    if (CAN_RD_IFLAG1(base) & temp)
     {
         return 1;
     }
@@ -1250,57 +936,57 @@ uint8_t FLEXCAN_HAL_GetMbIntFlag(
  *
  *END**************************************************************************/
 void FLEXCAN_HAL_GetErrCounter(
-    uint32_t canBaseAddr,
-    flexcan_berr_counter_t *err_cnt)
+    CAN_Type * base,
+    flexcan_buserr_counter_t *errCount)
 {
     /* Get transmit error counter and receive error counter*/
-    err_cnt->rxerr = HW_CAN_ECR(canBaseAddr).B.RXERRCNT;
-    err_cnt->txerr = HW_CAN_ECR(canBaseAddr).B.TXERRCNT;
+    errCount->rxerr = CAN_RD_ECR_RXERRCNT(base);
+    errCount->txerr = CAN_RD_ECR_TXERRCNT(base);
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_ClearErrIntStatus
+ * Function Name : FLEXCAN_HAL_ClearErrIntStatusFlag
  * Description   : Clear all error interrupt status.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_ClearErrIntStatus(uint32_t canBaseAddr)
+void FLEXCAN_HAL_ClearErrIntStatusFlag(CAN_Type * base)
 {
-    if(HW_CAN_ESR1_RD(canBaseAddr) & FLEXCAN_ALL_INT)
+    if(CAN_RD_ESR1(base) & FLEXCAN_ALL_INT)
     {
-        HW_CAN_ESR1_WR(canBaseAddr, FLEXCAN_ALL_INT);
+        CAN_WR_ESR1(base, FLEXCAN_ALL_INT);
     }
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_ReadFifo
+ * Function Name : FLEXCAN_HAL_ReadRxFifo
  * Description   : Read Rx FIFO data.
  * This function will copy MB[0] data field into user's buffer.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_ReadFifo(
-    uint32_t canBaseAddr,
-    flexcan_mb_t *rx_fifo)
+flexcan_status_t FLEXCAN_HAL_ReadRxFifo(
+    CAN_Type * base,
+    flexcan_msgbuff_t *rxFifo)
 {
     uint32_t i;
     volatile CAN_Type  *flexcan_reg_ptr;
 
-    flexcan_reg_ptr = ((CAN_Type *)canBaseAddr);
+    flexcan_reg_ptr = ((CAN_Type *)base);
     if (NULL == flexcan_reg_ptr)
     {
-        return (kStatus_FLEXCAN_InvalidArgument);
+        return kStatus_FLEXCAN_InvalidArgument;
     }
 
-    rx_fifo->cs = flexcan_reg_ptr->MB[0].CS;
+    rxFifo->cs = flexcan_reg_ptr->MB[0].CS;
 
-    if ((rx_fifo->cs) & CAN_CS_IDE_MASK)
+    if ((rxFifo->cs) & CAN_CS_IDE_MASK)
     {
-        rx_fifo->msg_id = flexcan_reg_ptr->MB[0].ID;
+        rxFifo->msgId = flexcan_reg_ptr->MB[0].ID;
     }
     else
     {
-        rx_fifo->msg_id = (flexcan_reg_ptr->MB[0].ID) >> CAN_ID_STD_SHIFT;
+        rxFifo->msgId = (flexcan_reg_ptr->MB[0].ID) >> CAN_ID_STD_SHIFT;
     }
 
     /* Copy MB[0] data field into user's buffer*/
@@ -1308,17 +994,17 @@ flexcan_status_t FLEXCAN_HAL_ReadFifo(
     {
         if (i < 4)
         {
-            rx_fifo->data[3 - i] = ((flexcan_reg_ptr->MB[0].WORD0) >> (i * 8)) &
+            rxFifo->data[3 - i] = ((flexcan_reg_ptr->MB[0].WORD0) >> (i * 8)) &
                                    FLEXCAN_BYTE_DATA_FIELD_MASK;
         }
         else
         {
-            rx_fifo->data[11 - i] = ((flexcan_reg_ptr->MB[0].WORD1) >> ((i - 4) * 8)) &
+            rxFifo->data[11 - i] = ((flexcan_reg_ptr->MB[0].WORD1) >> ((i - 4) * 8)) &
                                     FLEXCAN_BYTE_DATA_FIELD_MASK;
         }
     }
 
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -1329,36 +1015,27 @@ flexcan_status_t FLEXCAN_HAL_ReadFifo(
  * mask.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_SetMaskType(
-    uint32_t canBaseAddr,
+void FLEXCAN_HAL_SetRxMaskType(
+    CAN_Type * base,
     flexcan_rx_mask_type_t type)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* Set RX masking type (RX global mask or RX individual mask)*/
-    if (type == kFlexCanRxMask_Global)
+    if (type == kFlexCanRxMaskGlobal)
     {
         /* Enable Global RX masking*/
-        BW_CAN_MCR_IRMQ(canBaseAddr, 0x0);
+        CAN_BWR_MCR_IRMQ(base, 0x0);
     }
     else
     {
         /* Enable Individual Rx Masking and Queue*/
-        BW_CAN_MCR_IRMQ(canBaseAddr, 0x1);
+        CAN_BWR_MCR_IRMQ(base, 0x1);
     }
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -1368,25 +1045,17 @@ void FLEXCAN_HAL_SetMaskType(
  *
  *END**************************************************************************/
 void FLEXCAN_HAL_SetRxFifoGlobalStdMask(
-    uint32_t canBaseAddr,
-    uint32_t std_mask)
+    CAN_Type * base,
+    uint32_t stdMask)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 11 bit standard mask*/
-    HW_CAN_RXFGMASK_WR(canBaseAddr, CAN_ID_STD(std_mask));
+    CAN_WR_RXFGMASK(base, CAN_ID_STD(stdMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -1396,25 +1065,17 @@ void FLEXCAN_HAL_SetRxFifoGlobalStdMask(
  *
  *END**************************************************************************/
 void FLEXCAN_HAL_SetRxFifoGlobalExtMask(
-    uint32_t canBaseAddr,
-    uint32_t ext_mask)
+    CAN_Type * base,
+    uint32_t extMask)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 29-bit extended mask*/
-    HW_CAN_RXFGMASK_WR(canBaseAddr, CAN_ID_EXT(ext_mask));
+    CAN_WR_RXFGMASK(base, CAN_ID_EXT(extMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -1424,33 +1085,25 @@ void FLEXCAN_HAL_SetRxFifoGlobalExtMask(
  *
  *END**************************************************************************/
 flexcan_status_t FLEXCAN_HAL_SetRxIndividualStdMask(
-    uint32_t canBaseAddr,
-    uint32_t mb_idx,
-    uint32_t std_mask)
+    CAN_Type * base,
+    uint32_t msgBuffIdx,
+    uint32_t stdMask)
 {
-    if (mb_idx >= BR_CAN_MCR_MAXMB(canBaseAddr))
+    if (msgBuffIdx >= CAN_BRD_MCR_MAXMB(base))
     {
-        return (kStatus_FLEXCAN_OutOfRange);
+        return kStatus_FLEXCAN_OutOfRange;
     }
 
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 11 bit standard mask*/
-    HW_CAN_RXIMRn_WR(canBaseAddr, mb_idx, CAN_ID_STD(std_mask));
+    CAN_WR_RXIMR(base, msgBuffIdx, CAN_ID_STD(stdMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
+    FLEXCAN_HAL_ExitFreezeMode(base);
 
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
-
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -1460,33 +1113,25 @@ flexcan_status_t FLEXCAN_HAL_SetRxIndividualStdMask(
  *
  *END**************************************************************************/
 flexcan_status_t FLEXCAN_HAL_SetRxIndividualExtMask(
-    uint32_t canBaseAddr,
-    uint32_t mb_idx,
-    uint32_t ext_mask)
+    CAN_Type * base,
+    uint32_t msgBuffIdx,
+    uint32_t extMask)
 {
-    if (mb_idx >= BR_CAN_MCR_MAXMB(canBaseAddr))
+    if (msgBuffIdx >= CAN_BRD_MCR_MAXMB(base))
     {
-        return (kStatus_FLEXCAN_OutOfRange);
+        return kStatus_FLEXCAN_OutOfRange;
     }
 
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 29-bit extended mask*/
-    HW_CAN_RXIMRn_WR(canBaseAddr, mb_idx, CAN_ID_EXT(ext_mask));
+    CAN_WR_RXIMR(base, msgBuffIdx, CAN_ID_EXT(extMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
+    FLEXCAN_HAL_ExitFreezeMode(base);
 
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
-
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -1495,26 +1140,18 @@ flexcan_status_t FLEXCAN_HAL_SetRxIndividualExtMask(
  * Description   : Set Rx Message Buffer global mask as the 11-bit standard mask.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_SetRxMbGlobalStdMask(
-    uint32_t canBaseAddr,
-    uint32_t std_mask)
+void FLEXCAN_HAL_SetRxMsgBuffGlobalStdMask(
+    CAN_Type * base,
+    uint32_t stdMask)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 11 bit standard mask*/
-    HW_CAN_RXMGMASK_WR(canBaseAddr, CAN_ID_STD(std_mask));
+    CAN_WR_RXMGMASK(base, CAN_ID_STD(stdMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -1523,26 +1160,18 @@ void FLEXCAN_HAL_SetRxMbGlobalStdMask(
  * Description   : Set Rx Message Buffer 14 mask as the 11-bit standard mask.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_SetRxMbBuf14StdMask(
-    uint32_t canBaseAddr,
-    uint32_t std_mask)
+void FLEXCAN_HAL_SetRxMsgBuff14StdMask(
+    CAN_Type * base,
+    uint32_t stdMask)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 11 bit standard mask*/
-    HW_CAN_RX14MASK_WR(canBaseAddr, CAN_ID_STD(std_mask));
+    CAN_WR_RX14MASK(base, CAN_ID_STD(stdMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -1551,26 +1180,18 @@ void FLEXCAN_HAL_SetRxMbBuf14StdMask(
  * Description   : Set Rx Message Buffer 15 mask as the 11-bit standard mask.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_SetRxMbBuf15StdMask(
-    uint32_t canBaseAddr,
-    uint32_t std_mask)
+void FLEXCAN_HAL_SetRxMsgBuff15StdMask(
+    CAN_Type * base,
+    uint32_t stdMask)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 11 bit standard mask*/
-    HW_CAN_RX15MASK_WR(canBaseAddr, CAN_ID_STD(std_mask));
+    CAN_WR_RX15MASK(base, CAN_ID_STD(stdMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -1579,26 +1200,18 @@ void FLEXCAN_HAL_SetRxMbBuf15StdMask(
  * Description   : Set Rx Message Buffer global mask as the 29-bit extended mask.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_SetRxMbGlobalExtMask(
-    uint32_t canBaseAddr,
-    uint32_t ext_mask)
+void FLEXCAN_HAL_SetRxMsgBuffGlobalExtMask(
+    CAN_Type * base,
+    uint32_t extMask)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(HW_CAN_MCR_RD(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 29-bit extended mask*/
-    HW_CAN_RXMGMASK_WR(canBaseAddr, CAN_ID_EXT(ext_mask));
+    CAN_WR_RXMGMASK(base, CAN_ID_EXT(extMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -1607,26 +1220,18 @@ void FLEXCAN_HAL_SetRxMbGlobalExtMask(
  * Description   : Set Rx Message Buffer 14 mask as the 29-bit extended mask.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_SetRxMbBuf14ExtMask(
-    uint32_t canBaseAddr,
-    uint32_t ext_mask)
+void FLEXCAN_HAL_SetRxMsgBuff14ExtMask(
+    CAN_Type * base,
+    uint32_t extMask)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 29-bit extended mask*/
-    HW_CAN_RX14MASK_WR(canBaseAddr, CAN_ID_EXT(ext_mask));
+    CAN_WR_RX14MASK(base, CAN_ID_EXT(extMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -1635,26 +1240,18 @@ void FLEXCAN_HAL_SetRxMbBuf14ExtMask(
  * Description   : Set Rx Message Buffer 15 mask as the 29-bit extended mask.
  *
  *END**************************************************************************/
-void FLEXCAN_HAL_SetRxMbBuf15ExtMask(
-    uint32_t canBaseAddr,
-    uint32_t ext_mask)
+void FLEXCAN_HAL_SetRxMsgBuff15ExtMask(
+    CAN_Type * base,
+    uint32_t extMask)
 {
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     /* 29-bit extended mask*/
-    HW_CAN_RX15MASK_WR(canBaseAddr, CAN_ID_EXT(ext_mask));
+    CAN_WR_RX15MASK(base, CAN_ID_EXT(extMask));
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
-
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
+    FLEXCAN_HAL_ExitFreezeMode(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -1664,46 +1261,38 @@ void FLEXCAN_HAL_SetRxMbBuf15ExtMask(
  * This function will enable one of the modes listed in flexcan_operation_modes_t.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_EnableOperationMode(
-    uint32_t canBaseAddr,
+flexcan_status_t FLEXCAN_HAL_SetOperationMode(
+    CAN_Type * base,
     flexcan_operation_modes_t mode)
 {
     if (mode == kFlexCanFreezeMode)
     {
         /* Debug mode, Halt and Freeze*/
-        BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-        BW_CAN_MCR_HALT(canBaseAddr, 0x1);
+        FLEXCAN_HAL_EnterFreezeMode(base);
 
-        /* Wait for entering the freeze mode*/
-        while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
-
-        return (kStatus_FLEXCAN_Success);
+        return kStatus_FLEXCAN_Success;
     }
     else if (mode == kFlexCanDisableMode)
     {
         /* Debug mode, Halt and Freeze*/
-        BW_CAN_MCR_MDIS(canBaseAddr, 0x1);
-        return (kStatus_FLEXCAN_Success);
+        CAN_BWR_MCR_MDIS(base, 0x1);
+        return kStatus_FLEXCAN_Success;
     }
 
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     if (mode == kFlexCanNormalMode)
     {
-        BW_CAN_MCR_SUPV(canBaseAddr, 0x0);
+        CAN_BWR_MCR_SUPV(base, 0x0);
     }
     else if (mode == kFlexCanListenOnlyMode)
     {
-        BW_CAN_CTRL1_LOM(canBaseAddr, 0x1);
+        CAN_BWR_CTRL1_LOM(base, 0x1);
     }
     else if (mode == kFlexCanLoopBackMode)
     {
-        BW_CAN_CTRL1_LPB(canBaseAddr, 0x1);
+        CAN_BWR_CTRL1_LPB(base, 0x1);
     }
     else
     {
@@ -1711,62 +1300,50 @@ flexcan_status_t FLEXCAN_HAL_EnableOperationMode(
     }
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
+    FLEXCAN_HAL_ExitFreezeMode(base);
 
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
-
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXCAN_HAL_DisableOperationMode
+ * Function Name : FLEXCAN_HAL_ExitOperationMode
  * Description   : Disable a FlexCAN operation mode.
  * This function will disable one of the modes listed in flexcan_operation_modes_t.
  *
  *END**************************************************************************/
-flexcan_status_t FLEXCAN_HAL_DisableOperationMode(
-    uint32_t canBaseAddr,
+flexcan_status_t FLEXCAN_HAL_ExitOperationMode(
+    CAN_Type * base,
     flexcan_operation_modes_t mode)
 {
     if (mode == kFlexCanFreezeMode)
     {
         /* De-assert Freeze Mode*/
-        BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-        BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
+        FLEXCAN_HAL_ExitFreezeMode(base);
 
-        /* Wait till exit of freeze mode*/
-        while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
-
-        return (kStatus_FLEXCAN_Success);
+        return kStatus_FLEXCAN_Success;
     }
     else if (mode == kFlexCanDisableMode)
     {
         /* Disable module mode*/
-        BW_CAN_MCR_MDIS(canBaseAddr, 0x0);
-        return (kStatus_FLEXCAN_Success);
+        CAN_BWR_MCR_MDIS(base, 0x0);
+        return kStatus_FLEXCAN_Success;
     }
 
     /* Set Freeze mode*/
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x1);
-    BW_CAN_MCR_HALT(canBaseAddr, 0x1);
-
-    /* Wait for entering the freeze mode*/
-    while (!(BR_CAN_MCR_FRZACK(canBaseAddr))){}
+    FLEXCAN_HAL_EnterFreezeMode(base);
 
     if (mode == kFlexCanNormalMode)
     {
-        BW_CAN_MCR_SUPV(canBaseAddr, 0x1);
+        CAN_BWR_MCR_SUPV(base, 0x1);
     }
     else if (mode == kFlexCanListenOnlyMode)
     {
-        BW_CAN_CTRL1_LOM(canBaseAddr, 0x0);
+        CAN_BWR_CTRL1_LOM(base, 0x0);
     }
     else if (mode == kFlexCanLoopBackMode)
     {
-        BW_CAN_CTRL1_LPB(canBaseAddr, 0x0);
+        CAN_BWR_CTRL1_LPB(base, 0x0);
     }
     else
     {
@@ -1774,14 +1351,11 @@ flexcan_status_t FLEXCAN_HAL_DisableOperationMode(
     }
 
     /* De-assert Freeze Mode*/
-    BW_CAN_MCR_HALT(canBaseAddr, 0x0);
-    BW_CAN_MCR_FRZ(canBaseAddr, 0x0);
+    FLEXCAN_HAL_ExitFreezeMode(base);
 
-    /* Wait till exit of freeze mode*/
-    while (BR_CAN_MCR_FRZACK(canBaseAddr)){}
-
-    return (kStatus_FLEXCAN_Success);
+    return kStatus_FLEXCAN_Success;
 }
+#endif
 
 /*******************************************************************************
  * EOF

@@ -201,7 +201,7 @@ typedef struct _audio_ut_struct
  */
 typedef  struct _audio_units_struct 
 {
-   uint8_t            count;       /*!< Number of terminal or Ferture Unit End point */  
+   uint8_t            count;       /*!< Number of terminal or Feature Unit End point */
    audio_ut_struct_t* put;         /*!< Array of terminal or Feature Unit */
 }audio_units_struct_t; 
 
@@ -231,14 +231,17 @@ typedef  struct _audio_units_struct
 /******************************************************************************
  * Global Functions
  *****************************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*!
- * @brief The funtion initializes the Device and Controller layer 
+ * @brief The function initializes the Device and Controller layer
  *
  * This function initializes the Audio Class layer and layers it is dependent on 
  *
- * @param controller_id	[in] - controller ID, such as USB_CONTROLLER_KHCI_0
- * @param audio_config_ptr	[in] - AUDIO configuration structure, refer to audio_config_struct_t
- * @param audioHandle	[out] - pointer point to the initialized AUDIO class, refer to audio_handle_t
+ * @param controller_id       [in] - controller ID, such as USB_CONTROLLER_KHCI_0
+ * @param audio_config_ptr    [in] - AUDIO configuration structure, refer to audio_config_struct_t
+ * @param audioHandle         [out] - pointer point to the initialized AUDIO class, refer to audio_handle_t
  *
  * @return USB_OK-Success/Others-Fail
  */
@@ -250,7 +253,7 @@ extern usb_status USB_Class_Audio_Init
 );
 
 /*!
- * @brief The funtion deinitializes the Device and Controller layer 
+ * @brief The function de-initializes the Device and Controller layer
  *
  * This function initializes the Audio Class layer and layers it is dependent on 
  *
@@ -279,7 +282,7 @@ extern usb_status USB_Class_Audio_Send_Data
 (
     audio_handle_t       handle,        /* [IN]*/
     uint8_t              ep_num,        /* [IN]*/
-    uint8_t*             buff_ptr,      /* [IN] buffer to send */      
+    uint8_t*             app_buff,      /* [IN] buffer to send */      
     uint32_t             size           /* [IN] length of the transfer */
 );
 
@@ -325,6 +328,28 @@ extern usb_status USB_Class_Audio_Cancel
     uint8_t ep_num,/*[IN]*/
     uint8_t direction
 );
+#endif
+
+/**************************************************************************//*!
+ *
+ * @name  USB_Class_Audio_Get_Speed
+ *
+ * @brief This functions get speed from Host.
+ *
+ * @param handle          :   handle returned by USB_Class_Audio_Init
+ * @param speed           :   speed
+ *
+ * @return status       
+ *         USB_OK         : When Successfull 
+ *         Others         : Errors
+ *****************************************************************************/
+usb_status USB_Class_Audio_Get_Speed
+(
+    audio_handle_t       audio_handle,
+    uint16_t *           speed/* [OUT] the requested error */
+);
+#ifdef __cplusplus
+}
 #endif
 
 #endif

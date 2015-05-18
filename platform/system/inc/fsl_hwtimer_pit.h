@@ -32,7 +32,7 @@
 
 #include "fsl_hwtimer.h"
 
-/*! @brief Instance of HWTIMER_DEVIF_STRUCT structure initialized \n
+/*! @brief Instance of HWTIMER_DEVIF_STRUCT structure initialized
  * with pointers to API functions the  pit driver implements
  */
 extern const hwtimer_devif_t kPitDevif;

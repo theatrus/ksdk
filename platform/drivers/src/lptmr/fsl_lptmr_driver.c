@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -33,6 +33,7 @@
 #include "fsl_lptmr_driver.h"
 #include "fsl_interrupt_manager.h"
 #include "fsl_clock_manager.h"
+#if FSL_FEATURE_SOC_LPTMR_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -40,7 +41,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static lptmr_state_t *volatile lptmr_state_ptrs[HW_LPTMR_INSTANCE_COUNT];
+static lptmr_state_t *volatile lptmr_state_ptrs[LPTMR_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Code
@@ -54,11 +55,13 @@ static lptmr_state_t *volatile lptmr_state_ptrs[HW_LPTMR_INSTANCE_COUNT];
  * strcuture.
  *
  *END**************************************************************************/
-lptmr_status_t LPTMR_DRV_Init(uint32_t instance, const lptmr_user_config_t* userConfigPtr, lptmr_state_t *userStatePtr)
+lptmr_status_t LPTMR_DRV_Init(uint32_t instance, lptmr_state_t *userStatePtr, const lptmr_user_config_t* userConfigPtr)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
+    assert(instance < LPTMR_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lptmrBaseAddr[instance];
+    LPTMR_Type * base = g_lptmrBase[instance];
+    lptmr_prescaler_user_config_t prescalerUserConfig;
+    lptmr_working_mode_user_config_t workingModeUserConfig;
 
     if ((!userConfigPtr) || (!userStatePtr))
     {
@@ -74,31 +77,23 @@ lptmr_status_t LPTMR_DRV_Init(uint32_t instance, const lptmr_user_config_t* user
     }
 
     /* Enable clock for lptmr */
-    CLOCK_SYS_EnableLptimerClock(instance);
+    CLOCK_SYS_EnableLptmrClock(instance);
 
     /* Disable lptmr and reset lptmr logic */
-    LPTMR_HAL_Disable(baseAddr);
+    LPTMR_HAL_Disable(base);
+
+    /* LPTMR prescaler configure */  
+    prescalerUserConfig.prescalerClockSelect = (lptmr_prescaler_clock_select_t)userConfigPtr->prescalerClockSource;
+    prescalerUserConfig.prescalerBypass = (uint8_t)(userConfigPtr->prescalerEnable == false);
+    prescalerUserConfig.prescalerValue = userConfigPtr->prescalerValue;
+    LPTMR_HAL_SetPrescalerMode(base, prescalerUserConfig);
 
     /* Working Mode configure */
-    LPTMR_HAL_SetTimerModeMode(baseAddr,userConfigPtr->timerMode);
-
-    /* Pulse counter pin select */
-    LPTMR_HAL_SetPinSelectMode(baseAddr,userConfigPtr->pinSelect);
-
-    /* Pulse counter pin polarity */
-    LPTMR_HAL_SetPinPolarityMode(baseAddr,userConfigPtr->pinPolarity);
-
-    /* LPTMR free-running configure */
-    LPTMR_HAL_SetFreeRunningCmd(baseAddr,userConfigPtr->freeRunningEnable);
-
-    /* LPTMR prescaler */
-    LPTMR_HAL_SetPrescalerCmd(baseAddr,userConfigPtr->prescalerEnable);
-
-    /* LPTMR prescaler clock source */
-    LPTMR_HAL_SetPrescalerClockSourceMode(baseAddr,userConfigPtr->prescalerClockSource);
-
-    /* LPTMR prescaler value */
-    LPTMR_HAL_SetPrescalerValueMode(baseAddr,userConfigPtr->prescalerValue);
+    workingModeUserConfig.timerModeSelect = userConfigPtr->timerMode;
+    workingModeUserConfig.freeRunningEnable = userConfigPtr->freeRunningEnable;
+    workingModeUserConfig.pinPolarity = userConfigPtr->pinPolarity;
+    workingModeUserConfig.pinSelect = userConfigPtr->pinSelect;
+    LPTMR_HAL_SetTimerWorkingMode(base,workingModeUserConfig);
 
     /* Internal context */
     lptmr_state_ptrs[instance] = userStatePtr;
@@ -108,12 +103,12 @@ lptmr_status_t LPTMR_DRV_Init(uint32_t instance, const lptmr_user_config_t* user
     /* LPTMR interrupt */
     if (userConfigPtr->isInterruptEnabled)
     {
-        LPTMR_HAL_SetIntCmd(baseAddr,true);
+        LPTMR_HAL_SetIntCmd(base,true);
         INT_SYS_EnableIRQ(g_lptmrIrqId[instance]);
     }
     else
     {
-        LPTMR_HAL_SetIntCmd(baseAddr,false);
+        LPTMR_HAL_SetIntCmd(base,false);
         INT_SYS_DisableIRQ(g_lptmrIrqId[instance]);
     }
 
@@ -142,22 +137,22 @@ lptmr_status_t LPTMR_DRV_Init(uint32_t instance, const lptmr_user_config_t* user
  *END**************************************************************************/
 lptmr_status_t LPTMR_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
-    assert(CLOCK_SYS_GetLptimerGateCmd(instance));
+    assert(instance < LPTMR_INSTANCE_COUNT);
+    assert(CLOCK_SYS_GetLptmrGateCmd(instance));
 
-    uint32_t baseAddr = g_lptmrBaseAddr[instance];
+    LPTMR_Type * base = g_lptmrBase[instance];
 
     /* Turn off lptmr hal */
-    LPTMR_HAL_Disable(baseAddr);
+    LPTMR_HAL_Disable(base);
 
     /* Reset all register to reset value */
-    LPTMR_HAL_Init(baseAddr);
+    LPTMR_HAL_Init(base);
 
     /* Disable the interrupt */
     INT_SYS_DisableIRQ(g_lptmrIrqId[instance]);
 
     /* Disable clock for lptmr */
-    CLOCK_SYS_DisableLptimerClock(instance);
+    CLOCK_SYS_DisableLptmrClock(instance);
 
     /* Cleared state pointer */
     lptmr_state_ptrs[instance] = NULL;
@@ -174,12 +169,12 @@ lptmr_status_t LPTMR_DRV_Deinit(uint32_t instance)
  *END**************************************************************************/
 lptmr_status_t LPTMR_DRV_Start(uint32_t instance)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
-    assert(CLOCK_SYS_GetLptimerGateCmd(instance));
+    assert(instance < LPTMR_INSTANCE_COUNT);
+    assert(CLOCK_SYS_GetLptmrGateCmd(instance));
 
-    uint32_t baseAddr = g_lptmrBaseAddr[instance];
+    LPTMR_Type * base = g_lptmrBase[instance];
 
-    LPTMR_HAL_Enable(baseAddr);
+    LPTMR_HAL_Enable(base);
 
     return kStatus_LPTMR_Success;
 }
@@ -193,12 +188,12 @@ lptmr_status_t LPTMR_DRV_Start(uint32_t instance)
  *END**************************************************************************/
 lptmr_status_t LPTMR_DRV_Stop(uint32_t instance)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
-    assert(CLOCK_SYS_GetLptimerGateCmd(instance));
+    assert(instance < LPTMR_INSTANCE_COUNT);
+    assert(CLOCK_SYS_GetLptmrGateCmd(instance));
 
-    uint32_t baseAddr = g_lptmrBaseAddr[instance];
+    LPTMR_Type * base = g_lptmrBase[instance];
 
-    LPTMR_HAL_Disable(baseAddr);
+    LPTMR_HAL_Disable(base);
 
     return kStatus_LPTMR_Success;
 }
@@ -212,24 +207,12 @@ lptmr_status_t LPTMR_DRV_Stop(uint32_t instance)
  *END**************************************************************************/
 lptmr_status_t LPTMR_DRV_SetTimerPeriodUs(uint32_t instance, uint32_t us)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
+    assert(instance < LPTMR_INSTANCE_COUNT);
     assert(us > 0);
-    assert(CLOCK_SYS_GetLptimerGateCmd(instance));
+    assert(CLOCK_SYS_GetLptmrGateCmd(instance));
 
-    uint32_t baseAddr = g_lptmrBaseAddr[instance];
+    LPTMR_Type * base = g_lptmrBase[instance];
     uint32_t tick_count;
-
-    /* This function is invalid while in Pulse Counter mode */
-    if(kLptmrTimerModePulseCounter == LPTMR_HAL_GetTimerModeMode(baseAddr))
-    {
-        return kStatus_LPTMR_InvalidInPulseCounterMode;
-    }
-
-    /* If LPTMR is enabled, Compare register can only altered when TCF is set */
-    if((true == LPTMR_HAL_IsEnabled(baseAddr)) && (false == LPTMR_HAL_IsIntPending(baseAddr)))
-    {
-        return kStatus_LPTMR_TcfNotSet;
-    }
 
     if (lptmr_state_ptrs[instance]->prescalerClockHz < 1000000U)
     {
@@ -248,7 +231,7 @@ lptmr_status_t LPTMR_DRV_SetTimerPeriodUs(uint32_t instance, uint32_t us)
             }
             else
             {
-                LPTMR_HAL_SetCompareValue(baseAddr,tick_count);
+                LPTMR_HAL_SetCompareValue(base,tick_count);
             }
         }
     }
@@ -263,7 +246,7 @@ lptmr_status_t LPTMR_DRV_SetTimerPeriodUs(uint32_t instance, uint32_t us)
         }
         else
         {
-            LPTMR_HAL_SetCompareValue(baseAddr,tick_count);
+            LPTMR_HAL_SetCompareValue(base,tick_count);
         }
     }
 
@@ -279,26 +262,20 @@ lptmr_status_t LPTMR_DRV_SetTimerPeriodUs(uint32_t instance, uint32_t us)
  *END**************************************************************************/
 uint32_t LPTMR_DRV_GetCurrentTimeUs(uint32_t instance)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
-    assert(CLOCK_SYS_GetLptimerGateCmd(instance));
+    assert(instance < LPTMR_INSTANCE_COUNT);
+    assert(CLOCK_SYS_GetLptmrGateCmd(instance));
 
-    uint32_t baseAddr = g_lptmrBaseAddr[instance];
+    LPTMR_Type * base = g_lptmrBase[instance];
 
     uint32_t us;
 
-    /* This function is invalid while in Pulse Counter mode */
-    if(kLptmrTimerModePulseCounter == LPTMR_HAL_GetTimerModeMode(baseAddr))
-    {
-        return kStatus_LPTMR_InvalidInPulseCounterMode;
-    }
-
     if (lptmr_state_ptrs[instance]->prescalerClockHz < 1000000U)
     {
-        us = LPTMR_HAL_GetCounterValue(baseAddr)*(1000000U/lptmr_state_ptrs[instance]->prescalerClockHz);
+        us = LPTMR_HAL_GetCounterValue(base)*(1000000U/lptmr_state_ptrs[instance]->prescalerClockHz);
     }
     else
     {
-        us = LPTMR_HAL_GetCounterValue(baseAddr)/(lptmr_state_ptrs[instance]->prescalerClockHz/1000000U);
+        us = LPTMR_HAL_GetCounterValue(base)/(lptmr_state_ptrs[instance]->prescalerClockHz/1000000U);
     }
 
     return us;
@@ -314,26 +291,13 @@ uint32_t LPTMR_DRV_GetCurrentTimeUs(uint32_t instance)
  *END**************************************************************************/
 lptmr_status_t LPTMR_DRV_SetPulsePeriodCount(uint32_t instance, uint32_t pulsePeriodCount)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
+    assert(instance < LPTMR_INSTANCE_COUNT);
     assert(pulsePeriodCount > 0);
-    assert(CLOCK_SYS_GetLptimerGateCmd(instance));
+    assert(CLOCK_SYS_GetLptmrGateCmd(instance));
 
-    uint32_t baseAddr = g_lptmrBaseAddr[instance];
+    LPTMR_Type * base = g_lptmrBase[instance];
 
-     /* This function is invalid while in time Counter mode */
-    if(kLptmrTimerModeTimeCounter == LPTMR_HAL_GetTimerModeMode(baseAddr))
-    {
-        return kStatus_LPTMR_InvalidInTimeCounterMode;
-    }
-
-    /* If LPTMR is enabled, Compare register can only altered when TCF is set */
-    if((true == LPTMR_HAL_IsEnabled(baseAddr)) && (false == LPTMR_HAL_IsIntPending(baseAddr)))
-    {
-        return kStatus_LPTMR_TcfNotSet;
-    }
-
-
-    LPTMR_HAL_SetCompareValue(baseAddr, pulsePeriodCount);
+    LPTMR_HAL_SetCompareValue(base, pulsePeriodCount);
 
     return kStatus_LPTMR_Success;
 }
@@ -347,19 +311,13 @@ lptmr_status_t LPTMR_DRV_SetPulsePeriodCount(uint32_t instance, uint32_t pulsePe
  *END**************************************************************************/
 uint32_t LPTMR_DRV_GetCurrentPulseCount(uint32_t instance)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
-    assert(CLOCK_SYS_GetLptimerGateCmd(instance));
+    assert(instance < LPTMR_INSTANCE_COUNT);
+    assert(CLOCK_SYS_GetLptmrGateCmd(instance));
 
-    uint32_t baseAddr = g_lptmrBaseAddr[instance];
+    LPTMR_Type * base = g_lptmrBase[instance];
     uint32_t count;
 
-    /* This function is invalid while in time Counter mode */
-    if(kLptmrTimerModeTimeCounter == LPTMR_HAL_GetTimerModeMode(baseAddr))
-    {
-        return kStatus_LPTMR_InvalidInTimeCounterMode;
-    }
-
-    count = LPTMR_HAL_GetCounterValue(baseAddr);
+    count = LPTMR_HAL_GetCounterValue(base);
 
     return count;
 }
@@ -375,9 +333,9 @@ uint32_t LPTMR_DRV_GetCurrentPulseCount(uint32_t instance)
  *END*************************************************************************/
 lptmr_status_t LPTMR_DRV_InstallCallback(uint32_t instance, lptmr_callback_t userCallback)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
+    assert(instance < LPTMR_INSTANCE_COUNT);
 
-    assert (instance < HW_LPTMR_INSTANCE_COUNT);
+    assert (instance < LPTMR_INSTANCE_COUNT);
     if (!lptmr_state_ptrs[instance])
     {
         return kStatus_LPTMR_NotInitlialized;
@@ -399,13 +357,13 @@ lptmr_status_t LPTMR_DRV_InstallCallback(uint32_t instance, lptmr_callback_t use
  *END*************************************************************************/
 void LPTMR_DRV_IRQHandler(uint32_t instance)
 {
-    assert(instance < HW_LPTMR_INSTANCE_COUNT);
-    assert(CLOCK_SYS_GetLptimerGateCmd(instance));
+    assert(instance < LPTMR_INSTANCE_COUNT);
+    assert(CLOCK_SYS_GetLptmrGateCmd(instance));
 
-    uint32_t baseAddr = g_lptmrBaseAddr[instance];
+    LPTMR_Type * base = g_lptmrBase[instance];
 
     /* Clear interrupt flag */
-    LPTMR_HAL_ClearIntFlag(baseAddr);
+    LPTMR_HAL_ClearIntFlag(base);
 
     if (lptmr_state_ptrs[instance])
     {
@@ -416,6 +374,7 @@ void LPTMR_DRV_IRQHandler(uint32_t instance)
         }
     }
 }
+#endif
 /*******************************************************************************
  * EOF
  *******************************************************************************/

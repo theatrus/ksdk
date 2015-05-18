@@ -29,63 +29,103 @@
  */
 #include "fsl_tpm_hal.h"
 
+#if FSL_FEATURE_SOC_TPM_COUNT
+
+/* Table of number of channels for each TPM instance */
+const uint32_t g_tpmChannelCount[TPM_INSTANCE_COUNT] = FSL_FEATURE_TPM_CHANNEL_COUNTx;
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-void TPM_HAL_EnablePwmMode(uint32_t baseAddr, tpm_pwm_param_t *config, uint8_t channel)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : TPM_HAL_EnablePwmMode
+ * Description   : Enables the TPM PWM output mode.
+ *
+ *END**************************************************************************/
+void TPM_HAL_EnablePwmMode(TPM_Type *tpmBase, tpm_pwm_param_t *config, uint8_t channel)
 {
     uint32_t val;
+    tpm_clock_mode_t clkSrc;
 
-    val = ((uint32_t)(config->edgeMode ? 1 : 2)) << BP_TPM_CnSC_ELSA;
-    val |= (2 << BP_TPM_CnSC_MSA);
-    TPM_HAL_SetChnMsnbaElsnbaVal(baseAddr, channel, val);
+    /*
+     * Update bit only if change in PWM mode. This code is conditionalized as it requires disabling
+     * the counter
+     */
+    if (TPM_HAL_GetCpwms(tpmBase) != (bool)config->mode)
+    {
+        clkSrc = TPM_HAL_GetClockMode(tpmBase);
+        /* Disable counter when switching modes */
+        TPM_HAL_SetClockMode(tpmBase, kTpmClockSourceNoneClk);
+
+        TPM_HAL_SetCpwms(tpmBase, config->mode);
+        /* Restore the clock source */
+        TPM_HAL_SetClockMode(tpmBase, clkSrc);
+    }
+
+    val = ((uint32_t)(config->edgeMode ? 1 : 2)) << TPM_CnSC_ELSA_SHIFT;
+    val |= (2 << TPM_CnSC_MSA_SHIFT);
+    TPM_HAL_SetChnMsnbaElsnbaVal(tpmBase, channel, val);
 
     /* Wait till mode change is acknowledged */
-    while (!(TPM_HAL_GetChnMsnbaVal(baseAddr, channel))) { }
+    while (!(TPM_HAL_GetChnMsnbaVal(tpmBase, channel))) { }
+}
 
-    switch(config->mode)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : TPM_HAL_DisableChn
+ * Description   : Disables the TPM channel.
+ *
+ *END**************************************************************************/
+void TPM_HAL_DisableChn(TPM_Type *tpmBase, uint8_t channel)
+{
+
+    TPM_HAL_SetChnMsnbaElsnbaVal(tpmBase, channel, 0);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : TPM_HAL_SetClockMode
+ * Description   : Set TPM clock mode.
+ * When disabling the TPM counter, the function will wait till it receives an
+ * acknowledge from the TPM clock domain
+ *
+ *END**************************************************************************/
+void TPM_HAL_SetClockMode(TPM_Type *tpmBase, tpm_clock_mode_t mode)
+{
+    TPM_BWR_SC_CMOD(tpmBase, mode);
+    if (mode == kTpmClockSourceNoneClk)
     {
-        case kTpmEdgeAlignedPWM:
-            TPM_HAL_SetCpwms(baseAddr, 0);
-            break;
-        case kTpmCenterAlignedPWM:
-            TPM_HAL_SetCpwms(baseAddr, 1);
-            break;
-        default:
-            assert(0);
-            break;
+        /* Wait till this reads as zero acknowledging the counter is disabled */
+        while (TPM_BRD_SC_CMOD(tpmBase)) { }
     }
 }
 
-void TPM_HAL_DisableChn(uint32_t baseAddr, uint8_t channel)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : TPM_HAL_Reset
+ * Description   : Reset TPM registers
+ *
+ *END**************************************************************************/
+void TPM_HAL_Reset(TPM_Type *tpmBase, uint32_t instance)
 {
-
-    TPM_HAL_SetChnCountVal(baseAddr, channel, 0);
-    TPM_HAL_SetChnMsnbaElsnbaVal(baseAddr, channel, 0);
-    TPM_HAL_SetCpwms(baseAddr, 0);
-}
-
-/*see fsl_tpm_hal.h for documentation of this function*/
-void TPM_HAL_Reset(uint32_t baseAddr, uint32_t instance)
-{
-    uint8_t chan = FSL_FEATURE_TPM_CHANNEL_COUNTn(instance);
+    uint8_t chan = g_tpmChannelCount[instance];
     int i;
 
-    HW_TPM_SC_WR(baseAddr, 0);
-    TPM_HAL_SetMod(baseAddr, 0xffff);
+    TPM_WR_SC(tpmBase, 0);
 
     /*instance 1 and 2 only has two channels,0 and 1*/
     for(i = 0; i < chan; i++)
     {
-        HW_TPM_CnSC_WR(baseAddr, i, 0);
-        HW_TPM_CnV_WR(baseAddr, i, 0);
+        TPM_WR_CnSC(tpmBase, i, 0);
     }
 
-    HW_TPM_STATUS_WR(baseAddr, BM_TPM_STATUS_CH0F | BM_TPM_STATUS_CH1F | BM_TPM_STATUS_TOF);
-    HW_TPM_CONF_WR(baseAddr, 0);
+    TPM_WR_STATUS(tpmBase, TPM_STATUS_CH0F_MASK | TPM_STATUS_CH1F_MASK | TPM_STATUS_TOF_MASK);
+    TPM_WR_CONF(tpmBase, 0);
 }
 
+#endif /* FSL_FEATURE_SOC_TPM_COUNT */
 
 /*******************************************************************************
  * EOF

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -33,33 +33,34 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_SDHC_COUNT
 
 /*! @addtogroup sdhc_hal */
 /*! @{ */
 
 /* PRSSTA */
-#define SDHC_HAL_DAT0_LEVEL             (BM_SDHC_PRSSTAT_DLSL & (1 << 24))
+#define SDHC_HAL_DAT0_LEVEL             (SDHC_PRSSTAT_DLSL_MASK & (1 << 24))
 
 /* XFERTYP */
-#define SDHC_HAL_MAX_BLOCK_COUNT        ((1 << BS_SDHC_BLKATTR_BLKCNT) - 1)
-#define SDHC_HAL_ENABLE_DMA             BM_SDHC_XFERTYP_DMAEN
+#define SDHC_HAL_MAX_BLOCK_COUNT        ((1 << SDHC_BLKATTR_BLKCNT_WIDTH) - 1)
+#define SDHC_HAL_ENABLE_DMA             SDHC_XFERTYP_DMAEN_MASK
 
-#define SDHC_HAL_CMD_TYPE_SUSPEND       (BF_SDHC_XFERTYP_CMDTYP(1))
-#define SDHC_HAL_CMD_TYPE_RESUME        (BF_SDHC_XFERTYP_CMDTYP(2))
-#define SDHC_HAL_CMD_TYPE_ABORT         (BF_SDHC_XFERTYP_CMDTYP(3))
+#define SDHC_HAL_CMD_TYPE_SUSPEND       (SDHC_XFERTYP_CMDTYP(1))
+#define SDHC_HAL_CMD_TYPE_RESUME        (SDHC_XFERTYP_CMDTYP(2))
+#define SDHC_HAL_CMD_TYPE_ABORT         (SDHC_XFERTYP_CMDTYP(3))
 
-#define SDHC_HAL_ENABLE_BLOCK_COUNT     BM_SDHC_XFERTYP_BCEN
-#define SDHC_HAL_ENABLE_AUTO_CMD12      BM_SDHC_XFERTYP_AC12EN
-#define SDHC_HAL_ENABLE_DATA_READ       BM_SDHC_XFERTYP_DTDSEL
-#define SDHC_HAL_MULTIPLE_BLOCK         BM_SDHC_XFERTYP_MSBSEL
+#define SDHC_HAL_ENABLE_BLOCK_COUNT     SDHC_XFERTYP_BCEN_MASK
+#define SDHC_HAL_ENABLE_AUTO_CMD12      SDHC_XFERTYP_AC12EN_MASK
+#define SDHC_HAL_ENABLE_DATA_READ       SDHC_XFERTYP_DTDSEL_MASK
+#define SDHC_HAL_MULTIPLE_BLOCK         SDHC_XFERTYP_MSBSEL_MASK
 
-#define SDHC_HAL_RESP_LEN_136           ((0x1 << BP_SDHC_XFERTYP_RSPTYP) & BM_SDHC_XFERTYP_RSPTYP)
-#define SDHC_HAL_RESP_LEN_48            ((0x2 << BP_SDHC_XFERTYP_RSPTYP) & BM_SDHC_XFERTYP_RSPTYP)
-#define SDHC_HAL_RESP_LEN_48_BC         ((0x3 << BP_SDHC_XFERTYP_RSPTYP) & BM_SDHC_XFERTYP_RSPTYP)
+#define SDHC_HAL_RESP_LEN_136           ((0x1 << SDHC_XFERTYP_RSPTYP_SHIFT) & SDHC_XFERTYP_RSPTYP_MASK)
+#define SDHC_HAL_RESP_LEN_48            ((0x2 << SDHC_XFERTYP_RSPTYP_SHIFT) & SDHC_XFERTYP_RSPTYP_MASK)
+#define SDHC_HAL_RESP_LEN_48_BC         ((0x3 << SDHC_XFERTYP_RSPTYP_SHIFT) & SDHC_XFERTYP_RSPTYP_MASK)
 
-#define SDHC_HAL_ENABLE_CRC_CHECK       BM_SDHC_XFERTYP_CCCEN
-#define SDHC_HAL_ENABLE_INDEX_CHECK     BM_SDHC_XFERTYP_CICEN
-#define SDHC_HAL_DATA_PRESENT           BM_SDHC_XFERTYP_DPSEL
+#define SDHC_HAL_ENABLE_CRC_CHECK       SDHC_XFERTYP_CCCEN_MASK
+#define SDHC_HAL_ENABLE_INDEX_CHECK     SDHC_XFERTYP_CICEN_MASK
+#define SDHC_HAL_DATA_PRESENT           SDHC_XFERTYP_DPSEL_MASK
 
 /* SYSCTL */
 #define SDHC_HAL_MAX_DVS                (16U)
@@ -72,24 +73,24 @@
 #define SDHC_HAL_PREV_CLKFS(x)          do { ((x) >>= 1); } while(0)
 
 /* IRQSTAT */
-#define SDHC_HAL_CMD_COMPLETE_INT       BM_SDHC_IRQSTAT_CC
-#define SDHC_HAL_DATA_COMPLETE_INT      BM_SDHC_IRQSTAT_TC
-#define SDHC_HAL_BLOCK_GAP_EVENT_INT    BM_SDHC_IRQSTAT_BGE
-#define SDHC_HAL_DMA_INT                BM_SDHC_IRQSTAT_DINT
-#define SDHC_HAL_DMA_ERR_INT            BM_SDHC_IRQSTAT_DMAE
-#define SDHC_HAL_BUF_WRITE_READY_INT    BM_SDHC_IRQSTAT_BWR
-#define SDHC_HAL_BUF_READ_READY_INT     BM_SDHC_IRQSTAT_BRR
-#define SDHC_HAL_CARD_INSERTION_INT     BM_SDHC_IRQSTAT_CINS
-#define SDHC_HAL_CARD_REMOVAL_INT       BM_SDHC_IRQSTAT_CRM
-#define SDHC_HAL_CARD_INT               BM_SDHC_IRQSTAT_CINT
-#define SDHC_HAL_CMD_TIMEOUT_ERR_INT    BM_SDHC_IRQSTAT_CTOE
-#define SDHC_HAL_CMD_CRC_ERR_INT        BM_SDHC_IRQSTAT_CCE
-#define SDHC_HAL_CMD_END_BIT_ERR_INT    BM_SDHC_IRQSTAT_CEBE
-#define SDHC_HAL_CMD_INDEX_ERR_INT      BM_SDHC_IRQSTAT_CIE
-#define SDHC_HAL_DATA_TIMEOUT_ERR_INT   BM_SDHC_IRQSTAT_DTOE
-#define SDHC_HAL_DATA_CRC_ERR_INT       BM_SDHC_IRQSTAT_DCE
-#define SDHC_HAL_DATA_END_BIT_ERR_INT   BM_SDHC_IRQSTAT_DEBE
-#define SDHC_HAL_AUTO_CMD12_ERR_INT     BM_SDHC_IRQSTAT_AC12E
+#define SDHC_HAL_CMD_COMPLETE_INT       SDHC_IRQSTAT_CC_MASK
+#define SDHC_HAL_DATA_COMPLETE_INT      SDHC_IRQSTAT_TC_MASK
+#define SDHC_HAL_BLOCK_GAP_EVENT_INT    SDHC_IRQSTAT_BGE_MASK
+#define SDHC_HAL_DMA_INT                SDHC_IRQSTAT_DINT_MASK
+#define SDHC_HAL_DMA_ERR_INT            SDHC_IRQSTAT_DMAE_MASK
+#define SDHC_HAL_BUF_WRITE_READY_INT    SDHC_IRQSTAT_BWR_MASK
+#define SDHC_HAL_BUF_READ_READY_INT     SDHC_IRQSTAT_BRR_MASK
+#define SDHC_HAL_CARD_INSERTION_INT     SDHC_IRQSTAT_CINS_MASK
+#define SDHC_HAL_CARD_REMOVAL_INT       SDHC_IRQSTAT_CRM_MASK
+#define SDHC_HAL_CARD_INT               SDHC_IRQSTAT_CINT_MASK
+#define SDHC_HAL_CMD_TIMEOUT_ERR_INT    SDHC_IRQSTAT_CTOE_MASK
+#define SDHC_HAL_CMD_CRC_ERR_INT        SDHC_IRQSTAT_CCE_MASK
+#define SDHC_HAL_CMD_END_BIT_ERR_INT    SDHC_IRQSTAT_CEBE_MASK
+#define SDHC_HAL_CMD_INDEX_ERR_INT      SDHC_IRQSTAT_CIE_MASK
+#define SDHC_HAL_DATA_TIMEOUT_ERR_INT   SDHC_IRQSTAT_DTOE_MASK
+#define SDHC_HAL_DATA_CRC_ERR_INT       SDHC_IRQSTAT_DCE_MASK
+#define SDHC_HAL_DATA_END_BIT_ERR_INT   SDHC_IRQSTAT_DEBE_MASK
+#define SDHC_HAL_AUTO_CMD12_ERR_INT     SDHC_IRQSTAT_AC12E_MASK
 
 #define SDHC_HAL_CMD_ERR_INT            ((uint32_t)(SDHC_HAL_CMD_TIMEOUT_ERR_INT | \
                                         SDHC_HAL_CMD_CRC_ERR_INT | \
@@ -114,70 +115,82 @@
                                         SDHC_HAL_DMA_ERR_INT))
 
 /* AC12ERR */
-#define SDHC_HAL_ACMD12_NOT_EXEC_ERR    BM_SDHC_AC12ERR_AC12NE
-#define SDHC_HAL_ACMD12_TIMEOUT_ERR     BM_SDHC_AC12ERR_AC12TOE
-#define SDHC_HAL_ACMD12_END_BIT_ERR     BM_SDHC_AC12ERR_AC12EBE
-#define SDHC_HAL_ACMD12_CRC_ERR         BM_SDHC_AC12ERR_AC12CE
-#define SDHC_HAL_ACMD12_INDEX_ERR       BM_SDHC_AC12ERR_AC12IE
-#define SDHC_HAL_ACMD12_NOT_ISSUE_ERR   BM_SDHC_AC12ERR_CNIBAC12E
+#define SDHC_HAL_ACMD12_NOT_EXEC_ERR    SDHC_AC12ERR_AC12NE_MASK
+#define SDHC_HAL_ACMD12_TIMEOUT_ERR     SDHC_AC12ERR_AC12TOE_MASK
+#define SDHC_HAL_ACMD12_END_BIT_ERR     SDHC_AC12ERR_AC12EBE_MASK
+#define SDHC_HAL_ACMD12_CRC_ERR         SDHC_AC12ERR_AC12CE_MASK
+#define SDHC_HAL_ACMD12_INDEX_ERR       SDHC_AC12ERR_AC12IE_MASK
+#define SDHC_HAL_ACMD12_NOT_ISSUE_ERR   SDHC_AC12ERR_CNIBAC12E_MASK
+
+/* ADMAES */
+/* ADMA Error State (When ADMA Error Is Occurred.) */
+#define SDHC_HAL_ADMA_STATE_ERR                      SDHC_ADMAES_ADMAES_MASK
+/* ADMA Length Mismatch Error */
+#define SDHC_HAL_ADMA_LEN_MIS_MATCH_FLAG             SDHC_ADMAES_ADMALME_MASK
+/* ADMA Descriptor Error */ 
+#define SDHC_HAL_ADMA_DESP_ERR_FLAG                  SDHC_ADMAES_ADMADCE_MASK
 
 /* HTCAPBLT */
-#define SDHC_HAL_SUPPORT_ADMA           BM_SDHC_HTCAPBLT_ADMAS
-#define SDHC_HAL_SUPPORT_HIGHSPEED     BM_SDHC_HTCAPBLT_HSS
-#define SDHC_HAL_SUPPORT_DMA            BM_SDHC_HTCAPBLT_DMAS
-#define SDHC_HAL_SUPPORT_SUSPEND_RESUME BM_SDHC_HTCAPBLT_SRS
-#define SDHC_HAL_SUPPORT_3_3_V          BM_SDHC_HTCAPBLT_VS33
-#define SDHC_HAL_SUPPORT_3_0_V          BM_SDHC_HTCAPBLT_VS30
-#define SDHC_HAL_SUPPORT_1_8_V          BM_SDHC_HTCAPBLT_VS18
+#define SDHC_HAL_SUPPORT_ADMA           SDHC_HTCAPBLT_ADMAS_MASK
+#define SDHC_HAL_SUPPORT_HIGHSPEED     SDHC_HTCAPBLT_HSS_MASK
+#define SDHC_HAL_SUPPORT_DMA            SDHC_HTCAPBLT_DMAS_MASK
+#define SDHC_HAL_SUPPORT_SUSPEND_RESUME SDHC_HTCAPBLT_SRS_MASK
+#define SDHC_HAL_SUPPORT_3_3_V          SDHC_HTCAPBLT_VS33_MASK
+#define SDHC_HAL_SUPPORT_3_0_V          SDHC_HTCAPBLT_VS30_MASK
+#define SDHC_HAL_SUPPORT_1_8_V          SDHC_HTCAPBLT_VS18_MASK
 
 /* FEVT */
-#define SDHC_HAL_ACMD12_NOT_EXEC_ERR_EVENT  BM_SDHC_FEVT_AC12NE
-#define SDHC_HAL_ACMD12_TIMEOUT_ERR_EVENT   BM_SDHC_FEVT_AC12TOE
-#define SDHC_HAL_ACMD12_CRC_ERR_EVENT       BM_SDHC_FEVT_AC12CE
-#define SDHC_HAL_ACMD12_END_BIT_ERR_EVENT   BM_SDHC_FEVT_AC12EBE
-#define SDHC_HAL_ACMD12_INDEX_ERR_EVENT     BM_SDHC_FEVT_AC12IE
-#define SDHC_HAL_ACMD12_NOT_ISSUE_ERR_EVENT BM_SDHC_FEVT_CNIBAC12E
-#define SDHC_HAL_CMD_TIMEOUT_ERR_EVENT      BM_SDHC_FEVT_CTOE
-#define SDHC_HAL_CMD_CRC_ERR_EVENT          BM_SDHC_FEVT_CCE
-#define SDHC_HAL_CMD_END_BIT_ERR_EVENT      BM_SDHC_FEVT_CEBE
-#define SDHC_HAL_CMD_INDEX_ERR_EVENT        BM_SDHC_FEVT_CIE
-#define SDHC_HAL_DATA_TIMEOUT_ERR_EVENT     BM_SDHC_FEVT_DTOE
-#define SDHC_HAL_DATA_CRC_ERR_EVENT         BM_SDHC_FEVT_DCE
-#define SDHC_HAL_DATA_END_BIT_ERR_EVENT     BM_SDHC_FEVT_DEBE
-#define SDHC_HAL_ACMD12_ERR_EVENT           BM_SDHC_FEVT_AC12E
-#define SDHC_HAL_CARD_INT_EVENT             BM_SDHC_FEVT_CINT
-#define SDHC_HAL_DMA_ERROR_EVENT            BM_SDHC_FEVT_DMAE
+#define SDHC_HAL_ACMD12_NOT_EXEC_ERR_EVENT  SDHC_FEVT_AC12NE_MASK
+#define SDHC_HAL_ACMD12_TIMEOUT_ERR_EVENT   SDHC_FEVT_AC12TOE_MASK
+#define SDHC_HAL_ACMD12_CRC_ERR_EVENT       SDHC_FEVT_AC12CE_MASK
+#define SDHC_HAL_ACMD12_END_BIT_ERR_EVENT   SDHC_FEVT_AC12EBE_MASK
+#define SDHC_HAL_ACMD12_INDEX_ERR_EVENT     SDHC_FEVT_AC12IE_MASK
+#define SDHC_HAL_ACMD12_NOT_ISSUE_ERR_EVENT SDHC_FEVT_CNIBAC12E_MASK
+#define SDHC_HAL_CMD_TIMEOUT_ERR_EVENT      SDHC_FEVT_CTOE_MASK
+#define SDHC_HAL_CMD_CRC_ERR_EVENT          SDHC_FEVT_CCE_MASK
+#define SDHC_HAL_CMD_END_BIT_ERR_EVENT      SDHC_FEVT_CEBE_MASK
+#define SDHC_HAL_CMD_INDEX_ERR_EVENT        SDHC_FEVT_CIE_MASK
+#define SDHC_HAL_DATA_TIMEOUT_ERR_EVENT     SDHC_FEVT_DTOE_MASK
+#define SDHC_HAL_DATA_CRC_ERR_EVENT         SDHC_FEVT_DCE_MASK
+#define SDHC_HAL_DATA_END_BIT_ERR_EVENT     SDHC_FEVT_DEBE_MASK
+#define SDHC_HAL_ACMD12_ERR_EVENT           SDHC_FEVT_AC12E_MASK
+#define SDHC_HAL_CARD_INT_EVENT             SDHC_FEVT_CINT_MASK
+#define SDHC_HAL_DMA_ERROR_EVENT            SDHC_FEVT_DMAE_MASK
 
-/* MMCBOOT */
+/*! @brief MMC card BOOT type */
 typedef enum _sdhc_hal_mmcboot {
     kSdhcHalMmcbootNormal = 0,
     kSdhcHalMmcbootAlter = 1,
 } sdhc_hal_mmcboot_t;
 
-/* PROCTL */
+/*! @brief Led control status */
 typedef enum _sdhc_hal_led {
     kSdhcHalLedOff = 0,
     kSdhcHalLedOn = 1,
 } sdhc_hal_led_t;
 
+/*! @brief Data transfer width */
 typedef enum _sdhc_hal_dtw {
     kSdhcHalDtw1Bit = 0,
     kSdhcHalDtw4Bit = 1,
     kSdhcHalDtw8Bit = 2,
 } sdhc_hal_dtw_t;
 
+/*! @brief SDHC endian mode */
 typedef enum _sdhc_hal_endian {
     kSdhcHalEndianBig = 0,
     kSdhcHalEndianHalfWordBig = 1,
     kSdhcHalEndianLittle = 2,
 } sdhc_hal_endian_t;
 
+/*! @brief SDHC dma mode */
 typedef enum _sdhc_hal_dma_mode {
     kSdhcHalDmaSimple = 0,
     kSdhcHalDmaAdma1 = 1,
     kSdhcHalDmaAdma2 = 2,
 } sdhc_hal_dma_mode_t;
 
+/*! @brief SDHC ADMA address alignment size and length alignment size */
 #define SDHC_HAL_ADMA1_ADDR_ALIGN           (4096)
 #define SDHC_HAL_ADMA1_LEN_ALIGN            (4096)
 #define SDHC_HAL_ADMA2_ADDR_ALIGN           (4)
@@ -251,6 +264,7 @@ typedef struct SdhcHalAdma2Descriptor {
     uint32_t *address;
 } sdhc_hal_adma2_descriptor_t;
 
+/* ADMA1 descriptor control and status mask */
 #define SDHC_HAL_ADMA2_DESC_VALID_MASK           (1 << 0)
 #define SDHC_HAL_ADMA2_DESC_END_MASK             (1 << 1)
 #define SDHC_HAL_ADMA2_DESC_INT_MASK             (1 << 2)
@@ -264,14 +278,145 @@ typedef struct SdhcHalAdma2Descriptor {
 #define SDHC_HAL_ADMA2_DESC_LEN_MASK             (0xFFFFU)
 #define SDHC_HAL_ADMA2_DESC_MAX_LEN_PER_ENTRY    (SDHC_HAL_ADMA2_DESC_LEN_MASK)
 
-#define SDHC_HAL_RST_TYPE_ALL               BM_SDHC_SYSCTL_RSTA
-#define SDHC_HAL_RST_TYPE_CMD               BM_SDHC_SYSCTL_RSTC
-#define SDHC_HAL_RST_TYPE_DATA              BM_SDHC_SYSCTL_RSTD
+/* Card response type */
+#define SDHC_HAL_RST_TYPE_ALL               SDHC_SYSCTL_RSTA_MASK
+#define SDHC_HAL_RST_TYPE_CMD               SDHC_SYSCTL_RSTC_MASK
+#define SDHC_HAL_RST_TYPE_DATA              SDHC_SYSCTL_RSTD_MASK
 
+/* Max block length sdhc support */
 #define SDHC_HAL_MAX_BLKLEN_512B            (0U)
 #define SDHC_HAL_MAX_BLKLEN_1024B           (1U)
 #define SDHC_HAL_MAX_BLKLEN_2048B           (2U)
 #define SDHC_HAL_MAX_BLKLEN_4096B           (3U)
+
+/* Voltage Support 3.3 V */ 
+#define SDHC_HAL_SUPPORT_V330_FLAG                   (1U << 0)
+/* Voltage Support 3.0 V */
+#define SDHC_HAL_SUPPORT_V300_FLAG                   (1U << 1)
+/* High Speed Support */
+#define SDHC_HAL_SUPPORT_HIGHSPEED_FLAG              (1U << 2)
+/* DMA Support */
+#define SDHC_HAL_SUPPORT_DMA_FLAG                    (1U << 3)
+/* ADMA Support */
+#define SDHC_HAL_SUPPORT_ADMA_FLAG                   (1U << 4)
+/* Suspend/Resume Support */
+#define SDHC_HAL_SUPPORT_SUSPEND_RESUME_FLAG         (1U << 5)
+/* Voltage Support 1.8 V */
+#define SDHC_HAL_SUPPORT_V180_FLAG                   (1U << 6)
+/* Support external dma */
+#define SDHC_HAL_SUPPORT_EXDMA_FLAG                  (1U << 7)
+
+/*! @brief Data structure to get the basic information of SDHC */
+typedef struct SdhcHalBasicInfo
+{
+    uint8_t specVer;               /*!< Save the specification version */
+    uint8_t vendorVer;             /*!< Save the verdor version */
+    uint16_t maxBlkLen;             /*!< Save the max block length */
+    uint32_t capability;           /*!< The capability flags */
+}sdhc_hal_basic_info_t;
+
+/*! @brief SD clock configuration to configure the clock of SD protocol unit */
+typedef struct SdhcHalSdClkConfig
+{
+    bool enable;
+    uint32_t maxHostClk;
+    uint32_t destClk;
+}sdhc_hal_sdclk_config_t;
+
+/*! @brief Current sdhc status type */
+typedef enum _sdhc_hal_curstat_type_t {
+    kSdhcHalIsCmdInhibit,          /*!< Checks whether the command inhibit bit is set or not. */
+    kSdhcHalIsDataInhibit,         /*!< Checks whether data inhibit bit is set or not. */
+    kSdhcHalIsDataLineActive,      /*!< Checks whether data line is active. */
+    kSdhcHalIsSdClockStable,       /*!< Checks whether the SD clock is stable or not. */
+    kSdhcHalIsIpgClockOff,         /*!< Checks whether the  IPG clock is off or not. */
+    kSdhcHalIsSysClockOff,         /*!< Checks whether the system clock is off or not. */
+    kSdhcHalIsPeripheralClockOff,  /*!< Checks whether the peripheral clock is off or not. */
+    kSdhcHalIsSdClkOff,            /*!< Checks whether  the  SD clock is off or not. */
+    kSdhcHalIsWriteTransferActive, /*!< Checks whether the write transfer is active or not. */
+    kSdhcHalIsReadTransferActive,  /*!< Checks whether the read transfer is active or not. */
+    kSdhcHalIsBuffWriteEnabled,    /*!< Check whether the buffer write is enabled or not. */
+    kSdhcHalIsBuffReadEnabled,     /*!< Checks whether the buffer read is enabled or not. */
+    kSdhcHalIsCardInserted,        /*!< Checks whether the  card is inserted or not. */
+    kSdhcHalIsCmdLineLevelHigh,    /*!< Checks whether the command line signal is high or not. */
+    kSdhcHalGetDataLine0Level,      /*!< Gets the data line 0 signal level or not. */
+    kSdhcHalGetDataLine1Level,      /*!< Gets the data line 1 signal level or not. */
+    kSdhcHalGetDataLine2Level,      /*!< Gets the data line 2 signal level or not. */
+    kSdhcHalGetDataLine3Level,      /*!< Gets the data line 3 signal level or not. */
+    kSdhcHalGetDataLine4Level,      /*!< Gets the data line 4 signal level or not. */
+    kSdhcHalGetDataLine5Level,      /*!< Gets the data line 5 signal level or not. */
+    kSdhcHalGetDataLine6Level,      /*!< Gets the data line 6 signal level or not. */
+    kSdhcHalGetDataLine7Level,      /*!< Gets the data line 7 signal level or not. */
+    kSdhcHalGetCdTestLevel,        /*!< Gets the card detect test level. */
+}sdhc_hal_curstat_type_t;
+
+/* DAT3 As Card Detection Pin */
+#define SDHC_HAL_EN_D3CD_FLAG                           (1U << 0)
+/* Enables the card detect signal selection. */
+#define SDHC_HAL_EN_CD_SIG_SEL_FLAG                     (1U << 1)
+/* Enables stop at the block gap. */
+#define SDHC_HAL_EN_STOP_AT_BLK_GAP_FLAG                (1U << 2)
+/* Enables the read wait control for the SDIO cards. */
+#define SDHC_HAL_EN_READ_WAIT_CTRL_FLAG                 (1U << 3)
+/* Enables  stop at the block gap requests interrupt. */
+#define SDHC_HAL_EN_INT_STOP_AT_BLK_GAP_FLAG            (1U << 4)
+/* Enables wakeup event on the card interrupt. */
+#define SDHC_HAL_EN_WAKEUP_ON_CARD_INT_FLAG             (1U << 5)
+/* Enables wakeup event on the card insertion. */
+#define SDHC_HAL_EN_WAKEUP_ON_CARD_INS_FLAG             (1U << 6)
+/* Enables  wakeup event on card removal. */
+#define SDHC_HAL_EN_WAKEUP_ON_CARD_REM_FLAG             (1U << 7)
+/* Enables the external DMA request. */
+#define SDHC_HAL_EN_EXT_DMA_REQ_FLAG                    (1U << 8)
+/* Enables the exact block number for the SDIO CMD53. */ 
+#define SDHC_HAL_EN_EXACT_BLK_NUM_FLAG                  (1U << 9)
+
+/* Enables the boot ACK. */
+#define SDHC_HAL_EN_BOOT_ACK_FLAG                           (1 << 0)
+/* Enables the fast boot. */
+#define SDHC_HAL_EN_FAST_BOOT_FLAG                          (1 << 1)
+/* Enables the automatic stop at the block gap. */
+#define SDHC_HAL_EN_BOOT_STOP_AT_BLK_GAP_FLAG               (1 << 2)
+
+/*! @brief Data structure to configure the MMC boot feature */
+typedef struct SdhcHalMmcBootParam
+{
+    uint32_t ackTimeout;      /*!< Sets the timeout value for the boot ACK. */
+    sdhc_hal_mmcboot_t mode;  /*!< Configures the boot mode. */
+    uint32_t blockCount;      /*!< Configures the the block count for the boot. */
+    uint32_t enFlags;
+}sdhc_mmcboot_param_t;
+
+/*! @brief Data structure to initialize the SDHC */
+typedef struct SdhcHalInitConfig
+{
+    sdhc_hal_led_t ledState;          /*!< Sets the LED state. */ 
+    sdhc_hal_endian_t endianMode;     /*!< Configures the endian mode. */
+    sdhc_hal_dma_mode_t dmaMode;      /*!< Sets the DMA mode. */
+    uint8_t writeWatermarkLevel;      /*!< Sets the watermark for writing. */
+    uint8_t readWatermarkLevel;       /*!< Sets the watermark for reading. */
+    uint32_t enFlags;                 /*!< Enable or disable corresponding feature */
+    sdhc_mmcboot_param_t bootParams;  /*!< Configture read MMC card boot data feature*/
+}sdhc_hal_config_t;
+
+/*! @brief Command request structure */
+typedef struct SdhcHalCmdReq
+{
+    uint32_t dataBlkSize;                             /*!< Cmd data Block size */
+    uint32_t dataBlkCount;                            /*!< Cmd data Block count */
+    uint32_t arg;                                     /*!< Cmd argument */
+    uint32_t index;                                   /*!< Cmd index */
+    uint32_t flags;                                   /*!< Cmd Flags */
+}sdhc_hal_cmd_req_t;
+
+/*! @brief SDHC error type */
+typedef enum _sdhc_hal_err_type
+{
+    kAc12Err,                 /*!< Auto CMD12 error */
+    kAdmaErr,                 /*!< ADMA error */     
+}sdhc_hal_err_type_t;
+
+
 
 /*************************************************************************************************
  * API
@@ -285,937 +430,195 @@ extern "C" {
 /*@{ */
 
 /*!
- * @brief Configures the DMA address.
+ * @brief Sends command to card.
  *
- * @param baseAddr SDHC base address
- * @param address the DMA address
+ * @param base SDHC base address
+ * @param cmdReq command request structure
  */
-static inline void SDHC_HAL_SetDmaAddress(uint32_t baseAddr, uint32_t address)
-{
-    HW_SDHC_DSADDR_WR(baseAddr, BF_SDHC_DSADDR_DSADDR(address));
-}
-
-/*!
- * @brief Gets the DMA address.
- *
- * @param baseAddr SDHC base address
- * @return the DMA address
- */
-static inline uint32_t SDHC_HAL_GetDmaAddress(uint32_t baseAddr)
-{
-    return HW_SDHC_DSADDR_RD(baseAddr);
-}
-
-/*!
- * @brief Gets the block size configured.
- *
- * @param baseAddr SDHC base address
- * @return the block size already configured
- */
-static inline uint32_t SDHC_HAL_GetBlockSize(uint32_t baseAddr)
-{
-    return BR_SDHC_BLKATTR_BLKSIZE(baseAddr);
-}
-
-/*!
- * @brief Sets the block size.
- *
- * @param baseAddr SDHC base address
- * @param blockSize the block size
- */
-static inline void SDHC_HAL_SetBlockSize(uint32_t baseAddr, uint32_t blockSize)
-{
-    BW_SDHC_BLKATTR_BLKSIZE(baseAddr, blockSize);
-}
-
-/*!
- * @brief Sets the block count.
- *
- * @param baseAddr SDHC base address
- * @param blockCount the block count
- */
-static inline void SDHC_HAL_SetBlockCount(uint32_t baseAddr, uint32_t blockCount)
-{
-    BW_SDHC_BLKATTR_BLKCNT(baseAddr, blockCount);
-}
-
-/*!
- * @brief Gets the block count configured.
- *
- * @param baseAddr SDHC base address
- * @return the block count already configured
- */
-static inline uint32_t SDHC_HAL_GetBlockCount(uint32_t baseAddr)
-{
-    return BR_SDHC_BLKATTR_BLKCNT(baseAddr);
-}
-
-/*!
- * @brief Configures the command argument.
- *
- * @param baseAddr SDHC base address
- * @param arg the command argument
- */
-static inline void SDHC_HAL_SetCmdArgument(uint32_t baseAddr, uint32_t arg)
-{
-    BW_SDHC_CMDARG_CMDARG(baseAddr, arg);
-}
-
-/*!
- * @brief Sends a command.
- *
- * @param baseAddr SDHC base address
- * @param index command index
- * @param flags transfer type flags
- */
-static inline void SDHC_HAL_SendCmd(uint32_t baseAddr, uint32_t index, uint32_t flags)
-{
-    HW_SDHC_XFERTYP_WR(baseAddr, ((index << BP_SDHC_XFERTYP_CMDINX) & BM_SDHC_XFERTYP_CMDINX)
-            | (flags & ( BM_SDHC_XFERTYP_DMAEN | BM_SDHC_XFERTYP_MSBSEL | BM_SDHC_XFERTYP_DPSEL
-                | BM_SDHC_XFERTYP_CMDTYP | BM_SDHC_XFERTYP_BCEN | BM_SDHC_XFERTYP_CICEN
-                | BM_SDHC_XFERTYP_CCCEN | BM_SDHC_XFERTYP_RSPTYP | BM_SDHC_XFERTYP_DTDSEL
-                | BM_SDHC_XFERTYP_AC12EN)));
-}
+void SDHC_HAL_SendCmd(SDHC_Type * base, const sdhc_hal_cmd_req_t* cmdReq);
 
 /*!
  * @brief Fills the the data port.
  *
- * @param baseAddr SDHC base address
+ * @param base SDHC base address
  * @param data the data about to be sent
  */
-static inline void SDHC_HAL_SetData(uint32_t baseAddr, uint32_t data)
+static inline void SDHC_HAL_SetData(SDHC_Type * base, uint32_t data)
 {
-    HW_SDHC_DATPORT_WR(baseAddr, data);
+    SDHC_WR_DATPORT(base, data);
 }
 
 /*!
  * @brief Retrieves the data from the data port.
  *
- * @param baseAddr SDHC base address
- * @return data the data read
+ * @param base SDHC base address
+ * @return the data has been read
  */
-static inline uint32_t SDHC_HAL_GetData(uint32_t baseAddr)
+static inline uint32_t SDHC_HAL_GetData(SDHC_Type * base)
 {
-    return BR_SDHC_DATPORT_DATCONT(baseAddr);
+    return SDHC_RD_DATPORT(base);
 }
 
 /*!
- * @brief Checks whether the command inhibit bit is set or not.
+ * @brief Gets current card's status.
  *
- * @param baseAddr SDHC base address
- * @return 1 if command inhibit, 0 if not.
+ * @param base SDHC base address
+ * @return the status if happened corresponding to stateType
+ *        - true: status flag has been set
+ *        - false: status flag has not been set
  */
-static inline uint32_t SDHC_HAL_IsCmdInhibit(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_CIHB(baseAddr);
-}
-
-/*!
- * @brief Checks whether data inhibit bit is set or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if data inhibit, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsDataInhibit(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_CDIHB(baseAddr);
-}
-
-/*!
- * @brief Checks whether data line is active.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's active, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsDataLineActive(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_DLA(baseAddr);
-}
-
-/*!
- * @brief Checks whether the SD clock is stable or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's stable, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsSdClockStable(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_SDSTB(baseAddr);
-}
-
-/*!
- * @brief Checks whether the  IPG clock is off or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's off, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsIpgClockOff(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_IPGOFF(baseAddr);
-}
-
-/*!
- * @brief Checks whether the system clock is off or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's off, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsSysClockOff(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_HCKOFF(baseAddr);
-}
-
-/*!
- * @brief Checks whether the peripheral clock is off or not.
- *
- * @param baseAddr SDHC base address.
- * @return 1 if it's off, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsPeripheralClockOff(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_PEROFF(baseAddr);
-}
-
-/*!
- * @brief Checks whether  the  SD clock is off or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's off, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsSdClkOff(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_SDOFF(baseAddr);
-}
-
-/*!
- * @brief Checks whether the write transfer is active or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's active, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsWriteTransferActive(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_WTA(baseAddr);
-}
-
-/*!
- * @brief Checks whether the read transfer is active or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's off, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsReadTransferActive(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_RTA(baseAddr);
-}
-
-/*!
- * @brief Check whether the buffer write is enabled or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's isEnabledd, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsBuffWriteEnabled(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_BWEN(baseAddr);
-}
-
-/*!
- * @brief Checks whether the buffer read is enabled or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's isEnabledd, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsBuffReadEnabled(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_BREN(baseAddr);
-}
-
-/*!
- * @brief Checks whether the  card is inserted or not.
- *
- * @param baseAddr SDHC base address.
- * @return 1 if it's inserted, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsCardInserted(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_CINS(baseAddr);
-}
-
-/*!
- * @brief Checks whether the command line signal is high or not.
- *
- * @param baseAddr SDHC base address
- * @return 1 if it's high, 0 if not.
- */
-static inline uint32_t SDHC_HAL_IsCmdLineLevelHigh(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_CLSL(baseAddr);
-}
-
-/*!
- * @brief Gets the data line signal level or not.
- *
- * @param baseAddr SDHC base address
- * @return [7:0] data line signal level
- */
-static inline uint32_t SDHC_HAL_GetDataLineLevel(uint32_t baseAddr)
-{
-    return BR_SDHC_PRSSTAT_DLSL(baseAddr);
-}
-
-/*!
- * @brief Sets the LED state.
- *
- * @param baseAddr SDHC base address
- * @param state the LED state
- */
-static inline void SDHC_HAL_SetLedState(uint32_t baseAddr, sdhc_hal_led_t state)
-{
-    BW_SDHC_PROCTL_LCTL(baseAddr, state);
-}
+bool SDHC_HAL_GetCurState(SDHC_Type * base, sdhc_hal_curstat_type_t stateType);
 
 /*!
  * @brief Sets the data transfer width.
  *
- * @param baseAddr SDHC base address
+ * @param base SDHC base address
  * @param dtw data transfer width
  */
-static inline void SDHC_HAL_SetDataTransferWidth(uint32_t baseAddr, sdhc_hal_dtw_t dtw)
+static inline void SDHC_HAL_SetDataTransferWidth(SDHC_Type * base, sdhc_hal_dtw_t dtw)
 {
-    BW_SDHC_PROCTL_DTW(baseAddr, dtw);
-}
-
-/*!
- * @brief Checks whether the DAT3 is taken as card detect pin.
- *
- * @param baseAddr SDHC base address
- * @return if DAT3 as card detect pin is enabled
- */
-static inline bool SDHC_HAL_IsD3cdEnabled(uint32_t baseAddr)
-{
-    return BR_SDHC_PROCTL_D3CD(baseAddr);
-}
-
-/*!
- * @brief Enables the DAT3 as a card detect pin.
- *
- * @param baseAddr SDHC base address
- * @param enable to enable DAT3 as card detect pin
- */
-static inline void SDHC_HAL_SetD3cd(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_PROCTL_D3CD(baseAddr, enable ? 1 : 0);
-}
-
-/*!
- * @brief Configures the endian mode.
- *
- * @param baseAddr SDHC base address
- * @param endianMode endian mode
- */
-static inline void SDHC_HAL_SetEndian(uint32_t baseAddr, sdhc_hal_endian_t endianMode)
-{
-    BW_SDHC_PROCTL_EMODE(baseAddr, endianMode);
-}
-
-/*!
-* @brief Gets the card detect test level.
-*
-* @param baseAddr SDHC base address
-* @return card detect test level
-*/
-static inline uint32_t SDHC_HAL_GetCdTestLevel(uint32_t baseAddr)
-{
-    return BR_SDHC_PROCTL_CDTL(baseAddr);
-}
-
-/*!
-* @brief Enables the card detect test.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable card detect signal for test purpose
-*/
-static inline void SDHC_HAL_SetCdTest(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_PROCTL_CDSS(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Sets the DMA mode.
-*
-* @param baseAddr SDHC base address
-* @param dmaMode the DMA mode
-*/
-static inline void SDHC_HAL_SetDmaMode(uint32_t baseAddr, sdhc_hal_dma_mode_t dmaMode)
-{
-    BW_SDHC_PROCTL_DMAS(baseAddr, dmaMode);
-}
-
-/*!
-* @brief Enables stop at the block gap.
-*
-* @param baseAddr SDHC base address
-* @param enable to stop at block gap request
-*/
-static inline void SDHC_HAL_SetStopAtBlockGap(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_PROCTL_SABGREQ(baseAddr, enable ? 1 : 0);
+    SDHC_BWR_PROCTL_DTW(base, dtw);
 }
 
 /*!
 * @brief Restarts a transaction which has stopped at the block gap.
 *
-* @param baseAddr SDHC base address
+* @param base SDHC base address
 */
-static inline void SDHC_HAL_SetContinueRequest(uint32_t baseAddr)
+static inline void SDHC_HAL_SetContinueRequest(SDHC_Type * base)
 {
-    BW_SDHC_PROCTL_CREQ(baseAddr, 1);
+    SDHC_BWR_PROCTL_CREQ(base, 1);
 }
 
 /*!
-* @brief Enables the read wait control for the SDIO cards.
+* @brief Initialize the SDHC according to the configuration user input.
 *
-* @param baseAddr SDHC base address
-* @param enable to enable read wait control
+* @param base SDHC base address
+* @param initConfig The configuration structure 
 */
-static inline void SDHC_HAL_SetReadWaitCtrl(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_PROCTL_RWCTL(baseAddr, enable ? 1 : 0);
-}
+void SDHC_HAL_Config(SDHC_Type * base, const sdhc_hal_config_t* initConfig);
 
 /*!
-* @brief Enables  stop at the block gap requests.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable interrupt at block gap
-*/
-static inline void SDHC_HAL_SetIntStopAtBlockGap(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_PROCTL_IABG(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Enables wakeup event on the card interrupt.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable wakeup event on card interrupt
-*/
-static inline void SDHC_HAL_SetWakeupOnCardInt(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_PROCTL_WECINT(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Enables wakeup event on the card insertion.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable wakeup event on card insertion
-*/
-static inline void SDHC_HAL_SetWakeupOnCardInsertion(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_PROCTL_WECINS(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Enables  wakeup event on card removal.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable wakeup event on card removal
-*/
-static inline void SDHC_HAL_SetWakeupOnCardRemoval(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_PROCTL_WECRM(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Enables the IPG clock and no automatic clock gating off.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable IPG clock
-*/
-static inline void SDHC_HAL_SetIpgClock(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_SYSCTL_IPGEN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Enables the system clock and no automatic clock gating off.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable SYS clock
-*/
-static inline void SDHC_HAL_SetSysClock(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_SYSCTL_HCKEN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Enables the peripheral clock and no automatic clock gating off.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable Peripheral clock
-*/
-static inline void SDHC_HAL_SetPeripheralClock(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_SYSCTL_PEREN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Enables the SD clock. It should be disabled before changing the SD clock
-* frequency.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable SD clock or not 
-*/
-static inline void SDHC_HAL_SetSdClock(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_SYSCTL_SDCLKEN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Sets the SD clock frequency divisor.
-*
-* @param baseAddr SDHC base address
-* @param divisor the divisor
-*/
-static inline void SDHC_HAL_SetClockDivisor(uint32_t baseAddr, uint32_t divisor)
-{
-    BW_SDHC_SYSCTL_DVS(baseAddr, divisor);
-}
-
-/*!
-* @brief Sets the SD clock frequency select.
-*
-* @param baseAddr SDHC base address
-* @param frequency the frequency selector
-*/
-static inline void SDHC_HAL_SetClockFrequency(uint32_t baseAddr, uint32_t frequency)
-{
-    BW_SDHC_SYSCTL_SDCLKFS(baseAddr, frequency);
-}
-
-/*!
-* @brief Sets the data timeout counter value.
-*
-* @param baseAddr SDHC base address
-* @param timeout Data timeout counter value
-*/
-static inline void SDHC_HAL_SetDataTimeout(uint32_t baseAddr, uint32_t timeout)
-{
-    BW_SDHC_SYSCTL_DTOCV(baseAddr, timeout);
-}
+ * @brief Sets SDHC SD protol unit clock.
+ *
+ * @param base SDHC base address
+ * @param clkConfItms SDHC SD protol unit clock configuration items. 
+ */
+void SDHC_HAL_ConfigSdClock(SDHC_Type * base, sdhc_hal_sdclk_config_t* clkConfItms);
 
 /*!
 * @brief Gets the current interrupt status.
 *
-* @param baseAddr SDHC base address
+* @param base SDHC base address
 * @return current interrupt flags
 */
-static inline uint32_t SDHC_HAL_GetIntFlags(uint32_t baseAddr)
+static inline uint32_t SDHC_HAL_GetIntFlags(SDHC_Type * base)
 {
-    return HW_SDHC_IRQSTAT_RD(baseAddr);
+    return SDHC_RD_IRQSTAT(base);
 }
 
 /*!
 * @brief Clears a specified interrupt status.
 *
-* @param baseAddr SDHC base address
+* @param base SDHC base address
 * @param mask to specify interrupts' flags to be cleared
 */
-static inline void SDHC_HAL_ClearIntFlags(uint32_t baseAddr, uint32_t mask)
+static inline void SDHC_HAL_ClearIntFlags(SDHC_Type * base, uint32_t mask)
 {
-    HW_SDHC_IRQSTAT_WR(baseAddr, mask);
+    SDHC_WR_IRQSTAT(base, mask);
 }
 
 /*!
-* @brief Gets the currently enabled interrupt signal.
-*
-* @param baseAddr SDHC base address
-* @return currently enabled interrupt signal
+ * @brief Get the error status of SDHC .
+ *
+ * @param base SDHC base address
+ * @param sdhc_hal_err_type_t the error type
+ * @param errFlags the result error flags
 */
-static inline uint32_t SDHC_HAL_GetIntSignal(uint32_t baseAddr)
-{
-    return HW_SDHC_IRQSIGEN_RD(baseAddr);
-}
-
-/*!
-* @brief Gets the currently enabled interrupt state.
-*
-* @param baseAddr SDHC base address
-* @return currently enabled interrupts' state
-*/
-static inline uint32_t SDHC_HAL_GetIntState(uint32_t baseAddr)
-{
-    return HW_SDHC_IRQSTATEN_RD(baseAddr);
-}
-
-/*!
-* @brief Gets the auto cmd12 error.
-*
-* @param baseAddr SDHC base address
-* @return auto cmd12 error status
-*/
-static inline uint32_t SDHC_HAL_GetAc12Error(uint32_t baseAddr)
-{
-    return HW_SDHC_AC12ERR_RD(baseAddr);
-}
-
-/*!
-* @brief Gets the maximum block length supported.
-*
-* @param baseAddr SDHC base address
-* @return the maximum block length support
-*/
-static inline uint32_t SDHC_HAL_GetMaxBlockLength(uint32_t baseAddr)
-{
-    return BR_SDHC_HTCAPBLT_MBL(baseAddr);
-}
-
-/*!
-* @brief Checks whether the ADMA is supported.
-*
-* @param baseAddr SDHC base address
-* @return if ADMA is supported
-*/
-static inline uint32_t SDHC_HAL_DoesHostSupportAdma(uint32_t baseAddr)
-{
-    return BR_SDHC_HTCAPBLT_ADMAS(baseAddr);
-}
-
-/*!
-* @brief Checks whether the  high speed is supported.
-*
-* @param baseAddr SDHC base address
-* @return if high speed is supported
-*/
-static inline uint32_t SDHC_HAL_DoesHostSupportHighspeed(uint32_t baseAddr)
-{
-    return BR_SDHC_HTCAPBLT_HSS(baseAddr);
-}
-
-/*!
-* @brief Checks whether the  DMA is supported.
-*
-* @param baseAddr SDHC base address
-* @return if high speed is supported
-*/
-static inline uint32_t SDHC_HAL_DoesHostSupportDma(uint32_t baseAddr)
-{
-    return BR_SDHC_HTCAPBLT_DMAS(baseAddr);
-}
-
-/*!
-* @brief Checks whether the suspend/resume is supported.
-*
-* @param baseAddr SDHC base address
-* @return if suspend and resume is supported
-*/
-static inline uint32_t SDHC_HAL_DoesHostSupportSuspendResume(uint32_t baseAddr)
-{
-    return BR_SDHC_HTCAPBLT_SRS(baseAddr);
-}
-
-/*!
-* @brief Checks whether the  voltage 3.3 is supported.
-*
-* @param baseAddr SDHC base address
-* @return if voltage 3.3 is supported
-*/
-static inline uint32_t SDHC_HAL_DoesHostSupportV330(uint32_t baseAddr)
-{
-    return BR_SDHC_HTCAPBLT_VS33(baseAddr);
-}
-
-/*!
-* @brief Checks whether the  voltage 3.0 is supported.
-*
-* @param baseAddr SDHC base address
-* @return if voltage 3.0 is supported
-*/
-static inline uint32_t SDHC_HAL_DoesHostSupportV300(uint32_t baseAddr)
-{
-#if FSL_FEATURE_SDHC_HAS_V300_SUPPORT
-    return BR_SDHC_HTCAPBLT_VS30(baseAddr);
-#else
-    return 0;
-#endif
-}
-
-/*!
-* @brief Checks whether the voltage 1.8 is supported.
-*
-* @param baseAddr SDHC base address
-* @return if voltage 1.8 is supported
-*/
-static inline uint32_t SDHC_HAL_DoesHostSupportV180(uint32_t baseAddr)
-{
-#if FSL_FEATURE_SDHC_HAS_V180_SUPPORT
-    return BR_SDHC_HTCAPBLT_VS18(baseAddr);
-#else
-    return 0;
-#endif
-}
-
-/*!
-* @brief Sets the watermark for writing.
-*
-* @param baseAddr SDHC base address
-* @param watermark for writing
-*/
-static inline void SDHC_HAL_SetWriteWatermarkLevel(uint32_t baseAddr, uint32_t watermark)
-{
-    BW_SDHC_WML_WRWML(baseAddr, watermark);
-}
-
-/*!
-* @brief Sets the watermark for reading.
-*
-* @param baseAddr SDHC base address
-* @param watermark for reading
-*/
-static inline void SDHC_HAL_SetReadWatermarkLevel(uint32_t baseAddr, uint32_t watermark)
-{
-    BW_SDHC_WML_RDWML(baseAddr, watermark);
-}
+void SDHC_HAL_GetAllErrStatus(SDHC_Type * base, sdhc_hal_err_type_t errType, uint32_t* errFlags);
 
 /*!
 * @brief Sets the force events according to the given mask.
 *
-* @param baseAddr SDHC base address
+* @param base SDHC base address
 * @param mask to specify the force events' flags to be set
 */
-static inline void SDHC_HAL_SetForceEventFlags(uint32_t baseAddr, uint32_t mask)
+static inline void SDHC_HAL_SetForceEventFlags(SDHC_Type * base, uint32_t mask)
 {
-    HW_SDHC_FEVT_WR(baseAddr, mask);
-}
-
-/*!
-* @brief Checks whether the ADMA error is length mismatch.
-*
-* @param baseAddr SDHC base address
-* @return if ADMA error is length mismatch
-*/
-static inline uint32_t SDHC_HAL_IsAdmaLengthMismatchError(uint32_t baseAddr)
-{
-    return BR_SDHC_ADMAES_ADMALME(baseAddr);
-}
-
-/*!
-* @brief Checks the SD clock.
-*
-* Checks whether the clock to the SD is enabled.
-*
-* @param baseAddr SDHC base address
-* @return true if enabled
-*/
-static inline bool SDHC_HAL_IsSdClockOff(uint32_t baseAddr)
-{
-    return BR_SDHC_SYSCTL_SDCLKEN(baseAddr);
-}
-
-/*!
-* @brief Returns the state of the ADMA error.
-*
-* @param baseAddr SDHC base address
-* @return error state
-*/
-static inline uint32_t SDHC_HAL_GetAdmaErrorState(uint32_t baseAddr)
-{
-    return BR_SDHC_ADMAES_ADMAES(baseAddr);
-}
-
-/*!
-* @brief Checks whether the  ADMA error is a descriptor error.
-*
-* @param baseAddr SDHC base address
-* @return if ADMA error is descriptor error
-*/
-static inline uint32_t SDHC_HAL_IsAdmaDescriptionError(uint32_t baseAddr)
-{
-    return BR_SDHC_ADMAES_ADMADCE(baseAddr);
+    SDHC_WR_FEVT(base, mask);
 }
 
 /*!
 * @brief Sets the ADMA address.
 *
-* @param baseAddr SDHC base address
+* @param base SDHC base address
 * @param address for ADMA transfer
 */
-static inline void SDHC_HAL_SetAdmaAddress(uint32_t baseAddr, uint32_t address)
+static inline void SDHC_HAL_SetAdmaAddress(SDHC_Type * base, uint32_t address)
 {
-    HW_SDHC_ADSADDR_WR(baseAddr, address);
-}
-
-/*!
-* @brief Enables the external DMA request.
-*
-* @param baseAddr SDHC base address
-* @param enable to external DMA
-*/
-static inline void SDHC_HAL_SetExternalDmaRequest(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_VENDOR_EXTDMAEN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Enables the exact block number for the SDIO CMD53.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable exact block number block read for SDIO CMD53
-*/
-static inline void SDHC_HAL_SetExactBlockNumber(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_VENDOR_EXBLKNU(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Sets the timeout value for the boot ACK.
-*
-* @param baseAddr SDHC base address
-* @param timeout boot ack time out counter value
-*/
-static inline void SDHC_HAL_SetBootAckTimeout(uint32_t baseAddr, uint32_t timeout)
-{
-    BW_SDHC_MMCBOOT_DTOCVACK(baseAddr, timeout);
-}
-
-/*!
-* @brief Enables the boot ACK.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable boot ack mode
-*/
-static inline void SDHC_HAL_SetBootAck(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_MMCBOOT_BOOTACK(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Configures the boot mode.
-*
-* @param baseAddr SDHC base address
-* @param mode the boot mode
-*/
-static inline void SDHC_HAL_SetBootMode(uint32_t baseAddr, sdhc_hal_mmcboot_t mode)
-{
-    BW_SDHC_MMCBOOT_BOOTMODE(baseAddr, mode);
-}
-
-/*!
-* @brief Enables the fast boot.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable fast boot
-*/
-static inline void SDHC_HAL_SetFastboot(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_MMCBOOT_BOOTEN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Enables the automatic stop at the block gap.
-*
-* @param baseAddr SDHC base address
-* @param enable to enable auto stop at block gap function, when boot.
-*/
-static inline void SDHC_HAL_SetAutoStopAtBlockGap(uint32_t baseAddr, bool enable)
-{
-    BW_SDHC_MMCBOOT_AUTOSABGEN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Configures the the block count for the boot.
-*
-* @param baseAddr SDHC base address
-* @param blockCount the block count for boot
-*/
-static inline void SDHC_HAL_SetBootBlockCount(uint32_t baseAddr, uint32_t blockCount)
-{
-    BW_SDHC_MMCBOOT_BOOTBLKCNT(baseAddr, blockCount);
-}
-
-/*!
-* @brief Gets a specification version.
-*
-* @param baseAddr SDHC base address
-* @return specification version
-*/
-static inline uint32_t SDHC_HAL_GetSpecificationVersion(uint32_t baseAddr)
-{
-    return BR_SDHC_HOSTVER_SVN(baseAddr);
-}
-
-/*!
-* @brief Gets the vendor version.
-*
-* @param baseAddr SDHC base address
-* @return vendor version
-*/
-static inline uint32_t SDHC_HAL_GetVendorVersion(uint32_t baseAddr)
-{
-    return BR_SDHC_HOSTVER_VVN(baseAddr);
+    /* When use ADMA, disable simple DMA*/
+    SDHC_WR_DSADDR(base, 0);
+    SDHC_WR_ADSADDR(base, address);
 }
 
 /*!
  * @brief Gets the command response.
  *
- * @param baseAddr SDHC base address
+ * @param base SDHC base address
  * @param index of response register, range from 0 to 3
  */
-uint32_t SDHC_HAL_GetResponse(uint32_t baseAddr, uint32_t index);
+uint32_t SDHC_HAL_GetResponse(SDHC_Type * base, uint32_t index);
 
 /*!
 * @brief Enables the specified interrupts.
 *
-* @param baseAddr SDHC base address
+* @param base SDHC base address
 * @param enable enable or disable
 * @param mask to specify interrupts to be isEnabledd
 */
-void SDHC_HAL_SetIntSignal(uint32_t baseAddr, bool enable, uint32_t mask);
+void SDHC_HAL_SetIntSignal(SDHC_Type * base, bool enable, uint32_t mask);
 
 /*!
 * @brief Enables the specified interrupt state.
 *
-* @param baseAddr SDHC base address
+* @param base SDHC base address
 * @param enable enable or disable
 * @param mask to specify interrupts' state to be enabled
 */
-void SDHC_HAL_SetIntState(uint32_t baseAddr, bool enable, uint32_t mask);
+void SDHC_HAL_SetIntState(SDHC_Type * base, bool enable, uint32_t mask);
 
 /*!
 * @brief Performs an SDHC reset.
 *
-* @param baseAddr SDHC base address
+* @param base SDHC base address
 * @param type the type of reset
 * @param timeout timeout for reset
 * @return 0 on success, else on error
 */
-uint32_t SDHC_HAL_Reset(uint32_t baseAddr, uint32_t type, uint32_t timeout);
+uint32_t SDHC_HAL_Reset(SDHC_Type * base, uint32_t type, uint32_t timeout);
 
 /*!
 * @brief Sends 80 clocks to the card to initialize the card.
 *
-* @param baseAddr SDHC base address
+* @param base SDHC base address
 * @param timeout timeout for initialize card
 * @return 0 on success, else on error
 */
-uint32_t SDHC_HAL_InitCard(uint32_t baseAddr, uint32_t timeout);
-
-/*!
-* @brief Gets the IRQ ID for a given host controller.
-*
-* @param baseAddr SDHC base address
-* @return IRQ number for specific SDHC instance
-*/
-IRQn_Type SDHC_HAL_GetIrqId(uint32_t baseAddr);
+uint32_t SDHC_HAL_InitCard(SDHC_Type * base, uint32_t timeout);
 
 /*!
  * @brief Initializes the SDHC HAL.
  *
- * @param baseAddr SDHC base address
+ * @param base SDHC base address
  */
-void SDHC_HAL_Init(uint32_t baseAddr);
+void SDHC_HAL_Init(SDHC_Type * base);
+
+/*!
+ * @brief Get the capability of SDHC
+ *
+ * @param base SDHC base address
+ */
+void SDHC_HAL_GetBasicInfo(SDHC_Type * base, sdhc_hal_basic_info_t* basicInfo);
 
 /*@} */
 #if defined(__cplusplus)
@@ -1225,6 +628,7 @@ void SDHC_HAL_Init(uint32_t baseAddr);
 
 #endif
 
+#endif
 /*************************************************************************************************
  * EOF
  ************************************************************************************************/

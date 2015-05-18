@@ -33,6 +33,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_TSI_COUNT
 
 // Just for right generation of documentation
 #if defined(__DOXYGEN__)
@@ -155,18 +156,18 @@ extern "C" {
 /**
  * @brief Initialize hardware.
  *
- * @param   baseAddr    TSI module base address.
+ * @param   base    TSI module base address.
  *
  * @return none
  *
  * @details Initialize the peripheral to default state.
  */
-void TSI_HAL_Init(uint32_t baseAddr);
+void TSI_HAL_Init(TSI_Type * base);
 
 /**
  * @brief Set configuration of hardware.
  *
- * @param   baseAddr    TSI module base address.
+ * @param   base    TSI module base address.
  * @param   config      Pointer to TSI module configuration structure.
  *
  * @return none
@@ -174,12 +175,12 @@ void TSI_HAL_Init(uint32_t baseAddr);
  * @details Initialize and sets prescalers, number of scans, clocks, delta voltage
  * capacitance trimmer, reference and electrode charge current and threshold.
  */
-void TSI_HAL_SetConfiguration(uint32_t baseAddr, tsi_config_t *config);
+void TSI_HAL_SetConfiguration(TSI_Type * base, tsi_config_t *config);
 
 /**
  * @brief Recalibrate TSI hardware.
  *
- * @param   baseAddr    TSI module base address.
+ * @param   base    TSI module base address.
  * @param   config      Pointer to TSI module configuration structure.
  * @param   electrodes  The map of the electrodes.
  * @param   parLimits   Pointer to TSI module parameter limits structure.
@@ -192,234 +193,109 @@ void TSI_HAL_SetConfiguration(uint32_t baseAddr, tsi_config_t *config);
  * Enable module and interrupt if is not. Better if you see implimetation
  * of this function for better understanding @ref TSI_HAL_Recalibrate.
  */
-uint32_t TSI_HAL_Recalibrate(uint32_t baseAddr, tsi_config_t *config, const uint32_t electrodes, const tsi_parameter_limits_t *parLimits);
+uint32_t TSI_HAL_Recalibrate(TSI_Type * base, tsi_config_t *config, const uint32_t electrodes, const tsi_parameter_limits_t *parLimits);
 
 /*!
  * @brief Enable low power for TSI module.
  *
- * @param   baseAddr TSI module base address.
+ * @param   base TSI module base address.
  *
  * @return  none
  *
  */
-void TSI_HAL_EnableLowPower(uint32_t baseAddr);
+void TSI_HAL_EnableLowPower(TSI_Type * base);
 
 /*!
 * @brief Disable low power for TSI module.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-void TSI_HAL_DisableLowPower(uint32_t baseAddr);
-
-/*!
-* @brief Enable out of range interrupt.
-*
-* @param    baseAddr TSI module base address.
-* @return   None.
-*/
-static inline void TSI_HAL_EnableOutOfRangeInterrupt(uint32_t baseAddr)
-{
-    BW_TSI_GENCS_ESOR(baseAddr, 0);
-}
-
-/*!
-* @brief Enable end of scan interrupt.
-*
-* @param    baseAddr TSI module base address.
-* @return   None.
-*/
-static inline void TSI_HAL_EnableEndOfScanInterrupt(uint32_t baseAddr)
-{
-    BW_TSI_GENCS_ESOR(baseAddr, 1);
-}
-
-/*!
-* @brief Enable Touch Sensing Input Module.
-*
-* @param    baseAddr TSI module base address.
-* @return   None.
-*/
-static inline void TSI_HAL_EnableModule(uint32_t baseAddr)
-{
-    BW_TSI_GENCS_TSIEN(baseAddr, 1);
-}
-
-/*!
-* @brief Disable Touch Sensing Input Module.
-*
-* @param    baseAddr TSI module base address.
-* @return   None.
-*/
-static inline void TSI_HAL_DisableModule(uint32_t baseAddr)
-{
-    BW_TSI_GENCS_TSIEN(baseAddr, 0);
-}
+void TSI_HAL_DisableLowPower(TSI_Type * base);
 
 /*!
 * @brief Get module flag enable.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   State of enable module flag.
 */
-static inline uint32_t TSI_HAL_IsModuleEnabled(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_IsModuleEnabled(TSI_Type * base)
 {
-    return BR_TSI_GENCS_TSIEN(baseAddr);
-}
-
-/*!
-* @brief    Enable TSI module in stop mode.
-*
-* @param    baseAddr TSI module base address.
-* @return   None.
-*/
-static inline void TSI_HAL_EnableStop(uint32_t baseAddr)
-{
-    BW_TSI_GENCS_STPE(baseAddr, 1);
-}
-
-/*!
-* @brief Disable TSI module in stop mode.
-*
-* @param    baseAddr TSI module base address.
-* @return   None.
-*/
-static inline void TSI_HAL_DisableStop(uint32_t baseAddr)
-{
-    BW_TSI_GENCS_STPE(baseAddr, 0);
-}
-
-/*!
-* @brief Enable software trigger scan.
-*
-* @param    baseAddr TSI module base address.
-* @return   None.
-*/
-static inline void TSI_HAL_EnableSoftwareTriggerScan(uint32_t baseAddr)
-{
-    BW_TSI_GENCS_STM(baseAddr, 0);
+    return TSI_BRD_GENCS_TSIEN(base);
 }
 
 /*!
 * @brief Get TSI scan trigger mode.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Scan trigger mode.
 */
-static inline uint32_t TSI_HAL_GetScanTriggerMode(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetScanTriggerMode(TSI_Type * base)
 {
-    return (uint32_t)BR_TSI_GENCS_STM(baseAddr);
+    return (uint32_t)TSI_BRD_GENCS_STM(base);
 }
 
 /*!
 * @brief Get scan in progress flag.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   True - if scan is in progress. False - otherwise
 */
-static inline uint32_t TSI_HAL_IsScanInProgress(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_IsScanInProgress(TSI_Type * base)
 {
-    return (uint32_t)BR_TSI_GENCS_SCNIP(baseAddr);
-}
-
-/*!
-* @brief Get out of range flag.
-*
-* @param    baseAddr TSI module base address.
-* @return   State of out of range flag.
-*/
-static inline uint32_t TSI_HAL_GetOutOfRangeFlag(uint32_t baseAddr)
-{
-    return (uint32_t)BR_TSI_GENCS_OUTRGF(baseAddr);
-}
-
-/*!
-* @brief Clear out of range flag.
-*
-* @param    baseAddr TSI module base address.
-* @return   None.
-*/
-static inline void TSI_HAL_ClearOutOfRangeFlag(uint32_t baseAddr)
-{
-    BW_TSI_GENCS_OUTRGF(baseAddr, 1);
+    return (uint32_t)TSI_BRD_GENCS_SCNIP(base);
 }
 
 /*!
 * @brief Get end of scan flag.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   Current state of end of scan flag.
 */
-static inline uint32_t TSI_HAL_GetEndOfScanFlag(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetEndOfScanFlag(TSI_Type * base)
 {
-    return (uint32_t)BR_TSI_GENCS_EOSF(baseAddr);
+    return (uint32_t)TSI_BRD_GENCS_EOSF(base);
 }
 
 /*!
-* @brief Clear end of scan flag.
+* @brief Get out of range flag.
 *
-* @param    baseAddr TSI module base address.
-* @return   None.
+* @param    base TSI module base address.
+* @return   State of out of range flag.
 */
-static inline void TSI_HAL_ClearEndOfScanFlag(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetOutOfRangeFlag(TSI_Type * base)
 {
-    BW_TSI_GENCS_EOSF(baseAddr, 1);
-}
-
-/*!
-* @brief Set prescaler.
-*
-* @param    baseAddr    TSI module base address.
-* @param    prescaler   Prescaler value.
-* @return   None.
-*/
-static inline void TSI_HAL_SetPrescaler(uint32_t baseAddr, tsi_electrode_osc_prescaler_t prescaler)
-{
-    BW_TSI_GENCS_PS(baseAddr, prescaler);
+    return (uint32_t)TSI_BRD_GENCS_OUTRGF(base);
 }
 
 /*!
 * @brief Get prescaler.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Prescaler value.
 */
-static inline tsi_electrode_osc_prescaler_t TSI_HAL_GetPrescaler(uint32_t baseAddr)
+static inline tsi_electrode_osc_prescaler_t TSI_HAL_GetPrescaler(TSI_Type * base)
 {
-    return (tsi_electrode_osc_prescaler_t)BR_TSI_GENCS_PS(baseAddr);
-}
-
-/*!
-* @brief Set number of scans (NSCN).
-*
-* @param    baseAddr    TSI module base address.
-* @param    number      Number of scans.
-* @return   None.
-*/
-static inline void TSI_HAL_SetNumberOfScans(uint32_t baseAddr, tsi_n_consecutive_scans_t number)
-{
-    BW_TSI_GENCS_NSCN(baseAddr, number);
+    return (tsi_electrode_osc_prescaler_t)TSI_BRD_GENCS_PS(base);
 }
 
 /*!
 * @brief Get number of scans (NSCN).
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Number of scans.
 */
-static inline tsi_n_consecutive_scans_t TSI_HAL_GetNumberOfScans(uint32_t baseAddr)
+static inline tsi_n_consecutive_scans_t TSI_HAL_GetNumberOfScans(TSI_Type * base)
 {
-    return (tsi_n_consecutive_scans_t)BR_TSI_GENCS_NSCN(baseAddr);
+    return (tsi_n_consecutive_scans_t)TSI_BRD_GENCS_NSCN(base);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-//#endif
-
 /*! @}*/
-
+#endif
 #endif /* __FSL_TSI_HAL_H__*/
 /*******************************************************************************
  * EOF

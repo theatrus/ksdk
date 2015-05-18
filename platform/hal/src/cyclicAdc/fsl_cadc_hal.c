@@ -29,7 +29,7 @@
  */
 
 #include "fsl_cadc_hal.h"
-
+#if FSL_FEATURE_SOC_CADC_COUNT
 
 /*******************************************************************************
  * Code
@@ -41,167 +41,260 @@
  * Description   : Initialize all the ADC registers to a known state.
  *
  *END**************************************************************************/
-void CADC_HAL_Init(uint32_t baseAddr)
+void CADC_HAL_Init(ADC_Type * base)
 {
-    uint32_t i;
-    
-    HW_ADC_CTRL1_WR(baseAddr, 0x6060U);
-    HW_ADC_CTRL2_WR(baseAddr, 0x6044U);
-    HW_ADC_ZXCTRL1_WR(baseAddr,0U);
-    HW_ADC_ZXCTRL2_WR(baseAddr,0U);
-    HW_ADC_CLIST1_WR(baseAddr, 0x3210U);
-    HW_ADC_CLIST2_WR(baseAddr, 0x7654U);
-    HW_ADC_CLIST3_WR(baseAddr, 0xBA98U);
-    HW_ADC_CLIST4_WR(baseAddr, 0xFEDEU);
-    HW_ADC_SDIS_WR(baseAddr, 0xF0F0U);
-    HW_ADC_STAT_WR(baseAddr, 0x1800U);
-    HW_ADC_LOLIMSTAT_WR(baseAddr, 0xFFFFU);
-    HW_ADC_HILIMSTAT_WR(baseAddr, 0xFFFFU);
-    HW_ADC_ZXSTAT_WR(baseAddr, 0xFFFFU);
-    for (i = 0U; i < HW_ADC_RSLTn_COUNT; i++)
-    {
-        HW_ADC_RSLTn_WR(baseAddr, i, 0U);
-    }
-    for (i = 0U; i < HW_ADC_LOLIMn_COUNT; i++)
-    {
-        HW_ADC_LOLIMn_WR(baseAddr, i, 0U);
-    }
-    for (i = 0U; i < HW_ADC_HILIMn_COUNT; i++)
-    {
-        HW_ADC_HILIMn_WR(baseAddr, i, 0U);
-    }
-    for (i = 0U; i < HW_ADC_OFFSTn_COUNT; i++)
-    {
-        HW_ADC_OFFSTn_WR(baseAddr, i, 0U);
-    }
-    HW_ADC_PWR_WR(baseAddr, 0x1DA7U);
-    HW_ADC_CAL_WR(baseAddr, 0U);
-    HW_ADC_GC1_WR(baseAddr, 0U);
-    HW_ADC_GC2_WR(baseAddr, 0U);
-    HW_ADC_SCTRL_WR(baseAddr, 0U);
-    HW_ADC_PWR2_WR(baseAddr, 0x0400U);
-    HW_ADC_CTRL3_WR(baseAddr, 0U);
-    HW_ADC_SCHLTEN_WR(baseAddr, 0U);
-    
+    ADC_WR_CTRL1(base, 0x5005);
+    ADC_WR_CTRL2(base, 0x5044U);
+    ADC_WR_ZXCTRL1(base,0U);
+    ADC_WR_ZXCTRL2(base,0U);
+    ADC_WR_CLIST1(base, 0x3210U);
+    ADC_WR_CLIST2(base, 0x7654U);
+    ADC_WR_CLIST3(base, 0xBA98U);
+    ADC_WR_CLIST4(base, 0xFEDEU);
+    ADC_WR_SDIS(base, 0xF0F0U);
+    ADC_WR_LOLIMSTAT(base, 0xFFFFU);
+    ADC_WR_HILIMSTAT(base, 0xFFFFU);
+    ADC_WR_ZXSTAT(base, 0xFFFFU);
+    ADC_WR_PWR(base, 0x1DA7U);
+    ADC_WR_CAL(base, 0U);
+    ADC_WR_GC1(base, 0U);
+    ADC_WR_GC2(base, 0U);
+    ADC_WR_SCTRL(base, 0U);
+    ADC_WR_PWR2(base, 0x0400U);
+    ADC_WR_CTRL3(base, 0U);
+    ADC_WR_SCHLTEN(base, 0U);
+
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : CADC_HAL_SetConvDmaCmd
- * Description   : Switch to enable DMA for ADC converter.
+ * Function Name : CADC_HAL_ConfigController
+ * Description   : Configure the common feature in cyclic ADC module. For
+ * detailed items, see to "cadc_common_config_t".
  *
  *END**************************************************************************/
-void CADC_HAL_SetConvDmaCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable)
+void CADC_HAL_ConfigController(ADC_Type * base, const cadc_controller_config_t *configPtr)
 {
-    switch (convId)
+    uint16_t ctrl1, ctrl2, pwr, ctrl3;
+
+    /* ADC_CTRL1. */
+    ctrl1 = ADC_RD_CTRL1(base);
+    ctrl1 &= ~(   ADC_CTRL1_START0_MASK
+                | ADC_CTRL1_ZCIE_MASK
+                | ADC_CTRL1_LLMTIE_MASK
+                | ADC_CTRL1_HLMTIE_MASK
+                | ADC_CTRL1_SMODE_MASK
+                );
+    if (configPtr->zeroCrossingIntEnable)
     {
-    case kCAdcConvA:
-        BW_ADC_CTRL1_DMAEN0(baseAddr, enable?1U:0U );
-        break;
-    case kCAdcConvB:
-        BW_ADC_CTRL2_DMAEN1(baseAddr, enable?1U:0U );
-        break;
-    default:
-        break;
+        ctrl1 |= ADC_CTRL1_ZCIE_MASK;
     }
+    if (configPtr->lowLimitIntEnable)
+    {
+        ctrl1 |= ADC_CTRL1_LLMTIE_MASK;
+    }
+    if (configPtr->highLimitIntEnable)
+    {
+        ctrl1 |= ADC_CTRL1_HLMTIE_MASK;
+    }
+    ctrl1 |= ADC_CTRL1_SMODE((uint32_t)(configPtr->scanMode));
+
+    /* ADC_CTRL2. */
+    ctrl2 = ADC_RD_CTRL2(base);
+    ctrl2 &= ~(   ADC_CTRL2_START1_MASK
+                | ADC_CTRL2_SIMULT_MASK
+                );
+    if (configPtr->parallelSimultModeEnable)
+    {
+        ctrl2 |= ADC_CTRL2_SIMULT_MASK;
+    }
+
+    /* ADC_PWR. */
+    pwr = ADC_RD_PWR(base);
+    pwr &= ~( ADC_PWR_ASB_MASK
+            | ADC_PWR_PUDELAY_MASK
+            | ADC_PWR_APD_MASK
+            );
+    if (configPtr->autoStandbyEnable)
+    {
+        pwr |= ADC_PWR_ASB_MASK;
+    }
+    pwr |= ADC_PWR_PUDELAY((uint16_t)(configPtr->powerUpDelayCount));
+    if (configPtr->autoPowerDownEnable)
+    {
+        pwr |= ADC_PWR_APD_MASK;
+    }
+
+    /* ADC_CTRL3. */
+    ctrl3 = ADC_RD_CTRL3(base);
+    ctrl3 &= ~(ADC_CTRL3_DMASRC_MASK);
+    if (kCAdcDmaTriggeredByConvReady == configPtr->dmaSrc)
+    {
+        ctrl3 |= ADC_CTRL3_DMASRC_MASK;
+    }
+
+    ADC_WR_CTRL1(base, ctrl1);
+    ADC_WR_CTRL2(base, ctrl2);
+    ADC_WR_PWR(base, pwr);
+    ADC_WR_CTRL3(base, ctrl3);
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : CADC_HAL_SetConvStopCmd
- * Description   : Switch to enable DMA for ADC converter.
+ * Function Name : CADC_HAL_ConfigConvA
+ * Description   : Configure the feature for converter A. For detailed items,
+ * see to "cadc_converter_config_t".
  *
  *END**************************************************************************/
-void CADC_HAL_SetConvStopCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable)
+void CADC_HAL_ConfigConvA(ADC_Type * base, const cadc_converter_config_t *configPtr)
 {
-    switch (convId)
+    uint16_t ctrl1, ctrl2, cal, pwr2, ctrl3;
+
+    /* ADC_CTRL1. */
+    ctrl1 = ADC_RD_CTRL1(base);
+    ctrl1 &= ~(   ADC_CTRL1_DMAEN0_MASK
+                | ADC_CTRL1_STOP0_MASK
+                | ADC_CTRL1_START0_MASK
+                | ADC_CTRL1_SYNC0_MASK
+                | ADC_CTRL1_EOSIE0_MASK
+                );
+    if (configPtr->dmaEnable)
     {
-    case kCAdcConvA:
-        BW_ADC_CTRL1_STOP0(baseAddr, enable?1U:0U );
-        break;
-    case kCAdcConvB:
-        BW_ADC_CTRL2_STOP1(baseAddr, enable?1U:0U );
-        break;
-    default:
-        break;
+        ctrl1 |= ADC_CTRL1_DMAEN0_MASK;
     }
+    if (configPtr->stopEnable)
+    {
+        ctrl1 |= ADC_CTRL1_STOP0_MASK;
+    }
+    if (configPtr->syncEnable)
+    {
+        ctrl1 |= ADC_CTRL1_SYNC0_MASK;
+    }
+    if (configPtr->endOfScanIntEnable)
+    {
+        ctrl1 |= ADC_CTRL1_EOSIE0_MASK;
+    }
+
+    /* ADC_CTRL2. */
+    ctrl2 = ADC_RD_CTRL2(base);
+    ctrl2 &= ~(   ADC_CTRL2_START1_MASK
+                | ADC_CTRL2_DIV0_MASK
+                );
+    ctrl2 |= ADC_CTRL2_DIV0((uint16_t)(configPtr->clkDivValue));
+
+    /* ADC_CAL. */
+    cal = ADC_RD_CAL(base);
+    cal &= ~(  ADC_CAL_SEL_VREFH_A_MASK
+             | ADC_CAL_SEL_VREFLO_A_MASK
+            );
+    if (configPtr->useChnInputAsVrefH)
+    {
+        cal |= ADC_CAL_SEL_VREFH_A_MASK;
+    }
+    if (configPtr->useChnInputAsVrefL)
+    {
+        cal |= ADC_CAL_SEL_VREFLO_A_MASK;
+    }
+
+    /* ADC_PWR2. */
+    pwr2 = ADC_RD_PWR2(base);
+    pwr2 &= ~(ADC_PWR2_SPEEDA_MASK);
+    pwr2 |= ADC_PWR2_SPEEDA(configPtr->speedMode);
+
+    /* ADC_CTRL3. */
+    ctrl3 = ADC_RD_CTRL3(base);
+    ctrl3 &= ~(ADC_CTRL3_SCNT0_MASK);
+    ctrl3 |= ADC_CTRL3_SCNT0(configPtr->sampleWindowCount);
+
+    ADC_WR_CTRL1(base, ctrl1);
+    ADC_WR_CTRL2(base, ctrl2);
+    ADC_WR_CAL(base, cal);
+    ADC_WR_PWR2(base, pwr2);
+    ADC_WR_CTRL3(base, ctrl3);
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : CADC_HAL_SetConvStartCmd
- * Description   : Trigger the ADC converter's conversion by software.
+ * Function Name : CADC_HAL_ConfigConvB
+ * Description   : Configure the feature for conversion B. For detailed items,
+ * see to "cadc_converter_config_t".
  *
  *END**************************************************************************/
-void CADC_HAL_SetConvStartCmd(uint32_t baseAddr, cadc_conv_id_t convId)
+void CADC_HAL_ConfigConvB(ADC_Type * base, const cadc_converter_config_t *configPtr)
 {
-    switch (convId)
+    uint16_t ctrl2, pwr2, cal, ctrl3;
+
+    /* ADC_CTRL2. */
+    ctrl2 = ADC_RD_CTRL2(base);
+    ctrl2 &= ~(   ADC_CTRL2_DMAEN1_MASK
+                | ADC_CTRL2_STOP1_MASK
+                | ADC_CTRL2_START1_MASK
+                | ADC_CTRL2_SYNC1_MASK
+                | ADC_CTRL2_EOSIE1_MASK
+                );
+    if (configPtr->dmaEnable)
     {
-    case kCAdcConvA:
-        HW_ADC_CTRL1_SET(baseAddr, BF_ADC_CTRL1_START0(1U) );
-        break;
-    case kCAdcConvB:
-        HW_ADC_CTRL2_SET(baseAddr, BF_ADC_CTRL2_START1(1U) );
-        break;
-    default:
-        break;
+        ctrl2 |= ADC_CTRL2_DMAEN1_MASK;
     }
+    if (configPtr->stopEnable)
+    {
+        ctrl2 |= ADC_CTRL2_STOP1_MASK;
+    }
+    if (configPtr->syncEnable)
+    {
+        ctrl2 |= ADC_CTRL2_SYNC1_MASK;
+    }
+    if (configPtr->endOfScanIntEnable)
+    {
+        ctrl2 |= ADC_CTRL2_EOSIE1_MASK;
+    }
+
+    /* ADC_PWR2. */
+    pwr2 = ADC_RD_PWR2(base);
+    pwr2 &= ~(    ADC_PWR2_DIV1_MASK
+                | ADC_PWR2_SPEEDB_MASK
+            );
+    pwr2 |= ADC_PWR2_DIV1((uint16_t)(configPtr->clkDivValue))
+          | ADC_PWR2_SPEEDB((uint16_t)(configPtr->speedMode));
+
+    /* ADC_CAL. */
+    cal = ADC_RD_CAL(base);
+    cal &= ~( ADC_CAL_SEL_VREFH_B_MASK
+            | ADC_CAL_SEL_VREFLO_B_MASK );
+    if (configPtr->useChnInputAsVrefH)
+    {
+        cal |= ADC_CAL_SEL_VREFH_B_MASK;
+    }
+    if (configPtr->useChnInputAsVrefL)
+    {
+        cal |= ADC_CAL_SEL_VREFLO_B_MASK;
+    }
+
+    /* ADC_CTRL3. */
+    ctrl3 = ADC_RD_CTRL3(base);
+    ctrl3 &= ~(ADC_CTRL3_SCNT1_MASK);
+    ctrl3 |= ADC_CTRL3_SCNT1((uint16_t)(configPtr->sampleWindowCount));
+
+    ADC_WR_CTRL2(base, ctrl2);
+    ADC_WR_PWR2(base, pwr2);
+    ADC_WR_CAL(base, cal);
+    ADC_WR_CTRL3(base, ctrl3);
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : CADC_HAL_SetConvSyncCmd
- * Description   : Switch to enable input SYNC signal to trigger conversion.
+ * Function Name : CADC_HAL_ConfigChn
+ * Description   : Configure the feature for the sample channel. For detailed
+ * items, see to "cadc_chn_config_t".
  *
  *END**************************************************************************/
-void CADC_HAL_SetConvSyncCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable)
+void CADC_HAL_ConfigChn(ADC_Type * base, const cadc_chn_config_t *configPtr)
 {
-    switch (convId)
-    {
-    case kCAdcConvA:
-        BW_ADC_CTRL1_SYNC0(baseAddr, enable?1U:0U );
-        break;
-    case kCAdcConvB:
-        BW_ADC_CTRL2_SYNC1(baseAddr, enable?1U:0U );
-        break;
-    default:
-        break;
-    }
-}
+    uint16_t chns, tmp16;
 
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetConvEndOfScanIntCmd
- * Description   : Switch to enable interrupt caused by end of scan for each
- * converter.
- *
- *END**************************************************************************/
-void CADC_HAL_SetConvEndOfScanIntCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable)
-{
-    switch (convId)
-    {
-    case kCAdcConvA:
-        BW_ADC_CTRL1_EOSIE0(baseAddr, enable?1U:0U );
-        break;
-    case kCAdcConvB:
-        BW_ADC_CTRL2_EOSIE1(baseAddr, enable?1U:0U );
-        break;
-    default:
-        break;
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetChnDiffCmd
- * Description   : Switch to enable differential sample mode for ADC conversion 
- * channel.
- *
- *END**************************************************************************/
-void CADC_HAL_SetChnDiffCmd(uint32_t baseAddr, cadc_diff_chn_mode_t chns, bool enable)
-{
-    uint16_t tmp16;
-    switch (chns)
+    /* Configure if enable the differential sample. */
+    chns = configPtr->diffChns;
+    switch (configPtr->diffChns)
     {
     case kCAdcDiffChnANB0_1:
     case kCAdcDiffChnANB2_3:
@@ -212,13 +305,13 @@ void CADC_HAL_SetChnDiffCmd(uint32_t baseAddr, cadc_diff_chn_mode_t chns, bool e
         {
             chns -= 2U;
         }
-        tmp16 = HW_ADC_CTRL1_RD(baseAddr);
-        tmp16 &= ~(1U<<(BP_ADC_CTRL1_CHNCFG_L+(uint16_t)chns) );
-        if (enable)
+        tmp16 = ADC_RD_CTRL1(base);
+        tmp16 &= ~(1U<<(ADC_CTRL1_CHNCFG_L_SHIFT+(uint16_t)chns) );
+        if (kCAdcChnSelBoth == configPtr->diffSelMode) /* Enable differential sample . */
         {
-            tmp16 |= (1U<<(BP_ADC_CTRL1_CHNCFG_L+(uint16_t)chns) );
+            tmp16 |= (1U<<(ADC_CTRL1_CHNCFG_L_SHIFT+(uint16_t)chns) );
         }
-        HW_ADC_CTRL1_WR(baseAddr, tmp16);
+        ADC_WR_CTRL1(base, tmp16);
         break;
     case kCAdcDiffChnANB4_5:
     case kCAdcDiffChnANB6_7:
@@ -230,64 +323,53 @@ void CADC_HAL_SetChnDiffCmd(uint32_t baseAddr, cadc_diff_chn_mode_t chns, bool e
             chns -= 2U;
         }
         chns -= 2U;
-        tmp16 = HW_ADC_CTRL2_RD(baseAddr);
-        tmp16 &= ~(1U<<(BP_ADC_CTRL2_CHNCFG_H + (uint16_t)chns) );
-        if (enable)
+        tmp16 = ADC_RD_CTRL2(base);
+        tmp16 &= ~(1U<<(ADC_CTRL2_CHNCFG_H_SHIFT + (uint16_t)chns) );
+        if (kCAdcChnSelBoth == configPtr->diffSelMode) /* Enable differential sample . */
         {
-            tmp16 |= (1U<<(BP_ADC_CTRL2_CHNCFG_H + (uint16_t)chns) );
+            tmp16 |= (1U<<(ADC_CTRL2_CHNCFG_H_SHIFT + (uint16_t)chns) );
         }
-        HW_ADC_CTRL2_WR(baseAddr, tmp16);
+        ADC_WR_CTRL2(base, tmp16);
         break;
     default:
         break;
     }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetConvClkDiv
- * Description   : Set divider for conversion clock from system clock.
- *
- *END**************************************************************************/
-void CADC_HAL_SetConvClkDiv(uint32_t baseAddr, cadc_conv_id_t convId, uint16_t divider)
-{
-    switch (convId)
+    /* Configure the gain for each channel. */
+    chns = (uint16_t)(configPtr->diffChns) * 2U;
+    if (chns < 8U)
     {
-    case kCAdcConvA:
-        BW_ADC_CTRL2_DIV0(baseAddr, divider );
-        break;
-    case kCAdcConvB:
-        BW_ADC_PWR2_DIV1(baseAddr, divider );
-        break;
-    default:
-        break;
+        tmp16 = ADC_RD_GC1(base);
+        if (kCAdcChnSelN == configPtr->diffSelMode)
+        {
+            chns++;
+        }
+        tmp16 &= ~(0x3U<<(chns*2U));
+        tmp16 |= (uint16_t)(configPtr->gainMode<<(chns*2U));
+        if (kCAdcChnSelBoth == configPtr->diffSelMode)
+        {
+            chns++;
+            tmp16 &= ~(0x3U<<(chns*2U));
+            tmp16 |= (uint16_t)(configPtr->gainMode<<(chns*2U));
+        }
+        ADC_WR_GC1(base, tmp16);
     }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetSlotZeroCrossingMode
- * Description   : Set zero crossing detection for each slot in conversion
- * sequence.
- *
- *END**************************************************************************/
-void CADC_HAL_SetSlotZeroCrossingMode(uint32_t baseAddr, uint32_t slotNum, 
-    cadc_zero_crossing_mode_t mode)
-{
-    uint16_t tmp16;
-    
-    if (slotNum < 8U) /* Slot 0 - 7. */
+    else if (chns < 16U)
     {
-        tmp16 = HW_ADC_ZXCTRL1_RD(baseAddr) & ~((0x3U)<<(slotNum*2U));
-        tmp16 |= (uint16_t)( ((uint16_t)(mode))<<(slotNum*2U) );
-        HW_ADC_ZXCTRL1_WR(baseAddr, tmp16);
-    }
-    else if (slotNum < 16U) /* Slot 8 - 15. */
-    {
-        slotNum -= 8U;
-        tmp16 = HW_ADC_ZXCTRL2_RD(baseAddr) & ~((0x3U)<<(slotNum*2U));
-        tmp16 |= (uint16_t)( ((uint16_t)(mode))<<(slotNum*2U) );
-        HW_ADC_ZXCTRL2_WR(baseAddr, tmp16);
+        chns -= 8U;
+        tmp16 = ADC_RD_GC2(base);
+        if (kCAdcChnSelN == configPtr->diffSelMode)
+        {
+            chns++;
+        }
+        tmp16 &= ~(0x3U<<(chns*2U));
+        tmp16 |= (uint16_t)(configPtr->gainMode<<(chns*2U));
+        if (kCAdcChnSelBoth == configPtr->diffSelMode)
+        {
+            chns++;
+            tmp16 &= ~(0x3U<<(chns*2U));
+            tmp16 |= (uint16_t)(configPtr->gainMode<<(chns*2U));
+        }
+        ADC_WR_GC2(base, tmp16);
     }
 }
 
@@ -297,359 +379,141 @@ void CADC_HAL_SetSlotZeroCrossingMode(uint32_t baseAddr, uint32_t slotNum,
  * Description   : Set sample channel for each slot in conversion sequence.
  *
  *END**************************************************************************/
-void CADC_HAL_SetSlotSampleChn(uint32_t baseAddr, uint32_t slotNum, 
-    cadc_diff_chn_mode_t diffChns, cadc_chn_sel_mode_t selMode)
+static void CADC_HAL_SetSlotSampleChn(ADC_Type * base, uint32_t slotIdx,
+    cadc_diff_chn_t diffChns, cadc_chn_sel_mode_t selMode)
 {
     uint16_t tmp16;
-    
-    if (slotNum < 4U) /* Slot 0 - 3. */
+
+    if (slotIdx < 4U) /* Slot 0 - 3. */
     {
-        tmp16 = HW_ADC_CLIST1_RD(baseAddr) & (uint16_t)(~(uint16_t)(((uint16_t)(0xFU))<<(slotNum*4U)));
+        tmp16 = ADC_RD_CLIST1(base) & (uint16_t)(~(uint16_t)(((uint16_t)(0xFU))<<(slotIdx*4U)));
         switch (selMode)
-        {       
+        {
         case kCAdcChnSelP:
         case kCAdcChnSelBoth:
-            tmp16 |= (uint16_t)((((uint16_t)(diffChns))<<1)<<(slotNum*4U));
+            tmp16 |= (uint16_t)((((uint16_t)(diffChns))<<1)<<(slotIdx*4U));
             break;
         case kCAdcChnSelN:
-            tmp16 |= (uint16_t)(((((uint16_t)(diffChns))<<1)+1U)<<(slotNum*4U));
+            tmp16 |= (uint16_t)(((((uint16_t)(diffChns))<<1)+1U)<<(slotIdx*4U));
             break;
         default:
             break;
         }
-        HW_ADC_CLIST1_WR(baseAddr, tmp16);
-        
+        ADC_WR_CLIST1(base, tmp16);
+
     }
-    else if (slotNum < 8U) /* Slot 4 - 7. */
+    else if (slotIdx < 8U) /* Slot 4 - 7. */
     {
-        slotNum -= 4U;
-        tmp16 = HW_ADC_CLIST2_RD(baseAddr) & (uint16_t)(~(uint16_t)((((uint16_t)(0xFU))<<(slotNum*4U))));
+        slotIdx -= 4U;
+        tmp16 = ADC_RD_CLIST2(base) & (uint16_t)(~(uint16_t)((((uint16_t)(0xFU))<<(slotIdx*4U))));
         switch (selMode)
-        {       
+        {
         case kCAdcChnSelP:
         case kCAdcChnSelBoth:
-            tmp16 |= (uint16_t)((((uint16_t)(diffChns))<<1)<<(slotNum*4U));
+            tmp16 |= (uint16_t)((((uint16_t)(diffChns))<<1)<<(slotIdx*4U));
             break;
         case kCAdcChnSelN:
-            tmp16 |= (uint16_t)(((((uint16_t)(diffChns))<<1)+1U)<<(slotNum*4U));
-            break;
-        default:
-            break;
-        }       
-        HW_ADC_CLIST2_WR(baseAddr, tmp16);
-    }
-    else if (slotNum < 12U) /* Slot 8 - 11U. */
-    {
-        slotNum -= 8U;
-        tmp16 = HW_ADC_CLIST3_RD(baseAddr) & (uint16_t)(~(uint16_t)((((uint16_t)(0xFU))<<(slotNum*4U))));
-        switch (selMode)
-        {       
-        case kCAdcChnSelP:
-        case kCAdcChnSelBoth:
-            tmp16 |= (uint16_t)((((uint16_t)(diffChns))<<1)<<(slotNum*4U));
-            break;
-        case kCAdcChnSelN:
-            tmp16 |= (uint16_t)(((((uint16_t)(diffChns))<<1)+1U)<<(slotNum*4U));
+            tmp16 |= (uint16_t)(((((uint16_t)(diffChns))<<1)+1U)<<(slotIdx*4U));
             break;
         default:
             break;
         }
-        HW_ADC_CLIST3_WR(baseAddr, tmp16);
-
+        ADC_WR_CLIST2(base, tmp16);
     }
-    else if (slotNum < 16U) /* Slot 12 - 15U. */
+    else if (slotIdx < 12U) /* Slot 8 - 11U. */
     {
-        slotNum -= 12U;
-        tmp16 = HW_ADC_CLIST4_RD(baseAddr) & (uint16_t)(~(uint16_t)(((uint16_t)(0xFU))<<(slotNum*4U)));
+        slotIdx -= 8U;
+        tmp16 = ADC_RD_CLIST3(base) & (uint16_t)(~(uint16_t)((((uint16_t)(0xFU))<<(slotIdx*4U))));
         switch (selMode)
-        {       
+        {
         case kCAdcChnSelP:
         case kCAdcChnSelBoth:
-            tmp16 |= (uint16_t)((((uint16_t)(diffChns))<<1)<<(slotNum*4U));
+            tmp16 |= (uint16_t)((((uint16_t)(diffChns))<<1)<<(slotIdx*4U));
             break;
         case kCAdcChnSelN:
-            tmp16 |= (uint16_t)(((((uint16_t)(diffChns))<<1)+1U)<<(slotNum*4U));
+            tmp16 |= (uint16_t)(((((uint16_t)(diffChns))<<1)+1U)<<(slotIdx*4U));
             break;
         default:
             break;
         }
-        HW_ADC_CLIST4_WR(baseAddr, tmp16);
+        ADC_WR_CLIST3(base, tmp16);
+    }
+    else if (slotIdx < 16U) /* Slot 12 - 15U. */
+    {
+        slotIdx -= 12U;
+        tmp16 = ADC_RD_CLIST4(base) & (uint16_t)(~(uint16_t)(((uint16_t)(0xFU))<<(slotIdx*4U)));
+        switch (selMode)
+        {
+        case kCAdcChnSelP:
+        case kCAdcChnSelBoth:
+            tmp16 |= (uint16_t)((((uint16_t)(diffChns))<<1)<<(slotIdx*4U));
+            break;
+        case kCAdcChnSelN:
+            tmp16 |= (uint16_t)(((((uint16_t)(diffChns))<<1)+1U)<<(slotIdx*4U));
+            break;
+        default:
+            break;
+        }
+        ADC_WR_CLIST4(base, tmp16);
     }
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : CADC_HAL_SetSlotSampleEnableCmd
- * Description   : Switch to enable sample for each slot in conversion sequence.
+ * Function Name : CADC_HAL_ConfigSeqSlot
+ * Description   : Configure the feature for sample sequence's slot. For detailed
+ * items, see to "cadc_slot_config_t"
  *
  *END**************************************************************************/
-void CADC_HAL_SetSlotSampleEnableCmd(uint32_t baseAddr, uint32_t slotNum, bool enable)
+void CADC_HAL_ConfigSeqSlot(ADC_Type * base, uint32_t slotIdx,
+    const cadc_slot_config_t *configPtr)
 {
-    uint16_t tmp16;
-    tmp16 = HW_ADC_SDIS_RD(baseAddr) & ~(1U<<slotNum) | (enable?0U:(1U<<slotNum));
-    HW_ADC_SDIS_WR(baseAddr, tmp16);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_GetConvInProgressFlag
- * Description   : Check if the conversion is in process for each converter.
- *
- *END**************************************************************************/
-bool CADC_HAL_GetConvInProgressFlag(uint32_t baseAddr, cadc_conv_id_t convId)
-{
-    bool bRet = false;
-    switch (convId)
+    uint16_t zxctrl;
+    CADC_HAL_SetSlotSampleChn(base, slotIdx, configPtr->diffChns, configPtr->diffSel);
+    if (configPtr->slotDisable)
     {
-    case kCAdcConvA:
-        bRet = (1U==BR_ADC_STAT_CIP0(baseAddr) );
-        break;
-    case kCAdcConvB:
-        bRet = (1U==BR_ADC_STAT_CIP1(baseAddr) );
-        break;
-    default:
-        bRet = false;
-        break;
+        ADC_SET_SDIS(base, (1U<<slotIdx));
     }
-    return bRet;
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_GetConvEndOfScanIntFlag
- * Description   : Check if the end of scan event is asserted.
- *
- *END**************************************************************************/
-bool CADC_HAL_GetConvEndOfScanIntFlag(uint32_t baseAddr, cadc_conv_id_t convId)
-{
-    bool bRet = false;
-    switch (convId)
+    else
     {
-    case kCAdcConvA:
-        bRet = (1U==BR_ADC_STAT_EOSI0(baseAddr) );
-        break;
-    case kCAdcConvB:
-        bRet = (1U==BR_ADC_STAT_EOSI1(baseAddr) );
-        break;
-    default:
-        bRet = false;
-        break;
+        ADC_CLR_SDIS(base, (1U<<slotIdx));
     }
-    return bRet;
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_ClearConvEndOfScanIntFlag
- * Description   : Clear the end of scan flag.
- *
- *END**************************************************************************/
-void CADC_HAL_ClearConvEndOfScanIntFlag(uint32_t baseAddr, cadc_conv_id_t convId)
-{
-    switch (convId)
+    ADC_WR_LOLIM(base, slotIdx, configPtr->lowLimitValue);
+    ADC_WR_HILIM(base, slotIdx, configPtr->highLimitValue);
+    ADC_WR_OFFST(base, slotIdx, configPtr->offsetValue);
+    if (configPtr->syncPointEnable)
     {
-    case kCAdcConvA:
-        BW_ADC_STAT_EOSI0(baseAddr, 1U);
-        break;
-    case kCAdcConvB:
-        BW_ADC_STAT_EOSI1(baseAddr, 1U);
-        break;
-    default:
-        break;
+        ADC_SET_SCTRL(base, (1U<<slotIdx) );
+    }
+    else
+    {
+        ADC_CLR_SCTRL(base, (1U<<slotIdx) );
+    }
+    if (configPtr->syncIntEnable)
+    {
+        ADC_SET_SCHLTEN(base, (1U<<slotIdx) );
+    }
+    else
+    {
+        ADC_CLR_SCHLTEN(base, (1U<<slotIdx) );
+    }
+    if (slotIdx < 8U)
+    {
+        slotIdx *= 2U;
+        zxctrl = ADC_RD_ZXCTRL1(base) & ~(0x3U << slotIdx);
+        zxctrl |= (uint16_t)(configPtr->zeroCrossingMode << slotIdx );
+        ADC_WR_ZXCTRL1(base, zxctrl);
+    }
+    else if (slotIdx < 16U)
+    {
+        slotIdx -= 8U;
+        slotIdx *= 2U;
+        zxctrl = ADC_RD_ZXCTRL2(base) & ~(0x3U << slotIdx);
+        zxctrl |= (uint16_t)(configPtr->zeroCrossingMode << slotIdx );
+        ADC_WR_ZXCTRL2(base, zxctrl);
     }
 }
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_GetConvPowerUpFlag
- * Description   : Check if the ADC converter is powered up.
- *
- *END**************************************************************************/
-bool CADC_HAL_GetConvPowerUpFlag(uint32_t baseAddr, cadc_conv_id_t convId)
-{
-    bool bRet = false;
-    switch (convId)
-    {
-    case kCAdcConvA:
-        bRet = (0U == BR_ADC_PWR_PSTS0(baseAddr) );
-        break;
-    case kCAdcConvB:
-        bRet = (0U == BR_ADC_PWR_PSTS1(baseAddr) );
-        break;
-    default:
-        break;
-    }
-    return bRet;
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetConvPowerUpCmd
- * Description   : Switch to enable power up for each ADC converter.
- *
- *END**************************************************************************/
-void CADC_HAL_SetConvPowerUpCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable)
-{
-    switch (convId)
-    {
-    case kCAdcConvA:
-        BW_ADC_PWR_PD0(baseAddr, enable?0U:1U );
-        break;
-    case kCAdcConvB:
-        BW_ADC_PWR_PD1(baseAddr, enable?0U:1U );
-        break;
-    default:
-        break;
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetConvUseChnVrefHCmd
- * Description   : Switch to use channel 3 as VrefH for each ADC converter.
- *
- *END**************************************************************************/
-void CADC_HAL_SetConvUseChnVrefHCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable)
-{
-    switch (convId)
-    {
-    case kCAdcConvA:
-        BW_ADC_CAL_SEL_VREFH_A(baseAddr, enable?1U:0U );
-        break;
-    case kCAdcConvB:
-        BW_ADC_CAL_SEL_VREFH_B(baseAddr, enable?1U:0U );
-        break;
-    default:
-        break;
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetConvUseChnVrefLCmd
- * Description   : Switch to use channel 2 as VrefL for each ADC converter.
- *
- *END**************************************************************************/
-void CADC_HAL_SetConvUseChnVrefLCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable)\
-{
-    switch (convId)
-    {
-    case kCAdcConvA:
-        BW_ADC_CAL_SEL_VREFLO_A(baseAddr, enable?1U:0U );
-        break;
-    case kCAdcConvB:
-        BW_ADC_CAL_SEL_VREFLO_B(baseAddr, enable?1U:0U );
-        break;
-    default:
-        break;
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetSlotGainMode
- * Description   : Set the amplification for each slot in sequence.
- *
- *END**************************************************************************/
-void CADC_HAL_SetChnGainMode(uint32_t baseAddr, uint32_t chnNum, cadc_gain_mode_t mode)
-{
-    uint16_t tmp16;
-    
-    if (chnNum < 8U) /* Slot 0 - 7. */
-    {
-        tmp16 = HW_ADC_GC1_RD(baseAddr) & ~(0x3U<<(chnNum*2U));
-        tmp16 |=  (uint16_t)(((uint16_t)(mode))<<(chnNum*2U));
-        HW_ADC_GC1_WR(baseAddr, tmp16);
-    }
-    else if (chnNum < 16U) /* Slot 8 - 15. */
-    {
-        chnNum -= 8U;
-        tmp16 = HW_ADC_GC2_RD(baseAddr) & ~(0x3U<<(chnNum*2U));
-        tmp16 |=  (uint16_t)(((uint16_t)(mode))<<(chnNum*2U));
-        HW_ADC_GC2_WR(baseAddr, tmp16);
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetSlotSyncPointCmd
- * Description   : Switch to enable the sync point for each slot in sequence.
- *
- *END**************************************************************************/
-void CADC_HAL_SetSlotSyncPointCmd(uint32_t baseAddr, uint32_t slotNum, bool enable)
-
-{
-    uint16_t tmp16;
-
-    tmp16 = BR_ADC_SCTRL_SC(baseAddr) & ~(1U<<slotNum);
-    if (enable)
-    {
-        tmp16 |= (1U<<slotNum);
-    }
-    BW_ADC_SCTRL_SC(baseAddr, tmp16);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetConvSpeedLimitMode
- * Description   : Set the conversion speed control mode for each ADC converter.
- *
- *END**************************************************************************/
-void CADC_HAL_SetConvSpeedLimitMode(uint32_t baseAddr, cadc_conv_id_t convId,
-    cadc_conv_speed_mode_t mode)
-{
-    switch (convId)
-    {
-    case kCAdcConvA:
-        BW_ADC_PWR2_SPEEDA(baseAddr, (uint16_t)mode );
-        break;
-    case kCAdcConvB:
-        BW_ADC_PWR2_SPEEDB(baseAddr, (uint16_t)mode );
-        break;
-    default:
-        break;
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetConvSampleWindow
- * Description   : Set the conversion speed control mode for each ADC converter.
- *
- *END**************************************************************************/
-void CADC_HAL_SetConvSampleWindow(uint32_t baseAddr, cadc_conv_id_t convId, uint16_t val)
-{
-    switch (convId)
-    {
-    case kCAdcConvA:
-        BW_ADC_CTRL3_SCNT0(baseAddr, (uint16_t)val );
-        break;
-    case kCAdcConvB:
-        BW_ADC_CTRL3_SCNT1(baseAddr, (uint16_t)val );
-        break;
-    default:
-        break;
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_HAL_SetSlotScanIntCmd
- * Description   : Switch to enable scan interrupt for each slot in sequence.
- *
- *END**************************************************************************/
-void CADC_HAL_SetSlotScanIntCmd(uint32_t baseAddr, uint32_t slotNum, bool enable)
-{
-    uint16_t tmp16;
-
-    tmp16 = BR_ADC_SCHLTEN_SCHLTEN(baseAddr) & ~(1U<<slotNum);
-    if (enable)
-    {
-        tmp16 |= (1U<<slotNum);
-    }
-    BW_ADC_SCHLTEN_SCHLTEN(baseAddr, tmp16);
-    
-}
+#endif
 
 /*******************************************************************************
  * EOF

@@ -1,0 +1,213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <style type="text/css">
+    .text2 h3{
+      font-family: "Verdana";
+    }
+    </style>
+    <style type="text/css">
+      .ui-widget, .ui-widget .ui-widget {
+      font-size:11px !important;
+      }
+                        
+    </style>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>WebSocket chat</title>
+  </head>
+  <body background="./resources/images/bg-grad.png">                             
+    <link rel="stylesheet" href="./resources/jquery-ui.css" />
+    <link rel="stylesheet" href="./resources/theme.css" />
+    <link rel="stylesheet" href="./resources/prime-ui/primeui.css" />
+    <script type="text/javascript" src="./resources/jquery.js"></script>
+    <script type="text/javascript" src="./resources/jquery-ui.js"></script>
+    <script type="text/javascript" src="./resources/prime-ui/primeui.js"></script>
+    
+    <script type="text/javascript">
+
+    var user_id = 0;
+    var connected = false;
+
+    $(function() {
+      $('#username').puiinputtext();  
+      $('#connect_to').puiinputtext();
+      $('#connect_b').puibutton({
+        click: function(event) { InitWebsocket(event) }
+      });
+
+      $("#page_a" ).show("fade", 1000);
+      $("#page_a" ).position({
+        my: "center center",
+        at: "center center", 
+        of: $(document)
+      });
+
+      $("#page_b" ).position({
+        my: "left center",
+        at: "left center", 
+        of: $(document)
+      });
+
+      $('#chatbox').puiinputtextarea();
+
+      $('#message_in').puiinputtext();
+      $('#message_in').keydown(function(event) {
+        if (event.which == 13)
+        {
+          doSend($('#message_in').val());
+        }
+      });
+
+      $('#send_b').puibutton({
+        click: function(event) { doSend($('#message_in').val()) }
+      });
+
+      $('#disconnect_b').puibutton({
+        click: function(event) { ReleaseWebsocket() }
+      });
+
+      $('#notificator').puigrowl();
+      $('#connecting').puigrowl({
+        sticky: true
+      });
+    });
+
+  
+    function InitWebsocket(event)
+    {
+      if ($('#username').val() == '')
+      {
+        addMessage([{severity: 'error', summary: 'Error: No username', detail: "Username is required!"}]);
+        return;
+      }
+
+      if ($('#connect_to').val() == '')
+      {
+        addMessage([{severity: 'error', summary: 'Error: No server address', detail: "Server IP address is required!"}]);
+        return;
+      }
+
+      var wsUri = "ws://" + $('#connect_to').val() + "/chat";
+      websocket = new WebSocket(wsUri);
+      websocket.onopen = function(event) { onOpen(event) };
+      websocket.onclose = function(event) { onClose(event) };
+      websocket.onmessage = function(event) { onMessage(event) };
+      websocket.onerror = function(event) { onError(event) };
+      $('#connecting').puigrowl('show', [{severity: 'info', summary: 'Connecting to host', detail: "Contacting server. Please wait..."}]).delay(100); 
+    }
+
+    function ReleaseWebsocket()
+    {
+      doSend("User " + $('#username').val() + " disconnected.");
+      websocket.close();
+    }
+
+    function onOpen(event)
+    {
+      connected = true;
+      $('#connecting').hide("fade");
+      $('#chatbox').text('');
+
+      $("#page_a" ).toggle("fade", 500);
+      $("#page_b" ).delay(750).show("fade", 500);
+
+      if (user_id == 0)
+      {
+        user_id = Math.random();
+      }
+      doSend("User " + $('#username').val() + " connected.");
+      addMessage([{severity: 'info', summary: 'Client connected', detail: "Connected to: " + event.srcElement.url}]);
+    }
+
+    function onClose(event)
+    {
+      if (connected)
+      {
+        $("#page_b" ).toggle("fade", 500);
+        $("#page_a" ).delay(750).show("fade", 500);
+        connected = false;
+        addMessage([{severity: 'info', summary: 'Client disconnected', detail: "Disconnection type: " + event.type}]);
+      }
+      else
+      {
+        $('#connecting').hide("fade");
+        addMessage([{severity: 'error', summary: 'Error: Unable to connect', detail: "WebSocket connection failed with status code " + websocket.readyState + "."}]);
+      }
+    }
+
+    function onMessage(event)
+    {
+      var today = new Date();
+      var h = today.getHours();
+      var m = today.getMinutes();
+      var s = today.getSeconds();
+      var box = $('#chatbox');
+
+      h = checkTime(h);
+      m = checkTime(m);
+      s = checkTime(s);
+      var timestamp = h + ":" + m + ":" + s + " ";
+      
+      box.append(timestamp + event.data + "\n");
+      box.scrollTop(box[0].scrollHeight - box.height());
+    
+    }
+
+    function checkTime(i)
+    {
+      if (i < 10)
+      {
+          i = "0" + i;
+      }
+      return i;
+    }
+
+    function onError(event)
+    {
+      addMessage([{severity: 'error', summary: 'Error: Unable to connect', detail: "WebSocket connection failed with status code " + websocket.readyState + "."}]);
+    }
+    
+    addMessage = function(msg)
+    {  
+      $('#notificator').puigrowl('show', msg);
+    } 
+
+    function doSend(message)
+    {
+      var tmp = message;
+      message = user_id + ":" + tmp;
+      websocket.send(message);
+      $('#message_in').val('');
+    }
+
+    </script>
+
+    <div id="page_a" style="text-align: center; display: none;">
+      <div id="heading" class="ui-widget-content text2">
+        <h3>Connect to chat server</h3>
+      </div>
+      <div style="width: 100%; padding-top: 4px;">
+          <div style="width: 200px; margin: auto;">
+            <input id="username" type="text" placeholder="username" style="width: 200; display: block; margin-bottom: 4px;" autofocus/>
+            <input id="connect_to" type="text" placeholder="server IP address" style="width: 200; display: block; margin-bottom: 2px;"/>
+            <button id="connect_b" type="button" style="width: 200;">Connect</button>
+          </div>
+      </div>
+    </div>
+
+    <div id="page_b" style="text-align: center; display: none;">
+      <div id="back_b" style="width: 100%; padding-top: 2px;">
+        <div style="width: 500; margin: auto;">
+          <textarea readonly id="chatbox" rows="30" cols="80" style="margin: 2px; resize: none; display: block; width: 99%; clear: both;"></textarea>
+          <input id="message_in" type="text" placeholder="Type your message here..." style="width: 420px; margin: 2px; float: left;" autofocus/>
+          <button id="send_b" type="button" style="width: 70px; float: left; margin: 2px; height: 23px;">Send</button>
+          <button id="disconnect_b" type="button" style="width: 495px; display: block; clear: both; margin: 2px; height: 23px;">Disconnect</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="notificator"/>
+    <div id="connecting"/>
+  </body>
+</html>
+

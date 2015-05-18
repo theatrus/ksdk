@@ -193,7 +193,7 @@ typedef enum _sim_lpuart_rxsrc
 } sim_lpuart_rxsrc_t;
 #endif
 
-/*! @brief SIM receive data source select */
+/*! @brief SIM UART receive data source select */
 typedef enum _sim_uart_rxsrc
 {
     kSimUartRxsrcPin,               /*!< UARTx_RX Pin  */
@@ -205,7 +205,7 @@ typedef enum _sim_uart_rxsrc
 } sim_uart_rxsrc_t;
 #endif
 
-/*! @brief SIM transmit data source select */
+/*! @brief SIM UART transmit data source select */
 typedef enum _sim_uart_txsrc
 {
     kSimUartTxsrcPin,    /*!< UARTx_TX Pin */
@@ -348,12 +348,12 @@ extern "C" {
  *
  * This function enables the clock for specific module.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param name Name of the module to enable.
  */
-static inline void SIM_HAL_EnableClock(uint32_t baseAddr, sim_clock_gate_name_t name)
+static inline void SIM_HAL_EnableClock(SIM_Type * base, sim_clock_gate_name_t name)
 {
-    BW_SIM_SCGC_BIT(baseAddr, name, 1U);
+    SIM_BWR_SCGC_BIT(base, name, 1U);
 }
 
 /*!
@@ -361,12 +361,12 @@ static inline void SIM_HAL_EnableClock(uint32_t baseAddr, sim_clock_gate_name_t 
  *
  * This function disables the clock for specific module.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param name Name of the module to disable.
  */
-static inline void SIM_HAL_DisableClock(uint32_t baseAddr, sim_clock_gate_name_t name)
+static inline void SIM_HAL_DisableClock(SIM_Type * base, sim_clock_gate_name_t name)
 {
-    BW_SIM_SCGC_BIT(baseAddr, name, 0U);
+    SIM_BWR_SCGC_BIT(base, name, 0U);
 }
 
 /*!
@@ -374,13 +374,13 @@ static inline void SIM_HAL_DisableClock(uint32_t baseAddr, sim_clock_gate_name_t
  *
  * This function will get the clock gate state for specific module.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param name Name of the module to get.
  * @return state true - ungated(Enabled), false - gated (Disabled)
  */
-static inline bool SIM_HAL_GetGateCmd(uint32_t baseAddr, sim_clock_gate_name_t name)
+static inline bool SIM_HAL_GetGateCmd(SIM_Type * base, sim_clock_gate_name_t name)
 {
-    return (bool)BR_SIM_SCGC_BIT(baseAddr, name);
+    return (bool)SIM_BRD_SCGC_BIT(base, name);
 }
 
 /*!
@@ -388,15 +388,15 @@ static inline bool SIM_HAL_GetGateCmd(uint32_t baseAddr, sim_clock_gate_name_t n
  *
  * This function sets lpuart clock source selection.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param instance LPUART instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetLpuartSrc(uint32_t baseAddr,
+static inline void CLOCK_HAL_SetLpuartSrc(SIM_Type * base,
                                           uint32_t instance,
                                           clock_lpuart_src_t setting)
 {
-    BW_SIM_SOPT2_LPUARTSRC(baseAddr, setting);
+    SIM_BWR_SOPT2_LPUARTSRC(base, setting);
 }
 
 /*!
@@ -404,14 +404,14 @@ static inline void CLOCK_HAL_SetLpuartSrc(uint32_t baseAddr,
  *
  * This function gets lpuart clock source selection.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param instance LPUART instance.
  * @return Current selection.
  */
-static inline clock_lpuart_src_t CLOCK_HAL_GetLpuartSrc(uint32_t baseAddr,
+static inline clock_lpuart_src_t CLOCK_HAL_GetLpuartSrc(SIM_Type * base,
                                                         uint32_t instance)
 {
-    return (clock_lpuart_src_t)BR_SIM_SOPT2_LPUARTSRC(baseAddr);
+    return (clock_lpuart_src_t)SIM_BRD_SOPT2_LPUARTSRC(base);
 }
 
 /*!
@@ -419,12 +419,12 @@ static inline clock_lpuart_src_t CLOCK_HAL_GetLpuartSrc(uint32_t baseAddr,
  *
  * This function sets debug trace clock selection.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetTraceClkSrc(uint32_t baseAddr, clock_trace_src_t setting)
+static inline void CLOCK_HAL_SetTraceClkSrc(SIM_Type * base, clock_trace_src_t setting)
 {
-    BW_SIM_SOPT2_TRACECLKSEL(baseAddr, setting);
+    SIM_BWR_SOPT2_TRACECLKSEL(base, setting);
 }
 
 /*!
@@ -432,12 +432,12 @@ static inline void CLOCK_HAL_SetTraceClkSrc(uint32_t baseAddr, clock_trace_src_t
  *
  * This function gets debug trace clock selection.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return Current selection.
  */
-static inline clock_trace_src_t CLOCK_HAL_GetTraceClkSrc(uint32_t baseAddr)
+static inline clock_trace_src_t CLOCK_HAL_GetTraceClkSrc(SIM_Type * base)
 {
-    return (clock_trace_src_t)BR_SIM_SOPT2_TRACECLKSEL(baseAddr);
+    return (clock_trace_src_t)SIM_BRD_SOPT2_TRACECLKSEL(base);
 }
 
 /*!
@@ -445,13 +445,13 @@ static inline clock_trace_src_t CLOCK_HAL_GetTraceClkSrc(uint32_t baseAddr)
  *
  * This function sets the clock selection of ERCLK32K.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetExternalRefClock32kSrc(uint32_t baseAddr,
+static inline void CLOCK_HAL_SetExternalRefClock32kSrc(SIM_Type * base,
                                           clock_er32k_src_t setting)
 {
-    BW_SIM_SOPT1_OSC32KSEL(baseAddr, setting);
+    SIM_BWR_SOPT1_OSC32KSEL(base, setting);
 }
 
 /*!
@@ -459,12 +459,12 @@ static inline void CLOCK_HAL_SetExternalRefClock32kSrc(uint32_t baseAddr,
  *
  * This function gets the clock selection of ERCLK32K.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return Current selection.
  */
-static inline clock_er32k_src_t CLOCK_HAL_GetExternalRefClock32kSrc(uint32_t baseAddr)
+static inline clock_er32k_src_t CLOCK_HAL_GetExternalRefClock32kSrc(SIM_Type * base)
 {
-    return (clock_er32k_src_t)BR_SIM_SOPT1_OSC32KSEL(baseAddr);
+    return (clock_er32k_src_t)SIM_BRD_SOPT1_OSC32KSEL(base);
 }
 
 /*!
@@ -473,13 +473,13 @@ static inline clock_er32k_src_t CLOCK_HAL_GetExternalRefClock32kSrc(uint32_t bas
  * This function sets the selection of the high frequency clock for
  * various peripheral clocking options
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetPllfllSel(uint32_t baseAddr,
+static inline void CLOCK_HAL_SetPllfllSel(SIM_Type * base,
                                         clock_pllfll_sel_t setting)
 {
-    BW_SIM_SOPT2_PLLFLLSEL(baseAddr, setting);
+    SIM_BWR_SOPT2_PLLFLLSEL(base, setting);
 }
 
 /*!
@@ -488,12 +488,12 @@ static inline void CLOCK_HAL_SetPllfllSel(uint32_t baseAddr,
  * This function gets the selection of the high frequency clock for
  * various peripheral clocking options
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return Current selection.
  */
-static inline clock_pllfll_sel_t CLOCK_HAL_GetPllfllSel(uint32_t baseAddr)
+static inline clock_pllfll_sel_t CLOCK_HAL_GetPllfllSel(SIM_Type * base)
 {
-    return (clock_pllfll_sel_t)BR_SIM_SOPT2_PLLFLLSEL(baseAddr);
+    return (clock_pllfll_sel_t)SIM_BRD_SOPT2_PLLFLLSEL(base);
 }
 
 /*!
@@ -501,12 +501,12 @@ static inline clock_pllfll_sel_t CLOCK_HAL_GetPllfllSel(uint32_t baseAddr)
  *
  * This function sets the selection of the clock to output on the CLKOUT pin.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetClkOutSel(uint32_t baseAddr, clock_clkout_src_t setting)
+static inline void CLOCK_HAL_SetClkOutSel(SIM_Type * base, clock_clkout_src_t setting)
 {
-    BW_SIM_SOPT2_CLKOUTSEL(baseAddr, setting);
+    SIM_BWR_SOPT2_CLKOUTSEL(base, setting);
 }
 
 /*!
@@ -514,12 +514,12 @@ static inline void CLOCK_HAL_SetClkOutSel(uint32_t baseAddr, clock_clkout_src_t 
  *
  * This function gets the selection of the clock to output on the CLKOUT pin.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return Current selection.
  */
-static inline clock_clkout_src_t CLOCK_HAL_GetClkOutSel(uint32_t baseAddr)
+static inline clock_clkout_src_t CLOCK_HAL_GetClkOutSel(SIM_Type * base)
 {
-    return (clock_clkout_src_t)BR_SIM_SOPT2_CLKOUTSEL(baseAddr);
+    return (clock_clkout_src_t)SIM_BRD_SOPT2_CLKOUTSEL(base);
 }
 
 /*!
@@ -527,13 +527,13 @@ static inline clock_clkout_src_t CLOCK_HAL_GetClkOutSel(uint32_t baseAddr)
  *
  * This function sets ERCLK32K output pin.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetOsc32kOutSel(uint32_t baseAddr,
+static inline void CLOCK_HAL_SetOsc32kOutSel(SIM_Type * base,
                                              clock_osc32kout_sel_t setting)
 {
-    BW_SIM_SOPT1_OSC32KOUT(baseAddr, setting);
+    SIM_BWR_SOPT1_OSC32KOUT(base, setting);
 }
 
 /*!
@@ -541,12 +541,12 @@ static inline void CLOCK_HAL_SetOsc32kOutSel(uint32_t baseAddr,
  *
  * This function gets ERCLK32K output pin setting.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return Current selection.
  */
-static inline clock_osc32kout_sel_t CLOCK_HAL_GetOsc32kOutSel(uint32_t baseAddr)
+static inline clock_osc32kout_sel_t CLOCK_HAL_GetOsc32kOutSel(SIM_Type * base)
 {
-    return (clock_osc32kout_sel_t)BR_SIM_SOPT1_OSC32KOUT(baseAddr);
+    return (clock_osc32kout_sel_t)SIM_BRD_SOPT1_OSC32KOUT(base);
 }
 
 /*!
@@ -554,12 +554,12 @@ static inline clock_osc32kout_sel_t CLOCK_HAL_GetOsc32kOutSel(uint32_t baseAddr)
  *
  * This function sets divide value OUTDIV1.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetOutDiv1(uint32_t baseAddr, uint8_t setting)
+static inline void CLOCK_HAL_SetOutDiv1(SIM_Type * base, uint8_t setting)
 {
-    BW_SIM_CLKDIV1_OUTDIV1(baseAddr, setting);
+    SIM_BWR_CLKDIV1_OUTDIV1(base, setting);
 }
 
 /*!
@@ -567,12 +567,12 @@ static inline void CLOCK_HAL_SetOutDiv1(uint32_t baseAddr, uint8_t setting)
  *
  * This function gets divide value OUTDIV1.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return Current divide value.
  */
-static inline uint8_t CLOCK_HAL_GetOutDiv1(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetOutDiv1(SIM_Type * base)
 {
-    return BR_SIM_CLKDIV1_OUTDIV1(baseAddr);
+    return SIM_BRD_CLKDIV1_OUTDIV1(base);
 }
 
 /*!
@@ -580,12 +580,12 @@ static inline uint8_t CLOCK_HAL_GetOutDiv1(uint32_t baseAddr)
  *
  * This function sets divide value OUTDIV2.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetOutDiv2(uint32_t baseAddr, uint8_t setting)
+static inline void CLOCK_HAL_SetOutDiv2(SIM_Type * base, uint8_t setting)
 {
-    BW_SIM_CLKDIV1_OUTDIV2(baseAddr, setting);
+    SIM_BWR_CLKDIV1_OUTDIV2(base, setting);
 }
 
 /*!
@@ -593,12 +593,12 @@ static inline void CLOCK_HAL_SetOutDiv2(uint32_t baseAddr, uint8_t setting)
  *
  * This function gets divide value OUTDIV2.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return Current divide value.
  */
-static inline uint8_t CLOCK_HAL_GetOutDiv2(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetOutDiv2(SIM_Type * base)
 {
-    return BR_SIM_CLKDIV1_OUTDIV2(baseAddr);
+    return SIM_BRD_CLKDIV1_OUTDIV2(base);
 }
 
 /*!
@@ -606,12 +606,12 @@ static inline uint8_t CLOCK_HAL_GetOutDiv2(uint32_t baseAddr)
  *
  * This function sets divide value OUTDIV3.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetOutDiv3(uint32_t baseAddr, uint8_t setting)
+static inline void CLOCK_HAL_SetOutDiv3(SIM_Type * base, uint8_t setting)
 {
-    BW_SIM_CLKDIV1_OUTDIV3(baseAddr, setting);
+    SIM_BWR_CLKDIV1_OUTDIV3(base, setting);
 }
 
 /*!
@@ -619,12 +619,12 @@ static inline void CLOCK_HAL_SetOutDiv3(uint32_t baseAddr, uint8_t setting)
  *
  * This function gets divide value OUTDIV3.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return Current divide value.
  */
-static inline uint8_t CLOCK_HAL_GetOutDiv3(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetOutDiv3(SIM_Type * base)
 {
-    return BR_SIM_CLKDIV1_OUTDIV3(baseAddr);
+    return SIM_BRD_CLKDIV1_OUTDIV3(base);
 }
 
 /*!
@@ -632,12 +632,12 @@ static inline uint8_t CLOCK_HAL_GetOutDiv3(uint32_t baseAddr)
  *
  * This function sets divide value OUTDIV4.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @param setting  The value to set.
  */
-static inline void CLOCK_HAL_SetOutDiv4(uint32_t baseAddr, uint8_t setting)
+static inline void CLOCK_HAL_SetOutDiv4(SIM_Type * base, uint8_t setting)
 {
-    BW_SIM_CLKDIV1_OUTDIV4(baseAddr, setting);
+    SIM_BWR_CLKDIV1_OUTDIV4(base, setting);
 }
 
 /*!
@@ -645,12 +645,12 @@ static inline void CLOCK_HAL_SetOutDiv4(uint32_t baseAddr, uint8_t setting)
  *
  * This function gets divide value OUTDIV4.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return Current divide value.
  */
-static inline uint8_t CLOCK_HAL_GetOutDiv4(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetOutDiv4(SIM_Type * base)
 {
-    return BR_SIM_CLKDIV1_OUTDIV4(baseAddr);
+    return SIM_BRD_CLKDIV1_OUTDIV4(base);
 }
 
 /*!
@@ -658,13 +658,13 @@ static inline uint8_t CLOCK_HAL_GetOutDiv4(uint32_t baseAddr)
  *
  * This function sets the setting for all clock out dividers at the same time.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param outdiv1      Outdivider1 setting
  * @param outdiv2      Outdivider2 setting
  * @param outdiv3      Outdivider3 setting
  * @param outdiv4      Outdivider4 setting
  */
-void CLOCK_HAL_SetOutDiv(uint32_t baseAddr,
+void CLOCK_HAL_SetOutDiv(SIM_Type * base,
                          uint8_t outdiv1,
                          uint8_t outdiv2,
                          uint8_t outdiv3,
@@ -674,13 +674,13 @@ void CLOCK_HAL_SetOutDiv(uint32_t baseAddr,
  *
  * This function gets the setting for all clock out dividers at the same time.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param outdiv1      Outdivider1 setting
  * @param outdiv2      Outdivider2 setting
  * @param outdiv3      Outdivider3 setting
  * @param outdiv4      Outdivider4 setting
  */
-void CLOCK_HAL_GetOutDiv(uint32_t baseAddr,
+void CLOCK_HAL_GetOutDiv(SIM_Type * base,
                          uint8_t *outdiv1,
                          uint8_t *outdiv2,
                          uint8_t *outdiv3,
@@ -692,12 +692,12 @@ void CLOCK_HAL_GetOutDiv(uint32_t baseAddr,
  * This function gets the RAM size. The field specifies the amount of system RAM
  * available on the device.
  *
- * @param baseAddr Base address for current SIM instance.
+ * @param base Base address for current SIM instance.
  * @return size  RAM size on the device
  */
-static inline uint32_t SIM_HAL_GetRamSize(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetRamSize(SIM_Type * base)
 {
-    return BR_SIM_SOPT1_RAMSIZE(baseAddr);
+    return SIM_BRD_SOPT1_RAMSIZE(base);
 }
 
 /*!
@@ -707,7 +707,7 @@ static inline uint32_t SIM_HAL_GetRamSize(uint32_t baseAddr)
  * this field affects which CPU operations can access the off-chip via the FlexBus
  * and DDR controller interfaces. This field has no effect if the security is not enabled.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param setting   FlexBus security level setting
  *                  - 00: All off-chip accesses (op code and data) via the FlexBus and
  *                        DDR controller are disallowed.
@@ -715,10 +715,10 @@ static inline uint32_t SIM_HAL_GetRamSize(uint32_t baseAddr)
  *                        allowed.
  *                  - 11: Off-chip op code accesses and data accesses are allowed.
  */
-static inline void SIM_HAL_SetFlexbusSecurityLevelMode(uint32_t baseAddr,
+static inline void SIM_HAL_SetFlexbusSecurityLevelMode(SIM_Type * base,
                                                        sim_flexbus_security_level_t setting)
 {
-    BW_SIM_SOPT2_FBSL(baseAddr, setting);
+    SIM_BWR_SOPT2_FBSL(base, setting);
 }
 
 /*!
@@ -726,12 +726,12 @@ static inline void SIM_HAL_SetFlexbusSecurityLevelMode(uint32_t baseAddr,
  *
  * This function  gets the FlexBus security level setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return setting FlexBus security level setting
  */
-static inline sim_flexbus_security_level_t SIM_HAL_GetFlexbusSecurityLevelMode(uint32_t baseAddr)
+static inline sim_flexbus_security_level_t SIM_HAL_GetFlexbusSecurityLevelMode(SIM_Type * base)
 {
-    return (sim_flexbus_security_level_t)BR_SIM_SOPT2_FBSL(baseAddr);
+    return (sim_flexbus_security_level_t)SIM_BRD_SOPT2_FBSL(base);
 }
 
 /*!
@@ -739,13 +739,13 @@ static inline sim_flexbus_security_level_t SIM_HAL_GetFlexbusSecurityLevelMode(u
  *
  * This function enables/disables the alternative conversion triggers for ADCx.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param enable Enable alternative conversion triggers for ADCx
  *               - true:  Select alternative conversion trigger.
  *               - false: Select PDB trigger.
  */
-void SIM_HAL_SetAdcAlternativeTriggerCmd(uint32_t baseAddr,
+void SIM_HAL_SetAdcAlternativeTriggerCmd(SIM_Type * base,
                                          uint32_t instance,
                                          bool enable);
 
@@ -754,11 +754,11 @@ void SIM_HAL_SetAdcAlternativeTriggerCmd(uint32_t baseAddr,
  *
  * This function gets the ADCx alternate trigger enable setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @return enabled True if  ADCx alternate trigger is enabled
  */
-bool SIM_HAL_GetAdcAlternativeTriggerCmd(uint32_t baseAddr, uint32_t instance);
+bool SIM_HAL_GetAdcAlternativeTriggerCmd(SIM_Type * base, uint32_t instance);
 
 /*!
  * @brief Sets the ADCx pre-trigger select setting.
@@ -766,11 +766,11 @@ bool SIM_HAL_GetAdcAlternativeTriggerCmd(uint32_t baseAddr, uint32_t instance);
  * This function selects the ADCx pre-trigger source when the alternative
  * triggers are enabled through ADCxALTTRGEN.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param select pre-trigger select setting for ADCx
  */
-void SIM_HAL_SetAdcPreTriggerMode(uint32_t baseAddr,
+void SIM_HAL_SetAdcPreTriggerMode(SIM_Type * base,
                                   uint32_t instance,
                                   sim_adc_pretrg_sel_t select);
 
@@ -779,11 +779,11 @@ void SIM_HAL_SetAdcPreTriggerMode(uint32_t baseAddr,
  *
  * This function  gets the ADCx pre-trigger select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @return select ADCx pre-trigger select setting
  */
-sim_adc_pretrg_sel_t SIM_HAL_GetAdcPreTriggerMode(uint32_t baseAddr,
+sim_adc_pretrg_sel_t SIM_HAL_GetAdcPreTriggerMode(SIM_Type * base,
                                                   uint32_t instance);
 
 /*!
@@ -792,11 +792,11 @@ sim_adc_pretrg_sel_t SIM_HAL_GetAdcPreTriggerMode(uint32_t baseAddr,
  * This function  selects the ADCx trigger source when alternative triggers
  * are enabled through ADCxALTTRGEN.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param select       trigger select setting for ADCx
 */
-void SIM_HAL_SetAdcTriggerMode(uint32_t baseAddr,
+void SIM_HAL_SetAdcTriggerMode(SIM_Type * base,
                                uint32_t instance,
                                sim_adc_trg_sel_t select);
 
@@ -805,11 +805,11 @@ void SIM_HAL_SetAdcTriggerMode(uint32_t baseAddr,
  *
  * This function  gets the ADCx trigger select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @return ADCx trigger select setting
  */
-sim_adc_trg_sel_t SIM_HAL_GetAdcTriggerMode(uint32_t baseAddr,
+sim_adc_trg_sel_t SIM_HAL_GetAdcTriggerMode(SIM_Type * base,
                                             uint32_t instance);
 
 /*!
@@ -817,13 +817,13 @@ sim_adc_trg_sel_t SIM_HAL_GetAdcTriggerMode(uint32_t baseAddr,
  *
  * This function sets ADC alternate trigger, pre-trigger mode and trigger mode.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param altTrigEn    Alternative trigger enable or not.
  * @param preTrigSel   Pre-trigger mode.
  * @param trigSel      Trigger mode.
 */
-void SIM_HAL_SetAdcTriggerModeOneStep(uint32_t baseAddr,
+void SIM_HAL_SetAdcTriggerModeOneStep(SIM_Type * base,
                                       uint32_t instance,
                                       bool    altTrigEn,
                                       sim_adc_pretrg_sel_t preTrigSel,
@@ -834,11 +834,11 @@ void SIM_HAL_SetAdcTriggerModeOneStep(uint32_t baseAddr,
  *
  * This function  selects the source for the UARTx receive data.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param select the source for the UARTx receive data
  */
-void SIM_HAL_SetUartRxSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetUartRxSrcMode(SIM_Type * base,
                               uint32_t instance,
                               sim_uart_rxsrc_t select);
 
@@ -847,22 +847,22 @@ void SIM_HAL_SetUartRxSrcMode(uint32_t baseAddr,
  *
  * This function  gets the UARTx receive data source select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @return select UARTx receive data source select setting
  */
-sim_uart_rxsrc_t SIM_HAL_GetUartRxSrcMode(uint32_t baseAddr, uint32_t instance);
+sim_uart_rxsrc_t SIM_HAL_GetUartRxSrcMode(SIM_Type * base, uint32_t instance);
 
 /*!
  * @brief Sets the UARTx transmit data source select setting.
  *
  * This function  selects the source for the UARTx transmit data.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param select the source for the UARTx transmit data
  */
-void SIM_HAL_SetUartTxSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetUartTxSrcMode(SIM_Type * base,
                               uint32_t instance,
                               sim_uart_txsrc_t select);
 
@@ -871,26 +871,26 @@ void SIM_HAL_SetUartTxSrcMode(uint32_t baseAddr,
  *
  * This function  gets the UARTx transmit data source select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @return select UARTx transmit data source select setting
  */
-sim_uart_txsrc_t SIM_HAL_GetUartTxSrcMode(uint32_t baseAddr, uint32_t instance);
+sim_uart_txsrc_t SIM_HAL_GetUartTxSrcMode(SIM_Type * base, uint32_t instance);
 
 /*!
  * @brief Sets the LPUARTx receive data source select setting.
  *
  * This function  selects the source for the LPUARTx receive data.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param select the source for the LPUARTx receive data
  */
-static inline void SIM_HAL_SetLpuartRxSrcMode(uint32_t baseAddr,
+static inline void SIM_HAL_SetLpuartRxSrcMode(SIM_Type * base,
                                               uint32_t instance,
                                               sim_lpuart_rxsrc_t select)
 {
-    BW_SIM_SOPT5_LPUART0RXSRC(baseAddr, select);
+    SIM_BWR_SOPT5_LPUART0RXSRC(base, select);
 }
 
 /*!
@@ -898,14 +898,14 @@ static inline void SIM_HAL_SetLpuartRxSrcMode(uint32_t baseAddr,
  *
  * This function  gets the LPUARTx receive data source select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @return select LPUARTx receive data source select setting
  */
-static inline sim_lpuart_rxsrc_t SIM_HAL_GetLpuartRxSrcMode(uint32_t baseAddr,
+static inline sim_lpuart_rxsrc_t SIM_HAL_GetLpuartRxSrcMode(SIM_Type * base,
                                                             uint32_t instance)
 {
-    return (sim_lpuart_rxsrc_t)BR_SIM_SOPT5_LPUART0RXSRC(baseAddr);
+    return (sim_lpuart_rxsrc_t)SIM_BRD_SOPT5_LPUART0RXSRC(base);
 }
 
 /*!
@@ -913,14 +913,14 @@ static inline sim_lpuart_rxsrc_t SIM_HAL_GetLpuartRxSrcMode(uint32_t baseAddr,
  *
  * This function  selects  the source of FTMx hardware trigger y.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param trigger      hardware trigger y
  * @param select FlexTimer x hardware trigger y
  *               - 0: Pre-trigger A selected for ADCx.
  *               - 1: Pre-trigger B selected for ADCx.
  */
-void SIM_HAL_SetFtmTriggerSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmTriggerSrcMode(SIM_Type * base,
                                   uint32_t instance,
                                   uint8_t trigger,
                                   sim_ftm_trg_src_t select);
@@ -930,12 +930,12 @@ void SIM_HAL_SetFtmTriggerSrcMode(uint32_t baseAddr,
  *
  * This function  gets the FlexTimer x hardware trigger y source select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param trigger      hardware trigger y
  * @return select FlexTimer x hardware trigger y source select setting
  */
-sim_ftm_trg_src_t SIM_HAL_GetFtmTriggerSrcMode(uint32_t baseAddr,
+sim_ftm_trg_src_t SIM_HAL_GetFtmTriggerSrcMode(SIM_Type * base,
                                                uint32_t instance,
                                                uint8_t trigger);
 
@@ -944,13 +944,13 @@ sim_ftm_trg_src_t SIM_HAL_GetFtmTriggerSrcMode(uint32_t baseAddr,
  *
  * This function  selects the source of FTMx external clock pin select.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param select FTMx external clock pin select
  *               - 0: FTMx external clock driven by FTM CLKIN0 pin.
  *               - 1: FTMx external clock driven by FTM CLKIN1 pin.
  */
-void SIM_HAL_SetFtmExternalClkPinMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmExternalClkPinMode(SIM_Type * base,
                                       uint32_t instance,
                                       sim_ftm_clk_sel_t select);
 
@@ -959,11 +959,11 @@ void SIM_HAL_SetFtmExternalClkPinMode(uint32_t baseAddr,
  *
  * This function gets the FlexTimer x external clock pin select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @return select FlexTimer x external clock pin select setting
  */
-sim_ftm_clk_sel_t SIM_HAL_GetFtmExternalClkPinMode(uint32_t baseAddr,
+sim_ftm_clk_sel_t SIM_HAL_GetFtmExternalClkPinMode(SIM_Type * base,
                                                    uint32_t instance);
 
 /*!
@@ -971,12 +971,12 @@ sim_ftm_clk_sel_t SIM_HAL_GetFtmExternalClkPinMode(uint32_t baseAddr,
  *
  * This function  selects the FlexTimer x channel y input capture source.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param channel      FlexTimer channel y
  * @param select FlexTimer x channel y input capture source
  */
-void SIM_HAL_SetFtmChSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmChSrcMode(SIM_Type * base,
                              uint32_t instance,
                              uint8_t channel,
                              sim_ftm_ch_src_t select);
@@ -987,12 +987,12 @@ void SIM_HAL_SetFtmChSrcMode(uint32_t baseAddr,
  * This function gets the FlexTimer x channel y input capture
  * source select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param channel      FlexTimer channel y
  * @return select FlexTimer x channel y input capture source select setting
  */
-sim_ftm_ch_src_t SIM_HAL_GetFtmChSrcMode(uint32_t baseAddr,
+sim_ftm_ch_src_t SIM_HAL_GetFtmChSrcMode(SIM_Type * base,
                                          uint32_t instance,
                                          uint8_t channel);
 
@@ -1001,12 +1001,12 @@ sim_ftm_ch_src_t SIM_HAL_GetFtmChSrcMode(uint32_t baseAddr,
  *
  * This function  selects the FlexTimer x channel y output source.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param channel      FlexTimer channel y
  * @param select FlexTimer x channel y output source
  */
-void SIM_HAL_SetFtmChOutSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmChOutSrcMode(SIM_Type * base,
                                 uint32_t instance,
                                 uint8_t channel,
                                 sim_ftm_ch_out_src_t select);
@@ -1017,12 +1017,12 @@ void SIM_HAL_SetFtmChOutSrcMode(uint32_t baseAddr,
  * This function gets the FlexTimer x channel y output
  * source select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param channel      FlexTimer channel y
  * @return select FlexTimer x channel y output source select setting
  */
-sim_ftm_ch_out_src_t SIM_HAL_GetFtmChOutSrcMode(uint32_t baseAddr,
+sim_ftm_ch_out_src_t SIM_HAL_GetFtmChOutSrcMode(SIM_Type * base,
                                                 uint32_t instance,
                                                 uint8_t channel);
 
@@ -1032,11 +1032,11 @@ sim_ftm_ch_out_src_t SIM_HAL_GetFtmChOutSrcMode(uint32_t baseAddr,
  * This function sets FlexTimer x hardware trigger 0 software synchronization.
  * FTMxSYNCBIT.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param sync         Synchronize or not.
  */
-void SIM_HAL_SetFtmSyncCmd(uint32_t baseAddr, uint32_t instance, bool sync);
+void SIM_HAL_SetFtmSyncCmd(SIM_Type * base, uint32_t instance, bool sync);
 
 /*!
  * @brief Get FlexTimer x hardware trigger 0 software synchronization setting.
@@ -1044,13 +1044,13 @@ void SIM_HAL_SetFtmSyncCmd(uint32_t baseAddr, uint32_t instance, bool sync);
  * This function gets FlexTimer x hardware trigger 0 software synchronization.
  * FTMxSYNCBIT.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  */
-static inline bool SIM_HAL_GetFtmSyncCmd(uint32_t baseAddr, uint32_t instance)
+static inline bool SIM_HAL_GetFtmSyncCmd(SIM_Type * base, uint32_t instance)
 {
-    assert (instance < HW_FTM_INSTANCE_COUNT);
-    return (bool)(HW_SIM_SOPT8_RD(baseAddr) & (1U<<instance));
+    assert (instance < FTM_INSTANCE_COUNT);
+    return (bool)(SIM_RD_SOPT8(base) & (1U<<instance));
 }
 
 /*!
@@ -1058,14 +1058,14 @@ static inline bool SIM_HAL_GetFtmSyncCmd(uint32_t baseAddr, uint32_t instance)
  *
  * This function  sets the FlexTimer x fault y select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param fault        fault y
  * @param select FlexTimer x fault y select setting
  *               - 0: FlexTimer x fault y select 0.
  *               - 1: FlexTimer x fault y select 1.
  */
-void SIM_HAL_SetFtmFaultSelMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmFaultSelMode(SIM_Type * base,
                                 uint32_t instance,
                                 uint8_t fault,
                                 sim_ftm_flt_sel_t select);
@@ -1075,12 +1075,12 @@ void SIM_HAL_SetFtmFaultSelMode(uint32_t baseAddr,
  *
  * This function  gets the FlexTimer x fault y select setting.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param instance     device instance.
  * @param fault        fault y
  * @return select FlexTimer x fault y select setting
  */
-sim_ftm_flt_sel_t SIM_HAL_GetFtmFaultSelMode(uint32_t baseAddr,
+sim_ftm_flt_sel_t SIM_HAL_GetFtmFaultSelMode(SIM_Type * base,
                                              uint32_t instance,
                                              uint8_t fault);
 
@@ -1089,12 +1089,12 @@ sim_ftm_flt_sel_t SIM_HAL_GetFtmFaultSelMode(uint32_t baseAddr,
  *
  * This function  gets the Kinetis Family ID in the System Device ID register.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return id Kinetis Family ID
  */
-static inline uint32_t SIM_HAL_GetFamilyId(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetFamilyId(SIM_Type * base)
 {
-    return BR_SIM_SDID_FAMILYID(baseAddr);
+    return SIM_BRD_SDID_FAMILYID(base);
 }
 
 /*!
@@ -1102,12 +1102,12 @@ static inline uint32_t SIM_HAL_GetFamilyId(uint32_t baseAddr)
  *
  * This function  gets the Kinetis Sub-Family ID in System Device ID register.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return id Kinetis Sub-Family ID
  */
-static inline uint32_t SIM_HAL_GetSubFamilyId(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetSubFamilyId(SIM_Type * base)
 {
-    return BR_SIM_SDID_SUBFAMID(baseAddr);
+    return SIM_BRD_SDID_SUBFAMID(base);
 }
 
 /*!
@@ -1115,12 +1115,12 @@ static inline uint32_t SIM_HAL_GetSubFamilyId(uint32_t baseAddr)
  *
  * This function  gets the Kinetis Series ID in System Device ID register.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return id Kinetis Series ID
  */
-static inline uint32_t SIM_HAL_GetSeriesId(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetSeriesId(SIM_Type * base)
 {
-    return BR_SIM_SDID_SERIESID(baseAddr);
+    return SIM_BRD_SDID_SERIESID(base);
 }
 
 /*!
@@ -1128,12 +1128,12 @@ static inline uint32_t SIM_HAL_GetSeriesId(uint32_t baseAddr)
  *
  * This function  gets the Kinetis Pincount ID in System Device ID register.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return id Kinetis Pincount ID
  */
-static inline uint32_t SIM_HAL_GetPinCntId(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetPinCntId(SIM_Type * base)
 {
-    return BR_SIM_SDID_PINID(baseAddr);
+    return SIM_BRD_SDID_PINID(base);
 }
 
 /*!
@@ -1141,12 +1141,12 @@ static inline uint32_t SIM_HAL_GetPinCntId(uint32_t baseAddr)
  *
  * This function  gets the Kinetis Revision ID in System Device ID register.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return id Kinetis Revision ID
  */
-static inline uint32_t SIM_HAL_GetRevId(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetRevId(SIM_Type * base)
 {
-    return BR_SIM_SDID_REVID(baseAddr);
+    return SIM_BRD_SDID_REVID(base);
 }
 
 /*!
@@ -1154,12 +1154,12 @@ static inline uint32_t SIM_HAL_GetRevId(uint32_t baseAddr)
  *
  * This function  gets the Kinetis Die ID in System Device ID register.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return id Kinetis Die ID
  */
-static inline uint32_t SIM_HAL_GetDieId(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetDieId(SIM_Type * base)
 {
-    return BR_SIM_SDID_DIEID(baseAddr);
+    return SIM_BRD_SDID_DIEID(base);
 }
 
 
@@ -1168,12 +1168,12 @@ static inline uint32_t SIM_HAL_GetDieId(uint32_t baseAddr)
  *
  * This function  gets the program flash size in the Flash Configuration Register 1.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return size Program flash Size
  */
-static inline uint32_t SIM_HAL_GetProgramFlashSize(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetProgramFlashSize(SIM_Type * base)
 {
-    return BR_SIM_FCFG1_PFSIZE(baseAddr);
+    return SIM_BRD_FCFG1_PFSIZE(base);
 }
 
 
@@ -1182,12 +1182,12 @@ static inline uint32_t SIM_HAL_GetProgramFlashSize(uint32_t baseAddr)
  *
  * This function  sets the Flash Doze in the Flash Configuration Register 1.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param setting Flash Doze setting
  */
-static inline void SIM_HAL_SetFlashDoze(uint32_t baseAddr, uint32_t setting)
+static inline void SIM_HAL_SetFlashDoze(SIM_Type * base, uint32_t setting)
 {
-    BW_SIM_FCFG1_FLASHDOZE(baseAddr, setting);
+    SIM_BWR_FCFG1_FLASHDOZE(base, setting);
 }
 
 /*!
@@ -1195,12 +1195,12 @@ static inline void SIM_HAL_SetFlashDoze(uint32_t baseAddr, uint32_t setting)
  *
  * This function  gets the Flash Doze in the Flash Configuration Register 1.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return setting Flash Doze setting
  */
-static inline uint32_t SIM_HAL_GetFlashDoze(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetFlashDoze(SIM_Type * base)
 {
-    return BR_SIM_FCFG1_FLASHDOZE(baseAddr);
+    return SIM_BRD_FCFG1_FLASHDOZE(base);
 }
 
 /*!
@@ -1209,12 +1209,12 @@ static inline uint32_t SIM_HAL_GetFlashDoze(uint32_t baseAddr)
  * This function  sets the Flash disable setting in the
  * Flash Configuration Register 1.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @param disable      Flash disable setting
  */
-static inline void SIM_HAL_SetFlashDisableCmd(uint32_t baseAddr, bool disable)
+static inline void SIM_HAL_SetFlashDisableCmd(SIM_Type * base, bool disable)
 {
-    BW_SIM_FCFG1_FLASHDIS(baseAddr, disable);
+    SIM_BWR_FCFG1_FLASHDIS(base, disable);
 }
 
 /*!
@@ -1223,12 +1223,12 @@ static inline void SIM_HAL_SetFlashDisableCmd(uint32_t baseAddr, bool disable)
  * This function  gets the Flash disable setting in the
  * Flash Configuration Register 1.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return setting Flash disable setting
  */
-static inline bool SIM_HAL_GetFlashDisableCmd(uint32_t baseAddr)
+static inline bool SIM_HAL_GetFlashDisableCmd(SIM_Type * base)
 {
-    return (bool)BR_SIM_FCFG1_FLASHDIS(baseAddr);
+    return (bool)SIM_BRD_FCFG1_FLASHDIS(base);
 }
 
 /*!
@@ -1236,12 +1236,12 @@ static inline bool SIM_HAL_GetFlashDisableCmd(uint32_t baseAddr)
  *
  * This function gets the Flash maximum block 0 in Flash Configuration Register 2.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return address Flash maximum block 0 address
  */
-static inline uint32_t SIM_HAL_GetFlashMaxAddrBlock0(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetFlashMaxAddrBlock0(SIM_Type * base)
 {
-    return BR_SIM_FCFG2_MAXADDR0(baseAddr);
+    return SIM_BRD_FCFG2_MAXADDR0(base);
 }
 
 /*!
@@ -1249,12 +1249,12 @@ static inline uint32_t SIM_HAL_GetFlashMaxAddrBlock0(uint32_t baseAddr)
  *
  * This function  gets the Flash maximum block 1 in Flash Configuration Register 1.
  *
- * @param baseAddr     Base address for current SIM instance.
+ * @param base     Base address for current SIM instance.
  * @return address Flash maximum block 0 address
  */
-static inline uint32_t SIM_HAL_GetFlashMaxAddrBlock1(uint32_t baseAddr)
+static inline uint32_t SIM_HAL_GetFlashMaxAddrBlock1(SIM_Type * base)
 {
-    return BR_SIM_FCFG2_MAXADDR1(baseAddr);
+    return SIM_BRD_FCFG2_MAXADDR1(base);
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -31,7 +31,7 @@
 #include "fsl_device_registers.h"
 
 /*! @brief Table of base addresses for Enet instances. */
-const uint32_t g_enetBaseAddr[] = ENET_BASE_ADDRS;
+ENET_Type * const g_enetBase[] = ENET_BASE_PTRS;
 
 /*! @brief Table to save enet IRQ enum numbers defined in CMSIS header file. */
 const IRQn_Type g_enetTxIrqId[] = ENET_Transmit_IRQS;

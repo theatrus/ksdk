@@ -35,10 +35,10 @@
  ******************************************************************************/
 
 /* Table of base addresses for CMP instances. */
-const uint32_t g_cmpBaseAddr[] = CMP_BASE_ADDRS;
+CMP_Type * const g_cmpBase[] = CMP_BASE_PTRS;
 
 /* Table to save CMP IRQ enum numbers defined in CMSIS header file. */
-const IRQn_Type g_cmpIrqId[HW_CMP_INSTANCE_COUNT] = CMP_IRQS;
+const IRQn_Type g_cmpIrqId[CMP_INSTANCE_COUNT] = CMP_IRQS;
 
 /*******************************************************************************
  * EOF

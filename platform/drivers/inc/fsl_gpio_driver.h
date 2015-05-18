@@ -36,7 +36,7 @@
 #include "fsl_port_hal.h"
 #include "fsl_gpio_hal.h"
 
-/*! 
+/*!
  * @addtogroup gpio_driver
  * @{
  */
@@ -50,18 +50,18 @@
  * user application files. The variable saves all GPIO pin information used
  * in a project.
  *
- * This example shows how to define the enumeration variable. 
+ * This example shows how to define the enumeration variable.
    @code
    // This is the enumeration to define virtual GPIO pin names.
-   // These members are used by "uint32_t pinName" in 
-   // gpio_output_pin_user_config_t 
+   // These members are used by "uint32_t pinName" in
+   // gpio_output_pin_user_config_t
    // and gpio_input_pin_user_config_t. Usually defined in a header file.
-   enum _gpio_pins 
+   enum _gpio_pins
    {
-       kGpioLED1  = GPIO_MAKE_PIN(HW_GPIOA, 5), // Orange LED.
-       kGpioLED2  = GPIO_MAKE_PIN(HW_GPIOA, 6), // Yellow LED.
-       kGpioLED3  = GPIO_MAKE_PIN(HW_GPIOA, 7), // Breen LED.
-       kGpioLED4  = GPIO_MAKE_PIN(HW_GPIOB, 8), // Red LED.
+       kGpioLED1  = GPIO_MAKE_PIN(GPIOA_IDX, 5), // Orange LED.
+       kGpioLED2  = GPIO_MAKE_PIN(GPIOA_IDX, 6), // Yellow LED.
+       kGpioLED3  = GPIO_MAKE_PIN(GPIOA_IDX, 7), // Green LED.
+       kGpioLED4  = GPIO_MAKE_PIN(GPIOB_IDX, 8), // Red LED.
    };
    @endcode
  *
@@ -69,26 +69,26 @@
  * they are available in one of the pins. That doesn't mean, however, that all pins have the
  * capability to use such features. See the related reference manual for
  * accurate pin features.
- */ 
+ */
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /*! @brief Table of base addresses for GPIO instances. */
-extern const uint32_t g_gpioBaseAddr[HW_GPIO_INSTANCE_COUNT];
+extern GPIO_Type * const g_gpioBase[GPIO_INSTANCE_COUNT];
 
 /*! @brief Table of base addresses for PORT instances. */
-extern const uint32_t g_portBaseAddr[HW_PORT_INSTANCE_COUNT];
+extern PORT_Type * const g_portBase[PORT_INSTANCE_COUNT];
 
 /* Table to save PORT IRQ enumeration numbers defined in CMSIS header file */
-extern const IRQn_Type g_portIrqId[HW_PORT_INSTANCE_COUNT];
+extern const IRQn_Type g_portIrqId[PORT_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-/*! 
+/*!
  * @name GPIO Pin Macros
  * @{
  */
@@ -119,18 +119,20 @@ extern const IRQn_Type g_portIrqId[HW_PORT_INSTANCE_COUNT];
  * unavailable features is harmless, but takes no effect.
  */
 typedef struct GpioInputPin {
-    #if FSL_FEATURE_PORT_HAS_PULL_SELECTION  
+    #if FSL_FEATURE_PORT_HAS_PULL_ENABLE
     bool isPullEnable;                  /*!< Enable or disable pull. */
+    #endif
+    #if FSL_FEATURE_PORT_HAS_PULL_SELECTION
     port_pull_t pullSelect;             /*!< Select internal pull(up/down) resistor.*/
     #endif
-    #if FSL_FEATURE_PORT_HAS_PASSIVE_FILTER   
+    #if FSL_FEATURE_PORT_HAS_PASSIVE_FILTER
     bool isPassiveFilterEnabled;        /*!< Enable or disable passive filter.*/
     #endif
     #if FSL_FEATURE_PORT_HAS_DIGITAL_FILTER
     /* Digital filter clock source and width should be pre-configured using the port HAL.*/
     bool isDigitalFilterEnabled;        /*!< Enable or disable digital filter.*/
     #endif
-    #if FSL_FEATURE_GPIO_HAS_INTERRUPT_VECTOR 
+    #if FSL_FEATURE_GPIO_HAS_INTERRUPT_VECTOR
     port_interrupt_config_t interrupt;  /*!< Select interrupt/DMA request.*/
     #endif
 } gpio_input_pin_t;
@@ -145,10 +147,10 @@ typedef struct GpioInputPin {
  */
 typedef struct GpioOutputPin {
     uint32_t outputLogic;               /*!< Set default output logic.*/
-    #if FSL_FEATURE_PORT_HAS_SLEW_RATE 
+    #if FSL_FEATURE_PORT_HAS_SLEW_RATE
     port_slew_rate_t slewRate;          /*! Select fast/slow slew rate.*/
     #endif
-    #if FSL_FEATURE_PORT_HAS_DRIVE_STRENGTH  
+    #if FSL_FEATURE_PORT_HAS_DRIVE_STRENGTH
     port_drive_strength_t driveStrength;/*!< Select low/high drive strength.*/
     #endif
     #if FSL_FEATURE_PORT_HAS_OPEN_DRAIN
@@ -181,13 +183,13 @@ typedef struct GpioOutputPinUserConfig {
 /*******************************************************************************
  * API
  ******************************************************************************/
- 
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
 /*!
- * @name Initialization 
+ * @name Initialization
  * @{
  */
 
@@ -198,7 +200,7 @@ extern "C" {
  * inputPin[] array and the gpio_output_pin_user_config_t outputPin[] array in the user file.
  * Then, call the GPIO_DRV_Init() function and pass in the two arrays. If the input or output
  * pins are not needed, pass in a NULL.
- * 
+ *
  * This is an example to define an input pin array:
    @code
    // Configure the kGpioPTA2 as digital input.
@@ -220,7 +222,7 @@ extern "C" {
  * @param inputPins input GPIO pins pointer.
  * @param outputPins output GPIO pins pointer.
  */
-void GPIO_DRV_Init(const gpio_input_pin_user_config_t * inputPins, 
+void GPIO_DRV_Init(const gpio_input_pin_user_config_t * inputPins,
                    const gpio_output_pin_user_config_t * outputPins);
 
 /*!
@@ -239,7 +241,7 @@ void GPIO_DRV_OutputPinInit(const gpio_output_pin_user_config_t *outputPin);
 
 /* @} */
 
-/*! 
+/*!
  * @name Pin Direction
  * @{
  */
@@ -273,7 +275,7 @@ void GPIO_DRV_SetPinDir(uint32_t pinName, gpio_pin_direction_t direction);
 
 /*!
  * @brief Sets the output level of the individual GPIO pin to the logic 1 or 0.
- * 
+ *
  * @param pinName GPIO pin name defined by the user in the GPIO pin enumeration list.
  * @param output  pin output logic level.
  *        - 0: corresponding pin output low logic level.
@@ -286,21 +288,21 @@ void GPIO_DRV_WritePinOutput(uint32_t pinName, uint32_t output);
  *
  * @param pinName GPIO pin name defined by the user in the GPIO pin enumeration list.
  */
-void GPIO_DRV_SetPinOutput(uint32_t pinName); 
+void GPIO_DRV_SetPinOutput(uint32_t pinName);
 
 /*!
  * @brief Sets the output level of the individual GPIO pin to the logic 0.
  *
  * @param pinName GPIO pin name defined by the user in the GPIO pin enumeration list.
  */
-void GPIO_DRV_ClearPinOutput(uint32_t pinName); 
+void GPIO_DRV_ClearPinOutput(uint32_t pinName);
 
 /*!
  * @brief Reverses current output logic of the individual GPIO pin.
  *
  * @param pinName GPIO pin name defined by the user in the GPIO pin enumeration list.
  */
-void GPIO_DRV_TogglePinOutput(uint32_t pinName); 
+void GPIO_DRV_TogglePinOutput(uint32_t pinName);
 
 /* @} */
 
@@ -311,7 +313,7 @@ void GPIO_DRV_TogglePinOutput(uint32_t pinName);
 
 /*!
  * @brief Reads the current input value of the individual GPIO pin.
- * 
+ *
  * @param pinName GPIO pin name defined by the user in the GPIO pin enumeration list.
  * @return GPIO port input value.
  *         - 0: Pin logic level is 0, or is not configured for use by digital function.
@@ -324,7 +326,7 @@ uint32_t GPIO_DRV_ReadPinInput(uint32_t pinName);
  * @brief Enables or disables the digital filter in a single port.
  *
  * Each bit of the 32-bit register represents one pin.
- *  
+ *
  * @param pinName GPIO pin name defined by the user in the GPIO pin enumeration list.
  * @param isDigitalFilterEnabled  digital filter enable/disable.
  *        - false: digital filter is disabled on the corresponding pin.
@@ -341,8 +343,24 @@ void GPIO_DRV_SetDigitalFilterCmd(uint32_t pinName, bool isDigitalFilterEnabled)
  */
 
 /*!
+ * @brief Reads the individual pin-interrupt status flag.
+ *
+ * If a pin is configured to generate the DMA request,  the corresponding flag
+ * is cleared automatically at the completion of the requested DMA transfer.
+ * Otherwise, the flag remains set until a logic one is written to that flag.
+ * If configured for a level sensitive interrupt that remains asserted, the flag
+ * is set again immediately.
+ *
+ * @param pinName GPIO pin name defined by the user in the GPIO pin enumeration list.
+ * @return current pin interrupt status flag
+ *         - 0: interrupt is not detected.
+ *         - 1: interrupt is detected.
+ */
+bool GPIO_DRV_IsPinIntPending(uint32_t pinName);
+
+/*!
  * @brief Clears the individual GPIO pin interrupt status flag.
- * 
+ *
  * @param pinName GPIO pin name defined by the user in the GPIO pin enumeration list.
  */
 void GPIO_DRV_ClearPinIntFlag(uint32_t pinName);
@@ -352,9 +370,9 @@ void GPIO_DRV_ClearPinIntFlag(uint32_t pinName);
 #if defined(__cplusplus)
 }
 #endif
- 
+
 /*! @} */
- 
+
 #endif /* __FSL_GPIO_DRIVER_H__*/
 /*******************************************************************************
  * EOF

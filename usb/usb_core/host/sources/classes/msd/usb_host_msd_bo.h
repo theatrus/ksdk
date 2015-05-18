@@ -91,7 +91,7 @@
 ** high nibble in x should be 1111
 ** transfer the low nibble of x to low nibble of a
 */
-#define TRANSFER_LOW_NIBBLE(x,a)   (a) = (uint8_t)(((x) & 0x0F) | ((a) & 0xF0))
+#define TRANSFER_LOW_NIBBLE(x,a)   (a) = (uint8_t)(((x) & 0x0Fu) | ((a) & 0xF0u))
 
 #define CSW_SIZE  0x0C
 #define CBW_SIZE  0x1F
@@ -151,7 +151,7 @@ union _cbwcb
 typedef union _cbwcb cbwcb_struct_t;
 
 /* State machine constants of Class driver */
-enum usb_class_mass_command_status 
+enum _usb_class_mass_command_status
 {
    STATUS_COMPLETED = USB_OK,
    STATUS_CANCELLED,
@@ -172,7 +172,7 @@ enum usb_class_mass_command_status
    STATUS_COMMAND_FAILED
 };
 
-typedef enum usb_class_mass_command_status usb_class_mass_command_status;
+typedef enum _usb_class_mass_command_status usb_class_mass_command_status;
 
 
 /* Define the representation of a circular queue */
@@ -213,15 +213,15 @@ typedef struct _csw_struct
 /* USB Mass Class  One Single Command Object for all protocols */
 typedef struct
 {
-   class_handle                       CLASS_PTR;      /* Class intf data pointer and key    */
+   usb_class_handle                   CLASS_PTR;      /* Class intf data pointer and key    */
    uint32_t                           LUN;           /* Logical unit number on device      */
    cbw_struct_t *                     CBW_PTR;       /* current CBW being constructed      */
    csw_struct_t *                     CSW_PTR;       /* CSW for this command               */
    void (_CODE_PTR_                   CALLBACK)
-      (usb_status,                              /* status of this command                       */
-       void*,                                   /* pointer to USB_MASS_BULK_ONLY_REQUEST_STRUCT */
-       void*,                                   /* pointer to the command object                */
-       uint32_t                                 /* length of the data transfered if any         */
+      (usb_status status,                            /* status of this command                       */
+       void* p1,                                     /* pointer to USB_MASS_BULK_ONLY_REQUEST_STRUCT */
+       void* p2,                                     /* pointer to the command object                */
+       uint32_t buffer_length                        /* length of the data transfered if any         */
       );
 
    void*                              DATA_BUFFER;   /* buffer for IN/OUT for the command  */
@@ -231,11 +231,11 @@ typedef struct
    usb_class_mass_command_status      PREV_STATUS;   /* previous status of this command    */
    uint32_t                           TR_BUF_LEN;    /* length of the buffer received in
                                                        currently executed TR              */
-   uint8_t                            RETRY_COUNT;   /* Number of times this commad tried  */
-   uint8_t                            CBW_RETRY_COUNT;   /* Number of times this commad tried  */
-   uint8_t                            DPHASE_RETRY_COUNT;   /* Number of times this commad tried  */
-   uint8_t                            CSW_RETRY_COUNT;   /* Number of times this commad tried  */
-   uint8_t                            IS_STALL_IN_DPHASE;   /* Is stall happened in data dpase  */
+   uint8_t                            RETRY_COUNT;   /* Number of times this command tried  */
+   uint8_t                            CBW_RETRY_COUNT;   /* Number of times this command tried  */
+   uint8_t                            DPHASE_RETRY_COUNT;   /* Number of times this command tried  */
+   uint8_t                            CSW_RETRY_COUNT;   /* Number of times this command tried  */
+   uint8_t                            IS_STALL_IN_DPHASE;   /* Is stall happened in data dphase  */
    uint8_t                            TR_INDEX;      /* TR_INDEX of the TR used for search */
 } mass_command_struct_t;
 
@@ -272,19 +272,19 @@ typedef struct
 extern "C" {
 #endif
 
-int32_t usb_class_mass_q_insert(usb_mass_class_struct_t *, mass_command_struct_t*);
-void usb_class_mass_deleteq(usb_mass_class_struct_t *);
-void usb_class_mass_get_pending_request(usb_mass_class_struct_t *, mass_command_struct_t* *);
-void usb_class_mass_q_init(usb_mass_class_struct_t *);
-usb_status usb_class_mass_init(usb_device_instance_handle, usb_interface_descriptor_handle, class_handle *);
-usb_status usb_class_mass_deinit(class_handle);
-usb_status usb_class_mass_pre_deinit(class_handle);
-usb_status usb_class_mass_storage_device_command(mass_command_struct_t*);
-bool usb_class_mass_storage_device_command_cancel(mass_command_struct_t*);
-usb_status usb_class_mass_getmaxlun_bulkonly(class_handle, uint8_t *, tr_callback, void*);
-usb_status usb_class_mass_getvidpid(class_handle, uint16_t *, uint16_t *);
-usb_status usb_class_mass_reset_recovery_on_usb(usb_mass_class_struct_t *);
-bool usb_class_mass_cancelq(usb_mass_class_struct_t * intf_ptr, mass_command_struct_t* pCmd);
+int32_t usb_class_mass_q_insert(usb_mass_class_struct_t* mass_class, mass_command_struct_t* pCmd);
+void usb_class_mass_deleteq(usb_mass_class_struct_t* mass_class);
+void usb_class_mass_get_pending_request(usb_mass_class_struct_t* mass_class, mass_command_struct_t** cmd_ptr_ptr);
+void usb_class_mass_q_init(usb_mass_class_struct_t* msd_class_ptr);
+usb_status usb_class_mass_init(usb_device_instance_handle dev_handle, usb_interface_descriptor_handle intf_handle, usb_class_handle* class_handle_ptr);
+usb_status usb_class_mass_deinit(usb_class_handle handle);
+usb_status usb_class_mass_pre_deinit(usb_class_handle handle);
+usb_status usb_class_mass_storage_device_command(mass_command_struct_t* cmd_ptr);
+bool usb_class_mass_storage_device_command_cancel(mass_command_struct_t* cmd_ptr);
+usb_status usb_class_mass_getmaxlun_bulkonly(usb_class_handle handle, uint8_t* pLUN, tr_callback callback, void* callback_param);
+usb_status usb_class_mass_getvidpid(usb_class_handle handle, uint16_t* vid, uint16_t* pid);
+usb_status usb_class_mass_reset_recovery_on_usb(usb_mass_class_struct_t* mass_class);
+bool usb_class_mass_cancelq(usb_mass_class_struct_t* mass_class, mass_command_struct_t* pCmd);
 
 #ifdef __cplusplus
 }

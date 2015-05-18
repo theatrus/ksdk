@@ -33,20 +33,28 @@
 #include <stdlib.h>
 #include "fsl_device_registers.h"
 #include "fsl_debug_console.h"
-#if defined(HW_UART_INSTANCE_COUNT)
+#if defined(UART_INSTANCE_COUNT)
 #include "fsl_uart_hal.h"
 #endif
-#if defined(HW_LPUART_INSTANCE_COUNT)
+#if defined(LPUART_INSTANCE_COUNT)
 #include "fsl_lpuart_hal.h"
 #endif
-#if defined(HW_UART0_INSTANCE_COUNT)
+#if defined(UART0_INSTANCE_COUNT)
 #include "fsl_lpsci_hal.h"
 #endif
 #include "fsl_clock_manager.h"
 #include "fsl_os_abstraction.h"
 #include "print_scan.h"
 
+#if (defined(USB_INSTANCE_COUNT) &&  (defined(BOARD_USE_VIRTUALCOM)))
+  #include "usb_device_config.h"
+  #include "usb.h"
+  #include "usb_device_stack_interface.h"
+  #include "usb_descriptor.h"
+  #include "virtual_com.h"
+#endif
 
+extern uint32_t g_app_handle;
 #if __ICCARM__
 #include <yfuns.h>
 #endif
@@ -59,18 +67,36 @@ static int debug_putc(int ch, void* stream);
 
 /*! @brief Operation functions definiations for debug console. */
 typedef struct DebugConsoleOperationFunctions {
-    void (* Send)(uint32_t baseAddr, const uint8_t *buf, uint32_t count);
+    union {
+        void (* Send)(void *base, const uint8_t *buf, uint32_t count);
+#if defined(UART_INSTANCE_COUNT)
+        void (* UART_Send)(UART_Type *base, const uint8_t *buf, uint32_t count);
+#endif
+#if defined(LPUART_INSTANCE_COUNT)
+        void (* LPUART_Send)(LPUART_Type* base, const uint8_t *buf, uint32_t count);
+#endif
+#if defined(UART0_INSTANCE_COUNT)
+        void (* UART0_Send)(UART0_Type* base, const uint8_t *buf, uint32_t count);
+#endif
+#if (defined(USB_INSTANCE_COUNT) && defined(BOARD_USE_VIRTUALCOM))
+        void (* USB_Send)(uint32_t base, const uint8_t *buf, uint32_t count);
+#endif
+    } tx_union;
     union{
-        void (* Receive)(uint32_t baseAddr, uint8_t *buf, uint32_t count);
-#if defined(HW_UART_INSTANCE_COUNT)
-        uart_status_t (* UART_Receive)(uint32_t baseAddr, uint8_t *buf, uint32_t count);
+        void (* Receive)(void *base, uint8_t *buf, uint32_t count);
+#if defined(UART_INSTANCE_COUNT)
+        uart_status_t (* UART_Receive)(UART_Type *base, uint8_t *buf, uint32_t count);
 #endif
-#if defined(HW_LPUART_INSTANCE_COUNT)
-        lpuart_status_t (* LPUART_Receive)(uint32_t baseAddr, uint8_t *buf, uint32_t count);
+#if defined(LPUART_INSTANCE_COUNT)
+        lpuart_status_t (* LPUART_Receive)(LPUART_Type* base, uint8_t *buf, uint32_t count);
 #endif
-#if defined(HW_UART0_INSTANCE_COUNT)
-        lpsci_status_t (* UART0_Receive)(uint32_t baseAddr, uint8_t *buf, uint32_t count);
+#if defined(UART0_INSTANCE_COUNT)
+        lpsci_status_t (* UART0_Receive)(UART0_Type* base, uint8_t *buf, uint32_t count);
 #endif
+#if (defined(USB_INSTANCE_COUNT) && defined(BOARD_USE_VIRTUALCOM))
+        usb_status_t (* USB_Receive)(uint32_t base, uint8_t *buf, uint32_t count);
+#endif
+
     } rx_union;
 } debug_console_ops_t;
 
@@ -78,7 +104,7 @@ typedef struct DebugConsoleOperationFunctions {
 typedef struct DebugConsoleState {
     debug_console_device_type_t type;/*<! Indicator telling whether the debug console is inited. */
     uint8_t instance;               /*<! Instance number indicator. */
-    uint32_t baseAddr;
+    void*   base;                   /*<! Base of the IP register. */
     debug_console_ops_t ops;        /*<! Operation function pointers for debug uart operations. */
 } debug_console_state_t;
 
@@ -107,93 +133,103 @@ debug_console_status_t DbgConsole_Init(
     /* Switch between different device. */
     switch (device)
     {
-#if defined(HW_UART_INSTANCE_COUNT)
+#if (defined(USB_INSTANCE_COUNT) && defined(BOARD_USE_VIRTUALCOM))  /*&& defined()*/
+       case kDebugConsoleUSBCDC:
+         {
+                VirtualCom_Init();
+                s_debugConsole.base = (void*)g_app_handle;
+                s_debugConsole.ops.tx_union.USB_Send = VirtualCom_SendDataBlocking;
+                s_debugConsole.ops.rx_union.USB_Receive = VirtualCom_ReceiveDataBlocking;
+         }
+         break;
+#endif
+#if defined(UART_INSTANCE_COUNT)
         case kDebugConsoleUART:
             {
-                uint32_t g_Addr[HW_UART_INSTANCE_COUNT] = UART_BASE_ADDRS;
-                uint32_t baseAddr = g_Addr[uartInstance];
+                UART_Type * g_Base[UART_INSTANCE_COUNT] = UART_BASE_PTRS;
+                UART_Type * base = g_Base[uartInstance];
                 uint32_t uartSourceClock;
 
-                s_debugConsole.baseAddr = baseAddr;
+                s_debugConsole.base = base;
                 CLOCK_SYS_EnableUartClock(uartInstance);
 
                 /* UART clock source is either system or bus clock depending on instance */
                 uartSourceClock = CLOCK_SYS_GetUartFreq(uartInstance);
 
                 /* Initialize UART baud rate, bit count, parity and stop bit. */
-                UART_HAL_SetBaudRate(baseAddr, uartSourceClock, baudRate);
-                UART_HAL_SetBitCountPerChar(baseAddr, kUart8BitsPerChar);
-                UART_HAL_SetParityMode(baseAddr, kUartParityDisabled);
+                UART_HAL_SetBaudRate(base, uartSourceClock, baudRate);
+                UART_HAL_SetBitCountPerChar(base, kUart8BitsPerChar);
+                UART_HAL_SetParityMode(base, kUartParityDisabled);
 #if FSL_FEATURE_UART_HAS_STOP_BIT_CONFIG_SUPPORT
-                UART_HAL_SetStopBitCount(baseAddr, kUartOneStopBit);
+                UART_HAL_SetStopBitCount(base, kUartOneStopBit);
 #endif
 
                 /* Finally, enable the UART transmitter and receiver*/
-                UART_HAL_EnableTransmitter(baseAddr);
-                UART_HAL_EnableReceiver(baseAddr);
+                UART_HAL_EnableTransmitter(base);
+                UART_HAL_EnableReceiver(base);
 
                 /* Set the funciton pointer for send and receive for this kind of device. */
-                s_debugConsole.ops.Send = UART_HAL_SendDataPolling;
+                s_debugConsole.ops.tx_union.UART_Send = UART_HAL_SendDataPolling;
                 s_debugConsole.ops.rx_union.UART_Receive = UART_HAL_ReceiveDataPolling;
             }
             break;
 #endif
-#if defined(HW_UART0_INSTANCE_COUNT)
+#if defined(UART0_INSTANCE_COUNT)
         case kDebugConsoleLPSCI:
             {
                 /* Declare config sturcuture to initialize a uart instance. */
-                uint32_t g_Addr[HW_UART0_INSTANCE_COUNT] = UART0_BASE_ADDRS;
-                uint32_t baseAddr = g_Addr[uartInstance];
+                UART0_Type * g_Base[UART0_INSTANCE_COUNT] = UART0_BASE_PTRS;
+                UART0_Type * base = g_Base[uartInstance];
                 uint32_t uartSourceClock;
 
-                s_debugConsole.baseAddr = baseAddr;
+                s_debugConsole.base = base;
                 CLOCK_SYS_EnableLpsciClock(uartInstance);
 
                 uartSourceClock = CLOCK_SYS_GetLpsciFreq(uartInstance);
 
                 /* Initialize LPSCI baud rate, bit count, parity and stop bit. */
-                LPSCI_HAL_SetBaudRate(baseAddr, uartSourceClock, baudRate);
-                LPSCI_HAL_SetBitCountPerChar(baseAddr, kLpsci8BitsPerChar);
-                LPSCI_HAL_SetParityMode(baseAddr, kLpsciParityDisabled);
+                LPSCI_HAL_SetBaudRate(base, uartSourceClock, baudRate);
+                LPSCI_HAL_SetBitCountPerChar(base, kLpsci8BitsPerChar);
+                LPSCI_HAL_SetParityMode(base, kLpsciParityDisabled);
 #if FSL_FEATURE_LPSCI_HAS_STOP_BIT_CONFIG_SUPPORT
-                LPSCI_HAL_SetStopBitCount(baseAddr, kLpsciOneStopBit);
+                LPSCI_HAL_SetStopBitCount(base, kLpsciOneStopBit);
 #endif
 
                 /* Finally, enable the LPSCI transmitter and receiver*/
-                LPSCI_HAL_EnableTransmitter(baseAddr);
-                LPSCI_HAL_EnableReceiver(baseAddr);
+                LPSCI_HAL_EnableTransmitter(base);
+                LPSCI_HAL_EnableReceiver(base);
 
                 /* Set the funciton pointer for send and receive for this kind of device. */
-                s_debugConsole.ops.Send = LPSCI_HAL_SendDataPolling;
+                s_debugConsole.ops.tx_union.UART0_Send = LPSCI_HAL_SendDataPolling;
                 s_debugConsole.ops.rx_union.UART0_Receive = LPSCI_HAL_ReceiveDataPolling;
             }     
             break;
 #endif
-#if defined(HW_LPUART_INSTANCE_COUNT)
+#if defined(LPUART_INSTANCE_COUNT)
         case kDebugConsoleLPUART:
             {
-                uint32_t g_Addr[HW_LPUART_INSTANCE_COUNT] = LPUART_BASE_ADDRS;
-                uint32_t baseAddr = g_Addr[uartInstance];
+                LPUART_Type* g_Base[LPUART_INSTANCE_COUNT] = LPUART_BASE_PTRS;
+                LPUART_Type* base = g_Base[uartInstance];
                 uint32_t lpuartSourceClock;
 
-                s_debugConsole.baseAddr = baseAddr;
+                s_debugConsole.base = base;
                 CLOCK_SYS_EnableLpuartClock(uartInstance);
 
                 /* LPUART clock source is either system or bus clock depending on instance */
                 lpuartSourceClock = CLOCK_SYS_GetLpuartFreq(uartInstance);
 
                 /* initialize the parameters of the LPUART config structure with desired data */
-                LPUART_HAL_SetBaudRate(baseAddr, lpuartSourceClock, baudRate);
-                LPUART_HAL_SetBitCountPerChar(baseAddr, kLpuart8BitsPerChar);
-                LPUART_HAL_SetParityMode(baseAddr, kLpuartParityDisabled);
-                LPUART_HAL_SetStopBitCount(baseAddr, kLpuartOneStopBit);
+                LPUART_HAL_SetBaudRate(base, lpuartSourceClock, baudRate);
+                LPUART_HAL_SetBitCountPerChar(base, kLpuart8BitsPerChar);
+                LPUART_HAL_SetParityMode(base, kLpuartParityDisabled);
+                LPUART_HAL_SetStopBitCount(base, kLpuartOneStopBit);
 
                 /* finally, enable the LPUART transmitter and receiver */
-                LPUART_HAL_SetTransmitterCmd(baseAddr, true);
-                LPUART_HAL_SetReceiverCmd(baseAddr, true);
+                LPUART_HAL_SetTransmitterCmd(base, true);
+                LPUART_HAL_SetReceiverCmd(base, true);
 
                 /* Set the funciton pointer for send and receive for this kind of device. */
-                s_debugConsole.ops.Send = LPUART_HAL_SendDataPolling;
+                s_debugConsole.ops.tx_union.LPUART_Send = LPUART_HAL_SendDataPolling;
                 s_debugConsole.ops.rx_union.LPUART_Receive = LPUART_HAL_ReceiveDataPolling;
 
             }
@@ -210,12 +246,6 @@ debug_console_status_t DbgConsole_Init(
     /* Configure the s_debugConsole structure only when the inti operation is successful. */
     s_debugConsole.instance = uartInstance;
 
-#if ((defined(__GNUC__)) && (!defined(FSL_RTOS_MQX))) && (!defined(__KSDK_STDLIB__))
-    setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stdin, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
-#endif
-
     return kStatus_DEBUGCONSOLE_Success;
 }
 
@@ -229,17 +259,17 @@ debug_console_status_t DbgConsole_DeInit(void)
 
     switch(s_debugConsole.type)
     {
-#if defined(HW_UART_INSTANCE_COUNT)
+#if defined(UART_INSTANCE_COUNT)
         case kDebugConsoleUART:
             CLOCK_SYS_DisableUartClock(s_debugConsole.instance);
             break;
 #endif
-#if defined(HW_UART0_INSTANCE_COUNT)
+#if defined(UART0_INSTANCE_COUNT)
         case kDebugConsoleLPSCI:
             CLOCK_SYS_DisableLpsciClock(s_debugConsole.instance);
             break;
 #endif
-#if defined(HW_LPUART_INSTANCE_COUNT)
+#if defined(LPUART_INSTANCE_COUNT)
         case kDebugConsoleLPUART:
              CLOCK_SYS_DisableLpuartClock(s_debugConsole.instance);
             break;
@@ -272,7 +302,7 @@ int _WRITE(int fd, const void *buf, size_t nbytes)
     }
 
     /* Send data.*/
-    s_debugConsole.ops.Send(s_debugConsole.baseAddr, (uint8_t const *)buf, nbytes);
+    s_debugConsole.ops.tx_union.Send(s_debugConsole.base, (uint8_t const *)buf, nbytes);
     return nbytes;
 
 }
@@ -287,7 +317,7 @@ int _READ(int fd, void *buf, size_t nbytes)
     }
 
     /* Receive data.*/
-    s_debugConsole.ops.rx_union.Receive(s_debugConsole.baseAddr, buf, nbytes);
+    s_debugConsole.ops.rx_union.Receive(s_debugConsole.base, buf, nbytes);
     return nbytes;
 }
 #elif __ICCARM__
@@ -317,7 +347,7 @@ size_t __write(int handle, const unsigned char * buffer, size_t size)
     }
 
     /* Send data.*/
-    s_debugConsole.ops.Send(s_debugConsole.baseAddr, (uint8_t const *)buffer, size);
+    s_debugConsole.ops.tx_union.Send(s_debugConsole.base, (uint8_t const *)buffer, size);
     return size;
 }
 
@@ -338,58 +368,12 @@ size_t __read(int handle, unsigned char * buffer, size_t size)
     }
 
     /* Receive data.*/
-    s_debugConsole.ops.rx_union.Receive(s_debugConsole.baseAddr, buffer, size);
+    s_debugConsole.ops.rx_union.Receive(s_debugConsole.base, buffer, size);
 
     return size;
 }
 
 #elif (defined(__GNUC__))
-#pragma weak _write_atollic
-int _write_atollic (int handle, uint8_t *buffer, int size)
-{
-    if (buffer == 0)
-    {
-        /* return -1 if error */
-        return -1;
-    }
-
-    /* This function only writes to "standard out" and "standard err",*/
-    /* for all other file handles it returns failure.*/
-    if ((handle != 1) && (handle != 2))
-    {
-        return -1;
-    }
-
-    /* Do nothing if the debug uart is not initialized.*/
-    if (s_debugConsole.type == kDebugConsoleNone)
-    {
-        return -1;
-    }
-
-    /* Send data.*/
-    s_debugConsole.ops.Send(s_debugConsole.baseAddr, (uint8_t *)buffer, size);
-    return size;
-}
-#pragma weak _read_atollic
-int _read_atollic(int handle, uint8_t *buffer, int size)
-{
-    /* This function only reads from "standard in", for all other file*/
-    /* handles it returns failure.*/
-    if (handle != 0)
-    {
-        return -1;
-    }
-
-    /* Do nothing if the debug uart is not initialized.*/
-    if (s_debugConsole.type == kDebugConsoleNone)
-    {
-        return -1;
-    }
-
-    /* Receive data.*/
-    s_debugConsole.ops.rx_union.Receive(s_debugConsole.baseAddr, (uint8_t *)buffer, size);
-    return size;
-}
 #pragma weak _write
 int _write (int handle, char *buffer, int size)
 {
@@ -413,7 +397,7 @@ int _write (int handle, char *buffer, int size)
     }
 
     /* Send data.*/
-    s_debugConsole.ops.Send(s_debugConsole.baseAddr, (uint8_t *)buffer, size);
+    s_debugConsole.ops.tx_union.Send(s_debugConsole.base, (uint8_t *)buffer, size);
     return size;
 }
 
@@ -434,7 +418,7 @@ int _read(int handle, char *buffer, int size)
     }
 
     /* Receive data.*/
-    s_debugConsole.ops.rx_union.Receive(s_debugConsole.baseAddr, (uint8_t *)buffer, size);
+    s_debugConsole.ops.rx_union.Receive(s_debugConsole.base, (uint8_t *)buffer, size);
     return size;
 }
 #elif defined(__CC_ARM) && !defined(MQX_STDIO)
@@ -461,7 +445,7 @@ int fputc(int ch, FILE *f)
     }
 
     /* Send data.*/
-    s_debugConsole.ops.Send(s_debugConsole.baseAddr, (const uint8_t*)&ch, 1);
+    s_debugConsole.ops.tx_union.Send(s_debugConsole.base, (const uint8_t*)&ch, 1);
     return 1;
 }
 
@@ -476,7 +460,7 @@ int fgetc(FILE *f)
     }
 
     /* Receive data.*/
-    s_debugConsole.ops.rx_union.Receive(s_debugConsole.baseAddr, &temp, 1);
+    s_debugConsole.ops.rx_union.Receive(s_debugConsole.base, &temp, 1);
     return temp;
 }
 
@@ -487,7 +471,11 @@ int debug_printf(const char  *fmt_s, ...)
 {
    va_list  ap;
    int  result;
-
+   /* Do nothing if the debug uart is not initialized.*/
+   if (s_debugConsole.type == kDebugConsoleNone)
+   {
+       return -1;
+   }
    va_start(ap, fmt_s);
    result = _doprint(NULL, debug_putc, -1, (char *)fmt_s, ap);
    va_end(ap);
@@ -498,8 +486,12 @@ int debug_printf(const char  *fmt_s, ...)
 static int debug_putc(int ch, void* stream)
 {
     const unsigned char c = (unsigned char) ch;
-
-    s_debugConsole.ops.Send(s_debugConsole.baseAddr, &c, 1);
+    /* Do nothing if the debug uart is not initialized.*/
+    if (s_debugConsole.type == kDebugConsoleNone)
+    {
+        return -1;
+    }
+    s_debugConsole.ops.tx_union.Send(s_debugConsole.base, &c, 1);
 
     return 0;
 
@@ -507,6 +499,11 @@ static int debug_putc(int ch, void* stream)
 
 int debug_putchar(int ch)
 {
+    /* Do nothing if the debug uart is not initialized.*/
+    if (s_debugConsole.type == kDebugConsoleNone)
+    {
+        return -1;
+    }
     debug_putc(ch, NULL);
 
     return 1;
@@ -519,6 +516,11 @@ int debug_scanf(const char  *fmt_ptr, ...)
     uint32_t i;
     char result;
 
+    /* Do nothing if the debug uart is not initialized.*/
+    if (s_debugConsole.type == kDebugConsoleNone)
+    {
+        return -1;
+    }
     va_start(ap, fmt_ptr);
     temp_buf[0] = '\0';
 
@@ -526,10 +528,17 @@ int debug_scanf(const char  *fmt_ptr, ...)
     {
         temp_buf[i] = result = debug_getchar();
 
-        if (result == '\n')
+        if ((result == '\r') || (result == '\n'))
         {
             /* End of Line */
-            break; 
+            if (i == 0)
+            {
+                i = (uint32_t)-1;
+            }
+            else
+            {
+                break;
+            }
         }
 
         temp_buf[i + 1] = '\0';
@@ -545,7 +554,12 @@ int debug_getchar(void)
 {
     unsigned char c;
 
-    s_debugConsole.ops.rx_union.Receive(s_debugConsole.baseAddr, &c, 1);
+    /* Do nothing if the debug uart is not initialized.*/
+    if (s_debugConsole.type == kDebugConsoleNone)
+    {
+        return -1;
+    }
+    s_debugConsole.ops.rx_union.Receive(s_debugConsole.base, &c, 1);
 
     return c;
 }

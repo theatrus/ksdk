@@ -37,13 +37,13 @@ SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-format  -fno-strict-ali
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
 
 # C MACRO
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DDEBUG")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D_DEBUG=1")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MK24FN256VDC12")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_UCOSII")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DUSBCFG_OTG")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR_K24F120M")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTOWER")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DNDEBUG")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D_DEBUG=0")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MK24FN256VDC12")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_UCOSII")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DUSBCFG_OTG")
@@ -68,7 +68,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/uart)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/i2c)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../adapter/sources)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../adapter/sources/sdk)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../include)
@@ -101,11 +101,12 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/driver/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/driver/max3353)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/driver/max3353/sdk)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup/MK24F25612)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device/MK24F25612)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../host/include/twrk24f120m)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../device/include/twrk24f120m)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../boards/twrk24f120m)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../examples/twrk24f120m)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Ports/ARM-Cortex-M4/Generic/GNU)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uC-CPU/ARM-Cortex-M4/GNU)
@@ -121,7 +122,7 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/uart)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/i2c)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../adapter/sources)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../adapter/sources/sdk)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../include)
@@ -154,11 +155,12 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/driver/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/driver/max3353)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/driver/max3353/sdk)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup/MK24F25612)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device/MK24F25612)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../host/include/twrk24f120m)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../device/include/twrk24f120m)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../boards/twrk24f120m)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../examples/twrk24f120m)
 ENDIF()
 
 # ADD_LIBRARY
@@ -200,11 +202,11 @@ ADD_LIBRARY(KsdkUsbOtgUcosiiLib STATIC
     "${ProjDirPath}/../../../../device/sources/classes/msd/usb_msc_scsi.h"
     "${ProjDirPath}/../../../../device/sources/classes/phdc/usb_phdc.c"
     "${ProjDirPath}/../../../../device/sources/classes/phdc/usb_phdc.h"
-    "${ProjDirPath}/../../../../device/sources/controller/khci_interface.c"
     "${ProjDirPath}/../../../../device/sources/controller/usb_dev.c"
     "${ProjDirPath}/../../../../device/sources/controller/usb_dev.h"
     "${ProjDirPath}/../../../../device/sources/controller/usb_framework.c"
     "${ProjDirPath}/../../../../device/sources/controller/usb_framework.h"
+    "${ProjDirPath}/../../../../device/sources/controller/khci/device_khci_interface.c"
     "${ProjDirPath}/../../../../device/sources/controller/khci/khci_dev.c"
     "${ProjDirPath}/../../../../device/sources/controller/khci/khci_dev.h"
     "${ProjDirPath}/../../../../device/sources/controller/khci/khci_dev_misc.h"
@@ -237,6 +239,7 @@ ADD_LIBRARY(KsdkUsbOtgUcosiiLib STATIC
     "${ProjDirPath}/../../../../host/sources/controller/usb_host_common.h"
     "${ProjDirPath}/../../../../host/sources/controller/usb_host_dev_mng.c"
     "${ProjDirPath}/../../../../host/sources/controller/usb_host_dev_mng.h"
+    "${ProjDirPath}/../../../../host/sources/controller/khci/host_khci_interface.c"
     "${ProjDirPath}/../../../../host/sources/controller/khci/khci.c"
     "${ProjDirPath}/../../../../host/sources/controller/khci/khci.h"
     "${ProjDirPath}/../../../../host/sources/controller/khci/khci_prv.h"
@@ -247,7 +250,7 @@ ADD_LIBRARY(KsdkUsbOtgUcosiiLib STATIC
     "${ProjDirPath}/../../../sources/driver/khci/usb_otg_khci.h"
     "${ProjDirPath}/../../../sources/driver/usb_otg.c"
     "${ProjDirPath}/../../../sources/driver/usb_otg.h"
-    "${ProjDirPath}/../../../sources/driver/max3353_interface.c"
+    "${ProjDirPath}/../../../sources/driver/max3353/max3353_interface.c"
     "${ProjDirPath}/../../../sources/driver/max3353/sdk/usb_otg_max3353.c"
     "${ProjDirPath}/../../../sources/driver/max3353/usb_otg_max3353.h"
     "${ProjDirPath}/../../../sources/otg/usb_otg_main.c"
@@ -261,9 +264,9 @@ ADD_LIBRARY(KsdkUsbOtgUcosiiLib STATIC
     "${ProjDirPath}/../../../../host/include/twrk24f120m/usb_host_config.h"
     "${ProjDirPath}/../../../../host/sources/bsp/twrk24f120m/usb_host_bsp.c"
     "${ProjDirPath}/../../../sources/bsp/twrk24f120m/usb_otg_bsp.c"
-    "${ProjDirPath}/../../../../../../boards/twrk24f120m/board.h"
-    "${ProjDirPath}/../../../../../../boards/twrk24f120m/pin_mux.c"
-    "${ProjDirPath}/../../../../../../boards/twrk24f120m/pin_mux.h"
+    "${ProjDirPath}/../../../../../../examples/twrk24f120m/board.h"
+    "${ProjDirPath}/../../../../../../examples/twrk24f120m/pin_mux.c"
+    "${ProjDirPath}/../../../../../../examples/twrk24f120m/pin_mux.h"
 )
 
 SET_TARGET_PROPERTIES(KsdkUsbOtgUcosiiLib PROPERTIES OUTPUT_NAME "libusbotg_ucosii.a")

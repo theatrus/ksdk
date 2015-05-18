@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -38,10 +38,7 @@
 #if defined(FSL_SDHC_USING_BIG_ENDIAN)
 #define swap_be32(x) (x)
 #else
-#define swap_be32(x) ((uint32_t)((((uint32_t)(x) & (uint32_t)(0xFF)) << 24)) | \
-                                 (((uint32_t)(x) & (uint32_t)(0xFF00)) << 8) | \
-                                 (((uint32_t)(x) & (uint32_t)(0xFF0000)) >> 8) | \
-                                 (((uint32_t)(x) & (uint32_t)(0xFF000000U)) >> 24))
+#define swap_be32(x) (__REV(x))
 #endif
 
 #define FSL_SDCARD_REQUEST_TIMEOUT 1000
@@ -1039,71 +1036,6 @@ static sdhc_status_t SDCARD_DRV_SendIfCond(sdhc_card_t *card)
     return err;
 }
 
-/*FUNCTION****************************************************************
- *
- * Function Name: SDCARD_DRV_SendStatus
- * Description:  send the sd status
- *
- *END*********************************************************************/
-static sdhc_status_t SDCARD_DRV_SendStatus(sdhc_card_t *card)
-{
-    sdhc_request_t *req = 0;
-    sdhc_status_t err = kStatus_SDHC_NoError;
-    uint32_t timeout = 1000;
-#if ! defined BSP_FSL_SDHC_USING_DYNALLOC
-    sdhc_request_t request = {0};
-    req = &request;
-#endif
-    assert(card);
-
-#if defined BSP_FSL_SDHC_USING_DYNALLOC
-    req = (sdhc_request_t *)OSA_MemAllocZero(sizeof(sdhc_request_t));
-    if (req == NULL)
-    {
-        return kStatus_SDHC_OutOfMemory;
-    }
-#endif
-    req->cmdIndex = kSendStatus;
-    req->argument = card->rca << 16;
-    req->respType = kSdhcRespTypeR1;
-    do
-    {
-        if (kStatus_SDHC_NoError !=
-                SDHC_DRV_IssueRequestBlocking(card->hostInstance,
-                                              req,
-                                              FSL_SDCARD_REQUEST_TIMEOUT))
-        {
-#if defined BSP_FSL_SDHC_USING_DYNALLOC
-            OSA_MemFree(req);
-#endif
-            req = NULL;
-            return kStatus_SDHC_RequestFailed;
-        }
-        if ((req->response[0] & SDMMC_R1_READY_FOR_DATA)
-             && (SDMMC_R1_CURRENT_STATE(req->response[0]) != SDMMC_R1_STATE_PRG))
-        {
-            break;
-        }
-
-        SDCARD_DRV_DelayMsec(1);
-    } while(timeout--);
-
-    if (!timeout)
-    {
-#if defined BSP_FSL_SDHC_USING_DYNALLOC
-        OSA_MemFree(req);
-#endif
-        req = NULL;
-        return kStatus_SDHC_TimeoutError;
-    }
-
-#if defined BSP_FSL_SDHC_USING_DYNALLOC
-    OSA_MemFree(req);
-#endif
-    req = NULL;
-    return err;
-}
-
 #if ! defined BSP_FSL_SDHC_ENABLE_AUTOCMD12
 /*FUNCTION****************************************************************
  *
@@ -1131,6 +1063,7 @@ static sdhc_status_t SDCARD_DRV_StopTransmission(sdhc_card_t *card)
 #endif
 
     req->cmdIndex = kStopTransmission;
+    req->flags |= FSL_SDHC_REQ_FLAGS_STOP_TRANS;
     req->argument = 0;
     req->respType = kSdhcRespTypeR1b;
     req->data = 0;
@@ -1329,14 +1262,6 @@ static sdhc_status_t SDCARD_DRV_Write(sdhc_card_t *card,
             return kStatus_SDHC_StopTransmissionFailed;
         }
 #endif
-        if (kStatus_SDHC_NoError != SDCARD_DRV_SendStatus(card))
-        {
-#if defined BSP_FSL_SDHC_USING_DYNALLOC
-            OSA_MemFree(req);
-#endif
-            req = NULL;
-            return kStatus_SDHC_SendCardStatusFailed;
-        }
     }
 #if defined BSP_FSL_SDHC_USING_DYNALLOC
     OSA_MemFree(req);
@@ -1645,10 +1570,6 @@ sdhc_status_t SDCARD_DRV_EraseBlocks(sdhc_card_t *card,
             return kStatus_SDHC_CardEraseBlocksFailed;
         }
 
-        if (kStatus_SDHC_NoError != SDCARD_DRV_SendStatus(card))
-        {
-            return kStatus_SDHC_SendCardStatusFailed;
-        }
         blkDone += blkCnt;
     }
     return kStatus_SDHC_NoError;

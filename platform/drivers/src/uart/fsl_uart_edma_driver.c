@@ -34,25 +34,26 @@
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
 #include "fsl_edma_request.h"
+#if FSL_FEATURE_SOC_EDMA_COUNT && FSL_FEATURE_SOC_UART_COUNT
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Pointer to uart runtime state structure */
-extern void * g_uartStatePtr[HW_UART_INSTANCE_COUNT];
+extern void * g_uartStatePtr[UART_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Private Functions
  ******************************************************************************/
 static void UART_DRV_EdmaCompleteSendData(uint32_t instance);
 static void UART_DRV_EdmaTxCallback(void *param, edma_chn_status_t status);
-static uart_status_t UART_DRV_EdmaStartSendData(uint32_t instance, 
+static uart_status_t UART_DRV_EdmaStartSendData(uint32_t instance,
                                                const uint8_t * txBuff,
                                                uint32_t txSize);
 static void UART_DRV_EdmaCompleteReceiveData(uint32_t instance);
 static void UART_DRV_EdmaRxCallback(void *param, edma_chn_status_t status);
-static uart_status_t UART_DRV_EdmaStartReceiveData(uint32_t instance, 
+static uart_status_t UART_DRV_EdmaStartReceiveData(uint32_t instance,
                                                   uint8_t * rxBuff,
                                                   uint32_t rxSize);
 /*******************************************************************************
@@ -63,7 +64,7 @@ static uart_status_t UART_DRV_EdmaStartReceiveData(uint32_t instance,
  *
  * Function Name : UART_DRV_EdmaInit
  * Description   : This function initializes a UART instance for operation.
- * This function will initialize the run-time state structure to keep track of 
+ * This function will initialize the run-time state structure to keep track of
  * the on-going transfers, ungate the clock to the UART module, initialize the
  * module to user defined settings and default settings, configure UART DMA
  * and enable the UART module transmitter and receiver.
@@ -84,13 +85,17 @@ uart_status_t UART_DRV_EdmaInit(uint32_t instance,
                                 const uart_edma_user_config_t * uartUserConfig)
 {
     assert(uartEdmaStatePtr && uartUserConfig);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(g_uartBase[instance]);
+    assert(instance < UART_INSTANCE_COUNT);
+    /* This driver only support UART instances with separate DMA channels for
+     * both Tx and Rx.*/
+    assert(FSL_FEATURE_UART_HAS_SEPARATE_DMA_RX_TX_REQn(instance) == 1);
 
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
     uint32_t uartSourceClock = 0;
     dma_request_source_t uartTxEdmaRequest = kDmaRequestMux0Disable;
     dma_request_source_t uartRxEdmaRequest = kDmaRequestMux0Disable;
-    uint32_t edmaBaseAddr;
+    DMA_Type * edmaBaseAddr;
     uint32_t edmaChannel;
 
     /* Exit if current instance is already initialized. */
@@ -109,7 +114,7 @@ uart_status_t UART_DRV_EdmaInit(uint32_t instance,
     CLOCK_SYS_EnableUartClock(instance);
 
     /* Initialize UART to a known state. */
-    UART_HAL_Init(baseAddr);
+    UART_HAL_Init(base);
 
     /* Create Semaphore for txIrq and rxIrq. */
     OSA_SemaCreate(&uartEdmaStatePtr->txIrqSync, 0);
@@ -119,23 +124,51 @@ uart_status_t UART_DRV_EdmaInit(uint32_t instance,
     uartSourceClock = CLOCK_SYS_GetUartFreq(instance);
 
     /* Initialize UART baud rate, bit count, parity and stop bit. */
-    UART_HAL_SetBaudRate(baseAddr, uartSourceClock, uartUserConfig->baudRate);
-    UART_HAL_SetBitCountPerChar(baseAddr, uartUserConfig->bitCountPerChar);
-    UART_HAL_SetParityMode(baseAddr, uartUserConfig->parityMode);
+    UART_HAL_SetBaudRate(base, uartSourceClock, uartUserConfig->baudRate);
+    UART_HAL_SetBitCountPerChar(base, uartUserConfig->bitCountPerChar);
+    UART_HAL_SetParityMode(base, uartUserConfig->parityMode);
 #if FSL_FEATURE_UART_HAS_STOP_BIT_CONFIG_SUPPORT
-    UART_HAL_SetStopBitCount(baseAddr, uartUserConfig->stopBitCount);
+    UART_HAL_SetStopBitCount(base, uartUserConfig->stopBitCount);
 #endif
 
     switch (instance)
     {
+#if (FSL_FEATURE_UART_HAS_SEPARATE_DMA_RX_TX_REQn(0) == 1)
         case 0:
             uartRxEdmaRequest = kDmaRequestMux0UART0Rx;
             uartTxEdmaRequest = kDmaRequestMux0UART0Tx;
             break;
+#endif
+#if (FSL_FEATURE_UART_HAS_SEPARATE_DMA_RX_TX_REQn(1) == 1)
         case 1:
             uartRxEdmaRequest = kDmaRequestMux0UART1Rx;
             uartTxEdmaRequest = kDmaRequestMux0UART1Tx;
             break;
+#endif
+#if (FSL_FEATURE_UART_HAS_SEPARATE_DMA_RX_TX_REQn(2) == 1)
+        case 2:
+            uartRxEdmaRequest = kDmaRequestMux0UART2Rx;
+            uartTxEdmaRequest = kDmaRequestMux0UART2Tx;
+            break;
+#endif
+#if (FSL_FEATURE_UART_HAS_SEPARATE_DMA_RX_TX_REQn(3) == 1)
+        case 3:
+            uartRxEdmaRequest = kDmaRequestMux0UART3Rx;
+            uartTxEdmaRequest = kDmaRequestMux0UART3Tx;
+            break;
+#endif
+#if (FSL_FEATURE_UART_HAS_SEPARATE_DMA_RX_TX_REQn(4) == 1)
+        case 4:
+            uartRxEdmaRequest = kDmaRequestMux0UART4Rx;
+            uartTxEdmaRequest = kDmaRequestMux0UART4Tx;
+            break;
+#endif
+#if (FSL_FEATURE_UART_HAS_SEPARATE_DMA_RX_TX_REQn(5) == 1)
+        case 5:
+            uartRxEdmaRequest = kDmaRequestMux0UART5Rx;
+            uartTxEdmaRequest = kDmaRequestMux0UART5Tx;
+            break;
+#endif
         default :
             break;
     }
@@ -155,14 +188,14 @@ uart_status_t UART_DRV_EdmaInit(uint32_t instance,
     EDMA_HAL_HTCDSetDestLastAdjust(edmaBaseAddr, edmaChannel, 0);
 
     /* Setup source */
-    EDMA_HAL_HTCDSetSrcAddr(edmaBaseAddr, edmaChannel, UART_HAL_GetDataRegAddr(baseAddr));
+    EDMA_HAL_HTCDSetSrcAddr(edmaBaseAddr, edmaChannel, UART_HAL_GetDataRegAddr(base));
     EDMA_HAL_HTCDSetSrcOffset(edmaBaseAddr, edmaChannel, 0);
     EDMA_HAL_HTCDSetSrcLastAdjust(edmaBaseAddr, edmaChannel, 0);
 
     /* Setup transfer properties */
     EDMA_HAL_HTCDSetNbytes(edmaBaseAddr, edmaChannel, 1);
     EDMA_HAL_HTCDSetChannelMinorLink(edmaBaseAddr, edmaChannel, 0, false);
-    EDMA_HAL_HTCDSetAttribute(edmaBaseAddr, edmaChannel, kEDMAModuloDisable, 
+    EDMA_HAL_HTCDSetAttribute(edmaBaseAddr, edmaChannel, kEDMAModuloDisable,
         kEDMAModuloDisable, kEDMATransferSize_1Bytes, kEDMATransferSize_1Bytes);
     EDMA_HAL_HTCDSetScatterGatherCmd(edmaBaseAddr, edmaChannel, false);
     EDMA_HAL_HTCDSetDisableDmaRequestAfterTCDDoneCmd(edmaBaseAddr, edmaChannel, true);
@@ -172,13 +205,13 @@ uart_status_t UART_DRV_EdmaInit(uint32_t instance,
     EDMA_DRV_RequestChannel(kEDMAAnyChannel, uartTxEdmaRequest,
                             &uartEdmaStatePtr->edmaUartTx);
     EDMA_DRV_InstallCallback(&uartEdmaStatePtr->edmaUartTx,
-                    UART_DRV_EdmaTxCallback, (void *)instance); 
+                    UART_DRV_EdmaTxCallback, (void *)instance);
 
     edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaStatePtr->edmaUartTx.channel);
     edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(uartEdmaStatePtr->edmaUartTx.channel);
 
     /* Setup destination */
-    EDMA_HAL_HTCDSetDestAddr(edmaBaseAddr, edmaChannel, UART_HAL_GetDataRegAddr(baseAddr));
+    EDMA_HAL_HTCDSetDestAddr(edmaBaseAddr, edmaChannel, UART_HAL_GetDataRegAddr(base));
     EDMA_HAL_HTCDSetDestOffset(edmaBaseAddr, edmaChannel, 0);
     EDMA_HAL_HTCDSetDestLastAdjust(edmaBaseAddr, edmaChannel, 0);
 
@@ -195,12 +228,12 @@ uart_status_t UART_DRV_EdmaInit(uint32_t instance,
     EDMA_HAL_HTCDSetDisableDmaRequestAfterTCDDoneCmd(edmaBaseAddr, edmaChannel, true);
 
     /* Finally, enable the UART transmitter and receiver.
-     * Enable DMA trigger when transmit data register empty, 
+     * Enable DMA trigger when transmit data register empty,
      * and receive data register full. */
-    UART_HAL_SetTxDmaCmd(baseAddr, true);
-    UART_HAL_SetRxDmaCmd(baseAddr, true);
-    UART_HAL_EnableTransmitter(baseAddr);
-    UART_HAL_EnableReceiver(baseAddr);
+    UART_HAL_SetTxDmaCmd(base, true);
+    UART_HAL_SetRxDmaCmd(base, true);
+    UART_HAL_EnableTransmitter(base);
+    UART_HAL_EnableReceiver(base);
 
     return kStatus_UART_Success;
 }
@@ -208,30 +241,37 @@ uart_status_t UART_DRV_EdmaInit(uint32_t instance,
 /*FUNCTION**********************************************************************
  *
  * Function Name : UART_DRV_EdmaDeinit
- * Description   : This function shuts down the UART by disabling UART DMA and 
+ * Description   : This function shuts down the UART by disabling UART DMA and
  *                 the transmitter/receiver.
  *
  *END**************************************************************************/
-void UART_DRV_EdmaDeinit(uint32_t instance)
+uart_status_t UART_DRV_EdmaDeinit(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
+    assert(g_uartBase[instance]);
 
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    /* Exit if current instance is already de-initialized or is gated.*/
+    if ((!g_uartStatePtr[instance]) || (!CLOCK_SYS_GetUartGateCmd(instance)))
+    {
+        return kStatus_UART_Fail;
+    }
+
+    UART_Type * base = g_uartBase[instance];
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
 
     /* Wait until the data is completely shifted out of shift register */
-    while(!(UART_HAL_IsTxComplete(baseAddr))) { }
+    while(!(UART_BRD_S1_TC(base))) { }
 
-    UART_HAL_SetTxDmaCmd(baseAddr, false);
-    UART_HAL_SetRxDmaCmd(baseAddr, false);
+    UART_HAL_SetTxDmaCmd(base, false);
+    UART_HAL_SetRxDmaCmd(base, false);
 
     /* Release DMA channel. */
     EDMA_DRV_ReleaseChannel(&uartEdmaState->edmaUartRx);
     EDMA_DRV_ReleaseChannel(&uartEdmaState->edmaUartTx);
 
     /* Disable TX and RX */
-    UART_HAL_DisableTransmitter(baseAddr);
-    UART_HAL_DisableReceiver(baseAddr);
+    UART_HAL_DisableTransmitter(base);
+    UART_HAL_DisableReceiver(base);
 
     /* Destroy TX and RX sema. */
     OSA_SemaDestroy(&uartEdmaState->txIrqSync);
@@ -242,14 +282,16 @@ void UART_DRV_EdmaDeinit(uint32_t instance)
 
     /* Gate UART module clock */
     CLOCK_SYS_DisableUartClock(instance);
+
+    return kStatus_UART_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : UART_DRV_EdmaSendDataBlocking
  * Description   :  Sends (transmits) data out through the UART-DMA module
- * using a blocking method.  
- * 
+ * using a blocking method.
+ *
  *END**************************************************************************/
 uart_status_t UART_DRV_EdmaSendDataBlocking(uint32_t instance,
                                             const uint8_t * txBuff,
@@ -257,10 +299,10 @@ uart_status_t UART_DRV_EdmaSendDataBlocking(uint32_t instance,
                                             uint32_t timeout)
 {
     assert(txBuff);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
-    uint32_t edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartTx.channel);
+    DMA_Type * edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartTx.channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(uartEdmaState->edmaUartTx.channel);
     uart_status_t retVal = kStatus_UART_Success;
     osa_status_t syncStatus;
@@ -286,9 +328,9 @@ uart_status_t UART_DRV_EdmaSendDataBlocking(uint32_t instance,
 
             /* Stop DMA channel. */
             EDMA_HAL_SetDmaRequestCmd(edmaBaseAddr, (edma_channel_indicator_t)edmaChannel, false);
-               
+
             /* Update the information of the module driver state */
-            uartEdmaState->isTxBusy = false; 
+            uartEdmaState->isTxBusy = false;
 
             retVal = kStatus_UART_Timeout;
         }
@@ -316,7 +358,7 @@ uart_status_t UART_DRV_EdmaSendData(uint32_t instance,
                                     uint32_t txSize)
 {
     assert(txBuff);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_status_t retVal = kStatus_UART_Success;
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
@@ -334,7 +376,7 @@ uart_status_t UART_DRV_EdmaSendData(uint32_t instance,
  *
  * Function Name : UART_DRV_EdmaGetTransmitStatus
  * Description   : This function returns whether the previous UART transmit
- * has finished. When performing an async transmit, the user can call this 
+ * has finished. When performing an async transmit, the user can call this
  * function to ascertain the state of the current transmission: in progress
  * (or busy) or complete (success). In addition, if the transmission is still
  * in progress, the user can obtain the number of words that have been
@@ -344,10 +386,10 @@ uart_status_t UART_DRV_EdmaSendData(uint32_t instance,
 uart_status_t UART_DRV_EdmaGetTransmitStatus(uint32_t instance,
                                              uint32_t * bytesRemaining)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
-    uint32_t edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartTx.channel);
+    DMA_Type * edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartTx.channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(uartEdmaState->edmaUartTx.channel);
     uart_status_t retVal = kStatus_UART_Success;
     uint32_t txSize = 0;
@@ -356,7 +398,7 @@ uart_status_t UART_DRV_EdmaGetTransmitStatus(uint32_t instance,
     * the count to 0 manually. */
     if (uartEdmaState->isTxBusy)
     {
-        txSize = EDMA_HAL_HTCDGetCurrentMajorCount(edmaBaseAddr, edmaChannel);
+        txSize = EDMA_HAL_HTCDGetUnfinishedBytes(edmaBaseAddr, edmaChannel);
         retVal = kStatus_UART_TxBusy;
     }
 
@@ -379,7 +421,7 @@ uart_status_t UART_DRV_EdmaGetTransmitStatus(uint32_t instance,
  *END**************************************************************************/
 uart_status_t UART_DRV_EdmaAbortSendingData(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
 
@@ -410,10 +452,10 @@ uart_status_t UART_DRV_EdmaReceiveDataBlocking(uint32_t instance,
                                                uint32_t timeout)
 {
     assert(rxBuff);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
-    uint32_t edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartRx.channel);
+    DMA_Type * edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartRx.channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(uartEdmaState->edmaUartRx.channel);
     uart_status_t retVal = kStatus_UART_Success;
     osa_status_t syncStatus;
@@ -455,11 +497,11 @@ uart_status_t UART_DRV_EdmaReceiveDataBlocking(uint32_t instance,
  * Description   : This function gets (receives) data from the UART module using
  * a non-blocking method.
  * A non-blocking (also known as synchronous) function means that the function
- * returns immediately after initiating the receive function. The application 
+ * returns immediately after initiating the receive function. The application
  * has to get the receive status to see when the receive is complete. In other
- * words, after calling non-blocking (asynchronous) get function, the 
+ * words, after calling non-blocking (asynchronous) get function, the
  * application must get the receive status to check if receive is completed or
- * not. The asynchronous method of transmitting and receiving allows the UART 
+ * not. The asynchronous method of transmitting and receiving allows the UART
  * to perform a full duplex operation (simultaneously transmit and receive).
  *
  *END**************************************************************************/
@@ -468,7 +510,7 @@ uart_status_t UART_DRV_EdmaReceiveData(uint32_t instance,
                                        uint32_t rxSize)
 {
     assert(rxBuff);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_status_t retVal = kStatus_UART_Success;
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
@@ -477,7 +519,7 @@ uart_status_t UART_DRV_EdmaReceiveData(uint32_t instance,
     uartEdmaState->isRxBlocking = false;
 
     retVal = UART_DRV_EdmaStartReceiveData(instance, rxBuff, rxSize);
-    
+
     return retVal;
 }
 
@@ -485,7 +527,7 @@ uart_status_t UART_DRV_EdmaReceiveData(uint32_t instance,
  *
  * Function Name : UART_DRV_EdmaGetReceiveStatus
  * Description   : This function returns whether the previous UART receive is
- * complete. When performing an async receive, the user can call this function 
+ * complete. When performing an async receive, the user can call this function
  * to ascertain the state of the current receive progress: in progress (or busy)
  * or complete (success). In addition, if the receive is still in progress,
  * the user can obtain the number of words that have been currently received.
@@ -494,9 +536,9 @@ uart_status_t UART_DRV_EdmaReceiveData(uint32_t instance,
 uart_status_t UART_DRV_EdmaGetReceiveStatus(uint32_t instance,
                                             uint32_t * bytesRemaining)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
-    uint32_t edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartRx.channel);
+    DMA_Type * edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartRx.channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(uartEdmaState->edmaUartRx.channel);
     uart_status_t retVal = kStatus_UART_Success;
     uint32_t rxSize = 0;
@@ -505,7 +547,7 @@ uart_status_t UART_DRV_EdmaGetReceiveStatus(uint32_t instance,
      * the count to 0 manually. */
     if (uartEdmaState->isRxBusy)
     {
-        rxSize = EDMA_HAL_HTCDGetCurrentMajorCount(edmaBaseAddr, edmaChannel);
+        rxSize = EDMA_HAL_HTCDGetUnfinishedBytes(edmaBaseAddr, edmaChannel);
         retVal = kStatus_UART_RxBusy;
     }
 
@@ -527,7 +569,7 @@ uart_status_t UART_DRV_EdmaGetReceiveStatus(uint32_t instance,
  *END**************************************************************************/
 uart_status_t UART_DRV_EdmaAbortReceivingData(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
 
     /* Check if a transfer is running. */
@@ -545,17 +587,17 @@ uart_status_t UART_DRV_EdmaAbortReceivingData(uint32_t instance)
 /*FUNCTION**********************************************************************
  *
  * Function Name : UART_DRV_EdmaCompleteSendData
- * Description   : Finish up a transmit by completing the process of sending 
- * data and disabling the interrupt. 
+ * Description   : Finish up a transmit by completing the process of sending
+ * data and disabling the interrupt.
  * This is not a public API as it is called from other driver functions.
  *
  *END**************************************************************************/
 static void UART_DRV_EdmaCompleteSendData(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
-    uint32_t edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartTx.channel);
+    DMA_Type * edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartTx.channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(uartEdmaState->edmaUartTx.channel);
 
     /* Disable DMA major loop interrupt */
@@ -563,7 +605,7 @@ static void UART_DRV_EdmaCompleteSendData(uint32_t instance)
 
     /* Stop DMA channel. */
     EDMA_HAL_SetDmaRequestCmd(edmaBaseAddr, (edma_channel_indicator_t)edmaChannel, false);
-       
+
     /* Signal the synchronous completion object. */
     if (uartEdmaState->isTxBlocking)
     {
@@ -571,7 +613,7 @@ static void UART_DRV_EdmaCompleteSendData(uint32_t instance)
     }
 
     /* Update the information of the module driver state */
-    uartEdmaState->isTxBusy = false; 
+    uartEdmaState->isTxBusy = false;
 }
 
 /*FUNCTION**********************************************************************
@@ -591,15 +633,15 @@ static void UART_DRV_EdmaTxCallback(void *param, edma_chn_status_t status)
  * Description   : This is not a public interface.
  *
  *END**************************************************************************/
-static uart_status_t UART_DRV_EdmaStartSendData(uint32_t instance, 
+static uart_status_t UART_DRV_EdmaStartSendData(uint32_t instance,
                                                 const uint8_t * txBuff,
                                                 uint32_t txSize)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     /* Get current runtime structure. */
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
-    uint32_t edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartTx.channel);
+    DMA_Type * edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartTx.channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(uartEdmaState->edmaUartTx.channel);
 
     /* Check that we're not busy already transmitting data from a previous function call. */
@@ -607,14 +649,14 @@ static uart_status_t UART_DRV_EdmaStartSendData(uint32_t instance,
     {
         return kStatus_UART_TxBusy;
     }
-  
+
     /* Update UART DMA run-time structure. */
     uartEdmaState->isTxBusy = true;
 
     /* Update txBuff and txSize. */
     EDMA_HAL_HTCDSetSrcAddr(edmaBaseAddr, edmaChannel, (uint32_t)txBuff);
     EDMA_HAL_HTCDSetMajorCount(edmaBaseAddr, edmaChannel, txSize);
-    
+
     /* Enable DMA major loop interrupt */
     EDMA_HAL_HTCDSetIntCmd(edmaBaseAddr, edmaChannel, true);
 
@@ -628,16 +670,16 @@ static uart_status_t UART_DRV_EdmaStartSendData(uint32_t instance,
  *
  * Function Name : UART_DRV_EdmaCompleteReceiveData
  * Description   : Finish up a receive by completing the process of receiving data
- * and disabling the interrupt. 
+ * and disabling the interrupt.
  * This is not a public API as it is called from other driver functions.
  *
  *END**************************************************************************/
 static void UART_DRV_EdmaCompleteReceiveData(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
-    uint32_t edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartRx.channel);
+    DMA_Type * edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartRx.channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(uartEdmaState->edmaUartRx.channel);
 
     /* Disable DMA major loop interrupt */
@@ -671,7 +713,7 @@ static void UART_DRV_EdmaRxCallback(void *param, edma_chn_status_t status)
  *
  * Function Name : UART_DRV_EdmaStartReceiveData
  * Description   : Initiate (start) a receive by beginning the process of
- * receiving data and enabling the interrupt. 
+ * receiving data and enabling the interrupt.
  * This is not a public API as it is called from other driver functions.
  *
  *END**************************************************************************/
@@ -679,11 +721,11 @@ static uart_status_t UART_DRV_EdmaStartReceiveData(uint32_t instance,
                                                    uint8_t * rxBuff,
                                                    uint32_t rxSize)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     /* Get current runtime structure. */
     uart_edma_state_t * uartEdmaState = (uart_edma_state_t *)g_uartStatePtr[instance];
-    uint32_t edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartRx.channel);
+    DMA_Type * edmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(uartEdmaState->edmaUartRx.channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(uartEdmaState->edmaUartRx.channel);
 
     /* Check that we're not busy already receiving data from a previous function call. */
@@ -708,6 +750,7 @@ static uart_status_t UART_DRV_EdmaStartReceiveData(uint32_t instance,
     return kStatus_UART_Success;
 }
 
+#endif /* FSL_FEATURE_SOC_DMA_COUNT && FSL_FEATURE_SOC_UART_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

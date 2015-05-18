@@ -28,6 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "fsl_crc_hal.h"
+#if FSL_FEATURE_SOC_CRC_COUNT
 
 /*******************************************************************************
  * Code
@@ -38,32 +39,32 @@
  * Description   : This function initializes the module to a known state.
  *
  *END**************************************************************************/
-void CRC_HAL_Init(uint32_t baseAddr)
+void CRC_HAL_Init(CRC_Type * base)
 {
     uint32_t seedAndData = 0;
 
-    BW_CRC_CTRL_TCRC(baseAddr, kCrc32Bits);
+    CRC_BWR_CTRL_TCRC(base, kCrc32Bits);
     /*SetReadTranspose (no transpose)*/
-    BW_CRC_CTRL_TOTR(baseAddr, kCrcNoTranspose);
+    CRC_BWR_CTRL_TOTR(base, kCrcNoTranspose);
     /*SetWriteTranspose (no transpose)*/
-    BW_CRC_CTRL_TOT(baseAddr, kCrcNoTranspose);
+    CRC_BWR_CTRL_TOT(base, kCrcNoTranspose);
     /*SetXorMode (xor mode disabled)*/
-    BW_CRC_CTRL_FXOR(baseAddr, false);
+    CRC_BWR_CTRL_FXOR(base, false);
     /*SetSeedOrDataMode (seed selected)*/
-    BW_CRC_CTRL_WAS(baseAddr, true);
+    CRC_BWR_CTRL_WAS(base, true);
 
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    HW_CRC_CRC_WR(baseAddr, seedAndData);
+    CRC_WR_CRC(base, seedAndData);
 #else
-    HW_CRC_DATA_WR(baseAddr, seedAndData);
+    CRC_WR_DATA(base, seedAndData);
 #endif
     /*SetSeedOrDataMode (seed selected)*/
-    BW_CRC_CTRL_WAS(baseAddr, false);
+    CRC_BWR_CTRL_WAS(base, false);
 
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    HW_CRC_CRC_WR(baseAddr, seedAndData);
+    CRC_WR_CRC(base, seedAndData);
 #else
-    HW_CRC_DATA_WR(baseAddr, seedAndData);
+    CRC_WR_DATA(base, seedAndData);
 #endif
 }
 
@@ -74,20 +75,20 @@ void CRC_HAL_Init(uint32_t baseAddr)
  *                 and returns new result
  *
  *END**************************************************************************/
-uint32_t CRC_HAL_GetCrc32(uint32_t baseAddr, uint32_t data, bool newSeed, uint32_t seed)
+uint32_t CRC_HAL_GetCrc32(CRC_Type * base, uint32_t data, bool newSeed, uint32_t seed)
 {
     if (newSeed == true)
     {
-        CRC_HAL_SetSeedOrDataMode(baseAddr, true);
-        CRC_HAL_SetDataReg(baseAddr, seed);
-        CRC_HAL_SetSeedOrDataMode(baseAddr, false);
-        CRC_HAL_SetDataReg(baseAddr, data);
-        return CRC_HAL_GetCrcResult(baseAddr);
+        CRC_HAL_SetSeedOrDataMode(base, true);
+        CRC_HAL_SetDataReg(base, seed);
+        CRC_HAL_SetSeedOrDataMode(base, false);
+        CRC_HAL_SetDataReg(base, data);
+        return CRC_HAL_GetCrcResult(base);
     }
     else
     {
-        CRC_HAL_SetDataReg(baseAddr, data);
-        return CRC_HAL_GetCrcResult(baseAddr);
+        CRC_HAL_SetDataReg(base, data);
+        return CRC_HAL_GetCrcResult(base);
     }
 }
 
@@ -98,20 +99,20 @@ uint32_t CRC_HAL_GetCrc32(uint32_t baseAddr, uint32_t data, bool newSeed, uint32
  *                 and returns new result
  *
  *END**************************************************************************/
-uint32_t CRC_HAL_GetCrc16(uint32_t baseAddr, uint16_t data, bool newSeed, uint32_t seed)
+uint32_t CRC_HAL_GetCrc16(CRC_Type * base, uint16_t data, bool newSeed, uint32_t seed)
 {
     if (newSeed == true)
     {
-        CRC_HAL_SetSeedOrDataMode(baseAddr, true);
-        CRC_HAL_SetDataReg(baseAddr, seed);
-        CRC_HAL_SetSeedOrDataMode(baseAddr, false);
-        CRC_HAL_SetDataLReg(baseAddr, data);
-        return CRC_HAL_GetCrcResult(baseAddr);
+        CRC_HAL_SetSeedOrDataMode(base, true);
+        CRC_HAL_SetDataReg(base, seed);
+        CRC_HAL_SetSeedOrDataMode(base, false);
+        CRC_HAL_SetDataLReg(base, data);
+        return CRC_HAL_GetCrcResult(base);
     }
     else
     {
-        CRC_HAL_SetDataLReg(baseAddr, data);
-        return CRC_HAL_GetCrcResult(baseAddr);
+        CRC_HAL_SetDataLReg(base, data);
+        return CRC_HAL_GetCrcResult(base);
     }
 }
 
@@ -122,20 +123,20 @@ uint32_t CRC_HAL_GetCrc16(uint32_t baseAddr, uint16_t data, bool newSeed, uint32
  *                 and returns new result
  *
  *END**************************************************************************/
-uint32_t CRC_HAL_GetCrc8(uint32_t baseAddr, uint8_t data, bool newSeed, uint32_t seed)
+uint32_t CRC_HAL_GetCrc8(CRC_Type * base, uint8_t data, bool newSeed, uint32_t seed)
 {
     if (newSeed == true)
     {
-        CRC_HAL_SetSeedOrDataMode(baseAddr, true);
-        CRC_HAL_SetDataReg(baseAddr, seed);
-        CRC_HAL_SetSeedOrDataMode(baseAddr, false);
-        CRC_HAL_SetDataLLReg(baseAddr, data);
-        return CRC_HAL_GetCrcResult(baseAddr);
+        CRC_HAL_SetSeedOrDataMode(base, true);
+        CRC_HAL_SetDataReg(base, seed);
+        CRC_HAL_SetSeedOrDataMode(base, false);
+        CRC_HAL_SetDataLLReg(base, data);
+        return CRC_HAL_GetCrcResult(base);
     }
     else
     {
-        CRC_HAL_SetDataLLReg(baseAddr, data);
-        return CRC_HAL_GetCrcResult(baseAddr);
+        CRC_HAL_SetDataLLReg(base, data);
+        return CRC_HAL_GetCrcResult(base);
     }
 }
 
@@ -145,37 +146,38 @@ uint32_t CRC_HAL_GetCrc8(uint32_t baseAddr, uint8_t data, bool newSeed, uint32_t
  * Description   : This method returns current result of CRC calculation
  *
  *END**************************************************************************/
-uint32_t CRC_HAL_GetCrcResult(uint32_t baseAddr)
+uint32_t CRC_HAL_GetCrcResult(CRC_Type * base)
 {
     uint32_t result = 0;
     crc_transpose_t transpose;
     crc_prot_width_t width;
 
-    width = CRC_HAL_GetProtocolWidth(baseAddr);
+    width = CRC_HAL_GetProtocolWidth(base);
 
     switch(width)
     {
     case kCrc16Bits:
-        transpose = CRC_HAL_GetReadTranspose(baseAddr);
+        transpose = CRC_HAL_GetReadTranspose(base);
 
         if( (transpose == kCrcTransposeBoth) || (transpose == kCrcTransposeBytes) )
         {
             /* Return upper 16bits of CRC because of transposition in 16bit mode */
-            result = CRC_HAL_GetDataHReg(baseAddr);
+            result = CRC_HAL_GetDataHReg(base);
         }
         else
         {
-            result = CRC_HAL_GetDataLReg(baseAddr);
+            result = CRC_HAL_GetDataLReg(base);
         }
         break;
     case kCrc32Bits:
-        result = CRC_HAL_GetDataReg(baseAddr);
+        result = CRC_HAL_GetDataReg(base);
         break;
     default:
         break;
     }
     return result;
 }
+#endif
 
 /*******************************************************************************
  * EOF

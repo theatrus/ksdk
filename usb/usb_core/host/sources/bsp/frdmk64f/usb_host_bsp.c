@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 * 
-* Copyright (c) 2013 Freescale Semiconductor;
+* Copyright (c) 2013 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 *
@@ -24,13 +24,17 @@
 *
 *END************************************************************************/
 #include "adapter.h"
+#include "usb.h"
+#include "usb_misc.h"
+#include "usb_host_config.h"
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
-#define SIM_SOPT2_IRC48MSEL_MASK                 0x30000u
+#include "fsl_usb_khci_hal.h"
+#include "fsl_gpio_driver.h"
 #elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
     #if (defined(CPU_MK64FN1M012))
 #include "MK64F12/MK64F12_sim.h"
@@ -43,113 +47,225 @@
 #endif
 
 extern uint8_t soc_get_usb_vector_number(uint8_t controller_id);
+extern uint32_t soc_get_usb_base_address(uint8_t controller_id);
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern _WEAK_FUNCTION(usb_status bsp_usb_host_board_init(uint8_t controller_id));
+#ifdef __cplusplus
+           }
+#endif
 
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #define BSP_USB_INT_LEVEL                (4)
-#define USB_CLK_RECOVER_IRC_EN (*(volatile unsigned char *)0x40072144)
-#define SIM_SOPT2_IRC48MSEL_MASK                 0x30000u
+#define USB_CLK_RECOVER_IRC_EN           (*(volatile unsigned char *)0x40072144)
+#define SIM_SOPT2_IRC48MSEL_MASK         0x30000u
+#ifdef BSPCFG_USB_USE_IRC48M
+#undef BSPCFG_USB_USE_IRC48M
+#endif
+#define BSPCFG_USB_USE_IRC48M            (0)
 
-static int32_t bsp_usb_host_io_init
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if USBCFG_HOST_PORT_NATIVE
+#define kGpioUsbVbus                     GPIO_MAKE_PIN(GPIOC_IDX, 9U)
+/* Declare usb vbus gpio enable pin usb otg demo and host demo*/
+const gpio_output_pin_user_config_t usbvbusenablePin[] = 
+{
+    {
+        .pinName = kGpioUsbVbus,
+        .config.outputLogic = 1,
+        .config.slewRate = kPortSlowSlewRate,
+        .config.isOpenDrainEnabled = false,
+        .config.driveStrength = kPortLowDriveStrength,
+    },
+    {
+        .pinName = GPIO_PINS_OUT_OF_RANGE,
+    }
+};
+#endif
+#endif
+
+/*FUNCTION*-------------------------------------------------------------------
+*
+* Function Name    : bsp_usb_host_soc_init
+* Returned Value   : USB status
+* Comments         :
+*    This function performs BSP-specific I/O initialization related to USB
+*
+*END*----------------------------------------------------------------------*/
+static usb_status bsp_usb_host_soc_init
 (
-   int32_t i
+   int32_t controller_id
 )
 {
-    
-    int32_t ret = 0;
-    //Disable MPU so the module can access RAM
-    //HW_MPU_CESR_CLR(MPU_CESR, MPU_CESR_VLD_MASK);
+    usb_status ret = 0;
+    /* Disable MPU so the module can access RAM */
      MPU_CESR=0;
-    if (i == 0)
+    if (USB_CONTROLLER_KHCI_0 == controller_id)
     {
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    /* USB Clock Gating */
-    //HW_SIM_SCGC4_SET(SIM_SCGC4_USBOTG_MASK);
-    SIM_SCGC4 |= (SIM_SCGC4_USBOTG_MASK);
-    /* PLL/FLL selected as CLK source */
-    //HW_SIM_SOPT2_SET(SIM_SOPT2_USBSRC_MASK | SIM_SOPT2_PLLFLLSEL_MASK);
+#if BSPCFG_USB_USE_IRC48M
+        /*
+        * Configure SIM_CLKDIV2: USBDIV = 0, USBFRAC = 0
+        */
+        SIM_CLKDIV2 = (uint32_t)0x0UL; /* Update USB clock pre-scalers */
+
+        /* Configure USB to be clocked from IRC 48MHz */
+        SIM_SOPT2_REG(SIM_BASE_PTR)  |= SIM_SOPT2_USBSRC_MASK | SIM_SOPT2_IRC48MSEL_MASK;
+
+        /* Enable USB-OTG IP clocking */
+        SIM_SCGC4_REG(SIM_BASE_PTR) |= SIM_SCGC4_USBOTG_MASK;
+        /* Enable IRC 48MHz for USB module */
+        USB_CLK_RECOVER_IRC_EN = 0x03;
+#else
+        /* USB Clock Gating */
+        SIM_SCGC4 |= (SIM_SCGC4_USBOTG_MASK);
+        /* PLL/FLL selected as CLK source */
     #if (defined(CPU_MK64FN1M012))
         SIM_SOPT2 |= (SIM_SOPT2_USBSRC_MASK | SIM_SOPT2_PLLFLLSEL(0x01));
     #endif
-
-    /* Weak pull downs */
-    //HW_USB_USBCTRL_WR(0x40);
-    USB0_USBCTRL = (0x40);
-    #if USBCFG_HOST_PORT_NATIVE
-        /* Souce the P5V0_K22_USB. Set PTC9 to high */
-        //BW_PORT_PCRn_MUX(HW_PORTC, 9, 1); /* GPIO mux */
-        //HW_GPIO_PDDR_SET(2, 1<<9);        /* Set output */
-        //HW_GPIO_PSOR_WR(2, HW_GPIO_PSOR(2).U | 1<<9);       /* Output high */
-        PORTC_PCR9 = PORT_PCR_MUX(0x1); /* GPIO mux */
-        GPIOC_PDDR |= (1 << 9); /* Set output */
-        GPIOC_PSOR |= (1 << 9); /* Output high */
-    #endif
-#else
-        /* USB clock divider */
-        CLOCK_SYS_SetUsbfsDiv(i, 4U, 1U);
-
-        /* PLL/FLL selected as CLK source */
-        CLOCK_SYS_SetUsbfsSrc(i, kClockUsbfsSrcPllFllSel);
-        CLOCK_SYS_SetPllfllSel(kClockPllFllSelPll);
-        /* USB Clock Gating */
-        CLOCK_SYS_EnableUsbfsClock(i);
-        
-        /* Enable clock gating to all ports, A, B, C, D, E*/
-        CLOCK_SYS_EnablePortClock(0);
-        CLOCK_SYS_EnablePortClock(1);
-        CLOCK_SYS_EnablePortClock(2);
-        CLOCK_SYS_EnablePortClock(3);
-        CLOCK_SYS_EnablePortClock(4);
-
-
+        /* Configure USB divider to be 120MHz * 2 / 5 = 48 MHz */
+        SIM_CLKDIV2_REG(SIM_BASE_PTR) = SIM_CLKDIV2_USBDIV(4) | SIM_CLKDIV2_USBFRAC_MASK;
+#endif
         /* Weak pull downs */
-        HW_USB_USBCTRL_WR(USB0_BASE, 0x40);
+        USB0_USBCTRL = (0x40);
+
+        /* reset USB CTRL register */
+        USB0_USBCTRL = (0x0);
+        /* setup interrupt */
+        OS_intr_init(soc_get_usb_vector_number(controller_id), BSP_USB_INT_LEVEL, 0, TRUE);
+#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if !BSPCFG_USB_USE_IRC48M
+        uint32_t freq;
+        clock_usbfs_src_t src;
+#endif
+        uint8_t instance = controller_id - USB_CONTROLLER_KHCI_0;
+        uint32_t base_address = soc_get_usb_base_address(controller_id);
+#if BSPCFG_USB_USE_IRC48M
+        /* USB clock divider */
+        CLOCK_SYS_SetUsbfsDiv(instance, 0U, 0U);
+        /* PLL/FLL selected as CLK source */
+        CLOCK_SYS_SetUsbfsSrc(instance, kClockUsbfsSrcPllFllSel);
+        CLOCK_SYS_SetPllfllSel(kClockPllFllSelIrc48M);
+        /* USB Clock Gating */
+        CLOCK_SYS_EnableUsbfsClock(instance);
+        /* Enable IRC 48MHz for USB module */
+        USB_CLK_RECOVER_IRC_EN = 0x03;
+#else
+        /* PLL/FLL selected as CLK source */
+        CLOCK_SYS_SetPllfllSel(kClockPllFllSelPll);
+        CLOCK_SYS_SetUsbfsSrc(instance, kClockUsbfsSrcPllFllSel);
+        
+        /* USB clock divider */
+        src = CLOCK_SYS_GetUsbfsSrc(instance);
+        switch(src)
+        {
+        case kClockUsbfsSrcExt:
+            ret = USBERR_BAD_STATUS;
+            break;
+        case kClockUsbfsSrcPllFllSel:
+            freq = CLOCK_SYS_GetPllFllClockFreq();
+            switch(freq)
+            {
+            case 120000000U:
+                CLOCK_SYS_SetUsbfsDiv(instance, 4, 1);
+                break;
+            case 96000000U:
+                CLOCK_SYS_SetUsbfsDiv(instance, 1, 0);
+                break;
+            case 72000000U:
+                CLOCK_SYS_SetUsbfsDiv(instance, 2, 1);
+                break;
+            case 48000000U:
+                CLOCK_SYS_SetUsbfsDiv(instance, 0, 0);
+                break;
+            default:
+                ret = USBERR_BAD_STATUS;
+                break;
+            }
+            break;
+        default:
+            ret = USBERR_BAD_STATUS;
+            break;
+        }
+        /* Confirm the USB souce frequency is 48MHz */
+        if(48000000U != CLOCK_SYS_GetUsbfsFreq(instance))
+        {
+            ret = USBERR_BAD_STATUS;
+        }
+        /* USB Clock Gating */
+        CLOCK_SYS_EnableUsbfsClock(instance);
+#endif
+        /* set internal register pull down */
+        usb_hal_khci_set_weak_pulldown(base_address);
+        /* reset USB CTRL register */
+        usb_hal_khci_reset_control_register(base_address);
+        /* setup interrupt */
+        OS_intr_init((IRQn_Type)soc_get_usb_vector_number(controller_id), BSP_USB_INT_LEVEL, 0, TRUE);
 #endif
     }
     else
     {
-        ret = -1; //unknow controller
+        ret = USBERR_BAD_STATUS; //unknown controller
     }
 
     return ret;
-    
 }
 
-
-int32_t bsp_usb_host_init(uint8_t controller_id)
+/*FUNCTION*-------------------------------------------------------------------
+*
+* Function Name    : bsp_usb_host_board_init
+* Returned Value   : USB status
+* Comments         :
+*    This function performs board-specific initialization related to USB
+*
+*END*----------------------------------------------------------------------*/
+_WEAK_FUNCTION(usb_status bsp_usb_host_board_init(uint8_t controller_id))
 {
-    int32_t result = 0;
-
-    result = bsp_usb_host_io_init(controller_id);
-    if (result != 0)
-        return result;
-
-    if (0 == controller_id)
+    usb_status ret = USB_OK;
+    
+    if (controller_id == USB_CONTROLLER_KHCI_0)
     {
-        /* Do not configure enable USB regulator for host */
-        // SIM_SOPT1CFG_REG(SIM_BASE_PTR) |= SIM_SOPT1CFG_URWE_MASK;
-        // SIM_SOPT1_REG(SIM_BASE_PTR) |= SIM_SOPT1_USBREGEN_MASK;
-
-        /* reset USB CTRL register */
+#if USBCFG_HOST_PORT_NATIVE
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        USB0_USBCTRL = (0x0);
-#else
-        HW_USB_USBCTRL_WR(USB0_BASE, 0);
+        /* Source the P5V0_K22_USB. Set PTC9 to high */
+        PORTC_PCR9 = PORT_PCR_MUX(0x1); /* GPIO mux */
+        GPIOC_PDDR |= (1 << 9); /* Set output */
+        GPIOC_PSOR |= (1 << 9); /* Output high */
+#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+        /* Enable clock gating to all ports C*/
+        CLOCK_SYS_EnablePortClock(2);
+        GPIO_DRV_Init(NULL, usbvbusenablePin);
+        GPIO_DRV_WritePinOutput(kGpioUsbVbus, 1);
 #endif
-
-        /* setup interrupt */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)        
-        OS_intr_init(soc_get_usb_vector_number(0), BSP_USB_INT_LEVEL, 0, TRUE);
-#else
-        OS_intr_init((IRQn_Type)soc_get_usb_vector_number(0), BSP_USB_INT_LEVEL, 0, TRUE);
 #endif
     }
     else
     {
-        /* unknown controller */
-        result = -1;
+        ret = USBERR_BAD_STATUS;
     }
+    
+    return ret;
+}
 
-    return result;
+/*FUNCTION*-------------------------------------------------------------------
+*
+* Function Name    : bsp_usb_host_init
+* Returned Value   : USB status
+* Comments         :
+*    This function performs BSP-specific initialization related to USB
+*
+*END*----------------------------------------------------------------------*/
+usb_status bsp_usb_host_init(uint8_t controller_id)
+{
+    usb_status ret = USB_OK;
+    
+    ret = bsp_usb_host_soc_init(controller_id);
+    if (ret == USB_OK)
+    {
+        ret = bsp_usb_host_board_init(controller_id);
+    }
+    return ret;
 }
 #endif
 /* EOF */

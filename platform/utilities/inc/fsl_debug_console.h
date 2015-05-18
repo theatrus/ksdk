@@ -77,7 +77,8 @@ typedef enum _debug_console_device_type {
                                      to specify the device type but only use the 
                                      default value '0' as the device type.  */
     kDebugConsoleUART   = 16U,
-    kDebugConsoleLPUART = 17U
+    kDebugConsoleLPUART = 17U,
+    kDebugConsoleUSBCDC = 18U
 } debug_console_device_type_t;
 
 /*******************************************************************************
@@ -102,6 +103,7 @@ extern "C" {
  * @param uartInstance Which UART/LPUART instance is used to send debug messages.
  * @param baudRate The desired baud rate in bits per second.
  * @param device Low level device type for the debug console.
+ * @return Whether initialization was successful or not. 
  */
 debug_console_status_t DbgConsole_Init(
         uint32_t uartInstance, uint32_t baudRate, debug_console_device_type_t device);
@@ -111,13 +113,47 @@ debug_console_status_t DbgConsole_Init(
  *
  * Call this function to disable debug log messages to be output via the specified UART/LPUART
  * base address and at the specified baud rate.
- *
+ * @return Whether de-initialization was successful or not.
  */
 debug_console_status_t DbgConsole_DeInit(void);
 
+/*!
+ * @brief   Prints formatted output to the standard output stream.
+ *
+ * Call this function to print formatted output to the standard output stream.
+ *
+ * @param   fmt_s   Format control string.
+ * @return  Returns the number of characters printed, or a negative value if an error occurs.
+ */
 int debug_printf(const char  *fmt_s, ...);
+
+/*!
+ * @brief   Writes a character to stdout.
+ *
+ * Call this function to write a character to stdout.
+ *
+ * @param   ch  Character to be written.
+ * @return  Returns the character written.
+ */
 int debug_putchar(int ch);
+
+/*!
+ * @brief   Reads formatted data from the standard input stream.
+ *
+ * Call this function to read formatted data from the standard input stream.
+ *
+ * @param   fmt_ptr Format control string.
+ * @return  Returns the number of fields successfully converted and assigned.
+ */
 int debug_scanf(const char  *fmt_ptr, ...);
+
+/*!
+ * @brief   Reads a character from standard input.
+ *
+ * Call this function to read a character from standard input.
+ *
+ * @return  Returns the character read.
+ */
 int debug_getchar(void);
 
 /*@}*/

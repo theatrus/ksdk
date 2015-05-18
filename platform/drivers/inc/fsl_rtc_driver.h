@@ -34,6 +34,8 @@
 #include "fsl_rtc_hal.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_RTC_COUNT
+
 /*!
  * @addtogroup rtc_driver
  * @{
@@ -44,12 +46,12 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for RTC instances. */
-extern const uint32_t g_rtcBaseAddr[];
+extern RTC_Type * const g_rtcBase[RTC_INSTANCE_COUNT];
 
 /*! @brief Table to save RTC Alarm IRQ numbers for RTC instances. */
-extern const IRQn_Type g_rtcIrqId[];
+extern const IRQn_Type g_rtcIrqId[RTC_INSTANCE_COUNT];
 /*! @brief Table to save RTC Seconds IRQ numbers for RTC instances. */
-extern const IRQn_Type g_rtcSecondsIrqId[];
+extern const IRQn_Type g_rtcSecondsIrqId[RTC_INSTANCE_COUNT];
 
 /*!
  *  @brief RTC repeated alarm information used by the RTC driver
@@ -69,18 +71,19 @@ extern "C" {
 #endif
 
 /*!
- * @name Initialize and Deinitialize
+ * @name Initialization and De-initialization
  * @{
  */
 
 /*!
  * @brief  Initializes the RTC module.
  *
- * Enables the RTC clock and enables interrupts if requested by the user.
+ * Enables the RTC clock and interrupts if requested by the user.
  *
  * @param  instance The RTC peripheral instance number.
+ * @return kStatusRtcSuccess means succees, otherwise means failed.
  */
-void RTC_DRV_Init(uint32_t instance);
+rtc_status_t RTC_DRV_Init(uint32_t instance);
 
 /*!
  * @brief  Disables the RTC module clock gate control.
@@ -289,15 +292,15 @@ bool RTC_DRV_IncrementMonotonic(uint32_t instance);
  */
 
 /*!
- * @brief Implementation of RTC Alarm handler named in startup code.
+ * @brief Implements the RTC alarm handler named in the startup code.
  *
  * Handles the RTC alarm interrupt and invokes any callback that is interested
- * in the RTC alarm
+ * in the RTC alarm.
  */
 void RTC_IRQHandler(void);
 
 /*!
- * @brief Implementation of RTC Seconds handler named in startup code.
+ * @brief Implements the RTC seconds handler named in the startup code.
  *
  * Handles the RTC seconds interrupt and invokes any callback that is interested
  * in the RTC second tick.
@@ -328,6 +331,8 @@ void RTC_DRV_SecsIntAction(uint32_t instance);
 #endif
 
 /*! @}*/
+
+#endif /* FSL_FEATURE_SOC_RTC_COUNT */
 
 #endif /* __FSL_RTC_DRIVER_H__*/
 

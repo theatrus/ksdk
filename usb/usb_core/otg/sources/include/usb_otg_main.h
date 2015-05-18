@@ -1,32 +1,32 @@
 /**HEADER********************************************************************
-* 
-* Copyright (c) 2010, 2014 Freescale Semiconductor;
-* All Rights Reserved
-*
-*************************************************************************** 
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: usb_otg_main.h$
-* $Version : 
-* $Date    : 
-*
-* Comments : This is the header file for the OTG driver
-*
-*         
-*****************************************************************************/
+ * 
+ * Copyright (c) 2010, 2015 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ *************************************************************************** 
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: usb_otg_main.h$
+ * $Version : 
+ * $Date    : 
+ *
+ * Comments : This is the header file for the OTG driver
+ *
+ *         
+ *****************************************************************************/
 
 #ifndef USB_OTG_MAIN_H_
 #define USB_OTG_MAIN_H_
@@ -69,7 +69,7 @@
 #define OTG_A_HOST_LOAD_ERROR           ((uint32_t)0x20000000)
 #define OTG_A_PERIPHERAL_LOAD_ERROR     ((uint32_t)0x40000000)
 #define OTG_A_AIDL_BDIS_TMOUT           ((uint32_t)0x80000000)
-#define USB_STATUS_OTG                 (0x08)
+#define USB_STATUS_OTG                 (0x09)
 /* Public types */
 #define OTG_STATE_EVENT_MASK            0xFFFFFFFF
 #else
@@ -90,7 +90,7 @@
 #define OTG_A_HOST_LOAD_ERROR           ((uint32_t)0x2000)
 #define OTG_A_PERIPHERAL_LOAD_ERROR     ((uint32_t)0x4000)
 #define OTG_A_AIDL_BDIS_TMOUT           ((uint32_t)0x8000)
-#define USB_STATUS_OTG                 (0x08)
+#define USB_STATUS_OTG                 (0x09)
 /* Public types */
 #define OTG_STATE_EVENT_MASK            0xFFFFFF
 #endif
@@ -98,16 +98,16 @@ typedef os_event_handle otg_event;
 /* Function for getting the active interrupts from the external circuit */
 typedef uint32_t (*otg_load_usb_stack)(void);
 typedef uint32_t (*otg_unload_usb_stack)(void);
-typedef void     (*otg_event_callback)(usb_otg_handle handle, otg_event event);
+typedef void (*otg_event_callback)(usb_otg_handle handle, otg_event event);
 
 /* OTG initialization structure type */
 #ifdef __CC_ARM
-  #pragma push
-  #pragma pack(1)
+#pragma push
+#pragma pack(1)
 #endif
 #ifdef __GNUC__
-  #pragma pack(push)
-  #pragma pack(1)
+#pragma pack(push)
+#pragma pack(1)
 #endif
 /*!
  * @brief OTG initialization structure.
@@ -118,12 +118,32 @@ typedef void     (*otg_event_callback)(usb_otg_handle handle, otg_event event);
 typedef struct otg_init_struct
 {
 
-    otg_event_callback      app_otg_callback; /*!< Application callback*/
-    otg_load_usb_stack      load_usb_host;    /*!< load function for host*/
-    otg_load_usb_stack      load_usb_device;  /*!< load function for device*/
-    otg_unload_usb_stack    unload_usb_host;  /*!< unload function for host*/
-    otg_unload_usb_stack    unload_usb_device;/*!< unload function for device*/
+    otg_event_callback app_otg_callback; /*!< Application callback*/
+    otg_load_usb_stack load_usb_host; /*!< load function for host*/
+    otg_load_usb_stack load_usb_device; /*!< load function for device*/
+    otg_unload_usb_stack unload_usb_host; /*!< unload function for host*/
+    otg_unload_usb_stack unload_usb_device;/*!< unload function for device*/
 } otg_int_struct_t;
+
+typedef struct usb_otg_max3353_init_struct
+{
+    void* int_port;
+    uint8_t int_pin;
+    uint8_t int_vector;
+    uint8_t priority;
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
+    char* i2c_dev_id;
+#else
+    uint8_t i2c_channel;
+#endif
+    uint8_t i2c_vector;
+    uint8_t i2c_address;
+} usb_otg_max3353_init_struct_t;
+
+typedef union usb_otg_peripheral_union
+{
+    usb_otg_max3353_init_struct_t max3353_init;
+} usb_otg_peripheral_union_t;
 
 typedef enum
 {
@@ -139,6 +159,8 @@ enum
     USB_ACTIVE_STACK_HOST
 };
 
+#define USB_OTG_PERIPHERAL_MAX3353  0
+
 /*!
  * @brief OTG operation interface structure.
  *
@@ -147,10 +169,10 @@ enum
  */
 typedef struct usb_otg_if_struct
 {
-   const struct usb_otg_callback_functions_struct   *otg_if;       /*!< Interface for operation*/
-   void*                                            otg_init_param;/*!< Initialization parameter*/
-   void*                                            otg_handle;    /*!< Handle of OTG*/
-   usb_stack_type_t                                 stack_type;    /*!< Type of stack*/
+    const struct usb_otg_callback_functions_struct *otg_if; /*!< Interface for operation*/
+    void* otg_init_param;/*!< Initialization parameter*/
+    void* otg_handle; /*!< Handle of OTG*/
+    usb_stack_type_t stack_type; /*!< Type of stack*/
 } usb_otg_if_struct_t;
 
 /* Public functions */
@@ -170,7 +192,7 @@ typedef struct usb_otg_if_struct
  * @param handle OTG handle
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_init(uint8_t controller_id, otg_int_struct_t * init_struct_ptr, usb_host_handle *  handle);
+extern usb_status usb_otg_init(uint8_t controller_id, otg_int_struct_t * init_struct_ptr, usb_otg_handle * handle);
 
 /*!
  * @brief Stop the OTG controller.
@@ -180,7 +202,7 @@ extern usb_status  usb_otg_init(uint8_t controller_id, otg_int_struct_t * init_s
  * @param handle OTG handle
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_shut_down(usb_otg_handle  otg_handle);
+extern usb_status usb_otg_shut_down(usb_otg_handle otg_handle);
 
 /*!
  * @brief Start the SRP protocol from the B-Device side.
@@ -192,7 +214,7 @@ extern usb_status  usb_otg_shut_down(usb_otg_handle  otg_handle);
  * @param handle OTG handle
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_session_request(usb_otg_handle handle);
+extern usb_status usb_otg_session_request(usb_otg_handle handle);
 
 /*!
  * @brief Start the HNP protocol from the B-Device side.
@@ -205,7 +227,7 @@ extern usb_status  usb_otg_session_request(usb_otg_handle handle);
  * @param handle OTG handle
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_bus_request(usb_otg_handle handle);
+extern usb_status usb_otg_bus_request(usb_otg_handle handle);
 
 /*!
  * @brief End a Host session on the B-device.
@@ -217,7 +239,7 @@ extern usb_status  usb_otg_bus_request(usb_otg_handle handle);
  * @param handle OTG handle
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_bus_release(usb_otg_handle handle);
+extern usb_status usb_otg_bus_release(usb_otg_handle handle);
 
 /*!
  * @brief Set USB Bus drop status.
@@ -228,7 +250,7 @@ extern usb_status  usb_otg_bus_release(usb_otg_handle handle);
  * @param handle OTG handle
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_set_a_bus_req(usb_otg_handle otg_handle , bool a_bus_req );
+extern usb_status usb_otg_set_a_bus_req(usb_otg_handle otg_handle, bool a_bus_req);
 
 /*!
  * @brief Get USB Bus request status.
@@ -240,7 +262,7 @@ extern usb_status  usb_otg_set_a_bus_req(usb_otg_handle otg_handle , bool a_bus_
  * @param a_bus_req Request USB Bus status
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_get_a_bus_req(usb_otg_handle otg_handle , bool* a_bus_req );
+extern usb_status usb_otg_get_a_bus_req(usb_otg_handle otg_handle, bool* a_bus_req);
 
 /*!
  * @brief Set USB Bus drop status.
@@ -252,7 +274,7 @@ extern usb_status  usb_otg_get_a_bus_req(usb_otg_handle otg_handle , bool* a_bus
  * @param a_bus_drop set USB Bus drop status
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_set_a_bus_drop(usb_otg_handle otg_handle , bool a_bus_drop );
+extern usb_status usb_otg_set_a_bus_drop(usb_otg_handle otg_handle, bool a_bus_drop);
 
 /*!
  * @brief Get USB Bus drop status .
@@ -264,7 +286,7 @@ extern usb_status  usb_otg_set_a_bus_drop(usb_otg_handle otg_handle , bool a_bus
  * @param a_bus_drop USB Bus drop status
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_get_a_bus_drop(usb_otg_handle otg_handle , bool* a_bus_drop );
+extern usb_status usb_otg_get_a_bus_drop(usb_otg_handle otg_handle, bool* a_bus_drop);
 
 /*!
  * @brief Clear an error.
@@ -274,7 +296,7 @@ extern usb_status  usb_otg_get_a_bus_drop(usb_otg_handle otg_handle , bool* a_bu
  * @param handle OTG handle
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status  usb_otg_set_a_clear_err( usb_otg_handle otg_handle );
+extern usb_status usb_otg_set_a_clear_err(usb_otg_handle otg_handle);
 
 /*!
  * @brief Get the device role state.
@@ -284,12 +306,12 @@ extern usb_status  usb_otg_set_a_clear_err( usb_otg_handle otg_handle );
  * @param handle OTG handle
  * @return USB_OK-Success/Others-Fail
  */
-extern uint8_t     usb_otg_get_state(usb_otg_handle otg_handle);
+extern uint8_t usb_otg_get_state(usb_otg_handle otg_handle);
 
 #ifdef __CC_ARM
-  #pragma pop
+#pragma pop
 #endif
 #ifdef __GNUC__
-  #pragma pack(pop)
+#pragma pack(pop)
 #endif
 #endif /* USB_OTG_MAIN_H_ */

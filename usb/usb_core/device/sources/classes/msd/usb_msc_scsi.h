@@ -28,7 +28,7 @@
 *
 * Comments:
 *
-* @brief The file contains USB Mass Stoarge SCSI layer api header function
+* @brief The file contains USB Mass Storage SCSI layer api header function
 *
 *****************************************************************************/
 
@@ -113,7 +113,7 @@ typedef struct _inquiry_command
 typedef struct _request_sense_command
 {
    uint8_t   opcode; /* operation code : 0x03H*/
-   uint8_t   lun;    /* Logical Unit Number: bits 7-5, rest resrved */
+   uint8_t   lun;    /* Logical Unit Number: bits 7-5, rest reserved */
    uint8_t   reserved1[2];  /* 2 bytes are reserved */
    uint8_t   alloc_length; /* specs say it to be 252 bytes, 
                              but windows request only 18 bytes*/
@@ -134,7 +134,7 @@ typedef struct _read_capacity_command
 {
     uint8_t opcode; /* operation code : 0x25H*/
     uint8_t lun_adr; /* LUN : bits 7-5, RelAdr : bit 0*/
-    uint32_t lba; /* LOgical Block Address : 4 bytes */
+    uint32_t lba; /* Logical Block Address : 4 bytes */
     uint8_t reserved1[2]; /* 2 bytes are reserved */
     uint8_t pmi; /* always set to zero for UFI devices */
     uint8_t reserved2[3];/* 3 bytes are reserved */

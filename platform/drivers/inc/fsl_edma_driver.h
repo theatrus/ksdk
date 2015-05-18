@@ -36,6 +36,7 @@
 #include "fsl_edma_hal.h"
 #include "fsl_dmamux_hal.h"
 #include "fsl_os_abstraction.h"
+#if FSL_FEATURE_SOC_EDMA_COUNT
 
 /*!
  * @addtogroup edma_driver
@@ -43,16 +44,18 @@
  */
 
 /*! @brief Array for the eDMA module register base address. */
-extern const uint32_t g_edmaBaseAddr[];
+extern DMA_Type * const g_edmaBase[];
 
 /*! @brief Array for DMAMUX module register base address. */
-extern const uint32_t g_dmamuxBaseAddr[];
+extern DMAMUX_Type * const g_dmamuxBase[];
 
 /*! @brief Two dimensional array for eDMA channel interrupt vector number. */
-extern const IRQn_Type g_edmaIrqId[HW_DMA_INSTANCE_COUNT][FSL_FEATURE_EDMA_MODULE_CHANNEL];
+extern const IRQn_Type g_edmaIrqId[DMA_INSTANCE_COUNT][FSL_FEATURE_EDMA_MODULE_CHANNEL];
 
+#if !defined FSL_FEATURE_EDMA_HAS_ERROR_IRQ
 /*! @brief Array for eDMA module's error interrupt vector number. */
-extern const IRQn_Type g_edmaErrIrqId[HW_DMA_INSTANCE_COUNT];
+extern const IRQn_Type g_edmaErrIrqId[DMA_INSTANCE_COUNT];
+#endif
 
 /*******************************************************************************
  * Definitions
@@ -71,15 +74,18 @@ extern const IRQn_Type g_edmaErrIrqId[HW_DMA_INSTANCE_COUNT];
  *
  * Use an instance of this structure with the EDMA_DRV_Init() function. This allows the user to configure
  * settings of the EDMA peripheral with a single function call.
+ * @internal gui name="Configuration" id="edmaCfg"
  */
 typedef struct EDMAUserConfig {
-    edma_channel_arbitration_t chnArbitration;  /*!< eDMA channel arbitration. */
-#if (FSL_FEATURE_EDMA_CHANNEL_GROUP_COUNT > 0x1U)
-    edma_group_arbitration_t groupArbitration;  /*!< eDMA group arbitration. */
+    edma_channel_arbitration_t chnArbitration;  /*!< eDMA channel arbitration. @internal gui name="Channel arbitration" id="ChnArbitration" */
+#if FSL_FEATURE_EDMA_CHANNEL_GROUP_COUNT > 0x1U
+    edma_group_arbitration_t groupArbitration;  /*!< eDMA group arbitration. @internal gui name="Group arbitration" id="GroupArbitration" */
     edma_group_priority_t groupPriority;        /*!< eDMA group priority. It is used while eDMA
-                                                     group arbitration is set to fixed priority. */
+                                                     group arbitration is set to fixed priority. @internal gui name="Group priority" id="GroupPriority" */
 #endif
     bool notHaltOnError;
+    /*!<  Any error causes the HALT bit to set. Subsequently, all service requests are ignored until the HALT bit is cleared.
+    @internal gui name="Set HALT on Error" id="HaltOnError" */
 } edma_user_config_t;
 
 /*!
@@ -103,13 +109,13 @@ typedef enum _edma_chn_status {
 typedef void (*edma_callback_t)(void *parameter, edma_chn_status_t status);
 
 /*! @brief Macro to get the eDMA physical module indicator from the virtual channel indicator. */
-#define VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(chn)     g_edmaBaseAddr[chn/FSL_FEATURE_EDMA_MODULE_CHANNEL]
+#define VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(chn)     g_edmaBase[chn/FSL_FEATURE_EDMA_MODULE_CHANNEL]
 
 /*! @brief Macro to get the eDMA physical channel indicator from the virtual channel indicator. */
 #define VIRTUAL_CHN_TO_EDMA_CHN(chn)                (chn%FSL_FEATURE_EDMA_MODULE_CHANNEL)
 
 /*! @brief Macro to get the DMAMUX physical module indicator from the virtual channel indicator. */
-#define VIRTUAL_CHN_TO_DMAMUX_MODULE_REGBASE(chn)   g_dmamuxBaseAddr[chn/FSL_FEATURE_DMAMUX_MODULE_CHANNEL]
+#define VIRTUAL_CHN_TO_DMAMUX_MODULE_REGBASE(chn)   g_dmamuxBase[chn/FSL_FEATURE_DMAMUX_MODULE_CHANNEL]
 
 /*! @brief Macro to get the DMAMUX physical channel indicator from the virtual channel indicator. */
 #define VIRTUAL_CHN_TO_DMAMUX_CHN(chn)          (chn%FSL_FEATURE_DMAMUX_MODULE_CHANNEL)
@@ -233,7 +239,7 @@ edma_status_t EDMA_DRV_Deinit(void);
 /*!
  * @brief Requests an eDMA channel dynamically or statically.
  *
- * This function allocates eDMA channel according to the required channel allocation and
+ * This function allocates the eDMA channel according to the required channel allocation and
  * corresponding to the eDMA hardware request, initializes the channel state memory provided by user and fills
  * out the members. This functions also sets up the hardware request configuration according to the
  * user's requirements.
@@ -262,7 +268,7 @@ edma_status_t EDMA_DRV_Deinit(void);
     }
 
     @endcode
- * In a dynamic allocation, any of the free eDMA channels are available for use. eDMA driver 
+ * In a dynamic allocation, any of the free eDMA channels are available for use. eDMA driver
  * assigns the first free channel to the user.
  * This is an example for user to request a channel dynamically :
     @code
@@ -319,7 +325,7 @@ edma_status_t EDMA_DRV_ReleaseChannel(edma_chn_state_t *chn);
  * @brief Sets the descriptor basic transfer for the descriptor.
  *
  * This function sets up the basic transfer for the descriptor. The minor loop setting is not
- * used  because the minor loop configuration impacts the global eDMA setting. 
+ * used  because the minor loop configuration impacts the global eDMA setting.
  * The source minor loop offset is relevant to the destination minor loop offset. For these reasons, the minor
  * loop offset configuration is treated as an advanced configuration. The user can call the
  * EDMA_HAL_STCDSetMinorLoopOffset() function to configure the minor loop offset feature.
@@ -330,6 +336,7 @@ edma_status_t EDMA_DRV_ReleaseChannel(edma_chn_state_t *chn);
  * @param config Configuration for the basic transfer.
  * @param enableInt Enables (true) or Disables (false) interrupt on TCD complete.
  * @param disableDmaRequest Disables (true) or Enable (false) DMA request on TCD complete.
+ * @return An eDMA error codes or kStatus_EDMA_Success.
  */
 
 static inline edma_status_t EDMA_DRV_PrepareDescriptorTransfer(
@@ -342,7 +349,7 @@ static inline edma_status_t EDMA_DRV_PrepareDescriptorTransfer(
             VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(chn->channel), stcd, config, enableInt, disableDmaRequest);
 
     return kStatus_EDMA_Success;
-        
+
 }
 
 /*!
@@ -350,15 +357,16 @@ static inline edma_status_t EDMA_DRV_PrepareDescriptorTransfer(
  *
  *
  * This function enables the scatter/gather feature for the software TCD and configures the next
- * TCD address.This address points to the beginning of a 0-modulo-32 byte region containing 
+ * TCD address.This address points to the beginning of a 0-modulo-32 byte region containing
  * the next transfer TCD to be loaded into this channel. The channel reload is performed as the
- * major iteration count completes. The scatter/gather address must be 0-modulo-32-byte. Otherwise, 
+ * major iteration count completes. The scatter/gather address must be 0-modulo-32-byte. Otherwise,
  * a configuration error is reported.
  *
  * @param stcd The pointer to the software TCD, which needs to link to the software TCD. The
  * address needs to be aligned to 32 bytes.
  * @param nextStcd The pointer to the software TCD, which is to be linked to the software TCD. The
  * address needs to be aligned to 32 bytes.
+ * @return An eDMA error codes or kStatus_EDMA_Success.
  */
 static inline edma_status_t EDMA_DRV_PrepareDescriptorScatterGather(
                                 edma_software_tcd_t *stcd,
@@ -377,6 +385,7 @@ static inline edma_status_t EDMA_DRV_PrepareDescriptorScatterGather(
  *
  * @param stcd The pointer to the software TCD. The address need to be aligned to 32 bytes.
  * @param linkChn Channel number for major link
+ * @return An eDMA error codes or kStatus_EDMA_Success.
  */
 static inline edma_status_t EDMA_DRV_PrepareDescriptorChannelLink(
                                 edma_software_tcd_t *stcd, uint32_t linkChn)
@@ -390,6 +399,7 @@ static inline edma_status_t EDMA_DRV_PrepareDescriptorChannelLink(
  *
  * @param chn The pointer to the channel state structure.
  * @param stcd memory pointing to the software TCD.
+ * @return An eDMA error codes or kStatus_EDMA_Success.
  */
 edma_status_t EDMA_DRV_PushDescriptorToReg(edma_chn_state_t *chn, edma_software_tcd_t *stcd);
 
@@ -400,13 +410,26 @@ edma_status_t EDMA_DRV_PushDescriptorToReg(edma_chn_state_t *chn, edma_software_
  * function and the memory is divided into the "period" sub blocks. The DMA driver  configures the "period"
  * descriptors. Each descriptor stands for a sub block. The DMA driver  transfers data from the first
  * descriptor to the last descriptor. Then, the DMA driver  wraps to the first descriptor to continue
- * the loop. The interrupt handler is called every time a descriptor is completed. 
+ * the loop. The interrupt handler is called every time a descriptor is completed.
  * The user can get a transfer status of a descriptor by calling the edma_get_descriptor_status() function in the interrupt handler or any
  * other task context. At the same
  * time, calling the edma_update_descriptor() function notifies the DMA driver that the content belonging to
  * a descriptor is already updated and the DMA needs to count it as and underflow next time it
  * loops to this descriptor.
- *
+ * This is an example that describes how to use this interface in audio playback case:
+ * 1. Use a ping-pong buffer to transfer the data, the size of the each buffer is 1024 bytes.
+ * 2. Each DMA request needs to transfer 8 bytes.
+ * 3. The audio data is 16 bit.
+   @code
+   edma_chn_state_t chn; <--- Simply allocates the structure.
+   edma_software_tcd_t stcd[2]; <-- Need 32 bytes aligned, two buffer block, needs 2 TCD.
+   uint32_t srcAddr = buffer; <----Start address of the buffer.
+   uint32_t destAddr = SAI_TDR; <-----Destination address, usually SAI TDR register.
+
+   EDMA_DRV_ConfigLoopTransfer(&chn, stcd, kEDMAMemoryToPeripheral, srcAddr, destAddr,
+   kEDMATransferSize_2Bytes, 8, 2048, 2) ;
+
+   @endcode
  * @param chn The pointer to the channel state structure.
  * @param stcd Memory pointing to software TCDs. The user must prepare this memory block. The required
  * memory size is equal to a "period" * size of(edma_software_tcd_t). At the same time, the "stcd"
@@ -527,20 +550,20 @@ edma_status_t EDMA_DRV_InstallCallback(
  * custom interrupt action function.
  *
  * @param channel Virtual channel number.
- */ 
+ */
 void EDMA_DRV_IRQHandler(uint8_t channel);
 
 /*!
  * @brief ERROR IRQ Handler for eDMA channel interrupt.
  *
  * This function is provided as the default action for eDMA module error interrupt. This function
- * clears status, stops the error on a eDMA channel, and calls the eDMA channel callback function if the 
+ * clears status, stops the error on a eDMA channel, and calls the eDMA channel callback function if the
  * error eDMA channel is already requested.
  * The user can add this function into the eDMA error interrupt entry and implement a custom
  * interrupt action function.
  *
  * @param instance eDMA module indicator.
- */ 
+ */
 void EDMA_DRV_ErrorIRQHandler(uint8_t instance);
 
 /* @} */
@@ -559,6 +582,26 @@ void EDMA_DRV_ErrorIRQHandler(uint8_t instance);
 static inline edma_chn_status_t EDMA_DRV_GetChannelStatus(edma_chn_state_t *chn)
 {
     return chn->status;
+}
+
+/*!
+ * @brief Gets the unfinished bytes for the eDMA channel current TCD.
+ *
+ * This function checks the TCD (Task Control Descriptor) status for a specified eDMA channel and returns
+ * the bytes that have not finished.
+ * This function can only be used for one TCD scenario.
+ *
+ * @param chn The pointer to the channel state structure.
+ *
+ * @return Bytes already transferred for the current TCD.
+ */
+static inline uint32_t EDMA_DRV_GetUnfinishedBytes(edma_chn_state_t *chn)
+{
+    uint32_t channel = chn->channel;
+
+    return EDMA_HAL_HTCDGetUnfinishedBytes(
+                    VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel),
+                    VIRTUAL_CHN_TO_EDMA_CHN(channel));
 }
 
 /*!
@@ -592,6 +635,7 @@ static inline uint32_t EDMA_DRV_GetFinishedBytes(edma_chn_state_t *chn)
 
 /*! @} */
 
+#endif
 #endif /* __FSL_EDMA_DRIVER_H__ */
 /*******************************************************************************
  * EOF

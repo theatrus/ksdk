@@ -34,16 +34,24 @@
 #include "fsl_dma_driver.h"
 #include "fsl_os_abstraction.h"
 
+#if FSL_FEATURE_SOC_SPI_COUNT
+
 /*!
  * @addtogroup spi_slave_driver
  * @{
  */
 
+/*! @brief Table of base pointers for SPI instances. */
+extern SPI_Type * const g_spiBase[SPI_INSTANCE_COUNT];
+
+/*! @brief Table to save SPI IRQ enumeration numbers defined in CMSIS header file. */
+extern const IRQn_Type g_spiIrqId[SPI_INSTANCE_COUNT];
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-#define SPI_DMA_DEFAULT_DUMMY_PATTERN       (0x0U)      /*!< Dummy pattern, that SPI slave will send when transmit data was not configured */
+#define SPI_DMA_DEFAULT_DUMMY_PATTERN       (0x0U)      /*!< Dummy pattern, that SPI slave sends when transmit data was not configured */
 
 /*!
  *  @brief User configuration structure for the SPI slave driver.
@@ -71,14 +79,14 @@ typedef struct SPIDmaSlaveState {
     spi_status_t status;                        /*!< Current state of slave */
     event_t event;                              /*!< Event to notify waiting task */
     uint16_t errorCount;                        /*!< Driver error count */
-    uint32_t dummyPattern;                      /*!< Dummy data will be send when do not have data in transmit buffer */
+    uint32_t dummyPattern;                      /*!< Dummy data is sent when there is no data in the transmit buffer */
     volatile bool isTransferInProgress;         /*!< True if there is an active transfer.*/
-    const uint8_t * restrict sendBuffer;        /*!< Pointer to transmit buffer */
-    uint8_t * restrict receiveBuffer;           /*!< Pointer to receive buffer */
+    const uint8_t * sendBuffer;        /*!< Pointer to transmit buffer */
+    uint8_t * receiveBuffer;           /*!< Pointer to receive buffer */
     volatile int32_t remainingSendByteCount;    /*!< Number of bytes remaining to send.*/
     volatile int32_t remainingReceiveByteCount; /*!< Number of bytes remaining to receive.*/
     volatile int32_t transferredByteCount;      /*!< Number of bytes transferred so far.*/
-    bool isSync;                                /*!< Indicates the function call is sync or async */
+    bool isSync;                                /*!< Indicates the function call is sync or a-sync */
     bool hasExtraByte;                          /*!< Indicates the reception has extra byte */
     dma_channel_t dmaReceive;                   /*!< The DMA channel used for receive */
     dma_channel_t dmaTransmit;                  /*!< The DMA channel used for transmit */
@@ -103,7 +111,7 @@ extern "C" {
  * This function un-gates the clock to the SPI module, initializes the SPI for
  * slave mode. Once initialized, the SPI module is configured in slave mode and
  * user can start transmit, receive data by calls send, receive, transfer functions.
- * This function indicates SPI slave will use interrupt mechanism.
+ * This function indicates SPI slave uses an interrupt mechanism.
  *
  * @param instance The instance number of the SPI peripheral.
  * @param spiState The pointer to the SPI slave driver state structure.
@@ -120,13 +128,14 @@ spi_status_t SPI_DRV_DmaSlaveInit(uint32_t instance,
 /*!
  * @brief Shuts down a SPI instance - interrupt mechanism.
  *
- * Disable SPI module, gates its clock, change SPI slave driver state to NonInit for
+ * Disables the SPI module, gates its clock, change SPI slave driver state to NonInit for
  * SPI slave module which is initialized with interrupt mechanism. After de-initialized,
  * user can re-initialize SPI slave module with other mechanisms.
  *
  * @param instance The instance number of the SPI peripheral.
+ * @return kStatus_SPI_Success indicating successful de-initialization
  */
-void SPI_DRV_DmaSlaveDeinit(uint32_t instance);
+spi_status_t SPI_DRV_DmaSlaveDeinit(uint32_t instance);
 
 /*! @} */
 
@@ -139,17 +148,17 @@ void SPI_DRV_DmaSlaveDeinit(uint32_t instance);
  * @brief Transfers data on SPI bus using interrupt and blocking call
  *
  * This function check driver status, mechanism and transmit/receive data through SPI
- * bus. If sendBuffer is NULL, transmit process will be ignored, and if receiveBuffer is NULL
- * receive process is ignored. If both receiveBuffer and sendBuffer available, transmit and
- * receive progress will be processed. If only receiveBuffer available, receiving will be
- * processed, else transmitting will be processed. This function only return when its
- * processes were completed. This function uses interrupt mechanism.
+ * bus. If sendBuffer is NULL, transmit process is ignored. If the receiveBuffer is NULL, the
+ * receive process is ignored. If both the receiveBuffer and the sendBuffer are available, the transmit and the
+ * receive progress are processed. If only the receiveBuffer available, the receive is
+ * processed. Otherwise, the transmit is processed. This function returns when its
+ * processes are completed. This function uses interrupt mechanism.
  *
  * @param instance The instance number of SPI peripheral
  * @param sendBuffer The pointer to data that user wants to transmit.
  * @param receiveBuffer The pointer to data that user wants to store received data.
  * @param transferByteCount The number of bytes to send and receive.
- * @param timeout The maximum number of miliseconds that function will wait before
+ * @param timeout The maximum number of milliseconds that function waits before
  *              timed out reached.
  *
  * @return  kStatus_SPI_Success if driver starts to send/receive data successfully.
@@ -171,14 +180,14 @@ spi_status_t SPI_DRV_DmaSlaveTransferBlocking(uint32_t instance,
  */
 
 /*!
- * @brief Starts transfer data on SPI bus using interrupt and non-blocking call
+ * @brief Starts transfer data on the SPI bus using an interrupt and a non-blocking call
  *
- * This function check driver status then set buffer pointers to receive and transmit
- * SPI data. If sendBuffer is NULL, transmit process will be ignored, and if receiveBuffer
- * is NULL receive process is ignored. If both receiveBuffer and sendBuffer available,
- * transfer is done when kDspiTxDone and kDspiRxDone are set. If only receiveBuffer
- * available, transfer is done when kDspiRxDone flag was set, else transfer is done
- * when kDspiTxDone was set. This function uses interrupt mechanism.
+ * This function checks the driver status then set buffer pointers to receive and transmit
+ * SPI data. If the sendBuffer is NULL, the transmit process is ignored. If the receiveBuffer
+ * is NULL, the receive process is ignored. If both the receiveBuffer and the sendBuffer available,
+ * transfer is done when the kDspiTxDone and kDspiRxDone are set. If only the receiveBuffer is
+ * available, the transfer is done when the kDspiRxDone flag is set. Otherwise, the transfer is done
+ * when the kDspiTxDone was set. This function uses an interrupt mechanism.
  *
  * @param instance The instance number of SPI peripheral
  * @param sendBuffer The pointer to data that user wants to transmit.
@@ -196,13 +205,13 @@ spi_status_t SPI_DRV_DmaSlaveTransfer(uint32_t instance,
                                       uint32_t transferByteCount);
 
 /*!
- * @brief Abort transfer that started by non-blocking call transfer function
+ * @brief Aborts the transfer that started by a non-blocking call transfer function.
  *
- * This function stops the transfer which started by function SPI_DRV_SlaveTransfer().
+ * This function stops the transfer which was started by the SPI_DRV_SlaveTransfer() function.
  *
  * @param instance The instance number of SPI peripheral
  *
- * @return  kStatus_SPI_Success if everything is ok.
+ * @return  kStatus_SPI_Success if everything is OK.
  *          kStatus_SPI_InvalidMechanism if the current transaction does not use
  *                      interrupt mechanism.
  */
@@ -227,6 +236,15 @@ spi_status_t SPI_DRV_DmaSlaveAbortTransfer(uint32_t instance);
  */
 spi_status_t SPI_DRV_DmaSlaveGetTransferStatus(uint32_t instance,
                                             uint32_t * framesTransferred);
+
+/*!
+ * @brief Interrupt handler for SPI slave mode.
+ * This handler is used when the hasExtraByte flag is set to retrieve the received last byte.
+ *
+ * @param instance The instance number of the SPI peripheral.
+ */
+void SPI_DRV_DmaSlaveIRQHandler(uint32_t instance);
+
 /* @} */
 
 #if defined(__cplusplus)
@@ -235,7 +253,9 @@ spi_status_t SPI_DRV_DmaSlaveGetTransferStatus(uint32_t instance,
 
 /*! @} */
 
+#endif /* FSL_FEATURE_SOC_SPI_COUNT */
 #endif /* __FSL_SPI_DMA_SLAVE_DRIVER_H__ */
 /*******************************************************************************
  * EOF
  ******************************************************************************/
+

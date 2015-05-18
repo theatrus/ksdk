@@ -31,7 +31,11 @@
 #ifndef __FSL_POWER_MANAGER_COMMON_H__
 #define __FSL_POWER_MANAGER_COMMON_H__
 
+#include "fsl_device_registers.h"
+
+#if FSL_FEATURE_SOC_LLWU_COUNT
 #include "fsl_llwu_hal.h"
+#endif
 #include "fsl_gpio_driver.h"
 
 /*!
@@ -39,6 +43,7 @@
  * @{
  */
 
+#if FSL_FEATURE_SOC_LLWU_COUNT
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -46,6 +51,10 @@
 #define POWER_GPIO_RESERVED 0xFFFFU
 #define POWER_EXTRACT_LLWU_PIN(pin) (llwu_wakeup_pin_t)( ((uint32_t)pin)&0xFFU)
 #define POWER_EXTRACT_GPIO_PINNAME(pin) ((((uint32_t)pin)>>16)&0xFFFFU)
+#define POWER_LLWU_GPIO_PIN(num)                                \
+    POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin##num,                  \
+                          FSL_FEATURE_LLWU_PIN##num##_GPIO_IDX, \
+                          FSL_FEATURE_LLWU_PIN##num##_GPIO_PIN)
 /*
  * Include the cpu specific API.
  */
@@ -88,116 +97,103 @@ typedef enum _power_wakeup_module
 /*!
  * @brief Power manager external wake up pins.
  */
-#if defined(KL03Z4_SERIES)
-
-typedef enum _power_wakeup_pin
-{
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN4
-    kPowerManagerWakeupPin4 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin4,HW_GPIOB,0),
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN7
-    kPowerManagerWakeupPin7 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin7,HW_GPIOA,0),
-#endif
-} power_wakeup_pin_t;
-
-#else
 typedef enum _power_wakeup_pin
 {
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN0
-    kPowerManagerWakeupPin0 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin0,HW_GPIOE,1),
+    kPowerManagerWakeupPin0 = POWER_LLWU_GPIO_PIN(0),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN1
-    kPowerManagerWakeupPin1 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin1,HW_GPIOE,2),
+    kPowerManagerWakeupPin1 = POWER_LLWU_GPIO_PIN(1),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN2
-    kPowerManagerWakeupPin2 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin2,HW_GPIOE,4),
+    kPowerManagerWakeupPin2 = POWER_LLWU_GPIO_PIN(2),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN3
-    kPowerManagerWakeupPin3 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin3,HW_GPIOA,4),
+    kPowerManagerWakeupPin3 = POWER_LLWU_GPIO_PIN(3),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN4
-    kPowerManagerWakeupPin4 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin4,HW_GPIOA,13),
+    kPowerManagerWakeupPin4 = POWER_LLWU_GPIO_PIN(4),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN5
-    kPowerManagerWakeupPin5 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin5,HW_GPIOB,0),
+    kPowerManagerWakeupPin5 = POWER_LLWU_GPIO_PIN(5),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN6
-    kPowerManagerWakeupPin6 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin6,HW_GPIOC,1),
+    kPowerManagerWakeupPin6 = POWER_LLWU_GPIO_PIN(6),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN7
-    kPowerManagerWakeupPin7 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin7,HW_GPIOC,3),
+    kPowerManagerWakeupPin7 = POWER_LLWU_GPIO_PIN(7),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN8
-    kPowerManagerWakeupPin8 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin8,HW_GPIOC,4),
+    kPowerManagerWakeupPin8 = POWER_LLWU_GPIO_PIN(8),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN9
-    kPowerManagerWakeupPin9 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin9,HW_GPIOC,5),
+    kPowerManagerWakeupPin9 = POWER_LLWU_GPIO_PIN(9),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN10
-    kPowerManagerWakeupPin10 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin10,HW_GPIOC,6),
+    kPowerManagerWakeupPin10 = POWER_LLWU_GPIO_PIN(10),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN11
-    kPowerManagerWakeupPin11 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin11,HW_GPIOC,11),
+    kPowerManagerWakeupPin11 = POWER_LLWU_GPIO_PIN(11),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN12
-    kPowerManagerWakeupPin12 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin12,HW_GPIOD,0),
+    kPowerManagerWakeupPin12 = POWER_LLWU_GPIO_PIN(12),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN13
-    kPowerManagerWakeupPin13 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin13,HW_GPIOD,2),
+    kPowerManagerWakeupPin13 = POWER_LLWU_GPIO_PIN(13),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN14
-    kPowerManagerWakeupPin14 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin14,HW_GPIOD,4),
+    kPowerManagerWakeupPin14 = POWER_LLWU_GPIO_PIN(14),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN15
-    kPowerManagerWakeupPin15 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin15,HW_GPIOD,6),
+    kPowerManagerWakeupPin15 = POWER_LLWU_GPIO_PIN(15),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN16
-    kPowerManagerWakeupPin16 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin16,HW_GPIOE,6),
+    kPowerManagerWakeupPin16 = POWER_LLWU_GPIO_PIN(16),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN17
-    kPowerManagerWakeupPin17 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin17,HW_GPIOE,9),
+    kPowerManagerWakeupPin17 = POWER_LLWU_GPIO_PIN(17),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN18
-    kPowerManagerWakeupPin18 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin18,HW_GPIOE,10),
+    kPowerManagerWakeupPin18 = POWER_LLWU_GPIO_PIN(18),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN19
-    kPowerManagerWakeupPin19 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin19,HW_GPIOE,17),
+    kPowerManagerWakeupPin19 = POWER_LLWU_GPIO_PIN(19),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN20
-    kPowerManagerWakeupPin20 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin20,HW_GPIOE,18),
+    kPowerManagerWakeupPin20 = POWER_LLWU_GPIO_PIN(20),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN21
-    kPowerManagerWakeupPin21 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin21,HW_GPIOE,25),
+    kPowerManagerWakeupPin21 = POWER_LLWU_GPIO_PIN(21),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN22
-    kPowerManagerWakeupPin22 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin22,HW_GPIOA,10),
+    kPowerManagerWakeupPin22 = POWER_LLWU_GPIO_PIN(22),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN23
-    kPowerManagerWakeupPin23 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin23,HW_GPIOA,11),
+    kPowerManagerWakeupPin23 = POWER_LLWU_GPIO_PIN(23),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN24
-    kPowerManagerWakeupPin24 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin24,HW_GPIOD,8),
+    kPowerManagerWakeupPin24 = POWER_LLWU_GPIO_PIN(24),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN25
-    kPowerManagerWakeupPin25 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin25,HW_GPIOD,11),
+    kPowerManagerWakeupPin25 = POWER_LLWU_GPIO_PIN(25),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN26
-    kPowerManagerWakeupPin26 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin26,POWER_GPIO_RESERVED,POWER_GPIO_RESERVED),
+    kPowerManagerWakeupPin26 = POWER_LLWU_GPIO_PIN(26),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN27
-    kPowerManagerWakeupPin27 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin27,POWER_GPIO_RESERVED,POWER_GPIO_RESERVED),
+    kPowerManagerWakeupPin27 = POWER_LLWU_GPIO_PIN(27),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN28
-    kPowerManagerWakeupPin28 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin28,POWER_GPIO_RESERVED,POWER_GPIO_RESERVED),
+    kPowerManagerWakeupPin28 = POWER_LLWU_GPIO_PIN(28),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN29
-    kPowerManagerWakeupPin29 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin29,POWER_GPIO_RESERVED,POWER_GPIO_RESERVED),
+    kPowerManagerWakeupPin29 = POWER_LLWU_GPIO_PIN(29),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN30
-    kPowerManagerWakeupPin30 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin30,POWER_GPIO_RESERVED,POWER_GPIO_RESERVED),
+    kPowerManagerWakeupPin30 = POWER_LLWU_GPIO_PIN(30),
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN31
-    kPowerManagerWakeupPin31 = POWER_MAKE_WAKEUP_PIN(kLlwuWakeupPin31,POWER_GPIO_RESERVED,POWER_GPIO_RESERVED),
+    kPowerManagerWakeupPin31 = POWER_LLWU_GPIO_PIN(31),
 #endif
 }power_wakeup_pin_t;
 

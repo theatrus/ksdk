@@ -35,6 +35,7 @@
 #include "fsl_hwtimer_systick.h"
 #include "fsl_os_abstraction.h"
 #include "fsl_interrupt_manager.h"
+#include "fsl_clock_manager.h"
 
 /*******************************************************************************
  * Internal type definition
@@ -42,10 +43,10 @@
 /*******************************************************************************
  * Internal Variables
  ******************************************************************************/
-static void HWTIMER_SYS_SystickIsr(void);
-static _hwtimer_error_code_t HWTIMER_SYS_SystickInit(hwtimer_t *hwtimer, uint32_t systickId, uint32_t isrPrior, void *data);
+void HWTIMER_SYS_SystickIsrAction(void);
+static _hwtimer_error_code_t HWTIMER_SYS_SystickInit(hwtimer_t *hwtimer, uint32_t systickId, void *data);
 static _hwtimer_error_code_t HWTIMER_SYS_SystickDeinit(hwtimer_t *hwtimer);
-static _hwtimer_error_code_t HWTIMER_SYS_SystickSetDiv(hwtimer_t *hwtimer, uint32_t divider);
+static _hwtimer_error_code_t HWTIMER_SYS_SystickSetDiv(hwtimer_t *hwtimer, uint32_t period);
 static _hwtimer_error_code_t HWTIMER_SYS_SystickStart(hwtimer_t *hwtimer);
 static _hwtimer_error_code_t HWTIMER_SYS_SystickStop(hwtimer_t *hwtimer);
 static _hwtimer_error_code_t HWTIMER_SYS_SystickGetTime(hwtimer_t *hwtimer, hwtimer_time_t *time);
@@ -70,7 +71,7 @@ static hwtimer_t *g_hwtimersSystick = NULL;
 /*!
  * @cond DOXYGEN_PRIVATE
  *
- * @brief Interrupt service routine.
+ * @brief Called from the Interrupt service routine.
  *
  * This ISR is used when SysTick counted to 0.
  * Checks whether callback_func is not NULL,
@@ -85,7 +86,7 @@ static hwtimer_t *g_hwtimersSystick = NULL;
  * @see HWTIMER_SYS_SystickStop
  * @see HWTIMER_SYS_SystickGet_time
  */
-static void HWTIMER_SYS_SystickIsr(void)
+void HWTIMER_SYS_SystickIsrAction(void)
 {
     hwtimer_t *hwtimer = g_hwtimersSystick;
 
@@ -125,7 +126,6 @@ static void HWTIMER_SYS_SystickIsr(void)
  *
  * Called by hwtimer_init().
  * Initializes the hwtimer_t structure.
- * Sets interrupt priority and registers ISR.
  *
  * @param hwtimer[in]   Returns initialized hwtimer structure handle.
  * @param systickId[in] Determines Systick modul( Always 0).
@@ -141,9 +141,9 @@ static void HWTIMER_SYS_SystickIsr(void)
  * @see HWTIMER_SYS_SystickStart
  * @see HWTIMER_SYS_SystickStop
  * @see HWTIMER_SYS_SystickGet_time
- * @see HWTIMER_SYS_SystickIsr
+ * @see HWTIMER_SYS_SystickIsrAction
  */
-static _hwtimer_error_code_t HWTIMER_SYS_SystickInit(hwtimer_t *hwtimer, uint32_t systickId, uint32_t isrPrior, void *data)
+static _hwtimer_error_code_t HWTIMER_SYS_SystickInit(hwtimer_t *hwtimer, uint32_t systickId, void *data)
 {
 
     assert(NULL != hwtimer);
@@ -165,15 +165,6 @@ static _hwtimer_error_code_t HWTIMER_SYS_SystickInit(hwtimer_t *hwtimer, uint32_
     /* Store hwtimer in global variable */
     g_hwtimersSystick = hwtimer;
 
-    /* Set isr for timer*/
-    if (kStatus_OSA_Success != OSA_InstallIntHandler(SysTick_IRQn, HWTIMER_SYS_SystickIsr))
-    {
-        return kHwtimerRegisterHandlerError;
-    }
-
-    /* Set interrupt priority and enable interrupt */
-    NVIC_SetPriority(SysTick_IRQn, isrPrior);
-
     return kHwtimerSuccess;
 }
 
@@ -194,16 +185,12 @@ static _hwtimer_error_code_t HWTIMER_SYS_SystickInit(hwtimer_t *hwtimer, uint32_
  * @see HWTIMER_SYS_SystickStart
  * @see HWTIMER_SYS_SystickStop
  * @see HWTIMER_SYS_SystickGet_time
- * @see HWTIMER_SYS_SystickIsr
+ * @see HWTIMER_SYS_SystickIsrAction
  */
 static _hwtimer_error_code_t HWTIMER_SYS_SystickDeinit(hwtimer_t *hwtimer)
 {
+    _hwtimer_error_code_t retval = kHwtimerSuccess;
     assert(NULL != hwtimer);
-
-    if (kStatus_OSA_Success != OSA_InstallIntHandler(SysTick_IRQn, NULL))
-    {
-        return kHwtimerRegisterHandlerError;
-    }
 
     /* Disable timer and interrupt */
     SysTick->CTRL = 0U;
@@ -214,19 +201,23 @@ static _hwtimer_error_code_t HWTIMER_SYS_SystickDeinit(hwtimer_t *hwtimer)
 
     g_hwtimersSystick = NULL;
 
-    return kHwtimerSuccess;
+    return retval;
 }
 
 /*!
  * @cond DOXYGEN_PRIVATE
  *
- * @brief Sets up timer with divider settings closest to the requested total divider factor.
+ * @brief Sets up timer with divider settings closest to the requested period in microseconds.
+ *
+ * The function gets the value of the base frequency of the timer via clock manager and calculates required
+ * divider ratio. If the required period is a large value, then the code will try to use a low-frequency
+ * external clock if available.
  *
  * Called by hwtimer_set_freq() and hwtimer_set_period().
  * Fills in the divider (actual total divider) and modulo (sub-tick resolution) members of the hwtimer_t structure.
  *
  * @param hwtimer[in] Pointer to hwtimer structure.
- * @param divider[in] Value which divide input clock of systick timer module to obtain requested period of timer.
+ * @param period[in] Required period of timer in micro seconds.
  *
  * @return kHwtimerSuccess      Success.
  * @return kHwtimerInvalidInput Divider is equal too big.
@@ -236,21 +227,44 @@ static _hwtimer_error_code_t HWTIMER_SYS_SystickDeinit(hwtimer_t *hwtimer)
  * @see HWTIMER_SYS_SystickStart
  * @see HWTIMER_SYS_SystickStop
  * @see HWTIMER_SYS_SystickGet_time
- * @see HWTIMER_SYS_SystickIsr
+ * @see HWTIMER_SYS_SystickIsrAction
  */
-static _hwtimer_error_code_t HWTIMER_SYS_SystickSetDiv(hwtimer_t *hwtimer, uint32_t divider)
+static _hwtimer_error_code_t HWTIMER_SYS_SystickSetDiv(hwtimer_t *hwtimer, uint32_t period)
 {
-
     assert(NULL != hwtimer);
-    assert(0U != divider);
+    uint64_t divider;
 
-    /* Divider should fit to register(it is not 32 bit) */
+#if FSL_FEATURE_SYSTICK_HAS_EXT_REF
+    /* Set the clock source back to core freq */
+    CLOCK_SYS_SetSystickSrc(kClockSystickSrcCore);
+#endif
+    /* Get Core clock frequency */
+    hwtimer->clockFreq = CLOCK_SYS_GetSystickFreq();
+
+    divider = (((uint64_t)hwtimer->clockFreq * period)) / 1000000U ;
+
+    /* if divider is greater than 24b value we return an error */
     if ((divider - 1U) & ~SysTick_LOAD_RELOAD_Msk)
     {
+#if FSL_FEATURE_SYSTICK_HAS_EXT_REF
+        /* Check if we can use a slower clock source to get required period */
+        CLOCK_SYS_SetSystickSrc(kClockSystickSrcExtRef);
+        hwtimer->clockFreq = CLOCK_SYS_GetSystickFreq();
+        divider = (((uint64_t)hwtimer->clockFreq * period)) / 1000000U ;
+
+        if ((divider - 1U) & ~SysTick_LOAD_RELOAD_Msk)
+        {
+            return kHwtimerInvalidInput;
+        }
+#else
         return kHwtimerInvalidInput;
+#endif
     }
 
-    /* A start value of 0 (divider == 1) is possible, but has no effect because the SysTick interrupt and COUNTFLAG are activated when counting from 1 to 0. */
+    /*
+     * A start value of 0 (divider == 1) is possible, but has no effect because the
+     * SysTick interrupt and COUNTFLAG are activated when counting from 1 to 0.
+     */
     if (divider == 1U)
     {
         divider = 2U; /* Set smallest possible value for divider. */
@@ -258,6 +272,7 @@ static _hwtimer_error_code_t HWTIMER_SYS_SystickSetDiv(hwtimer_t *hwtimer, uint3
 
     SysTick->LOAD = divider - 1U;
 
+    /* Store in struct. */
     hwtimer->divider    = divider;
     hwtimer->modulo     = divider;
 
@@ -282,7 +297,7 @@ static _hwtimer_error_code_t HWTIMER_SYS_SystickSetDiv(hwtimer_t *hwtimer, uint3
  * @see HWTIMER_SYS_SystickSet_div
  * @see HWTIMER_SYS_SystickStop
  * @see HWTIMER_SYS_SystickGet_time
- * @see HWTIMER_SYS_SystickIsr
+ * @see HWTIMER_SYS_SystickIsrAction
  */
 static _hwtimer_error_code_t HWTIMER_SYS_SystickStart(hwtimer_t *hwtimer)
 {
@@ -292,7 +307,7 @@ static _hwtimer_error_code_t HWTIMER_SYS_SystickStart(hwtimer_t *hwtimer)
     SysTick->VAL = 0U;
 
     /* Run timer and enable interrupt */
-    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk;
+    SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk;
 
     return kHwtimerSuccess;
 }
@@ -313,7 +328,7 @@ static _hwtimer_error_code_t HWTIMER_SYS_SystickStart(hwtimer_t *hwtimer)
  * @see HWTIMER_SYS_SystickSet_div
  * @see HWTIMER_SYS_SystickStart
  * @see HWTIMER_SYS_SystickGet_time
- * @see HWTIMER_SYS_SystickIsr
+ * @see HWTIMER_SYS_SystickIsrAction
  */
 static _hwtimer_error_code_t HWTIMER_SYS_SystickStop(hwtimer_t *hwtimer)
 {
@@ -344,7 +359,7 @@ static _hwtimer_error_code_t HWTIMER_SYS_SystickStop(hwtimer_t *hwtimer)
  * @see HWTIMER_SYS_SystickSet_div
  * @see HWTIMER_SYS_SystickStart
  * @see HWTIMER_SYS_SystickStop
- * @see HWTIMER_SYS_SystickIsr
+ * @see HWTIMER_SYS_SystickIsrAction
  */
 static _hwtimer_error_code_t HWTIMER_SYS_SystickGetTime(hwtimer_t *hwtimer, hwtimer_time_t *time)
 {

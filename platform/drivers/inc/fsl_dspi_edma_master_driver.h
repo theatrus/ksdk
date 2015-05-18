@@ -34,16 +34,18 @@
 #include "fsl_os_abstraction.h"
 #include "fsl_edma_driver.h"
 
+#if FSL_FEATURE_SOC_DSPI_COUNT
+
 /*!
  * @addtogroup dspi_master_driver
  * @{
  */
 
-/*! @brief Table of base addresses for DSPI instances. */
-extern const uint32_t g_dspiBaseAddr[];
+/*! @brief Table of base pointers for SPI instances. */
+extern SPI_Type * const g_dspiBase[SPI_INSTANCE_COUNT];
 
 /*! @brief Table to save DSPI IRQ enumeration numbers defined in the CMSIS header file. */
-extern const IRQn_Type g_dspiIrqId[HW_SPI_INSTANCE_COUNT];
+extern const IRQn_Type g_dspiIrqId[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Definitions
@@ -84,7 +86,7 @@ typedef struct DspiEdmaMasterState {
     edma_chn_state_t dmaFifo2Receive; /*!< Structure definition for the eDMA channel */
     edma_software_tcd_t * stcdSrc2CmdDataLast; /*!< Pointer to SW TCD in memory */
     bool extraByte;    /*!< Flag used for 16-bit transfers with odd byte count */
-    uint8_t * restrict rxBuffer;     /*!< The buffer into which received bytes are placed.*/
+    uint8_t * rxBuffer;     /*!< The buffer into which received bytes are placed.*/
     uint32_t rxTransferByteCnt;  /*!< Number of bytes to receive.*/
 } dspi_edma_master_state_t;
 
@@ -170,14 +172,15 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
  * the core, and releases any used DMA channels.
  *
  * @param instance The instance number of the DSPI peripheral.
+ * @return kStatus_DSPI_Success indicating successful de-initialization
  */
-void DSPI_DRV_EdmaMasterDeinit(uint32_t instance);
+dspi_status_t DSPI_DRV_EdmaMasterDeinit(uint32_t instance);
 
 
 /*!
  * @brief Configures the DSPI master mode bus timing delay options with the EDMA support.
  *
- * This function involves using the DSPI module delay options to
+ * This function uses the DSPI module delay options to
  * "fine tune" some of the signal timings and match the timing needs of a slower peripheral device.
  * This is an optional function that can be called after the DSPI module has been initialized for
  * master mode.
@@ -205,9 +208,9 @@ void DSPI_DRV_EdmaMasterDeinit(uint32_t instance);
  *
  * @param instance The instance number of the DSPI peripheral.
  * @param whichDelay The desired delay to configure, must be of type dspi_delay_type_t
- * @param delayInNanoSec The desired delay value in nano-seconds.
+ * @param delayInNanoSec The desired delay value in nanoseconds.
  * @param calculatedDelay The calculated delay that best matches the desired
- *        delay (in nano-seconds).
+ *        delay (in nanoseconds).
  * @return Either kStatus_DSPI_Success or kStatus_DSPI_OutOfRange if the desired delay exceeds
  *         the capability of the device.
  */
@@ -292,7 +295,7 @@ dspi_status_t DSPI_DRV_EdmaMasterConfigureBus(uint32_t instance,
  *         kStatus_DSPI_Timeout The transfer timed out and was aborted.
  */
 dspi_status_t DSPI_DRV_EdmaMasterTransferBlocking(uint32_t instance,
-                                                  const dspi_edma_device_t * restrict device,
+                                                  const dspi_edma_device_t * device,
                                                   const uint8_t * sendBuffer,
                                                   uint8_t * receiveBuffer,
                                                   size_t transferByteCount,
@@ -307,9 +310,9 @@ dspi_status_t DSPI_DRV_EdmaMasterTransferBlocking(uint32_t instance,
 /*!
  * @brief Performs a non-blocking SPI master mode transfer with the EDMA support.
  *
- * This function  returns immediately. The user must check back 
+ * This function  returns immediately. The user must check back
  * whether the transfer is complete (using the DSPI_DRV_EdmaMasterGetTransferStatus function).
- * This function simultaneously sends and receives data on the SPI bus because the SPI is 
+ * This function simultaneously sends and receives data on the SPI bus because the SPI is
  * a full-duplex bus.
  *
  * @param instance The instance number of the DSPI peripheral.
@@ -327,7 +330,7 @@ dspi_status_t DSPI_DRV_EdmaMasterTransferBlocking(uint32_t instance,
  *         kStatus_DSPI_Busy Cannot perform transfer because a transfer is already in progress.
  */
 dspi_status_t DSPI_DRV_EdmaMasterTransfer(uint32_t instance,
-                                          const dspi_edma_device_t * restrict device,
+                                          const dspi_edma_device_t * device,
                                           const uint8_t * sendBuffer,
                                           uint8_t * receiveBuffer,
                                           size_t transferByteCount);
@@ -364,6 +367,14 @@ dspi_status_t DSPI_DRV_EdmaMasterGetTransferStatus(uint32_t instance, uint32_t *
  */
 dspi_status_t DSPI_DRV_EdmaMasterAbortTransfer(uint32_t instance);
 
+/*!
+ * @brief Interrupt handler for DSPI master mode.
+ * This handler uses the buffers stored in the dspi_master_state_t structs to transfer data.
+ *
+ * @param instance The instance number of the DSPI peripheral.
+ */
+void DSPI_DRV_EdmaMasterIRQHandler(uint32_t instance);
+
 /* @}*/
 
 #if defined(__cplusplus)
@@ -372,6 +383,7 @@ dspi_status_t DSPI_DRV_EdmaMasterAbortTransfer(uint32_t instance);
 
 /*! @}*/
 
+#endif /* FSL_FEATURE_SOC_DSPI_COUNT */
 #endif /* __FSL_DSPI_EDMA_MASTER_DRIVER_H__*/
 /*******************************************************************************
  * EOF

@@ -38,7 +38,7 @@
  * Code
  ******************************************************************************/
 
-#if (HW_TPM_INSTANCE_COUNT > 0)
+#if (TPM_INSTANCE_COUNT > 0)
 /*!
  * @brief Implementation of  handler named in startup code.
  *
@@ -50,7 +50,7 @@ void TPM0_IRQHandler(void)
 }
 #endif
 
-#if (HW_TPM_INSTANCE_COUNT > 1)
+#if (TPM_INSTANCE_COUNT > 1)
 /*!
  * @brief Implementation of TPM1 handler named in startup code.
  *
@@ -62,7 +62,7 @@ void TPM1_IRQHandler(void)
 }
 #endif
 
-#if (HW_TPM_INSTANCE_COUNT > 2)
+#if (TPM_INSTANCE_COUNT > 2)
 /*!
  * @brief Implementation of TPM2 handler named in startup code.
  *

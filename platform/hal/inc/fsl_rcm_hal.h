@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_RCM_COUNT
 
 /*! @addtogroup rcm_hal*/
 /*! @{*/
@@ -46,47 +47,55 @@
 
 /*! @brief System Reset Source Name definitions */
 typedef enum _rcm_source_names {
-    kRcmWakeup,                     /* low-leakage wakeup reset */
-    kRcmLowVoltDetect,              /* low voltage detect reset */
+    kRcmSrcAll         = 0U,                           /*!< Parameter could get all reset flags */
+    kRcmWakeup         = RCM_SRS0_WAKEUP_MASK,         /*!< low-leakage wakeup reset */
+    kRcmLowVoltDetect  = RCM_SRS0_LVD_MASK,            /*!< low voltage detect reset */
 #if FSL_FEATURE_RCM_HAS_LOC
-    kRcmLossOfClk,                  /* loss of clock reset */
+    kRcmLossOfClk      = RCM_SRS0_LOC_MASK,            /*!< loss of clock reset */
 #endif
 #if FSL_FEATURE_RCM_HAS_LOL
-    kRcmLossOfLock,                 /* loss of lock reset */
+    kRcmLossOfLock     = RCM_SRS0_LOL_MASK,            /*!< loss of lock reset */
 #endif
-    kRcmWatchDog,                   /* watch dog reset */
-    kRcmExternalPin,                /* external pin reset */
-    kRcmPowerOn,                    /* power on reset */
+    kRcmWatchDog       = RCM_SRS0_WDOG_MASK,           /*!< watch dog reset */
+    kRcmExternalPin    = RCM_SRS0_PIN_MASK,            /*!< external pin reset */
+    kRcmPowerOn        = RCM_SRS0_POR_MASK,            /*!< power on reset */
 #if FSL_FEATURE_RCM_HAS_JTAG
-    kRcmJtag,                       /* JTAG generated reset */
+    kRcmJtag           = RCM_SRS1_JTAG_MASK    << 8U,  /*!< JTAG generated reset */
 #endif
-    kRcmCoreLockup,                 /* core lockup reset */
-    kRcmSoftware,                   /* software reset */
-    kRcmMdmAp,                      /* MDM-AP system reset. */
+    kRcmCoreLockup     = RCM_SRS1_LOCKUP_MASK  << 8U,  /*!< core lockup reset */
+    kRcmSoftware       = RCM_SRS1_SW_MASK      << 8U,  /*!< software reset */
+    kRcmMdmAp          = RCM_SRS1_MDM_AP_MASK  << 8U,  /*!< MDM-AP system reset. */
 #if FSL_FEATURE_RCM_HAS_EZPORT
-    kRcmEzport,                     /* EzPort reset */
+    kRcmEzport         = RCM_SRS1_EZPT_MASK    << 8U,  /*!< EzPort reset */
 #endif
-    kRcmStopModeAckErr,             /* stop mode ack error reset */
-    kRcmSrcNameMax
+    kRcmStopModeAckErr = RCM_SRS1_SACKERR_MASK << 8U,  /*!< stop mode ack error reset */
 } rcm_source_names_t;
 
 /*! @brief Reset pin filter select in Run and Wait modes */
 typedef enum _rcm_filter_run_wait_modes {
-    kRcmFilterDisabled,          /* all filtering disabled */
-    kRcmFilterBusClk,            /* Bus clock filter enabled */
-    kRcmFilterLpoClk,            /* LPO clock filter enabled */
-    kRcmFilterReserverd          /* reserved setting */
+    kRcmFilterDisabled,          /*!< all filtering disabled */
+    kRcmFilterBusClk,            /*!< Bus clock filter enabled */
+    kRcmFilterLpoClk,            /*!< LPO clock filter enabled */
+    kRcmFilterReserverd          /*!< reserved setting */
 } rcm_filter_run_wait_modes_t;
 
 #if FSL_FEATURE_RCM_HAS_BOOTROM
 /*! @brief Boot from ROM configuration. */
 typedef enum _rcm_boot_rom_config {
-    kRcmBootFlash,       /* boot from flash */
-    kRcmBootRomCfg0,     /* boot from boot rom due to BOOTCFG0 */
-    kRcmBootRomFopt,     /* boot from boot rom due to FOPT[7] */
-    kRcmBootRomBoth      /* boot from boot rom due to both BOOTCFG0 and FOPT[7] */
+    kRcmBootFlash,       /*!< Boot from flash */
+    kRcmBootRomCfg0,     /*!< Boot from boot rom due to BOOTCFG0 */
+    kRcmBootRomFopt,     /*!< Boot from boot rom due to FOPT[7] */
+    kRcmBootRomBoth      /*!< Boot from boot rom due to both BOOTCFG0 and FOPT[7] */
 } rcm_boot_rom_config_t;
 #endif
+
+/*! @brief Reset pin filter configuration. */
+typedef struct _rcm_reset_pin_filter_config
+{
+    bool filterInStop;                        /*!< Reset pin filter select in stop mode. */
+    rcm_filter_run_wait_modes_t filterInRunWait; /*!< Reset pin filter in run/wait mode. */
+    uint8_t busClockFilterCount;                 /*!< Reset pin bus clock filter width.  */
+} rcm_reset_pin_filter_config_t;
 
 /*******************************************************************************
  * API
@@ -101,114 +110,61 @@ extern "C" {
 /*!
  * @brief Gets the reset source status.
  *
- * This function gets the current reset source status for a specified source.
+ * This function gets the current reset source status for some specified sources.
  *
- * @param baseAddr     Register base address of RCM
- * @param srcName      reset source name
- * @return status      true or false for specified reset source
+ * Example:
+   @code
+   uint32_t resetStatus;
+
+   // To get all reset source statuses.
+   resetStatus = RCM_HAL_GetSrcStatus(RCM, kRcmSrcAll);
+
+   // To test whether MCU is reset by watchdog.
+   resetStatus = RCM_HAL_GetSrcStatus(RCM, kRcmWatchDog);
+
+   // To test multiple reset source.
+   resetStatus = RCM_HAL_GetSrcStatus(RCM, kRcmWatchDog | kRcmSoftware);
+   @endcode
+ *
+ * @param base     Register base address of RCM
+ * @param statusMask Bit mask for the reset sources to get.
+ * @return The reset source status.
  */
-bool RCM_HAL_GetSrcStatusCmd(uint32_t baseAddr, rcm_source_names_t srcName);
+uint32_t RCM_HAL_GetSrcStatus(RCM_Type * base, uint32_t statusMask);
 
 #if FSL_FEATURE_RCM_HAS_SSRS
 /*!
  * @brief Gets the sticky reset source status.
  *
  * This function gets the current reset source status that have not been cleared
- * by software for a specified source.
+ * by software for some specified sources.
  *
- * @param baseAddr     Register base address of RCM
- * @param srcName      reset source name
- * @return status      true or false for specified reset source
+ * @param base     Register base address of RCM
+ * @param statusMask Bit mask for the reset sources to get.
+ * @return The reset source status.
  */
-bool RCM_HAL_GetStickySrcStatusCmd(uint32_t baseAddr, rcm_source_names_t srcName);
+uint32_t RCM_HAL_GetStickySrcStatus(RCM_Type * base, uint32_t statusMask);
 
 /*!
  * @brief Clear the sticky reset source status.
  *
  * This function clears all the sticky system reset flags.
  *
- * @param baseAddr     Register base address of RCM
+ * @param base     Register base address of RCM
  */
-void RCM_HAL_ClearStickySrcStatus(uint32_t baseAddr);
+void RCM_HAL_ClearStickySrcStatus(RCM_Type * base);
 #endif
 
 /*!
- * @brief Sets the reset pin filter in stop mode.
+ * @brief Sets the reset pin filter base on configuration.
  *
- * This function  sets the reset pin filter enable setting in stop mode.
+ * This function sets the reset pin filter, including filter source, filter
+ * width and so on.
  *
- * @param baseAddr     Register base address of RCM
- * @param enable      enable or disable the filter in stop mode
+ * @param base   Register base address of RCM
+ * @param config Pointer to the configuration structure.
  */
-static inline void RCM_HAL_SetFilterStopModeCmd(uint32_t baseAddr, bool enable)
-{
-    BW_RCM_RPFC_RSTFLTSS(baseAddr, enable);
-}
-
-/*!
- * @brief Gets the reset pin filter in stop mode.
- *
- * This function gets the reset pin filter enable setting in stop mode.
- *
- * @param baseAddr     Register base address of RCM
- * @return enable      true/false to enable or disable the filter in stop mode
- */
-static inline bool RCM_HAL_GetFilterStopModeCmd(uint32_t baseAddr)
-{
-    return (bool)BR_RCM_RPFC_RSTFLTSS(baseAddr);
-}
-
-/*!
- * @brief Sets the reset pin filter in run and wait mode.
- *
- * This function sets the reset pin filter enable setting in run/wait mode.
- *
- * @param baseAddr     Register base address of RCM
- * @param mode  to be set for reset filter in run/wait mode
- */
-static inline void RCM_HAL_SetFilterRunWaitMode(uint32_t baseAddr, rcm_filter_run_wait_modes_t mode)
-{
-    BW_RCM_RPFC_RSTFLTSRW(baseAddr, mode);
-}
-
-/*!
- * @brief Gets the reset pin filter for stop mode.
- *
- * This function gets the reset pin filter enable setting for stop mode.
- *
- * @param baseAddr     Register base address of RCM
- * @return mode  for reset filter in run/wait mode
- */
-static inline rcm_filter_run_wait_modes_t RCM_HAL_GetFilterRunWaitMode(uint32_t baseAddr)
-{
-    return (rcm_filter_run_wait_modes_t)BR_RCM_RPFC_RSTFLTSRW(baseAddr);
-}
-
-/*!
- * @brief Sets the reset pin filter width.
- *
- * This function sets the reset pin filter width.
- *
- * @param baseAddr     Register base address of RCM
- * @param width  to be set for reset filter width
- */
-static inline void RCM_HAL_SetFilterWidth(uint32_t baseAddr, uint32_t width)
-{
-    BW_RCM_RPFW_RSTFLTSEL(baseAddr, width);
-}
-
-/*!
- * @brief Gets the reset pin filter for stop mode.
- *
- * This function gets the reset pin filter width.
- *
- * @param baseAddr     Register base address of RCM
- * @return width reset filter width
- */
-static inline uint32_t RCM_HAL_GetFilterWidth(uint32_t baseAddr)
-{
-    return (uint32_t)BR_RCM_RPFW_RSTFLTSEL(baseAddr);
-}
+void RCM_HAL_SetResetPinFilterConfig(RCM_Type * base, rcm_reset_pin_filter_config_t *config);
 
 #if FSL_FEATURE_RCM_HAS_EZPMS
 /*!
@@ -216,12 +172,12 @@ static inline uint32_t RCM_HAL_GetFilterWidth(uint32_t baseAddr)
  *
  * This function gets the easy port mode status (EZP_MS_B) pin assert status.
  *
- * @param baseAddr     Register base address of RCM
+ * @param base     Register base address of RCM
  * @return status  true - asserted, false - reasserted
  */
-static inline bool RCM_HAL_GetEasyPortModeStatusCmd(uint32_t baseAddr)
+static inline bool RCM_HAL_GetEasyPortModeStatus(RCM_Type * base)
 {
-    return (bool)BR_RCM_MR_EZP_MS(baseAddr);
+    return (bool)RCM_BRD_MR_EZP_MS(base);
 }
 #endif
 
@@ -231,26 +187,13 @@ static inline bool RCM_HAL_GetEasyPortModeStatusCmd(uint32_t baseAddr)
  *
  * This function forces boot from ROM during all subsequent system resets.
  *
- * @param baseAddr     Register base address of RCM
+ * @param base     Register base address of RCM
  * @param config       Boot configuration.
  */
-static inline void RCM_HAL_SetForceBootRomSrc(uint32_t baseAddr,
+static inline void RCM_HAL_SetForceBootRomSrc(RCM_Type * base,
                                               rcm_boot_rom_config_t config)
 {
-    BW_RCM_FM_FORCEROM(baseAddr, config);
-}
-
-/*!
- * @brief Get the force ROM boot setting.
- *
- * This function gets the force ROM boot setting.
- *
- * @param baseAddr     Register base address of RCM
- * @return The force ROM boot source.
- */
-static inline rcm_boot_rom_config_t RCM_HAL_GetForceBootRomSrc(uint32_t baseAddr)
-{
-    return (rcm_boot_rom_config_t)BR_RCM_FM_FORCEROM(baseAddr);
+    RCM_BWR_FM_FORCEROM(base, config);
 }
 
 /*!
@@ -258,12 +201,12 @@ static inline rcm_boot_rom_config_t RCM_HAL_GetForceBootRomSrc(uint32_t baseAddr
  *
  * This function gets the ROM boot source during the last chip reset.
  *
- * @param baseAddr     Register base address of RCM
+ * @param base     Register base address of RCM
  * @return The ROM boot source.
  */
-static inline rcm_boot_rom_config_t RCM_HAL_GetBootRomSrc(uint32_t baseAddr)
+static inline rcm_boot_rom_config_t RCM_HAL_GetBootRomSrc(RCM_Type * base)
 {
-    return (rcm_boot_rom_config_t)BR_RCM_MR_BOOTROM(baseAddr);
+    return (rcm_boot_rom_config_t)RCM_BRD_MR_BOOTROM(base);
 }
 
 /*!
@@ -271,11 +214,11 @@ static inline rcm_boot_rom_config_t RCM_HAL_GetBootRomSrc(uint32_t baseAddr)
  *
  * This function clears the ROM boot source flag.
  *
- * @param baseAddr     Register base address of RCM
+ * @param base     Register base address of RCM
  */
-static inline void RCM_HAL_ClearBootRomSrc(uint32_t baseAddr)
+static inline void RCM_HAL_ClearBootRomSrc(RCM_Type * base)
 {
-    BW_RCM_MR_BOOTROM(baseAddr, kRcmBootRomBoth);
+    RCM_BWR_MR_BOOTROM(base, kRcmBootRomBoth);
 }
 #endif
 
@@ -287,6 +230,7 @@ static inline void RCM_HAL_ClearBootRomSrc(uint32_t baseAddr)
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_RCM_HAL_H__*/
 /*******************************************************************************
  * EOF

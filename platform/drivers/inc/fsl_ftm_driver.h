@@ -33,6 +33,8 @@
 #include "fsl_ftm_hal.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_FTM_COUNT
+
 /*!
  * @addtogroup ftm_driver
  * @{
@@ -43,17 +45,18 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for FTM instances. */
-extern const uint32_t g_ftmBaseAddr[];
+extern FTM_Type * const g_ftmBase[FTM_INSTANCE_COUNT];
 
 /*! @brief Table to save FTM IRQ enumeration numbers defined in the CMSIS header file. */
-extern const IRQn_Type g_ftmIrqId[];
+extern const IRQn_Type g_ftmIrqId[FTM_INSTANCE_COUNT];
 
-/*! @brief Configuration structure that the user needs to set */
+/*! @brief Configuration structure that the user needs to set
+ */
 typedef struct FtmUserConfig {
-    uint8_t tofFrequency; /*!< Select ratio between number of overflows to times TOF is set */
-    ftm_bdm_mode_t BDMMode; /*!< Select FTM behavior in BDM mode */
-    bool isWriteProtection; /*!< true: enable write protection, false: write protection is disabled */
-    uint32_t syncMethod; /*!< Register synch options available in the ftm_sync_method_t enumeration */
+    uint8_t tofFrequency; /*!< Select ratio between number of overflows to times TOF is set @internal gui name="Overflow frequency" id="OvFrequency" */
+    ftm_bdm_mode_t BDMMode; /*!< Select FTM behavior in BDM mode @internal gui name="BDM mode" id="BdmMode" */
+    bool isWriteProtection; /*!< true: enable write protection, false: write protection is disabled @internal gui name="Write protection" id="WriteProtection" */
+    uint32_t syncMethod; /*!< Register synch options available in the ftm_sync_method_t enumeration @internal gui name="Triggers" id="Triggers" */
 } ftm_user_config_t;
 
 /*******************************************************************************
@@ -68,61 +71,64 @@ extern "C" {
  * @brief Initializes the FTM driver.
  *
  * @param instance The FTM peripheral instance number.
- * @param info The FTM user configuration structure.
+ * @param info The FTM user configuration structure, see #ftm_user_config_t.
+ * @return kStatusFtmSuccess means succees, otherwise means failed.
  */
-void FTM_DRV_Init(uint8_t instance, ftm_user_config_t *info);
+ftm_status_t FTM_DRV_Init(uint32_t instance, const ftm_user_config_t *info);
 
 /*!
  * @brief Shuts down the FTM driver.
  *
  * @param instance The FTM peripheral instance number.
  */
-void FTM_DRV_Deinit(uint8_t instance);
+void FTM_DRV_Deinit(uint32_t instance);
 
 /*!
- * @brief Stops channel PWM.
+ * @brief Stops the channel PWM.
  *
  * @param instance The FTM peripheral instance number.
  * @param param FTM driver PWM parameter to configure PWM options
- * @param channel The channel number. In combined mode, the code will find the channel
+ * @param channel The channel number. In combined mode, the code  finds the channel
  *                pair associated with the channel number passed in.
  */
-void FTM_DRV_PwmStop(uint8_t instance, ftm_pwm_param_t *param, uint8_t channel);
+void FTM_DRV_PwmStop(uint32_t instance, ftm_pwm_param_t *param, uint8_t channel);
 
 /*!
- * @brief Configures duty cycle and frequency and starts outputting PWM on specified channel .
+ * @brief Configures the duty cycle and frequency and starts outputting the PWM on a specified channel .
  *
  * @param instance The FTM peripheral instance number.
  * @param param FTM driver PWM parameter to configure PWM options
- * @param channel The channel number. In combined mode, the code will find the channel
+ * @param channel The channel number. In combined mode, the code  finds the channel
  *                pair associated with the channel number passed in.
+ * @return kStatusFtmSuccess if the PWM setup was successful,
+ *         kStatusFtmError on failure as the PWM counter is disabled
  */
-void FTM_DRV_PwmStart(uint8_t instance, ftm_pwm_param_t *param, uint8_t channel);
+ftm_status_t FTM_DRV_PwmStart(uint32_t instance, ftm_pwm_param_t *param, uint8_t channel);
 
 /*!
- * @brief Configures the parameters needed and activates quadrature decode mode.
+ * @brief Configures the parameters and activates the quadrature decode mode.
  *
  * @param instance     Instance number of the FTM module.
  * @param phaseAParams Phase A configuration parameters
  * @param phaseBParams Phase B configuration parameters
  * @param quadMode     Selects encoding mode used in quadrature decoder mode
  */
-void FTM_DRV_QuadDecodeStart(uint8_t instance, ftm_phase_params_t *phaseAParams,
+void FTM_DRV_QuadDecodeStart(uint32_t instance, ftm_phase_params_t *phaseAParams,
                                       ftm_phase_params_t *phaseBParams, ftm_quad_decode_mode_t quadMode);
 
 /*!
- * @brief De-activates quadrature decode mode.
+ * @brief De-activates the quadrature decode mode.
  *
  * @param instance  Instance number of the FTM module.
  */
-void FTM_DRV_QuadDecodeStop(uint8_t instance);
+void FTM_DRV_QuadDecodeStop(uint32_t instance);
 
 /*!
  * @brief Starts the FTM counter.
  *
  * This function provides access to the FTM counter. The counter can be run in
- * Up-counting and Up-down counting modes. To run the counter in Free running mode,
- * choose Up-counting option and provide 0x0 for the countStartVal and 0xFFFF for
+ * up-counting and up-down counting modes. To run the counter in free running mode,
+ * choose the up-counting option and provide 0x0 for the countStartVal and 0xFFFF for
  * countFinalVal.
  *
  * @param instance The FTM peripheral instance number.
@@ -131,7 +137,7 @@ void FTM_DRV_QuadDecodeStop(uint8_t instance);
  * @param countFinalVal The final value that is stored in the MOD register.
  * @param enableOverflowInt true: enable timer overflow interrupt; false: disable
  */
-void FTM_DRV_CounterStart(uint8_t instance, ftm_counting_mode_t countMode, uint32_t countStartVal,
+void FTM_DRV_CounterStart(uint32_t instance, ftm_counting_mode_t countMode, uint32_t countStartVal,
                                  uint32_t countFinalVal, bool enableOverflowInt);
 
 /*!
@@ -139,14 +145,37 @@ void FTM_DRV_CounterStart(uint8_t instance, ftm_counting_mode_t countMode, uint3
  *
  * @param instance The FTM peripheral instance number.
  */
-void FTM_DRV_CounterStop(uint8_t instance);
+void FTM_DRV_CounterStop(uint32_t instance);
 
 /*!
  * @brief Reads back the current value of the FTM counter.
  *
  * @param instance The FTM peripheral instance number.
  */
-uint32_t FTM_DRV_CounterRead(uint8_t instance);
+uint32_t FTM_DRV_CounterRead(uint32_t instance);
+
+/*!
+ * @brief Set FTM clock source.
+ *
+ * This function will save the users clock source selection in the driver and
+ * uses this to set the clock source whenever the user decides to use features provided
+ * by this driver like counter, PWM generation etc. It will also set the clock divider.
+ *
+ * @param instance The FTM peripheral instance number.
+ * @param clock The clock source to use, cannot pick None.
+ * @param clockPs The clock divider value.
+ */
+void FTM_DRV_SetClock(uint8_t instance, ftm_clock_source_t clock, ftm_clock_ps_t clockPs);
+
+/*!
+ * @brief Retrieves the frequency of the clock source feeding the FTM counter.
+ *
+ * Function will return a 0 if no clock source is selected and the FTM counter is disabled
+ *
+ * @param instance The FTM peripheral instance number.
+ * @return The frequency of the clock source running the FTM counter, returns 0 if counter is disabled
+ */
+uint32_t FTM_DRV_GetClock(uint8_t instance);
 
 /*!
  * @brief Enables or disables the timer overflow interrupt.
@@ -165,21 +194,68 @@ void FTM_DRV_SetTimeOverflowIntCmd(uint32_t instance, bool overflowEnable);
 void FTM_DRV_SetFaultIntCmd(uint32_t instance, bool faultEnable);
 
 /*!
+ * @brief Enables capture of an input signal on the channel using the function parameters.
+ *
+ * When the edge specified in the captureMode argument occurs on the channel the FTM counter is captured into
+ * the CnV register. The user has to read the CnV register separately to get this value. The filter
+ * function is disabled if the filterVal argument passed in is 0. The filter function is available only for
+ *  0, 1, 2, 3 channels.
+ *
+ * @param instance    The FTM peripheral instance number
+ * @param captureMode Specifies which edge to capture
+ * @param channel     The channel number
+ * @param filterVal   Filter value to be used, specify 0 to disable filter. Available only for channels 0-3
+ */
+void FTM_DRV_SetupChnInputCapture(uint32_t instance, ftm_input_capture_edge_mode_t captureMode,
+                                            uint8_t channel, uint8_t filterVal);
+
+/*!
+ * @brief Configures the FTM to generate timed pulses.
+ *
+ * When the FTM counter matches the value of compareVal argument (this is written into CnV reg), the channel
+ * output is changed based on what is specified in the compareMode argument.
+ *
+ * @param instance    The FTM peripheral instance number.
+ * @param compareMode Action to take on the channel output when the compare condition is met
+ * @param channel     The channel number
+ * @param compareVal  Value to be programmed in the CnV register.
+ */
+void FTM_DRV_SetupChnOutputCompare(uint32_t instance, ftm_output_compare_edge_mode_t compareMode,
+                                               uint8_t channel, uint32_t compareVal);
+
+/*!
+ * @brief Configures the dual edge capture mode of the FTM.
+ *
+ * This function sets up the dual edge capture mode on a channel pair. The capture edge for the channel
+ * pair and the capture mode (one-shot or continuous) is specified in the parameter argument. The filter function
+ * is disabled if the filterVal argument passed in is 0. The filter function is available only on
+ * channels 0 and 2. The user has to read the channel CnV registers separately to get the capture values.
+ *
+ * @param instance    The FTM peripheral instance number.
+ * @param param       Controls the dual edge capture function
+ * @param channel     The channel number, the code finds the channel pair associated with the channel
+ *                    number passed in.
+ * @param filterVal   Filter value to be used, specify 0 to disable filter. Available only for channels 0, 2
+ */
+void FTM_DRV_SetupChnDualEdgeCapture(uint32_t instance, ftm_dual_edge_capture_param_t *param,
+                                                 uint8_t channel, uint8_t filterVal);
+
+/*!
  * @brief Action to take when an FTM interrupt is triggered.
  *
  * The timer overflow flag is checked and cleared if set.
  *
  * @param instance   Instance number of the FTM module.
  */
-void FTM_DRV_IRQHandler(uint8_t instance);
+void FTM_DRV_IRQHandler(uint32_t instance);
 
-
-/*Other API functions are for input capture, output compare, dual edge capture, and quadrature. */
 #if defined(__cplusplus)
 }
 #endif
 
 /*! @}*/
+
+#endif /* FSL_FEATURE_SOC_FTM_COUNT */
 
 #endif /* __FSL_FTM_DRIVER_H__*/
 /*******************************************************************************

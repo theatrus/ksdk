@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 * 
-* Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
+* Copyright (c) 2008, 2013 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 * Copyright (c) 1989-2008 ARC International;
@@ -42,15 +42,15 @@
 #include "usb_host.h"
 
 /* Private functions */
-static void usb_class_mass_call_back_cbw(void*, void*, uint8_t *, uint32_t, usb_status);
-static void usb_class_mass_call_back_dphase(void*, void*, uint8_t *, uint32_t, usb_status);
-static void usb_class_mass_call_back_csw(void*, void*, uint8_t *, uint32_t, usb_status);
-static void usb_class_mass_reset_callback(void*, void*, uint8_t *, uint32_t, usb_status);
-static void usb_class_mass_ctrl_callback(void*, void*, uint8_t *, uint32_t, usb_status);
-static usb_status usb_class_mass_pass_on_usb(usb_mass_class_struct_t *);
-static usb_status usb_class_mass_clear_bulk_pipe_on_usb(usb_mass_class_struct_t *);
-static usb_status usb_class_mass_reset_in_pipe(usb_mass_class_struct_t *);
-static usb_status usb_class_mass_reset_out_pipe(usb_mass_class_struct_t *);
+static void usb_class_mass_call_back_cbw(void* tr_ptr, void* user_parm, uint8_t* buffer, uint32_t length_data_transfered, usb_status status);
+static void usb_class_mass_call_back_dphase(void* tr_ptr, void* user_parm, uint8_t* buffer, uint32_t length_data_transfered, usb_status status);
+static void usb_class_mass_call_back_csw(void* tr_ptr, void* user_parm, uint8_t* buffer, uint32_t length_data_transfered, usb_status status);
+static void usb_class_mass_reset_callback(void* tr_ptr, void* user_parm, uint8_t* buffer, uint32_t length_data_transfered, usb_status status);
+static void usb_class_mass_ctrl_callback(void* pipe_handle, void* user_param, uint8_t* buffer, uint32_t size, usb_status status);
+static usb_status usb_class_mass_pass_on_usb(usb_mass_class_struct_t* mass_class);
+static usb_status usb_class_mass_clear_bulk_pipe_on_usb(usb_mass_class_struct_t* mass_class);
+static usb_status usb_class_mass_reset_in_pipe(usb_mass_class_struct_t* mass_class);
+static usb_status usb_class_mass_reset_out_pipe(usb_mass_class_struct_t* mass_class);
 
 /*FUNCTION*----------------------------------------------------------------
 *
@@ -68,7 +68,7 @@ usb_status usb_class_mass_init
         /* [IN]  the interface handle related to the class driver */
         usb_interface_descriptor_handle intf_handle,
         /* [OUT] printer call struct pointer */
-        class_handle*                    class_handle_ptr
+        usb_class_handle*               class_handle_ptr
    )
 { /* Body */
    usb_mass_class_struct_t *       mass_class = NULL;
@@ -112,11 +112,11 @@ usb_status usb_class_mass_init
            if (status != USB_OK)
            {
                USB_PRINTF("usb_class_msd_init fail to open in pipe\n");
-               *class_handle_ptr = (class_handle)mass_class;
+               *class_handle_ptr = (usb_class_handle)mass_class;
                return USBERR_ERROR;
            }
        }
-       else if (!(ep_desc->bEndpointAddress & OUT_ENDPOINT) && ((ep_desc->bmAttributes & EP_TYPE_MASK) == BULK_ENDPOINT))
+       else if ((!(ep_desc->bEndpointAddress & OUT_ENDPOINT)) && ((ep_desc->bmAttributes & EP_TYPE_MASK) == BULK_ENDPOINT))
        {
            pipe_init.endpoint_number  = (ep_desc->bEndpointAddress & ENDPOINT_MASK);
            pipe_init.direction        = USB_SEND;
@@ -130,7 +130,7 @@ usb_status usb_class_mass_init
            if (status != USB_OK)
            {
                USB_PRINTF("usb_class_msd_init fail to open out pipe\n");
-               *class_handle_ptr = (class_handle)mass_class;
+               *class_handle_ptr = (usb_class_handle)mass_class;
                return USBERR_ERROR;
            }
        }          
@@ -138,7 +138,7 @@ usb_status usb_class_mass_init
    
    mass_class->control_pipe = usb_host_dev_mng_get_control_pipe(mass_class->dev_handle);
    
-   if (mass_class->control_pipe && mass_class->bulk_in_pipe && mass_class->bulk_out_pipe)
+   if ((mass_class->control_pipe) && (mass_class->bulk_in_pipe) && (mass_class->bulk_out_pipe))
    {
       /* Initialize the queue for storing the local copy of interface handles */
       usb_class_mass_q_init(mass_class);
@@ -148,11 +148,11 @@ usb_status usb_class_mass_init
    if (mass_class->mutex == NULL)
    {
       USB_PRINTF("usb_class_msd_init create mutex failed\n");
-      *class_handle_ptr = (class_handle)mass_class;
+      *class_handle_ptr = (usb_class_handle)mass_class;
       return USBERR_ALLOC;
    }
 
-   *class_handle_ptr = (class_handle)mass_class;
+   *class_handle_ptr = (usb_class_handle)mass_class;
 
    /* USB_PRINTF("MSD class driver initialized\n"); */
    
@@ -172,7 +172,7 @@ usb_status usb_class_mass_init
 usb_status usb_class_mass_deinit
     (
         /* [IN]  the class driver handle */
-        class_handle      handle
+        usb_class_handle      handle
      )
 {
     usb_mass_class_struct_t *      mass_class = (usb_mass_class_struct_t *)handle;
@@ -223,7 +223,7 @@ usb_status usb_class_mass_deinit
 usb_status usb_class_mass_pre_deinit
     (
         /* [IN]  the class driver handle */
-        class_handle      handle
+        usb_class_handle      handle
      )
 {
     usb_mass_class_struct_t *      mass_class = (usb_mass_class_struct_t *)handle;
@@ -260,7 +260,7 @@ usb_status usb_class_mass_pre_deinit
 *
 * Function Name  : usb_mass_storage_device_command
 * Returned Value : ERROR STATUS error code
-*                  USB_OK - means that command has been succefully queued in class
+*                  USB_OK - means that command has been successfully queued in class
 *                  driver queue (or has been passed to USB, if there is not other
 *                  command pending)
 * Comments       :
@@ -278,7 +278,7 @@ usb_status usb_class_mass_storage_device_command
 { /* Body */
    usb_mass_class_struct_t *   mass_class = (usb_mass_class_struct_t *)cmd_ptr->CLASS_PTR;
    int32_t                     temp;
-   usb_status                  error = USBERR_NO_INTERFACE;
+   usb_status                  error = USB_OK;
    cbw_struct_t *              pCbw = (cbw_struct_t *) cmd_ptr->CBW_PTR;
    bool                        empty;
 
@@ -293,7 +293,7 @@ usb_status usb_class_mass_storage_device_command
    }
 
    /* Fill in the remaining CBW fields as per the USB Mass Storage specs */
-   *(uint32_t*)pCbw->DCBWSIGNATURE = USB_HOST_TO_LE_LONG_CONST(CBW_SIGNATURE);
+   *(uint32_t*)&pCbw->DCBWSIGNATURE[0] = USB_HOST_TO_LE_LONG_CONST(CBW_SIGNATURE);
    
    /* CBW is ready so queue it and update status */
    empty = USB_CLASS_MASS_IS_Q_EMPTY(mass_class);
@@ -307,7 +307,7 @@ usb_status usb_class_mass_storage_device_command
       cmd_ptr->IS_STALL_IN_DPHASE = 0;
       cmd_ptr->BUFFER_SOFAR = 0;
       /* The tag for the command packet is its queue number. */
-      *(uint32_t*)pCbw->DCBWTAG = USB_HOST_TO_LE_LONG(temp);
+      *(uint32_t*)&pCbw->DCBWTAG[0] = USB_HOST_TO_LE_LONG(temp);
    
       /*
       ** If queue was empty send CBW to USB immediately, otherwise it will be
@@ -334,7 +334,7 @@ usb_status usb_class_mass_storage_device_command
 *
 * Function Name  : usb_class_mass_storage_device_command_cancel
 * Returned Value : ERROR STATUS error code
-*                  USB_OK - means that command has been succefullyde queued in class
+*                  USB_OK - means that command has been successfully de-queued in class
 *                  driver queue 
 
 * Comments       :
@@ -379,7 +379,7 @@ bool usb_class_mass_storage_device_command_cancel
 *
 *END*--------------------------------------------------------------------*/
 
-void usb_class_mass_call_back_cbw
+static void usb_class_mass_call_back_cbw
    (
       /* [IN] Pipe on which CBW call was made */
       void*           tr_ptr,
@@ -489,7 +489,7 @@ void usb_class_mass_call_back_cbw
       status = usb_class_mass_pass_on_usb(mass_class);
    } /* Endif */
 
-   if (usb_host_release_tr(mass_class->host_handle, tr_ptr) != USB_OK)
+   if (usb_host_release_tr(mass_class->host_handle, (tr_struct_t*)tr_ptr) != USB_OK)
    {
        USB_PRINTF("_usb_host_release_tr failed\n");
    }
@@ -510,11 +510,11 @@ void usb_class_mass_call_back_cbw
 *     If status is USB_OK, this routine will pass on the next routine called
 *     usb_class_mass_pass_on_usb() which will queue the status phase. If failure
 *     the routine will either try to dequeue the packet, or send a Reset device
-*     command or will try to requeue the packet for next phase.
+*     command or will try to de-queue the packet for next phase.
 *
 *END*--------------------------------------------------------------------*/
 
-void usb_class_mass_call_back_dphase
+static void usb_class_mass_call_back_dphase
    (
       /* [IN] Pipe on which CBW call was made */
       void*             tr_ptr,
@@ -559,7 +559,7 @@ void usb_class_mass_call_back_dphase
    cmd_ptr->TR_BUF_LEN = length_data_transfered;
 
    /* Test if full or partial data received */
-   if (status == USB_OK ||
+   if ((status == USB_OK) ||
       ((status == USBERR_TR_FAILED) && (buffer != NULL)))
    {
       cmd_ptr->BUFFER_SOFAR += length_data_transfered;
@@ -623,7 +623,7 @@ void usb_class_mass_call_back_dphase
       status = usb_class_mass_pass_on_usb(mass_class);
    } /* Endif */
 
-   if (usb_host_release_tr(mass_class->host_handle, tr_ptr) != USB_OK)
+   if (usb_host_release_tr(mass_class->host_handle, (tr_struct_t*)tr_ptr) != USB_OK)
    {
        USB_PRINTF("_usb_host_release_tr failed\n");
    }   
@@ -646,7 +646,7 @@ void usb_class_mass_call_back_dphase
 *
 *END*--------------------------------------------------------------------*/
 
-void usb_class_mass_call_back_csw
+static void usb_class_mass_call_back_csw
    (
       /* [IN] Pipe on which CBW call was made */
       void*             tr_ptr,
@@ -696,9 +696,9 @@ void usb_class_mass_call_back_csw
    if (status == USB_OK) 
    {
       pCsw = (csw_struct_t *) cmd_ptr->CSW_PTR;
-      tmp1 = USB_LONG_UNALIGNED_LE_TO_HOST(pCsw->DCSWTAG);
-      tmp2 = USB_LONG_UNALIGNED_LE_TO_HOST(cmd_ptr->CBW_PTR->DCBWTAG);
-      tmp3 = USB_LONG_UNALIGNED_LE_TO_HOST(pCsw->DCSWSIGNATURE);
+      tmp1 = (uint32_t)USB_LONG_UNALIGNED_LE_TO_HOST(pCsw->DCSWTAG);
+      tmp2 = (uint32_t)USB_LONG_UNALIGNED_LE_TO_HOST(cmd_ptr->CBW_PTR->DCBWTAG);
+      tmp3 = (uint32_t)USB_LONG_UNALIGNED_LE_TO_HOST(pCsw->DCSWSIGNATURE);
 
       /* Size must be verified, as well as the signature and the tags */
       if ((length_data_transfered != sizeof(csw_struct_t)) ||
@@ -821,7 +821,7 @@ void usb_class_mass_call_back_csw
       } /* Endbody */
    } /* Endif */
 
-   if (usb_host_release_tr(mass_class->host_handle, tr_ptr) != USB_OK)
+   if (usb_host_release_tr(mass_class->host_handle, (tr_struct_t*)tr_ptr) != USB_OK)
    {
        USB_PRINTF("_usb_host_release_tr failed\n");
    }
@@ -842,12 +842,12 @@ void usb_class_mass_call_back_csw
 *     what needs to be done by looking at the status (cmd_ptr->STATUS). If a
 *     phase has been completed, it will queue the next phase. If there is no
 *     pending request in the queue, it will just return.
-*     NOTE: This functions should only be called by a callback or withing a
+*     NOTE: This functions should only be called by a callback or within a
 *     OS_Lock() OS_Unlock() block!
 *
 *END*--------------------------------------------------------------------*/
 
-usb_status usb_class_mass_pass_on_usb
+static usb_status usb_class_mass_pass_on_usb
    (
       /* [IN] Interface handle */
       usb_mass_class_struct_t *   mass_class
@@ -891,7 +891,8 @@ usb_status usb_class_mass_pass_on_usb
          {
              /* USB_PRINTF("\nError in usb_class_mass_pass_on_usb: %x", status); */
              usb_host_release_tr(mass_class->host_handle, tr_ptr);
-             return USBERR_ERROR;
+             usb_class_mass_deleteq(mass_class);
+             return status;
          }
          break;
 
@@ -901,7 +902,7 @@ usb_status usb_class_mass_pass_on_usb
 
          if (data_len > 0) 
          {
-            /* Commen TR setup for IN or OUT direction */
+            /* Common TR setup for IN or OUT direction */
             if (usb_host_get_tr(mass_class->host_handle, usb_class_mass_call_back_dphase, mass_class, &tr_ptr) != USB_OK)
             {
                USB_PRINTF("error to get tr\n");
@@ -921,7 +922,8 @@ usb_status usb_class_mass_pass_on_usb
                   {
                       /* USB_PRINTF("\nError in usb_class_mass_pass_on_usb: %x", status); */
                       usb_host_release_tr(mass_class->host_handle, tr_ptr);
-                      return USBERR_ERROR;
+                      usb_class_mass_deleteq(mass_class);
+                      return status;
                   }
                   break;
 
@@ -935,7 +937,8 @@ usb_status usb_class_mass_pass_on_usb
                   {
                       /* USB_PRINTF("\nError in usb_class_mass_pass_on_usb: %x", status); */
                       usb_host_release_tr(mass_class->host_handle, tr_ptr);
-                      return USBERR_ERROR;
+                      usb_class_mass_deleteq(mass_class);
+                      return status;
                   }
                   break;
 
@@ -966,7 +969,8 @@ usb_status usb_class_mass_pass_on_usb
          {
              /* USB_PRINTF("\nError in usb_class_mass_pass_on_usb: %x", status); */
              usb_host_release_tr(mass_class->host_handle, tr_ptr);
-             return USBERR_ERROR;
+             usb_class_mass_deleteq(mass_class);
+             return status;
          }
          break;
 
@@ -1002,7 +1006,7 @@ usb_status usb_class_mass_pass_on_usb
 * Returned Value : ERROR STATUS of the command
 * Comments       :
 *     This is a class specific command. See the documentation of the USB
-*     mass storage specifictaion to learn how this command works. This command
+*     mass storage specification to learn how this command works. This command
 *     is used the get the Number of Logical Units on the device. Caller will
 *     use the LUN number to direct the commands (as a part of CBW)
 *END*--------------------------------------------------------------------*/
@@ -1010,7 +1014,7 @@ usb_status usb_class_mass_pass_on_usb
 usb_status usb_class_mass_getmaxlun_bulkonly
    (
       /* [IN] the class driver handle */
-      class_handle               handle,
+      usb_class_handle           handle,
       uint8_t *                  pLUN,
       tr_callback                callback,
       void*                      callback_param
@@ -1052,9 +1056,9 @@ usb_status usb_class_mass_getmaxlun_bulkonly
    /* Get the number of logical units on the device */
    tr_ptr->setup_packet.bmrequesttype = REQ_TYPE_CLASS | REQ_TYPE_INTERFACE | REQ_TYPE_IN;
    tr_ptr->setup_packet.brequest = GET_MAX_LUN;
-   *(uint16_t*)tr_ptr->setup_packet.wvalue = USB_HOST_TO_LE_SHORT_CONST(0);
-   *(uint16_t*)tr_ptr->setup_packet.windex = USB_HOST_TO_LE_SHORT(((interface_descriptor_t*)(((usb_device_interface_struct_t *)mass_class->intf_handle)->lpinterfaceDesc))->bInterfaceNumber);
-   *(uint16_t*)tr_ptr->setup_packet.wlength = USB_HOST_TO_LE_SHORT_CONST(1);
+   *(uint16_t*)&tr_ptr->setup_packet.wvalue[0] = USB_HOST_TO_LE_SHORT_CONST(0);
+   *(uint16_t*)&tr_ptr->setup_packet.windex[0] = USB_HOST_TO_LE_SHORT(((interface_descriptor_t*)(((usb_device_interface_struct_t *)mass_class->intf_handle)->lpinterfaceDesc))->bInterfaceNumber);
+   *(uint16_t*)&tr_ptr->setup_packet.wlength[0] = USB_HOST_TO_LE_SHORT_CONST(1);
 
    /* Set TR buffer length as required */
    if ((REQ_TYPE_IN & tr_ptr->setup_packet.bmrequesttype) != 0) 
@@ -1090,7 +1094,7 @@ usb_status usb_class_mass_getmaxlun_bulkonly
 * Returned Value : ERROR STATUS of the command
 * Comments       :
 *     This is a class specific command. See the documentation of the USB
-*     mass storage specifictaion to learn how this command works. This command
+*     mass storage specification to learn how this command works. This command
 *     is used the get the Number of Logical Units on the device. Caller will
 *     use the LUN number to direct the commands (as a part of CBW)
 *END*--------------------------------------------------------------------*/
@@ -1098,7 +1102,7 @@ usb_status usb_class_mass_getmaxlun_bulkonly
 usb_status usb_class_mass_getvidpid
    (
       /* [IN] the class driver handle */
-      class_handle handle,
+      usb_class_handle handle,
       /* [OUT] USB device VID */
       uint16_t * vid,
       /* [OUT] USB device PID */
@@ -1150,7 +1154,7 @@ usb_status usb_class_mass_getvidpid
       just return.
 *END*--------------------------------------------------------------------*/
 
-usb_status usb_class_mass_clear_bulk_pipe_on_usb
+static usb_status usb_class_mass_clear_bulk_pipe_on_usb
    (
       usb_mass_class_struct_t *   mass_class
    )
@@ -1240,7 +1244,7 @@ usb_status usb_class_mass_clear_bulk_pipe_on_usb
 *     reset the device. If there is no pending request in the queue, it will
 *     just return. This routine registers a call back for control pipe commands
 *     to ensure that pending command is queued again.
-*     NOTE: This functions should only be called by a callback or withing a
+*     NOTE: This functions should only be called by a callback or within a
 *     OS_Lock() OS_Unlock() block!
 *
 *END*--------------------------------------------------------------------*/
@@ -1285,9 +1289,9 @@ usb_status usb_class_mass_reset_recovery_on_usb
    /* BULK device mass storage reset */
    tr_ptr->setup_packet.bmrequesttype   = REQ_TYPE_CLASS | REQ_TYPE_INTERFACE | REQ_TYPE_OUT;
    tr_ptr->setup_packet.brequest        = MASS_STORAGE_RESET;
-   *(uint16_t*)tr_ptr->setup_packet.wvalue = USB_HOST_TO_LE_SHORT_CONST(0);
-   *(uint16_t*)tr_ptr->setup_packet.windex = USB_HOST_TO_LE_SHORT(((interface_descriptor_t*)(((usb_device_interface_struct_t *)mass_class->intf_handle)->lpinterfaceDesc))->bInterfaceNumber);
-   *(uint16_t*)tr_ptr->setup_packet.wlength = USB_HOST_TO_LE_SHORT_CONST(0);
+   *(uint16_t*)&tr_ptr->setup_packet.wvalue[0] = USB_HOST_TO_LE_SHORT_CONST(0);
+   *(uint16_t*)&tr_ptr->setup_packet.windex[0] = USB_HOST_TO_LE_SHORT(((interface_descriptor_t*)(((usb_device_interface_struct_t *)mass_class->intf_handle)->lpinterfaceDesc))->bInterfaceNumber);
+   *(uint16_t*)&tr_ptr->setup_packet.wlength[0] = USB_HOST_TO_LE_SHORT_CONST(0);
 
    /* Set TR buffer length as required */
    if ((REQ_TYPE_IN & tr_ptr->setup_packet.bmrequesttype) != 0) 
@@ -1368,7 +1372,7 @@ static void usb_class_mass_reset_callback
 
    usb_host_unregister_ch9_callback(mass_class->host_handle, mass_class->dev_handle);
 
-   if (usb_host_release_tr(mass_class->host_handle, tr_ptr) != USB_OK)
+   if (usb_host_release_tr(mass_class->host_handle, (tr_struct_t*)tr_ptr) != USB_OK)
    {
        USB_PRINTF("_usb_host_release_tr failed\n");
    }
@@ -1436,6 +1440,12 @@ static void usb_class_mass_reset_callback
          case STATUS_RESET_BULK_OUT:
             usb_class_mass_reset_in_pipe(mass_class);
             usb_class_mass_reset_out_pipe(mass_class);
+            
+            /* this has no significance, just for fixing misra error */
+            if (cmd_ptr->STATUS != STATUS_RESET_BULK_OUT)
+            {
+                break;
+            }
          case STATUS_CLEAR_BULK_PIPE:
             /* pPipe = (pipe_struct_t*)mass_class->bulk_in_pipe; */
             /* pPipe->nextdata01 = 0; */ /* reset the NEXTDATA toggle bit */
@@ -1487,7 +1497,7 @@ static void usb_class_mass_ctrl_callback(void* pipe_handle, void* user_param, ui
        mass_class->ctrl_callback(pipe_handle, mass_class->ctrl_param, buffer, size, status);
    }
    
-   if (NULL != mass_class && usb_host_release_tr(mass_class->host_handle, pipe_handle) != USB_OK)
+   if ((NULL != mass_class) && (usb_host_release_tr(mass_class->host_handle, (tr_struct_t*)pipe_handle) != USB_OK))
    {
        USB_PRINTF("_usb_host_release_tr failed\n");
    }
@@ -1582,7 +1592,7 @@ static usb_status usb_class_mass_reset_out_pipe
     for (ep_num = 0; ep_num < pDeviceIntf->ep_count; ep_num++)
     {
         ep_desc = pDeviceIntf->ep[ep_num].lpEndpointDesc;
-        if (!(ep_desc->bEndpointAddress & OUT_ENDPOINT) && ((ep_desc->bmAttributes & EP_TYPE_MASK) == BULK_ENDPOINT))
+        if ((!(ep_desc->bEndpointAddress & OUT_ENDPOINT)) && ((ep_desc->bmAttributes & EP_TYPE_MASK) == BULK_ENDPOINT))
         {
             pipe_init.endpoint_number  = (ep_desc->bEndpointAddress & ENDPOINT_MASK);
             pipe_init.direction        = USB_SEND;

@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_MMDVSQ_COUNT
 
 /*! @addtogroup mmdvsq_hal*/
 /*! @{*/
@@ -123,13 +124,13 @@ extern "C" {
  * This function performs the MMDVSQ unsigned divide operation and get remainder. 
  * It is in block mode. For non-block mode, other HAL routines can be used.    
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.    
+ * @param	base	Base address for current MMDVSQ instance.    
  * @param	dividend   -Dividend value 
  * @param	divisor    -Divisor value 
  *  
  * @return  Unsigned divide calculation result in the MMDVSQ_RES register.
  */
-uint32_t MMDVSQ_HAL_DivUR(uint32_t baseAddr, uint32_t dividend, uint32_t divisor);
+uint32_t MMDVSQ_HAL_DivUR(MMDVSQ_Type * base, uint32_t dividend, uint32_t divisor);
 
 /*!
  * @brief perform the current MMDVSQ unsigned divide operation and get quotient 
@@ -137,13 +138,13 @@ uint32_t MMDVSQ_HAL_DivUR(uint32_t baseAddr, uint32_t dividend, uint32_t divisor
  * This function performs the MMDVSQ unsigned divide operation and get quotient. 
  * It is in block mode. For non-block mode, other HAL routines can be used.
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.    
+ * @param	base	Base address for current MMDVSQ instance.    
  * @param	dividend   -Dividend value 
  * @param	divisor    -Divisor value 
  *  
  * @return  Unsigned divide calculation result in the MMDVSQ_RES register.
  */
-uint32_t MMDVSQ_HAL_DivUQ(uint32_t baseAddr, uint32_t dividend, uint32_t divisor);
+uint32_t MMDVSQ_HAL_DivUQ(MMDVSQ_Type * base, uint32_t dividend, uint32_t divisor);
 
 
 /*!
@@ -152,13 +153,13 @@ uint32_t MMDVSQ_HAL_DivUQ(uint32_t baseAddr, uint32_t dividend, uint32_t divisor
  * This function performs the MMDVSQ signed divide operation and get remainder. 
  * It is in block mode. For non-block mode, other HAL routines can be used. 
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.    
+ * @param	base	Base address for current MMDVSQ instance.    
  * @param	dividend   -Dividend value 
  * @param	divisor    -Divisor value 
  *  
  * @return  Signed divide calculation result in the MMDVSQ_RES register.
  */
-uint32_t MMDVSQ_HAL_DivSR(uint32_t baseAddr, uint32_t dividend, uint32_t divisor);
+uint32_t MMDVSQ_HAL_DivSR(MMDVSQ_Type * base, uint32_t dividend, uint32_t divisor);
 
 /*!
  * @brief perform the current MMDVSQ signed divide operation and get quotient 
@@ -166,13 +167,13 @@ uint32_t MMDVSQ_HAL_DivSR(uint32_t baseAddr, uint32_t dividend, uint32_t divisor
  * This function performs the MMDVSQ signed divide operation and get quotient.
  * It is in block mode. For non-block mode, other HAL routines can be used. 
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.    
+ * @param	base	Base address for current MMDVSQ instance.    
  * @param	dividend   -Dividend value 
  * @param	divisor    -Divisor value 
  *  
  * @return  Signed divide calculation result in the MMDVSQ_RES register.
  */
-uint32_t MMDVSQ_HAL_DivSQ(uint32_t baseAddr, uint32_t dividend, uint32_t divisor);
+uint32_t MMDVSQ_HAL_DivSQ(MMDVSQ_Type * base, uint32_t dividend, uint32_t divisor);
 
 /*!
  * @brief set the current MMDVSQ square root operation
@@ -180,12 +181,12 @@ uint32_t MMDVSQ_HAL_DivSQ(uint32_t baseAddr, uint32_t dividend, uint32_t divisor
  * This function performs the MMDVSQ square root operation and return the sqrt result of given radicantvalue
  * It is in block mode. For non-block mode, other HAL routines can be used.
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  * @param	radicand   	- Radicand value 
  *  
  * @return  Square root calculation result in the MMDVSQ_RES register.
  */
-uint16_t MMDVSQ_HAL_Sqrt(uint32_t baseAddr, uint32_t radicand);
+uint16_t MMDVSQ_HAL_Sqrt(MMDVSQ_Type * base, uint32_t radicand);
 
 /*@}*/
 
@@ -197,13 +198,13 @@ uint16_t MMDVSQ_HAL_Sqrt(uint32_t baseAddr, uint32_t radicand);
  *
  * This function checks the current MMDVSQ execution status
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *
  * @return	Current MMDVSQ execution status
  */
-static inline mmdvsq_execution_status_t MMDVSQ_HAL_GetExecutionStatus(uint32_t baseAddr)
+static inline mmdvsq_execution_status_t MMDVSQ_HAL_GetExecutionStatus(MMDVSQ_Type * base)
 {
-   return (mmdvsq_execution_status_t)(HW_MMDVSQ_CSR_RD(baseAddr)>>MMDVSQ_CSR_SQRT_SHIFT);
+   return (mmdvsq_execution_status_t)(MMDVSQ_RD_CSR(base)>>MMDVSQ_CSR_SQRT_SHIFT);
 }
 
 /*!
@@ -211,13 +212,13 @@ static inline mmdvsq_execution_status_t MMDVSQ_HAL_GetExecutionStatus(uint32_t b
  *
  * This function checks the current MMDVSQ BUSY status
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *
  * @return	MMDVSQ is busy or idle
  */
-static inline bool MMDVSQ_HAL_GetBusyStatus(uint32_t baseAddr)
+static inline bool MMDVSQ_HAL_GetBusyStatus(MMDVSQ_Type * base)
 {
-   return BR_MMDVSQ_CSR_BUSY(baseAddr);   
+   return MMDVSQ_BRD_CSR_BUSY(base);   
 }
 
 /*!
@@ -225,15 +226,15 @@ static inline bool MMDVSQ_HAL_GetBusyStatus(uint32_t baseAddr)
  *
  * This function sets the MMDVSQ divide fast start. 
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  * @param 	enable 		Enable or disable divide fast start mode.
  *        				- true:  ensable divide fast start.
  *        				- false: disable divide fast start, use normal start.
  *  
  */
-static inline void MMDVSQ_HAL_SetDivideFastStart(uint32_t baseAddr, bool enable)
+static inline void MMDVSQ_HAL_SetDivideFastStart(MMDVSQ_Type * base, bool enable)
 {
-    BW_MMDVSQ_CSR_DFS(baseAddr, enable ? 0 : 1);
+    MMDVSQ_BWR_CSR_DFS(base, enable ? 0 : 1);
 }
 
 /*!
@@ -241,15 +242,15 @@ static inline void MMDVSQ_HAL_SetDivideFastStart(uint32_t baseAddr, bool enable)
  *
  * This function gets the MMDVSQ divide fast start setting
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *
  * @return	MMDVSQ divide start is fast start or normal start
  *          -true  : enable fast start mode.
  *        	-false : disable fast start, divide works normal start mode.
  */
-static inline bool MMDVSQ_HAL_GetDivideFastStart(uint32_t baseAddr)
+static inline bool MMDVSQ_HAL_GetDivideFastStart(MMDVSQ_Type * base)
 {
-    return (!BR_MMDVSQ_CSR_DFS(baseAddr));
+    return (!MMDVSQ_BRD_CSR_DFS(base));
 }
 
 /*!
@@ -257,16 +258,16 @@ static inline bool MMDVSQ_HAL_GetDivideFastStart(uint32_t baseAddr)
  *
  * This function sets the MMDVSQ divide by zero detection
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  
  * @param 	enable 		Enable or disable divide by zero detect.
  *        				- true:  Enable divide by zero detect.
  *        				- false: Disable divide by zero detect.
  *  
  */
-static inline void MMDVSQ_HAL_SetDivdeByZero(uint32_t baseAddr, bool enable )
+static inline void MMDVSQ_HAL_SetDivdeByZero(MMDVSQ_Type * base, bool enable )
 {
-    BW_MMDVSQ_CSR_DZE(baseAddr, enable ? 1 : 0);
+    MMDVSQ_BWR_CSR_DZE(base, enable ? 1 : 0);
 }
 
 /*!
@@ -274,16 +275,16 @@ static inline void MMDVSQ_HAL_SetDivdeByZero(uint32_t baseAddr, bool enable )
  *
  * This function gets the MMDVSQ divide by zero setting 
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *
  * @return	MMDVSQ divide is non-zero divisor or zero divisor
  *        	- true:  Enable divide by zero detect.
  *          - false: Disable divide by zero detect.
  */
-static inline bool MMDVSQ_HAL_GetDivdeByZeroSetting(uint32_t baseAddr)
+static inline bool MMDVSQ_HAL_GetDivdeByZeroSetting(MMDVSQ_Type * base)
 {
 
-    return BR_MMDVSQ_CSR_DZE(baseAddr);
+    return MMDVSQ_BRD_CSR_DZE(base);
 }
 
 /*!
@@ -291,16 +292,16 @@ static inline bool MMDVSQ_HAL_GetDivdeByZeroSetting(uint32_t baseAddr)
  *
  * This function gets the MMDVSQ divide by zero status
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *
  * @return	MMDVSQ divide is non-zero divisor or zero divisor
  *        	- true:  zero divisor.
  *          - false: non-zero divisor.
  */
-static inline bool MMDVSQ_HAL_GetDivdeByZeroStatus(uint32_t baseAddr)
+static inline bool MMDVSQ_HAL_GetDivdeByZeroStatus(MMDVSQ_Type * base)
 {
 
-    return BR_MMDVSQ_CSR_DZ(baseAddr);
+    return MMDVSQ_BRD_CSR_DZ(base);
 }
 
 /*!
@@ -308,15 +309,15 @@ static inline bool MMDVSQ_HAL_GetDivdeByZeroStatus(uint32_t baseAddr)
  *
  * This function sets the MMDVSQ divide remainder calculation
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  * @param 	enable 		Return quotient or remainder in the MMDVSQ_RES register.
  *        				- true:  Return remainder in MMQVSQ_RES.
  *        				- false: Return quotient  in MMQVSQ_RES.
  *  
  */
-static inline void MMDVSQ_HAL_SetRemainderCalculation(uint32_t baseAddr, bool enable)
+static inline void MMDVSQ_HAL_SetRemainderCalculation(MMDVSQ_Type * base, bool enable)
 {
-    BW_MMDVSQ_CSR_REM(baseAddr, enable ? 1 : 0);
+    MMDVSQ_BWR_CSR_REM(base, enable ? 1 : 0);
 }
 
 /*!
@@ -324,15 +325,15 @@ static inline void MMDVSQ_HAL_SetRemainderCalculation(uint32_t baseAddr, bool en
  *
  * This function gets the MMDVSQ divide remainder calculation
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *  
  * @return	MMDVSQ divide remainder calculation is quotient or remainder
  *        	       	    - true:  return remainder in RES register.
  *        		        - false: return quotient in RES register.
  */
-static inline bool MMDVSQ_HAL_GetRemainderCalculation(uint32_t baseAddr)
+static inline bool MMDVSQ_HAL_GetRemainderCalculation(MMDVSQ_Type * base)
 {
-    return BR_MMDVSQ_CSR_REM(baseAddr);
+    return MMDVSQ_BRD_CSR_REM(base);
 }
 
 /*!
@@ -340,7 +341,7 @@ static inline bool MMDVSQ_HAL_GetRemainderCalculation(uint32_t baseAddr)
  *
  * This function sets the MMDVSQ unsigned divide calculation
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *
  * @param 	enable 		Enable or disable unsigned divide calculation.
  *        				- true:  Enable unsigned divide calculation.
@@ -348,9 +349,9 @@ static inline bool MMDVSQ_HAL_GetRemainderCalculation(uint32_t baseAddr)
 
  *  
  */
-static inline void MMDVSQ_HAL_SetUnsignedCalculation(uint32_t baseAddr, bool enable)
+static inline void MMDVSQ_HAL_SetUnsignedCalculation(MMDVSQ_Type * base, bool enable)
 {
-    BW_MMDVSQ_CSR_USGN(baseAddr, enable ? 1 : 0);
+    MMDVSQ_BWR_CSR_USGN(base, enable ? 1 : 0);
 }
 
 /*!
@@ -358,15 +359,15 @@ static inline void MMDVSQ_HAL_SetUnsignedCalculation(uint32_t baseAddr, bool ena
  *
  * This function gets the MMDVSQ unsigned divide calculation
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *  
  * @return	MMDVSQ divide is unsigned divide operation
  *          - true:  perform an unsigned divide.
  *        	- false: perform a signed divide
  */
-static inline bool MMDVSQ_HAL_GetUnsignedCalculation(uint32_t baseAddr)
+static inline bool MMDVSQ_HAL_GetUnsignedCalculation(MMDVSQ_Type * base)
 {
-    return BR_MMDVSQ_CSR_USGN(baseAddr);
+    return MMDVSQ_BRD_CSR_USGN(base);
 }
 
 /*!
@@ -374,13 +375,13 @@ static inline bool MMDVSQ_HAL_GetUnsignedCalculation(uint32_t baseAddr)
  *
  * This function gets the MMDVSQ operation result
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *  
  * @return	MMDVSQ operation result
  */
-static inline uint32_t MMDVSQ_HAL_GetResult(uint32_t baseAddr)
+static inline uint32_t MMDVSQ_HAL_GetResult(MMDVSQ_Type * base)
 {
-    return BR_MMDVSQ_RES_RESULT(baseAddr); 
+    return MMDVSQ_RD_RES(base); 
 }
 
 /*!
@@ -388,13 +389,13 @@ static inline uint32_t MMDVSQ_HAL_GetResult(uint32_t baseAddr)
  *
  * This function sets the MMDVSQ dividend value
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  * 
 * @param	dividend	Dividend value for divide calculations. 
  */
-static inline void MMDVSQ_HAL_SetDividend(uint32_t baseAddr, uint32_t dividend)
+static inline void MMDVSQ_HAL_SetDividend(MMDVSQ_Type * base, uint32_t dividend)
 {
-    BW_MMDVSQ_DEND_DIVIDEND( baseAddr, dividend);
+    MMDVSQ_WR_DEND( base, dividend);
 }
 
 /*!
@@ -402,13 +403,13 @@ static inline void MMDVSQ_HAL_SetDividend(uint32_t baseAddr, uint32_t dividend)
  *
  * This function gets the MMDVSQ dividend value
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *
  * @return	MMDVSQ dividend value 
  */
-static inline uint32_t MMDVSQ_HAL_GetDividend(uint32_t baseAddr)
+static inline uint32_t MMDVSQ_HAL_GetDividend(MMDVSQ_Type * base)
 {
-    return BR_MMDVSQ_DEND_DIVIDEND(baseAddr);
+    return MMDVSQ_RD_DEND(base);
 }
 
 /*!
@@ -416,13 +417,13 @@ static inline uint32_t MMDVSQ_HAL_GetDividend(uint32_t baseAddr)
  *
  * This function sets the MMDVSQ divisor value
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *  
 * @param	divisor	Divisor value for divide calculations..
  */
-static inline void MMDVSQ_HAL_SetDivisor(uint32_t baseAddr, uint32_t divisor)
+static inline void MMDVSQ_HAL_SetDivisor(MMDVSQ_Type * base, uint32_t divisor)
 {
-    BW_MMDVSQ_DSOR_DIVISOR(baseAddr, divisor);
+    MMDVSQ_WR_DSOR(base, divisor);
 }
 
 /*!
@@ -430,13 +431,13 @@ static inline void MMDVSQ_HAL_SetDivisor(uint32_t baseAddr, uint32_t divisor)
  *
  * This function gets the MMDVSQ divisor value
  *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *  
  * @return	MMDVSQ divisor value
  */
-static inline uint32_t MMDVSQ_HAL_GetDivisor(uint32_t baseAddr)
+static inline uint32_t MMDVSQ_HAL_GetDivisor(MMDVSQ_Type * base)
 {
-    return BR_MMDVSQ_DSOR_DIVISOR(baseAddr); 
+    return MMDVSQ_RD_DSOR(base); 
 }
 
 /*!
@@ -444,14 +445,14 @@ static inline uint32_t MMDVSQ_HAL_GetDivisor(uint32_t baseAddr)
  *
  * This function sets the MMDVSQ radicand value
 *
- * @param	baseAddr	Base address for current MMDVSQ instance.
+ * @param	base	Base address for current MMDVSQ instance.
  *
  * @param	radicand	Radicand value of Sqrt.
  *  
  */
-static inline void MMDVSQ_HAL_SetRadicand(uint32_t baseAddr, uint32_t radicand)
+static inline void MMDVSQ_HAL_SetRadicand(MMDVSQ_Type * base, uint32_t radicand)
 {
-    BW_MMDVSQ_RCND_RADICAND(baseAddr, radicand);
+    MMDVSQ_WR_RCND(base, radicand);
 }
 
 /*@}*/
@@ -462,6 +463,7 @@ static inline void MMDVSQ_HAL_SetRadicand(uint32_t baseAddr, uint32_t radicand)
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_MMDVSQ_HAL_H__*/
 /*******************************************************************************
  * EOF

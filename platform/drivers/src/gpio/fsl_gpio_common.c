@@ -30,19 +30,27 @@
 
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_GPIO_COUNT
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Table of base addresses for GPIO instances. */
-const uint32_t g_gpioBaseAddr[HW_GPIO_INSTANCE_COUNT] = GPIO_BASE_ADDRS;
+GPIO_Type * const g_gpioBase[GPIO_INSTANCE_COUNT] = GPIO_BASE_PTRS;
+
+#if defined(FGPIO_INSTANCE_COUNT)
+/* Table of base addresses for FGPIO instances. */
+FGPIO_Type * const g_fgpioBase[FGPIO_INSTANCE_COUNT ] = FGPIO_BASE_PTRS;
+#endif
 
 /* Table of base addresses for PORT instances. */
-const uint32_t g_portBaseAddr[HW_PORT_INSTANCE_COUNT] = PORT_BASE_ADDRS;
+PORT_Type * const g_portBase[PORT_INSTANCE_COUNT] = PORT_BASE_PTRS;
 
 /* Table to save port IRQ enum numbers defined in CMSIS files. */
-const IRQn_Type g_portIrqId[HW_PORT_INSTANCE_COUNT] = PORT_IRQS;
+const IRQn_Type g_portIrqId[PORT_INSTANCE_COUNT] = PORT_IRQS;
 
+#endif /* FSL_FEATURE_SOC_GPIO_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

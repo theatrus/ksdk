@@ -33,9 +33,10 @@
 #include "fsl_cmp_hal.h"
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
+#if FSL_FEATURE_SOC_CMP_COUNT
 
 /*! @brief Table of pointers to internal state structure for CMP instances. */
-static cmp_state_t * volatile g_cmpStatePtr[HW_CMP_INSTANCE_COUNT];
+static cmp_state_t * volatile g_cmpStatePtr[CMP_INSTANCE_COUNT];
 
 /*FUNCTION*********************************************************************
  *
@@ -57,14 +58,14 @@ static cmp_state_t * volatile g_cmpStatePtr[HW_CMP_INSTANCE_COUNT];
  * configuration to hardware.
  *
  *END*************************************************************************/
-cmp_status_t CMP_DRV_StructInitUserConfigDefault(cmp_user_config_t *userConfigPtr,
+cmp_status_t CMP_DRV_StructInitUserConfigDefault(cmp_comparator_config_t *userConfigPtr,
     cmp_chn_mux_mode_t plusInput, cmp_chn_mux_mode_t minusInput)
 {
     if (!userConfigPtr)
     {
         return kStatus_CMP_InvalidArgument;
     }
-    
+
     userConfigPtr->hystersisMode = kCmpHystersisOfLevel0;
     userConfigPtr->pinoutEnable = true;
     userConfigPtr->pinoutUnfilteredEnable = false;
@@ -81,10 +82,6 @@ cmp_status_t CMP_DRV_StructInitUserConfigDefault(cmp_user_config_t *userConfigPt
     userConfigPtr->triggerEnable = false;
 #endif /* FSL_FEATURE_CMP_HAS_TRIGGER_MODE */
 
-#if FSL_FEATURE_CMP_HAS_PASS_THROUGH_MODE
-    userConfigPtr->passThroughEnable = false;
-#endif /* FSL_FEATURE_CMP_HAS_PASS_THROUGH_MODE */
-
     return kStatus_CMP_Success;
 }
 
@@ -96,12 +93,12 @@ cmp_status_t CMP_DRV_StructInitUserConfigDefault(cmp_user_config_t *userConfigPt
  * configured for the basic comparator.
  *
  *END*************************************************************************/
-cmp_status_t CMP_DRV_Init(uint32_t instance, cmp_user_config_t *userConfigPtr,
-    cmp_state_t *userStatePtr)
+cmp_status_t CMP_DRV_Init(uint32_t instance, cmp_state_t *userStatePtr,
+    const cmp_comparator_config_t *userConfigPtr)
 {
-    assert(instance < HW_CMP_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
+    assert(instance < CMP_INSTANCE_COUNT);
+    CMP_Type * base = g_cmpBase[instance];
 
     if ( (!userConfigPtr) || (!userStatePtr) )
     {
@@ -115,29 +112,8 @@ cmp_status_t CMP_DRV_Init(uint32_t instance, cmp_user_config_t *userConfigPtr,
     }
 
     /* Reset all the registers. */
-    CMP_HAL_Init(baseAddr);
-
-    /* Configure the comparator. */
-    CMP_HAL_SetHystersisMode(baseAddr, userConfigPtr->hystersisMode);
-    CMP_HAL_SetOutputPinCmd(baseAddr, userConfigPtr->pinoutEnable);
-    CMP_HAL_SetUnfilteredOutCmd(baseAddr, userConfigPtr->pinoutUnfilteredEnable);
-    CMP_HAL_SetInvertLogicCmd(baseAddr, userConfigPtr->invertEnable);
-    CMP_HAL_SetHighSpeedCmd(baseAddr, userConfigPtr->highSpeedEnable);
-#if FSL_FEATURE_CMP_HAS_DMA
-    CMP_HAL_SetDmaCmd(baseAddr, userConfigPtr->dmaEnable);
-#endif /* FSL_FEATURE_CMP_HAS_DMA */
-    CMP_HAL_SetOutputRisingIntCmd(baseAddr, userConfigPtr->risingIntEnable);
-    CMP_HAL_SetOutputFallingIntCmd(baseAddr,userConfigPtr->fallingIntEnable);
-    CMP_HAL_SetMinusInputChnMuxMode(baseAddr, userConfigPtr->minusChnMux);
-    CMP_HAL_SetPlusInputChnMuxMode(baseAddr, userConfigPtr->plusChnMux);
-    
-#if FSL_FEATURE_CMP_HAS_TRIGGER_MODE
-    CMP_HAL_SetTriggerModeCmd(baseAddr, userConfigPtr->triggerEnable);
-#endif /* FSL_FEATURE_CMP_HAS_TRIGGER_MODE */
-
-#if FSL_FEATURE_CMP_HAS_PASS_THROUGH_MODE
-    CMP_HAL_SetPassThroughModeCmd(baseAddr, userConfigPtr->passThroughEnable);
-#endif /* FSL_FEATURE_CMP_HAS_PASS_THROUGH_MODE */
+    CMP_HAL_Init(base);
+    CMP_HAL_ConfigComparator(base, userConfigPtr);
 
     /* Configure the NVIC. */
     if ( (userConfigPtr->risingIntEnable) || (userConfigPtr->fallingIntEnable) )
@@ -153,7 +129,7 @@ cmp_status_t CMP_DRV_Init(uint32_t instance, cmp_user_config_t *userConfigPtr,
 
     userStatePtr->isInUsed = true; /* Mark it as in used. */
     g_cmpStatePtr[instance] = userStatePtr; /* Linked the user-provided memory into context record. */
-    
+
     return kStatus_CMP_Success;
 }
 
@@ -165,16 +141,17 @@ cmp_status_t CMP_DRV_Init(uint32_t instance, cmp_user_config_t *userConfigPtr,
  * longer used in application and it will help to reduce the power consumption.
  *
  *END*************************************************************************/
-void CMP_DRV_Deinit(uint32_t instance)
+cmp_status_t CMP_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_CMP_INSTANCE_COUNT);
+    assert(instance < CMP_INSTANCE_COUNT);
 
     uint32_t i;
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
+    CMP_Type * base = g_cmpBase[instance];
 
     /* Be sure to disable the CMP module. */
-    CMP_HAL_Disable(baseAddr);
-    
+    CMP_HAL_Disable(base);
+    CMP_HAL_Init(base);
+
     /* Disable the CMP interrupt in NVIC. */
     INT_SYS_DisableIRQ(g_cmpIrqId[instance] );
 
@@ -182,7 +159,7 @@ void CMP_DRV_Deinit(uint32_t instance)
     g_cmpStatePtr[instance]->isInUsed = false;
 
     /* Disable the clock if necessary. */
-    for (i = 0U; i < HW_CMP_INSTANCE_COUNT; i++)
+    for (i = 0U; i < CMP_INSTANCE_COUNT; i++)
     {
         if ( (g_cmpStatePtr[i]) && (g_cmpStatePtr[i]->isInUsed) )
         {
@@ -190,13 +167,15 @@ void CMP_DRV_Deinit(uint32_t instance)
             break;
         }
     }
-    if (i == HW_CMP_INSTANCE_COUNT)
+    if (i == CMP_INSTANCE_COUNT)
     {
         /* Disable the shared clock. */
-        CLOCK_SYS_DisableCmpClock(0U);
+        CLOCK_SYS_DisableCmpClock(instance);
     }
     
     g_cmpStatePtr[instance] = NULL;
+
+    return kStatus_CMP_Success;
 }
 
 /*FUNCTION*********************************************************************
@@ -208,10 +187,10 @@ void CMP_DRV_Deinit(uint32_t instance)
  *END*************************************************************************/
 void CMP_DRV_Start(uint32_t instance)
 {
-    assert(instance < HW_CMP_INSTANCE_COUNT);
+    assert(instance < CMP_INSTANCE_COUNT);
     
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
-    CMP_HAL_Enable(baseAddr);
+    CMP_Type * base = g_cmpBase[instance];
+    CMP_HAL_Enable(base);
 }
 
 /*FUNCTION*********************************************************************
@@ -223,53 +202,34 @@ void CMP_DRV_Start(uint32_t instance)
  *END*************************************************************************/
 void CMP_DRV_Stop(uint32_t instance)
 {
-    assert(instance < HW_CMP_INSTANCE_COUNT);
+    assert(instance < CMP_INSTANCE_COUNT);
     
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
-    CMP_HAL_Disable(baseAddr);
+    CMP_Type * base = g_cmpBase[instance];
+    CMP_HAL_Disable(base);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : CMP_DRV_EnableDac
+ * Function Name : CMP_DRV_ConfigDacChn
  * Description   : Enable the internal DAC in CMP module. It will take
  * effect actually only when internal DAC has been chosen as one of input
  * channel for comparator. Then the DAC channel can be programmed to provide
  * a reference voltage level.
  *
  *END*************************************************************************/
-cmp_status_t CMP_DRV_EnableDac(uint32_t instance, cmp_dac_config_t *dacConfigPtr)
+cmp_status_t CMP_DRV_ConfigDacChn(uint32_t instance, const cmp_dac_config_t *dacConfigPtr)
 {
-    assert(instance < HW_CMP_INSTANCE_COUNT);
-
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
+    assert(instance < CMP_INSTANCE_COUNT);
+    CMP_Type * base = g_cmpBase[instance];
 
     if (!dacConfigPtr)
     {
         return kStatus_CMP_InvalidArgument;
     }
     /* Configure the DAC Control Register. */
-    CMP_HAL_SetDacCmd(baseAddr, true);
-    CMP_HAL_SetDacRefVoltSrcMode(baseAddr, dacConfigPtr->refVoltSrcMode);
-    CMP_HAL_SetDacValue(baseAddr, dacConfigPtr->dacValue);
+    CMP_HAL_ConfigDacChn(base, dacConfigPtr);
 
     return kStatus_CMP_Success;
-}
-
-/*FUNCTION*********************************************************************
- *
- * Function Name : CMP_DRV_DisableDac
- * Description   : Disable the internal DAC in CMP module. It should be
- * called if the internal DAC is no longer used in application.
- *
- *END*************************************************************************/
-void CMP_DRV_DisableDac(uint32_t instance)
-{
-    assert(instance < HW_CMP_INSTANCE_COUNT);
-
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
-    
-    CMP_HAL_SetDacCmd(baseAddr, false);
 }
 
 /*FUNCTION*********************************************************************
@@ -278,124 +238,26 @@ void CMP_DRV_DisableDac(uint32_t instance)
  * Description   : Configure the CMP working in Sample\Filter modes. These
  * modes are some advanced features beside the basic comparator. They may
  * be about Windowed Mode, Filter Mode and so on. See to 
- * "cmp_sample_filter_config_t"for detailed description.
+ * "cmp_sample_filter_config_t" for detailed description.
  *
  *END*************************************************************************/
-cmp_status_t CMP_DRV_ConfigSampleFilter(uint32_t instance, cmp_sample_filter_config_t *configPtr)
+cmp_status_t CMP_DRV_ConfigSampleFilter(uint32_t instance, const cmp_sample_filter_config_t *configPtr)
 {
-    assert(instance < HW_CMP_INSTANCE_COUNT);
-
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
+    assert(instance < CMP_INSTANCE_COUNT);
+    CMP_Type * base = g_cmpBase[instance];
     
     if (!configPtr)
     {
         return kStatus_CMP_InvalidArgument;
     }
-    
-    /* Configure the comparator Window/Filter mode. */
-    switch (configPtr->workMode)
-    {
-    case kCmpContinuousMode:
-        /* Continuous Mode:
-        * Both window control and filter blocks are completely bypassed.
-        * The output of comparator is updated continuously. 
-        */
-#if FSL_FEATURE_CMP_HAS_WINDOW_MODE
-        CMP_HAL_SetWindowModeCmd(baseAddr, false);
-#endif /* FSL_FEATURE_CMP_HAS_WINDOW_MODE */
-        CMP_HAL_SetSampleModeCmd(baseAddr, false);
-        CMP_HAL_SetFilterCounterMode(baseAddr, kCmpFilterCountSampleOf0);
-        CMP_HAL_SetFilterPeriodValue(baseAddr, 0U);
-        break;
-    case kCmpSampleWithNoFilteredMode:
-        /* Sample, Non-Filtered Mode:
-        * Windowing control is completely bypassed. The output of
-        * comparator is sampled whenever a rising-edge is detected on
-        * the filter block clock input. Of course, the filter clock
-        * prescaler can be configured as the divider from bus clock.
-        */
-#if FSL_FEATURE_CMP_HAS_WINDOW_MODE
-        CMP_HAL_SetWindowModeCmd(baseAddr, false);
-#endif /* FSL_FEATURE_CMP_HAS_WINDOW_MODE */
-        if (configPtr->useExtSampleOrWindow)
-        {
-            CMP_HAL_SetSampleModeCmd(baseAddr, true);
-        }
-        else
-        {
-            CMP_HAL_SetSampleModeCmd(baseAddr, false);
-            CMP_HAL_SetFilterPeriodValue(baseAddr, configPtr->filterClkDiv);
-        }
-        CMP_HAL_SetFilterCounterMode(baseAddr, kCmpFilterCountSampleOf1);
-        break;
-    case kCmpSampleWithFilteredMode:
-        /* Sample, Filtered Mode:
-        * Similar to "Sample, Non-Filtered Mode", but the filter is
-        * active in this mode. The filter counter value becomes
-        * configurable as well.
-        */
-#if FSL_FEATURE_CMP_HAS_WINDOW_MODE
-        CMP_HAL_SetWindowModeCmd(baseAddr, false);
-#endif /* FSL_FEATURE_CMP_HAS_WINDOW_MODE */
-        if (configPtr->useExtSampleOrWindow)
-        {
-            CMP_HAL_SetSampleModeCmd(baseAddr, true);
-        }
-        else
-        {
-            CMP_HAL_SetSampleModeCmd(baseAddr, false);
-            CMP_HAL_SetFilterPeriodValue(baseAddr, configPtr->filterClkDiv);
-        }
-        CMP_HAL_SetFilterCounterMode(baseAddr, configPtr->filterCount);
-        break;
-    case kCmpWindowedMode:
-        /* Windowed Mode:
-        * In Windowed Mode, only output of analog comparator is passed
-        * only when the WINDOW signal is high. The last latched value
-        * is held when WINDOW signal is low.
-        */
-#if FSL_FEATURE_CMP_HAS_WINDOW_MODE
-        CMP_HAL_SetWindowModeCmd(baseAddr, true);
-#endif /* FSL_FEATURE_CMP_HAS_WINDOW_MODE */
-        CMP_HAL_SetSampleModeCmd(baseAddr, false);
-        CMP_HAL_SetFilterCounterMode(baseAddr, kCmpFilterCountSampleOf0);
-        CMP_HAL_SetFilterPeriodValue(baseAddr, 0U);
-        break;
-    case kCmpWindowedFilteredMode:
-        /* Window/Filtered Mode:
-        * This mode is kind of complex, as it uses both windowing and
-        * filtering features. It also has the highest latency of all
-        * modes. This can be approximated: up to 1 bus clock
-        * synchronization in the window function 
-        * + ( ( filter counter * filter prescaler ) + 1) bus clock
-        * for the filter function.
-        */
-#if FSL_FEATURE_CMP_HAS_WINDOW_MODE
-        CMP_HAL_SetWindowModeCmd(baseAddr, true);
-#endif /* FSL_FEATURE_CMP_HAS_WINDOW_MODE */
-        CMP_HAL_SetSampleModeCmd(baseAddr, false);
-        CMP_HAL_SetFilterCounterMode(baseAddr, configPtr->filterCount);
-        CMP_HAL_SetFilterPeriodValue(baseAddr, configPtr->filterClkDiv);
-        break;
-    default:
-        /* Default Mode:
-        * Same as continuous mode. See to "kCmpContinuousMode". 
-        */
-#if FSL_FEATURE_CMP_HAS_WINDOW_MODE
-        CMP_HAL_SetWindowModeCmd(baseAddr, false);
-#endif /* FSL_FEATURE_CMP_HAS_WINDOW_MODE */
-        CMP_HAL_SetSampleModeCmd(baseAddr, false);
-        CMP_HAL_SetFilterCounterMode(baseAddr, kCmpFilterCountSampleOf0);
-        CMP_HAL_SetFilterPeriodValue(baseAddr, 0U);
-        break;
-    }
-    
+    CMP_HAL_ConfigSampleFilter(base, configPtr);
+
     return kStatus_CMP_Success;
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : CMP_DRV_GetOutput
+ * Function Name : CMP_DRV_GetOutputLogic
  * Description   : Get the output of CMP module.
  * The output source depends on the configuration when initializing the comparator.
  * When cmp_user_config_t.pinoutUnfilteredEnable = false, the output will be
@@ -403,13 +265,12 @@ cmp_status_t CMP_DRV_ConfigSampleFilter(uint32_t instance, cmp_sample_filter_con
  * the filter.
  *
  *END*************************************************************************/
-bool CMP_DRV_GetOutput(uint32_t instance)
+bool CMP_DRV_GetOutputLogic(uint32_t instance)
 {
-    assert(instance < HW_CMP_INSTANCE_COUNT);
-
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
+    assert(instance < CMP_INSTANCE_COUNT);
+    CMP_Type * base = g_cmpBase[instance];
     
-    return CMP_HAL_GetOutputLogic(baseAddr);
+    return CMP_HAL_GetOutputLogic(base);
 }
 
 /*FUNCTION*********************************************************************
@@ -421,18 +282,18 @@ bool CMP_DRV_GetOutput(uint32_t instance)
  *END*************************************************************************/
 bool CMP_DRV_GetFlag(uint32_t instance, cmp_flag_t flag)
 {
-    assert(instance < HW_CMP_INSTANCE_COUNT);
+    assert(instance < CMP_INSTANCE_COUNT);
 
     bool bRet;
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
+    CMP_Type * base = g_cmpBase[instance];
 
     switch(flag)
     {
     case kCmpFlagOfCoutRising:
-        bRet = CMP_HAL_GetOutputRisingFlag(baseAddr);
+        bRet = CMP_HAL_GetOutputRisingFlag(base);
         break;
     case kCmpFlagOfCoutFalling:
-        bRet = CMP_HAL_GetOutputFallingFlag(baseAddr);
+        bRet = CMP_HAL_GetOutputFallingFlag(base);
         break;
     default:
         bRet = false;
@@ -449,22 +310,23 @@ bool CMP_DRV_GetFlag(uint32_t instance, cmp_flag_t flag)
  *END*************************************************************************/
 void CMP_DRV_ClearFlag(uint32_t instance, cmp_flag_t flag)
 {
-    assert(instance < HW_CMP_INSTANCE_COUNT);
+    assert(instance < CMP_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_cmpBaseAddr[instance];
+    CMP_Type * base = g_cmpBase[instance];
 
     switch(flag)
     {
     case kCmpFlagOfCoutRising:
-        CMP_HAL_ClearOutputRisingFlag(baseAddr);
+        CMP_HAL_ClearOutputRisingFlag(base);
         break;
     case kCmpFlagOfCoutFalling:
-        CMP_HAL_ClearOutputFallingFlag(baseAddr);
+        CMP_HAL_ClearOutputFallingFlag(base);
         break;
     default:
         break;
     }
 }
+#endif
 
 /*******************************************************************************
  * EOF

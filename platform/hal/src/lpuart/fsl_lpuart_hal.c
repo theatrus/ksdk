@@ -29,6 +29,8 @@
  */
 #include "fsl_lpuart_hal.h"
 
+#if FSL_FEATURE_SOC_LPUART_COUNT
+
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -38,14 +40,14 @@
  * Description   : Initializes the LPUART controller to known state.
  *
  *END**************************************************************************/
-void LPUART_HAL_Init(uint32_t baseAddr)
+void LPUART_HAL_Init(LPUART_Type * base)
 {
-    HW_LPUART_BAUD_WR(baseAddr, 0x0F000004);
-    HW_LPUART_STAT_WR(baseAddr, 0xC01FC000);
-    HW_LPUART_CTRL_WR(baseAddr, 0x00000000);
-    HW_LPUART_MATCH_WR(baseAddr, 0x00000000);
+    LPUART_WR_BAUD(base, 0x0F000004);
+    LPUART_WR_STAT(base, 0xC01FC000);
+    LPUART_WR_CTRL(base, 0x00000000);
+    LPUART_WR_MATCH(base, 0x00000000);
 #if FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT
-    HW_LPUART_MODIR_WR(baseAddr, 0x00000000);
+    LPUART_WR_MODIR(base, 0x00000000);
 #endif
 }
 
@@ -58,7 +60,7 @@ void LPUART_HAL_Init(uint32_t baseAddr)
  * Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
  *END**************************************************************************/
-lpuart_status_t LPUART_HAL_SetBaudRate(uint32_t baseAddr,
+lpuart_status_t LPUART_HAL_SetBaudRate(LPUART_Type * base,
                                        uint32_t sourceClockInHz,
                                        uint32_t desiredBaudRate)
 {
@@ -116,14 +118,14 @@ lpuart_status_t LPUART_HAL_SetBaudRate(uint32_t baseAddr,
          * If so, then "BOTHEDGE" sampling must be turned on */
         if ((osr > 3) && (osr < 8))
         {
-            BW_LPUART_BAUD_BOTHEDGE(baseAddr, 1);
+            LPUART_BWR_BAUD_BOTHEDGE(base, 1);
         }
 
         /* program the osr value (bit value is one less than actual value) */
-        BW_LPUART_BAUD_OSR(baseAddr, (osr-1));
+        LPUART_BWR_BAUD_OSR(base, (osr-1));
 
         /* write the sbr value to the BAUD registers */
-        BW_LPUART_BAUD_SBR(baseAddr, sbr);
+        LPUART_BWR_BAUD_SBR(base, sbr);
     }
     else
     {
@@ -143,19 +145,19 @@ lpuart_status_t LPUART_HAL_SetBaudRate(uint32_t baseAddr,
  * Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
  *END**************************************************************************/
-void LPUART_HAL_SetBitCountPerChar(uint32_t baseAddr,
+void LPUART_HAL_SetBitCountPerChar(LPUART_Type * base,
                                    lpuart_bit_count_per_char_t bitCountPerChar)
 {
     if (bitCountPerChar == kLpuart10BitsPerChar)
     {
-        BW_LPUART_BAUD_M10(baseAddr, 0x1U);
+        LPUART_BWR_BAUD_M10(base, 0x1U);
     }
     else
     {
         /* config 8-bit (M=0) or 9-bits (M=1) */
-        BW_LPUART_CTRL_M(baseAddr, bitCountPerChar);
+        LPUART_BWR_CTRL_M(base, bitCountPerChar);
         /* clear M10 to make sure not 10-bit mode */
-        BW_LPUART_BAUD_M10(baseAddr, 0x0U);
+        LPUART_BWR_BAUD_M10(base, 0x0U);
     }
 }
 
@@ -168,10 +170,10 @@ void LPUART_HAL_SetBitCountPerChar(uint32_t baseAddr,
  * Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
  *END**************************************************************************/
-void LPUART_HAL_SetParityMode(uint32_t baseAddr, lpuart_parity_mode_t parityModeType)
+void LPUART_HAL_SetParityMode(LPUART_Type * base, lpuart_parity_mode_t parityModeType)
 {
-    BW_LPUART_CTRL_PE(baseAddr, parityModeType >> 1U);
-    BW_LPUART_CTRL_PT(baseAddr, parityModeType & 1U);
+    LPUART_BWR_CTRL_PE(base, parityModeType >> 1U);
+    LPUART_BWR_CTRL_PT(base, parityModeType & 1U);
 }
 
 /*FUNCTION**********************************************************************
@@ -180,17 +182,17 @@ void LPUART_HAL_SetParityMode(uint32_t baseAddr, lpuart_parity_mode_t parityMode
  * Description   : Sends the LPUART 9-bit character.
  *
  *END**************************************************************************/
-void LPUART_HAL_Putchar9(uint32_t baseAddr, uint16_t data)
+void LPUART_HAL_Putchar9(LPUART_Type * base, uint16_t data)
 {
     uint8_t ninthDataBit;
 
     ninthDataBit = (data >> 8U) & 0x1U;
 
     /* write to ninth data bit T8(where T[0:7]=8-bits, T8=9th bit) */
-    BW_LPUART_CTRL_R9T8(baseAddr, ninthDataBit);
+    LPUART_BWR_CTRL_R9T8(base, ninthDataBit);
 
     /* write 8-bits to the data register*/
-    HW_LPUART_DATA_WR(baseAddr, (uint8_t)data);
+    LPUART_WR_DATA(base, (uint8_t)data);
 }
 
 /*FUNCTION**********************************************************************
@@ -199,7 +201,7 @@ void LPUART_HAL_Putchar9(uint32_t baseAddr, uint16_t data)
  * Description   : Sends the LPUART 10-bit character.
  *
  *END**************************************************************************/
-lpuart_status_t LPUART_HAL_Putchar10(uint32_t baseAddr, uint16_t data)
+lpuart_status_t LPUART_HAL_Putchar10(LPUART_Type * base, uint16_t data)
 {
     uint8_t ninthDataBit, tenthDataBit;
 
@@ -207,11 +209,11 @@ lpuart_status_t LPUART_HAL_Putchar10(uint32_t baseAddr, uint16_t data)
     tenthDataBit = (data >> 9U) & 0x1U;
 
     /* write to ninth/tenth data bit (T[0:7]=8-bits, T8=9th bit, T9=10th bit) */
-    BW_LPUART_CTRL_R9T8(baseAddr, ninthDataBit);
-    BW_LPUART_CTRL_R8T9(baseAddr, tenthDataBit);
+    LPUART_BWR_CTRL_R9T8(base, ninthDataBit);
+    LPUART_BWR_CTRL_R8T9(base, tenthDataBit);
 
     /* write to 8-bits to the data register */
-    HW_LPUART_DATA_WR(baseAddr, (uint8_t)data);
+    LPUART_WR_DATA(base, (uint8_t)data);
 
     return kStatus_LPUART_Success;
 }
@@ -222,13 +224,13 @@ lpuart_status_t LPUART_HAL_Putchar10(uint32_t baseAddr, uint16_t data)
  * Description   : Gets the LPUART 9-bit character.
  *
  *END**************************************************************************/
-void LPUART_HAL_Getchar9(uint32_t baseAddr, uint16_t *readData)
+void LPUART_HAL_Getchar9(LPUART_Type * base, uint16_t *readData)
 {
     /* get ninth bit from lpuart data register */
-    *readData = (uint16_t)BR_LPUART_CTRL_R8T9(baseAddr) << 8;
+    *readData = (uint16_t)LPUART_BRD_CTRL_R8T9(base) << 8;
 
     /* get 8-bit data from the lpuart data register */
-    *readData |= (uint8_t)HW_LPUART_DATA_RD(baseAddr);
+    *readData |= (uint8_t)LPUART_RD_DATA(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -238,16 +240,16 @@ void LPUART_HAL_Getchar9(uint32_t baseAddr, uint16_t *readData)
  *                 supported lpuarts
  *
  *END**************************************************************************/
-void LPUART_HAL_Getchar10(uint32_t baseAddr, uint16_t *readData)
+void LPUART_HAL_Getchar10(LPUART_Type * base, uint16_t *readData)
 {
     /* read tenth data bit */
-    *readData = (uint16_t)((uint32_t)(BR_LPUART_CTRL_R9T8(baseAddr)) << 9U);
+    *readData = (uint16_t)((uint32_t)(LPUART_BRD_CTRL_R9T8(base)) << 9U);
 
     /* read ninth data bit */
-    *readData |= (uint16_t)((uint32_t)(BR_LPUART_CTRL_R8T9(baseAddr)) << 8U);
+    *readData |= (uint16_t)((uint32_t)(LPUART_BRD_CTRL_R8T9(base)) << 8U);
 
     /* get 8-bit data */
-    *readData |= HW_LPUART_DATA_RD(baseAddr);
+    *readData |= LPUART_RD_DATA(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -257,16 +259,16 @@ void LPUART_HAL_Getchar10(uint32_t baseAddr, uint16_t *readData)
  * This function only supports 8-bit transaction.
  *
  *END**************************************************************************/
-void LPUART_HAL_SendDataPolling(uint32_t baseAddr,
+void LPUART_HAL_SendDataPolling(LPUART_Type * base,
                                 const uint8_t *txBuff,
                                 uint32_t txSize)
 {
     while (txSize--)
     {
-        while (!LPUART_HAL_IsTxDataRegEmpty(baseAddr))
+        while (!LPUART_BRD_STAT_TDRE(base))
         {}
 
-        LPUART_HAL_Putchar(baseAddr, *txBuff++);
+        LPUART_HAL_Putchar(base, *txBuff++);
     }
 }
 
@@ -277,7 +279,7 @@ void LPUART_HAL_SendDataPolling(uint32_t baseAddr,
  * This function only supports 8-bit transaction.
  *
  *END**************************************************************************/
-lpuart_status_t LPUART_HAL_ReceiveDataPolling(uint32_t baseAddr,
+lpuart_status_t LPUART_HAL_ReceiveDataPolling(LPUART_Type * base,
                                               uint8_t *rxBuff,
                                               uint32_t rxSize)
 {
@@ -285,15 +287,15 @@ lpuart_status_t LPUART_HAL_ReceiveDataPolling(uint32_t baseAddr,
 
     while (rxSize--)
     {
-        while (!LPUART_HAL_IsRxDataRegFull(baseAddr))
+        while (!LPUART_BRD_STAT_RDRF(base))
         {}
 
-        LPUART_HAL_Getchar(baseAddr, rxBuff++);
+        LPUART_HAL_Getchar(base, rxBuff++);
 
         /* Clear the Overrun flag since it will block receiving */
-        if (BR_LPUART_STAT_OR(baseAddr))
+        if (LPUART_BRD_STAT_OR(base))
         {
-            BW_LPUART_STAT_OR(baseAddr, 1U);
+            LPUART_BWR_STAT_OR(base, 1U);
             retVal = kStatus_LPUART_RxOverRun;
         }
     }
@@ -308,7 +310,7 @@ lpuart_status_t LPUART_HAL_ReceiveDataPolling(uint32_t baseAddr,
  * various interrupt sources.
  *
  *END**************************************************************************/
-void LPUART_HAL_SetIntMode(uint32_t baseAddr, lpuart_interrupt_t interrupt, bool enable)
+void LPUART_HAL_SetIntMode(LPUART_Type * base, lpuart_interrupt_t interrupt, bool enable)
 {
     uint32_t reg = (uint32_t)(interrupt) >> LPUART_SHIFT;
     uint32_t temp = 1U << (uint32_t)interrupt;
@@ -316,23 +318,23 @@ void LPUART_HAL_SetIntMode(uint32_t baseAddr, lpuart_interrupt_t interrupt, bool
     switch ( reg )
     {
         case LPUART_BAUD_REG_ID:
-            enable ? HW_LPUART_BAUD_SET(baseAddr, temp) : HW_LPUART_BAUD_CLR(baseAddr, temp);
+            enable ? LPUART_SET_BAUD(base, temp) : LPUART_CLR_BAUD(base, temp);
             break;
         case LPUART_STAT_REG_ID:
-            enable ? HW_LPUART_STAT_SET(baseAddr, temp) : HW_LPUART_STAT_CLR(baseAddr, temp);
+            enable ? LPUART_SET_STAT(base, temp) : LPUART_CLR_STAT(base, temp);
             break;
         case LPUART_CTRL_REG_ID:
-            enable ? HW_LPUART_CTRL_SET(baseAddr, temp) : HW_LPUART_CTRL_CLR(baseAddr, temp);
+            enable ? LPUART_SET_CTRL(base, temp) : LPUART_CLR_CTRL(base, temp);
             break;
         case LPUART_DATA_REG_ID:
-            enable ? HW_LPUART_DATA_SET(baseAddr, temp) : HW_LPUART_DATA_CLR(baseAddr, temp);
+            enable ? LPUART_SET_DATA(base, temp) : LPUART_CLR_DATA(base, temp);
             break;
         case LPUART_MATCH_REG_ID:
-            enable ? HW_LPUART_MATCH_SET(baseAddr, temp) : HW_LPUART_MATCH_CLR(baseAddr, temp);
+            enable ? LPUART_SET_MATCH(base, temp) : LPUART_CLR_MATCH(base, temp);
             break;
 #if FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT
         case LPUART_MODIR_REG_ID:
-            enable ? HW_LPUART_MODIR_SET(baseAddr, temp) : HW_LPUART_MODIR_CLR(baseAddr, temp);
+            enable ? LPUART_SET_MODIR(base, temp) : LPUART_CLR_MODIR(base, temp);
             break;
 #endif
         default :
@@ -346,7 +348,7 @@ void LPUART_HAL_SetIntMode(uint32_t baseAddr, lpuart_interrupt_t interrupt, bool
  * Description   : Returns whether LPUART module interrupts is enabled/disabled.
  *
  *END**************************************************************************/
-bool LPUART_HAL_GetIntMode(uint32_t baseAddr, lpuart_interrupt_t interrupt)
+bool LPUART_HAL_GetIntMode(LPUART_Type * base, lpuart_interrupt_t interrupt)
 {
     uint32_t reg = (uint32_t)(interrupt) >> LPUART_SHIFT;
 	  bool retVal = false;
@@ -354,23 +356,23 @@ bool LPUART_HAL_GetIntMode(uint32_t baseAddr, lpuart_interrupt_t interrupt)
     switch ( reg )
     {
         case LPUART_BAUD_REG_ID:
-            retVal = HW_LPUART_BAUD_RD(baseAddr) >> (uint32_t)(interrupt) & 1U;
+            retVal = LPUART_RD_BAUD(base) >> (uint32_t)(interrupt) & 1U;
             break;
         case LPUART_STAT_REG_ID:
-            retVal = HW_LPUART_STAT_RD(baseAddr) >> (uint32_t)(interrupt) & 1U;
+            retVal = LPUART_RD_STAT(base) >> (uint32_t)(interrupt) & 1U;
             break;
         case LPUART_CTRL_REG_ID:
-            retVal = HW_LPUART_CTRL_RD(baseAddr) >> (uint32_t)(interrupt) & 1U;
+            retVal = LPUART_RD_CTRL(base) >> (uint32_t)(interrupt) & 1U;
             break;
         case LPUART_DATA_REG_ID:
-            retVal = HW_LPUART_DATA_RD(baseAddr) >> (uint32_t)(interrupt) & 1U;
+            retVal = LPUART_RD_DATA(base) >> (uint32_t)(interrupt) & 1U;
             break;
         case LPUART_MATCH_REG_ID:
-            retVal = HW_LPUART_MATCH_RD(baseAddr) >> (uint32_t)(interrupt) & 1U;
+            retVal = LPUART_RD_MATCH(base) >> (uint32_t)(interrupt) & 1U;
             break;
 #if FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT
         case LPUART_MODIR_REG_ID:
-            retVal = HW_LPUART_MODIR_RD(baseAddr) >> (uint32_t)(interrupt) & 1U;
+            retVal = LPUART_RD_MODIR(base) >> (uint32_t)(interrupt) & 1U;
             break;
 #endif
         default :
@@ -390,16 +392,16 @@ bool LPUART_HAL_GetIntMode(uint32_t baseAddr, lpuart_interrupt_t interrupt)
  * Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
  *END**************************************************************************/
-void LPUART_HAL_SetLoopbackCmd(uint32_t baseAddr, bool enable)
+void LPUART_HAL_SetLoopbackCmd(LPUART_Type * base, bool enable)
 {
     /* configure LOOPS bit to enable(1)/disable(0) loopback mode, but also need
      * to clear RSRC */
-    BW_LPUART_CTRL_LOOPS(baseAddr, enable);
+    LPUART_BWR_CTRL_LOOPS(base, enable);
 
     /* clear RSRC for loopback mode, and if loopback disabled, */
     /* this bit has no meaning but clear anyway */
     /* to set it back to default value */
-    BW_LPUART_CTRL_RSRC(baseAddr, 0);
+    LPUART_BWR_CTRL_RSRC(base, 0);
 }
 
 /*FUNCTION**********************************************************************
@@ -412,12 +414,12 @@ void LPUART_HAL_SetLoopbackCmd(uint32_t baseAddr, bool enable)
  * Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
  *END**************************************************************************/
-void LPUART_HAL_SetSingleWireCmd(uint32_t baseAddr, bool enable)
+void LPUART_HAL_SetSingleWireCmd(LPUART_Type * base, bool enable)
 {
     /* to enable single-wire mode, need both LOOPS and RSRC set,
      * to enable or clear both */
-    BW_LPUART_CTRL_LOOPS(baseAddr, enable);
-    BW_LPUART_CTRL_RSRC(baseAddr, enable);
+    LPUART_BWR_CTRL_LOOPS(base, enable);
+    LPUART_BWR_CTRL_RSRC(base, enable);
 }
 
 /*FUNCTION**********************************************************************
@@ -429,13 +431,13 @@ void LPUART_HAL_SetSingleWireCmd(uint32_t baseAddr, bool enable)
  * already in idle state.
  *
  *END**************************************************************************/
-lpuart_status_t LPUART_HAL_SetReceiverInStandbyMode(uint32_t baseAddr)
+lpuart_status_t LPUART_HAL_SetReceiverInStandbyMode(LPUART_Type * base)
 {
     lpuart_wakeup_method_t rxWakeMethod;
     bool lpuart_current_rx_state;
 
-    rxWakeMethod = LPUART_HAL_GetReceiverWakeupMode(baseAddr);
-    lpuart_current_rx_state = LPUART_HAL_GetStatusFlag(baseAddr, kLpuartRxActive);
+    rxWakeMethod = LPUART_HAL_GetReceiverWakeupMode(base);
+    lpuart_current_rx_state = LPUART_HAL_GetStatusFlag(base, kLpuartRxActive);
 
     /* if both rxWakeMethod is set for idle and current rx state is idle,
      * don't put in standby */
@@ -446,7 +448,7 @@ lpuart_status_t LPUART_HAL_SetReceiverInStandbyMode(uint32_t baseAddr)
     else
     {
         /* set the RWU bit to place receiver into standby mode */
-        BW_LPUART_CTRL_RWU(baseAddr, 1);
+        LPUART_BWR_CTRL_RWU(base, 1);
         return kStatus_LPUART_Success;
     }
 }
@@ -461,15 +463,15 @@ lpuart_status_t LPUART_HAL_SetReceiverInStandbyMode(uint32_t baseAddr)
  * Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
  *END**************************************************************************/
-void LPUART_HAL_SetIdleLineDetect(uint32_t baseAddr,
+void LPUART_HAL_SetIdleLineDetect(LPUART_Type * base,
                                   const lpuart_idle_line_config_t *config)
 {
     /* Configure the idle line detection configuration as follows:
      * configure the ILT to bit count after start bit or stop bit
      * configure RWUID to set or not set IDLE status bit upon detection of
      * an idle character when receiver in standby */
-    BW_LPUART_CTRL_ILT(baseAddr, config->idleLineType);
-    BW_LPUART_STAT_RWUID(baseAddr, config->rxWakeIdleDetect);
+    LPUART_BWR_CTRL_ILT(base, config->idleLineType);
+    LPUART_BWR_STAT_RWUID(base, config->rxWakeIdleDetect);
 }
 
 /*FUNCTION**********************************************************************
@@ -478,14 +480,14 @@ void LPUART_HAL_SetIdleLineDetect(uint32_t baseAddr,
  * Description   : Configures match address register 1
  *
  *END**************************************************************************/
-void LPUART_HAL_SetMatchAddressReg1(uint32_t baseAddr, bool enable, uint8_t value)
+void LPUART_HAL_SetMatchAddressReg1(LPUART_Type * base, bool enable, uint8_t value)
 {
     /* The MAEN bit must be cleared before configuring MA value */
-    BW_LPUART_BAUD_MAEN1(baseAddr, 0x0U);
+    LPUART_BWR_BAUD_MAEN1(base, 0x0U);
     if (enable)
     {
-        BW_LPUART_MATCH_MA1(baseAddr, value);
-        BW_LPUART_BAUD_MAEN1(baseAddr, 0x1U);
+        LPUART_BWR_MATCH_MA1(base, value);
+        LPUART_BWR_BAUD_MAEN1(base, 0x1U);
     }
 }
 
@@ -495,14 +497,14 @@ void LPUART_HAL_SetMatchAddressReg1(uint32_t baseAddr, bool enable, uint8_t valu
  * Description   : Configures match address register 2
  *
  *END**************************************************************************/
-void LPUART_HAL_SetMatchAddressReg2(uint32_t baseAddr, bool enable, uint8_t value)
+void LPUART_HAL_SetMatchAddressReg2(LPUART_Type * base, bool enable, uint8_t value)
 {
     /* The MAEN bit must be cleared before configuring MA value */
-    BW_LPUART_BAUD_MAEN2(baseAddr, 0x0U);
+    LPUART_BWR_BAUD_MAEN2(base, 0x0U);
     if (enable)
     {
-        BW_LPUART_MATCH_MA2(baseAddr, value);
-        BW_LPUART_BAUD_MAEN2(baseAddr, 0x1U);
+        LPUART_BWR_MATCH_MA2(base, value);
+        LPUART_BWR_BAUD_MAEN2(base, 0x1U);
     }
 }
 
@@ -513,14 +515,14 @@ void LPUART_HAL_SetMatchAddressReg2(uint32_t baseAddr, bool enable, uint8_t valu
  * Description   : Configures the LPUART infrared operation.
  *
  *END**************************************************************************/
-void LPUART_HAL_SetInfrared(uint32_t baseAddr, bool enable,
+void LPUART_HAL_SetInfrared(LPUART_Type * base, bool enable,
                             lpuart_ir_tx_pulsewidth_t pulseWidth)
 {
     /* enable or disable infrared */
-    BW_LPUART_MODIR_IREN(baseAddr, enable);
+    LPUART_BWR_MODIR_IREN(base, enable);
 
     /* configure the narrow pulse width of the IR pulse */
-    BW_LPUART_MODIR_TNP(baseAddr, pulseWidth);
+    LPUART_BWR_MODIR_TNP(base, pulseWidth);
 }
 #endif  /* FSL_FEATURE_LPUART_HAS_IR_SUPPORT */
 
@@ -530,7 +532,7 @@ void LPUART_HAL_SetInfrared(uint32_t baseAddr, bool enable,
  * Description   : LPUART get status flag by passing flag enum.
  *
  *END**************************************************************************/
-bool LPUART_HAL_GetStatusFlag(uint32_t baseAddr, lpuart_status_flag_t statusFlag)
+bool LPUART_HAL_GetStatusFlag(LPUART_Type * base, lpuart_status_flag_t statusFlag)
 {
     uint32_t reg = (uint32_t)(statusFlag) >> LPUART_SHIFT;
 	bool retVal = false;
@@ -538,23 +540,23 @@ bool LPUART_HAL_GetStatusFlag(uint32_t baseAddr, lpuart_status_flag_t statusFlag
     switch ( reg )
     {
         case LPUART_BAUD_REG_ID:
-            retVal = HW_LPUART_BAUD_RD(baseAddr) >> (uint32_t)(statusFlag) & 1U;
+            retVal = LPUART_RD_BAUD(base) >> (uint32_t)(statusFlag) & 1U;
             break;
         case LPUART_STAT_REG_ID:
-            retVal = HW_LPUART_STAT_RD(baseAddr) >> (uint32_t)(statusFlag) & 1U;
+            retVal = LPUART_RD_STAT(base) >> (uint32_t)(statusFlag) & 1U;
             break;
         case LPUART_CTRL_REG_ID:
-            retVal = HW_LPUART_CTRL_RD(baseAddr) >> (uint32_t)(statusFlag) & 1U;
+            retVal = LPUART_RD_CTRL(base) >> (uint32_t)(statusFlag) & 1U;
             break;
         case LPUART_DATA_REG_ID:
-            retVal = HW_LPUART_DATA_RD(baseAddr) >> (uint32_t)(statusFlag) & 1U;
+            retVal = LPUART_RD_DATA(base) >> (uint32_t)(statusFlag) & 1U;
             break;
         case LPUART_MATCH_REG_ID:
-            retVal = HW_LPUART_MATCH_RD(baseAddr) >> (uint32_t)(statusFlag) & 1U;
+            retVal = LPUART_RD_MATCH(base) >> (uint32_t)(statusFlag) & 1U;
             break;
 #if FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT
         case LPUART_MODIR_REG_ID:
-            retVal = HW_LPUART_MODIR_RD(baseAddr) >> (uint32_t)(statusFlag) & 1U;
+            retVal = LPUART_RD_MODIR(base) >> (uint32_t)(statusFlag) & 1U;
             break;
 #endif
         default:
@@ -571,7 +573,7 @@ bool LPUART_HAL_GetStatusFlag(uint32_t baseAddr, lpuart_status_flag_t statusFlag
  * (see lpuart_status_flag_t for list of status bits).
  *
  *END**************************************************************************/
-lpuart_status_t LPUART_HAL_ClearStatusFlag(uint32_t baseAddr,
+lpuart_status_t LPUART_HAL_ClearStatusFlag(LPUART_Type * base,
                                            lpuart_status_flag_t statusFlag)
 {
     lpuart_status_t returnCode = kStatus_LPUART_Success;
@@ -592,39 +594,39 @@ lpuart_status_t LPUART_HAL_ClearStatusFlag(uint32_t baseAddr,
             break;
 
         case kLpuartIdleLineDetect:
-            BW_LPUART_STAT_IDLE(baseAddr, 0x1U);
+            LPUART_WR_STAT(base, LPUART_STAT_IDLE_MASK);
             break;
 
         case kLpuartRxOverrun:
-            BW_LPUART_STAT_OR(baseAddr, 0x1U);
+            LPUART_WR_STAT(base, LPUART_STAT_OR_MASK);
             break;
 
         case kLpuartNoiseDetect:
-            BW_LPUART_STAT_NF(baseAddr, 0x1U);
+            LPUART_WR_STAT(base, LPUART_STAT_NF_MASK);
             break;
 
         case kLpuartFrameErr:
-            BW_LPUART_STAT_FE(baseAddr, 0x1U);
+            LPUART_WR_STAT(base, LPUART_STAT_FE_MASK);
             break;
 
         case kLpuartParityErr:
-            BW_LPUART_STAT_PF(baseAddr, 0x1U);
+            LPUART_WR_STAT(base, LPUART_STAT_PF_MASK);
             break;
 
         case kLpuartLineBreakDetect:
-            BW_LPUART_STAT_LBKDIF(baseAddr, 0x1U);
+            LPUART_WR_STAT(base, LPUART_STAT_LBKDIF_MASK);
             break;
 
         case kLpuartRxActiveEdgeDetect:
-            BW_LPUART_STAT_RXEDGIF(baseAddr, 0x1U);
+            LPUART_WR_STAT(base, LPUART_STAT_RXEDGIF_MASK);
             break;
 
 #if FSL_FEATURE_LPUART_HAS_ADDRESS_MATCHING
         case kLpuartMatchAddrOne:
-            BW_LPUART_STAT_MA1F(baseAddr, 0x1U);
+            LPUART_WR_STAT(base, LPUART_STAT_MA1F_MASK);
             break;
         case kLpuartMatchAddrTwo:
-            BW_LPUART_STAT_MA2F(baseAddr, 0x1U);
+            LPUART_WR_STAT(base, LPUART_STAT_MA2F_MASK);
             break;
 #endif
         default:
@@ -635,6 +637,7 @@ lpuart_status_t LPUART_HAL_ClearStatusFlag(uint32_t baseAddr,
     return (returnCode);
 }
 
+#endif /* FSL_FEATURE_SOC_LPUART_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

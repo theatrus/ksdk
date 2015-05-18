@@ -30,15 +30,19 @@
 
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_TPM_COUNT
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Table of base addresses for TPM instances. */
-const uint32_t g_tpmBaseAddr[] = TPM_BASE_ADDRS;
+TPM_Type * const g_tpmBase[TPM_INSTANCE_COUNT] = TPM_BASE_PTRS;
 
 /* Tables to save TPM IRQ enum numbers defined in CMSIS header file. */
-const IRQn_Type g_tpmIrqId[] = TPM_IRQS;
+const IRQn_Type g_tpmIrqId[TPM_INSTANCE_COUNT] = TPM_IRQS;
+
+#endif /* FSL_FEATURE_SOC_TPM_COUNT */
 
 /*******************************************************************************
  * EOF

@@ -93,12 +93,14 @@ typedef struct _phdc_config_struct
     usb_class_specific_callback_struct_t        class_specific_callback;   /*!< application callback function to handle all the class related event*/
     usb_desc_request_notify_struct_t*           desc_callback_ptr;         /*!< descriptor related callback function data structure.*/
 } phdc_config_struct_t;
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /******************************************************************************
  * Global Functions
  *****************************************************************************/
 /*!
- * @brief The funtion initializes the Device and Controller layer.
+ * @brief The function initializes the Device and Controller layer.
  *
  * The application calls this API function to initialize the PHDC class, the underlying layers, and
  * the controller hardware.
@@ -116,16 +118,16 @@ extern usb_status USB_Class_PHDC_Init
 );
 
 /*!
- * @brief The funtion De-initializes the Device and Controller layer.
+ * @brief The function de-initializes the Device and Controller layer.
  *
- * The application calls this API function to un-initialize the PHDC class, the underlying layers, and
+ * The application calls this API function to de-initialize the PHDC class, the underlying layers, and
  * the controller hardware.
  * @param phdcHandle PHDC class handler  
  * @return USB_OK-Success/Others-Fail
  */
 extern usb_status USB_Class_PHDC_Deinit
 (
-    phdc_handle_t   phdcHandle
+    phdc_handle_t   handle
 );
 
 /*!
@@ -155,13 +157,13 @@ extern usb_status USB_Class_PHDC_Recv_Data
  * sent, the application layer receives a callback event USB_DEV_EVENT_SEND_COMPLETE.
  * The application reserves the buffer until it receives a callback event stating that the data is sent.
  *
- * @param handle PHDC class handler
- * @param meta_data opaque meta data in app buffer
- * @param num_tfr	 no. of transfers to follow with given channel--only valid if meta data is true
- * @param current_qos	  qos of the transfers to follow--only valid if meta data is true
- * @param app_buff buffer holding application data 
- * @param size length of the transfer
- * @return USB_OK-Success/Others-Fail
+ * @param handle            PHDC class handler
+ * @param meta_data         opaque meta data in app buffer
+ * @param num_tfr           no. of transfers to follow with given channel--only valid if meta data is true
+ * @param current_qos       qos of the transfers to follow--only valid if meta data is true
+ * @param app_buff buffer   holding application data 
+ * @param size              length of the transfer
+ * @return                  USB_OK-Success/Others-Fail
  */
 extern usb_status USB_Class_PHDC_Send_Data
 (
@@ -170,7 +172,7 @@ extern usb_status USB_Class_PHDC_Send_Data
     uint8_t          num_tfr,      /* no. of transfers to follow with given 
                                                             channel--only valid if meta data is 
                                                             true */
-    uint8_t          current_qos,  /* qos of the transfers to follow--only 
+    uint8_t          qos,  /* qos of the transfers to follow--only 
                                                              valid if meta data is true */
     uint8_t*         app_buff,     /* buffer holding application data */
     uint32_t         size          /* [IN] length of the transfer */
@@ -199,10 +201,31 @@ extern usb_status USB_Class_PHDC_Cancel
 );
 #endif
 
+/**************************************************************************//*!
+ *
+ * @name  USB_Class_PHDC_Get_Speed
+ *
+ * @brief This functions get speed from Host.
+ *
+ * @param handle          :   handle returned by USB_Class_PHDC_Init
+ * @param speed           :   speed
+ *
+ * @return status       
+ *         USB_OK         : When Successfull 
+ *         Others         : Errors
+ *****************************************************************************/
+extern usb_status USB_Class_PHDC_Get_Speed
+(
+    phdc_handle_t         handle,
+    uint16_t *            speed/* [OUT] the requested error */
+);
+
 extern void USB_Class_Periodic_Task(void);                               
 #define USB_PHDC_Periodic_Task USB_Class_Periodic_Task
 #define USB_Class_PHDC_Periodic_Task USB_Class_Periodic_Task
-
+#ifdef __cplusplus
+    }
+#endif
 #endif
 
 /* EOF */

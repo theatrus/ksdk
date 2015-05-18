@@ -31,7 +31,12 @@ copy usb_core\device\sources\classes\include\usb_class_composite.h %OUTPUTDIR%\ 
 copy usb_core\device\sources\classes\include\usb_class_hid.h %OUTPUTDIR%\ /Y
 copy usb_core\device\sources\classes\include\usb_class_msc.h %OUTPUTDIR%\ /Y
 copy usb_core\device\sources\classes\include\usb_class_phdc.h %OUTPUTDIR%\ /Y
-
+copy usb_core\device\sources\classes\include\config\usb_audio_config.h %OUTPUTDIR%\ /Y
+copy usb_core\device\sources\classes\include\config\usb_cdc_config.h %OUTPUTDIR%\ /Y
+copy usb_core\device\sources\classes\include\config\usb_composite_config.h %OUTPUTDIR%\ /Y
+copy usb_core\device\sources\classes\include\config\usb_hid_config.h %OUTPUTDIR%\ /Y
+copy usb_core\device\sources\classes\include\config\usb_msc_config.h %OUTPUTDIR%\ /Y
+copy usb_core\device\sources\classes\include\config\usb_phdc_config.h %OUTPUTDIR%\ /Y
 goto tool_%TOOL%
 
 rem cw10 files

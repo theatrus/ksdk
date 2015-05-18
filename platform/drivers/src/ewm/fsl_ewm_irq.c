@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_ewm_driver_test.h"
+#if FSL_FEATURE_SOC_EWM_COUNT
 
 
 /******************************************************************************
@@ -39,9 +40,10 @@
 
 /* EWM and Watchdog have the same IRQ handler---Watchdog_IRQHandler.*/
 /* User can define their own handler in this function */
-void Watchdog_IRQHandler(void)
+void WDOG_EWM_IRQHandler(void)
 {
 }
+#endif
 
 /******************************************************************************
  * EOF

@@ -1,37 +1,37 @@
 /**HEADER********************************************************************
-* 
-* Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
-* All Rights Reserved
-*
-* Copyright (c) 1989-2008 ARC International;
-* All Rights Reserved
-*
-*************************************************************************** 
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: usb_host_msd_ufi.h$
-* $Version : 
-* $Date    : 
-*
-* Comments:
-*
-*   This file is a supporting header file for UFI.c which implements the UFI
-*   command set for mass storage applications
-*
-*END************************************************************************/
+ * 
+ * Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ * Copyright (c) 1989-2008 ARC International;
+ * All Rights Reserved
+ *
+ *************************************************************************** 
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: usb_host_msd_ufi.h$
+ * $Version : 
+ * $Date    : 
+ *
+ * Comments:
+ *
+ *   This file is a supporting header file for UFI.c which implements the UFI
+ *   command set for mass storage applications
+ *
+ *END************************************************************************/
 #ifndef __usb_host_msd_ufi_h__
 #define __usb_host_msd_ufi_h__
 
@@ -46,7 +46,6 @@
 
 /*some useful macros for UFI command block*/
 #define TRANSFER_LUN_TO_HIGH_3_BITS(x,l)   x &= ((l << 5)   | 0x1F)
-
 
 /* Operation code for the UFI Commands (floppy drives) */
 #define UFI_FORMAT_UNIT                   (0x04)
@@ -92,121 +91,112 @@
 
 #define DEFAULT_INTERLEAVE                (0x00)
 
-
 /* USB Mass storage FORMAT UNIT Command information */
 
 typedef struct _defect_list_header_struct
 {
-   uint8_t   RESERVED1;
-   uint8_t   BBIT_INFO_HEADER;
-   #define DEFAULT_BIT_INFO               (0xA0)
-   uint8_t   BLENGTH_MSB;
-   uint8_t   BLENGTH_LSB;
-   #define DEFAULT_LENGTH_MSB             (0x00)
-   #define DEFAULT_LENGTH_LSB             (0x08)
+    uint8_t RESERVED1;
+    uint8_t BBIT_INFO_HEADER;
+    #define DEFAULT_BIT_INFO               (0xA0)
+    uint8_t BLENGTH_MSB;
+    uint8_t BLENGTH_LSB;
+#define DEFAULT_LENGTH_MSB             (0x00)
+#define DEFAULT_LENGTH_LSB             (0x08)
 } defect_list_header_struct_t;
-
 
 typedef struct _format_capacity_descriptor_struct
 {
-   uint8_t   NNUM_BLOCKS[4];
-   uint8_t   RESERVED;
-   uint8_t   NBLOCK_LENGTH[3];
+    uint8_t NNUM_BLOCKS[4];
+    uint8_t RESERVED;
+    uint8_t NBLOCK_LENGTH[3];
 } format_capacity_descriptor_struct_t;
 
-typedef  struct _format_unit_parameter_block_struct
+typedef struct _format_unit_parameter_block_struct
 {
-   defect_list_header_struct_t             DEF_LIST_HEADER;
-   format_capacity_descriptor_struct_t     FMT_CAPACITY_DESC;
-}  format_unit_parameter_block_struct_t;
-
+    defect_list_header_struct_t DEF_LIST_HEADER;
+    format_capacity_descriptor_struct_t FMT_CAPACITY_DESC;
+} format_unit_parameter_block_struct_t;
 
 /* USB Mass storage READ CAPACITY Command information */
 
 /* USB Mass storage Read10 Command information */
 typedef struct _mass_storage_read_capacity_cmd_struct
 {
-   uint8_t  BLLBA[4];    /* Last Logical Block Address */
-   uint8_t  BLENGTH[4];    /*Block length */
+    uint8_t BLLBA[4]; /* Last Logical Block Address */
+    uint8_t BLENGTH[4]; /*Block length */
 } mass_storage_read_capacity_cmd_struct_t;
-
 
 /* USB Mass storage READ FORMAT CAPACITY Command information */
 
 typedef struct _capacity_list_header
 {
-   uint8_t  RESERVED[3];
-   uint8_t  BLENGTH[1];    /* Capacity list length */
+    uint8_t RESERVED[3];
+    uint8_t BLENGTH[1]; /* Capacity list length */
 } capacity_list_header_struct_t;
-
 
 typedef struct _current_capacity_descriptor
 {
-   uint8_t   NNUM_BLOCKS[4];
-   uint8_t   BDESC_CODE;    /* Only last two bits are used */
-   #define  UNFORMATTED_MEDIA          (0x01)
-   #define  FORMATTED_MEDIA            (0x02)
-   #define  NO_MEDIA                   (0x03)
-   uint8_t   NBLOCK_LENGTH[3];
+    uint8_t NNUM_BLOCKS[4];
+    uint8_t BDESC_CODE; /* Only last two bits are used */
+#define  UNFORMATTED_MEDIA          (0x01)
+#define  FORMATTED_MEDIA            (0x02)
+#define  NO_MEDIA                   (0x03)
+    uint8_t NBLOCK_LENGTH[3];
 } current_capacity_descriptor_struct_t;
-
 
 typedef struct _capacity_list
 {
-   capacity_list_header_struct_t            LIST_HEADER;          /* 4 bytes */
-   current_capacity_descriptor_struct_t     CAPACITY_DESCRIPTOR;  /* 8 bytes */
-   format_capacity_descriptor_struct_t      FMT_CAPACITY_DESC;    /* 8 bytes */
+    capacity_list_header_struct_t LIST_HEADER; /* 4 bytes */
+    current_capacity_descriptor_struct_t CAPACITY_DESCRIPTOR; /* 8 bytes */
+    format_capacity_descriptor_struct_t FMT_CAPACITY_DESC; /* 8 bytes */
 } capacity_list_struct_t;
-
 
 /* USB Mass storage INQUIRY Command information */
 
 typedef struct _inquiry_data_format
 {
-   /*device type currently connected to Logical Unit */
-   uint8_t   BDEVICE_TYPE;
-   #define   DIRECT_ACCESS_DEVICE     (0x00)
-   #define   NONE                     (0x1F)
+    /*device type currently connected to Logical Unit */
+    uint8_t BDEVICE_TYPE;
+    #define   DIRECT_ACCESS_DEVICE     (0x00)
+#define   NONE                     (0x1F)
 
-   /*removable media bit only bit 7 is used. rest reserved*/
-   uint8_t   BRMB;
+    /*removable media bit only bit 7 is used. rest reserved*/
+    uint8_t BRMB;
 
-   /*ISO, ECMA, ANSI Version bits*/
-   uint8_t   BVERSION_SPEC;
-   #define DEFAULT_VERSION_SPEC       (0x00)
+    /*ISO, ECMA, ANSI Version bits*/
+    uint8_t BVERSION_SPEC;
+    #define DEFAULT_VERSION_SPEC       (0x00)
 
-   /*Response data format */
-   uint8_t   BRESP_DATA_FORMAt;
-   #define DEFAULT_RESNPOSE_FORMAT    (0x01)
+    /*Response data format */
+    uint8_t BRESP_DATA_FORMAt;
+    #define DEFAULT_RESNPOSE_FORMAT    (0x01)
 
-   /* length of parameters */
-   uint8_t   BADITIONAL_LENGTH;
-   #define DEFAULT_LENGTH             (0x1F)
+    /* length of parameters */
+    uint8_t BADITIONAL_LENGTH;
+    #define DEFAULT_LENGTH             (0x1F)
 
-   uint8_t   RESERVED1;
-   uint8_t   RESERVED2;
-   uint8_t   RESERVED3;
+    uint8_t RESERVED1;
+    uint8_t RESERVED2;
+    uint8_t RESERVED3;
 
-   uint8_t   BVID[8];         /* Vendor Identification String */
-   uint8_t   BPID[16];        /* Product Identification String */
-   uint8_t   BPRODUCT_REV[4]; /* Product revision level */
+    uint8_t BVID[8]; /* Vendor Identification String */
+    uint8_t BPID[16]; /* Product Identification String */
+    uint8_t BPRODUCT_REV[4]; /* Product revision level */
 
 } inquiry_data_format_struct_t;
 
-
 /* USB Mass storage MODE SELECT Command information */
-typedef union _read_write_recovery_page 
+typedef union _read_write_recovery_page
 {
-   uint8_t   FIELDS[12];
+    uint8_t FIELDS[12];
 } read_write_recovery_page_struct_t;
 
-
-typedef union _mode_select_page 
+typedef union _mode_select_page
 {
-   read_write_recovery_page_struct_t  READ_WRITE_PAGE;
+    read_write_recovery_page_struct_t READ_WRITE_PAGE;
 } mode_select_page_struct_t;
 
-typedef struct _mode_param_header 
+typedef struct _mode_param_header
 {
    uint8_t  BLENGTH[2];    /* Mode Data Length */
    uint8_t  BMEDIA_TYPE;   /* Media type code */
@@ -218,15 +208,12 @@ typedef struct _mode_param_header
    #define WP_DPOFUA_HEADER         (0xEF)
 } mode_param_header_struct_t;
 
-
-typedef struct _mode_select_parameter_list 
+typedef struct _mode_select_parameter_list
 {
-   mode_param_header_struct_t   MODE_PARAM_HEADER;
-   #define      DEFAULT_NO_OF_PAGES (0x01)
-   mode_select_page_struct_t    PAGES[DEFAULT_NO_OF_PAGES];
+    mode_param_header_struct_t MODE_PARAM_HEADER;
+    #define      DEFAULT_NO_OF_PAGES (0x01)
+    mode_select_page_struct_t PAGES[DEFAULT_NO_OF_PAGES];
 } mode_select_parameter_list_struct_t;
-
-
 
 /* USB Mass storage REQUEST SENSE Command information */
 
@@ -247,48 +234,45 @@ typedef struct _req_sense_data_format
    uint8_t   RESERVED3[4];          /* 14,15,16,17*/
 } req_sense_data_format_struct_t;
 
-
 /* USB Mass storage WRITE10 Command information */
-typedef struct _mass_storage_write10_cmd_struct 
+typedef struct _mass_storage_write10_cmd_struct
 {
-   uint8_t  BLBA[4];
-   uint8_t  BTRANSFER_LENGTH[2];
+    uint8_t BLBA[4];
+    uint8_t BTRANSFER_LENGTH[2];
 } mass_storage_write10_cmd_struct_t;
 
-
 /* USB Mass storage WRITE12 Command information */
-typedef struct _mass_storage_write12_cmd_struct 
+typedef struct _mass_storage_write12_cmd_struct
 {
-   uint8_t  BLBA[4];
-   uint8_t  BTRANSFER_LENGTH;
+    uint8_t BLBA[4];
+    uint8_t BTRANSFER_LENGTH;
 } mass_storage_write12_cmd_struct_t;
 
 /* USB Mass storage SEEK10 Command information */
-typedef struct _mass_storage_seek10_struct 
+typedef struct _mass_storage_seek10_struct
 {
-   uint8_t  BLBA[4];
+    uint8_t BLBA[4];
 } mass_storage_seek10_strcut_t;
 
 /* USB Mass storage SEND DIAGNOSTIC Command information */
-typedef struct _mass_storage_send_diagnostic_struct 
+typedef struct _mass_storage_send_diagnostic_struct
 {
-   bool  SELF_TEST;
+    bool SELF_TEST;
 } mass_storage_send_diagnostic_struct_t;
 
 /* USB Mass storage START-STOP UNIT Command information */
-typedef struct _mass_storage_start_stop_unit_struct 
+typedef struct _mass_storage_start_stop_unit_struct
 {
-   bool   START;
-   bool   LOEJ;
+    bool START;
+    bool LOEJ;
 } mass_storage_start_stop_unit_struct_t;
 
 /* USB Mass storage VERIFY Command information */
-typedef struct _mass_storage_verify_cmd_struct 
+typedef struct _mass_storage_verify_cmd_struct
 {
-   uint8_t  BLBA[4];
-   uint8_t  BTRANSFER_LENGTH[2];
+    uint8_t BLBA[4];
+    uint8_t BTRANSFER_LENGTH[2];
 } mass_storage_verify_cmd_struct_t;
-
 
 /* UFI commands */
 
@@ -312,7 +296,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t)CBW_DIRECTION_IN,                                           \
       (buf_ptr),                                                          \
       (buf_len))
-
 
 /* Used by host-side to send the FORMAT UNIT command */
 #define usb_mass_ufi_format_unit(                                         \
@@ -339,7 +322,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t *)(format_ptr),                                            \
       (format_ptr) ? (sizeof(FORMAT_LUN_HEADER_BITS) << 8) : 0)
 
-
 /* Used by host-side to send the FORMAT CAPACITY command */
 #define usb_mass_ufi_format_capacity(                                     \
       /* [IN] command object allocated by application*/                   \
@@ -361,11 +343,10 @@ typedef struct _mass_storage_verify_cmd_struct
       (buf_ptr),                                                          \
       (buf_len))
 
-
 /*
-** Used by host-side to send the INQUIRY command, to request information
-** regarding parameters of the UFI device itself
-*/
+ ** Used by host-side to send the INQUIRY command, to request information
+ ** regarding parameters of the UFI device itself
+ */
 #define usb_mass_ufi_inquiry(                                             \
       /* [IN] command object allocated by application*/                   \
       /* mass_command_struct_t* */         cmd_ptr,                           \
@@ -386,7 +367,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (buf_ptr),                                                          \
       (buf_len))
 
-
 /* Used by host-side to send the MODE SELECT command */
 #define usb_mass_ufi_mode_select(                                         \
       /* [IN] command object allocated by application*/                   \
@@ -406,8 +386,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t)CBW_DIRECTION_OUT,                                          \
       (uint8_t *)(buf_ptr),                                               \
       (buf_ptr) ? (buf_len) : 0)
-
-
 
 /* Used by host-side to send the MODE SENSE command */
 #define usb_mass_ufi_mode_sense(                                          \
@@ -436,7 +414,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (buf_ptr),                                                          \
       (buf_ptr) ? (buf_len) : 0)
 
-
 /* Used by host-side to send the PREVENT-ALLOW MEDIUM REMOVAL command */
 #define usb_mass_ufi_prevent_allow_medium_removal(                        \
       /* [IN] command object allocated by application*/                   \
@@ -454,7 +431,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t)CBW_DIRECTION_OUT,                                          \
       NULL,                                                               \
       0)
-
 
 /* Used by host-side to send the READ(10) command, to get data from device */
 #define usb_mass_ufi_read_10(                                             \
@@ -483,7 +459,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (buf_ptr),                                                          \
       (buf_len))
 
-
 /* Used by host-side to send the READ(12) command, to get data from device */
 #define usb_mass_ufi_read_12(                                             \
       /* [IN] command object allocated by application*/                   \
@@ -511,7 +486,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (buf_ptr),                                                          \
       (buf_len))
 
-
 /* Used by host-side to send the REQUEST SENSE command */
 #define usb_mass_ufi_request_sense(                                       \
       /* [IN] command object allocated by application*/                   \
@@ -532,7 +506,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t *)(buf_ptr),                                               \
       (buf_len))
 
-
 /* Used by host-side to send the REZERO UNIT command */
 #define usb_mass_ufi_rezero_unit(                                         \
       /* [IN] command object allocated by application*/                   \
@@ -547,7 +520,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t)CBW_DIRECTION_OUT,                                          \
       NULL,                                                               \
       0)
-
 
 /* Used by host-side to send the SEEK command */
 #define usb_mass_ufi_seek_10(                                             \
@@ -565,7 +537,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t)CBW_DIRECTION_OUT,                                          \
       NULL,                                                               \
       0)
-
 
 /* Used by host-side to send the SEND DIAGNOSTIC command */
 #define usb_mass_ufi_send_diagnostic(                                     \
@@ -585,7 +556,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t)CBW_DIRECTION_OUT,                                          \
       NULL,                                                               \
       0)
-
 
 /* Used by host-side to send the START-STOP command */
 #define usb_mass_ufi_start_stop(                                          \
@@ -608,7 +578,6 @@ typedef struct _mass_storage_verify_cmd_struct
       NULL,                                                               \
       0)
 
-
 /* Used by host-side to send the TEST UNIT READY command */
 #define usb_mass_ufi_test_unit_ready(                                     \
       /* [IN] command object allocated by application*/                   \
@@ -623,7 +592,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t)CBW_DIRECTION_OUT,                                          \
       NULL,                                                               \
       0)
-
 
 /* Used by host-side to send the VERIFY command */
 #define usb_mass_ufi_verify(                                              \
@@ -645,7 +613,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t)CBW_DIRECTION_OUT,                                          \
       NULL,                                                               \
       0)
-
 
 /* Used by host-side to send the WRITE(10) command, to send data to device */
 #define usb_mass_ufi_write_10(                                            \
@@ -674,7 +641,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (buf_ptr),                                                          \
       (buf_len))
 
-
 /* Used by host-side to send the WRITE(12) command, to send data to device */
 #define usb_mass_ufi_write_12(                                            \
       /* [IN] command object allocated by application*/                   \
@@ -701,7 +667,6 @@ typedef struct _mass_storage_verify_cmd_struct
       (uint8_t)CBW_DIRECTION_OUT,                                          \
       (buf_ptr),                                                          \
       (buf_len))
-
 
 /* Used by host-side to send the WRITE AND VERIFY command */
 #define usb_mass_ufi_write_and_verify(                                    \
@@ -730,16 +695,16 @@ typedef struct _mass_storage_verify_cmd_struct
       (buf_ptr),                                                          \
       (buf_len))
 
-
 /* Prototypes */
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-extern usb_status usb_mass_ufi_generic
-   (
-      /* [IN] command object allocated by application*/
+    extern usb_status usb_mass_ufi_generic
+    (
+        /* [IN] command object allocated by application*/
       mass_command_struct_t*      cmd_ptr,
       uint8_t                     opcode,
       uint8_t                     lun,
@@ -750,12 +715,12 @@ extern usb_status usb_mass_ufi_generic
 
       uint8_t *                   buf,
       uint32_t                    buf_len
-   );
+    );
 
-extern bool usb_mass_ufi_cancel
-   (
-      mass_command_struct_t*      cmd_ptr
-   );
+    extern bool usb_mass_ufi_cancel
+    (
+        mass_command_struct_t* cmd_ptr
+    );
 #ifdef __cplusplus
 }
 #endif

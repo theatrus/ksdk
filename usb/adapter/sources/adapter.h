@@ -35,7 +35,7 @@
 #include "adapter_cfg.h"
 #include "adapter_types.h"
 
-#ifdef __cplusplus
+#if defined (__cplusplus)
 extern "C" {
 #endif
 
@@ -47,43 +47,43 @@ extern "C" {
 #include "adapter_sdk.h"
 #endif
 
-extern uint32_t OS_Task_create(task_start_t pstart, void* task_param, uint32_t pri, uint32_t stack_size, char* task_name, void* opt);
-extern uint32_t OS_Task_delete(uint32_t);
-extern uint32_t OS_Task_suspend(uint32_t);
-extern uint32_t OS_Task_resume(uint32_t);
+extern uint32_t OS_Task_create(task_start_t pstart, void* param, uint32_t pri, uint32_t stack_size, char* task_name, void* opt);
+extern uint32_t OS_Task_delete(uint32_t task_id);
+extern uint32_t OS_Task_suspend(uint32_t task_id);
+extern uint32_t OS_Task_resume(uint32_t task_id);
 
 extern os_event_handle OS_Event_create(uint32_t flag);
-extern uint32_t OS_Event_destroy(os_event_handle event);
-extern uint32_t OS_Event_set(os_event_handle event, uint32_t bitmask);
-extern uint32_t OS_Event_check_bit(os_event_handle event, uint32_t bitmask);
+extern uint32_t OS_Event_destroy(os_event_handle handle);
+extern uint32_t OS_Event_set(os_event_handle handle, uint32_t bitmask);
+extern uint32_t OS_Event_check_bit(os_event_handle handle, uint32_t bitmask);
 //extern uint32_t OS_Event_set_auto_clear(os_event_handle event, uint32 bitmask);
-extern uint32_t OS_Event_clear(os_event_handle event, uint32_t bitmask);
-extern uint32_t OS_Event_wait(os_event_handle event, uint32_t bitmask, uint32_t flag, uint32_t timeout);
+extern uint32_t OS_Event_clear(os_event_handle handle, uint32_t bitmask);
+extern uint32_t OS_Event_wait(os_event_handle handle, uint32_t bitmask, uint32_t flag, uint32_t timeout);
 //extern OS_Event_get_value(a,b)      _lwevent_get_value(a,b)
 //#define OS_EVENT_WAIT_TIMEOUT            0x01
 
 
 extern os_msgq_handle OS_MsgQ_create(uint32_t max_msg_number, uint32_t msg_size);
-extern uint32_t OS_MsgQ_send(os_msgq_handle, void* msg, uint32_t flag);
-extern uint32_t OS_MsgQ_recv(os_msgq_handle, void* msg, uint32_t flag, uint32_t timeout);
-extern uint32_t OS_MsgQ_destroy(os_msgq_handle);
+extern uint32_t OS_MsgQ_send(os_msgq_handle msgq, void* msg, uint32_t flag);
+extern uint32_t OS_MsgQ_recv(os_msgq_handle msgq, void* msg, uint32_t flag, uint32_t timeout);
+extern uint32_t OS_MsgQ_destroy(os_msgq_handle msgq);
 
-extern os_gpio_handle OS_Gpio_init(uint32_t, uint32_t, uint32_t);
+extern os_gpio_handle OS_Gpio_init(uint32_t id, uint32_t dir, uint32_t value);
 extern uint32_t OS_Gpio_set_functionality(os_gpio_handle handle, uint32_t function);
 extern uint32_t OS_Gpio_set_value(os_gpio_handle handle, uint32_t value);
 
 extern os_mutex_handle OS_Mutex_create(void);
-extern uint32_t OS_Mutex_lock(os_mutex_handle);
-extern uint32_t OS_Mutex_unlock(os_mutex_handle);
-extern uint32_t OS_Mutex_destroy(os_mutex_handle);
+extern uint32_t OS_Mutex_lock(os_mutex_handle handle);
+extern uint32_t OS_Mutex_unlock(os_mutex_handle handle);
+extern uint32_t OS_Mutex_destroy(os_mutex_handle handle);
 
 
 extern os_sem_handle OS_Sem_create(uint32_t initial_number);
-extern uint32_t OS_Sem_post(os_sem_handle);
-extern uint32_t OS_Sem_wait(os_sem_handle sem,uint32_t timeout);
-extern uint32_t OS_Sem_destroy(os_sem_handle sem);
+extern uint32_t OS_Sem_post(os_sem_handle handle);
+extern uint32_t OS_Sem_wait(os_sem_handle handle,uint32_t timeout);
+extern uint32_t OS_Sem_destroy(os_sem_handle handle);
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
 

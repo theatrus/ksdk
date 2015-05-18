@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,6 +29,7 @@
  */
 
 #include "fsl_mcg_hal.h"
+#if FSL_FEATURE_SOC_MCG_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -44,6 +45,9 @@ uint32_t g_xtal0ClkFreq;           /* EXTAL0 clock */
 #if FSL_FEATURE_MCG_HAS_OSC1
 uint32_t g_xtal1ClkFreq;           /* EXTAL1 clock */
 #endif
+#if FSL_FEATURE_MCG_HAS_EXTERNAL_PLL
+uint32_t g_extPllClkFreq;          /* External PLL clock */
+#endif
 uint32_t g_xtalRtcClkFreq;         /* EXTAL RTC clock */
 
 uint32_t g_fastInternalRefClkFreq = 4000000U;
@@ -56,7 +60,7 @@ uint32_t g_slowInternalRefClkFreq = 32768U;
  * Description   : This function checks MCG external OSC clock frequency.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_TestOscFreq(uint32_t baseAddr, mcg_oscsel_select_t oscselVal)
+uint32_t CLOCK_HAL_TestOscFreq(MCG_Type * base, mcg_oscsel_select_t oscselVal)
 {
     uint32_t extFreq;
 
@@ -94,11 +98,11 @@ uint32_t CLOCK_HAL_TestOscFreq(uint32_t baseAddr, mcg_oscsel_select_t oscselVal)
  * register OSCSEL.
  *
  *END**************************************************************************/
-static uint32_t CLOCK_HAL_GetMcgExternalClkFreq(uint32_t baseAddr)
+static uint32_t CLOCK_HAL_GetMcgExternalClkFreq(MCG_Type * base)
 {
 #if FSL_FEATURE_MCG_USE_OSCSEL
     /* OSC frequency selected by OSCSEL. */
-    return CLOCK_HAL_TestOscFreq(baseAddr, CLOCK_HAL_GetOscselMode(baseAddr));
+    return CLOCK_HAL_TestOscFreq(base, (mcg_oscsel_select_t)MCG_BRD_C7_OSCSEL(base));
 #else
     /* Use default osc0*/
     return g_xtal0ClkFreq;
@@ -112,15 +116,15 @@ static uint32_t CLOCK_HAL_GetMcgExternalClkFreq(uint32_t baseAddr)
  * on input parameters.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_TestFllExternalRefFreq(uint32_t baseAddr,
+uint32_t CLOCK_HAL_TestFllExternalRefFreq(MCG_Type * base,
                                           uint32_t extFreq,
                                           uint8_t  frdivVal,
-                                          mcg_freq_range_select_t range0,
+                                          osc_range_t range0,
                                           mcg_oscsel_select_t oscsel)
 {
     extFreq >>= frdivVal;
 
-    if ((kMcgFreqRangeSelLow != range0)
+    if ((kOscRangeLow != range0)
 #if FSL_FEATURE_MCG_USE_OSCSEL
       && (kMcgOscselRtc != oscsel)
 #endif
@@ -162,27 +166,26 @@ uint32_t CLOCK_HAL_TestFllExternalRefFreq(uint32_t baseAddr,
  * value will be used for other APIs to calculate teh fll and other clock value.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_GetFllRefClk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetFllRefClk(MCG_Type * base)
 {
     uint32_t mcgffclk;
+    uint8_t frdiv;
+    osc_range_t range;
+    mcg_oscsel_select_t oscsel;
 
-    if (CLOCK_HAL_GetInternalRefSelMode(baseAddr) == kMcgInternalRefClkSrcExternal)
+    if (MCG_BRD_C1_IREFS(base) == kMcgFllSrcExternal)
     {
         /* External reference clock is selected */
-        mcgffclk = CLOCK_HAL_GetMcgExternalClkFreq(baseAddr);
-
+        mcgffclk = CLOCK_HAL_GetMcgExternalClkFreq(base);
+        frdiv = MCG_BRD_C1_FRDIV(base);
+        range = (osc_range_t)MCG_BRD_C2_RANGE(base);
 #if FSL_FEATURE_MCG_USE_OSCSEL
-        mcgffclk = CLOCK_HAL_TestFllExternalRefFreq(baseAddr, mcgffclk,
-                                CLOCK_HAL_GetFllExternalRefDiv(baseAddr),
-                                CLOCK_HAL_GetRange0Mode(baseAddr),
-                                CLOCK_HAL_GetOscselMode(baseAddr));
+        oscsel = (mcg_oscsel_select_t)MCG_BRD_C7_OSCSEL(base);
 #else
-        mcgffclk = CLOCK_HAL_TestFllExternalRefFreq(baseAddr, mcgffclk,
-                                CLOCK_HAL_GetFllExternalRefDiv(baseAddr),
-                                CLOCK_HAL_GetRange0Mode(baseAddr),
-                                kMcgOscselOsc);
+        oscsel = kMcgOscselOsc;
 #endif
 
+        mcgffclk = CLOCK_HAL_TestFllExternalRefFreq(base, mcgffclk, frdiv, range, oscsel);
     }
     else
     {
@@ -198,7 +201,7 @@ uint32_t CLOCK_HAL_GetFllRefClk(uint32_t baseAddr)
  * Description   : Calculate the Fll frequency based on input parameters.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_TestFllFreq(uint32_t baseAddr,
+uint32_t CLOCK_HAL_TestFllFreq(MCG_Type * base,
                                uint32_t fllRef,
                                mcg_dmx32_select_t dmx32,
                                mcg_dco_range_select_t drs)
@@ -238,20 +241,32 @@ uint32_t CLOCK_HAL_TestFllFreq(uint32_t baseAddr,
  * in order to get the valid value.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_GetFllClk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetFllClk(MCG_Type * base)
 {
     uint32_t mcgfllclk;
+    mcg_dmx32_select_t dmx32;
+    mcg_dco_range_select_t drs;
 
-    mcgfllclk = CLOCK_HAL_GetFllRefClk(baseAddr);
+#if FSL_FEATURE_MCG_HAS_PLL
+    /* If FLL is not enabled, return 0. */
+    if (CLOCK_HAL_IsPllSelected(base))
+    {
+        return 0U;
+    }
+#endif
+
+    mcgfllclk = CLOCK_HAL_GetFllRefClk(base);
 
     if (0U == mcgfllclk)
     {
         return 0U;
     }
 
-    mcgfllclk = CLOCK_HAL_TestFllFreq(baseAddr, mcgfllclk,
-                    CLOCK_HAL_GetDmx32(baseAddr),
-                    CLOCK_HAL_GetDcoRangeMode(baseAddr));
+    dmx32 = (mcg_dmx32_select_t)MCG_BRD_C4_DMX32(base);
+    drs   = (mcg_dco_range_select_t)MCG_BRD_C4_DRST_DRS(base);
+
+
+    mcgfllclk = CLOCK_HAL_TestFllFreq(base, mcgfllclk, dmx32, drs);
 
     return mcgfllclk;
 }
@@ -263,29 +278,29 @@ uint32_t CLOCK_HAL_GetFllClk(uint32_t baseAddr)
  * changed when fast internal reference is enabled, this function checks the
  * status, if it is enabled, disable it first, then set FCRDIV, at last reenable
  * it. If you can make sure fast internal reference is not enabled, call
- * CLOCK_HAL_SetFastClkInternalRefDiv() will be more effective.
+ * MCG_WR_SC_FCRDIV() will be more effective.
  *
  *END**************************************************************************/
-void CLOCK_HAL_UpdateFastClkInternalRefDiv(uint32_t baseAddr, uint8_t fcrdiv)
+void CLOCK_HAL_UpdateFastClkInternalRefDiv(MCG_Type * base, uint8_t fcrdiv)
 {
     /* If new value equals current value, do not update. */
-    if (CLOCK_HAL_GetFastClkInternalRefDiv(baseAddr) != fcrdiv)
+    if (MCG_BRD_SC_FCRDIV(base) != fcrdiv)
     {
         /* If fast internal reference clock is not used, change directly. */
-        if (kMcgInternalRefClkSelSlow == CLOCK_HAL_GetInternalRefClkSelMode(baseAddr))
+        if (kMcgIrcSlow == MCG_BRD_C2_IRCS(base))
         {
-            CLOCK_HAL_SetFastClkInternalRefDiv(baseAddr, fcrdiv);
+            MCG_WR_SC_FCRDIV(base, fcrdiv);
         }
         else /* If it is used, swith to slow IRC, then change FCRDIV. */
         {
             /* Switch to slow IRC. */
-            CLOCK_HAL_SetInternalRefClkSelMode(baseAddr, kMcgInternalRefClkSelSlow);
-            while (kMcgInternalRefClkStatSlow != CLOCK_HAL_GetInternalRefClkStatMode(baseAddr)) {}
+            CLOCK_HAL_SetInternalRefClkMode(base, kMcgIrcSlow);
+            while (kMcgIrcSlow != CLOCK_HAL_GetInternalRefClkMode(base)) {}
             /* Set new value. */
-            CLOCK_HAL_SetFastClkInternalRefDiv(baseAddr, fcrdiv);
+            MCG_WR_SC_FCRDIV(base, fcrdiv);
             /* Switch to fast IRC. */
-            CLOCK_HAL_SetInternalRefClkSelMode(baseAddr, kMcgInternalRefClkSelFast);
-            while (kMcgInternalRefClkStatFast != CLOCK_HAL_GetInternalRefClkStatMode(baseAddr)) {}
+            CLOCK_HAL_SetInternalRefClkMode(base, kMcgIrcFast);
+            while (kMcgIrcFast != CLOCK_HAL_GetInternalRefClkMode(base)) {}
         }
     }
 }
@@ -297,7 +312,7 @@ void CLOCK_HAL_UpdateFastClkInternalRefDiv(uint32_t baseAddr, uint8_t fcrdiv)
  * to FLL reference clock.
  *
  *END**************************************************************************/
-mcg_status_t CLOCK_HAL_GetAvailableFrdiv(mcg_freq_range_select_t range0,
+mcg_status_t CLOCK_HAL_GetAvailableFrdiv(osc_range_t range0,
                                     mcg_oscsel_select_t oscsel,
                                     uint32_t inputFreq,
                                     uint8_t  *frdiv)
@@ -313,7 +328,17 @@ mcg_status_t CLOCK_HAL_GetAvailableFrdiv(mcg_freq_range_select_t range0,
 #endif
     };
 
-    if ((kMcgFreqRangeSelLow != range0)
+    static const uint16_t freqLow_kHz[] = {
+        1000U, 2000U, 4000U, 8000U, 16000U, 32000U,
+#if FSL_FEATURE_MCG_FRDIV_SUPPORT_1280
+        40000U,
+#endif
+#if FSL_FEATURE_MCG_FRDIV_SUPPORT_1536
+        48000U
+#endif
+    };
+
+    if ((kOscRangeLow != range0)
 #if FSL_FEATURE_MCG_USE_OSCSEL
         && (kMcgOscselRtc != oscsel)
 #endif
@@ -322,9 +347,16 @@ mcg_status_t CLOCK_HAL_GetAvailableFrdiv(mcg_freq_range_select_t range0,
         inputFreq /= 1000U;
         while (*frdiv < (sizeof(freq_kHz)/sizeof(freq_kHz[0])))
         {
-            if (inputFreq < freq_kHz[*frdiv])
+            if (inputFreq <= freq_kHz[*frdiv])
             {
-                return kStatus_MCG_Success;
+                if (inputFreq >= freqLow_kHz[*frdiv])
+                {
+                    return kStatus_MCG_Success;
+                }
+                else
+                {
+                    return kStatus_MCG_Fail;
+                }
             }
             (*frdiv)++;
         }
@@ -336,7 +368,7 @@ mcg_status_t CLOCK_HAL_GetAvailableFrdiv(mcg_freq_range_select_t range0,
             inputFreq >>= 1U;
             (*frdiv)++;
         }
-        if ((*frdiv) < 8U)
+        if (((*frdiv) < 8U) && (inputFreq >= 31250U))
         {
             return kStatus_MCG_Success;
         }
@@ -457,11 +489,11 @@ uint32_t CLOCK_HAL_CalculatePllDiv(uint32_t refFreq,
  * selected by OSCSEL or PLLREFSEL, according to chip design.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_GetPll0RefFreq(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetPll0RefFreq(MCG_Type * base)
 {
 #if FSL_FEATURE_MCG_HAS_PLL1
     /* Use dedicate source. */
-    if (kMcgPllExternalRefClkSelOsc0 == CLOCK_HAL_GetPllRefSel0Mode(baseAddr))
+    if (kMcgPllExternalRefClkSelOsc0 == CLOCK_HAL_GetPllRefSel0Mode(base))
     {
         return g_xtal0ClkFreq;
     }
@@ -471,7 +503,7 @@ uint32_t CLOCK_HAL_GetPll0RefFreq(uint32_t baseAddr)
     }
 #else
     /* Use OSCSEL frequency. */
-    return CLOCK_HAL_GetMcgExternalClkFreq(baseAddr);
+    return CLOCK_HAL_GetMcgExternalClkFreq(base);
 #endif
 }
 
@@ -484,18 +516,24 @@ uint32_t CLOCK_HAL_GetPll0RefFreq(uint32_t baseAddr)
  * configured in order to get the valid value.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_GetPll0Clk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetPll0Clk(MCG_Type * base)
 {
     uint32_t mcgpll0clk;
     uint8_t  divider;
 
-    mcgpll0clk = CLOCK_HAL_GetPll0RefFreq(baseAddr);
+    /* If PLL0 is not enabled, return 0. */
+    if (!(MCG_BRD_S_PLLST(base) || MCG_BRD_C5_PLLCLKEN0(base)))
+    {
+        return 0U;
+    }
 
-    divider = (FSL_FEATURE_MCG_PLL_PRDIV_BASE + CLOCK_HAL_GetPllExternalRefDiv0(baseAddr));
+    mcgpll0clk = CLOCK_HAL_GetPll0RefFreq(base);
+
+    divider = (FSL_FEATURE_MCG_PLL_PRDIV_BASE + MCG_BRD_C5_PRDIV0(base));
 
     /* Calculate the PLL reference clock*/
     mcgpll0clk /= divider;
-    divider = (CLOCK_HAL_GetVoltCtrlOscDiv0(baseAddr) + FSL_FEATURE_MCG_PLL_VDIV_BASE);
+    divider = (MCG_BRD_C6_VDIV0(base) + FSL_FEATURE_MCG_PLL_VDIV_BASE);
 
     /* Calculate the MCG output clock*/
     mcgpll0clk = (mcgpll0clk * divider);
@@ -504,6 +542,26 @@ uint32_t CLOCK_HAL_GetPll0Clk(uint32_t baseAddr)
     mcgpll0clk >>= 1U;
 #endif
     return mcgpll0clk;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CLOCK_HAL_EnablePll0InFllMode
+ * Description   : Enable PLL0 when MCG is in FLL mode.
+ *
+ *END**************************************************************************/
+void CLOCK_HAL_EnablePll0InFllMode(MCG_Type * base,
+                                   uint8_t prdiv,
+                                   uint8_t vdiv,
+                                   bool enableInStop)
+{
+    MCG_WR_C6_VDIV0(base, vdiv);
+    MCG_WR_C5(base, (MCG_RD_C5(base)
+                 & ~(MCG_C5_PLLSTEN0_MASK | MCG_C5_PRDIV0_MASK))
+                 |   MCG_C5_PLLCLKEN0_MASK
+                 |   MCG_C5_PLLSTEN0(enableInStop)
+                 |   MCG_C5_PRDIV0(prdiv));
+    while(!CLOCK_HAL_IsPll0Locked(base)) {} // Wait until locked.
 }
 #endif
 
@@ -515,9 +573,9 @@ uint32_t CLOCK_HAL_GetPll0Clk(uint32_t baseAddr)
  * selected by PLLREFSEL.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_GetPll1RefFreq(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetPll1RefFreq(MCG_Type * base)
 {
-    if (kMcgPllExternalRefClkSelOsc0 == CLOCK_HAL_GetPllRefSel1Mode(baseAddr))
+    if (kMcgPllExternalRefClkSelOsc0 == CLOCK_HAL_GetPllRefSel1Mode(base))
     {
         return g_xtal0ClkFreq;
     }
@@ -536,18 +594,24 @@ uint32_t CLOCK_HAL_GetPll1RefFreq(uint32_t baseAddr)
  * in order to get the valid value.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_GetPll1Clk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetPll1Clk(MCG_Type * base)
 {
     uint32_t mcgpll1clk;
     uint8_t  divider;
 
-    mcgpll1clk = CLOCK_HAL_GetPll1RefFreq(baseAddr);
+    /* If PLL1 is not enabled, return 0. */
+    if (!(MCG_BRD_S_PLLST(base) || MCG_BRD_C11_PLLCLKEN1(base)))
+    {
+        return 0U;
+    }
 
-    divider = (FSL_FEATURE_MCG_PLL_PRDIV_BASE + CLOCK_HAL_GetPllExternalRefDiv1(baseAddr));
+    mcgpll1clk = CLOCK_HAL_GetPll1RefFreq(base);
+
+    divider = (FSL_FEATURE_MCG_PLL_PRDIV_BASE + MCG_BRD_C11_PRDIV1(base));
 
     /* Calculate the PLL reference clock*/
     mcgpll1clk /= divider;
-    divider = (CLOCK_HAL_GetVoltCtrlOscDiv1(baseAddr) + FSL_FEATURE_MCG_PLL_VDIV_BASE);
+    divider = (MCG_BRD_C12_VDIV1(base) + FSL_FEATURE_MCG_PLL_VDIV_BASE);
 
     /* Calculate the MCG output clock*/
     mcgpll1clk = (mcgpll1clk * divider); /* divided by 2*/
@@ -555,6 +619,39 @@ uint32_t CLOCK_HAL_GetPll1Clk(uint32_t baseAddr)
     mcgpll1clk >>= 1U;
 #endif
     return mcgpll1clk;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CLOCK_HAL_EnablePll1InFllMode
+ * Description   : Enable PLL1 when MCG is in FLL mode.
+ *
+ *END**************************************************************************/
+void CLOCK_HAL_EnablePll1InFllMode(MCG_Type * base,
+                                   uint8_t prdiv,
+                                   uint8_t vdiv,
+                                   bool enableInStop)
+{
+    MCG_WR_C12_VDIV1(base, vdiv);
+    MCG_WR_C11(base, (MCG_RD_C11(base)
+                  & ~(MCG_C11_PLLSTEN1_MASK | MCG_C11_PRDIV1_MASK))
+                  |   MCG_C11_PLLCLKEN1_MASK
+                  |   MCG_C11_PLLSTEN1(enableInStop)
+                  |   MCG_C11_PRDIV1(prdiv));
+    while(!CLOCK_HAL_IsPll1Locked(base)) {} // Wait until locked.
+}
+#endif
+
+#if FSL_FEATURE_MCG_HAS_EXTERNAL_PLL
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CLOCK_HAL_GetExtPllClk
+ * Description   : Get the current external pll clock.
+ *
+ *END**************************************************************************/
+uint32_t CLOCK_HAL_GetExtPllClk(MCG_Type * base)
+{
+    return g_extPllClkFreq;
 }
 #endif
 
@@ -567,23 +664,23 @@ uint32_t CLOCK_HAL_GetPll1Clk(uint32_t baseAddr)
  * mcgirclk is enabled or not, just calculate and return the value.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_GetInternalRefClk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetInternalRefClk(MCG_Type * base)
 {
     uint32_t mcgirclk;
 
-    if (!CLOCK_HAL_GetInternalClkCmd(baseAddr))
+    if (!MCG_BRD_C1_IRCLKEN(base))
     {
         return 0U;
     }
 
-    if (CLOCK_HAL_GetInternalRefClkSelMode(baseAddr) == kMcgInternalRefClkSelSlow)
+    if (MCG_BRD_C2_IRCS(base) == kMcgIrcSlow)
     {
         /* Slow internal reference clock selected*/
         mcgirclk = g_slowInternalRefClkFreq;
     }
     else
     {
-        mcgirclk = g_fastInternalRefClkFreq >> CLOCK_HAL_GetFastClkInternalRefDiv(baseAddr);
+        mcgirclk = g_fastInternalRefClkFreq >> MCG_BRD_SC_FCRDIV(base);
     }
     return mcgirclk;
 }
@@ -596,12 +693,12 @@ uint32_t CLOCK_HAL_GetInternalRefClk(uint32_t baseAddr)
  * more than MCGOUTCLK/8. If MCGFFCLK is invalid, this function returns 0.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_GetFixedFreqClk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetFixedFreqClk(MCG_Type * base)
 {
-    uint32_t freq = CLOCK_HAL_GetFllRefClk(baseAddr);
+    uint32_t freq = CLOCK_HAL_GetFllRefClk(base);
 
     /* MCGFFCLK must be no more than MCGOUTCLK/8. */
-    if ((!freq) && (freq <= (CLOCK_HAL_GetOutClk(baseAddr)/8U)))
+    if ((freq) && (freq <= (CLOCK_HAL_GetOutClk(base)/8U)))
     {
         return freq;
     }
@@ -620,39 +717,42 @@ uint32_t CLOCK_HAL_GetFixedFreqClk(uint32_t baseAddr)
  * properly done in order to get the valid value.
  *
  *END**************************************************************************/
-uint32_t CLOCK_HAL_GetOutClk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetOutClk(MCG_Type * base)
 {
     uint32_t mcgoutclk;
-    mcg_clock_select_t src = CLOCK_HAL_GetClkSrcMode(baseAddr);
+    mcg_clkout_stat_t src = CLOCK_HAL_GetClkOutStat(base);
 
     switch (src)
     {
-        case kMcgClkSelOut: /* PLL or FLL. */
 #if FSL_FEATURE_MCG_HAS_PLL
-            if (CLOCK_HAL_GetPllSelMode(baseAddr) == kMcgPllSelPllClkSel)
-            {
+        case kMcgClkOutStatPll:
 #if FSL_FEATURE_MCG_HAS_PLL1
-                if (CLOCK_HAL_GetPllClkSelMode(baseAddr) == kMcgPllClkSelPll1)
-                {
-                    mcgoutclk = CLOCK_HAL_GetPll1Clk(baseAddr);
-                }
-                else
+            if (CLOCK_HAL_GetPllClkSelMode(base) == kMcgPllClkSelPll1)
+            {
+                mcgoutclk = CLOCK_HAL_GetPll1Clk(base);
+            }
+            else
 #endif
-                {
-                    mcgoutclk = CLOCK_HAL_GetPll0Clk(baseAddr);
-                }
+#if FSL_FEATURE_MCG_HAS_EXTERNAL_PLL
+            if (CLOCK_HAL_GetPllClkSelMode(base) == kMcgPllClkSelExtPll)
+            {
+                mcgoutclk = CLOCK_HAL_GetExtPllClk(base);
             }
             else
 #endif
             {
-                mcgoutclk = CLOCK_HAL_GetFllClk(baseAddr);
+                mcgoutclk = CLOCK_HAL_GetPll0Clk(base);
             }
             break;
-        case kMcgClkSelInternal:  /* Internal clock. */
-            mcgoutclk = CLOCK_HAL_GetInternalRefClk(baseAddr);
+#endif                                
+        case kMcgClkOutStatFll:
+            mcgoutclk = CLOCK_HAL_GetFllClk(base);
             break;
-        case kMcgClkSelExternal:  /* External clock. */
-            mcgoutclk = CLOCK_HAL_GetMcgExternalClkFreq(baseAddr);
+        case kMcgClkOutStatInternal:  /* Internal clock. */
+            mcgoutclk = CLOCK_HAL_GetInternalRefClk(base);
+            break;
+        case kMcgClkOutStatExternal:  /* External clock. */
+            mcgoutclk = CLOCK_HAL_GetMcgExternalClkFreq(base);
             break;
         default:
             mcgoutclk = 0U;
@@ -669,15 +769,45 @@ uint32_t CLOCK_HAL_GetOutClk(uint32_t baseAddr)
  * oscillator select and external reference select.
  *
  *END**************************************************************************/
-void CLOCK_HAL_SetOsc0Mode(uint32_t baseAddr,
-                           mcg_freq_range_select_t range,
-                           mcg_high_gain_osc_select_t hgo,
-                           mcg_external_ref_clock_select_t erefs)
+void CLOCK_HAL_SetOsc0Mode(MCG_Type * base,
+                           osc_range_t range,
+                           osc_gain_t hgo,
+                           osc_src_t erefs)
 {
-    CLOCK_HAL_SetRange0Mode(baseAddr, range);
-    CLOCK_HAL_SetHighGainOsc0Mode(baseAddr, hgo);
-    CLOCK_HAL_SetExternalRefSel0Mode(baseAddr, erefs);
+    MCG_WR_C2(base, (MCG_RD_C2(base)
+                  & ~(MCG_C2_RANGE_MASK  |
+                      MCG_C2_HGO_MASK    |
+                      MCG_C2_EREFS_MASK))
+                  |  (MCG_C2_RANGE(range)|
+                      MCG_C2_HGO(hgo)    |
+                      MCG_C2_EREFS(erefs)));
 }
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CLOCK_HAL_EnableOsc0Monitor
+ * Description   : Enable the OSC0 external clock monitor.
+ *
+ *END**************************************************************************/
+void CLOCK_HAL_EnableOsc0Monitor(MCG_Type * base, mcg_osc_monitor_mode_t mode)
+{
+    MCG_BWR_C2_LOCRE0(base, mode);
+    MCG_BWR_C6_CME0(base, 1U);
+}
+
+#if FSL_FEATURE_MCG_HAS_RTC_32K
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CLOCK_HAL_EnableRtcOscMonitor
+ * Description   : Enable the RTC OSC external clock monitor.
+ *
+ *END**************************************************************************/
+void CLOCK_HAL_EnableRtcOscMonitor(MCG_Type * base, mcg_osc_monitor_mode_t mode)
+{
+    MCG_BWR_C8_LOCRE1(base, mode);
+    MCG_BWR_C8_CME1(base, 1U);
+}
+#endif
 
 #if FSL_FEATURE_MCG_HAS_OSC1
 /*FUNCTION**********************************************************************
@@ -688,44 +818,46 @@ void CLOCK_HAL_SetOsc0Mode(uint32_t baseAddr,
  * oscillator select and external reference select.
  *
  *END**************************************************************************/
-void CLOCK_HAL_SetOsc1Mode(uint32_t baseAddr,
-                           mcg_freq_range_select_t range,
-                           mcg_high_gain_osc_select_t hgo,
-                           mcg_external_ref_clock_select_t erefs)
+void CLOCK_HAL_SetOsc1Mode(MCG_Type * base,
+                           osc_range_t range,
+                           osc_gain_t hgo,
+                           osc_src_t erefs)
 {
-    CLOCK_HAL_SetRange1Mode(baseAddr, range);
-    CLOCK_HAL_SetHighGainOsc1Mode(baseAddr, hgo);
-    CLOCK_HAL_SetExternalRefSel1Mode(baseAddr, erefs);
+    MCG_WR_C10(base, (MCG_RD_C10(base)
+                  & ~(MCG_C10_RANGE1_MASK  |
+                      MCG_C10_HGO1_MASK    |
+                      MCG_C10_EREFS1_MASK))
+                  |  (MCG_C10_RANGE1(range)|
+                      MCG_C10_HGO1(hgo)    |
+                      MCG_C10_EREFS1(erefs)));
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CLOCK_HAL_EnableOsc1Monitor
+ * Description   : Enable the OSC1 external clock monitor.
+ *
+ *END**************************************************************************/
+void CLOCK_HAL_EnableOsc1Monitor(MCG_Type * base, mcg_osc_monitor_mode_t mode)
+{
+    MCG_BWR_C10_LOCRE2(base, mode);
+    MCG_BWR_C12_CME2(base, 1U);
 }
 #endif
 
+#if FSL_FEATURE_MCG_HAS_EXTERNAL_PLL
 /*FUNCTION**********************************************************************
  *
- * Function Name : CLOCK_HAL_SetAutoTrimMachineCmpVal
- * Description   : This function sets the auto trim machine compare value.
+ * Function Name : CLOCK_HAL_EnableExtPllMonitor
+ * Description   : Enable the External PLL clock monitor.
  *
  *END**************************************************************************/
-void CLOCK_HAL_SetAutoTrimMachineCmpVal(uint32_t baseAddr, uint16_t value)
+void CLOCK_HAL_EnableExtPllMonitor(MCG_Type * base, mcg_osc_monitor_mode_t mode)
 {
-    BW_MCG_ATCVL_ATCVL(baseAddr, (value & 0xFFU));
-    BW_MCG_ATCVH_ATCVH(baseAddr, ((value >> 8U) & 0xFFU));
+    MCG_BWR_C9_PLL_LOCRE(base, mode);
+    MCG_BWR_C9_PLL_CME(base, 1U);
 }
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CLOCK_HAL_GetAutoTrimMachineCmpVal
- * Description   : This function gets the auto trim machine compare value.
- *
- *END**************************************************************************/
-uint16_t CLOCK_HAL_GetAutoTrimMachineCompVal(uint32_t baseAddr)
-{
-    uint16_t ret;
-
-    ret = BR_MCG_ATCVH_ATCVH(baseAddr);
-    ret <<= 8U;
-    ret |= BR_MCG_ATCVL_ATCVL(baseAddr);
-    return ret;
-}
+#endif
 
 /*FUNCTION**********************************************************************
  *
@@ -735,7 +867,7 @@ uint16_t CLOCK_HAL_GetAutoTrimMachineCompVal(uint32_t baseAddr)
  * of 8MHz to 16MHz.
  *
  *END**************************************************************************/
-mcg_atm_error_t CLOCK_HAL_TrimInternalRefClk(uint32_t  baseAddr,
+mcg_atm_error_t CLOCK_HAL_TrimInternalRefClk(MCG_Type* base,
                                              uint32_t  extFreq,
                                              uint32_t  desireFreq,
                                              uint32_t* actualFreq,
@@ -750,11 +882,27 @@ mcg_atm_error_t CLOCK_HAL_TrimInternalRefClk(uint32_t  baseAddr,
         return kMcgAtmErrorBusClockRange;
     }
 
+    /* Check desired frequency range. */
+    if (kMcgAtmSel4m == atms)
+    {
+        if ((desireFreq < 3000000U) || (desireFreq > 5000000U))
+        {
+            return kMcgAtmErrorDesireFreqRange;
+        }
+    }
+    else
+    {
+        if ((desireFreq < 31250U) || (desireFreq > 39063U))
+        {
+            return kMcgAtmErrorDesireFreqRange;
+        }
+    }
+
     /*
      * Make sure internal reference clock is not used to generate bus clock.
      * Just need to check C1[IREFS].
      */
-    if (kMcgInternalRefClkSrcSlow == CLOCK_HAL_GetInternalRefSelMode(baseAddr))
+    if (kMcgFllSrcInternal == MCG_BRD_C1_IREFS(base))
     {
         return kMcgAtmErrorIrcUsed;
     }
@@ -768,16 +916,17 @@ mcg_atm_error_t CLOCK_HAL_TrimInternalRefClk(uint32_t  baseAddr,
     }
 
     /* Now begin to start trim. */
-    CLOCK_HAL_SetAutoTrimMachineCmpVal(baseAddr, (uint16_t)actv);
+    MCG_WR_ATCVL(base, (actv & 0xFFU));
+    MCG_WR_ATCVH(base, ((actv >> 8U) & 0xFFU));
 
-    CLOCK_HAL_SetAutoTrimMachineSelMode(baseAddr, atms);
+    MCG_BWR_SC_ATMS(base, atms);
 
-    CLOCK_HAL_SetAutoTrimMachineCmd(baseAddr, true);
+    MCG_BWR_SC_ATME(base, 1U);
 
-    while (CLOCK_HAL_GetAutoTrimMachineCmd(baseAddr)) {}
+    while (MCG_BRD_SC_ATME(base)) {}
 
     /* Error occurs? */
-    if (kMcgAutoTrimMachineNormal != CLOCK_HAL_GetAutoTrimMachineFailStatus(baseAddr))
+    if (CLOCK_HAL_IsAutoTrimMachineFailed(base))
     {
         return kMcgAtmErrorHardwareFail;
     }
@@ -795,6 +944,7 @@ mcg_atm_error_t CLOCK_HAL_TrimInternalRefClk(uint32_t  baseAddr,
 
     return kMcgAtmErrorNone;
 }
+#endif
 
 /*******************************************************************************
  * EOF

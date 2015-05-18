@@ -79,7 +79,7 @@
  /*!
   * @brief Structure used to hold the detailed information about the composite class configuration.
   *
-  * Define the structure of detailed inforamtion of the composite class. 
+  * Define the structure of detailed information of the composite class.
   *
   */
  typedef struct _composite_config_struct
@@ -91,34 +91,59 @@
 /******************************************************************************
  * Global function prototypes
  *****************************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif 
  /*!
- * @brief The funtion initializes the Device and Controller layer 
+ * @brief The function initializes the Device and Controller layer
  *
  * This function initializes the Composite Class layer and layers it is dependent on 
  *
- * @param controller_id	[in] - controller ID, like USB_CONTROLLER_KHCI_0
- * @param composite_callback_ptr	[in] - composite configuration structure, refer to composite_config_struct_t
- * @param compositeHandle	[out] - pointer point to the initialized composite class, refer to composite_handle_t    
+ * @param controller_id             [in] - controller ID, like USB_CONTROLLER_KHCI_0
+ * @param composite_callback_ptr    [in] - composite configuration structure, refer to composite_config_struct_t
+ * @param compositeHandle           [out] - pointer point to the initialized composite class, refer to composite_handle_t    
  *
  * @return USB_OK-Success/Others-Fail
  */
 extern usb_status USB_Composite_Init(
-    uint8_t                    controller_ID,                /* [IN] Controller ID */
-    composite_config_struct_t* composite_callback_ptr,       /* [IN] Poiter to class info */
+    uint8_t                    controller_id,                /* [IN] Controller ID */
+    composite_config_struct_t* composite_callback_ptr,       /* [IN] Pointer to class info */
     composite_handle_t*         compositeHandle   
 );
 
 /*!
-* @brief The funtion deinitializes the Device and Controller layer 
+* @brief The function de-initializes the Device and Controller layer
 *
-* This function deinitializes the Composite Class layer and layers it is dependent on 
+* This function de-initializes the Composite Class layer and layers it is dependent on
 *
 * @param compositeHandle   [in] - pointer point to the initialized composite class, refer to composite_handle_t    
 *
 * @return USB_OK-Success/Others-Fail
 */
 extern usb_status USB_Composite_DeInit(
-    composite_handle_t          compositeHandle               /* [IN] Controller ID */
+    composite_handle_t          handle               /* [IN] Controller ID */
 );
+
+/**************************************************************************//*!
+ *
+ * @name  USB_Composite_Get_Speed
+ *
+ * @brief This functions get speed from Host.
+ *
+ * @param handle          :   handle returned by USB_Composite_Init
+ * @param speed           :   speed
+ *
+ * @return status       
+ *         USB_OK         : When Successfull 
+ *         Others         : Errors
+ *****************************************************************************/
+usb_status USB_Composite_Get_Speed
+(
+    composite_handle_t   handle,
+    uint16_t *           speed/* [OUT] the requested error */
+);
+#ifdef __cplusplus
+}
+#endif
 #endif
 /* EOF */

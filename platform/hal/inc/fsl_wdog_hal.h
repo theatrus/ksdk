@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_WDOG_COUNT
 
 /*! 
  * @addtogroup wdog_hal
@@ -44,47 +45,56 @@
  * Definitions
  *******************************************************************************/
 
-#define WDOG_UNLOCK_VALUE_HIGH (0xC520U)
-#define WDOG_UNLOCK_VALUE_LOW (0xD928U)
+/*! @brief Descriptes wdog clock source structure */
+typedef enum _wdog_clk_src
+{
+    kWdogLpoClkSrc       = 0U,  /*!< wdog clock sourced from LPO @internal gui name="LPO clock" */
+    kWdogAlternateClkSrc = 1U   /*!< wdog clock sourced from alternate clock source @internal gui name="Bus clock" */
+}wdog_clk_src_t;
 
-#define WDOG_REFRESH_VALUE_HIGH (0xA602U)
-#define WDOG_REFRESH_VALUE_LOW (0xB480U)
+/*! @brief Descriptes wdog work mode structure */
+typedef struct _wdog_work_mode
+{
+    bool kWdogEnableInWaitMode;   /*!< Enables or disables wdog in wait mode  */
+    bool kWdogEnableInStopMode;   /*!< Enables or disables wdog in stop mode  */
+    bool kWdogEnableInDebugMode;  /*!< Enables or disables wdog in debug mode */
+}wdog_work_mode_t;
 
-/*! @brief Define the selection of the clock prescaler*/
-typedef enum _wdog_clock_prescaler_value {
-    kWdogClockPrescalerValueDevide1 = 0x0U, /*!< Divided by 1 */
-    kWdogClockPrescalerValueDevide2 = 0x1U, /*!< Divided by 2 */
-    kWdogClockPrescalerValueDevide3 = 0x2U, /*!< Divided by 3 */
-    kWdogClockPrescalerValueDevide4 = 0x3U, /*!< Divided by 4 */
-    kWdogClockPrescalerValueDevide5 = 0x4U, /*!< Divided by 5 */
-    kWdogClockPrescalerValueDevide6 = 0x5U, /*!< Divided by 6 */
-    kWdogClockPrescalerValueDevide7 = 0x6U, /*!< Divided by 7 */
-    kWdogClockPrescalerValueDevide8 = 0x7U  /*!< Divided by 8 */
-} wdog_clock_prescaler_value_t;
+/*! @brief Descripts the selection of the clock prescaler */
+typedef enum _wdog_clk_prescaler {
+    kWdogClkPrescalerDivide1 = 0x0U, /*!< Divided by 1 @internal gui name="1" */
+    kWdogClkPrescalerDivide2 = 0x1U, /*!< Divided by 2 @internal gui name="2" */
+    kWdogClkPrescalerDivide3 = 0x2U, /*!< Divided by 3 @internal gui name="3" */
+    kWdogClkPrescalerDivide4 = 0x3U, /*!< Divided by 4 @internal gui name="4" */
+    kWdogClkPrescalerDivide5 = 0x4U, /*!< Divided by 5 @internal gui name="5" */
+    kWdogClkPrescalerDivide6 = 0x5U, /*!< Divided by 6 @internal gui name="6" */
+    kWdogClkPrescalerDivide7 = 0x6U, /*!< Divided by 7 @internal gui name="7" */
+    kWdogClkPrescalerDivide8 = 0x7U  /*!< Divided by 8 @internal gui name="8" */
+} wdog_clk_prescaler_t;
 
-/*! @brief Define the common configure */
-typedef union _wdog_common_config {
-    uint32_t U;
-    struct CommonConfig {
-        uint32_t wdogEnable:1; /*!< Enable configure, 1 means enable WDOG */
-        uint32_t clockSource:1; /*!< Clock source */
-        uint32_t interruptEnable:1; /*!< WDOG interrupt configure, 1 means enable interrupt */
-        uint32_t windowModeEnable:1; /*!< Window mode configure, 1 means enable window mode */
-        uint32_t updateRegisterEnable:1; /*!< 1 means WDOG register can reconfigure by unlock */
-        uint32_t workInDebugModeEnable:1; /*!< 1 means WDOG works while CPU in Debug mode */
-        uint32_t workInStopModeEnable:1; /*!< 1 means WDOG works while CPU in Debug mode */
-        uint32_t workInWaitModeEnable:1; /*!< 1 means WDOG works while CPU in Debug mode */
-        uint32_t reserved0:1; /*!< Reserved */
-        uint32_t reserved1:1; /*!< Reserved */
-        uint32_t testWdog:1; /*!< WDOG enable configure */
-        uint32_t testSelect:1; /*!< 0 means quick test, 1 means byte test */
-        uint32_t byteSelect:2; /*!< Test byte select */
-        uint32_t disableTestWdog:1; /*!< 1 means WDOG test mode is disabled */
-        uint32_t reserved2:1;  /*!< Reserved */
-        uint32_t reserved3:16;  /*!< Reserved */
-    } commonConfig;
-} wdog_common_config;
+/*! @brief Descripts wdog configuration structure 
+    @internal gui name="Basic configuration" id="wdogCfg"
+ */
+typedef struct _wdog_config
+{
+    bool                 wdogEnable;   /*!< Enables or disables wdog @internal gui name="Watchdog" id="Watchdog" */
+    wdog_clk_src_t       clkSrc;       /*!< Clock source select @internal gui name="Clock source" id="ClockSource" */
+    wdog_clk_prescaler_t prescaler;    /*!< Clock prescaler value @internal gui name="Clock prescaler" id="ClockPrescaler" */
+    wdog_work_mode_t     workMode;     /*!< Configures wdog work mode in debug stop and wait mode @internal gui name="Work mode" id="WorkMode" */
+    bool                 updateEnable; /*!< Update write-once register enable @internal gui name="Update write-once register" id="UpdateReg" */
+    bool                 intEnable;    /*!< Enables or disables wdog interrupt @internal gui name="Interrupt" id="Interrupt" */
+    bool                 winEnable;    /*!< Enables or disables wdog window mode @internal gui name="Window mode" id="WindowMode" */
+    uint32_t             windowValue;  /*!< Window value @internal gui name="Window value" id="WindowValue" */
+    uint32_t             timeoutValue; /*!< Timeout value @internal gui name="Timeout value" id="TimeoutValue" */
+}wdog_config_t;
 
+/*! @brief wdog status return codes.*/
+typedef enum _wdog_status {
+    kStatus_WDOG_Success         = 0x0U, /*!< WDOG operation Succeed      */
+    kStatus_WDOG_Fail            = 0x1U, /*!< WDOG operation Failed       */
+    kStatus_WDOG_NotInitlialized = 0x2U, /*!< WDOG is not initialized yet */
+    kStatus_WDOG_NullArgument    = 0x3U, /*!< Argument is NULL            */
+}wdog_status_t;
 
 /*******************************************************************************
  * API
@@ -100,6 +110,48 @@ extern "C" {
  */
 
 /*!
+ * @brief Enables the Watchdog module.
+ *
+ * This function enables the WDOG.
+ * Make sure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
+ * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
+ *
+ * @param base The WDOG peripheral base address
+ */
+static inline void WDOG_HAL_Enable(WDOG_Type * base)
+{
+    WDOG_BWR_STCTRLH_WDOGEN(base, 1U);
+}
+
+/*!
+ * @brief Disables the Watchdog module.
+ * 
+ * This function disables the WDOG.
+ * Make sure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
+ * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
+ *
+ * @param base The WDOG peripheral base address
+ */
+static inline void WDOG_HAL_Disable(WDOG_Type * base)
+{
+    WDOG_BWR_STCTRLH_WDOGEN(base, 0U);
+}
+
+/*!
+ * @brief Checks whether the WDOG is enabled.
+ * 
+ * This function checks whether the WDOG is enabled.
+ *
+ * @param base The WDOG peripheral base address
+ * @return false means WDOG is disabled, true means WODG is enabled.
+ *
+ */
+static inline bool WDOG_HAL_IsEnable(WDOG_Type * base)
+{
+    return (bool)WDOG_BRD_STCTRLH_WDOGEN(base);
+}
+
+/*!
  * @brief Sets the WDOG common configure.
  *
  * This function is used to set the WDOG common configure.
@@ -113,55 +165,10 @@ extern "C" {
  * #WDOG_HAL_SetRegisterUpdateCmd,#WDOG_HAL_SetWorkInDebugModeCmd,#WDOG_HAL_SetWorkInStopModeCmd,
  * #WDOG_HAL_SetWorkInWaitModeCmd
  *
- * @param baseAddr The WDOG peripheral base address
- * @param commonConfig The common configure of the WDOG 
+ * @param base The WDOG peripheral base address
+ * @param configPtr The common configure of the WDOG
  */
-static inline void WDOG_HAL_SetCommonConfig(uint32_t baseAddr, wdog_common_config commonConfig)
-{
-    HW_WDOG_STCTRLH_WR(baseAddr,(uint16_t)commonConfig.U);
-}
-
-/*!
- * @brief Enables the Watchdog module.
- *
- * This function enables the WDOG.
- * Make sure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- *
- * @param baseAddr The WDOG peripheral base address
- */
-static inline void WDOG_HAL_Enable(uint32_t baseAddr)
-{
-    BW_WDOG_STCTRLH_WDOGEN(baseAddr, (uint8_t)true);
-}
-
-/*!
- * @brief Disables the Watchdog module.
- * 
- * This function disables the WDOG.
- * Make sure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- *
- * @param baseAddr The WDOG peripheral base address
- */
-static inline void WDOG_HAL_Disable(uint32_t baseAddr)
-{
-    BW_WDOG_STCTRLH_WDOGEN(baseAddr, (uint8_t)false);
-}
-
-/*!
- * @brief Checks whether the WDOG is enabled.
- * 
- * This function checks whether the WDOG is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return false means WDOG is disabled, true means WODG is enabled.
- *
- */
-static inline bool WDOG_HAL_IsEnabled(uint32_t baseAddr)
-{
-    return (bool)BR_WDOG_STCTRLH_WDOGEN(baseAddr);
-}
+void WDOG_HAL_SetConfig(WDOG_Type * base, const wdog_config_t *configPtr);
 
 /*!
  * @brief Enables and disables the Watchdog interrupt.
@@ -171,212 +178,12 @@ static inline bool WDOG_HAL_IsEnabled(uint32_t baseAddr)
  * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
  * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  * @param enable false means disable watchdog interrupt and true means enable watchdog interrupt.
  */
-static inline void WDOG_HAL_SetIntCmd(uint32_t baseAddr,  bool enable)
+static inline void WDOG_HAL_SetIntCmd(WDOG_Type * base,  bool enable)
 {
-    BW_WDOG_STCTRLH_IRQRSTEN(baseAddr, (uint8_t)enable);
-}
-
-/*!
- * @brief Checks whether the WDOG interrupt is enabled.
- *
- * This function checks whether the WDOG interrupt is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return false means interrupt is disabled, true means interrupt is enabled.
- */
-static inline bool WDOG_HAL_GetIntCmd(uint32_t baseAddr)
-{
-    return (bool)BR_WDOG_STCTRLH_IRQRSTEN(baseAddr);
-}
-
-/*!
- * @brief Sets the Watchdog clock Source.
- *
- * This function sets the WDOG clock source. There are two clock sources that can be used:
- * the LPO clock and the bus clock.
- * Make sure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @param clockSource watchdog clock source.
- */
-static inline void WDOG_HAL_SetClockSourceMode(uint32_t baseAddr,  uint8_t clockSource)
-{
-    BW_WDOG_STCTRLH_CLKSRC(baseAddr, clockSource);
-}
-
-/*!
- * @brief Gets the Watchdog clock Source.
- *
- * This function gets the WDOG clock source. There are two clock sources that can be used:
- * the LPO clock and the bus clock.
- * A Clock Switching Delay time is about 2 clock A cycles plus 2
- * clock B, where clock A and B are the two input clocks to the clock mux.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return watchdog clock source.
- */
-static inline uint8_t WDOG_HAL_GetClockSourceMode(uint32_t baseAddr)
-{
-    return BR_WDOG_STCTRLH_CLKSRC(baseAddr);
-}
-
-/*!
- * @brief Enables and disables the Watchdog window mode.
- *
- * This function configures the WDOG window mode.
- * Make sure WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @param enable false means disable watchdog window mode. true means enable watchdog window mode.
- */
-static inline void WDOG_HAL_SetWindowModeCmd(uint32_t baseAddr,  bool enable)
-{
-    BW_WDOG_STCTRLH_WINEN(baseAddr, (uint8_t)enable);
-}
-
-/*!
- * @brief Checks whether the window mode is enabled.
- *
- * This function checks whether the WDOG window mode is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return false means window mode is disabled, true means window mode is enabled.
- */
-static inline bool WDOG_HAL_GetWindowModeCmd(uint32_t baseAddr)
-{
-    return (bool)BR_WDOG_STCTRLH_WINEN(baseAddr);
-}
-
-/*!
- * @brief Enables and disables the Watchdog write-once-only register update.
- *
- * This function configures the WDOG register update feature. If disabled, it means that
- * all WDOG registers is never  written again unless Power On Reset.
- * Make sure WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @param enable false means disable watchdog write-once-only register update.
- *                  true means enable watchdog write-once-only register update.
- */
-static inline void WDOG_HAL_SetRegisterUpdateCmd(uint32_t baseAddr,  bool enable)
-{
-    BW_WDOG_STCTRLH_ALLOWUPDATE(baseAddr, (uint8_t)enable);
-}
-
-/*!
- * @brief Checks whether the register update is enabled.
- *
- * This function checks whether the WDOG register update is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return false means register update is disabled, true means register update is enabled.
- */
-static inline bool WDOG_HAL_GetRegisterUpdateCmd(uint32_t baseAddr)
-{
-    return (bool)BR_WDOG_STCTRLH_ALLOWUPDATE(baseAddr);
-}
-
-/*!
- * @brief Sets whether Watchdog is working while the CPU is in debug mode.
- *
- * This function configures whether the WDOG is enabled in the CPU debug mode. 
- * Make sure WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @param enable false means watchdog is disabled in CPU debug mode.
- *                  true means watchdog is enabled in CPU debug mode.
- */
-static inline void WDOG_HAL_SetWorkInDebugModeCmd(uint32_t baseAddr,  bool enable)
-{
-    BW_WDOG_STCTRLH_DBGEN(baseAddr, (uint8_t)enable);
-}
-
-/*!
- * @brief Checks whether the WDOG works while in the CPU debug mode.
- *
- * This function checks whether the WDOG works in the CPU debug mode.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return false means not work while in CPU debug mode, true means works while in CPU debug mode.
- */
-static inline bool WDOG_HAL_GetWorkInDebugModeCmd(uint32_t baseAddr)
-{
-    return (bool)BR_WDOG_STCTRLH_DBGEN(baseAddr);
-}
-
-/*!
- * @brief Sets whether the Watchdog is working while the CPU is in stop mode.
- *
- * This function configures whether the WDOG is enabled in the CPU stop mode. 
- * Make sure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @param enable false means watchdog is disabled in CPU stop mode.
- *                  true means watchdog is enabled in CPU stop mode.
- */
-static inline void WDOG_HAL_SetWorkInStopModeCmd(uint32_t baseAddr,  bool enable)
-{
-    BW_WDOG_STCTRLH_STOPEN(baseAddr, (uint8_t)enable);
-}
-
-/*!
- * @brief Checks whether the WDOG works while in CPU stop mode.
- *
- * This function checks whether the WDOG works in the CPU stop mode.
- * Make sure WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return false means not work while in CPU stop mode, true means works while in CPU stop mode.
- */
-static inline bool WDOG_HAL_GetWorkInStopModeCmd(uint32_t baseAddr)
-{
-    return (bool)BR_WDOG_STCTRLH_STOPEN(baseAddr);
-}
-
-/*!
- * @brief Sets whether the Watchdog is working while the CPU is in wait mode.
- *
- * This function configures whether the WDOG is enabled in the CPU wait mode. 
- * Make sure WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
- *
- * @param baseAddr The WDOG peripheral base address
- * @param enable false means watchdog is disabled in CPU wait mode.
- *                  true means watchdog is enabled in CPU wait mode.
- */
-static inline void WDOG_HAL_SetWorkInWaitModeCmd(uint32_t baseAddr,  bool enable)
-{
-    BW_WDOG_STCTRLH_WAITEN(baseAddr, (uint8_t)enable);
-}
-
-/*!
- * @brief Checks whether the WDOG works while in the CPU wait mode.
- *
- * This function checks whether the WDOG works in the CPU wait mode.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return false means not work while in CPU wait mode, true means works while in CPU wait mode.
- */
-
-static inline bool WDOG_HAL_GetWorkInWaitModeCmd(uint32_t baseAddr)
-{
-    return (bool)BR_WDOG_STCTRLH_WAITEN(baseAddr);
+    WDOG_BWR_STCTRLH_IRQRSTEN(base, enable);
 }
 
 /*!
@@ -384,12 +191,12 @@ static inline bool WDOG_HAL_GetWorkInWaitModeCmd(uint32_t baseAddr)
  *
  * This function gets the WDOG interrupt flag.
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  * @return Watchdog interrupt status, false means interrupt not asserted, true means interrupt asserted.
  */
-static inline bool WDOG_HAL_IsIntPending(uint32_t baseAddr)
+static inline bool WDOG_HAL_GetIntFlag(WDOG_Type * base)
 {
-    return (bool)BR_WDOG_STCTRLL_INTFLG(baseAddr);
+    return (bool)WDOG_BRD_STCTRLL_INTFLG(base);
 }
 
 /*!
@@ -397,11 +204,11 @@ static inline bool WDOG_HAL_IsIntPending(uint32_t baseAddr)
  *
  * This function  clears the WDOG interrupt flag.
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  */
-static inline void WDOG_HAL_ClearIntFlag(uint32_t baseAddr)
+static inline void WDOG_HAL_ClearIntStatusFlag(WDOG_Type * base)
 {
-    BW_WDOG_STCTRLL_INTFLG(baseAddr, true);
+    WDOG_BWR_STCTRLL_INTFLG(base, 1U);
 }
 
 /*!
@@ -414,26 +221,13 @@ static inline void WDOG_HAL_ClearIntFlag(uint32_t baseAddr)
  * this API has not been called in this WCT while this function is called.
  * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  * @param timeoutCount watchdog timeout value, count of watchdog clock tick.
  */
-static inline void WDOG_HAL_SetTimeoutValue(uint32_t baseAddr,  uint32_t timeoutCount)
+static inline void WDOG_HAL_SetTimeoutValue(WDOG_Type * base,  uint32_t timeoutCount)
 {
-    HW_WDOG_TOVALH_WR(baseAddr, (uint16_t)((timeoutCount >> 16U) & 0xFFFFU));
-    HW_WDOG_TOVALL_WR(baseAddr, (uint16_t)((timeoutCount) & 0xFFFFU));
-}
-
-/*!
- * @brief Gets the Watchdog timeout value.
- *
- * This function gets the WDOG_TOVAL value.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return value of register WDOG_TOVAL.
- */
-static inline uint32_t WDOG_HAL_GetTimeoutValue(uint32_t baseAddr)
-{
-    return (uint32_t)((((uint32_t)(HW_WDOG_TOVALH_RD(baseAddr))) << 16U) | (HW_WDOG_TOVALL_RD(baseAddr)));
+    WDOG_WR_TOVALH(base, (uint16_t)((timeoutCount >> 16U) & 0xFFFFU));
+    WDOG_WR_TOVALL(base, (uint16_t)((timeoutCount) & 0xFFFFU));
 }
 
 /*!
@@ -441,41 +235,12 @@ static inline uint32_t WDOG_HAL_GetTimeoutValue(uint32_t baseAddr)
  *
  * This function gets the WDOG_TMROUT value.
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  * @return Current value of watchdog timer counter.
  */
-static inline uint32_t WDOG_HAL_GetTimerOutputValue(uint32_t baseAddr)
+static inline uint32_t WDOG_HAL_GetTimerOutputValue(WDOG_Type * base)
 {
-    return (uint32_t)((((uint32_t)(HW_WDOG_TMROUTH_RD(baseAddr))) << 16U) | (HW_WDOG_TMROUTL_RD(baseAddr)));
-}
-
-/*!
- * @brief Sets the Watchdog clock prescaler.
- *
- * This function sets the WDOG clock prescaler.
- * Make sure WDOG registers are unlocked by the WDOG_HAL_Unlock , that the WCT window is still open and that
- * this API has not been called in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
- * 
- * @param baseAddr The WDOG peripheral base address
- * @param clockPrescaler watchdog clock prescaler, see #wdog_clock_prescaler_value_t.
- */
-static inline void WDOG_HAL_SetClockPrescalerValueMode(uint32_t baseAddr,  wdog_clock_prescaler_value_t clockPrescaler)
-{
-    BW_WDOG_PRESC_PRESCVAL(baseAddr, (uint8_t)clockPrescaler);
-}
-
-/*!
- * @brief Gets the Watchdog clock prescaler.
- *
- * This function gets the WDOG clock prescaler.
- * 
- * @param baseAddr The WDOG peripheral base address
- * @return WDOG clock prescaler, see #wdog_clock_prescaler_value_t.
- */
-static inline wdog_clock_prescaler_value_t WDOG_HAL_GetClockPrescalerValueMode(uint32_t baseAddr)
-{
-    return (wdog_clock_prescaler_value_t)BR_WDOG_PRESC_PRESCVAL(baseAddr);
+    return (uint32_t)((((uint32_t)(WDOG_RD_TMROUTH(base))) << 16U) | (WDOG_RD_TMROUTL(base)));
 }
 
 /*!
@@ -486,26 +251,13 @@ static inline wdog_clock_prescaler_value_t WDOG_HAL_GetClockPrescalerValueMode(u
  * this API has not been called in this WCT while this function is called.
  * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  * @param windowValue watchdog window value.
  */
-static inline void WDOG_HAL_SetWindowValue(uint32_t baseAddr,  uint32_t windowValue)
+static inline void WDOG_HAL_SetWindowValue(WDOG_Type * base,  uint32_t windowValue)
 {
-    HW_WDOG_WINH_WR(baseAddr, (uint16_t)((windowValue>>16U) & 0xFFFFU));
-    HW_WDOG_WINL_WR(baseAddr, (uint16_t)((windowValue) & 0xFFFFU));
-}
-
-/*!
- * @brief Gets the Watchdog window value.
- *
- * This function gets the WDOG_WIN value.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return watchdog window value.
- */
-static inline uint32_t WDOG_HAL_GetWindowValue(uint32_t baseAddr)
-{
-    return (uint32_t)((((uint32_t)(HW_WDOG_WINH_RD(baseAddr))) << 16U) | (HW_WDOG_WINL_RD(baseAddr)));
+    WDOG_WR_WINH(base, (uint16_t)((windowValue>>16U) & 0xFFFFU));
+    WDOG_WR_WINL(base, (uint16_t)((windowValue) & 0xFFFFU));
 }
 
 /*!
@@ -515,12 +267,12 @@ static inline uint32_t WDOG_HAL_GetWindowValue(uint32_t baseAddr)
  * This function must be called before any configuration is set because watchdog register
  * will be locked automatically after a WCT(256 bus cycles).
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  */
-static inline void WDOG_HAL_Unlock(uint32_t baseAddr)
+static inline void WDOG_HAL_Unlock(WDOG_Type * base)
 {
-    HW_WDOG_UNLOCK_WR(baseAddr, WDOG_UNLOCK_VALUE_HIGH);
-    HW_WDOG_UNLOCK_WR(baseAddr, WDOG_UNLOCK_VALUE_LOW);
+    WDOG_WR_UNLOCK(base, 0xC520U);
+    WDOG_WR_UNLOCK(base, 0xD928U);
 }
 
 /*!
@@ -529,12 +281,12 @@ static inline void WDOG_HAL_Unlock(uint32_t baseAddr)
  * This function feeds the WDOG.
  * This function should be called before watchdog timer is in timeout. Otherwise, a reset is asserted.
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  */
-static inline void WDOG_HAL_Refresh(uint32_t baseAddr)
+static inline void WDOG_HAL_Refresh(WDOG_Type * base)
 {
-    HW_WDOG_REFRESH_WR(baseAddr, WDOG_REFRESH_VALUE_HIGH);
-    HW_WDOG_REFRESH_WR(baseAddr, WDOG_REFRESH_VALUE_LOW);
+    WDOG_WR_REFRESH(base, 0xA602U);
+    WDOG_WR_REFRESH(base, 0xB480U);
 }
 
 /*!
@@ -542,40 +294,15 @@ static inline void WDOG_HAL_Refresh(uint32_t baseAddr)
  *
  * This function resets the chip using WDOG.
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  */
-static inline void WDOG_HAL_ResetSystem(uint32_t baseAddr)
+static inline void WDOG_HAL_ResetSystem(WDOG_Type * base)
 {
-    HW_WDOG_REFRESH_WR(baseAddr, WDOG_REFRESH_VALUE_HIGH);
-    HW_WDOG_REFRESH_WR(baseAddr, 0);
+    WDOG_WR_REFRESH(base, 0xA602U);
+    WDOG_WR_REFRESH(base, 0);
     while(1)
     {
     }
-}
-
-/*!
- * @brief Gets the chip reset count that was reset by Watchdog.
- *
- * This function gets the value of the WDOG_RSTCNT.
- *
- * @param baseAddr The WDOG peripheral base address
- * @return Chip reset count that was reset by Watchdog.
- */
-static inline uint32_t WDOG_HAL_GetResetCount(uint32_t baseAddr)
-{
-    return HW_WDOG_RSTCNT_RD(baseAddr);
-}
-
-/*!
- * @brief Clears the chip reset count that was reset by Watchdog.
- *
- * This function clears the WDOG_RSTCNT.
- *
- * @param baseAddr The WDOG peripheral base address
- */
-static inline void WDOG_HAL_ClearResetCount(uint32_t baseAddr)
-{
-    HW_WDOG_RSTCNT_WR(baseAddr, 0xFFFFU);
 }
 
 /*!
@@ -583,9 +310,9 @@ static inline void WDOG_HAL_ClearResetCount(uint32_t baseAddr)
  *
  * This function restores the WDOG module to reset value.
  *
- * @param baseAddr The WDOG peripheral base address
+ * @param base The WDOG peripheral base address
  */
-void WDOG_HAL_Init(uint32_t baseAddr);
+void WDOG_HAL_Init(WDOG_Type * base);
 
 /*@}*/
 
@@ -595,6 +322,7 @@ void WDOG_HAL_Init(uint32_t baseAddr);
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_WDOG_HAL_H__*/
 /*******************************************************************************
  * EOF

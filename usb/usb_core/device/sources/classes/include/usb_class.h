@@ -74,10 +74,10 @@ typedef uint32_t class_handle_t;
 
 /*callback function pointer structure for application to provide class params*/
 typedef uint8_t (_CODE_PTR_ usb_class_specific_handler_func)(
-                           uint8_t,
-                           uint16_t, 
-                           uint8_t **,
-                           uint32_t*,
+                           uint8_t event,
+                           uint16_t value, 
+                           uint8_t **data,
+                           uint32_t* size,
                            void* arg);
 
 
@@ -86,6 +86,30 @@ typedef struct usb_class_specific_handler_callback_struct
     usb_class_specific_handler_func  callback;
     void*                            arg;
 }usb_class_specific_callback_struct_t;
+
+
+/******************************************************************************
+ * Global Functions
+ *****************************************************************************/
+#if defined(__cplusplus)
+    extern "C" {
+#endif
+/**************************************************************************//*!
+ *
+ * @name   USB_Class_Periodic_Task
+ *
+ * @brief  The function calls for periodic tasks
+ *
+ * @param  None
+ *
+ * @return None
+ *
+ *****************************************************************************/
+extern void USB_Class_Periodic_Task(void);
+
+#if defined(__cplusplus)
+    }
+#endif
 
 #endif
 

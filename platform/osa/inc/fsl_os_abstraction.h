@@ -67,6 +67,9 @@ typedef enum _osa_critical_section_mode_t
     kCriticalDisableInt  = 1U   /*!< Disable interrupt in critical selection. */
 } osa_critical_section_mode_t;
 
+/*! @brief OSA interrupt handler. */
+typedef void (*osa_int_handler_t)(void);
+
 /* Include required header file based on RTOS selection */
 #if defined (FSL_RTOS_MQX)
     #define USE_RTOS 1
@@ -112,7 +115,7 @@ extern "C" {
  * @param initValue Initial value the semaphore will be set to.
  *
  * @retval kStatus_OSA_Success The semaphore is created successfully.
- * @retval kStatus_OSA_Error   The semaphore can not be created.
+ * @retval kStatus_OSA_Error   The semaphore cannot be created.
  *
  * Example:
    @code
@@ -141,7 +144,7 @@ osa_status_t OSA_SemaCreate(semaphore_t *pSem, uint8_t initValue);
  * @retval kStatus_OSA_Idle    The semaphore is not available and 'timeout' is not exhausted,
  *                             This is only for bare metal.
  *
- * @note With bare metal, a semaphore can not be waited by more than one task
+ * @note With bare metal, a semaphore cannot be waited on by more than one task
  * at the same time.
  *
  * Example:
@@ -166,7 +169,7 @@ osa_status_t OSA_SemaWait(semaphore_t *pSem, uint32_t timeout);
  * @param pSem Pointer to the semaphore to signal.
  *
  * @retval kStatus_OSA_Success The semaphore is successfully signaled.
- * @retval kStatus_OSA_Error   The object can not be signaled or invalid parameter.
+ * @retval kStatus_OSA_Error   The object cannot be signaled or invalid parameter.
  *
  * Example:
  * @code
@@ -187,7 +190,7 @@ osa_status_t OSA_SemaPost(semaphore_t *pSem);
  * @param pSem Pointer to the semaphore to destroy.
  *
  * @retval kStatus_OSA_Success The semaphore is successfully destroyed.
- * @retval kStatus_OSA_Error   The semaphore can not be destroyed.
+ * @retval kStatus_OSA_Error   The semaphore cannot be destroyed.
  *
  * Example:
  * @code
@@ -217,7 +220,7 @@ osa_status_t OSA_SemaDestroy(semaphore_t *pSem);
  * @param pMutex Pointer to the Mutex.
  *
  * @retval kStatus_OSA_Success The mutex is created successfully.
- * @retval kStatus_OSA_Error   The mutex can not be created.
+ * @retval kStatus_OSA_Error   The mutex cannot be created.
  *
  * Example:
    @code
@@ -251,7 +254,7 @@ osa_status_t OSA_MutexCreate(mutex_t *pMutex);
  * @retval kStatus_OSA_Idle    The mutex is not available and 'timeout' is not exhausted,
  *                             This is only for bare metal.
  *
- * @note This is non-recursive mutex, a task can not try to lock the mutex it has locked.
+ * @note This is non-recursive mutex, a task cannot try to lock the mutex it has locked.
  *
  * Example:
    @code
@@ -272,7 +275,7 @@ osa_status_t OSA_MutexLock(mutex_t *pMutex, uint32_t timeout);
  * @param pMutex Pointer to the Mutex.
  *
  * @retval kStatus_OSA_Success The mutex is successfully unlocked.
- * @retval kStatus_OSA_Error   The mutex can not be unlocked or invalid parameter.
+ * @retval kStatus_OSA_Error   The mutex cannot be unlocked or invalid parameter.
  *
  * Example:
    @code
@@ -292,7 +295,7 @@ osa_status_t OSA_MutexUnlock(mutex_t *pMutex);
  * @param pMutex Pointer to the Mutex.
  *
  * @retval kStatus_OSA_Success The mutex is successfully destroyed.
- * @retval kStatus_OSA_Error   The mutex can not be destroyed.
+ * @retval kStatus_OSA_Error   The mutex cannot be destroyed.
  *
  * Example:
    @code
@@ -359,7 +362,7 @@ osa_status_t OSA_EventCreate(event_t *pEvent, osa_event_clear_mode_t clearMode);
  * @retval kStatus_OSA_Idle    The wait condition is not met and 'timeout' is not exhausted,
  *                             This is only for bare metal.
  *
- * @note 1. With bare metal, a event object can not be waited by more than one tasks
+ * @note 1. With bare metal, a event object cannot be waited on by more than one tasks
  *          at the same time.
  *       2. Please pay attention to the flags bit width, FreeRTOS uses the most
  *          significant 8 bis as control bits, so do not wait these bits while using
@@ -492,7 +495,7 @@ osa_status_t OSA_EventDestroy(event_t *pEvent);
  * @param handler   Pointer to the task handler.
  *
  * @retval kStatus_OSA_Success The task is successfully created.
- * @retval kStatus_OSA_Error   The task can not be created..
+ * @retval kStatus_OSA_Error   The task cannot be created..
  *
  * Example:
    @code
@@ -603,7 +606,7 @@ uint16_t OSA_TaskGetPriority(task_handler_t handler);
  * @param priority The priority to set.
  *
  * @retval kStatus_OSA_Success Task's priority is set successfully.
- * @retval kStatus_OSA_Error   Task's priority can not be set.
+ * @retval kStatus_OSA_Error   Task's priority cannot be set.
  *
  * Example:
    @code
@@ -629,7 +632,7 @@ osa_status_t OSA_TaskSetPriority(task_handler_t handler, uint16_t priority);
  * @brief Initializes a message queue.
  *
  * This function  initializes the message queue that was declared previously.
- * This is an example demonstrating use:
+ * This is an example demonstrating the use of the function:
    @code
    msg_queue_handler_t handler;
    MSG_QUEUE_DECLARE(my_message, msg_num, msg_size);
@@ -799,11 +802,13 @@ uint32_t OSA_TimeGetMsec(void);
  * @param IRQNumber IRQ number of the interrupt.
  * @param handler The interrupt handler to install.
  *
- * @retval kStatus_OSA_Success Handler is installed successfully.
- * @retval kStatus_OSA_Error   Handler could not be installed.
+ * @return This function returns the old interrupt handler installed in vector
+ *         table. If could not install ISR, this function returns NULL; The
+ *         return value could be compared with OSA_DEFAULT_INT_HANDLER to
+ *         detect whether this is the first interrupt handler installed.
  */
-osa_status_t OSA_InstallIntHandler (int32_t IRQNumber,
-                                                        void (*handler)(void));
+osa_int_handler_t OSA_InstallIntHandler(int32_t IRQNumber,
+                                        osa_int_handler_t handler);
 
 /* @} */
 

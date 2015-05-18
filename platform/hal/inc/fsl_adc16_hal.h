@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 #ifndef __FSL_ADC16_HAL_H__
 #define __FSL_ADC16_HAL_H__
 
@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_ADC16_COUNT
 
 /*!
  * @addtogroup adc16_hal
@@ -42,13 +43,13 @@
  */
 
 /******************************************************************************
- * Definitions
+ * Enumerations.
  *****************************************************************************/
 
 /*!
  * @brief ADC16 status return codes.
  */
-typedef enum _adc16_status 
+typedef enum _adc16_status
 {
     kStatus_ADC16_Success         = 0U, /*!< Success. */
     kStatus_ADC16_InvalidArgument = 1U, /*!< Invalid argument existed. */
@@ -59,152 +60,291 @@ typedef enum _adc16_status
 
 /*!
  * @brief Defines the type of the enumerating channel multiplexer mode for each channel.
- * 
+ *
  * For some ADC16 channels, there are two selections for the channel multiplexer. For
  * example, ADC0_SE4a and ADC0_SE4b are the different channels but share the same
- * channel number.
+ * channel index.
  */
 typedef enum _adc16_chn_mux_mode
 {
-    kAdcChnMuxOfA = 0U, /*!< For channel with channel mux a. */
-    kAdcChnMuxOfB = 1U, /*!< For channel with channel mux b. */
-    kAdcChnMuxOfDefault = kAdcChnMuxOfA /*!< For channel without any channel mux identifier. */
+    kAdc16ChnMuxOfA = 0U, /*!< For channel with channel mux a. @internal gui name="MUX A" */
+    kAdc16ChnMuxOfB = 1U, /*!< For channel with channel mux b. @internal gui name="MUX B" */
+    kAdc16ChnMuxOfDefault = kAdc16ChnMuxOfA /*!< For channel without any channel mux identifier. @internal gui name="" */
 } adc16_chn_mux_mode_t;
 #endif /* FSL_FEATURE_ADC16_HAS_MUX_SELECT */
 
 /*!
  * @brief Defines the type of the enumerating divider for the converter.
  */
-typedef enum _adc16_clk_divider_mode
+typedef enum _adc16_clk_divider
 {
-    kAdcClkDividerInputOf1 = 0U, /*!< For divider 1 from the input clock to ADC. */
-    kAdcClkDividerInputOf2 = 1U, /*!< For divider 2 from the input clock to ADC. */
-    kAdcClkDividerInputOf4 = 2U, /*!< For divider 4 from the input clock to ADC. */
-    kAdcClkDividerInputOf8 = 3U  /*!< For divider 8 from the input clock to ADC. */
-} adc16_clk_divider_mode_t;
+    kAdc16ClkDividerOf1 = 0U, /*!< For divider 1 from the input clock to ADC16. @internal gui name="1" */
+    kAdc16ClkDividerOf2 = 1U, /*!< For divider 2 from the input clock to ADC16. @internal gui name="2" */
+    kAdc16ClkDividerOf4 = 2U, /*!< For divider 4 from the input clock to ADC16. @internal gui name="4" */
+    kAdc16ClkDividerOf8 = 3U  /*!< For divider 8 from the input clock to ADC16. @internal gui name="8" */
+} adc16_clk_divider_t;
 
 /*!
  *@brief Defines the type of the enumerating resolution for the converter.
  */
-typedef enum _adc16_resolution_mode
+typedef enum _adc16_resolution
 {
-    kAdcResolutionBitOf8or9 = 0U,
-        /*!< 8-bit for single end sample, or 9-bit for differential sample. */
-    kAdcResolutionBitOfSingleEndAs8 = kAdcResolutionBitOf8or9, /*!< 8-bit for single end sample. */
-    kAdcResolutionBitOfDiffModeAs9 = kAdcResolutionBitOf8or9, /*!< 9-bit for differential sample. */
-    
-    kAdcResolutionBitOf12or13 = 1U,
-        /*!< 12-bit for single end sample, or 13-bit for differential sample. */
-    kAdcResolutionBitOfSingleEndAs12 = kAdcResolutionBitOf12or13, /*!< 12-bit for single end sample. */
-    kAdcResolutionBitOfDiffModeAs13 = kAdcResolutionBitOf12or13, /*!< 13-bit for differential sample. */
-    
-    kAdcResolutionBitOf10or11 = 2U,
-        /*!< 10-bit for single end sample, or 11-bit for differential sample. */
-    kAdcResolutionBitOfSingleEndAs10 = kAdcResolutionBitOf10or11, /*!< 10-bit for single end sample. */
-    kAdcResolutionBitOfDiffModeAs11 = kAdcResolutionBitOf10or11 /*!< 11-bit for differential sample. */
-#if (FSL_FEATURE_ADC16_MAX_RESOLUTION>=16)
-    , kAdcResolutionBitOf16 = 3U,
-        /*!< 16-bit for both single end sample and differential sample. */
-    kAdcResolutionBitOfSingleEndAs16 = kAdcResolutionBitOf16, /*!< 16-bit for single end sample. */
-    kAdcResolutionBitOfDiffModeAs16 = kAdcResolutionBitOf16 /*!< 16-bit for differential sample. */
+    kAdc16ResolutionBitOf8or9 = 0U,
+        /*!< 8-bit for single end sample, or 9-bit for differential sample. @internal gui name="" */
+    kAdc16ResolutionBitOfSingleEndAs8 = kAdc16ResolutionBitOf8or9, /*!< 8-bit for single end sample. @internal gui name="8 bit in single mode" */
+    kAdc16ResolutionBitOfDiffModeAs9 = kAdc16ResolutionBitOf8or9, /*!< 9-bit for differential sample. @internal gui name="9 bit in differential mode" */
+
+    kAdc16ResolutionBitOf12or13 = 1U,
+        /*!< 12-bit for single end sample, or 13-bit for differential sample. @internal gui name="" */
+    kAdc16ResolutionBitOfSingleEndAs12 = kAdc16ResolutionBitOf12or13, /*!< 12-bit for single end sample. @internal gui name="12 bit in single mode" */
+    kAdc16ResolutionBitOfDiffModeAs13 = kAdc16ResolutionBitOf12or13, /*!< 13-bit for differential sample. @internal gui name="13 bit in differential mode" */
+
+    kAdc16ResolutionBitOf10or11 = 2U,
+        /*!< 10-bit for single end sample, or 11-bit for differential sample. @internal gui name="" */
+    kAdc16ResolutionBitOfSingleEndAs10 = kAdc16ResolutionBitOf10or11, /*!< 10-bit for single end sample. @internal gui name="10 bit in single mode" */
+    kAdc16ResolutionBitOfDiffModeAs11 = kAdc16ResolutionBitOf10or11 /*!< 11-bit for differential sample. @internal gui name="11 bit in differential mode" */
+#if (FSL_FEATURE_ADC16_MAX_RESOLUTION >= 16U)
+    , kAdc16ResolutionBitOf16 = 3U,
+        /*!< 16-bit for both single end sample and differential sample. @internal gui name="16-bit" */
+    kAdc16ResolutionBitOfSingleEndAs16 = kAdc16ResolutionBitOf16, /*!< 16-bit for single end sample. @internal gui name="" */
+    kAdc16ResolutionBitOfDiffModeAs16 = kAdc16ResolutionBitOf16 /*!< 16-bit for differential sample. @internal gui name="" */
 
 #endif /* FSL_FEATURE_ADC16_MAX_RESOLUTION */
-} adc16_resolution_mode_t;
+} adc16_resolution_t;
 
 /*!
  * @brief Defines the type of the enumerating source of the input clock.
  */
 typedef enum _adc16_clk_src_mode
 {
-    kAdcClkSrcOfBusClk = 0U, /*!< For input as bus clock. */
-    kAdcClkSrcOfBusOrAltClk2 = 1U, /*!< For input as bus clock /2 or AltClk2. */
-    kAdcClkSrcOfAltClk = 2U, /*!< For input as alternate clock (ALTCLK). */
-    kAdcClkSrcOfAsynClk = 3U /*!< For input as asynchronous clock (ADACK). */
+    kAdc16ClkSrcOfBusClk  = 0U, /*!< For input as bus clock. @internal gui name="Bus clock" */
+    kAdc16ClkSrcOfAltClk2 = 1U, /*!< For input as alternate clock 2 (AltClk2). @internal gui name="Alternate clock 2" */
+    kAdc16ClkSrcOfAltClk  = 2U, /*!< For input as alternate clock (ALTCLK). @internal gui name="Alternate clock 1" */
+    kAdc16ClkSrcOfAsynClk = 3U  /*!< For input as asynchronous clock (ADACK). @internal gui name="Asynchronous clock" */
 } adc16_clk_src_mode_t;
 
 /*!
  * @brief Defines the type of the enumerating long sample cycles.
  */
-typedef enum _adc16_long_sample_cycle_mode
+typedef enum _adc16_long_sample_cycle
 {
-    kAdcLongSampleCycleOf24 = 0U, /*!< 20 extra ADCK cycles, 24 ADCK cycles total. */
-    kAdcLongSampleCycleOf16 = 1U, /*!< 12 extra ADCK cycles, 16 ADCK cycles total. */
-    kAdcLongSampleCycleOf10 = 2U, /*!< 6 extra ADCK cycles, 10 ADCK cycles total. */
-    kAdcLongSampleCycleOf4 = 3U /*!< 2 extra ADCK cycles, 6 ADCK cycles total. */
-} adc16_long_sample_cycle_mode_t;
+    kAdc16LongSampleCycleOf24 = 0U, /*!< 20 extra ADCK cycles, 24 ADCK cycles total. */
+    kAdc16LongSampleCycleOf16 = 1U, /*!< 12 extra ADCK cycles, 16 ADCK cycles total. */
+    kAdc16LongSampleCycleOf10 = 2U, /*!< 6 extra ADCK cycles, 10 ADCK cycles total. */
+    kAdc16LongSampleCycleOf4  = 3U  /*!< 2 extra ADCK cycles, 6 ADCK cycles total. */
+} adc16_long_sample_cycle_t;
 
 /*!
  * @brief Defines the type of the enumerating reference voltage source.
  */
-typedef enum _adc16_ref_volt_src_mode
+typedef enum _adc16_ref_volt_src
 {
-    kAdcRefVoltSrcOfVref = 0U, /*!< For external pins pair of VrefH and VrefL. */
-    kAdcRefVoltSrcOfValt = 1U /*!< For alternate reference pair of ValtH and ValtL.*/
-} adc16_ref_volt_src_mode_t;
+    kAdc16RefVoltSrcOfVref = 0U, /*!< For external pins pair of VrefH and VrefL. @internal gui name="Vref pair" */
+    kAdc16RefVoltSrcOfValt = 1U  /*!< For alternate reference pair of ValtH and ValtL. @internal gui name="Valt pair" */
+} adc16_ref_volt_src_t;
 
 #if FSL_FEATURE_ADC16_HAS_HW_AVERAGE
 
 /*!
  * @brief Defines the type of the enumerating hardware average mode.
  */
-typedef enum _adc16_hw_average_count_mode
+typedef enum _adc16_hw_average_count
 {
-    kAdcHwAverageCountOf4 = 0U, /*!< For hardware average with 4 samples. */
-    kAdcHwAverageCountOf8 = 1U, /*!< For hardware average with 8 samples. */
-    kAdcHwAverageCountOf16 = 2U, /*!< For hardware average with 16 samples. */
-    kAdcHwAverageCountOf32 = 3U /*!< For hardware average with 32 samples. */
-} adc16_hw_average_count_mode_t;
+    kAdc16HwAverageCountOf4  = 0U, /*!< For hardware average with 4 samples. */
+    kAdc16HwAverageCountOf8  = 1U, /*!< For hardware average with 8 samples. */
+    kAdc16HwAverageCountOf16 = 2U, /*!< For hardware average with 16 samples. */
+    kAdc16HwAverageCountOf32 = 3U  /*!< For hardware average with 32 samples. */
+} adc16_hw_average_count_t;
 
 #endif /* FSL_FEATURE_ADC16_HAS_HW_AVERAGE */
-
-/*!
- * @brief Defines the type of the enumerating asserted range in the hardware compare. 
- *
- * When the internal CMP is enabled, the COCO flag, which represents the complement
- * of the conversion, is not asserted if the sample value is not in the indicated
- * range. Eventually, the data of conversion result  is not kept in the result
- * data register. The two values, cmpValue1 and cmpValue2, mark
- * the thresholds  with the comparator feature.\n
- * \li kAdcHwCmpRangeModeOf1:
- *      Both greater than and in range switchers  are disabled.
- *      The available range is "< cmpValue1".
- * \li kAdcHwCmpRangeModeOf2:
- *      Greater than switcher  is enabled while the in range switcher is disabled.
- *      The available range is " > cmpValue1".
- * \li kAdcHwCmpRangeModeOf3:
- *      Greater than switcher  is disabled while in range switcher is enabled.
- *      The available range is "< cmpValue1" or "> cmpValue2" when
- *      cmpValue1 <= cmpValue2, or "< cmpValue1" and "> cmpValue2" when
- *      cmpValue1 >= cmpValue2.
- * \li kAdcHwCmpRangeModeOf4:
- *      Both greater than and in range switchers are enabled.
- *      The available range is "> cmpValue1" and "< cmpValue2" when
- *      cmpValue1 <= cmpValue2, or "> cmpValue1" or "< cmpValue2" when
- *      cmpValue1 < cmpValue2.
- */
-typedef enum _adc16_hw_cmp_range_mode
-{
-    kAdcHwCmpRangeModeOf1 = 0U, /*!< For selection mode 1. */
-    kAdcHwCmpRangeModeOf2 = 1U, /*!< For selection mode 2. */
-    kAdcHwCmpRangeModeOf3 = 2U, /*!< For selection mode 3. */
-    kAdcHwCmpRangeModeOf4 = 3U  /*!< For selection mode 4. */
-} adc16_hw_cmp_range_mode_t;
 
 #if FSL_FEATURE_ADC16_HAS_PGA
 
 /*!
  * @brief Defines the type of enumerating PGA's Gain mode.
  */
-typedef enum _adc16_pga_gain_mode
+typedef enum _adc16_pga_gain
 {
-    kAdcPgaGainValueOf1 = 0U, /*!< For amplifier gain of 1.*/
-    kAdcPgaGainValueOf2 = 1U, /*!< For amplifier gain of 2.*/
-    kAdcPgaGainValueOf4 = 2U, /*!< For amplifier gain of 4.*/
-    kAdcPgaGainValueOf8 = 3U, /*!< For amplifier gain of 8.*/
-    kAdcPgaGainValueOf16 = 4U, /*!< For amplifier gain of 16.*/
-    kAdcPgaGainValueOf32 = 5U, /*!< For amplifier gain of 32.*/
-    kAdcPgaGainValueOf64 = 6U  /*!< For amplifier gain of 64.*/
-} adc16_pga_gain_mode_t;
+    kAdc16PgaGainValueOf1  = 0U, /*!< For amplifier gain of 1. @internal gui name="1" */
+    kAdc16PgaGainValueOf2  = 1U, /*!< For amplifier gain of 2. @internal gui name="2" */
+    kAdc16PgaGainValueOf4  = 2U, /*!< For amplifier gain of 4. @internal gui name="4" */
+    kAdc16PgaGainValueOf8  = 3U, /*!< For amplifier gain of 8. @internal gui name="8" */
+    kAdc16PgaGainValueOf16 = 4U, /*!< For amplifier gain of 16. @internal gui name="16" */
+    kAdc16PgaGainValueOf32 = 5U, /*!< For amplifier gain of 32. @internal gui name="32" */
+    kAdc16PgaGainValueOf64 = 6U  /*!< For amplifier gain of 64. @internal gui name="64" */
+} adc16_pga_gain_t;
+
+#endif /* FSL_FEATURE_ADC16_HAS_PGA */
+
+/*!
+ * @brief Defines the type of enumerating ADC16's channel index.
+ */
+typedef enum _adc16_chn
+{
+    kAdc16Chn0  = 0U,  /*!< AD0. */
+    kAdc16Chn1  = 1U,  /*!< AD1. */
+    kAdc16Chn2  = 2U,  /*!< AD2. */
+    kAdc16Chn3  = 3U,  /*!< AD3. */
+    kAdc16Chn4  = 4U,  /*!< AD4. */
+    kAdc16Chn5  = 5U,  /*!< AD5. */
+    kAdc16Chn6  = 6U,  /*!< AD6. */
+    kAdc16Chn7  = 7U,  /*!< AD6. */
+    kAdc16Chn8  = 8U,  /*!< AD8.  */
+    kAdc16Chn9  = 9U,  /*!< AD9.  */
+    kAdc16Chn10 = 10U, /*!< AD10. */
+    kAdc16Chn11 = 11U, /*!< AD11. */
+    kAdc16Chn12 = 12U, /*!< AD12. */
+    kAdc16Chn13 = 13U, /*!< AD13. */
+    kAdc16Chn14 = 14U, /*!< AD14. */
+    kAdc16Chn15 = 15U, /*!< AD15. */
+    kAdc16Chn16 = 16U, /*!< AD16. */
+    kAdc16Chn17 = 17U, /*!< AD17. */
+    kAdc16Chn18 = 18U, /*!< AD18. */
+    kAdc16Chn19 = 19U, /*!< AD19. */
+    kAdc16Chn20 = 20U, /*!< AD20. */
+    kAdc16Chn21 = 21U, /*!< AD21. */
+    kAdc16Chn22 = 22U, /*!< AD22. */
+    kAdc16Chn23 = 23U, /*!< AD23. */
+    kAdc16Chn24 = 24U, /*!< AD24. */
+    kAdc16Chn25 = 25U, /*!< AD25. */
+    kAdc16Chn26 = 26U, /*!< AD26. */
+    kAdc16Chn27 = 27U, /*!< AD27. */
+    kAdc16Chn28 = 28U, /*!< AD28. */
+    kAdc16Chn29 = 29U, /*!< AD29. */
+    kAdc16Chn30 = 30U, /*!< AD30. */
+    kAdc16Chn31 = 31U,  /*!< AD31. */
+
+    kAdc16Chn0d = kAdc16Chn0,  /*!< DAD0. */
+    kAdc16Chn1d = kAdc16Chn1,  /*!< DAD1. */
+    kAdc16Chn2d = kAdc16Chn2,  /*!< DAD2. */
+    kAdc16Chn3d = kAdc16Chn3,  /*!< DAD3. */
+    kAdc16Chn4a = kAdc16Chn4,  /*!< AD4a. */
+    kAdc16Chn5a = kAdc16Chn5,  /*!< AD5a. */
+    kAdc16Chn6a = kAdc16Chn6,  /*!< AD6a. */
+    kAdc16Chn7a = kAdc16Chn7,  /*!< AD7a. */
+    kAdc16Chn4b = kAdc16Chn4,  /*!< AD4b. */
+    kAdc16Chn5b = kAdc16Chn5,  /*!< AD5b. */
+    kAdc16Chn6b = kAdc16Chn6,  /*!< AD6b. */
+    kAdc16Chn7b = kAdc16Chn7   /*!< AD7b. */
+
+} adc16_chn_t;
+
+/******************************************************************************
+ * Definitions.
+ *****************************************************************************/
+/*!
+ * @brief Defines the structure to configure the ADC16 channel.
+ *
+ * This type of variable is treated as the command to be set in ADC
+ * control register, which may execute the ADC's conversion.
+ */
+typedef struct Adc16ChnConfig
+{
+    adc16_chn_t chnIdx;          /*!< Select the sample channel index. */
+    bool convCompletedIntEnable; /*!< Enable the conversion complete interrupt. */
+#if FSL_FEATURE_ADC16_HAS_DIFF_MODE
+    bool diffConvEnable;         /*!< Enable the differential conversion. */
+#endif /* FSL_FEATURE_ADC16_HAS_DIFF_MODE */
+} adc16_chn_config_t;
+
+/*!
+ * @brief Defines the structure to configure the ADC16's converter.
+ *
+ * This type of variable is treated as a group of configurations.
+ * Most of the time, these configurations are a one-time
+ * setting for converter sampling condition. Usually, they are set before
+ * executing the ADC16 job.
+ * @internal gui name="ADC configuration" id="adcCfg"
+ */
+typedef struct Adc16ConverterConfig
+{
+    bool                    lowPowerEnable; /*!< Enable low power. @internal gui name="Low power mode" id="LowPowerMode" */
+    adc16_clk_divider_t     clkDividerMode; /*!< Select the divider of input clock source. @internal gui name="Clock divider" id="ClockDivider" */
+    bool                    longSampleTimeEnable; /*!< Enable the long sample time. @internal gui name="Long sample time" id="LongSampleTime" */
+    adc16_resolution_t      resolution; /*!< Select the sample resolution mode. @internal gui name="Resolution" id="Resolution" */
+    adc16_clk_src_mode_t    clkSrc; /*!< Select the input clock source to converter. @internal gui name="Clock source" id="ClockSource" */
+    bool                    asyncClkEnable; /*!< Enable the asynchronous clock inside the ADC. @internal gui name="Internal async. clock" id="InternalAsyncClock" */
+    bool                    highSpeedEnable; /*!< Enable the high speed mode. @internal gui name="High speed mode" id="HighSpeed" */
+    adc16_long_sample_cycle_t longSampleCycleMode; /*!< Select the long sample mode. @internal gui name="Long sample mode" id="LongSampleMode" */
+    bool                    hwTriggerEnable; /*!< Enable hardware trigger function. @internal gui name="Hardware trigger" id="HwTrigger" */
+    adc16_ref_volt_src_t    refVoltSrc; /*!< Select the reference voltage source. @internal gui name="Voltage reference" id="ReferenceVoltage" */
+    bool                    continuousConvEnable; /*!< Enable continuous conversion mode. @internal gui name="Continuous mode" id="ContinuousMode" */
+#if FSL_FEATURE_ADC16_HAS_DMA
+    bool                    dmaEnable; /*!< Enable the DMA for ADC converter. @internal gui name="DMA mode" id="DMASupport" */
+#endif /* FSL_FEATURE_ADC16_HAS_DMA */
+} adc16_converter_config_t;
+
+/*!
+ * @brief Defines the structure to configure the ADC16 internal comparator.
+ * @internal gui name="HW compare configuration" id="adcHwCfg"
+ */
+typedef struct Adc16HwCmpConfig
+{
+    bool hwCmpEnable; /*!< Enable the hardware compare function. @internal gui name="Hardware compare" */
+    bool hwCmpGreaterThanEnable; /*!< Configure the compare function. @internal gui name="Compare function greater than" */
+    /*
+     false - Configures less than the threshold. The outside and inside range are not inclusive.
+             The functionality is based on the values
+             placed in CV1 and CV2.
+     true  - Configures greater than or equal to the threshold. The outside and inside
+             ranges are inclusive. The functionality is based on the values placed in
+             CV1 and CV2.
+     */
+    bool hwCmpRangeEnable; /*!< Configure the comparator function. @internal gui name="Compare function range" */
+    /*
+     Configures the comparator function to check if the conversion result of the
+     input being monitored is either between or outside the range formed by
+     CV1 and CV2 and determined by the value of hwCmpGreaterThanEnable.
+
+     false - Range function disabled. Only CV1 is compared.
+     true  - Range function enabled. Both CV1 and CV2 are compared.
+    */
+    uint16_t cmpValue1; /*!< Setting value for CV1. @internal gui name="Compare value 1" */
+    uint16_t cmpValue2; /*!< Setting value for CV2. @internal gui name="Compare value 2" */
+} adc16_hw_cmp_config_t;
+
+#if FSL_FEATURE_ADC16_HAS_HW_AVERAGE
+/*!
+ * @brief Defines the structure to configure the ADC16 internal accumulator.
+ */
+typedef struct Adc16HwAverageConfig
+{
+    bool hwAverageEnable; /*!< Enable the hardware average function. */
+    adc16_hw_average_count_t hwAverageCountMode; /*!< Select the count of conversion result for accumulator. */
+} adc16_hw_average_config_t;
+
+#endif /* FSL_FEATURE_ADC16_HAS_HW_AVERAGE */
+
+
+#if FSL_FEATURE_ADC16_HAS_PGA
+/*!
+ * @brief Defines the structure to configure the ADC16 programmable gain amplifier.
+ * @internal gui name="ADC PGA configuration" id="adcPgaCfg"
+ */
+typedef struct Adc16PgaConfig
+{
+    bool pgaEnable; /*!< Enable the PGA's function. @internal gui name="PGA module" */
+    bool runInNormalModeEnable; /*!< Enable PGA working in normal mode, or low power mode defaultly. @internal gui name="Low power mode run" */
+    adc16_pga_gain_t pgaGainMode; /*!< Select the PGA Gain factor. @internal gui name="Gain" */
+
+#if FSL_FEATURE_ADC16_HAS_PGA_CHOPPING
+    bool pgaChoppingDisable; /*!< Disable the PGA chopping function. @internal gui name="Chopping control" */
+    /*
+     The PGA employs chopping to remove/reduce offset and 1/f noise and offers an
+     offset measurement configuration that aids the offset calibration.
+    */
+#endif /* FSL_FEATURE_ADC16_HAS_PGA_CHOPPING */
+#if FSL_FEATURE_ADC16_HAS_PGA_OFFSET_MEASUREMENT
+    bool runInOffsetMeasurementEnable; /*!< Enable the PGA working in offset measurement mode. @internal gui name="Offset measurement mode" */
+    /*
+     When this feature is enabled, the PGA disconnects itself from the external
+     inputs and auto-configures into offset measurement mode. With this bit set,
+     run the ADC in the recommended settings and enable the maximum hardware
+     averaging to get the PGA offset number. The output is the
+     (PGA offset * (64+1)) for the given PGA setting.
+    */
+#endif /* FSL_FEATURE_ADC16_HAS_PGA_OFFSET_MEASUREMENT */
+} adc16_pga_config_t;
 
 #endif /* FSL_FEATURE_ADC16_HAS_PGA */
 
@@ -215,8 +355,12 @@ extern "C" {
 /*******************************************************************************
  * API
  ******************************************************************************/
-
-
+/*! 
+ * @name ADC16 HAL.
+ * @{
+ */
+ 
+ 
 /*!
  * @brief Resets all registers into a known state for the ADC16 module.
  *
@@ -225,415 +369,135 @@ extern "C" {
  * manual. It is strongly recommended to call this API before any other operation
  * when initializing the ADC16 module.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  */
-void ADC16_HAL_Init(uint32_t baseAddr);
+void ADC16_HAL_Init(ADC_Type * base);
 
 /*!
  * @brief Configures the conversion channel for the ADC16 module.
  *
- * This function configures the channel for the ADC16 module. At any point, 
- * only one of the configuration groups takes effect. The other channel mux of
+ * This function configures the channel for the ADC16 module. At any point,
+ * only one of the configuration groups takes effect. The other channel group of
  * the first group (group A, 0) is only for the hardware trigger. Both software and
  * hardware trigger can be used to the first group. When in software trigger
- * mode, once the available channel is set, the conversion begins to execute.
+ * mode, after the available channel is set, the conversion begins to execute.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chnGroup Channel configuration group ID.
- * @param intEnable Switcher to enable interrupt when conversion is completed.
- * @param diffEnable Switcher to enable differential channel mode.
- * @param chnNum ADC16 channel for next conversion.
+ * @param configPtr Pointer to configuration structure.
  */
-static inline void ADC16_HAL_ConfigChn(uint32_t baseAddr, uint32_t chnGroup,
-    bool intEnable, bool diffEnable, uint8_t chnNum)
-{
-    assert(chnGroup < FSL_FEATURE_ADC16_CONVERSION_CONTROL_COUNT);
-
-#if FSL_FEATURE_ADC16_HAS_DIFF_MODE  
-    HW_ADC_SC1n_WR(baseAddr, chnGroup, \
-        (   (intEnable ? BM_ADC_SC1n_AIEN : 0U) \
-          | ( (diffEnable)? BM_ADC_SC1n_DIFF : 0U) \
-          | BF_ADC_SC1n_ADCH(chnNum) \
-        ) );
-#else
-    HW_ADC_SC1n_WR(baseAddr, chnGroup, \
-        (   (intEnable ? BM_ADC_SC1n_AIEN : 0U) \
-          | BF_ADC_SC1n_ADCH(chnNum) \
-        ) );
-
-#endif /* FSL_FEATURE_ADC16_HAS_DIFF_MODE */
-
-}
-
-#if FSL_FEATURE_ADC16_HAS_DIFF_MODE
+void ADC16_HAL_ConfigChn(ADC_Type * base, uint32_t chnGroup, const adc16_chn_config_t *configPtr);
 
 /*!
- * @brief Checks whether the channel differential mode is enabled.
- *
- * This function checks whether the channel differential mode for
- *  is enabled.
- *
- * @param baseAddr Register base address for the module.
- * @param chnGroup Channel configuration group ID.
- * @return Assertion of enabling differential mode.
- */
-static inline bool ADC16_HAL_GetChnDiffCmd(uint32_t baseAddr, uint32_t chnGroup)
-{
-    assert(chnGroup < FSL_FEATURE_ADC16_CONVERSION_CONTROL_COUNT);
-    return (1U == BR_ADC_SC1n_DIFF(baseAddr, chnGroup));
-}
-#endif /* FSL_FEATURE_ADC16_HAS_DIFF_MODE */
-
-/*!
- * @brief Checks whether the channel conversion  is completed.
+ * @brief Checks whether the channel conversion is completed.
  *
  * This function checks whether the channel conversion for the ADC
  * module is completed.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chnGroup Channel configuration group ID.
  * @return Assertion of completed conversion mode.
  */
-static inline bool ADC16_HAL_GetChnConvCompletedCmd(uint32_t baseAddr, uint32_t chnGroup)
+static inline bool ADC16_HAL_GetChnConvCompletedFlag(ADC_Type * base, uint32_t chnGroup)
 {
     assert(chnGroup < FSL_FEATURE_ADC16_CONVERSION_CONTROL_COUNT);
-    return (1U == BR_ADC_SC1n_COCO(baseAddr, chnGroup) );
+    return (1U == ADC_BRD_SC1_COCO(base, chnGroup) );
 }
 
 /*!
- * @brief Switches to enable the low power mode for ADC16 module.
+ * @brief Configures the sampling converter for the ADC16.
  *
- * This function switches to enable the low power mode for ADC16 module.
+ * This function configures the sampling converter for the ADC16.
+ * Most of the time, the configurations are a one-time setting for the
+ * converter sampling condition. Usually, it is called before
+ * executing the ADC16 job.
  *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
+ * @param base Register base address for the module.
+ * @param configPtr Pointer to configuration structure.
  */
-static inline void ADC16_HAL_SetLowPowerCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_CFG1_ADLPC(baseAddr, (enable ? 1U : 0U) );
-}
+void ADC16_HAL_ConfigConverter(ADC_Type *base, const adc16_converter_config_t *configPtr);
 
 /*!
- * @brief Selects the clock divider mode for the ADC16 module.
+ * @brief Configures the hardware comparator function for the ADC16.
  *
- * This function selects the clock divider mode for the ADC16 module.
+ * This function configures the hardware comparator function for the ADC16.
+ * These are the settings  for the ADC16 comparator.
  *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of mode enumeration. See to "adc16_clk_divider_mode_t".
+ * @param base Register base address for the module.
+ * @param configPtr Pointer to configuration structure.
  */
-static inline void ADC16_HAL_SetClkDividerMode(uint32_t baseAddr, adc16_clk_divider_mode_t mode)
-{
-    BW_ADC_CFG1_ADIV(baseAddr, (uint32_t)mode );
-}
+void ADC16_HAL_ConfigHwCompare(ADC_Type * base, const adc16_hw_cmp_config_t *configPtr);
 
+#if FSL_FEATURE_ADC16_HAS_HW_AVERAGE
 /*!
- * @brief Switches to enable the long sample mode for the ADC16 module.
+ * @brief Configures the hardware average function for the ADC16.
  *
- * This function switches to enable the long sample mode for the ADC16 module.
- * This function adjusts the sample period to allow the higher impedance inputs to
- * be accurately sampled or to maximize the conversion speed for the lower impedance
- * inputs. Longer sample times can also be used to lower overall power
- * consumption if the continuous conversions are enabled and the high conversion rates
- * are not required. If the long sample mode is enabled, more configuration
- * is set by calling the "ADC16_HAL_SetLongSampleCycleMode()" function.
+ * This function configures the hardware average function for the ADC16.
+ * These are the settings  for the accumulator inside the ADC16.
  *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
+ * @param base Register base address for the module.
+ * @param configPtr Pointer to configuration structure.
  */
-static inline void ADC16_HAL_SetLongSampleCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_CFG1_ADLSMP(baseAddr, (enable ? 1U : 0U) );
-}
-
-/*!
- * @brief Selects the conversion resolution mode for ADC16 module.
- *
- * This function selects the conversion resolution mode for the ADC16 module.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of mode enumeration. See to "adc16_resolution_mode_t".
- */
-static inline void ADC16_HAL_SetResolutionMode(uint32_t baseAddr, adc16_resolution_mode_t mode)
-{
-    BW_ADC_CFG1_MODE(baseAddr, (uint32_t)mode );
-}
-
-/*!
- * @brief Gets the conversion resolution mode for ADC16 module.
- *
- * This function gets the conversion resolution mode for the ADC16 module.
- * It is specially used when processing the conversion result of RAW format.
- *
- * @param baseAddr Register base address for the module.
- * @return Current conversion resolution mode.
- */
-static inline adc16_resolution_mode_t ADC16_HAL_GetResolutionMode(uint32_t baseAddr)
-{
-    return (adc16_resolution_mode_t)( BR_ADC_CFG1_MODE(baseAddr) );
-}
-
-/*!
- * @brief Selects the input clock source for the ADC16 module.
- *
- * This function selects the input clock source for the ADC16 module.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of mode enumeration. See to "adc16_clk_src_mode_t".
- */
-static inline void ADC16_HAL_SetClkSrcMode(uint32_t baseAddr, adc16_clk_src_mode_t mode)
-{
-    BW_ADC_CFG1_ADICLK(baseAddr, (uint32_t)mode );
-}
-
-#if FSL_FEATURE_ADC16_HAS_MUX_SELECT
-
-/*!
- * @brief Selects the channel mux mode for the ADC16 module.
- *
- * This function selects the channel mux mode for the ADC16 module.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of mode enumeration. See to "adc16_chn_mux_mode_t".
- */
-static inline void ADC16_HAL_SetChnMuxMode(uint32_t baseAddr, adc16_chn_mux_mode_t mode)
-{
-    BW_ADC_CFG2_MUXSEL(baseAddr, ((kAdcChnMuxOfA == mode) ? 0U : 1U) );
-}
-
-/*!
- * @brief Gets the current channel mux mode for the ADC16 module.
- *
- * This function selects the channel mux mode for the ADC16 module.
- *
- * @param baseAddr Register base address for the module.
- * @return Selection of mode enumeration. See to "adc16_chn_mux_mode_t".
- */
-static inline adc16_chn_mux_mode_t ADC16_HAL_GetChnMuxMode(uint32_t baseAddr)
-{
-    return (adc16_chn_mux_mode_t)(BR_ADC_CFG2_MUXSEL(baseAddr) );
-}
-
-#endif /* FSL_FEATURE_ADC16_HAS_MUX_SELECT */
-
-/*!
- * @brief Switches to enable the asynchronous clock for the ADC16 module.
- *
- * This function switches to enable the asynchronous clock for the ADC16 module. 
- * It enables the ADC's asynchronous clock source and the clock source
- * output regardless of the conversion and the input clock select status of the
- * ADC. Asserting this function allows the clock to be used even while the ADC
- * is idle or operating from a different clock source. Also, latency of
- * initiating a single or first-continuous conversion with the asynchronous
- * clock selected is reduced since the ADC16 internal clock has been already
- * operational.
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
- */
-static inline void ADC16_HAL_SetAsyncClkCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_CFG2_ADACKEN(baseAddr, (enable ? 1U : 0U) );
-}
-
-/*!
- * @brief Switches to enable the high speed mode for the ADC16 module.
- *
- * This function switches to enable the high speed mode for the ADC16 module. 
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
- */
-static inline void ADC16_HAL_SetHighSpeedCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_CFG2_ADHSC(baseAddr, (enable ? 1U : 0U) );
-}
-
-/*!
- * @brief Selects the long sample cycle mode for the ADC16 module.
- *
- * This function selects the long sample cycle mode for the ADC16 module.
- * This function should be called along with "ADC16_HAL_SetLongSampleCmd()".
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of long sample cycle mode. See the "adc16_long_sample_cycle_mode_t".
- */
-static inline void ADC16_HAL_SetLongSampleCycleMode(uint32_t baseAddr,
-    adc16_long_sample_cycle_mode_t mode)
-{
-    BW_ADC_CFG2_ADLSTS(baseAddr, (uint32_t)mode );
-}
+void ADC16_HAL_ConfigHwAverage(ADC_Type * base, const adc16_hw_average_config_t *configPtr);
+#endif /* FSL_FEATURE_ADC16_HAS_HW_AVERAGE */
 
 /*!
  * @brief Gets the raw result data of channel conversion for the ADC16 module.
  *
- * This function gets the result data of conversion for the ADC16 module.
- * The return value is raw data  that is not processed. The unavailable bits would be
- * filled with "0" in single-ended mode and sign bit in differential mode. 
+ * This function gets the conversion result data for the ADC16 module.
+ * The return value is the raw data that is not processed.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chnGroup Channel configuration group ID.
  * @return Conversion value of RAW.
  */
-static inline uint16_t ADC16_HAL_GetChnConvValueRAW(uint32_t baseAddr,
-    uint32_t chnGroup )
+static inline uint16_t ADC16_HAL_GetChnConvValue(ADC_Type * base, uint32_t chnGroup )
 {
     assert(chnGroup < FSL_FEATURE_ADC16_CONVERSION_CONTROL_COUNT);
-    return (uint16_t)(BR_ADC_Rn_D(baseAddr, chnGroup) );
-}
-
-/*!
- * @brief Sets the compare value of the lower limitation for the ADC16 module.
- *
- * This function sets the compare value of the lower limitation for the ADC16 module.
- *
- * @param baseAddr Register base address for the module.
- * @param value Setting value.
- */
-static inline void ADC16_HAL_SetHwCmpValue1(uint32_t baseAddr, uint16_t value)
-{
-    BW_ADC_CV1_CV(baseAddr,value);
-}
-
-/*!
- * @brief Sets the compare value of the higher limitation for the ADC16 module.
- *
- * This function sets the compare value of the higher limitation for the ADC16 module.
- *
- * @param baseAddr Register base address for the module.
- * @param value Setting value.
- */
-static inline void ADC16_HAL_SetHwCmpValue2(uint32_t baseAddr, uint16_t value)
-{
-    BW_ADC_CV2_CV(baseAddr,value);
+    return (uint16_t)(ADC_BRD_R_D(base, chnGroup) );
 }
 
 /*!
  * @brief Checks whether the converter is active for the ADC16 module.
  *
- * This function checks  whether the converter is active for the ADC
- * module. If it is dis-asserted when the conversion is completed, one of the
- * completed flag is asserted for the indicated group mux. See the
- * "ADC16_HAL_GetChnConvCompletedCmd()".
- *
- * @param baseAddr Register base address for the module.
- * @return Assertion of that the converter is active.
- */
-static inline bool ADC16_HAL_GetConvActiveCmd(uint32_t baseAddr)
-{
-    return (1U == BR_ADC_SC2_ADACT(baseAddr) );
-}
-
-/*!
- * @brief Switches to enable the hardware trigger mode for the ADC16 module.
- *
- * This function switches to enable the hardware trigger mode for the ADC
+ * This function checks  whether the converter is active for the ADC16
  * module.
  *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
+ * @param base Register base address for the module.
+ * @return Assertion of that the converter is active.
  */
-static inline void ADC16_HAL_SetHwTriggerCmd(uint32_t baseAddr, bool enable)
+static inline bool ADC16_HAL_GetConvActiveFlag(ADC_Type * base)
 {
-    BW_ADC_SC2_ADTRG(baseAddr,(enable ? 1U : 0U) );
+    return (1U == ADC_BRD_SC2_ADACT(base) );
 }
 
+#if FSL_FEATURE_ADC16_HAS_MUX_SELECT
 /*!
- * @brief Switches to enable the hardware comparator for the ADC16 module.
+ * @brief Selects the channel mux mode for the ADC16 module.
  *
- * This function switches to enable the hardware comparator for the ADC16 module.
+ * This function selects the channel mux mode for the ADC16 module.
  *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
+ * @param base Register base address for the module.
+ * @param mode Selection of mode enumeration. See to "adc16_chn_mux_mode_t".
  */
-static inline void ADC16_HAL_SetHwCmpCmd(uint32_t baseAddr, bool enable)
+static inline void ADC16_HAL_SetChnMuxMode(ADC_Type * base, adc16_chn_mux_mode_t mode)
 {
-    BW_ADC_SC2_ACFE(baseAddr, (enable ? 1U : 0U) );
+    ADC_BWR_CFG2_MUXSEL(base, ((kAdc16ChnMuxOfA == mode) ? 0U : 1U) );
 }
-
-/*!
- * @brief Switches to enable the setting that is greater than the hardware comparator.
- *
- * This function switches to enable the setting that is greater than the
- * hardware comparator.
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
- */
-static inline void ADC16_HAL_SetHwCmpGreaterCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_SC2_ACFGT(baseAddr, (enable ? 1U : 0U) );
-}
-
-/*!
- * @brief Switches to enable the setting of the range for hardware comparator.
- *
- * This function switches to enable the setting of range for the hardware
- * comparator.
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
- */
-static inline void ADC16_HAL_SetHwCmpRangeCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_SC2_ACREN(baseAddr, (enable ? 1U : 0U) );
-}
-
-/*!
- * @brief Configures the asserted range of the hardware comparator for the ADC16 module.
- *
- * This function configures the asserted range of the hardware comparator for the
- * ADC16 module. 
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of range mode, see to "adc16_hw_cmp_range_mode_t".
- */
-void ADC16_HAL_SetHwCmpMode(uint32_t baseAddr, adc16_hw_cmp_range_mode_t mode);
-
-#if FSL_FEATURE_ADC16_HAS_DMA
-
-/*!
- * @brief Switches to enable the DMA for the ADC16 module.
- *
- * This function switches to enable the DMA for the ADC16 module. When enabled, the
- * DMA request is asserted during the ADC16 conversion complete event, which is noted
- * by the assertion of any of the ADC16 channel completed flags.
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
- */
-static inline void ADC16_HAL_SetDmaCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_SC2_DMAEN(baseAddr, (enable ? 1U : 0U) );
-}
-
-#endif /* FSL_FEATURE_ADC16_HAS_DMA */
-
-/*!
- * @brief Selects the reference voltage source for the ADC16 module.
- *
- * This function selects the reference voltage source for the ADC16 module.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of asserted the feature.
- */
-static inline void ADC16_HAL_SetRefVoltSrcMode(uint32_t baseAddr, adc16_ref_volt_src_mode_t mode)
-{
-    BW_ADC_SC2_REFSEL(baseAddr, (uint32_t)mode );
-}
+#endif /* FSL_FEATURE_ADC16_HAS_MUX_SELECT */
 
 #if FSL_FEATURE_ADC16_HAS_CALIBRATION
-
 /*!
  * @brief Switches to enable the hardware calibration for the ADC16 module.
  *
  * This function launches the hardware calibration for the ADC16 module.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param enable Switcher to asserted the feature.
  */
-static inline void ADC16_HAL_SetAutoCalibrationCmd(uint32_t baseAddr, bool enable)
+static inline void ADC16_HAL_SetAutoCalibrationCmd(ADC_Type * base, bool enable)
 {
-    BW_ADC_SC3_CAL(baseAddr, (enable ? 1U : 0U) );
+    ADC_BWR_SC3_CAL(base, (enable ? 1U : 0U) );
 }
 
 /*!
@@ -644,25 +508,27 @@ static inline void ADC16_HAL_SetAutoCalibrationCmd(uint32_t baseAddr, bool enabl
  * calibration. Then, it is cleared and dis-asserted after the
  * calibration.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
+ * @return Whether the hardware calibration is active or not.
  */
-static inline bool ADC16_HAL_GetAutoCalibrationActiveCmd(uint32_t baseAddr)
+static inline bool ADC16_HAL_GetAutoCalibrationActiveFlag(ADC_Type * base)
 {
-    return (1U == BR_ADC_SC3_CAL(baseAddr) );
+    return (1U == ADC_BRD_SC3_CAL(base) );
 }
 
 /*!
- * @brief Gets the hardware calibration status  for the ADC16 module.
+ * @brief Gets the hardware calibration status for the ADC16 module.
  *
  * This function gets the status whether the hardware calibration has failed
  * for the ADC16 module. The return value  is asserted if there is anything wrong
  * with the hardware calibration.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
+ * @return Whether the hardware calibration has failed or not.
  */
-static inline bool ADC16_HAL_GetAutoCalibrationFailedCmd(uint32_t baseAddr)
+static inline bool ADC16_HAL_GetAutoCalibrationFailedFlag(ADC_Type * base)
 {
-    return (1U == BR_ADC_SC3_CALF(baseAddr) );
+    return (1U == ADC_BRD_SC3_CALF(base) );
 }
 
 /*!
@@ -673,22 +539,22 @@ static inline bool ADC16_HAL_GetAutoCalibrationFailedCmd(uint32_t baseAddr)
  * register directly. Note that this API should be called after the process of
  * auto calibration is complete.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @return value that can be set into PG directly.
  */
-uint16_t ADC16_HAL_GetAutoPlusSideGainValue(uint32_t baseAddr);
+uint16_t ADC16_HAL_GetAutoPlusSideGainValue(ADC_Type * base);
 
 /*!
  * @brief Sets the plus side gain calibration value  for the ADC16 module.
  *
  * This function  sets the plus side gain calibration value  for the ADC16 module.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param value Setting value for plus side gain.
  */
-static inline void ADC16_HAL_SetPlusSideGainValue(uint32_t baseAddr, uint16_t value)
+static inline void ADC16_HAL_SetPlusSideGainValue(ADC_Type * base, uint16_t value)
 {
-    BW_ADC_PG_PG(baseAddr, value);
+    ADC_BWR_PG_PG(base, value);
 }
 
 #if FSL_FEATURE_ADC16_HAS_DIFF_MODE
@@ -701,22 +567,22 @@ static inline void ADC16_HAL_SetPlusSideGainValue(uint32_t baseAddr, uint16_t va
  * register directly. Note that this API should be called after the process of
  * auto calibration is complete.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @return value that can be set into MG directly.
  */
-uint16_t ADC16_HAL_GetAutoMinusSideGainValue(uint32_t baseAddr);
+uint16_t ADC16_HAL_GetAutoMinusSideGainValue(ADC_Type * base);
 
 /*!
  * @brief Sets the minus side gain calibration  value for the ADC16 module.
  *
  * This function sets the minus side gain calibration value for the ADC16 module.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param value Setting value for minus side gain.
  */
-static inline void ADC16_HAL_SetMinusSideGainValue(uint32_t baseAddr, uint16_t value)
+static inline void ADC16_HAL_SetMinusSideGainValue(ADC_Type * base, uint16_t value)
 {
-    BW_ADC_MG_MG(baseAddr, value);
+    ADC_BWR_MG_MG(base, value);
 }
 
 #endif /* FSL_FEATURE_ADC16_HAS_DIFF_MODE */
@@ -728,17 +594,17 @@ static inline void ADC16_HAL_SetMinusSideGainValue(uint32_t baseAddr, uint16_t v
 /*!
  * @brief Gets the offset correction value for the ADC16 module.
  *
- * This function gets the offset correction value for the ADC16 module. 
+ * This function gets the offset correction value for the ADC16 module.
  * When auto calibration is executed, the OFS register holds the new value
  * generated by the calibration. It can be left as default or modified
  * according to the use case.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @return current value for OFS.
  */
-static inline uint16_t ADC16_HAL_GetOffsetValue(uint32_t baseAddr)
+static inline uint16_t ADC16_HAL_GetOffsetValue(ADC_Type * base)
 {
-    return (uint16_t)(BR_ADC_OFS_OFS(baseAddr) );
+    return (uint16_t)(ADC_BRD_OFS_OFS(base) );
 }
 
 /*!
@@ -750,157 +616,42 @@ static inline uint16_t ADC16_HAL_GetOffsetValue(uint32_t baseAddr)
  * registers (OFS) is subtracted from the conversion and the result is
  * transferred into the result registers (Rn). If the result is above the
  * maximum or below the minimum result value, it is forced to the appropriate
- * limit for the current mode of operation. 
+ * limit for the current mode of operation.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param value Setting value for OFS.
  */
-static inline void ADC16_HAL_SetOffsetValue(uint32_t baseAddr, uint16_t value)
+static inline void ADC16_HAL_SetOffsetValue(ADC_Type * base, uint16_t value)
 {
-    BW_ADC_OFS_OFS(baseAddr, value);
+    ADC_BWR_OFS_OFS(base, value);
 }
 
 #endif /* FSL_FEATURE_ADC16_HAS_OFFSET_CORRECTION */
 
-/*!
- * @brief Switches to enable the continuous conversion mode for the ADC16 module.
- *
- * This function switches to enable the continuous conversion mode for the ADC
- * module. Once enabled, continuous conversions, or sets of conversions if the
- * hardware average function, is enabled after initiating a conversion.
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
- */
-static inline void ADC16_HAL_SetContinuousConvCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_SC3_ADCO(baseAddr, (enable ? 1U : 0U) );
-}
-
-#if FSL_FEATURE_ADC16_HAS_HW_AVERAGE
-
-/*!
- * @brief Switches to enable the hardware average for the ADC16 module.
- *
- * This function switches to enable the hardware average for the ADC16 module.
- * Once enabled, the conversion does not stop before the average
- * count has been reached.
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted the feature.
- */
-static inline void ADC16_HAL_SetHwAverageCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_SC3_AVGE(baseAddr, (enable ? 1U : 0U) );
-}
-
-/*!
- * @brief Selects the hardware average mode for the ADC16 module.
- *
- * This function switches to select the hardware average mode for the ADC
- * module.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of hardware average count mode, see to "adc16_hw_average_count_mode_t".
- */
-static inline void ADC16_HAL_SetHwAverageMode(uint32_t baseAddr, adc16_hw_average_count_mode_t mode)
-{
-    BW_ADC_SC3_AVGS(baseAddr, (uint32_t)mode );
-}
-
-#endif /* FSL_FEATURE_ADC16_HAS_HW_AVERAGE */
-
 #if FSL_FEATURE_ADC16_HAS_PGA
 
 /*!
- * @brief Switches to enable the Programmable Gain Amplifier for ADC16 module.
+ * @brief Configures the PGA function for ADC16.
  *
- * This function enables the PGA for the ADC16 module. The Programmable Gain
- * Amplifier (PGA) is designed to increase the dynamic range by amplifying the
- * low-amplitude signals before they are fed to the 16 bit SAR ADC. 
+ * This function configures the PGA function for ADC16.
+ * The settings are mainly for the Programmable Gain Amplifier inside
+ * the ADC16.
  *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted feature.
+ * @param base Register base address for the module.
+ * @param configPtr Pointer to configuration structure.
  */
-static inline void ADC16_HAL_SetPgaCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_PGA_PGAEN(baseAddr, (enable ? 1U : 0U) );
-}
+void ADC16_HAL_ConfigPga(ADC_Type * base, const adc16_pga_config_t *configPtr);
 
-#if FSL_FEATURE_ADC16_HAS_PGA_CHOPPING
-/*!
- * @brief Switches to enable the PGA chopping mode for the ADC16 module.
- *
- * This function switches to enable the PGA chopping mode for the ADC16 module.
- * The PGA employs chopping to remove/reduce offset and 1/f noise and offers an
- * offset measurement configuration that aids the offset calibration. 
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted feature.
- */
-static inline void ADC16_HAL_SetPgaChoppingCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_PGA_PGACHPb(baseAddr, (enable ? 0U : 1U) );
-}
-#endif /* FSL_FEATURE_ADC16_HAS_PGA_CHOPPING */
-
-/*!
- * @brief Switches to enable the PGA working in low power mode for the ADC16 module.
- *
- * This function switches to enable the PGA working in low power mode for
- * ADC16 module.
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted feature.
- */
-static inline void ADC16_HAL_SetPgaLowPowerCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_PGA_PGALPb(baseAddr, (enable ? 0U : 1U) );
-}
-
-/*!
- * @brief Selects the amplifier mode for the PGA.
- *
- * This function selects the amplifier mode for the PGA.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of asserted feature. See to "adc16_pga_gain_mode_t".
- */
-static inline void ADC16_HAL_SetPgaGainMode(uint32_t baseAddr, adc16_pga_gain_mode_t mode)
-{
-    BW_ADC_PGA_PGAG(baseAddr, (uint32_t)mode );
-}
-
-#if FSL_FEATURE_ADC16_HAS_PGA_OFFSET_MEASUREMENT
-/*!
- * @brief Switches to enable the offset measurement mode for the ADC16 module.
- *
- * This function switches to enable the offset measurement mode for the ADC
- * module. When asserted, the PGA disconnects  from the external inputs and
- * auto-configures into offset measurement mode. With this function asserted,
- * run the ADC16 in recommended settings and enable maximum hardware averaging
- * to get the PGA offset number. The output is the (PGA offset * (64+1))
- * for a given setting.
- *
- * @param baseAddr Register base address for the module.
- * @param enable Switcher to asserted feature.
- */
-static inline void ADC16_HAL_SetPgaOffsetMeasurementCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_PGA_PGAOFSM(baseAddr, (enable ? 1U : 0U) );
-}
-#endif /* FSL_FEATURE_ADC16_HAS_PGA_OFFSET_MEASUREMENT */
+/*@}*/
 
 #endif /* FSL_FEATURE_ADC16_HAS_PGA */
 
 #if defined(__cplusplus)
-extern }
+}
 #endif
 
-/*!
- * @}
- */
-
+/*! @}*/
+#endif
 #endif /* __FSL_ADC16_HAL_H__ */
 
 /******************************************************************************

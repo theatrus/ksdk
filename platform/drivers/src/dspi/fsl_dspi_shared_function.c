@@ -31,9 +31,16 @@
 #include <assert.h>
 #include "fsl_dspi_shared_function.h"
 
+#if FSL_FEATURE_SOC_DSPI_COUNT
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
+/* Extern for the DSPI master driver's interrupt handler.*/
+extern void DSPI_DRV_MasterIRQHandler(uint32_t instance);
+
+/* Extern for the SPI slave driver's interrupt handler.*/
+extern void DSPI_DRV_SlaveIRQHandler(uint32_t instance);
 
 /*******************************************************************************
  * Code
@@ -51,10 +58,10 @@
  */
 void DSPI_DRV_IRQHandler(uint32_t instance)
 {
-    assert(instance < HW_SPI_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    assert(instance < SPI_INSTANCE_COUNT);
+    SPI_Type *base = g_dspiBase[instance];
 
-    if (DSPI_HAL_IsMaster(baseAddr))
+    if (DSPI_HAL_IsMaster(base))
     {
         /* Master mode.*/
         DSPI_DRV_MasterIRQHandler(instance);
@@ -66,6 +73,7 @@ void DSPI_DRV_IRQHandler(uint32_t instance)
     }
 }
 
+#endif /* FSL_FEATURE_SOC_DSPI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

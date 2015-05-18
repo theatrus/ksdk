@@ -36,6 +36,8 @@
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_I2C_COUNT
+
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -48,19 +50,19 @@
  * I2C instance, setup according to user configuration.
  *
  *END**************************************************************************/
-void I2C_DRV_SlaveInit(uint32_t instance,
+i2c_status_t I2C_DRV_SlaveInit(uint32_t instance,
                        const i2c_slave_user_config_t * userConfigPtr,
                        i2c_slave_state_t * slave)
 {
     assert(slave);
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    I2C_Type * base = g_i2cBase[instance];
 
     /* Exit if current instance is already initialized. */
     if (g_i2cStatePtr[instance])
     {
-        return;
+        return kStatus_I2C_Initialized;
     }
 
     /* Init driver instance structure */
@@ -73,10 +75,10 @@ void I2C_DRV_SlaveInit(uint32_t instance,
     CLOCK_SYS_EnableI2cClock(instance);
 
     /* Init instance to known state. */
-    I2C_HAL_Init(baseAddr);
+    I2C_HAL_Init(base);
 
     /* Set slave address.*/
-    I2C_HAL_SetAddress7bit(baseAddr, userConfigPtr->address);
+    I2C_HAL_SetAddress7bit(base, userConfigPtr->address);
 
     /* Save runtime structure pointer.*/
     g_i2cStatePtr[instance] = slave;
@@ -88,25 +90,27 @@ void I2C_DRV_SlaveInit(uint32_t instance,
     /* Enable I2C START&STOP signal detect interrupt in the peripheral.*/
     if(userConfigPtr->startStopDetect)
     {
-        I2C_HAL_SetStartStopIntCmd(baseAddr,true);
+        I2C_HAL_SetStartStopIntCmd(base,true);
     }
 #endif
 #if FSL_FEATURE_I2C_HAS_STOP_DETECT
     /* Enable STOP signal detect interrupt in the peripheral.*/
     if(userConfigPtr->stopDetect)
     {
-        I2C_HAL_SetStopIntCmd(baseAddr,true);
+        I2C_HAL_SetStopIntCmd(base,true);
     }
 #endif
 
     /* Enable I2C interrupt as default if setup slave listening mode */
-    I2C_HAL_SetIntCmd(baseAddr, slave->slaveListening);
+    I2C_HAL_SetIntCmd(base, slave->slaveListening);
 
     /* Enable I2C interrupt from NVIC */
     INT_SYS_EnableIRQ(g_i2cIrqId[instance]);
 
     /* Enable the peripheral operation.*/
-    I2C_HAL_Enable(baseAddr);
+    I2C_HAL_Enable(base);
+
+    return kStatus_I2C_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -117,27 +121,33 @@ void I2C_DRV_SlaveInit(uint32_t instance,
  * module.
  *
  *END**************************************************************************/
-void I2C_DRV_SlaveDeinit(uint32_t instance)
+i2c_status_t I2C_DRV_SlaveDeinit(uint32_t instance)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    /* Exit if current instance is already de-initialized or is gated.*/
+    if ((!g_i2cStatePtr[instance]) || (!CLOCK_SYS_GetI2cGateCmd(instance)))
+    {
+        return kStatus_I2C_Fail;
+    }
+
+    I2C_Type * base = g_i2cBase[instance];
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
 
 #if FSL_FEATURE_I2C_HAS_START_STOP_DETECT
     /* Disable I2C START&STOP signal detect interrupt in the peripheral.*/
-    I2C_HAL_SetStartStopIntCmd(baseAddr,false);
+    I2C_HAL_SetStartStopIntCmd(base,false);
 #endif
 #if FSL_FEATURE_I2C_HAS_STOP_DETECT
     /* Disable STOP signal detect interrupt in the peripheral.*/
-    I2C_HAL_SetStopIntCmd(baseAddr,false);
+    I2C_HAL_SetStopIntCmd(base,false);
 #endif
 
     /* Disable I2C interrupt. */
-    I2C_HAL_SetIntCmd(baseAddr, false);
+    I2C_HAL_SetIntCmd(base, false);
 
     /* Turn off I2C.*/
-    I2C_HAL_Disable(baseAddr);
+    I2C_HAL_Disable(base);
 
     /* Disable clock for I2C.*/
     CLOCK_SYS_DisableI2cClock(instance);
@@ -150,6 +160,8 @@ void I2C_DRV_SlaveDeinit(uint32_t instance)
 
     /* Clear runtime structure poniter.*/
     g_i2cStatePtr[instance] = NULL;
+
+    return kStatus_I2C_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -179,7 +191,7 @@ i2c_status_t I2C_DRV_SlaveReceiveDataBlocking(uint32_t instance,
                                               uint32_t timeout_ms)
 {
     assert(rxBuff);
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
 
@@ -199,19 +211,14 @@ i2c_status_t I2C_DRV_SlaveReceiveDataBlocking(uint32_t instance,
         i2cSlaveState->isRxBlocking = true;
 
         /* If IAAS event already comes, read dummy to release the bus.*/
-        if(I2C_HAL_GetStatusFlag(g_i2cBaseAddr[instance], kI2CAddressAsSlave))
+        if(I2C_HAL_GetStatusFlag(g_i2cBase[instance], kI2CAddressAsSlave))
         {
             /* Switch to RX mode.*/
-            I2C_HAL_SetDirMode(g_i2cBaseAddr[instance], kI2CReceive);
-            I2C_HAL_ReadByte(g_i2cBaseAddr[instance]);
+            I2C_HAL_SetDirMode(g_i2cBase[instance], kI2CReceive);
+            I2C_HAL_ReadByte(g_i2cBase[instance]);
         }
 
-#if FSL_FEATURE_I2C_HAS_START_STOP_DETECT
-        I2C_HAL_ClearStartFlag(g_i2cBaseAddr[instance]);
-#endif
-        I2C_HAL_ClearInt(g_i2cBaseAddr[instance]);
-
-        I2C_HAL_SetIntCmd(g_i2cBaseAddr[instance], true);
+        I2C_HAL_SetIntCmd(g_i2cBase[instance], true);
 
         /* Wait until the transmit is complete. */
         do
@@ -228,7 +235,7 @@ i2c_status_t I2C_DRV_SlaveReceiveDataBlocking(uint32_t instance,
 
         if (syncStatus != kStatus_OSA_Success)
         {
-            I2C_HAL_SetIntCmd(g_i2cBaseAddr[instance], false);
+            I2C_HAL_SetIntCmd(g_i2cBase[instance], false);
             i2cSlaveState->status = kStatus_I2C_Timeout;
         }
 
@@ -257,7 +264,7 @@ i2c_status_t I2C_DRV_SlaveReceiveData(uint32_t instance,
                                       uint32_t rxSize)
 {
     assert(rxBuff);
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
 
@@ -273,18 +280,14 @@ i2c_status_t I2C_DRV_SlaveReceiveData(uint32_t instance,
         i2cSlaveState->isRxBusy = true;
 
         /* If IAAS event already comes, read dummy to release the bus.*/
-        if(I2C_HAL_GetStatusFlag(g_i2cBaseAddr[instance], kI2CAddressAsSlave))
+        if(I2C_HAL_GetStatusFlag(g_i2cBase[instance], kI2CAddressAsSlave))
         {
              /* Switch to RX mode.*/
-            I2C_HAL_SetDirMode(g_i2cBaseAddr[instance], kI2CReceive);
-            I2C_HAL_ReadByte(g_i2cBaseAddr[instance]);
+            I2C_HAL_SetDirMode(g_i2cBase[instance], kI2CReceive);
+            I2C_HAL_ReadByte(g_i2cBase[instance]);
         }
 
-#if FSL_FEATURE_I2C_HAS_START_STOP_DETECT
-        I2C_HAL_ClearStartFlag(g_i2cBaseAddr[instance]);
-#endif
-        I2C_HAL_ClearInt(g_i2cBaseAddr[instance]);
-        I2C_HAL_SetIntCmd(g_i2cBaseAddr[instance], true);
+        I2C_HAL_SetIntCmd(g_i2cBase[instance], true);
 
         return kStatus_I2C_Success;
     }
@@ -308,7 +311,7 @@ i2c_status_t I2C_DRV_SlaveSendDataBlocking(uint32_t instance,
                                            uint32_t timeout_ms)
 {
     assert(txBuff);
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
 
@@ -328,11 +331,7 @@ i2c_status_t I2C_DRV_SlaveSendDataBlocking(uint32_t instance,
         i2cSlaveState->isTxBusy = true;
         i2cSlaveState->isTxBlocking = true;
 
-#if FSL_FEATURE_I2C_HAS_START_STOP_DETECT
-        I2C_HAL_ClearStartFlag(g_i2cBaseAddr[instance]);
-#endif
-        I2C_HAL_ClearInt(g_i2cBaseAddr[instance]);
-        I2C_HAL_SetIntCmd(g_i2cBaseAddr[instance], true);
+        I2C_HAL_SetIntCmd(g_i2cBase[instance], true);
 
         /* Wait until the transmit is complete. */
         do
@@ -346,7 +345,7 @@ i2c_status_t I2C_DRV_SlaveSendDataBlocking(uint32_t instance,
 
         if (syncStatus != kStatus_OSA_Success)
         {
-            I2C_HAL_SetIntCmd(g_i2cBaseAddr[instance], false);
+            I2C_HAL_SetIntCmd(g_i2cBase[instance], false);
             i2cSlaveState->status = kStatus_I2C_Timeout;
         }
 
@@ -375,7 +374,7 @@ i2c_status_t I2C_DRV_SlaveSendData(uint32_t instance,
                                    uint32_t txSize)
 {
     assert(txBuff);
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
 
@@ -391,11 +390,7 @@ i2c_status_t I2C_DRV_SlaveSendData(uint32_t instance,
         i2cSlaveState->txSize = txSize;
         i2cSlaveState->isTxBusy = true;
 
-#if FSL_FEATURE_I2C_HAS_START_STOP_DETECT
-        I2C_HAL_ClearStartFlag(g_i2cBaseAddr[instance]);
-#endif
-        I2C_HAL_ClearInt(g_i2cBaseAddr[instance]);
-        I2C_HAL_SetIntCmd(g_i2cBaseAddr[instance], true);
+        I2C_HAL_SetIntCmd(g_i2cBase[instance], true);
 
         return kStatus_I2C_Success;
     }
@@ -419,7 +414,7 @@ i2c_status_t I2C_DRV_SlaveSendData(uint32_t instance,
 i2c_status_t I2C_DRV_SlaveGetTransmitStatus(uint32_t instance,
                                             uint32_t *bytesRemaining)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
     /* Get current runtime structure */
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
@@ -453,7 +448,7 @@ i2c_status_t I2C_DRV_SlaveGetTransmitStatus(uint32_t instance,
 i2c_status_t I2C_DRV_SlaveGetReceiveStatus(uint32_t instance,
                                            uint32_t *bytesRemaining)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
     /* Get current runtime structure */
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
@@ -481,7 +476,7 @@ i2c_status_t I2C_DRV_SlaveGetReceiveStatus(uint32_t instance,
  *END**************************************************************************/
 i2c_status_t I2C_DRV_SlaveAbortReceiveData(uint32_t instance, uint32_t *rxSize)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
 
     *rxSize = i2cSlaveState->rxSize;
@@ -500,7 +495,7 @@ i2c_status_t I2C_DRV_SlaveAbortReceiveData(uint32_t instance, uint32_t *rxSize)
     if(!i2cSlaveState->slaveListening)
     {
         /* Disable I2C interrupt in the peripheral.*/
-        I2C_HAL_SetIntCmd(g_i2cBaseAddr[instance], false);
+        I2C_HAL_SetIntCmd(g_i2cBase[instance], false);
 
         if (i2cSlaveState->isRxBlocking)
         {
@@ -520,7 +515,7 @@ i2c_status_t I2C_DRV_SlaveAbortReceiveData(uint32_t instance, uint32_t *rxSize)
  *END**************************************************************************/
 i2c_status_t I2C_DRV_SlaveAbortSendData(uint32_t instance, uint32_t *txSize)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
 
     *txSize = i2cSlaveState->txSize;
@@ -539,7 +534,7 @@ i2c_status_t I2C_DRV_SlaveAbortSendData(uint32_t instance, uint32_t *txSize)
     if(!i2cSlaveState->slaveListening)
     {
         /* Disable I2C interrupt in the peripheral.*/
-        I2C_HAL_SetIntCmd(g_i2cBaseAddr[instance], false);
+        I2C_HAL_SetIntCmd(g_i2cBase[instance], false);
 
         if (i2cSlaveState->isTxBlocking)
         {
@@ -560,39 +555,39 @@ i2c_status_t I2C_DRV_SlaveAbortSendData(uint32_t instance, uint32_t *txSize)
  *END**************************************************************************/
 void I2C_DRV_SlaveIRQHandler(uint32_t instance)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    I2C_Type * base = g_i2cBase[instance];
     uint8_t  i2cData  = 0x00;
     bool     doTransmit = false;
-    bool     wasArbLost = I2C_HAL_GetStatusFlag(baseAddr, kI2CArbitrationLost);
-    bool     addressed = I2C_HAL_GetStatusFlag(baseAddr, kI2CAddressAsSlave);
+    bool     wasArbLost = I2C_HAL_GetStatusFlag(base, kI2CArbitrationLost);
+    bool     addressed = I2C_HAL_GetStatusFlag(base, kI2CAddressAsSlave);
     bool     stopIntEnabled = false;
 
 #if FSL_FEATURE_I2C_HAS_START_STOP_DETECT
-    bool     startDetected = I2C_HAL_GetStartFlag(baseAddr);
-    bool     startIntEnabled = I2C_HAL_GetStartStopIntCmd(baseAddr);
-    bool     stopDetected = I2C_HAL_GetStopFlag(baseAddr);
+    bool     startDetected = I2C_HAL_GetStartFlag(base);
+    bool     startIntEnabled = I2C_HAL_GetStartStopIntCmd(base);
+    bool     stopDetected = I2C_HAL_GetStopFlag(base);
     stopIntEnabled = startIntEnabled;
 #endif
 
 #if FSL_FEATURE_I2C_HAS_STOP_DETECT
-    bool     stopDetected = I2C_HAL_GetStopFlag(baseAddr);
-    stopIntEnabled = I2C_HAL_GetStopIntCmd(baseAddr);
+    bool     stopDetected = I2C_HAL_GetStopFlag(base);
+    stopIntEnabled = I2C_HAL_GetStopIntCmd(base);
 #endif
 
     /* Get current runtime structure */
     i2c_slave_state_t * i2cSlaveState = (i2c_slave_state_t *)g_i2cStatePtr[instance];
 
     /* Get current slave transfer direction */
-    i2c_direction_t direction = I2C_HAL_GetDirMode(baseAddr);
+    i2c_direction_t direction = I2C_HAL_GetDirMode(base);
 
 #if FSL_FEATURE_I2C_HAS_START_STOP_DETECT
     /*--------------- Handle START ------------------*/
     if (startIntEnabled && startDetected)
     {
-        I2C_HAL_ClearStartFlag(baseAddr);
-        I2C_HAL_ClearInt(baseAddr);
+        I2C_HAL_ClearStartFlag(base);
+        I2C_HAL_ClearInt(base);
 
         if(i2cSlaveState->slaveCallback != NULL)
         {
@@ -610,13 +605,13 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
     /*--------------- Handle STOP ------------------*/
     if (stopIntEnabled && stopDetected)
     {
-        I2C_HAL_ClearStopFlag(baseAddr);
-        I2C_HAL_ClearInt(baseAddr);
+        I2C_HAL_ClearStopFlag(base);
+        I2C_HAL_ClearInt(base);
 
         if(!i2cSlaveState->slaveListening)
         {
             /* Disable I2C interrupt in the peripheral.*/
-            I2C_HAL_SetIntCmd(baseAddr, false);
+            I2C_HAL_SetIntCmd(base, false);
         }
 
         if(i2cSlaveState->slaveCallback != NULL)
@@ -639,18 +634,18 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
 #endif
 
     /* Clear I2C IRQ.*/
-    I2C_HAL_ClearInt(baseAddr);
+    I2C_HAL_ClearInt(base);
 
     if (wasArbLost)
     {
-        I2C_HAL_ClearArbitrationLost(baseAddr);
+        I2C_HAL_ClearArbitrationLost(base);
         if (!addressed)
         {
             i2cSlaveState->status = kStatus_I2C_AribtrationLost;
             if(!i2cSlaveState->slaveListening)
             {
                 /* Disable I2C interrupt in the peripheral.*/
-                I2C_HAL_SetIntCmd(baseAddr, false);
+                I2C_HAL_SetIntCmd(base, false);
             }
             return;
         }
@@ -661,10 +656,10 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
     if (addressed) /* Slave is addressed. */
     {
         /* Master read from Slave. Slave transmit.*/
-        if (I2C_HAL_GetStatusFlag(baseAddr, kI2CSlaveTransmit))
+        if (I2C_HAL_GetStatusFlag(base, kI2CSlaveTransmit))
         {
             /* Switch to TX mode*/
-            I2C_HAL_SetDirMode(baseAddr, kI2CSend);
+            I2C_HAL_SetDirMode(base, kI2CSend);
 
             if(i2cSlaveState->slaveCallback != NULL)
             {
@@ -679,7 +674,7 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
         else /* Master write to Slave. Slave receive.*/
         {
             /* Switch to RX mode.*/
-            I2C_HAL_SetDirMode(baseAddr, kI2CReceive);
+            I2C_HAL_SetDirMode(base, kI2CReceive);
 
             if(i2cSlaveState->slaveCallback != NULL)
             {
@@ -690,7 +685,7 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
             }
 
             /* Read dummy character.*/
-            I2C_HAL_ReadByte(baseAddr);
+            I2C_HAL_ReadByte(base);
         }
     }
     /*--------------- Handle Transfer ------------------*/
@@ -699,17 +694,17 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
         /* Handle transmit */
         if (direction == kI2CSend)
         {
-            if (I2C_HAL_GetStatusFlag(baseAddr, kI2CReceivedNak))
+            if (I2C_HAL_GetStatusFlag(base, kI2CReceivedNak))
             {
                 /* Switch to RX mode.*/
-                I2C_HAL_SetDirMode(baseAddr, kI2CReceive);
+                I2C_HAL_SetDirMode(base, kI2CReceive);
                 /* Read dummy character to release bus */
-                I2C_HAL_ReadByte(baseAddr);
+                I2C_HAL_ReadByte(base);
 
                 if ((!i2cSlaveState->slaveListening) && (!stopIntEnabled))
                 {
                     /* Disable I2C interrupt in the peripheral.*/
-                    I2C_HAL_SetIntCmd(baseAddr, false);
+                    I2C_HAL_SetIntCmd(base, false);
                 }
 
                 if(i2cSlaveState->slaveCallback != NULL)
@@ -738,7 +733,7 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
         else
         {
             /* Get byte from data register */
-            i2cData = I2C_HAL_ReadByte(baseAddr);
+            i2cData = I2C_HAL_ReadByte(base);
 
             if (i2cSlaveState->rxSize)
             {
@@ -753,7 +748,7 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
                         if(!i2cSlaveState->slaveListening)
                         {
                             /* Disable I2C interrupt in the peripheral.*/
-                            I2C_HAL_SetIntCmd(baseAddr, false);
+                            I2C_HAL_SetIntCmd(base, false);
                         }
 
                         /* All bytes are received, so we're done with this transfer */
@@ -790,7 +785,7 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
         if (i2cSlaveState->txSize)
         {
             i2cData = *(i2cSlaveState->txBuff);
-            I2C_HAL_WriteByte(baseAddr, i2cData);
+            I2C_HAL_WriteByte(base, i2cData);
             ++ i2cSlaveState->txBuff;
             -- i2cSlaveState->txSize;
             if (!i2cSlaveState->txSize)
@@ -816,6 +811,8 @@ void I2C_DRV_SlaveIRQHandler(uint32_t instance)
         }
     }
 }
+
+#endif /* FSL_FEATURE_SOC_I2C_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

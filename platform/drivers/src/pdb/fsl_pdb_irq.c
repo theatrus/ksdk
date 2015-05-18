@@ -29,6 +29,7 @@
  */
 
 #include "fsl_pdb_driver.h"
+#if FSL_FEATURE_SOC_PDB_COUNT
 
 /******************************************************************************
  * IRQ Handlers
@@ -45,7 +46,7 @@ void PDB0_IRQHandler(void)
     }
 }
 
-#if (HW_PDB_INSTANCE_COUNT > 1)
+#if (PDB_INSTANCE_COUNT > 1)
 void PDB1_IRQHandler(void)
 {
     /* Add user-defined ISR for PDB1. */
@@ -56,6 +57,7 @@ void PDB1_IRQHandler(void)
         PDB_DRV_ClearPdbCounterIntFlag(1U);
     }
 }
+#endif
 #endif
 
 /*******************************************************************************

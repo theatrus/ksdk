@@ -213,26 +213,25 @@ typedef void power_manager_callback_data_t;
  *  lowPowerOscillatorValue - When set to true, the 1 kHz Low power oscillator is enabled in any
  *   Low leakage or Very low leakage stop mode. When set to false, oscillator is disabled in these modes.
  *   This item is chip-specific.
+ * @internal gui name="Power manager configuration" id="power_managerCfg"
  */
 typedef struct _power_manager_mode_user_config {
-    power_manager_modes_t mode;
-    bool sleepOnExitOption;
-    bool sleepOnExitValue;
+    power_manager_modes_t mode;  /*!< Power mode. @internal gui name="Power mode" id="mode" */
+    bool sleepOnExitValue;       /*!< Sleep or deep sleep after interrupt service finished. @internal gui name="Sleep or deep sleep after interrupt service finished" id="sleepOnExitValue" */
 #if FSL_FEATURE_SMC_HAS_LPWUI
-    bool lowPowerWakeUpOnInterruptOption;
-    smc_lpwui_option_t lowPowerWakeUpOnInterruptValue;
+    smc_lpwui_option_t lowPowerWakeUpOnInterruptValue;  /*!< Wake-up on interrupt from Very low power run, Very low power wait or Very low power stop mode. @internal gui name="Wake-up on interrupt from Very low power run, Very low power wait or Very low power stop mode" id="lowPowerWakeUpOnInterruptValue" */
 #endif
 #if FSL_FEATURE_SMC_HAS_PORPO
-    bool powerOnResetDetectionOption;
-    smc_por_option_t powerOnResetDetectionValue;
+    smc_por_option_t powerOnResetDetectionValue;  /*!< Power on reset detection circuit is enabled in Very low leakage stop 0 mode. @internal gui name="Power on reset detection circuit is enabled in Very low leakage stop 0 mode" id="powerOnResetDetectionValue" */
 #endif
 #if FSL_FEATURE_SMC_HAS_RAM2_POWER_OPTION
-    bool RAM2PartitionOption;
-    smc_ram2_option_t RAM2PartitionValue;
+    smc_ram2_option_t RAM2PartitionValue;  /*!< RAM2 partition content is retained through Very low leakage stop 2 mode. @internal gui name="RAM2 partition content is retained through Very low leakage stop 2 mode" id="RAM2PartitionValue" */
+#endif
+#if FSL_FEATURE_SMC_HAS_PSTOPO
+    smc_pstop_option_t  partialStopOptionValue;  /*!< Defines Normal stop mode, or Partial Stop with both system and bus clocks disabled, or Partial Stop with system clock disabled and bus clock enabled. @internal gui name="Defines Normal stop mode, or Partial Stop with both system and bus clocks disabled, or Partial Stop with system clock disabled and bus clock enabled" id="partialStopOptionValue" */
 #endif
 #if FSL_FEATURE_SMC_HAS_LPOPO
-    bool lowPowerOscillatorOption;
-    smc_lpo_option_t lowPowerOscillatorValue;
+    smc_lpo_option_t lowPowerOscillatorValue;  /*!< The 1 kHz Low power oscillator is enabled in any Low leakage or Very low leakage stop mode. @internal gui name="The 1 kHz Low power oscillator is enabled in any Low leakage or Very low leakage stop mode" id="lowPowerOscillatorValue" */
 #endif
 } power_manager_user_config_t;
 
@@ -240,7 +239,7 @@ typedef struct _power_manager_mode_user_config {
 typedef struct _power_notify_struct
 {
     uint8_t targetPowerConfigIndex;    /*!< Target power configuration index. */
-    power_manager_user_config_t *targetPowerConfigPtr; /*!< Pointer to target power configuration */
+    power_manager_user_config_t const *targetPowerConfigPtr; /*!< Pointer to target power configuration */
     power_manager_policy_t policy;     /*!< Clock transition policy.          */
     power_manager_notify_t notifyType; /*!< Clock notification type.          */
 } power_manager_notify_struct_t;
@@ -297,9 +296,9 @@ typedef struct _power_manager_callback_user_config {
  * This structure is statically allocated and initialized after POWER_SYS_Init() call.
  */
 typedef struct _power_manager_state {
-    power_manager_user_config_t * (* configs)[];   /*!< Pointer to power configure table.*/
+    power_manager_user_config_t const ** configs;   /*!< Pointer to power configure table.*/
     uint8_t configsNumber;                         /*!< Number of power configurations */
-    power_manager_callback_user_config_t * (* staticCallbacks)[]; /*!< Pointer to callback table. */
+    power_manager_callback_user_config_t ** staticCallbacks; /*!< Pointer to callback table. */
     uint8_t staticCallbacksNumber;                 /*!< Max. number of callback configurations */
     uint8_t errorCallbackIndex;                    /*!< Index of callback returns error. */
     uint8_t currentConfig;                         /*!< Index of current configuration.  */  
@@ -387,9 +386,9 @@ extern "C" {
  *  array.
  * @return An error code or kPowerManagerSuccess.
  */
-power_manager_error_code_t POWER_SYS_Init(power_manager_user_config_t const * (* powerConfigsPtr)[],
+power_manager_error_code_t POWER_SYS_Init(power_manager_user_config_t const ** powerConfigsPtr,
                                           uint8_t configsNumber,
-                                          power_manager_callback_user_config_t const * (* callbacksPtr)[],
+                                          power_manager_callback_user_config_t ** callbacksPtr,
                                           uint8_t callbacksNumber);
 
 /*!
@@ -462,7 +461,7 @@ power_manager_error_code_t POWER_SYS_GetLastMode(uint8_t *powerModeIndexPtr);
  * @param powerModePtr Pointer to power mode configuration structure of power mode set as last one.
  * @return An error code or kPowerManagerSuccess.
  */
-power_manager_error_code_t POWER_SYS_GetLastModeConfig(power_manager_user_config_t ** powerModePtr);
+power_manager_error_code_t POWER_SYS_GetLastModeConfig(power_manager_user_config_t const ** powerModePtr);
 
 /*!
  * @brief This function returns currently running power mode.
@@ -544,6 +543,7 @@ void POWER_SYS_ClearAckIsolation(void);
 
 #include "../src/power/fsl_power_manager_common.h"
 
+#if FSL_FEATURE_SOC_LLWU_COUNT
 /*!
  * The LLWU module becomes functional on entry into a low-leakage power mode. After
  * recovery from LLS, the LLWU is immediately disabled. After recovery from VLLS, the
@@ -581,14 +581,6 @@ void POWER_SYS_ClearAckIsolation(void);
 void POWER_SYS_SetWakeupModule(power_wakeup_module_t module,bool enable);
 
 /*!
- * @brief This function allows to get wake up module settings from low leakage wake up unit (LLWU).
- * 
- * @param module Wake up module name.
- * @return Returns true if module is enabled
- */
-bool POWER_SYS_GetWakeupModule(power_wakeup_module_t module);
-
-/*!
  * @brief This function allows to get wake up module flag in LLWU.
  * 
  * For internal peripherals that are capable of running in a low-leakage power mode, such as
@@ -623,14 +615,6 @@ bool POWER_SYS_GetWakeupModuleFlag(power_wakeup_module_t module);
 void POWER_SYS_SetWakeupPin(power_wakeup_pin_t pin, llwu_external_pin_modes_t pinMode, const gpio_input_pin_t * config);
 
 /*!
- * @brief This function allows to get wake up pin settings in low leakage wake up unit (LLWU).
- * 
- * @param pin Wake up pin name
- * @return Returns pin mode.
- */
-llwu_external_pin_modes_t POWER_SYS_GetWakeupPin(power_wakeup_pin_t pin);
-
-/*!
  * @brief This function allows to get wake up pin flag in low leakage wake up unit (LLWU).
  * 
  * @param pin Wake up pin name.
@@ -645,6 +629,7 @@ bool POWER_SYS_GetWakeupPinFlag(power_wakeup_pin_t pin);
  */
 void POWER_SYS_ClearWakeupPinFlag(power_wakeup_pin_t pin);
 
+#endif
 #endif
 
 #if defined(__cplusplus)

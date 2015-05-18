@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_EDMA_COUNT
 
 /*!
  * @addtogroup edma_hal
@@ -53,9 +54,9 @@ typedef enum _edma_status {
 /*! @brief eDMA channel arbitration algorithm used for selection among channels. */
 typedef enum _edma_channel_arbitration {
     kEDMAChnArbitrationFixedPriority = 0U,  /*!< Fixed Priority arbitration is used for selection
-                                                 among channels. */
+                                                 among channels. @internal gui name="Fixed priority" */
     kEDMAChnArbitrationRoundrobin           /*!< Round-Robin arbitration is used for selection among
-                                                 channels. */
+                                                 channels. @internal gui name="Round-Robin" */
 } edma_channel_arbitration_t;
 
 /*! @brief eDMA channel priority setting */
@@ -83,17 +84,17 @@ typedef enum _edma_chn_priority {
 typedef enum _edma_group_arbitration
 {
     kEDMAGroupArbitrationFixedPriority = 0U,    /*!< Fixed Priority arbitration is used for
-                                                     selection among eDMA groups. */
+                                                     selection among eDMA groups. @internal gui name="Fixed priority" */
     kEDMAGroupArbitrationRoundrobin             /*!< Round-Robin arbitration is used for selection
-                                                     among eDMA channels. */
+                                                     among eDMA channels. @internal gui name="Round-Robin" */
 } edma_group_arbitration_t;
 
 /*! @brief eDMA group priority setting */
 typedef enum _edma_group_priority {
     kEDMAGroup0PriorityLowGroup1PriorityHigh,    /*!< eDMA group 0's priority is lower priority.
-                                                      eDMA group 1's priority is higher priority. */
+                                                      eDMA group 1's priority is higher priority. @internal gui name="Group 1 high priority" */
     kEDMAGroup0PriorityHighGroup1PriorityLow     /*!< eDMA group 0's priority is higher priority.
-                                                      eDMA group 1's priority is lower priority. */
+                                                      eDMA group 1's priority is lower priority. @internal gui name="Group 0 high priority" */
 } edma_group_priority_t;
 #endif
 
@@ -144,7 +145,7 @@ typedef enum _edma_transfer_size {
 
 /*!
  * @brief eDMA transfer size configuration.
- * 
+ *
  * This structure configures the basic source/destination transfer attribute.
  * This figure shows the eDMA's transfer model:\n
  *  _________________________________________________ \n
@@ -157,7 +158,7 @@ typedef enum _edma_transfer_size {
  *              |_______________| Major Loop Count 2 | \n
  *              |               |                    | \n
  *              |_______________|____________________|--> Minor loop  Complete \n
- *                                                                      
+ *
  *               ---------------------------------------------------------> Major loop complete \n
  *
  */
@@ -229,26 +230,23 @@ typedef struct EDMAMinorLoopOffsetConfig {
 } edma_minorloop_offset_config_t;
 
 /*! @brief Error status of the eDMA module */
-typedef union EDMAErrorStatusAll {
-    struct {
-        uint32_t destinationBusError : 1;               /*!< Bus error on destination address */
-        uint32_t sourceBusError : 1;                    /*!< Bus error on the SRC address */
-        uint32_t scatterOrGatherConfigurationError : 1; /*!< Error on the Scatter/Gather address */
-        uint32_t nbyteOrCiterConfigurationError : 1;    /*!< NBYTES/CITER configuration error */
-        uint32_t destinationOffsetError : 1;            /*!< Destination offset error */
-        uint32_t destinationAddressError : 1;           /*!< Destination address error */
-        uint32_t sourceOffsetError : 1;                 /*!< Source offset error */
-        uint32_t sourceAddressError : 1;                /*!< Source address error */
-        uint32_t errorChannel : 5;                      /*!< Error channel number of the cancelled
-                                                             channel number */
-        uint32_t _reserved1 : 1;
-        uint32_t channelPriorityError : 1;              /*!< Channel priority error */
-        uint32_t groupPriorityError : 1;                /*!< Group priority error */
-        uint32_t transferCancelledError : 1;            /*!< Transfer cancelled */
-        uint32_t _reserved0 : 14;
-        uint32_t orOfAllError : 1;                      /*!< Logical OR  all ERR status bits */
-    } U;
-    uint32_t B;
+typedef struct EDMAErrorStatusAll {
+    uint8_t errorChannel;       /*!< Error channel number of the cancelled channel number */
+    bool destinationBusError;               /*!< Bus error on destination address */
+    bool sourceBusError;                    /*!< Bus error on the SRC address */
+    bool scatterOrGatherConfigurationError; /*!< Error on the Scatter/Gather address */
+    bool nbyteOrCiterConfigurationError;    /*!< NBYTES/CITER configuration error */
+    bool destinationOffsetError;            /*!< Destination offset error */
+    bool destinationAddressError;           /*!< Destination address error */
+    bool sourceOffsetError;                 /*!< Source offset error */
+    bool sourceAddressError;                /*!< Source address error */
+
+    bool channelPriorityError;              /*!< Channel priority error */
+#if FSL_FEATURE_EDMA_CHANNEL_GROUP_COUNT > 1
+    bool groupPriorityError;                /*!< Group priority error */
+#endif
+    bool transferCancelledError;            /*!< Transfer cancelled */
+    bool orOfAllError;                      /*!< Logical OR  all ERR status bits */
 } edma_error_status_all_t;
 
 /*! @brief Bandwidth control configuration */
@@ -263,24 +261,14 @@ typedef struct EDMASoftwareTcd {
     uint32_t SADDR;
     uint16_t SOFF;
     uint16_t ATTR;
-    union {
-        uint32_t MLNO;
-        uint32_t MLOFFNO;
-        uint32_t MLOFFYES;
-    } NBYTES;
+    uint32_t NBYTES;
     uint32_t SLAST;
     uint32_t DADDR;
     uint16_t DOFF;
-    union {
-        uint16_t ELINKNO;
-        uint16_t ELINKYES;
-    } CITER;
+    uint16_t CITER;
     uint32_t DLAST_SGA;
     uint16_t CSR;
-    union {
-        uint16_t ELINKNO;
-        uint16_t ELINKYES;
-    } BITER;
+    uint16_t BITER;
 } edma_software_tcd_t;
 
 /*******************************************************************************
@@ -291,7 +279,7 @@ typedef struct EDMASoftwareTcd {
 extern "C" {
 #endif
 
-/*! 
+/*!
  * @name eDMA HAL driver module level operation
  * @{
  */
@@ -299,9 +287,9 @@ extern "C" {
 /*!
  * @brief Initializes eDMA module to known state.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  */
-void EDMA_HAL_Init(uint32_t baseAddr);
+void EDMA_HAL_Init(DMA_Type * base);
 
 /*!
  * @brief Cancels the remaining data transfer.
@@ -312,9 +300,9 @@ void EDMA_HAL_Init(uint32_t baseAddr);
  * been honored. This cancel retires the channel normally as if the minor
  * loop had completed.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  */
-void EDMA_HAL_CancelTransfer(uint32_t baseAddr);
+void EDMA_HAL_CancelTransfer(DMA_Type * base);
 
 /*!
  * @brief Cancels the remaining data transfer and treats it as an error condition.
@@ -326,22 +314,22 @@ void EDMA_HAL_CancelTransfer(uint32_t baseAddr);
  * loop had completed. Additional thing is to treat this operation as an error
  * condition.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  */
-void EDMA_HAL_ErrorCancelTransfer(uint32_t baseAddr);
+void EDMA_HAL_ErrorCancelTransfer(DMA_Type * base);
 
 /*!
  * @brief Halts/Un-halts the DMA Operations.
  *
  * This function stalls/un-stalls the start of any new channels. Executing channels are allowed
- * to be completed. 
+ * to be completed.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param halt Halts (true) or un-halts (false) eDMA transfer.
  */
-static inline void EDMA_HAL_SetHaltCmd(uint32_t baseAddr, bool halt)
+static inline void EDMA_HAL_SetHaltCmd(DMA_Type * base, bool halt)
 {
-    BW_DMA_CR_HALT(baseAddr, halt);
+    DMA_BWR_CR_HALT(base, halt);
 }
 
 /*!
@@ -350,41 +338,41 @@ static inline void EDMA_HAL_SetHaltCmd(uint32_t baseAddr, bool halt)
  * An error causes the HALT bit to be set. Subsequently, all service requests are ignored until the
  * HALT bit is cleared.
  *
- * @param baseAddr Register base address for eDMA module.
- * @param haltOnError Halts (true) or not halt (false) eDMA module when an error occurs. 
+ * @param base Register base address for eDMA module.
+ * @param haltOnError Halts (true) or not halt (false) eDMA module when an error occurs.
  */
-static inline void EDMA_HAL_SetHaltOnErrorCmd(uint32_t baseAddr, bool haltOnError)
-{	
-    BW_DMA_CR_HOE(baseAddr, haltOnError);
+static inline void EDMA_HAL_SetHaltOnErrorCmd(DMA_Type * base, bool haltOnError)
+{
+    DMA_BWR_CR_HOE(base, haltOnError);
 }
 
 /*!
  * @brief Enables/Disables the eDMA DEBUG mode.
  *
  * This function enables/disables the eDMA Debug mode.
- * When in debug mode, the DMA stalls the start of a new 
- * channel. Executing channels are allowed to complete. Channel execution resumes 
- * either when the system exits debug mode or when the EDBG bit is cleared. 
+ * When in debug mode, the DMA stalls the start of a new
+ * channel. Executing channels are allowed to complete. Channel execution resumes
+ * either when the system exits debug mode or when the EDBG bit is cleared.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param enable Enables (true) or Disable (false) eDMA module debug mode.
  */
-static inline void EDMA_HAL_SetDebugCmd(uint32_t baseAddr, bool enable)
+static inline void EDMA_HAL_SetDebugCmd(DMA_Type * base, bool enable)
 {
-    BW_DMA_CR_EDBG(baseAddr, enable);
+    DMA_BWR_CR_EDBG(base, enable);
 }
 /* @} */
 
-/*! 
+/*!
  * @name eDMA HAL driver channel priority and arbitration configuration.
  * @{
  */
 /*!
  * @brief Sets the preempt and preemption feature for the eDMA channel.
  *
- * This function sets the preempt and preemption features. 
+ * This function sets the preempt and preemption features.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param preempt eDMA channel can't suspend a lower priority channel (true). eDMA channel can
  * suspend a lower priority channel (false).
@@ -392,37 +380,37 @@ static inline void EDMA_HAL_SetDebugCmd(uint32_t baseAddr, bool enable)
  * priority channel (true). eDMA channel can't be suspended by a higher priority channel (false).
  */
 static inline void EDMA_HAL_SetChannelPreemptMode(
-                uint32_t baseAddr, uint32_t channel, bool preempt, bool preemption)
+                DMA_Type * base, uint32_t channel, bool preempt, bool preemption)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_DCHPRIn_DPA(baseAddr, HW_DMA_DCHPRIn_CHANNEL(channel), preempt);
-    BW_DMA_DCHPRIn_ECP(baseAddr, HW_DMA_DCHPRIn_CHANNEL(channel), preemption);
+    DMA_BWR_DCHPRIn_DPA(base, channel, preempt);
+    DMA_BWR_DCHPRIn_ECP(base, channel, preemption);
 }
 
 /*!
  * @brief Sets the eDMA channel priority.
  *
- * @param baseAddr Register base address for eDMA module. 
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param priority Priority of the DMA channel. Different channels should have different priority
  * setting inside a group.
  */
 static inline void EDMA_HAL_SetChannelPriority(
-                uint32_t baseAddr, uint32_t channel, edma_channel_priority_t priority)
+                DMA_Type * base, uint32_t channel, edma_channel_priority_t priority)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_DCHPRIn_CHPRI(baseAddr, HW_DMA_DCHPRIn_CHANNEL(channel), priority);
+    DMA_BWR_DCHPRIn_CHPRI(base, channel, priority);
 }
 /*!
  * @brief Sets the channel arbitration algorithm.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channelArbitration Round-Robin way for fixed priority way.
  */
 static inline void EDMA_HAL_SetChannelArbitrationMode(
-                uint32_t baseAddr, edma_channel_arbitration_t channelArbitration)
+                DMA_Type * base, edma_channel_arbitration_t channelArbitration)
 {
-    BW_DMA_CR_ERCA(baseAddr, channelArbitration);
+    DMA_BWR_CR_ERCA(base, channelArbitration);
 }
 
 #if (FSL_FEATURE_EDMA_CHANNEL_GROUP_COUNT > 0x1U)
@@ -431,27 +419,27 @@ static inline void EDMA_HAL_SetChannelArbitrationMode(
  *
  * This function configures the priority for group 0 and group 1.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param groupPriority Group priority configuration. Note that each group get its own
  * group priority.
  */
-void EDMA_HAL_SetGroupPriority(uint32_t baseAddr, edma_group_priority_t groupPriority);
+void EDMA_HAL_SetGroupPriority(DMA_Type * base, edma_group_priority_t groupPriority);
 
 /*!
  * @brief Sets the eDMA group arbitration algorithm.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param groupArbitration Group arbitration way. Fixed-Priority way or Round-Robin way.
  */
 static inline void EDMA_HAL_SetGroupArbitrationMode(
-                    uint32_t baseAddr, edma_group_arbitration_t groupArbitration)
+                    DMA_Type * base, edma_group_arbitration_t groupArbitration)
 {
-    BW_DMA_CR_ERGA(baseAddr, groupArbitration);
+    DMA_BWR_CR_ERGA(base, groupArbitration);
 }
 #endif
 /* @} */
 
-/*! 
+/*!
  * @name eDMA HAL driver configuration and operation.
  * @{
  */
@@ -460,15 +448,15 @@ static inline void EDMA_HAL_SetGroupArbitrationMode(
  *
  * This function enables/disables the minor loop mapping feature.
  * If enabled, the NBYTES is redefined to include the individual enable fields and the NBYTES field. The
- * individual enable fields allow the minor loop offset to be applied to the source address, the 
+ * individual enable fields allow the minor loop offset to be applied to the source address, the
  * destination address, or both. The NBYTES field is reduced when either offset is enabled.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param enable Enables (true) or Disable (false) minor loop mapping.
  */
-static inline void EDMA_HAL_SetMinorLoopMappingCmd(uint32_t baseAddr, bool enable)
+static inline void EDMA_HAL_SetMinorLoopMappingCmd(DMA_Type * base, bool enable)
 {
-    BW_DMA_CR_EMLM(baseAddr, enable);
+    DMA_BWR_CR_EMLM(base, enable);
 }
 
 /*!
@@ -477,208 +465,171 @@ static inline void EDMA_HAL_SetMinorLoopMappingCmd(uint32_t baseAddr, bool enabl
  * This function enables or disables the continuous transfer. If set, a minor loop channel link
  * does not go through the channel arbitration before being activated again. Upon minor loop
  * completion, the channel activates again if that channel has a minor loop channel link enabled and
- * the link channel is itself. 
+ * the link channel is itself.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param continuous Enables (true) or Disable (false) continuous transfer mode.
  */
-static inline void EDMA_HAL_SetContinuousLinkCmd(uint32_t baseAddr, bool continuous)
+static inline void EDMA_HAL_SetContinuousLinkCmd(DMA_Type * base, bool continuous)
 {
-    BW_DMA_CR_CLM(baseAddr, continuous);
+    DMA_BWR_CR_CLM(base, continuous);
 }
 
 /*!
  * @brief Gets the error status of the eDMA module.
  *
- * @param baseAddr Register base address for eDMA module. 
+ * @param base Register base address for eDMA module.
  * @return Detailed information of the error type in the eDMA module.
  */
-static inline uint32_t EDMA_HAL_GetErrorStatus(uint32_t baseAddr)
-{
-    return HW_DMA_ES_RD(baseAddr);
-}
+edma_error_status_all_t EDMA_HAL_GetErrorStatus(DMA_Type * base);
 
 /*!
  * @brief Enables/Disables the error interrupt for channels.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param enable Enable(true) or Disable (false) error interrupt.
  * @param channel Channel indicator. If kEDMAAllChannel is selected, all channels' error interrupt
  * will be enabled/disabled.
  */
-void EDMA_HAL_SetErrorIntCmd(uint32_t baseAddr, bool enable, edma_channel_indicator_t channel);
-
-/*!
- * @brief Checks whether the eDMA channel error interrupt is enabled or disabled.
- *
- * @param baseAddr Register base address for eDMA module.
- * @param channel eDMA channel number.
- * @return Error interrupt is enabled (true) or disabled (false).
- */
-bool EDMA_HAL_GetErrorIntCmd(uint32_t baseAddr, uint32_t channel);
+void EDMA_HAL_SetErrorIntCmd(DMA_Type * base, bool enable, edma_channel_indicator_t channel);
 
 /*!
  * @brief Gets the eDMA error interrupt status.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @return 32 bit variable indicating error channels. If error happens on eDMA channel n, the bit n
  * of this variable is '1'. If not, the bit n of this variable is '0'.
  */
-static inline uint32_t EDMA_HAL_GetErrorIntStatusFlag(uint32_t baseAddr)
+static inline uint32_t EDMA_HAL_GetErrorIntStatusFlag(DMA_Type * base)
 {
-    return HW_DMA_ERR_RD(baseAddr);
+    return DMA_RD_ERR(base);
 }
 
 /*!
  * @brief Clears the error interrupt status for the eDMA channel or channels.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel Channel indicator. If kEDMAAllChannel is selected, all channels' error interrupt
  * status will be cleared.
  */
 static inline void EDMA_HAL_ClearErrorIntStatusFlag(
-                uint32_t baseAddr, edma_channel_indicator_t channel)
+                DMA_Type * base, edma_channel_indicator_t channel)
 {
-    HW_DMA_CERR_WR(baseAddr, channel);
+    DMA_WR_CERR(base, channel);
 }
 
 /*!
  * @brief Enables/Disables the DMA request for the channel or all channels.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param enable Enable(true) or Disable (false) DMA request.
  * @param channel Channel indicator. If kEDMAAllChannel is selected, all channels DMA request
  * are enabled/disabled.
  */
-void EDMA_HAL_SetDmaRequestCmd(uint32_t baseAddr, edma_channel_indicator_t channel,bool enable);
-
-/*!
- * @brief Checks whether the eDMA channel DMA request is enabled or disabled.
- *
- * @param baseAddr Register base address for eDMA module.
- * @param channel eDMA channel number.
- * @return DMA request is enabled (true) or disabled (false).
- */
-static inline bool EDMA_HAL_GetDmaRequestCmd(uint32_t baseAddr, uint32_t channel)
-{
-    assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-
-    return ((HW_DMA_ERQ_RD(baseAddr) >> channel) & 1U); 
-}
+void EDMA_HAL_SetDmaRequestCmd(DMA_Type * base, edma_channel_indicator_t channel,bool enable);
 
 /*!
  * @brief Gets the eDMA channel DMA request status.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @return Hardware request is triggered in this eDMA channel (true) or not be triggered in this
- * channel (false). 
+ * channel (false).
  */
-static inline bool EDMA_HAL_GetDmaRequestStatusFlag(uint32_t baseAddr, uint32_t channel)
+static inline bool EDMA_HAL_GetDmaRequestStatusFlag(DMA_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    return (((uint32_t)HW_DMA_HRS_RD(baseAddr) >> channel) & 1U); 
+    return (((uint32_t)DMA_RD_HRS(base) >> channel) & 1U);
 }
 
 /*!
  * @brief Clears the done status for a channel or all channels.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel Channel indicator. If kEDMAAllChannel is selected, all channels' done status will
- * be cleared. 
+ * be cleared.
  */
-static inline void EDMA_HAL_ClearDoneStatusFlag(uint32_t baseAddr, edma_channel_indicator_t channel)
+static inline void EDMA_HAL_ClearDoneStatusFlag(DMA_Type * base, edma_channel_indicator_t channel)
 {
-    HW_DMA_CDNE_WR(baseAddr, channel);
+    DMA_WR_CDNE(base, channel);
 }
 
 /*!
  * @brief Triggers the eDMA channel.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel Channel indicator. If kEDMAAllChannel is selected, all channels are tirggere.
  */
-static inline void EDMA_HAL_TriggerChannelStart(uint32_t baseAddr, edma_channel_indicator_t channel)
+static inline void EDMA_HAL_TriggerChannelStart(DMA_Type * base, edma_channel_indicator_t channel)
 {
-    HW_DMA_SSRT_WR(baseAddr, channel);
+    DMA_WR_SSRT(base, channel);
 }
 
 /*!
  * @brief Gets the eDMA channel interrupt request status.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @return Interrupt request happens in this eDMA channel (true) or not happen in this
- * channel (false). 
+ * channel (false).
  */
-static inline bool EDMA_HAL_GetIntStatusFlag(uint32_t baseAddr, uint32_t channel)
+static inline bool EDMA_HAL_GetIntStatusFlag(DMA_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
-    return (((uint32_t)HW_DMA_INT_RD(baseAddr) >> channel) & 1U); 
-}
-
-/*!
- * @brief Gets the eDMA all channel's interrupt request status.
- *
- * @param baseAddr Register base address for eDMA module.
- * @return Interrupt status flag of all channels.
- */
-static inline uint32_t EDMA_HAL_GetAllIntStatusFlag(uint32_t baseAddr)
-{
-    return (uint32_t)HW_DMA_INT_RD(baseAddr);
+    return (((uint32_t)DMA_RD_INT(base) >> channel) & 1U);
 }
 
 /*!
  * @brief Clears the interrupt status for the eDMA channel or all channels.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel Channel indicator. If kEDMAAllChannel is selected, all channels' interrupt
  * status will be cleared.
  */
 static inline void EDMA_HAL_ClearIntStatusFlag(
-                uint32_t baseAddr, edma_channel_indicator_t channel)
+                DMA_Type * base, edma_channel_indicator_t channel)
 {
-    HW_DMA_CINT_WR(baseAddr, channel);
+    DMA_WR_CINT(base, channel);
 }
 
 #if (FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT > 0x0U)
 /*!
  * @brief Enables/Disables an asynchronous request in stop mode.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param enable Enable (true) or Disable (false) async DMA request.
  */
-void EDMA_HAL_SetAsyncRequestInStopModeCmd(uint32_t baseAddr, uint32_t channel, bool enable);
+void EDMA_HAL_SetAsyncRequestInStopModeCmd(DMA_Type * base, uint32_t channel, bool enable);
 #endif
 
 /* @} */
 
-/*! 
+/*!
  * @name eDMA HAL driver hardware TCD configuration functions.
  * @{
  */
- 
+
 /*!
  * @brief Clears all registers to 0 for the hardware TCD.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  */
-void EDMA_HAL_HTCDClearReg(uint32_t baseAddr, uint32_t channel);
+void EDMA_HAL_HTCDClearReg(DMA_Type * base, uint32_t channel);
 
 /*!
  * @brief Configures the source address for the hardware TCD.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param address The pointer to the source memory address.
  */
-static inline void EDMA_HAL_HTCDSetSrcAddr(uint32_t baseAddr, uint32_t channel, uint32_t address)
+static inline void EDMA_HAL_HTCDSetSrcAddr(DMA_Type * base, uint32_t channel, uint32_t address)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_SADDR_SADDR(baseAddr, channel, address);
+    DMA_WR_SADDR(base, channel, address);
 }
 
 /*!
@@ -687,24 +638,24 @@ static inline void EDMA_HAL_HTCDSetSrcAddr(uint32_t baseAddr, uint32_t channel, 
  * Sign-extended offset applied to the current source address to form the next-state value as each
  * source read is complete.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param offset signed-offset for source address.
  */
-static inline void EDMA_HAL_HTCDSetSrcOffset(uint32_t baseAddr, uint32_t channel, int16_t offset)
+static inline void EDMA_HAL_HTCDSetSrcOffset(DMA_Type * base, uint32_t channel, int16_t offset)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_SOFF_SOFF(baseAddr, channel, offset);
+    DMA_WR_SOFF(base, channel, offset);
 }
 
 /*!
- * @brief Configures the transfer attribute for the eDMA channel. 
+ * @brief Configures the transfer attribute for the eDMA channel.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param srcModulo enumeration type for an allowed source modulo. The value defines a specific address range
  * specified as the value after the SADDR + SOFF calculation is performed on the original register
- * value. Setting this field provides the ability to implement a circular data. For data queues 
+ * value. Setting this field provides the ability to implement a circular data. For data queues
  * requiring power-of-2 size bytes, the queue should start at a 0-modulo-size address and the SMOD
  * field should be set to the appropriate value for the queue, freezing the desired number of upper
  * address bits. The value programmed into this field specifies the number of the lower address bits
@@ -716,7 +667,7 @@ static inline void EDMA_HAL_HTCDSetSrcOffset(uint32_t baseAddr, uint32_t channel
  * @param destTransferSize Enum type for destination transfer size.
  */
 void EDMA_HAL_HTCDSetAttribute(
-                uint32_t baseAddr, uint32_t channel,
+                DMA_Type * base, uint32_t channel,
                 edma_modulo_t srcModulo, edma_modulo_t destModulo,
                 edma_transfer_size_t srcTransferSize, edma_transfer_size_t destTransferSize);
 
@@ -726,11 +677,11 @@ void EDMA_HAL_HTCDSetAttribute(
  * Note here that user need firstly configure the minor loop mapping feature and then call this
  * function.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param nbytes Number of bytes to be transferred in each service request of the channel
  */
-void EDMA_HAL_HTCDSetNbytes(uint32_t baseAddr, uint32_t channel, uint32_t nbytes);
+void EDMA_HAL_HTCDSetNbytes(DMA_Type * base, uint32_t channel, uint32_t nbytes);
 
 /*!
  * @brief Gets the nbytes configuration data for the hardware TCD.
@@ -738,11 +689,11 @@ void EDMA_HAL_HTCDSetNbytes(uint32_t baseAddr, uint32_t channel, uint32_t nbytes
  * This function  decides whether the minor loop mapping is enabled or whether the source/dest
  * minor loop mapping is enabled. Then, the nbytes are returned accordingly.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @return nbytes configuration according to minor loop setting.
  */
-uint32_t EDMA_HAL_HTCDGetNbytes(uint32_t baseAddr, uint32_t channel);
+uint32_t EDMA_HAL_HTCDGetNbytes(DMA_Type * base, uint32_t channel);
 
 /*!
  * @brief Configures the minor loop offset for the hardware TCD.
@@ -751,12 +702,12 @@ uint32_t EDMA_HAL_HTCDGetNbytes(uint32_t baseAddr, uint32_t channel);
  * offset  is not configured. Note here if source or destination offset is required, the eDMA module
  * EMLM bit will be set in this function. User need to know this side effect.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param config Configuration data structure for the minor loop offset
  */
 void EDMA_HAL_HTCDSetMinorLoopOffset(
-                uint32_t baseAddr, uint32_t channel, edma_minorloop_offset_config_t *config);
+                DMA_Type * base, uint32_t channel, edma_minorloop_offset_config_t *config);
 
 /*!
  * @brief Configures the last source address adjustment for the hardware TCD.
@@ -765,27 +716,27 @@ void EDMA_HAL_HTCDSetMinorLoopOffset(
  * value can be applied to restore the source address to the initial value, or adjust the address to
  * reference the next data structure.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param size adjustment value
  */
-static inline void EDMA_HAL_HTCDSetSrcLastAdjust(uint32_t baseAddr, uint32_t channel, int32_t size)
+static inline void EDMA_HAL_HTCDSetSrcLastAdjust(DMA_Type * base, uint32_t channel, int32_t size)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_SLAST_SLAST(baseAddr, channel, size);
+    DMA_WR_SLAST(base, channel, size);
 }
 
 /*!
  * @brief Configures the destination address for the hardware TCD.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param address The pointer to the destination address.
  */
-static inline void EDMA_HAL_HTCDSetDestAddr(uint32_t baseAddr, uint32_t channel, uint32_t address)
+static inline void EDMA_HAL_HTCDSetDestAddr(DMA_Type * base, uint32_t channel, uint32_t address)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_DADDR_DADDR(baseAddr, channel, address);
+    DMA_WR_DADDR(base, channel, address);
 }
 
 /*!
@@ -794,32 +745,32 @@ static inline void EDMA_HAL_HTCDSetDestAddr(uint32_t baseAddr, uint32_t channel,
  * Sign-extended offset applied to the current source address to form the next-state value as each
  * destination write is complete.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param offset signed-offset
  */
-static inline void EDMA_HAL_HTCDSetDestOffset(uint32_t baseAddr, uint32_t channel, int16_t offset)
+static inline void EDMA_HAL_HTCDSetDestOffset(DMA_Type * base, uint32_t channel, int16_t offset)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_DOFF_DOFF(baseAddr, channel, offset);
+    DMA_WR_DOFF(base, channel, offset);
 }
 
 /*!
  * @brief Configures the last source address adjustment.
  *
- * This function adds an adjustment value added to the source address at the completion of the major 
- * iteration count. This value can be applied to restore the source address to the initial value, or 
+ * This function adds an adjustment value added to the source address at the completion of the major
+ * iteration count. This value can be applied to restore the source address to the initial value, or
  * adjust the address to reference the next data structure.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param adjust adjustment value
  */
 static inline void EDMA_HAL_HTCDSetDestLastAdjust(
-                uint32_t baseAddr, uint32_t channel, uint32_t adjust)
+                DMA_Type * base, uint32_t channel, uint32_t adjust)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_DLASTSGA_DLASTSGA(baseAddr, channel, adjust);
+    DMA_WR_DLAST_SGA(base, channel, adjust);
 }
 
 /*!
@@ -827,17 +778,17 @@ static inline void EDMA_HAL_HTCDSetDestLastAdjust(
  *
  *
  * This function enables the scatter/gather feature for the hardware TCD and configures the next
- * TCD's address. This address points to the beginning of a 0-modulo-32 byte region containing 
+ * TCD's address. This address points to the beginning of a 0-modulo-32 byte region containing
  * the next transfer TCD to be loaded into this channel. The channel reload is performed as the
- * major iteration count completes. The scatter/gather address must be 0-modulo-32-byte. Otherwise, 
+ * major iteration count completes. The scatter/gather address must be 0-modulo-32-byte. Otherwise,
  * a configuration error is reported.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param stcd The pointer to the TCD to be linked to this hardware TCD.
  */
 void EDMA_HAL_HTCDSetScatterGatherLink(
-                uint32_t baseAddr, uint32_t channel, edma_software_tcd_t *stcd);
+                DMA_Type * base, uint32_t channel, edma_software_tcd_t *stcd);
 
 /*!
  * @brief Configures the bandwidth for the hardware TCD.
@@ -847,15 +798,15 @@ void EDMA_HAL_HTCDSetScatterGatherLink(
  * This field forces the eDMA to stall after the completion of each read/write access to control the
  * bus request bandwidth seen by the crossbar switch.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param bandwidth enum type for bandwidth control
  */
 static inline void EDMA_HAL_HTCDSetBandwidth(
-                uint32_t baseAddr, uint32_t channel, edma_bandwidth_config_t bandwidth)
+                DMA_Type * base, uint32_t channel, edma_bandwidth_config_t bandwidth)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_CSR_BWC(baseAddr, channel, bandwidth);
+    DMA_BWR_CSR_BWC(base, channel, bandwidth);
 }
 
 /*!
@@ -865,58 +816,31 @@ static inline void EDMA_HAL_HTCDSetBandwidth(
  * channel service request at the channel defined by these six bits by setting that channel start
  * bits.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param majorChannel channel number for major link
  * @param enable Enables (true) or Disables (false) channel major link.
  */
 static inline void EDMA_HAL_HTCDSetChannelMajorLink(
-                uint32_t baseAddr, uint32_t channel, uint32_t majorChannel, bool enable)
+                DMA_Type * base, uint32_t channel, uint32_t majorChannel, bool enable)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_CSR_MAJORLINKCH(baseAddr, channel, majorChannel);
-    BW_DMA_TCDn_CSR_MAJORELINK(baseAddr, channel, enable);
-}
-
-/*!
- * @brief Gets the major link channel for the hardware TCD.
- *
- * @param baseAddr Register base address for eDMA module.
- * @param channel eDMA channel number.
- * @return major link channel number
- */
-static inline uint32_t EDMA_HAL_HTCDGetMajorLinkChannel(uint32_t baseAddr, uint32_t channel)
-{
-    assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    return BR_DMA_TCDn_CSR_MAJORLINKCH(baseAddr, channel);
+    DMA_BWR_CSR_MAJORLINKCH(base, channel, majorChannel);
+    DMA_BWR_CSR_MAJORELINK(base, channel, enable);
 }
 
 /*!
  * @brief Enables/Disables the scatter/gather feature for the hardware TCD.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param enable Enables (true) /Disables (false) scatter/gather feature.
  */
 static inline void EDMA_HAL_HTCDSetScatterGatherCmd(
-                uint32_t baseAddr, uint32_t channel, bool enable)
+                DMA_Type * base, uint32_t channel, bool enable)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_CSR_ESG(baseAddr, channel, enable);
-}
-
-/*!
- * @brief Checks whether the scatter/gather feature is enabled for the hardware TCD.
- *
- * @param baseAddr Register base address for eDMA module.
- * @param channel eDMA channel number.
- * @return True stand for enabled. False stands for disabled. 
- */
-static inline bool EDMA_HAL_HTCDGetScatterGatherCmd(uint32_t baseAddr, uint32_t channel)
-{
-    assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    return BR_DMA_TCDn_CSR_ESG(baseAddr, channel);
-
+    DMA_BWR_CSR_ESG(base, channel, enable);
 }
 
 /*!
@@ -925,16 +849,16 @@ static inline bool EDMA_HAL_HTCDGetScatterGatherCmd(uint32_t baseAddr, uint32_t 
  * If disabled, the eDMA hardware automatically clears the corresponding DMA request when the
  * current major iteration count reaches zero.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param disable Disable (true)/Enable (true) DMA request after TCD complete.
  */
 static inline void EDMA_HAL_HTCDSetDisableDmaRequestAfterTCDDoneCmd(
-                uint32_t baseAddr, uint32_t channel, bool disable)
+                DMA_Type * base, uint32_t channel, bool disable)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_CSR_DREQ(baseAddr, channel, disable);
-}  
+    DMA_BWR_CSR_DREQ(base, channel, disable);
+}
 
 /*!
  * @brief Enables/Disables the half complete interrupt for the hardware TCD.
@@ -945,32 +869,32 @@ static inline void EDMA_HAL_HTCDSetDisableDmaRequestAfterTCDDoneCmd(
  * interrupt request is provided to support the double-buffered schemes or other types of data movement
  * where the processor needs an early indication of the transfer's process.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param enable Enable (true) /Disable (false) half complete interrupt.
  */
 static inline void EDMA_HAL_HTCDSetHalfCompleteIntCmd(
-                uint32_t baseAddr, uint32_t channel, bool enable) 
+                DMA_Type * base, uint32_t channel, bool enable)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_CSR_INTHALF(baseAddr, channel, enable);
+    DMA_BWR_CSR_INTHALF(base, channel, enable);
 }
 
 /*!
  * @brief Enables/Disables the interrupt after the major loop completes for the hardware TCD.
  *
- * If enabled, the channel generates an interrupt request by setting the appropriate bit in the 
+ * If enabled, the channel generates an interrupt request by setting the appropriate bit in the
  * interrupt register when the current major iteration count reaches zero.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param enable Enable (true) /Disable (false) interrupt after TCD done.
  */
 static inline void EDMA_HAL_HTCDSetIntCmd(
-                uint32_t baseAddr, uint32_t channel, bool enable)
+                DMA_Type * base, uint32_t channel, bool enable)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_CSR_INTMAJOR(baseAddr, channel, enable);
+    DMA_BWR_CSR_INTMAJOR(base, channel, enable);
 }
 
 /*!
@@ -978,51 +902,38 @@ static inline void EDMA_HAL_HTCDSetIntCmd(
  *
  * The eDMA hardware automatically clears this flag after the channel begins execution.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  */
-static inline void EDMA_HAL_HTCDTriggerChannelStart(uint32_t baseAddr, uint32_t channel)
+static inline void EDMA_HAL_HTCDTriggerChannelStart(DMA_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_CSR_START(baseAddr, channel, true); 
+    DMA_BWR_CSR_START(base, channel, true);
 }
 
 /*!
  * @brief Checks whether the channel is running for the hardware TCD.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
- * @return True stands for running. False stands for not. 
+ * @return True stands for running. False stands for not.
  */
-static inline bool EDMA_HAL_HTCDGetChannelActiveStatus(uint32_t baseAddr, uint32_t channel)
+static inline bool EDMA_HAL_HTCDGetChannelActiveStatus(DMA_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    return BR_DMA_TCDn_CSR_ACTIVE(baseAddr, channel); 
+    return DMA_BRD_CSR_ACTIVE(base, channel);
 }
 
 /*!
  * @brief Sets the channel minor link for the hardware TCD.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param linkChannel Channel to be linked on minor loop complete.
  * @param enable Enable (true)/Disable (false) channel minor link.
  */
 void EDMA_HAL_HTCDSetChannelMinorLink(
-                uint32_t baseAddr, uint32_t channel, uint32_t linkChannel, bool enable);
-
-/*!
- * @brief Return the channel minor link status for the hardware TCD.
- *
- * @param baseAddr Register base address for eDMA module.
- * @param channel eDMA channel number.
- * @return Enable (true)/Disable (false) channel minor link.
- */
-static inline bool EDMA_HAL_HTCD_GetChannelMinorLinkStatus(
-    uint32_t baseAddr, uint32_t channel)
-{
-    return BR_DMA_TCDn_BITER_ELINKYES_ELINK(baseAddr, channel);
-}
+                DMA_Type * base, uint32_t channel, uint32_t linkChannel, bool enable);
 
 /*!
  * @brief Sets the major iteration count according to minor loop channel link setting.
@@ -1030,58 +941,40 @@ static inline bool EDMA_HAL_HTCD_GetChannelMinorLinkStatus(
  * Note here that user need to first set the minor loop channel link and then call this function.
  * The execute flow inside this function is dependent on the minor loop channel link setting.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param count major loop count
  */
-void EDMA_HAL_HTCDSetMajorCount(uint32_t baseAddr, uint32_t channel, uint32_t count);
-
-/*!
- * @brief Gets the number of beginning major counts for the hardware TCD.
- *
- * @param baseAddr Register base address for eDMA module.
- * @param channel eDMA channel number.
- * @return Begin major counts.
- */
-uint32_t EDMA_HAL_HTCDGetBeginMajorCount(uint32_t baseAddr, uint32_t channel);
-
-/*!
- * @brief Gets the number of current major counts for the hardware TCD.
- *
- * @param baseAddr Register base address for eDMA module.
- * @param channel eDMA channel number.
- * @return Current major counts.
- */
-uint32_t EDMA_HAL_HTCDGetCurrentMajorCount(uint32_t baseAddr, uint32_t channel);
+void EDMA_HAL_HTCDSetMajorCount(DMA_Type * base, uint32_t channel, uint32_t count);
 
 /*!
  * @brief Gets the number of bytes already transferred for the hardware TCD.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @return data bytes already transferred
  */
-uint32_t EDMA_HAL_HTCDGetFinishedBytes(uint32_t baseAddr, uint32_t channel);
+uint32_t EDMA_HAL_HTCDGetFinishedBytes(DMA_Type * base, uint32_t channel);
 
 /*!
  * @brief Gets the number of bytes haven't transferred for the hardware TCD.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @return data bytes already transferred
  */
-uint32_t EDMA_HAL_HTCDGetUnfinishedBytes(uint32_t baseAddr, uint32_t channel);
+uint32_t EDMA_HAL_HTCDGetUnfinishedBytes(DMA_Type * base, uint32_t channel);
 
 /*!
  * @brief Gets the channel done status.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @return If channel done.
  */
-static inline bool EDMA_HAL_HTCDGetDoneStatusFlag(uint32_t baseAddr, uint32_t channel)
+static inline bool EDMA_HAL_HTCDGetDoneStatusFlag(DMA_Type * base, uint32_t channel)
 {
-    return BR_DMA_TCDn_CSR_DONE(baseAddr,channel);
+    return DMA_BRD_CSR_DONE(base,channel);
 }
 
 /* @} */
@@ -1099,7 +992,7 @@ static inline bool EDMA_HAL_HTCDGetDoneStatusFlag(uint32_t baseAddr, uint32_t ch
 static inline void EDMA_HAL_STCDSetSrcAddr(edma_software_tcd_t *stcd, uint32_t address)
 {
     assert(stcd);
-    stcd->SADDR = DMA_SADDR_SADDR(address); 
+    stcd->SADDR = DMA_SADDR_SADDR(address);
 }
 
 /*!
@@ -1118,12 +1011,12 @@ static inline void EDMA_HAL_STCDSetSrcOffset(edma_software_tcd_t *stcd, int16_t 
 }
 
 /*!
- * @brief Configures the transfer attribute for software TCD. 
+ * @brief Configures the transfer attribute for software TCD.
  *
  * @param stcd The pointer to the software TCD.
  * @param srcModulo enum type for an allowed source modulo. The value defines a specific address range
  * specified as the value after the SADDR + SOFF calculation is performed on the original register
- * value. Setting this field provides the ability to implement a circular data. For data queues 
+ * value. Setting this field provides the ability to implement a circular data. For data queues
  * requiring power-of-2 size bytes, the queue should start at a 0-modulo-size address and the SMOD
  * field should be set to the appropriate value for the queue, freezing the desired number of upper
  * address bits. The value programmed into this field specifies the number of the lower address bits
@@ -1145,11 +1038,11 @@ void EDMA_HAL_STCDSetAttribute(
  * Note here that user need firstly configure the minor loop mapping feature and then call this
  * function.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param stcd The pointer to the software TCD.
  * @param nbytes Number of bytes to be transferred in each service request of the channel
  */
-void EDMA_HAL_STCDSetNbytes(uint32_t baseAddr, edma_software_tcd_t *stcd, uint32_t nbytes);
+void EDMA_HAL_STCDSetNbytes(DMA_Type * base, edma_software_tcd_t *stcd, uint32_t nbytes);
 
 /*!
  * @brief Configures the minorloop offset for the software TCD.
@@ -1158,12 +1051,12 @@ void EDMA_HAL_STCDSetNbytes(uint32_t baseAddr, edma_software_tcd_t *stcd, uint32
  * offset  is not configured. Note here if source or destination offset is requred, the eDMA module
  * EMLM bit will be set in this function. User need to know this side effect.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param stcd The pointer to the software TCD.
  * @param config Configuration data structure for the minorloop offset
  */
 void EDMA_HAL_STCDSetMinorLoopOffset(
-            uint32_t baseAddr, edma_software_tcd_t *stcd, edma_minorloop_offset_config_t *config);
+            DMA_Type * base, edma_software_tcd_t *stcd, edma_minorloop_offset_config_t *config);
 
 /*!
  * @brief Configures the last source address adjustment for the software TCD.
@@ -1190,7 +1083,7 @@ static inline void EDMA_HAL_STCDSetSrcLastAdjust(edma_software_tcd_t *stcd, int3
 static inline void EDMA_HAL_STCDSetDestAddr(edma_software_tcd_t *stcd, uint32_t address)
 {
     assert(stcd);
-    stcd->DADDR = DMA_DADDR_DADDR(address); 
+    stcd->DADDR = DMA_DADDR_DADDR(address);
 }
 
 /*!
@@ -1211,8 +1104,8 @@ static inline void EDMA_HAL_STCDSetDestOffset(edma_software_tcd_t *stcd, int16_t
 /*!
  * @brief Configures the last source address adjustment.
  *
- * This function add an adjustment value added to the source address at the completion of the major 
- * iteration count. This value can be applied to restore the source address to the initial value, or 
+ * This function add an adjustment value added to the source address at the completion of the major
+ * iteration count. This value can be applied to restore the source address to the initial value, or
  * adjust the address to reference the next data structure.
  *
  * @param stcd The pointer to the software TCD.
@@ -1230,9 +1123,9 @@ static inline void EDMA_HAL_STCDSetDestLastAdjust(
  *
  *
  * This function enable the scatter/gather feature for the software TCD and configure the next
- * TCD's address.This address points to the beginning of a 0-modulo-32 byte region containing 
+ * TCD's address.This address points to the beginning of a 0-modulo-32 byte region containing
  * the next transfer TCD to be loaded into this channel. The channel reload is performed as the
- * major iteration count completes. The scatter/gather address must be 0-modulo-32-byte. Otherwise, 
+ * major iteration count completes. The scatter/gather address must be 0-modulo-32-byte. Otherwise,
  * a configuration error is reported.
  *
  * @param stcd The pointer to the software TCD.
@@ -1308,7 +1201,7 @@ static inline void EDMA_HAL_STCDSetDisableDmaRequestAfterTCDDoneCmd(
 {
     assert(stcd);
     stcd->CSR = (stcd->CSR & ~DMA_CSR_DREQ_MASK) | ((uint32_t)disable << DMA_CSR_DREQ_SHIFT);
-}  
+}
 
 /*!
  * @brief Enables/Disables the half complete interrupt for the software TCD.
@@ -1323,7 +1216,7 @@ static inline void EDMA_HAL_STCDSetDisableDmaRequestAfterTCDDoneCmd(
  * @param enable Enable (true) /Disable (false) half complete interrupt.
  */
 static inline void EDMA_HAL_STCDSetHalfCompleteIntCmd(
-                edma_software_tcd_t *stcd, bool enable) 
+                edma_software_tcd_t *stcd, bool enable)
 {
     assert(stcd);
     stcd->CSR = (stcd->CSR & ~DMA_CSR_INTHALF_MASK) | ((uint32_t)enable << DMA_CSR_INTHALF_SHIFT);
@@ -1332,7 +1225,7 @@ static inline void EDMA_HAL_STCDSetHalfCompleteIntCmd(
 /*!
  * @brief Enables/Disables the interrupt after the major loop completes for the software TCD.
  *
- * If enabled, the channel generates an interrupt request by setting the appropriate bit in the 
+ * If enabled, the channel generates an interrupt request by setting the appropriate bit in the
  * interrupt register when the current major iteration count reaches zero.
  *
  * @param stcd The pointer to the software TCD.
@@ -1381,11 +1274,11 @@ void EDMA_HAL_STCDSetMajorCount(edma_software_tcd_t *stcd, uint32_t count);
 /*!
  * @brief Copy the software TCD configuration to the hardware TCD.
  *
- * @param baseAddr Register base address for eDMA module.
+ * @param base Register base address for eDMA module.
  * @param channel eDMA channel number.
  * @param stcd The pointer to the software TCD.
  */
-void EDMA_HAL_PushSTCDToHTCD(uint32_t baseAddr, uint32_t channel, edma_software_tcd_t *stcd);
+void EDMA_HAL_PushSTCDToHTCD(DMA_Type * base, uint32_t channel, edma_software_tcd_t *stcd);
 
 /*!
  * @brief Set the basic transfer for software TCD.
@@ -1396,14 +1289,14 @@ void EDMA_HAL_PushSTCDToHTCD(uint32_t baseAddr, uint32_t channel, edma_software_
  * loop offset configuration is treated as an advanced configuration. User can call the
  * EDMA_HAL_STCDSetMinorLoopOffset() to configure the minor loop offset feature.
  *
- * @param baseAddr Register base address for eDMA module. 
+ * @param base Register base address for eDMA module.
  * @param stcd The pointer to the software TCD.
  * @param config The pointer to the transfer configuration structure.
  * @param enableInt Enables (true) or Disables (false) interrupt on TCD complete.
  * @param disableDmaRequest Disables (true) or Enable (false) dma request on TCD complete.
  */
 edma_status_t EDMA_HAL_STCDSetBasicTransfer(
-            uint32_t baseAddr, edma_software_tcd_t *stcd, edma_transfer_config_t *config,
+            DMA_Type * base, edma_software_tcd_t *stcd, edma_transfer_config_t *config,
             bool enableInt, bool disableDmaRequest);
 
 
@@ -1416,6 +1309,7 @@ edma_status_t EDMA_HAL_STCDSetBasicTransfer(
 
 /*! @} */
 
+#endif
 #endif /* __EDMA_HAL_H__ */
 
 /*******************************************************************************

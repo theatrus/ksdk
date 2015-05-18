@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_CRC_COUNT
 
 /*! @addtogroup crc_hal*/
 /*! @{*/
@@ -82,440 +83,440 @@ typedef enum _crc_prot_width
 extern "C" {
 #endif /* __cplusplus*/
 
-/*! @name CRC related feature APIs*/
+/*! @name CRC-related feature APIs*/
 
 /*!
  * @brief This function initializes the module to a known state.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  */
-void CRC_HAL_Init(uint32_t baseAddr);
+void CRC_HAL_Init(CRC_Type * base);
 
 /*!
- * @brief Returns current CRC result from data register.
+ * @brief Returns the current CRC result from the data register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return Returns a 32-bit value.
  */
-static inline uint32_t CRC_HAL_GetDataReg(uint32_t baseAddr)
+static inline uint32_t CRC_HAL_GetDataReg(CRC_Type * base)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    return HW_CRC_CRC_RD(baseAddr);
+    return CRC_RD_CRC(base);
 #else
-    return HW_CRC_DATA_RD(baseAddr);
+    return CRC_RD_DATA(base);
 #endif
 }
 
 /*!
- * @brief Returns upper 16bits of current CRC result from data register.
+ * @brief Returns the upper 16 bits of the current CRC result from the data register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return Returns a 16-bit value.
  */
-static inline uint16_t CRC_HAL_GetDataHReg(uint32_t baseAddr)
+static inline uint16_t CRC_HAL_GetDataHReg(CRC_Type * base)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    return HW_CRC_CRCH_RD(baseAddr);
+    return CRC_RD_CRCH(base);
 #else
-    return HW_CRC_DATAH_RD(baseAddr);
+    return CRC_RD_DATAH(base);
 #endif
 }
 
 /*!
- * @brief Returns lower 16bits of current CRC result from data register.
+ * @brief Returns the lower 16 bits of the current CRC result from the data register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return Returns a 16-bit value.
  */
-static inline uint16_t CRC_HAL_GetDataLReg(uint32_t baseAddr)
+static inline uint16_t CRC_HAL_GetDataLReg(CRC_Type * base)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    return HW_CRC_CRCL_RD(baseAddr);
+    return CRC_RD_CRCL(base);
 #else
-    return HW_CRC_DATAL_RD(baseAddr);
+    return CRC_RD_DATAL(base);
 #endif
 }
 
 /*!
- * @brief Set CRC data register (4 bytes).
+ * @brief Sets the CRC data register (4 bytes).
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value New data for CRC computation. This parameter is a 32-bit value.
  */
-static inline void CRC_HAL_SetDataReg(uint32_t baseAddr, uint32_t value)
+static inline void CRC_HAL_SetDataReg(CRC_Type * base, uint32_t value)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    HW_CRC_CRC_WR(baseAddr, value);
+    CRC_WR_CRC(base, value);
 #else
-    HW_CRC_DATA_WR(baseAddr, value);
+    CRC_WR_DATA(base, value);
 #endif
 }
 
 /*!
- * @brief Set CRC data register (upper 2 bytes).
+ * @brief Sets the CRC data register (upper 2 bytes).
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value New data for CRC computation. This parameter is a 16-bit value.
  */
-static inline void CRC_HAL_SetDataHReg(uint32_t baseAddr, uint16_t value)
+static inline void CRC_HAL_SetDataHReg(CRC_Type * base, uint16_t value)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    HW_CRC_CRCH_WR(baseAddr, value);
+    CRC_WR_CRCH(base, value);
 #else
-    HW_CRC_DATAH_WR(baseAddr, value);
+    CRC_WR_DATAH(base, value);
 #endif
 }
 
 /*!
- * @brief Set CRC data register (lower 2 bytes).
+ * @brief Sets the CRC data register (lower 2 bytes).
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value New data for CRC computation. This parameter is a 16-bit value.
  */
-static inline void CRC_HAL_SetDataLReg(uint32_t baseAddr, uint16_t value)
+static inline void CRC_HAL_SetDataLReg(CRC_Type * base, uint16_t value)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    HW_CRC_CRCL_WR(baseAddr, value);
+    CRC_WR_CRCL(base, value);
 #else
-    HW_CRC_DATAL_WR(baseAddr, value);
+    CRC_WR_DATAL(base, value);
 #endif
 }
 
 /*!
- * @brief Set CRC data register (HL byte).
+ * @brief Sets the CRC data register (HL byte).
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value New data for CRC computation. This parameter is a 8-bit value.
  */
-static inline void CRC_HAL_SetDataHLReg(uint32_t baseAddr, uint8_t value)
+static inline void CRC_HAL_SetDataHLReg(CRC_Type * base, uint8_t value)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    HW_CRC_CRCHL_WR(baseAddr, value);
+    CRC_WR_CRCHL(base, value);
 #else
-    HW_CRC_DATAHL_WR(baseAddr, value);
+    CRC_WR_DATAHL(base, value);
 #endif
 }
 
 /*!
- * @brief Set CRC data register (HU byte).
+ * @brief Sets the CRC data register (HU byte).
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value New data for CRC computation. This parameter is a 8-bit value.
  */
-static inline void CRC_HAL_SetDataHUReg(uint32_t baseAddr, uint8_t value)
+static inline void CRC_HAL_SetDataHUReg(CRC_Type * base, uint8_t value)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    HW_CRC_CRCHU_WR(baseAddr, value);
+    CRC_WR_CRCHU(base, value);
 #else
-    HW_CRC_DATAHU_WR(baseAddr, value);
+    CRC_WR_DATAHU(base, value);
 #endif
 }
 
 /*!
- * @brief Set CRC data register (LL byte).
+ * @brief Sets the CRC data register (LL byte).
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value New data for CRC computation. This parameter is a 8-bit value.
  */
-static inline void CRC_HAL_SetDataLLReg(uint32_t baseAddr, uint8_t value)
+static inline void CRC_HAL_SetDataLLReg(CRC_Type * base, uint8_t value)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    HW_CRC_CRCLL_WR(baseAddr, value);
+    CRC_WR_CRCLL(base, value);
 #else
-    HW_CRC_DATALL_WR(baseAddr, value);
+    CRC_WR_DATALL(base, value);
 #endif
 }
 
 /*!
- * @brief Set CRC data register (LU byte).
+ * @brief Sets the CRC data register (LU byte).
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value New data for CRC computation. This parameter is a 8-bit value.
  */
-static inline void CRC_HAL_SetDataLUReg(uint32_t baseAddr, uint8_t value)
+static inline void CRC_HAL_SetDataLUReg(CRC_Type * base, uint8_t value)
 {
 #if FSL_FEATURE_CRC_HAS_CRC_REG
-    HW_CRC_CRCLU_WR(baseAddr, value);
+    CRC_WR_CRCLU(base, value);
 #else
-    HW_CRC_DATALU_WR(baseAddr, value);
+    CRC_WR_DATALU(base, value);
 #endif
 }
 
 /*!
- * @brief Returns polynomial register value.
+ * @brief Returns the polynomial register value.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return Returns a 32-bit value.
  */
-static inline uint32_t CRC_HAL_GetPolyReg(uint32_t baseAddr)
+static inline uint32_t CRC_HAL_GetPolyReg(CRC_Type * base)
 {
-    return HW_CRC_GPOLY_RD(baseAddr);
+    return CRC_RD_GPOLY(base);
 }
 
 /*!
- * @brief Returns upper 16bits of polynomial register.
+ * @brief Returns the upper 16 bits of polynomial register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return Returns a 16-bit value.
  */
-static inline uint16_t CRC_HAL_GetPolyHReg(uint32_t baseAddr)
+static inline uint16_t CRC_HAL_GetPolyHReg(CRC_Type * base)
 {
-    return HW_CRC_GPOLYH_RD(baseAddr);
+    return CRC_RD_GPOLYH(base);
 }
 
 /*!
- * @brief Returns lower 16bits of polynomial register.
+ * @brief Returns the lower 16 bits of polynomial register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return Returns a 16-bit value.
  */
-static inline uint16_t CRC_HAL_GetPolyLReg(uint32_t baseAddr)
+static inline uint16_t CRC_HAL_GetPolyLReg(CRC_Type * base)
 {
-    return HW_CRC_GPOLYL_RD(baseAddr);
+    return CRC_RD_GPOLYL(base);
 }
 
 /*!
- * @brief Set polynomial register.
+ * @brief Sets the polynomial register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value Polynomial value. This parameter is a 32-bit value.
  */
-static inline void CRC_HAL_SetPolyReg(uint32_t baseAddr, uint32_t value)
+static inline void CRC_HAL_SetPolyReg(CRC_Type * base, uint32_t value)
 {
-    HW_CRC_GPOLY_WR(baseAddr, value);
+    CRC_WR_GPOLY(base, value);
 }
 
 /*!
- * @brief Set upper 16 bits of polynomial register.
+ * @brief Sets the upper 16 bits of polynomial register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value Polynomial value. This parameter is a 16-bit value.
  */
-static inline void CRC_HAL_SetPolyHReg(uint32_t baseAddr, uint16_t value)
+static inline void CRC_HAL_SetPolyHReg(CRC_Type * base, uint16_t value)
 {
-    HW_CRC_GPOLYH_WR(baseAddr, value);
+    CRC_WR_GPOLYH(base, value);
 }
 
 /*!
- * @brief Set lower 16 bits of polynomial register.
+ * @brief Sets the lower 16 bits of polynomial register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value Polynomial value. This parameter is a 16-bit value.
  */
-static inline void CRC_HAL_SetPolyLReg(uint32_t baseAddr, uint16_t value)
+static inline void CRC_HAL_SetPolyLReg(CRC_Type * base, uint16_t value)
 {
-    HW_CRC_GPOLYL_WR(baseAddr, value);
+    CRC_WR_GPOLYL(base, value);
 }
 
 /*!
- * @brief Returns CRC control register.
+ * @brief Returns the CRC control register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return Returns a 32-bit value.
  */
-static inline uint32_t CRC_HAL_GetCtrlReg(uint32_t baseAddr)
+static inline uint32_t CRC_HAL_GetCtrlReg(CRC_Type * base)
 {
-    return HW_CRC_CTRL_RD(baseAddr);
+    return CRC_RD_CTRL(base);
 }
 
 /*!
- * @brief Set CRC control register.
+ * @brief Sets the CRC control register.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param value Control register value. This parameter is a 32-bit value.
  */
-static inline void CRC_HAL_SetCtrlReg(uint32_t baseAddr, uint32_t value)
+static inline void CRC_HAL_SetCtrlReg(CRC_Type * base, uint32_t value)
 {
-    HW_CRC_CTRL_WR(baseAddr, value);
+    CRC_WR_CTRL(base, value);
 }
 
 /*!
- * @brief Get CRC seed mode.
+ * @brief Gets the CRC seed mode.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return CRC seed mode
  *         -true: Seed mode is enabled
  *         -false: Data mode is enabled
  */
-static inline bool CRC_HAL_GetSeedOrDataMode(uint32_t baseAddr)
+static inline bool CRC_HAL_GetSeedOrDataMode(CRC_Type * base)
 {
-    return (bool)BR_CRC_CTRL_WAS(baseAddr);
+    return (bool)CRC_BRD_CTRL_WAS(base);
 }
 
 /*!
- * @brief Set CRC seed mode.
+ * @brief Sets the CRC seed mode.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param enable Enable or disable seed mode.
           -true: use CRC data register for seed values
           -false: use CRC data register for data values
  */
-static inline void CRC_HAL_SetSeedOrDataMode(uint32_t baseAddr, bool enable)
+static inline void CRC_HAL_SetSeedOrDataMode(CRC_Type * base, bool enable)
 {
-    BW_CRC_CTRL_WAS(baseAddr, enable);
+    CRC_BWR_CTRL_WAS(base, enable);
 }
 
 /*!
- * @brief Get CRC transpose type for writes.
+ * @brief Gets the CRC transpose type for writes.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return CRC input transpose type for writes.
  */
-static inline crc_transpose_t CRC_HAL_GetWriteTranspose(uint32_t baseAddr)
+static inline crc_transpose_t CRC_HAL_GetWriteTranspose(CRC_Type * base)
 {
-    return (crc_transpose_t)BR_CRC_CTRL_TOT(baseAddr);
+    return (crc_transpose_t)CRC_BRD_CTRL_TOT(base);
 }
 
 /*!
- * @brief Set CRC transpose type for writes.
+ * @brief Sets the CRC transpose type for writes.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param transp The CRC input transpose type.
  */
-static inline void CRC_HAL_SetWriteTranspose(uint32_t baseAddr, crc_transpose_t transp)
+static inline void CRC_HAL_SetWriteTranspose(CRC_Type * base, crc_transpose_t transp)
 {
-    BW_CRC_CTRL_TOT(baseAddr, transp);
+    CRC_BWR_CTRL_TOT(base, transp);
 }
 
 /*!
- * @brief Get CRC transpose type for reads.
+ * @brief Gets the CRC transpose type for reads.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return CRC output transpose type.
  */
-static inline crc_transpose_t CRC_HAL_GetReadTranspose(uint32_t baseAddr)
+static inline crc_transpose_t CRC_HAL_GetReadTranspose(CRC_Type * base)
 {
-    return (crc_transpose_t)BR_CRC_CTRL_TOTR(baseAddr);
+    return (crc_transpose_t)CRC_BRD_CTRL_TOTR(base);
 }
 
 /*!
- * @brief Set CRC transpose type for reads.
+ * @brief Sets the CRC transpose type for reads.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param transp The CRC output transpose type.
  */
-static inline void CRC_HAL_SetReadTranspose(uint32_t baseAddr, crc_transpose_t transp)
+static inline void CRC_HAL_SetReadTranspose(CRC_Type * base, crc_transpose_t transp)
 {
-    BW_CRC_CTRL_TOTR(baseAddr, transp);
+    CRC_BWR_CTRL_TOTR(base, transp);
 }
 
 /*!
- * @brief Get CRC XOR mode.
+ * @brief Gets the CRC XOR mode.
  *
  * Some CRC protocols require the final checksum to be XORed with 0xFFFFFFFF
  * or 0xFFFF. XOR mode enables "on the fly" complementing of read data.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return CRC XOR mode
  *         -true: XOR mode is enabled
  *         -false: XOR mode is disabled
  */
-static inline bool CRC_HAL_GetXorMode(uint32_t baseAddr)
+static inline bool CRC_HAL_GetXorMode(CRC_Type * base)
 {
-    return (bool)BR_CRC_CTRL_FXOR(baseAddr);
+    return (bool)CRC_BRD_CTRL_FXOR(base);
 }
 
 /*!
- * @brief Set CRC XOR mode.
+ * @brief Sets the CRC XOR mode.
  *
  * Some CRC protocols require the final checksum to be XORed with 0xFFFFFFFF
  * or 0xFFFF. XOR mode enables "on the fly" complementing of read data.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param enable Enable or disable XOR mode.
  */
-static inline void CRC_HAL_SetXorMode(uint32_t baseAddr, bool enable)
+static inline void CRC_HAL_SetXorMode(CRC_Type * base, bool enable)
 {
-    BW_CRC_CTRL_FXOR(baseAddr, enable);
+    CRC_BWR_CTRL_FXOR(base, enable);
 }
 
 /*!
- * @brief Get CRC protocol width.
+ * @brief Gets the CRC protocol width.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return CRC protocol width
  *         -kCrc16Bits: 16-bit CRC protocol
  *         -kCrc32Bits: 32-bit CRC protocol
  */
-static inline crc_prot_width_t CRC_HAL_GetProtocolWidth(uint32_t baseAddr)
+static inline crc_prot_width_t CRC_HAL_GetProtocolWidth(CRC_Type * base)
 {
-    return (crc_prot_width_t)BR_CRC_CTRL_TCRC(baseAddr);
+    return (crc_prot_width_t)CRC_BRD_CTRL_TCRC(base);
 }
 
 /*!
- * @brief Set CRC protocol width.
+ * @brief Sets the CRC protocol width.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @param width The CRC protocol width
  *         -kCrc16Bits: 16-bit CRC protocol
  *         -kCrc32Bits: 32-bit CRC protocol
  */
-static inline void CRC_HAL_SetProtocolWidth(uint32_t baseAddr, crc_prot_width_t width)
+static inline void CRC_HAL_SetProtocolWidth(CRC_Type * base, crc_prot_width_t width)
 {
-    BW_CRC_CTRL_TCRC(baseAddr, width);
+    CRC_BWR_CTRL_TCRC(base, width);
 }
 
 /*!
  * @brief CRC_HAL_GetCrc32
  *
- * This method appends 32-bit data to current CRC calculation
- * and returns new result. If newSeed is true, seed set and
- * result calculated from seed new value (new crc calculation).
+ * This method appends 32-bit data to the current CRC calculation
+ * and returns new result. If the newSeed is true, seed set and
+ * result are calculated from the seed new value (new CRC calculation).
  *
- * @param baseAddr The CRC peripheral base address.
- * @param data input data for crc calculation
- * @param newSeed Sets new crc calculation.
+ * @param base The CRC peripheral base address.
+ * @param data input data for CRC calculation
+ * @param newSeed Sets new CRC calculation.
  *        - true: New seed set and used for new calculation.
  *        - false: seed argument ignored, continues old calculation.
  * @param seed New seed if newSeed is true, else ignored
- * @return new crc result.
+ * @return new CRC result.
  */
-uint32_t CRC_HAL_GetCrc32(uint32_t baseAddr, uint32_t data, bool newSeed, uint32_t seed);
+uint32_t CRC_HAL_GetCrc32(CRC_Type * base, uint32_t data, bool newSeed, uint32_t seed);
 
 /*!
  * @brief CRC_HAL_GetCrc16
  *
- * This method appends 16-bit data to current CRC calculation
- * and returns new result. If newSeed is true, seed set and
- * result calculated from seed new value (new crc calculation).
+ * This method appends the 16-bit data to the current CRC calculation
+ * and returns a new result. If the newSeed is true, seed set and
+ * result are calculated from the seed new value (new CRC calculation).
  *
- * @param baseAddr The CRC peripheral base address.
- * @param data input data for crc calculation
- * @param newSeed Sets new crc calculation.
+ * @param base The CRC peripheral base address.
+ * @param data input data for CRC calculation
+ * @param newSeed Sets new CRC calculation.
  *        - true: New seed set and used for new calculation.
  *        - false: seed argument ignored, continues old calculation.
  * @param seed New seed if newSeed is true, else ignored
- * @return new crc result.
+ * @return new CRC result.
  */
-uint32_t CRC_HAL_GetCrc16(uint32_t baseAddr, uint16_t data, bool newSeed, uint32_t seed);
+uint32_t CRC_HAL_GetCrc16(CRC_Type * base, uint16_t data, bool newSeed, uint32_t seed);
 
 /*!
  * @brief CRC_HAL_GetCrc8
  *
- * This method appends 8-bit data to current CRC calculation
- * and returns new result. If newSeed is true, seed set and
- * result calculated from seed new value (new crc calculation).
+ * This method appends the 8-bit data to the current CRC calculation
+ * and returns the new result. If the newSeed is true, seed set and
+ * result are calculated from the seed new value (new CRC calculation).
  *
- * @param baseAddr The CRC peripheral base address.
- * @param data input data for crc calculation
- * @param newSeed Sets new crc calculation.
+ * @param base The CRC peripheral base address.
+ * @param data input data for CRC calculation
+ * @param newSeed Sets new CRC calculation.
  *        - true: New seed set and used for new calculation.
  *        - false: seed argument ignored, continues old calculation.
  * @param seed New seed if newSeed is true, else ignored
- * @return new crc result.
+ * @return new CRC result.
  */
-uint32_t CRC_HAL_GetCrc8(uint32_t baseAddr, uint8_t data, bool newSeed, uint32_t seed);
+uint32_t CRC_HAL_GetCrc8(CRC_Type * base, uint8_t data, bool newSeed, uint32_t seed);
 
 /*!
  * @brief CRC_HAL_GetCrcResult
  *
- * This method returns current result of CRC calculation.
- * The result is ReadTranspose dependent.
+ * This method returns the current result of the CRC calculation.
+ * The result is the ReadTranspose dependent.
  *
- * @param baseAddr The CRC peripheral base address.
+ * @param base The CRC peripheral base address.
  * @return result of CRC calculation.
  */
-uint32_t CRC_HAL_GetCrcResult(uint32_t baseAddr);
+uint32_t CRC_HAL_GetCrcResult(CRC_Type * base);
 
 /*@}*/
 
@@ -525,4 +526,5 @@ uint32_t CRC_HAL_GetCrcResult(uint32_t baseAddr);
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_CRC_HAL_H__*/

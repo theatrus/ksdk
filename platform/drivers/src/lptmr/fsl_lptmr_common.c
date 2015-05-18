@@ -35,7 +35,7 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for LPTMR instances. */
-const uint32_t g_lptmrBaseAddr[] = LPTMR_BASE_ADDRS;
+LPTMR_Type * const g_lptmrBase[] = LPTMR_BASE_PTRS;
 
 /*! @brief Table to save LPTMR IRQ enum numbers defined in CMSIS header file. */
 const IRQn_Type g_lptmrIrqId[] = LPTMR_IRQS;

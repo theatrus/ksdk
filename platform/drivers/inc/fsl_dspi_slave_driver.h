@@ -33,16 +33,25 @@
 #include "fsl_dspi_hal.h"
 #include "fsl_os_abstraction.h"
 
+#if FSL_FEATURE_SOC_DSPI_COUNT
+
 /*!
  * @addtogroup dspi_slave_driver
  * @{
  */
 
+/*! @brief Table of base pointers for SPI instances. */
+extern SPI_Type * const g_dspiBase[SPI_INSTANCE_COUNT];
+
+/*! @brief Table to save DSPI IRQ enumeration numbers defined in the CMSIS header file. */
+extern const IRQn_Type g_dspiIrqId[SPI_INSTANCE_COUNT];
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-#define DSPI_DEFAULT_DUMMY_PATTERN      (0x0U)      /*!< Dummy pattern, that DSPI slave will send when transmit data was not configured */
+#define DSPI_DEFAULT_DUMMY_PATTERN      (0x0U)      /*!< Dummy pattern, that DSPI slave will send
+                                                         when transmit data was not configured */
 
 /*!
  *  @brief User configuration structure for the DSPI slave driver.
@@ -65,10 +74,11 @@ typedef struct DSPISlaveState {
     dspi_status_t status;                       /*!< Current state of slave */
     event_t event;                              /*!< Event to notify waiting task */
     uint16_t errorCount;                        /*!< Driver error count */
-    uint32_t dummyPattern;                      /*!< Dummy data will be send when do not have data in transmit buffer */
+    uint32_t dummyPattern;                      /*!< Dummy data will be send when do not have data
+                                                     in transmit buffer */
     volatile bool isTransferInProgress;         /*!< True if there is an active transfer.*/
-    const uint8_t * restrict sendBuffer;        /*!< Pointer to transmit buffer */
-    uint8_t * restrict receiveBuffer;           /*!< Pointer to receive buffer */
+    const uint8_t * sendBuffer;        /*!< Pointer to transmit buffer */
+    uint8_t * receiveBuffer;           /*!< Pointer to receive buffer */
     volatile int32_t remainingSendByteCount;    /*!< Number of bytes remaining to send.*/
     volatile int32_t remainingReceiveByteCount; /*!< Number of bytes remaining to receive.*/
     bool isSync;                                /*!< Indicates the function call is sync or async */
@@ -110,13 +120,14 @@ dspi_status_t DSPI_DRV_SlaveInit(uint32_t instance,
 /*!
  * @brief Shuts down a DSPI instance - interrupt mechanism.
  *
- * Disable DSPI module, gates its clock, change DSPI slave driver state to NonInit for
+ * Disables the DSPI module, gates its clock, change DSPI slave driver state to NonInit for
  * DSPI slave module which is initialized with interrupt mechanism. After de-initialized,
  * user can re-initialize DSPI slave module with other mechanisms.
  *
  * @param instance The instance number of the DSPI peripheral.
+ * @return kStatus_DSPI_Success indicating successful de-initialization or error code
  */
-void DSPI_DRV_SlaveDeinit(uint32_t instance);
+dspi_status_t DSPI_DRV_SlaveDeinit(uint32_t instance);
 
 /*! @} */
 
@@ -129,17 +140,17 @@ void DSPI_DRV_SlaveDeinit(uint32_t instance);
  * @brief Transfers data on SPI bus using interrupt and blocking call
  *
  * This function check driver status, mechanism and transmit/receive data through SPI
- * bus. If sendBuffer is NULL, transmit process will be ignored, and if receiveBuffer is NULL
- * receive process is ignored. If both receiveBuffer and sendBuffer available, transmit and
- * receive progress will be processed. If only receiveBuffer available, receiving will be
- * processed, else transmitting will be processed. This function only return when its
- * processes were completed. This function uses interrupt mechanism.
+ * bus. If sendBuffer is NULL, the transmit process is ignored, and if receiveBuffer is NULL the
+ * receive process is ignored. If both receiveBuffer and sendBuffer are available, both the transmit
+ * and the receive progress are processed. If only the receiveBuffer is available, the receive is
+ * processed. Otherwise, the transmit is processed. This function only returns when its
+ * processes are complete. This function uses an interrupt mechanism.
  *
  * @param instance The instance number of DSPI peripheral
  * @param sendBuffer The pointer to data that user wants to transmit.
  * @param receiveBuffer The pointer to data that user wants to store received data.
  * @param transferByteCount The number of bytes to send and receive.
- * @param timeout The maximum number of miliseconds that function will wait before
+ * @param timeout The maximum number of milliseconds that function will wait before
  *              timed out reached.
  *
  * @return  kStatus_DSPI_Success if driver starts to send/receive data successfully.
@@ -161,14 +172,14 @@ dspi_status_t DSPI_DRV_SlaveTransferBlocking(uint32_t instance,
  */
 
 /*!
- * @brief Starts transfer data on SPI bus using interrupt and non-blocking call
+ * @brief Starts transfer data on SPI bus using interrupt and a non-blocking call.
  *
- * This function check driver status then set buffer pointers to receive and transmit
- * SPI data. If sendBuffer is NULL, transmit process will be ignored, and if receiveBuffer
- * is NULL receive process is ignored. If both receiveBuffer and sendBuffer available,
- * transfer is done when kDspiTxDone and kDspiRxDone are set. If only receiveBuffer
- * available, transfer is done when kDspiRxDone flag was set, else transfer is done
- * when kDspiTxDone was set. This function uses interrupt mechanism.
+ * This function checks the driver status and sets buffer pointers to receive and transmit
+ * the SPI data. If the sendBuffer is NULL, the transmit process is ignored. If the receiveBuffer
+ * is NULL, the receive process is ignored. If both the receiveBuffer and the sendBuffer are ,
+ * available the transfer is done when the kDspiTxDone and the kDspiRxDone are set. If only the
+ * receiveBuffer is available, the transfer is done when the kDspiRxDone flag is set. Otherwise,
+ * the transfer is done when the kDspiTxDone is set. This function uses an interrupt mechanism.
  *
  * @param instance The instance number of DSPI peripheral
  * @param sendBuffer The pointer to data that user wants to transmit.
@@ -186,13 +197,13 @@ dspi_status_t DSPI_DRV_SlaveTransfer(uint32_t instance,
                                      uint32_t transferByteCount);
 
 /*!
- * @brief Abort transfer that started by non-blocking call transfer function
+ * @brief Aborts the transfer that started by a non-blocking call to a transfer function.
  *
- * This function stops the transfer which started by function DSPI_DRV_SlaveTransfer().
+ * This function stops the transfer which started by calling the DSPI_DRV_SlaveTransfer() function.
  *
  * @param instance The instance number of DSPI peripheral
  *
- * @return  kStatus_DSPI_Success if everything is ok.
+ * @return  kStatus_DSPI_Success if everything is OK.
  *          kStatus_DSPI_InvalidMechanism if the current transaction does not use
  *                      interrupt mechanism.
  */
@@ -217,6 +228,17 @@ dspi_status_t DSPI_DRV_SlaveAbortTransfer(uint32_t instance);
  */
 dspi_status_t DSPI_DRV_SlaveGetTransferStatus(uint32_t instance,
                                               uint32_t * framesTransferred);
+
+/*!
+ * @brief DSPI Slave Generic IRQ handler.
+ *
+ * This handler check errors of driver and it puts data into Tx FIFO, gets data
+ * from Rx FIFO whenever data transmitting/received.
+ *
+ * @param instance The instance number of the DSPI peripheral.
+ */
+void DSPI_DRV_SlaveIRQHandler(uint32_t instance);
+
 /* @} */
 
 #if defined(__cplusplus)
@@ -225,7 +247,9 @@ dspi_status_t DSPI_DRV_SlaveGetTransferStatus(uint32_t instance,
 
 /*! @} */
 
+#endif /* FSL_FEATURE_SOC_DSPI_COUNT */
 #endif /* __FSL_DSPI_SLAVE_DRIVER_H__ */
 /*******************************************************************************
  * EOF
  ******************************************************************************/
+

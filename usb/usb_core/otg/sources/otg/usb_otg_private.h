@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 *
-* Copyright (c) 2010, 2013 - 2014 Freescale Semiconductor;
+* Copyright (c) 2010, 2013 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 ***************************************************************************
@@ -47,7 +47,7 @@ enum{ srp_not_started , srp_se0 , srp_dp_puls};
   #pragma pack(push)
   #pragma pack(1)
 #endif
-typedef struct usb_otg_status
+typedef struct
 {
     uint8_t              id;                    /* Current ID state */
     uint8_t              vbus_valid;            /* V_BUS_VALID status */
@@ -80,21 +80,21 @@ typedef struct usb_otg_status
 typedef struct usb_otg_callback_functions_struct
 {
    /* The Host/Device pre-init function */
-   usb_status (_CODE_PTR_ otg_preinit)(usb_otg_handle *);
+   usb_status (_CODE_PTR_ otg_preinit)(usb_otg_handle* handle);
    /* The Host/Device init function */
-   usb_status (_CODE_PTR_ otg_init)(uint8_t, usb_otg_handle);
+   usb_status (_CODE_PTR_ otg_init)(uint8_t controller_id, usb_otg_handle handle);
    /* The function to shutdown the host/device */
-   usb_status (_CODE_PTR_ otg_shutdown)(usb_otg_handle);
+   usb_status (_CODE_PTR_ otg_shutdown)(usb_otg_handle handle);
    /* The function to send data */
-   usb_status (_CODE_PTR_ otg_get_status)(usb_otg_handle);
+   usb_status (_CODE_PTR_ otg_get_status)(usb_otg_handle handle);
    /* The function to send setup data */
-   usb_status (_CODE_PTR_ otg_set_vbus)(usb_otg_handle, bool);
+   usb_status (_CODE_PTR_ otg_set_vbus)(usb_otg_handle handle, bool enable);
    /* The function to receive data */
-   usb_status (_CODE_PTR_ otg_set_pulldowns)(usb_otg_handle,  uint8_t);
+   usb_status (_CODE_PTR_ otg_set_pulldowns)(usb_otg_handle handle,  uint8_t bitfield);
    /* The function to cancel the transfer */
-   usb_status (_CODE_PTR_ otg_set_dp_pullup)(usb_otg_handle, bool);
+   usb_status (_CODE_PTR_ otg_set_dp_pullup)(usb_otg_handle handle, bool enable);
    /* The function for USB bus control */
-   usb_status (_CODE_PTR_ otg_generate_resume)(usb_otg_handle, bool);
+   usb_status (_CODE_PTR_ otg_generate_resume)(usb_otg_handle handle, bool enable);
 } usb_otg_api_functions_struct_t;
 /* Public types */
 

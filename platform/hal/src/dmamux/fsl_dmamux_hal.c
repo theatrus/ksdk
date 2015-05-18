@@ -28,6 +28,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "fsl_dmamux_hal.h"
+#if FSL_FEATURE_SOC_DMAMUX_COUNT
 
 /*******************************************************************************
  * Code
@@ -39,16 +40,17 @@
  * Description   : Initialize the dmamux module to the reset state.
  *
  *END**************************************************************************/
-void DMAMUX_HAL_Init(uint32_t baseAddr)
+void DMAMUX_HAL_Init(DMAMUX_Type * base)
 {
     int i;
 
     for (i = 0; i < FSL_FEATURE_DMAMUX_MODULE_CHANNEL; i++)
     {
-        BW_DMAMUX_CHCFGn_ENBL(baseAddr, i, 0U);
-        BW_DMAMUX_CHCFGn_SOURCE(baseAddr, i, 0U);
+        DMAMUX_BWR_CHCFG_ENBL(base, i, 0U);
+        DMAMUX_BWR_CHCFG_SOURCE(base, i, 0U);
     }
 }
+#endif
 
 /*******************************************************************************
  * EOF

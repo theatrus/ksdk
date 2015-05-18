@@ -1,36 +1,36 @@
 /**HEADER********************************************************************
-* 
-* Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
-* All Rights Reserved
-*
-* Copyright (c) 1989-2008 ARC International;
-* All Rights Reserved
-*
-*************************************************************************** 
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: usb_host_hid.h$
-* $Version : 
-* $Date    : 
-*
-* Comments:
-*
-*   This file defines a template structure for Class Drivers.
-*
-*END************************************************************************/
+ * 
+ * Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ * Copyright (c) 1989-2008 ARC International;
+ * All Rights Reserved
+ *
+ *************************************************************************** 
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: usb_host_hid.h$
+ * $Version : 
+ * $Date    : 
+ *
+ * Comments:
+ *
+ *   This file defines a template structure for Class Drivers.
+ *
+ *END************************************************************************/
 #ifndef __usb_host_hid_h__
 #define __usb_host_hid_h__
 
@@ -67,7 +67,6 @@
 #define LOCAL_STRING_MAX               0x98
 #define LOCAL_SET_DELIMITER            0xA8
 
-
 #define USAGE_PAGE_UNDEFINED           0x00
 #define USAGE_PAGE_GENERIC_DESKTOP     0x01
 #define USAGE_PAGE_KEYBOARD            0x07
@@ -98,68 +97,69 @@
 #define SET_IDLE                       0x0A
 #define SET_PROTOCOL                   0x0B
 
-
 /* structure for HID class descriptor */
-typedef struct _hid_descriptor_struct {
-    uint8_t     blength;
-    uint8_t     bdescriptortype;
-    uint8_t     bcdhid[2];
-    uint8_t     bcountrycode;
-    uint8_t     bnumdescriptor;
-    uint8_t     bclassdescriptortype;
-    uint8_t     bclassdescriptorlength[2];
+typedef struct _hid_descriptor_struct
+{
+    uint8_t blength;
+    uint8_t bdescriptortype;
+    uint8_t bcdhid[2];
+    uint8_t bcountrycode;
+    uint8_t bnumdescriptor;
+    uint8_t bclassdescriptortype;
+    uint8_t bclassdescriptorlength[2];
 } hid_descriptor_struct_t;
 
 typedef struct _hid_class_descriptor
 {
-    uint8_t     classdescriptortype;
-    uint8_t     descriptorlength[2];
+    uint8_t classdescriptortype;
+    uint8_t descriptorlength[2];
 } hid_class_descriptor_struct_t;
 
 /*
-** HID Class Interface structure. This structure will be passed to
-** all commands to this class driver.
-*/
+ ** HID Class Interface structure. This structure will be passed to
+ ** all commands to this class driver.
+ */
 
 typedef struct _usb_hid_class
 {
-    usb_host_handle                 host_handle; 
-    usb_device_instance_handle      dev_handle;
+    usb_host_handle host_handle;
+    usb_device_instance_handle dev_handle;
     usb_interface_descriptor_handle intf_handle;
-     /* Only 1 command can be issued at one time */
-    usb_pipe_handle                 in_pipe;
+    /* Only 1 command can be issued at one time */
+    usb_pipe_handle in_pipe;
     /* Here we store callback and parameter from higher level */
-    tr_callback                     ctrl_callback;
-    void*                           ctrl_param;
-    tr_callback                     recv_callback;
-    void*                           recv_param;
-    uint32_t                        running;
-    bool                            in_setup;
+    tr_callback ctrl_callback;
+    void* ctrl_param;
+    tr_callback recv_callback;
+    void* recv_param;
+    uint32_t running;
+    bool in_setup;
 } usb_hid_class_struct_t;
 
 typedef struct _hid_command
 {
-    class_handle       class_ptr;
-    tr_callback        callback_fn;
-    void*              callback_param;
+    usb_class_handle class_ptr;
+    tr_callback callback_fn;
+    void* callback_param;
 } hid_command_t;
 
 /* Class specific functions exported by HID class driver */
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-extern usb_status usb_class_hid_init(usb_device_instance_handle, usb_interface_descriptor_handle, class_handle*);
-extern usb_status usb_class_hid_deinit(class_handle);
-extern usb_status usb_class_hid_pre_deinit(class_handle);
-extern usb_status usb_class_hid_get_idle(hid_command_t*, uint8_t, uint8_t *);
-extern usb_status usb_class_hid_get_protocol(hid_command_t*, uint8_t *);
-extern usb_status usb_class_hid_set_protocol(hid_command_t*, uint8_t);
-extern usb_status usb_class_hid_get_report(hid_command_t*, uint8_t, uint8_t, void*, uint16_t);
-extern usb_status usb_class_hid_set_idle(hid_command_t*, uint8_t, uint8_t);
-extern usb_status usb_class_hid_set_report(hid_command_t*, uint8_t, uint8_t, void*, uint16_t);
-extern usb_status usb_class_hid_recv_data(hid_command_t*, uint8_t *, uint16_t);
-extern usb_status usb_class_hid_get_descriptor(hid_command_t*, uint8_t, uint8_t*, uint16_t);
+extern usb_status usb_class_hid_init(usb_device_instance_handle dev_handle, usb_interface_descriptor_handle intf_handle, usb_class_handle* class_handle_ptr);
+extern usb_status usb_class_hid_deinit(usb_class_handle handle);
+extern usb_status usb_class_hid_pre_deinit(usb_class_handle handle);
+extern usb_status usb_class_hid_get_idle(hid_command_t* com_ptr, uint8_t rid, uint8_t* idle_rate);
+extern usb_status usb_class_hid_get_protocol(hid_command_t* com_ptr, uint8_t* protocol);
+extern usb_status usb_class_hid_set_protocol(hid_command_t* com_ptr, uint8_t protocol);
+extern usb_status usb_class_hid_get_report(hid_command_t* com_ptr, uint8_t rid, uint8_t rtype, void* buf, uint16_t blen);
+extern usb_status usb_class_hid_set_idle(hid_command_t* com_ptr, uint8_t rid, uint8_t duration);
+extern usb_status usb_class_hid_set_report(hid_command_t* com_ptr, uint8_t rid, uint8_t rtype, void* buf, uint16_t blen);
+extern usb_status usb_class_hid_recv_data(hid_command_t* com_ptr, uint8_t* buffer, uint16_t length);
+extern usb_status usb_class_hid_get_descriptor(hid_command_t* com_ptr, uint8_t type, uint8_t* buf, uint16_t len);
 #ifdef __cplusplus
 }
 #endif

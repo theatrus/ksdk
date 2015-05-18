@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_crc_hal.h"
+#if FSL_FEATURE_SOC_CRC_COUNT
 
 /*!
  * @addtogroup crc_driver
@@ -44,21 +45,22 @@
  * Definitions
  ******************************************************************************/
 /*! @brief Table of base addresses for the CRC instances. */
-extern const uint32_t g_crcBaseAddr[HW_CRC_INSTANCE_COUNT];
+extern CRC_Type * const g_crcBase[CRC_INSTANCE_COUNT];
 
 /*!
  * @brief Defines a structure to initialize the CRC module.
  *
  * This structure holds the configuration for the CRC.
+ * @internal gui name="CRC configuration" id="crcCfg"
  */
 typedef struct _crc_user_config
 {
-    crc_prot_width_t crcWidth;      /*!< Selects 16 or 32-bit CRC protocol */
-    uint32_t seed;                  /*!< Value of the seed (initial) CRC value */
-    uint32_t polynomial;            /*!< Value of the polynomial for the CRC calculation */
-    crc_transpose_t writeTranspose; /*!< Defines transpose configuration of the data written to the CRC data register */
-    crc_transpose_t readTranspose;  /*!< Defines transpose configuration of the value read from the CRC data register */
-    bool complementRead;            /*!< Enables complement read of CRC data register */
+    crc_prot_width_t crcWidth;      /*!< Selects 16 or 32-bit CRC protocol @internal gui name="Width" id="crcWidth" */
+    uint32_t seed;                  /*!< Value of the seed (initial) CRC value @internal gui name="Seed" id="seed" */
+    uint32_t polynomial;            /*!< Value of the polynomial for the CRC calculation @internal gui name="Polynomial" id="polynomial" */
+    crc_transpose_t writeTranspose; /*!< Defines transpose configuration of the data written to the CRC data register @internal gui name="Write transpose" id="writeTranspose" */
+    crc_transpose_t readTranspose;  /*!< Defines transpose configuration of the value read from the CRC data register @internal gui name="Read transpose" id="readTranspose" */
+    bool complementRead;            /*!< Enables complement read of CRC data register @internal gui name="Complement read" id="complementRead" */
 } crc_user_config_t;
 
 #if defined(__cplusplus)
@@ -79,7 +81,7 @@ extern "C" {
  * @param userConfigPtr Pointer to structure of initialization, see to "crc_user_config_t".
  * @return Execution status.
  */
-crc_status_t CRC_DRV_Init(uint32_t instance, crc_user_config_t *userConfigPtr);
+crc_status_t CRC_DRV_Init(uint32_t instance, const crc_user_config_t *userConfigPtr);
 
 /*!
  * @brief CRC_DRV_Deinit
@@ -113,16 +115,17 @@ uint32_t CRC_DRV_GetCrcBlock(uint32_t instance, uint8_t *data, uint32_t dataLen)
  * @param userConfigPtr Pointer to structure of initialization, see to "crc_user_config_t".
  * @return Execution status.
  */
-crc_status_t CRC_DRV_Configure(uint32_t instance, crc_user_config_t *userConfigPtr);
+crc_status_t CRC_DRV_Configure(uint32_t instance, const crc_user_config_t *userConfigPtr);
 
 #if defined(__cplusplus)
-extern }
+}
 #endif
 
 /*!
  *@}
  */
 
+#endif
 #endif /* __FSL_CRC_DRIVER_H__ */
 
 /******************************************************************************

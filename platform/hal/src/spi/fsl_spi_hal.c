@@ -30,6 +30,8 @@
 #include "fsl_spi_hal.h"
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_SPI_COUNT
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -59,17 +61,17 @@ enum _spi_pin_bit_encodings
  * disabling the module.
  *
  *END**************************************************************************/
-void SPI_HAL_Init(uint32_t baseAddr)
+void SPI_HAL_Init(SPI_Type * base)
 {
-    HW_SPI_C1_WR(baseAddr, BM_SPI_C1_CPHA);
-    HW_SPI_C2_WR(baseAddr, 0);
-    HW_SPI_BR_WR(baseAddr, 0);
+    SPI_WR_C1(base, SPI_C1_CPHA_MASK);
+    SPI_WR_C2(base, 0);
+    SPI_WR_BR(base, 0);
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-    HW_SPI_MH_WR(baseAddr, 0);
-    HW_SPI_ML_WR(baseAddr, 0);
+    SPI_WR_MH(base, 0);
+    SPI_WR_ML(base, 0);
 #else
-    HW_SPI_M_WR(baseAddr, 0);
+    SPI_WR_M(base, 0);
 #endif
 }
 
@@ -83,7 +85,7 @@ void SPI_HAL_Init(uint32_t baseAddr)
  * module source clock (in Hertz).
  *
  *END**************************************************************************/
-uint32_t SPI_HAL_SetBaud(uint32_t baseAddr, uint32_t bitsPerSec, uint32_t sourceClockInHz)
+uint32_t SPI_HAL_SetBaud(SPI_Type * base, uint32_t bitsPerSec, uint32_t sourceClockInHz)
 {
     uint32_t prescaler, bestPrescaler;
     uint32_t rateDivisor, bestDivisor;
@@ -137,7 +139,7 @@ uint32_t SPI_HAL_SetBaud(uint32_t baseAddr, uint32_t bitsPerSec, uint32_t source
     }
 
     /* write the best prescalar and baud rate scalar */
-    SPI_HAL_SetBaudDivisors(baseAddr, bestPrescaler, bestDivisor);
+    SPI_WR_BR(base, SPI_BR_SPR(bestDivisor) | SPI_BR_SPPR(bestPrescaler));
 
     /* return the actual calculated baud rate*/
     return bestBaudrate;
@@ -150,14 +152,13 @@ uint32_t SPI_HAL_SetBaud(uint32_t baseAddr, uint32_t bitsPerSec, uint32_t source
  * modes: as GPIO, as a fault input, or as an automatic output for standard SPI modes.
  *
  *END**************************************************************************/
-void SPI_HAL_SetSlaveSelectOutputMode(uint32_t baseAddr, spi_ss_output_mode_t mode)
+void SPI_HAL_SetSlaveSelectOutputMode(SPI_Type * base, spi_ss_output_mode_t mode)
 {
     /* The mode enum values encode the SSOE and MODFEN bit values.*/
     /* Bit 0: SSOE*/
     /* Bit 1: MODFEN*/
-    BW_SPI_C1_SSOE(baseAddr, ((uint32_t)mode & (1U << kSpiSsoeBit)) >> kSpiSsoeBit);
-    BW_SPI_C2_MODFEN(baseAddr, ((uint32_t)mode &
-                     (1U << kSpiModfenBit)) >> kSpiModfenBit);
+    SPI_BWR_C1_SSOE(base, ((uint32_t)mode & (1U << kSpiSsoeBit)) >> kSpiSsoeBit);
+    SPI_BWR_C2_MODFEN(base, ((uint32_t)mode & (1U << kSpiModfenBit)) >> kSpiModfenBit);
 }
 
 /*FUNCTION**********************************************************************
@@ -166,14 +167,14 @@ void SPI_HAL_SetSlaveSelectOutputMode(uint32_t baseAddr, spi_ss_output_mode_t mo
  * This function configures the clock polarity, clock phase, and data shift direction.
  *
  *END**************************************************************************/
-void SPI_HAL_SetDataFormat(uint32_t baseAddr,
+void SPI_HAL_SetDataFormat(SPI_Type * base,
                            spi_clock_polarity_t polarity,
                            spi_clock_phase_t phase,
                            spi_shift_direction_t direction)
 {
-    BW_SPI_C1_CPOL(baseAddr, (uint32_t)polarity);
-    BW_SPI_C1_CPHA(baseAddr, (uint32_t)phase);
-    BW_SPI_C1_LSBFE(baseAddr, (uint32_t)direction);
+    SPI_BWR_C1_CPOL(base, (uint32_t)polarity);
+    SPI_BWR_C1_CPHA(base, (uint32_t)phase);
+    SPI_BWR_C1_LSBFE(base, (uint32_t)direction);
 }
 
 /*FUNCTION**********************************************************************
@@ -184,13 +185,41 @@ void SPI_HAL_SetDataFormat(uint32_t baseAddr,
  * Birectional mode: Master: MOSI configured as input, Slave: MISO configured as input.
  * Birectional mode: Master: MOSI configured as output, Slave: MISO configured as output.
  *END**************************************************************************/
-void SPI_HAL_SetPinMode(uint32_t baseAddr, spi_pin_mode_t mode)
+void SPI_HAL_SetPinMode(SPI_Type * base, spi_pin_mode_t mode)
 {
     /* The mode enum values encode the SPC0 and BIDIROE bit values.*/
     /* Bit 0: SPC0*/
     /* Bit 1: BIDIROE*/
-    BW_SPI_C2_SPC0(baseAddr, ((uint32_t)mode & (1U << kSpiSpc0Bit)) >> kSpiSpc0Bit);
-    BW_SPI_C2_BIDIROE(baseAddr, ((uint32_t)mode & (1U << kSpiBidiroeBit)) >> kSpiBidiroeBit);
+    SPI_BWR_C2_SPC0(base, ((uint32_t)mode & (1U << kSpiSpc0Bit)) >> kSpiSpc0Bit);
+    SPI_BWR_C2_BIDIROE(base, ((uint32_t)mode & (1U << kSpiBidiroeBit)) >> kSpiBidiroeBit);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SPI_HAL_SetIntMode
+ * This function enables or disables the
+ * SPI receive buffer (or FIFO if the module supports a FIFO) full and mode fault interrupt
+ * SPI transmit buffer (or FIFO if the module supports a FIFO) empty interrupt
+ * SPI match interrupt
+ *
+ * Example, to set the receive and mode fault interrupt:
+ * SPI_HAL_SetIntMode(base, kSpiRxFullAndModfInt, true);
+ *
+ *END**************************************************************************/
+void SPI_HAL_SetIntMode(SPI_Type * base, spi_interrupt_source_t interrupt, bool enable)
+{
+    if (interrupt == kSpiMatchInt)
+    {
+        SPI_BWR_C2_SPMIE(base, (enable == true));
+    }
+    else if (interrupt == kSpiRxFullAndModfInt)
+    {
+        SPI_BWR_C1_SPIE(base, (enable == true));
+    }
+    else /* kSpiTxEmptyInt */
+    {
+        SPI_BWR_C1_SPTIE(base, (enable == true));
+    }
 }
 
 /*FUNCTION**********************************************************************
@@ -198,15 +227,15 @@ void SPI_HAL_SetPinMode(uint32_t baseAddr, spi_pin_mode_t mode)
  * Function Name : SPI_HAL_ClearModeFaultFlag
  * This function clears the mode fault flag.
  *END**************************************************************************/
-void SPI_HAL_ClearModeFaultFlag(uint32_t baseAddr)
+void SPI_HAL_ClearModeFaultFlag(SPI_Type * base)
 {
     /* Must make sure we read from the status register first. Then, if set,
      * we must write to SPI_C1 (per the reference manual).
      */
-    if (SPI_HAL_IsModeFaultPending(baseAddr))
+    if (SPI_RD_S_MODF(base))
     {
         /* Then we have to write to C1.*/
-        HW_SPI_C1_WR(baseAddr, HW_SPI_C1_RD(baseAddr));
+        SPI_WR_C1(base, SPI_RD_C1(base));
     }
 }
 
@@ -215,17 +244,17 @@ void SPI_HAL_ClearModeFaultFlag(uint32_t baseAddr)
  * Function Name : SPI_HAL_ClearMatchFlag
  * This function clears the match flag.
  *END**************************************************************************/
-void SPI_HAL_ClearMatchFlag(uint32_t baseAddr)
+void SPI_HAL_ClearMatchFlag(SPI_Type * base)
 {
     /* Check that the match flag is set before writing 1 to clear it. This read*/
     /* is required in order to clear the flag.*/
-    if (SPI_HAL_IsMatchPending(baseAddr))
+    if (SPI_RD_S_SPMF(base))
     {
         /* We have to hack this to write to the register because it is incorrectly
          * defined as a read-only register, even though the SPI_S.SPMF bitfield documentation
          * states you must write a 1 to the bitfield to clear it.
          */
-        *(volatile uint8_t *)HW_SPI_S_ADDR(baseAddr) = BM_SPI_S_SPMF;
+/*        SPI_S_REG(base) = SPI_S_SPMF_MASK; */
     }
 }
 
@@ -242,28 +271,28 @@ void SPI_HAL_ClearMatchFlag(uint32_t baseAddr)
  * Note, for 16-bit data writes, make sure that function SPI_HAL_Set8or16BitMode is set to
  * kSpi16BitMode.
  *END**************************************************************************/
-void SPI_HAL_WriteDataBlocking(uint32_t baseAddr, spi_data_bitcount_mode_t bitCount,
+void SPI_HAL_WriteDataBlocking(SPI_Type * base, spi_data_bitcount_mode_t bitCount,
                                uint8_t dataHigh, uint8_t dataLow)
 {
     /* Since this is a blocking write, it is assume the user will call this function
      * directly. Per the ref manual, the status register must first be read with the
      * SPTEF bit set.  So wait until SPTEF gets set to make sure the buffer is empty.
      */
-    while(SPI_HAL_IsTxBuffEmptyPending(baseAddr) == 0) { }
+    while(SPI_RD_S_SPTEF(base) == 0) { }
 
     if (bitCount == kSpi16BitMode)
     {
-        HW_SPI_DH_WR(baseAddr, dataHigh);
-        HW_SPI_DL_WR(baseAddr, dataLow);
+        SPI_WR_DH(base, dataHigh);
+        SPI_WR_DL(base, dataLow);
     }
 
     else
     {
-        HW_SPI_DL_WR(baseAddr, dataLow);
+        SPI_WR_DL(base, dataLow);
     }
 
     /* Wait until TX empty is set before return */
-    while(SPI_HAL_IsTxBuffEmptyPending(baseAddr) == 0) { }
+    while(SPI_RD_S_SPTEF(base) == 0) { }
 }
 
 #else
@@ -274,21 +303,22 @@ void SPI_HAL_WriteDataBlocking(uint32_t baseAddr, spi_data_bitcount_mode_t bitCo
  * This function writes data to the SPI data register and waits until
  * TX empty to return.
  *END**************************************************************************/
-void SPI_HAL_WriteDataBlocking(uint32_t baseAddr, uint8_t data)
+void SPI_HAL_WriteDataBlocking(SPI_Type * base, uint8_t data)
 {
     /* Since this is a blocking write, it is assume the user will call this function
      * directly. Per the ref manual, the status register must first be read with the
      * SPTEF bit set.  So wait until SPTEF gets set to make sure the buffer is empty.
      */
-    while(SPI_HAL_IsTxBuffEmptyPending(baseAddr) == 0) { }
+    while(SPI_RD_S_SPTEF(base) == 0) { }
 
-    HW_SPI_D_WR(baseAddr, data);
+    SPI_WR_D(base, data);
 
     /* Wait until TX empty is set before return */
-    while(SPI_HAL_IsTxBuffEmptyPending(baseAddr) == 0) { }
+    while(SPI_RD_S_SPTEF(base) == 0) { }
+
 }
 
-#endif
+#endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
 
 #if FSL_FEATURE_SPI_FIFO_SIZE
 /*FUNCTION**********************************************************************
@@ -299,13 +329,13 @@ void SPI_HAL_WriteDataBlocking(uint32_t baseAddr, uint8_t data)
  * Configure the RX FIFO full watermark to be 48bits (3/4) or 32bits (1/2)
  * Enable/disable the FIFO
  *END**************************************************************************/
-void SPI_HAL_SetFifoMode(uint32_t baseAddr, bool enable,
+void SPI_HAL_SetFifoMode(SPI_Type * base, bool enable,
                          spi_txfifo_watermark_t txWaterMark,
                          spi_rxfifo_watermark_t rxWaterMark)
 {
-    BW_SPI_C3_FIFOMODE(baseAddr, (enable == true));
-    BW_SPI_C3_TNEAREF_MARK(baseAddr, (uint32_t)txWaterMark);
-    BW_SPI_C3_RNFULLF_MARK(baseAddr, (uint32_t)rxWaterMark);
+    SPI_BWR_C3_FIFOMODE(base, (enable == true));
+    SPI_BWR_C3_TNEAREF_MARK(base, (uint32_t)txWaterMark);
+    SPI_BWR_C3_RNFULLF_MARK(base, (uint32_t)rxWaterMark);
 }
 
 /*FUNCTION**********************************************************************
@@ -316,16 +346,16 @@ void SPI_HAL_SetFifoMode(uint32_t baseAddr, bool enable,
  * to enable/disable receive buffer/FIFO full interrupt and the transmit buffer/FIFO empty
  * interrupt.
  *END**************************************************************************/
-void SPI_HAL_SetFifoIntCmd(uint32_t baseAddr, spi_fifo_interrupt_source_t intSrc,
+void SPI_HAL_SetFifoIntCmd(SPI_Type * base, spi_fifo_interrupt_source_t intSrc,
                                          bool enable)
 {
     if (intSrc == kSpiRxFifoNearFullInt)
     {
-        BW_SPI_C3_RNFULLIEN(baseAddr, (enable == true));
+        SPI_BWR_C3_RNFULLIEN(base, (enable == true));
     }
     else
     {
-        BW_SPI_C3_TNEARIEN(baseAddr, (enable == true));
+        SPI_BWR_C3_TNEARIEN(base, (enable == true));
     }
 }
 
@@ -335,15 +365,15 @@ void SPI_HAL_SetFifoIntCmd(uint32_t baseAddr, spi_fifo_interrupt_source_t intSrc
  * This function returns the specific SPI FIFO interrupt setting: enable (true) or disable (false).
  * These FIFO interrupts are the TX FIFO nearly empty and the RX FIFO nearly full.
  *END**************************************************************************/
-bool SPI_HAL_GetFifoIntMode(uint32_t baseAddr, spi_fifo_interrupt_source_t intSrc)
+bool SPI_HAL_GetFifoIntMode(SPI_Type * base, spi_fifo_interrupt_source_t intSrc)
 {
     if (intSrc == kSpiRxFifoNearFullInt)
     {
-        return BR_SPI_C3_RNFULLIEN(baseAddr);
+        return SPI_RD_C3_RNFULLIEN(base);
     }
     else
     {
-        return BR_SPI_C3_TNEARIEN(baseAddr);
+        return SPI_RD_C3_TNEARIEN(base);
     }
  }
 
@@ -360,29 +390,30 @@ bool SPI_HAL_GetFifoIntMode(uint32_t baseAddr, spi_fifo_interrupt_source_t intSr
  * Transmit FIFO empty interrupt
  * Transmit FIFO nearly empty interrupt
  *END**************************************************************************/
-void SPI_HAL_ClearFifoIntUsingBitWrite(uint32_t baseAddr, spi_w1c_interrupt_t intSrc)
+void SPI_HAL_ClearFifoIntUsingBitWrite(SPI_Type * base, spi_w1c_interrupt_t intSrc)
 {
     /* First see if SPIx_C3[INTCLR] is set.  This needs to first be set in order
      * to enable the write to clear mode.
      */
-    if (!(SPI_HAL_GetIntClearCmd(baseAddr)))
+    if (!(SPI_RD_C3_INTCLR(base)))
     {
         /* If SPIx_C3[INTCLR] is not set, set it than clear later */
-        SPI_HAL_SetIntClearCmd(baseAddr, true);
+        SPI_BWR_C3_INTCLR(base, true);
         /* Write to the desired clear bit */
-        HW_SPI_CI_WR(baseAddr, 1U << intSrc);
+        SPI_WR_CI(base, 1U << intSrc);
         /* clear SPIx_C3[INTCLR] */
-        SPI_HAL_SetIntClearCmd(baseAddr, false);
+        SPI_BWR_C3_INTCLR(base, false);
     }
     else
     {
         /* Write to the desired clear bit */
-        HW_SPI_CI_WR(baseAddr, 1U << intSrc);
+        SPI_WR_CI(base, 1U << intSrc);
     }
  }
 
-#endif
+#endif /* FSL_FEATURE_SPI_FIFO_SIZE */
 
+#endif /* FSL_FEATURE_SOC_SPI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

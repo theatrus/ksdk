@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -47,26 +47,15 @@
  * will run immediately according to the configure.
  *
  *END*********************************************************************/
-void COP_DRV_Init(uint32_t instance, const cop_user_config_t* initPtr)
+cop_status_t COP_DRV_Init(uint32_t instance, const cop_config_t* initPtr)
 {
-    assert(initPtr);
-    uint32_t baseAddr = g_copBaseAddr[instance];
-    cop_common_config_t copCommonConfig;
-    
-    copCommonConfig.commonConfig.copWindowEnable = initPtr->copWindowModeEnable;
-#if FSL_FEATURE_COP_HAS_LONGTIME_MODE    
-    copCommonConfig.commonConfig.copTimeoutMode     = initPtr->copTimeoutMode;
-    copCommonConfig.commonConfig.copStopModeEnable  = initPtr->copStopModeEnable;
-    copCommonConfig.commonConfig.copDebugModeEnable = initPtr->copDebugModeEnable;
-    copCommonConfig.commonConfig.copClockSource     = initPtr->copClockSource;
-#else
-    copCommonConfig.commonConfig.copClockSelect     = initPtr->copClockSource;
-    copCommonConfig.commonConfig.reserved0          = 0;
-#endif
-    copCommonConfig.commonConfig.copTimeout         = initPtr->copTimeout;
-    copCommonConfig.commonConfig.reserved1          = 0;
-    
-    COP_HAL_SetCommonConfiguration(baseAddr, copCommonConfig);
+    SIM_Type * base = g_copBase[instance];
+    if(!initPtr)
+    {
+        return kStatus_COP_NullArgument;
+    }
+    COP_HAL_SetConfig(base, initPtr);
+    return kStatus_COP_Success;
 }
 
 /*FUNCTION****************************************************************
@@ -76,11 +65,11 @@ void COP_DRV_Init(uint32_t instance, const cop_user_config_t* initPtr)
  * This function is used to shutdown the COP.
  *
  *END*********************************************************************/
-void COP_DRV_Deinit(uint32_t instance)
+void COP_DRV_Disable(uint32_t instance)
 {
-    uint32_t baseAddr = g_copBaseAddr[instance];
+    SIM_Type * base = g_copBase[instance];
     
-    COP_HAL_Disable(baseAddr);
+    COP_HAL_Disable(base);
 }
 
 /*FUNCTION****************************************************************
@@ -94,9 +83,9 @@ void COP_DRV_Deinit(uint32_t instance)
  *END*********************************************************************/
 bool COP_DRV_IsRunning(uint32_t instance)
 {
-   uint32_t baseAddr = g_copBaseAddr[instance];
+   SIM_Type * base = g_copBase[instance];
    
-   return COP_HAL_IsEnabled(baseAddr);
+   return COP_HAL_IsEnable(base);
 }
 
 /*FUNCTION****************************************************************
@@ -109,11 +98,11 @@ bool COP_DRV_IsRunning(uint32_t instance)
   *END*********************************************************************/
 void COP_DRV_Refresh(uint32_t instance)
 {
-   uint32_t baseAddr = g_copBaseAddr[instance];
+   SIM_Type * base = g_copBase[instance];
     
    INT_SYS_DisableIRQGlobal();
 
-   COP_HAL_Refresh(baseAddr);
+   COP_HAL_Refresh(base);
 
    INT_SYS_EnableIRQGlobal();
 }
@@ -128,11 +117,9 @@ void COP_DRV_Refresh(uint32_t instance)
   *END*********************************************************************/
 void COP_DRV_ResetSystem(uint32_t instance)
 {
-    uint32_t baseAddr = g_copBaseAddr[instance];
-    COP_HAL_ResetSystem(baseAddr);
+    SIM_Type * base = g_copBase[instance];
+    COP_HAL_ResetSystem(base);
 }
-
-
 /*******************************************************************************
  * EOF
  *******************************************************************************/

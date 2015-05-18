@@ -132,6 +132,11 @@ typedef xQueueHandle  msg_queue_handler_t;
 /*! @brief OSA's time range in millisecond, OSA time wraps if exceeds this value. */
 #define FSL_OSA_TIME_RANGE 0xFFFFFFFFU
 
+/*! @brief The default interrupt handler installed in vector table. */
+#define OSA_DEFAULT_INT_HANDLER  ((osa_int_handler_t)(&DefaultISR))
+
+extern void DefaultISR(void);
+
 /*!
  * @name Thread management
  * @{

@@ -32,36 +32,7 @@
 #include "fsl_pdb_driver.h"
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
-
-/*FUNCTION*********************************************************************
- *
- * Function Name : PDB_DRV_StructInitUserConfigForSoftTrigger
- * Description   : Fill the initial user configuration for PDB module.
- * It will be set as one-time, software trigger mode. The PDB modulus and delay
- * value are all set to the maximum. The PDB interrupt is enabled that will
- * cause the PDB interrupt when the counter hits the delay value. Then the PDB
- * module will be initialized an normal timer if no other setting is changed.
- *
- *END*************************************************************************/
-pdb_status_t PDB_DRV_StructInitUserConfigForSoftTrigger(pdb_user_config_t *userConfigPtr)
-{
-    if (!userConfigPtr)
-    {
-        return kStatus_PDB_InvalidArgument;
-    }
-    userConfigPtr->loadMode = kPdbLoadImmediately;
-    userConfigPtr->seqErrIntEnable = false;
-    userConfigPtr->dmaEnable = false;
-    userConfigPtr->clkPrescalerDivMode = kPdbClkPreDivBy128;
-    userConfigPtr->triggerSrcMode = kPdbSoftTrigger;
-    userConfigPtr->intEnable = true;
-    userConfigPtr->multFactorMode = kPdbMultFactorAs40;
-    userConfigPtr->continuousModeEnable = false;
-    userConfigPtr->pdbModulusValue = 0xFFFFU;
-    userConfigPtr->delayValue = 0xFFFFU;
-
-    return kStatus_PDB_Success;
-}
+#if FSL_FEATURE_SOC_PDB_COUNT
 
 /*FUNCTION*********************************************************************
  *
@@ -73,50 +44,36 @@ pdb_status_t PDB_DRV_StructInitUserConfigForSoftTrigger(pdb_user_config_t *userC
  * PDB module.
  *
  *END*************************************************************************/
-pdb_status_t PDB_DRV_Init(uint32_t instance, pdb_user_config_t *userConfigPtr)
+pdb_status_t PDB_DRV_Init(uint32_t instance, const pdb_timer_config_t *userConfigPtr)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
 
     if (!userConfigPtr)
     {
         return kStatus_PDB_InvalidArgument;
     }
     /* Enable the clock gate from clock manager. */
-    if ( !CLOCK_SYS_GetPdbGateCmd(instance) )
-    {
-        CLOCK_SYS_EnablePdbClock(instance);
-    }
-    /* Reset the registers for PDB module to reset state. */
-    PDB_HAL_Init(baseAddr);
+    CLOCK_SYS_EnablePdbClock(instance);
 
-    PDB_HAL_Enable(baseAddr);
-    PDB_HAL_SetLoadMode(baseAddr,userConfigPtr->loadMode);
-    PDB_HAL_SetSeqErrIntCmd(baseAddr,userConfigPtr->seqErrIntEnable);
-    PDB_HAL_SetDmaCmd(baseAddr,userConfigPtr->dmaEnable);
-    PDB_HAL_SetPreDivMode(baseAddr, userConfigPtr->clkPrescalerDivMode);
-    PDB_HAL_SetTriggerSrcMode(baseAddr, userConfigPtr->triggerSrcMode);
-    PDB_HAL_SetIntCmd(baseAddr, userConfigPtr->intEnable);
-    PDB_HAL_SetPreMultFactorMode(baseAddr, userConfigPtr->multFactorMode);
-    PDB_HAL_SetContinuousModeCmd(baseAddr, userConfigPtr->continuousModeEnable);
-    PDB_HAL_SetModulusValue(baseAddr, userConfigPtr->pdbModulusValue);
-    PDB_HAL_SetIntDelayValue(baseAddr, userConfigPtr->delayValue);
-    PDB_HAL_SetLoadRegsCmd(baseAddr);
+    /* Reset the registers for PDB module to reset state. */
+    PDB_HAL_Init(base);
+    PDB_HAL_Enable(base);
+    PDB_HAL_ConfigTimer(base, userConfigPtr);
 
     /* Configure NVIC. */
     if (userConfigPtr->intEnable)
     {
-        /* Enable PDB interrupt in NVIC level.*/
-        INT_SYS_EnableIRQ(g_pdbIrqId[instance] );
+        INT_SYS_EnableIRQ(g_pdbIrqId[instance] );/* Enable PDB interrupt in NVIC level.*/
     }
     else
     {
-        /* Disable PDB interrupt in NVIC level.*/
-        INT_SYS_DisableIRQ(g_pdbIrqId[instance] );
+        INT_SYS_DisableIRQ(g_pdbIrqId[instance] );/* Disable PDB interrupt in NVIC level.*/
     }
 
     return kStatus_PDB_Success;
 }
+
 
 /*FUNCTION*********************************************************************
  *
@@ -126,16 +83,16 @@ pdb_status_t PDB_DRV_Init(uint32_t instance, pdb_user_config_t *userConfigPtr)
  * PDB module and reduce the power consumption.
  *
  *END*************************************************************************/
-void PDB_DRV_Deinit(uint32_t instance)
+pdb_status_t PDB_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
 
     INT_SYS_DisableIRQ( g_pdbIrqId[instance] );
-    PDB_HAL_SetDmaCmd(baseAddr, false);
-    PDB_HAL_SetIntCmd(baseAddr, false);
-    PDB_HAL_Disable(baseAddr);
+    PDB_HAL_Disable(base);
     CLOCK_SYS_DisablePdbClock(instance);
+
+    return kStatus_PDB_Success;
 }
 
 /*FUNCTION*********************************************************************
@@ -148,239 +105,268 @@ void PDB_DRV_Deinit(uint32_t instance)
  *END*************************************************************************/
 void PDB_DRV_SoftTriggerCmd(uint32_t instance)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
 
-    PDB_HAL_SetSoftTriggerCmd(baseAddr);
+    PDB_HAL_SetSoftTriggerCmd(base);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : PDB_DRV_GetCurrentCounter
+ * Function Name : PDB_DRV_GetTimerValue
  * Description   : Get the current counter value in PDB module.
  *
  *END*************************************************************************/
-uint32_t PDB_DRV_GetCurrentCounter(uint32_t instance)
+uint32_t PDB_DRV_GetTimerValue(uint32_t instance)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
 
-    return PDB_HAL_GetCounterValue(baseAddr);
+    return PDB_HAL_GetTimerValue(base);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : PDB_DRV_GetPdbCounterIntFlag
+ * Function Name : PDB_DRV_GetTimerIntFlag
  * Description   : Get the interrupt flag for PDB module. It will be
  * asserted if the PDB interrupt occurs.
  *
  *END*************************************************************************/
-bool PDB_DRV_GetPdbCounterIntFlag(uint32_t instance)
+bool PDB_DRV_GetTimerIntFlag(uint32_t instance)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
 
-    return PDB_HAL_GetIntFlag(baseAddr);
+    return PDB_HAL_GetTimerIntFlag(base);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : PDB_DRV_ClearPdbCounterIntFlag
+ * Function Name : PDB_DRV_ClearTimerIntFlag
  * Description   : Clear the interrupt flag for PDB module.
  *
  *END*************************************************************************/
-void PDB_DRV_ClearPdbCounterIntFlag(uint32_t instance)
+void PDB_DRV_ClearTimerIntFlag(uint32_t instance)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
 
-    PDB_HAL_ClearIntFlag(baseAddr);
+    PDB_HAL_ClearTimerIntFlag(base);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : PDB_DRV_EnableAdcPreTrigger
- * Description   : Enable the ADC pre-trigger with its configuration. 
- * The setting value will take effect according to the load mode configured
- * when initializing the PDB, though the load operation has been done inside
- * the function. This is an additional function based on the PDB counter.
+ * Function Name : PDB_DRV_LoadValuesCmd
+ * Description   : Execute the command of loading values.
  *
  *END*************************************************************************/
-pdb_status_t PDB_DRV_EnableAdcPreTrigger(uint32_t instance, uint32_t adcChn, uint32_t preChn,
-        pdb_adc_pre_trigger_config_t *adcPreTriggerConfigPtr)
+void PDB_DRV_LoadValuesCmd(uint32_t instance)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
 
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
-
-    PDB_HAL_SetPreTriggerCmd(baseAddr, adcChn, preChn, true);
-    PDB_HAL_SetPreTriggerBackToBackCmd(baseAddr, adcChn, preChn,
-        adcPreTriggerConfigPtr->backToBackModeEnable);
-    PDB_HAL_SetPreTriggerOutputCmd(baseAddr, adcChn, preChn,
-        adcPreTriggerConfigPtr->preTriggerOutEnable);
-    PDB_HAL_SetPreTriggerDelayCount(baseAddr, adcChn, preChn, 
-        adcPreTriggerConfigPtr->delayValue);
-    PDB_HAL_SetLoadRegsCmd(baseAddr);
-
-    return kStatus_PDB_Success;
+    PDB_HAL_SetLoadValuesCmd(base);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : PDB_DRV_DisableAdcPreTrigger
- * Description   : Disable the ADC pre-trigger. The PDB would work normally
- * as before the pre-trigger had not been enabled.
+ * Function Name : PDB_DRV_SetTimerModulusValue
+ * Description   : Set the value of timer modulus.
  *
  *END*************************************************************************/
-void PDB_DRV_DisableAdcPreTrigger(uint32_t instance, uint32_t adcChn, uint32_t preChn)
+void PDB_DRV_SetTimerModulusValue(uint32_t instance, uint32_t value)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
-
-    PDB_HAL_SetPreTriggerCmd(baseAddr, adcChn, preChn, false);
-}
-
-/*FUNCTION*********************************************************************
- *
- * Function Name : PDB_DRV_GetAdcPreTriggerFlag
- * Description   : Get the flag of ADC pre-trigger for PDB module. It will be
- * asserted if related event occurs.
- *
- *END*************************************************************************/
-bool PDB_DRV_GetAdcPreTriggerFlag(uint32_t instance, uint32_t adcChn, uint32_t preChn,
-    pdb_adc_pre_trigger_flag_t flag)
-{
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
-    bool bRet;
-    switch (flag)
-    {
-    case kPdbAdcPreChnFlag:
-        bRet = PDB_HAL_GetPreTriggerFlag(baseAddr, adcChn, preChn);
-        break;
-    case kPdbAdcPreChnErrFlag:
-        bRet = PDB_HAL_GetPreTriggerSeqErrFlag(baseAddr, adcChn, preChn);
-        break;
-    default:
-        bRet = false;
-        break;
-    }
-    return bRet;
-}
-
-/*FUNCTION*********************************************************************
- *
- * Function Name : PDB_DRV_ClearAdcPreTriggerFlag
- * Description   : Clear the flag of ADC pre-trigger for PDB module.
- *
- *END*************************************************************************/
-void PDB_DRV_ClearAdcPreTriggerFlag(uint32_t instance, uint32_t adcChn, uint32_t preChn,
-    pdb_adc_pre_trigger_flag_t flag)
-{
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
-    switch (flag)
-    {
-    case kPdbAdcPreChnFlag:
-        PDB_HAL_ClearPreTriggerFlag(baseAddr, adcChn, preChn);
-        break;
-    case kPdbAdcPreChnErrFlag:
-        PDB_HAL_ClearPreTriggerSeqErrFlag(baseAddr, adcChn, preChn);
-        break;
-    default:
-        PDB_HAL_ClearPreTriggerFlag(baseAddr, adcChn, preChn);
-        PDB_HAL_ClearPreTriggerSeqErrFlag(baseAddr, adcChn, preChn);
-        break;
-    }
-}
-
-/*FUNCTION*********************************************************************
- *
- * Function Name : PDB_DRV_EnableDacTrigger
- * Description   : Enable the DAC trigger with its configuration.
- * The setting value will take effect according to the load mode configured
- * when initializing the PDB, though the load operation has been done inside
- * the function. This is an additional function based on the PDB counter.
- *
- *END*************************************************************************/
-pdb_status_t PDB_DRV_EnableDacTrigger(uint32_t instance, uint32_t dacChn, pdb_dac_trigger_config_t *dacTriggerConfigPtr)
-{
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
-
-    if (!dacTriggerConfigPtr)
-    {
-        return kStatus_PDB_InvalidArgument;
-    }
-
-    PDB_HAL_SetDacIntervalTriggerCmd(baseAddr, dacChn, true);
-    PDB_HAL_SetDacExtTriggerInputCmd(baseAddr, dacChn, dacTriggerConfigPtr->extTriggerInputEnable);
-    PDB_HAL_SetDacIntervalValue(baseAddr,dacChn, dacTriggerConfigPtr->intervalValue);
-    PDB_HAL_SetLoadRegsCmd(baseAddr);
-
-    return kStatus_PDB_Success;
-}
-
-/*FUNCTION*********************************************************************
- *
- * Function Name : PDB_DRV_DisableDacTrigger
- * Description   : Disable the DAC trigger. The PDB would work normally
- * as before the DAC trigger had not been enabled.
- *
- *END*************************************************************************/
-void PDB_DRV_DisableDacTrigger(uint32_t instance, uint32_t dacChn)
-{
-    assert(instance < HW_PDB_INSTANCE_COUNT);
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
     
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
-
-    PDB_HAL_SetDacIntervalTriggerCmd(baseAddr, dacChn, false);
+    PDB_HAL_SetTimerModulusValue(base, value);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : PDB_DRV_EnablePulseOutTrigger
- * Description   : Enable the pulse out trigger with its configuration. 
- * The setting value will take effect according to the load mode configured
- * when initializing the PDB, though the load operation has been done inside
- * the function. This is an additional function based on the PDB counter.
+ * Function Name : PDB_DRV_SetValueForTimerInterrupt
+ * Description   : Set the value for the timer interrupt.
  *
  *END*************************************************************************/
-pdb_status_t PDB_DRV_EnablePulseOutTrigger(uint32_t instance, uint32_t pulseChn, 
-    pdb_pulse_out_trigger_config_t *pulseOutTriggerConfigPtr)
+void PDB_DRV_SetValueForTimerInterrupt(uint32_t instance, uint32_t value)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    PDB_HAL_SetValueForTimerInterrupt(base, value);
+}
 
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
-
-    PDB_HAL_SetPulseOutCmd(baseAddr, pulseChn, true);
-    PDB_HAL_SetPulseOutDelayForHigh(baseAddr, pulseChn, 
-        pulseOutTriggerConfigPtr->pulseOutHighValue);
-    PDB_HAL_SetPulseOutDelayForLow(baseAddr, pulseChn, 
-        pulseOutTriggerConfigPtr->pulseOutLowValue);
-    PDB_HAL_SetLoadRegsCmd(baseAddr);
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_ConfigAdcPreTrigger
+ * Description   : Configure the ADC pre_trigger in the PDB module.
+ *
+ *END*************************************************************************/
+pdb_status_t PDB_DRV_ConfigAdcPreTrigger(uint32_t instance, uint32_t chn, const pdb_adc_pretrigger_config_t *configPtr)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    if (!configPtr)
+    {
+        return kStatus_PDB_InvalidArgument; 
+    }
+    
+    PDB_HAL_SetAdcPreTriggerEnable(base, chn, 1U << (configPtr->adcPreTriggerIdx), configPtr->preTriggerEnable);
+    PDB_HAL_SetAdcPreTriggerOutputEnable(base, chn, 1U << (configPtr->adcPreTriggerIdx), configPtr->preTriggerOutputEnable);
+    PDB_HAL_SetAdcPreTriggerBackToBackEnable(base, chn, 1U << (configPtr->adcPreTriggerIdx), configPtr->preTriggerBackToBackEnable);
+    
     return kStatus_PDB_Success;
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : PDB_DRV_DisablePulseOutTrigger
- * Description   : Disable the pulse out trigger. The PDB would work normally
- * as before the pulse out trigger had not been enabled.
+ * Function Name : PDB_DRV_GetAdcPreTriggerFlags
+ * Description   : Get the ADC pre_trigger flag in the PDB module.
  *
  *END*************************************************************************/
-void PDB_DRV_DisablePulseOutTrigger(uint32_t instance, uint32_t pulseChn)
+uint32_t PDB_DRV_GetAdcPreTriggerFlags(uint32_t instance, uint32_t chn, uint32_t preChnMask)
 {
-    assert(instance < HW_PDB_INSTANCE_COUNT);
-
-    uint32_t baseAddr = g_pdbBaseAddr[instance];
-
-    PDB_HAL_SetPulseOutCmd(baseAddr, pulseChn, false);
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    return PDB_HAL_GetAdcPreTriggerFlags(base, chn, preChnMask);
 }
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_ClearAdcPreTriggerFlags
+ * Description   : Clear the ADC pre_trigger flag in the PDB module.
+ *
+ *END*************************************************************************/
+void PDB_DRV_ClearAdcPreTriggerFlags(uint32_t instance, uint32_t chn, uint32_t preChnMask)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    PDB_HAL_ClearAdcPreTriggerFlags(base, chn, preChnMask);
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_GetAdcPreTriggerSeqErrFlags
+ * Description   : Get the ADC pre_trigger flag in the PDB module.
+ *
+ *END*************************************************************************/
+uint32_t PDB_DRV_GetAdcPreTriggerSeqErrFlags(uint32_t instance, uint32_t chn, uint32_t preChnMask)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    return PDB_HAL_GetAdcPreTriggerSeqErrFlags(base, chn, preChnMask);
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_ClearAdcPreTriggerSeqErrFlags
+ * Description   : Clear the ADC pre_trigger flag in the PDB module.
+ *
+ *END*************************************************************************/
+void PDB_DRV_ClearAdcPreTriggerSeqErrFlags(uint32_t instance, uint32_t chn, uint32_t preChnMask)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+
+    PDB_HAL_ClearAdcPreTriggerSeqErrFlags(base, chn, preChnMask);
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_SetAdcPreTriggerDelayValue
+ * Description   : Set the ADC pre_trigger delay value in the PDB module.
+ *
+ *END*************************************************************************/
+void PDB_DRV_SetAdcPreTriggerDelayValue(uint32_t instance, uint32_t chn, uint32_t preChn, uint32_t value)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    PDB_HAL_SetAdcPreTriggerDelayValue(base, chn, preChn, value);
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_ConfigDacInterval
+ * Description   : Configure the DAC interval in the PDB module.
+ *
+ *END*************************************************************************/
+pdb_status_t PDB_DRV_ConfigDacInterval(uint32_t instance, uint32_t dacChn, const pdb_dac_interval_config_t *configPtr)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    if (!configPtr)
+    {
+        return kStatus_PDB_InvalidArgument; 
+    }
+    
+    PDB_HAL_SetDacIntervalTriggerEnable(base, dacChn, configPtr->intervalTriggerEnable);
+    PDB_HAL_SetDacExtTriggerInputEnable(base, dacChn, configPtr->extTriggerInputEnable);
+    
+    return kStatus_PDB_Success;
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_SetDacIntervalValue
+ * Description   : Set the DAC interval value in the PDB module.
+ *
+ *END*************************************************************************/
+void PDB_DRV_SetDacIntervalValue(uint32_t instance, uint32_t dacChn, uint32_t value)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    PDB_HAL_SetDacIntervalValue(base, dacChn, value);
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_SetCmpPulseOutEnable
+ * Description   : Switch on/off the CMP pulse out in the PDB module.
+ *
+ *END*************************************************************************/
+void PDB_DRV_SetCmpPulseOutEnable(uint32_t instance, uint32_t pulseChnMask, bool enable)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    PDB_HAL_SetCmpPulseOutEnable(base, pulseChnMask, enable);
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_SetCmpPulseOutDelayForHigh
+ * Description   : Set the CMP pulse out delay value for high in the PDB module.
+ *
+ *END*************************************************************************/
+void PDB_DRV_SetCmpPulseOutDelayForHigh(uint32_t instance, uint32_t pulseChn, uint32_t value)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    PDB_HAL_SetCmpPulseOutDelayForHigh(base, pulseChn, value);
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : PDB_DRV_SetCmpPulseOutDelayForLow
+ * Description   : Set the CMP pulse out delay value for low in the PDB module.
+ *
+ *END*************************************************************************/
+void PDB_DRV_SetCmpPulseOutDelayForLow(uint32_t instance, uint32_t pulseChn, uint32_t value)
+{
+    assert(instance < PDB_INSTANCE_COUNT);
+    PDB_Type * base = g_pdbBase[instance];
+    
+    PDB_HAL_SetCmpPulseOutDelayForLow(base, pulseChn, value);
+}
+#endif
 
 /*******************************************************************************
  * EOF

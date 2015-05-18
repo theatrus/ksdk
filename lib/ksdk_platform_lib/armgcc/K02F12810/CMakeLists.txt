@@ -22,33 +22,38 @@ SET(CMAKE_EXECUTABLE_LIBRARY_SUFFIX)
 SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
 
 # C MACRO
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DDEBUG")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MK02FN64VLH10")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MK02FN128VFM10")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFRDM_KL02Z")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFREEDOM")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DNDEBUG")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MK02FN64VLH10")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MK02FN128VFM10")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFRDM_KL02Z")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFREEDOM")
 
 # CXX MACRO
 
 # INCLUDE_DIRECTORIES
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include/device)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MK02F12810)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK02F12810/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK02F12810/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/drivers/inc)
@@ -56,8 +61,9 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/osa/inc)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include/device)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MK02F12810)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK02F12810/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK02F12810/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/drivers/inc)
@@ -112,7 +118,7 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/dspi/fsl_dspi_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_dspi_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_shared_function.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_shared_function.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_shared_function.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_common.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_master_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_master_driver.c"
@@ -123,7 +129,7 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_slave_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_slave_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_shared_function.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_shared_function.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_shared_function.h"
     "${ProjDirPath}/../../../../platform/hal/src/ftm/fsl_ftm_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_ftm_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/ftm/fsl_ftm_driver.c"
@@ -137,7 +143,7 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/i2c/fsl_i2c_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_i2c_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_shared_function.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_shared_function.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_i2c_shared_function.h"
     "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_common.c"
     "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_master_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_i2c_master_driver.h"
@@ -164,7 +170,6 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/pit/fsl_pit_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_pit_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/pit/fsl_pit_driver.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/pit/fsl_pit_irq.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_pit_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/pit/fsl_pit_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/port/fsl_port_hal.c"
@@ -174,7 +179,6 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/sim/MK02F12810/fsl_sim_hal_MK02F12810.h"
     "${ProjDirPath}/../../../../platform/hal/src/smc/fsl_smc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_smc_hal.h"
-    "${ProjDirPath}/../../../../platform/hal/src/pmc/fsl_pmc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_pmc_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/rcm/fsl_rcm_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_rcm_hal.h"
@@ -190,6 +194,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/wdog/fsl_wdog_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_wdog_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/wdog/fsl_wdog_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/vref/fsl_vref_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_vref_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_vref_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/vref/fsl_vref_common.c"
+    "${ProjDirPath}/../../../../platform/drivers/src/vref/fsl_vref_driver.c"
 )
 
 SET_TARGET_PROPERTIES(KsdkPlatformLib PROPERTIES OUTPUT_NAME "libksdk_platform.a")

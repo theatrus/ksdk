@@ -34,6 +34,11 @@
 #include "fsl_os_abstraction.h"
 #include "fsl_interrupt_manager.h"
 
+/*! @brief Converts milliseconds to ticks*/
+#define MSEC_TO_TICK(msec)  (((uint32_t)(msec)+500uL/(uint32_t)configTICK_RATE_HZ) \
+                             *(uint32_t)configTICK_RATE_HZ/1000uL)
+#define TICKS_TO_MSEC(tick) ((tick)*1000uL/(uint32_t)configTICK_RATE_HZ)
+
 /*FUNCTION**********************************************************************
  *
  * Function Name : OSA_SemaCreate
@@ -78,7 +83,7 @@ osa_status_t OSA_SemaWait(semaphore_t *pSem, uint32_t timeout)
     }
     else
     {
-        timeoutTicks = timeout/portTICK_RATE_MS;
+        timeoutTicks = MSEC_TO_TICK(timeout);
     }
 
     if (xSemaphoreTake(*pSem, timeoutTicks)==pdFALSE)
@@ -215,7 +220,7 @@ osa_status_t OSA_MutexLock(mutex_t *pMutex, uint32_t timeout)
     }
     else
     {
-        timeoutTicks = timeout/portTICK_RATE_MS;
+        timeoutTicks = MSEC_TO_TICK(timeout);
     }
 
     if (xSemaphoreTake(*pMutex, timeoutTicks)==pdFALSE)
@@ -622,7 +627,7 @@ osa_status_t OSA_MsgQGet(msg_queue_handler_t handler,
     }
     else
     {
-        timeoutTicks = timeout/portTICK_RATE_MS;
+        timeoutTicks = MSEC_TO_TICK(timeout);
     }
     if (xQueueReceive(handler, pMessage, timeoutTicks)!=pdPASS)
     {
@@ -699,7 +704,7 @@ osa_status_t OSA_MemFree(void *ptr)
  *END**************************************************************************/
 void OSA_TimeDelay(uint32_t delay)
 {
-    vTaskDelay(delay/portTICK_RATE_MS);
+    vTaskDelay(MSEC_TO_TICK(delay));
 }
 
 /*FUNCTION**********************************************************************
@@ -721,21 +726,25 @@ uint32_t OSA_TimeGetMsec(void)
         ticks = xTaskGetTickCount();
     }
 
-    return ticks * portTICK_RATE_MS;
+    return TICKS_TO_MSEC(ticks);
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : OSA_InstallIntHandler
  * Description   : This function is used to install interrupt handler.
- * For FreeRTOS, this function will always return kStatus_OSA_Success.
  *
  *END**************************************************************************/
-osa_status_t OSA_InstallIntHandler(int32_t IRQNumber, void (*handler)(void))
+osa_int_handler_t OSA_InstallIntHandler(int32_t IRQNumber,
+                                        osa_int_handler_t handler)
 {
-    INT_SYS_InstallHandler((IRQn_Type)IRQNumber, handler);
-
-    return kStatus_OSA_Success;
+#if defined ( __IAR_SYSTEMS_ICC__ )
+_Pragma ("diag_suppress = Pm138")
+#endif
+    return (osa_int_handler_t)INT_SYS_InstallHandler((IRQn_Type)IRQNumber, handler);
+#if defined ( __IAR_SYSTEMS_ICC__ )
+_Pragma ("diag_remark = PM138")
+#endif
 }
 
 /*FUNCTION**********************************************************************

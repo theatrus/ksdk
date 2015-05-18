@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,10 +29,63 @@
  */
 
 #include "fsl_llwu_hal.h"
+#if FSL_FEATURE_SOC_LLWU_COUNT
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+// Has PIN0 ~ PIN3
+#define LLWU_HAS_PIN_0_3 \
+    (FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN0 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN1 | \
+     FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN2 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN3)
+// Has PIN4 ~ PIN7
+#define LLWU_HAS_PIN_4_7 \
+    (FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN4 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN5 | \
+     FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN6 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN7)
+// Has PIN8 ~ PIN11
+#define LLWU_HAS_PIN_8_11 \
+    (FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN8 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN9 | \
+     FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN10 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN11)
+// Has PIN12 ~ PIN15
+#define LLWU_HAS_PIN_12_15 \
+    (FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN12 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN13 | \
+     FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN14 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN15)
+// Has PIN16 ~ PIN19
+#define LLWU_HAS_PIN_16_19 \
+    (FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN16 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN17 | \
+     FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN18 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN19)
+// Has PIN20 ~ PIN23
+#define LLWU_HAS_PIN_20_23 \
+    (FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN20 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN21 | \
+     FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN22 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN23)
+// Has PIN24 ~ PIN27
+#define LLWU_HAS_PIN_24_27 \
+    (FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN24 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN25 | \
+     FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN26 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN27)
+// Has PIN28 ~ PIN31
+#define LLWU_HAS_PIN_28_31 \
+    (FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN28 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN29 | \
+     FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN30 | FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN31)
+
+// Has PIN0 ~ PIN7
+#define LLWU_HAS_PIN_0_7   \
+    (LLWU_HAS_PIN_0_3   | LLWU_HAS_PIN_4_7)
+// Has PIN8 ~ PIN15
+#define LLWU_HAS_PIN_8_15  \
+    (LLWU_HAS_PIN_8_11  | LLWU_HAS_PIN_12_15)
+// Has PIN16 ~ PIN23
+#define LLWU_HAS_PIN_16_23 \
+    (LLWU_HAS_PIN_16_19 | LLWU_HAS_PIN_20_23)
+// Has PIN24 ~ PIN31
+#define LLWU_HAS_PIN_24_31 \
+    (LLWU_HAS_PIN_24_27 | LLWU_HAS_PIN_28_31)
+
+// Has PIN0 ~ PIN15
+#define LLWU_HAS_PIN_0_15   \
+    (LLWU_HAS_PIN_0_7   | LLWU_HAS_PIN_8_15)
+// Has PIN16 ~ PIN31
+#define LLWU_HAS_PIN_16_31 \
+    (LLWU_HAS_PIN_16_23 | LLWU_HAS_PIN_24_31)
 
 /*******************************************************************************
  * Code
@@ -47,358 +100,88 @@
  * as wake up source.
  * 
  *END**************************************************************************/
-void LLWU_HAL_SetExternalInputPinMode(uint32_t baseAddr,
+void LLWU_HAL_SetExternalInputPinMode(LLWU_Type * base,
                                       llwu_external_pin_modes_t pinMode,
                                       llwu_wakeup_pin_t pinNumber)
 {
-    switch (pinNumber)
+    /*-------------------------------------------------------------------------
+      In 8-bit control register, every 2-bit controls one external pin. To set
+      the proper register bit field, need to calculate the register and shift in
+      register base on pinNumber.
+
+                  X   X   X   X   X   X | X   X           <-- pinNumber
+                  ----------------------|------
+                  Used to get register  | Used to get shift in register
+
+      Register: pinNumber>>2;
+      Shift in register: (pinNumber & 0b11) << 1;
+
+      For example, if pinNumber=1 (WUPE1), register and shift are like this
+      -------------------------------------------------
+      |   WUPE3   |   WUPE2   |   WUPE1   |   WUPE0   |   <-- Register
+      -------------------------------------------------
+                                          ^
+                                          | Shift in register.
+
+          0    0      0    0      1    1      0    0      <-- Bit mask.
+
+    --------------------------------------------------------------------------*/
+    uint32_t shiftInReg = (((uint8_t)pinNumber)&0x03U) << 1U;
+    uint32_t bitMask    = 0x03U << shiftInReg;
+
+    switch ((uint8_t)pinNumber >> 2U) // Which register to write to.
     {
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN0
-    case 0:
-        BW_LLWU_PE1_WUPE0(baseAddr, pinMode);
-        break;
+#if (LLWU_HAS_PIN_0_3)
+        case 0:
+            LLWU_WR_PE1(base,
+                    ((LLWU_RD_PE1(base) & ~bitMask) | ((uint32_t)pinMode << shiftInReg)));
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN1
-    case 1:
-        BW_LLWU_PE1_WUPE1(baseAddr, pinMode);
-        break;
+#if (LLWU_HAS_PIN_4_7)
+        case 1:
+            LLWU_WR_PE2(base,
+                    ((LLWU_RD_PE2(base) & ~bitMask) | ((uint32_t)pinMode << shiftInReg)));
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN2
-    case 2:
-        BW_LLWU_PE1_WUPE2(baseAddr, pinMode);
-        break;
+#if (LLWU_HAS_PIN_8_11)
+        case 2:
+            LLWU_WR_PE3(base,
+                    ((LLWU_RD_PE3(base) & ~bitMask) | ((uint32_t)pinMode << shiftInReg)));
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN3
-    case 3:
-        BW_LLWU_PE1_WUPE3(baseAddr, pinMode);
-        break;
+#if (LLWU_HAS_PIN_12_15)
+        case 3:
+            LLWU_WR_PE4(base,
+                    ((LLWU_RD_PE4(base) & ~bitMask) | ((uint32_t)pinMode << shiftInReg)));
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN4
-    case 4:
-        BW_LLWU_PE2_WUPE4(baseAddr, pinMode);
-        break;
+#if (LLWU_HAS_PIN_16_19)
+        case 4:
+            LLWU_WR_PE5(base,
+                    ((LLWU_RD_PE5(base) & ~bitMask) | ((uint32_t)pinMode << shiftInReg)));
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN5
-    case 5:
-        BW_LLWU_PE2_WUPE5(baseAddr, pinMode);
-        break;
+#if (LLWU_HAS_PIN_20_23)
+        case 5:
+            LLWU_WR_PE6(base,
+                    ((LLWU_RD_PE6(base) & ~bitMask) | ((uint32_t)pinMode << shiftInReg)));
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN6
-    case 6:
-        BW_LLWU_PE2_WUPE6(baseAddr, pinMode);
-        break;
+#if (LLWU_HAS_PIN_24_27)
+        case 6:
+            LLWU_WR_PE7(base,
+                    ((LLWU_RD_PE7(base) & ~bitMask) | ((uint32_t)pinMode << shiftInReg)));
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN7
-    case 7:
-        BW_LLWU_PE2_WUPE7(baseAddr, pinMode);
-        break;
+#if (LLWU_HAS_PIN_28_31)
+        case 7:
+            LLWU_WR_PE8(base,
+                    ((LLWU_RD_PE8(base) & ~bitMask) | ((uint32_t)pinMode << shiftInReg)));
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN8
-    case 8:
-        BW_LLWU_PE3_WUPE8(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN9
-    case 9:
-        BW_LLWU_PE3_WUPE9(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN10
-    case 10:
-        BW_LLWU_PE3_WUPE10(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN11
-    case 11:
-        BW_LLWU_PE3_WUPE11(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN12
-    case 12:
-        BW_LLWU_PE4_WUPE12(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN13
-    case 13:
-        BW_LLWU_PE4_WUPE13(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN14
-    case 14:
-        BW_LLWU_PE4_WUPE14(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN15
-    case 15:
-        BW_LLWU_PE4_WUPE15(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN16
-    case 16:
-        BW_LLWU_PE5_WUPE16(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN17
-    case 17:
-        BW_LLWU_PE5_WUPE17(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN18
-    case 18:
-        BW_LLWU_PE5_WUPE18(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN19
-    case 19:
-        BW_LLWU_PE5_WUPE19(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN20
-    case 20:
-        BW_LLWU_PE6_WUPE20(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN21
-    case 21:
-        BW_LLWU_PE6_WUPE21(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN22
-    case 22:
-        BW_LLWU_PE6_WUPE22(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN23
-    case 23:
-        BW_LLWU_PE6_WUPE23(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN24
-    case 24:
-        BW_LLWU_PE7_WUPE24(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN25
-    case 25:
-        BW_LLWU_PE7_WUPE25(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN26
-    case 26:
-        BW_LLWU_PE7_WUPE26(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN27
-    case 27:
-        BW_LLWU_PE7_WUPE27(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN28
-    case 28:
-        BW_LLWU_PE8_WUPE28(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN29
-    case 29:
-        BW_LLWU_PE8_WUPE29(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN30
-    case 30:
-        BW_LLWU_PE8_WUPE30(baseAddr, pinMode);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN31
-    case 31:
-        BW_LLWU_PE8_WUPE31(baseAddr, pinMode);
-        break;
-#endif
-    default:
-        break;
+        default:
+            break;
     }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : LLWU_HAL_GetExternalInputPinMode
- * Description   : Get external input pin source mode
- * This function will get the external input pin source mode that will be used
- * as wake up source.
- * 
- *END**************************************************************************/
-llwu_external_pin_modes_t LLWU_HAL_GetExternalInputPinMode(uint32_t baseAddr,
-                                                           llwu_wakeup_pin_t pinNumber)
-{
-    llwu_external_pin_modes_t retValue;
-
-    switch (pinNumber)
-    {
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN0
-    case 0:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE1_WUPE0(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN1
-    case 1:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE1_WUPE1(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN2
-    case 2:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE1_WUPE2(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN3
-    case 3:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE1_WUPE3(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN4
-    case 4:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE2_WUPE4(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN5
-    case 5:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE2_WUPE5(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN6
-    case 6:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE2_WUPE6(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN7
-    case 7:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE2_WUPE7(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN8
-    case 8:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE3_WUPE8(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN9
-    case 9:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE3_WUPE9(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN10
-    case 10:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE3_WUPE10(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN11
-    case 11:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE3_WUPE11(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN12
-    case 12:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE4_WUPE12(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN13
-    case 13:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE4_WUPE13(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN14
-    case 14:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE4_WUPE14(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN15
-    case 15:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE4_WUPE15(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN16
-    case 16:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE5_WUPE16(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN17
-    case 17:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE5_WUPE17(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN18
-    case 18:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE5_WUPE18(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN19
-    case 19:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE5_WUPE19(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN20
-    case 20:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE6_WUPE20(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN21
-    case 21:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE6_WUPE21(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN22
-    case 22:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE6_WUPE22(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN23
-    case 23:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE6_WUPE23(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN24
-    case 24:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE7_WUPE24(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN25
-    case 25:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE7_WUPE25(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN26
-    case 26:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE7_WUPE26(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN27
-    case 27:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE7_WUPE27(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN28
-    case 28:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE8_WUPE28(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN29
-    case 29:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE8_WUPE29(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN30
-    case 30:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE8_WUPE30(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN31
-    case 31:
-        retValue = (llwu_external_pin_modes_t)BR_LLWU_PE8_WUPE31(baseAddr);
-        break;
-#endif
-    default:
-        retValue = (llwu_external_pin_modes_t)0;
-        break;
-    }
-
-    return retValue;
 }
 #endif
 
@@ -411,131 +194,34 @@ llwu_external_pin_modes_t LLWU_HAL_GetExternalInputPinMode(uint32_t baseAddr,
  * be used as wake up source. 
  * 
  *END**************************************************************************/
-void LLWU_HAL_SetInternalModuleCmd(uint32_t baseAddr, llwu_wakeup_module_t moduleNumber, bool enable)
+void LLWU_HAL_SetInternalModuleCmd(LLWU_Type * base, llwu_wakeup_module_t moduleNumber, bool enable)
 {
-    switch (moduleNumber)
+    uint32_t bitMask = 1U << (uint8_t)moduleNumber;
+
+    if (enable)
     {
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE0
-    case 0:
-        BW_LLWU_ME_WUME0(baseAddr, enable);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE1
-    case 1:
-        BW_LLWU_ME_WUME1(baseAddr, enable);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE2
-    case 2:
-        BW_LLWU_ME_WUME2(baseAddr, enable);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE3
-    case 3:
-        BW_LLWU_ME_WUME3(baseAddr, enable);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE4
-    case 4:
-        BW_LLWU_ME_WUME4(baseAddr, enable);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE5
-    case 5:
-        BW_LLWU_ME_WUME5(baseAddr, enable);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE6
-    case 6:
-        BW_LLWU_ME_WUME6(baseAddr, enable);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE7
-    case 7:
-        BW_LLWU_ME_WUME7(baseAddr, enable);
-        break;
-#endif
-    default:
-        break;
+        LLWU_WR_ME(base, (LLWU_RD_ME(base) | bitMask));
     }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : LLWU_HAL_GetInternalModuleCmd
- * Description   : Get internal module source enable setting
- * This function will enable/disable the internal module source mode that will 
- * be used as wake up source. 
- * 
- *END**************************************************************************/
-bool LLWU_HAL_GetInternalModuleCmd(uint32_t baseAddr, llwu_wakeup_module_t moduleNumber)
-{
-    bool retValue;
-
-    switch (moduleNumber)
+    else
     {
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE0
-    case 0:
-        retValue = (bool)BR_LLWU_ME_WUME0(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE1
-    case 1:
-        retValue = (bool)BR_LLWU_ME_WUME1(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE2
-    case 2:
-        retValue = (bool)BR_LLWU_ME_WUME2(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE3
-    case 3:
-        retValue = (bool)BR_LLWU_ME_WUME3(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE4
-    case 4:
-        retValue = (bool)BR_LLWU_ME_WUME4(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE5
-    case 5:
-        retValue = (bool)BR_LLWU_ME_WUME5(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE6
-    case 6:
-        retValue = (bool)BR_LLWU_ME_WUME6(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE7
-    case 7:
-        retValue = (bool)BR_LLWU_ME_WUME7(baseAddr);
-        break;
-#endif
-    default:
-        retValue = false;
-        break;
+        LLWU_WR_ME(base, (LLWU_RD_ME(base) & ~bitMask));
     }
-
-    return retValue;
 }
 #endif
 
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN
 
 /* For some platforms register LLWU_PF is used instead of LLWU_F. */
-#if defined(BR_LLWU_PF1_WUF0)
-#define BR_LLWU_PIN_FLAG(reg, index) BR_LLWU_PF##reg##_WUF##index
+#if defined(LLWU_BRD_PF1_WUF0)
+#define LLWU_RD_PINFLAG(reg) LLWU_RD_PF##reg
 #else
-#define BR_LLWU_PIN_FLAG(reg, index) BR_LLWU_F##reg##_WUF##index
+#define LLWU_RD_PINFLAG(reg) LLWU_RD_F##reg
 #endif
 
-#if defined(BW_LLWU_PF1_WUF0)
-#define BW_LLWU_PIN_FLAG(reg, index) BW_LLWU_PF##reg##_WUF##index
+#if defined(LLWU_BWR_PF1_WUF0)
+#define LLWU_WR_PINFLAG(reg) LLWU_WR_PF##reg
 #else
-#define BW_LLWU_PIN_FLAG(reg, index) BW_LLWU_F##reg##_WUF##index
+#define LLWU_WR_PINFLAG(reg) LLWU_WR_F##reg
 #endif
 
 /*FUNCTION**********************************************************************
@@ -545,177 +231,37 @@ bool LLWU_HAL_GetInternalModuleCmd(uint32_t baseAddr, llwu_wakeup_module_t modul
  * This function will get the external wakeup source flag for specific pin. 
  * 
  *END**************************************************************************/
-bool LLWU_HAL_GetExternalPinWakeupFlag(uint32_t baseAddr, llwu_wakeup_pin_t pinNumber)
+bool LLWU_HAL_GetExternalPinWakeupFlag(LLWU_Type * base, llwu_wakeup_pin_t pinNumber)
 {
-    bool retValue = false;
-    switch (pinNumber)
-    {
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN0
-    case 0:
-        retValue = (bool)BR_LLWU_PIN_FLAG(1,0)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN1
-    case 1:
-        retValue = (bool)BR_LLWU_PIN_FLAG(1,1)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN2
-    case 2:
-        retValue = (bool)BR_LLWU_PIN_FLAG(1,2)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN3
-    case 3:
-        retValue = (bool)BR_LLWU_PIN_FLAG(1,3)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN4
-    case 4:
-        retValue = (bool)BR_LLWU_PIN_FLAG(1,4)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN5
-    case 5:
-        retValue = (bool)BR_LLWU_PIN_FLAG(1,5)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN6
-    case 6:
-        retValue = (bool)BR_LLWU_PIN_FLAG(1,6)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN7
-    case 7:
-        retValue = (bool)BR_LLWU_PIN_FLAG(1,7)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN8
-    case 8:
-        retValue = (bool)BR_LLWU_PIN_FLAG(2,8)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN9
-    case 9:
-        retValue = (bool)BR_LLWU_PIN_FLAG(2,9)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN10
-    case 10:
-        retValue = (bool)BR_LLWU_PIN_FLAG(2,10)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN11
-    case 11:
-        retValue = (bool)BR_LLWU_PIN_FLAG(2,11)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN12
-    case 12:
-        retValue = (bool)BR_LLWU_PIN_FLAG(2,12)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN13
-    case 13:
-        retValue = (bool)BR_LLWU_PIN_FLAG(2,13)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN14
-    case 14:
-        retValue = (bool)BR_LLWU_PIN_FLAG(2,14)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN15
-    case 15:
-        retValue = (bool)BR_LLWU_PIN_FLAG(2,15)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN16
-    case 16:
-        retValue = (bool)BR_LLWU_PIN_FLAG(3,16)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN17
-    case 17:
-        retValue = (bool)BR_LLWU_PIN_FLAG(3,17)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN18
-    case 18:
-        retValue = (bool)BR_LLWU_PIN_FLAG(3,18)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN19
-    case 19:
-        retValue = (bool)BR_LLWU_PIN_FLAG(3,19)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN20
-    case 20:
-        retValue = (bool)BR_LLWU_PIN_FLAG(3,20)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN21
-    case 21:
-        retValue = (bool)BR_LLWU_PIN_FLAG(3,21)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN22
-    case 22:
-        retValue = (bool)BR_LLWU_PIN_FLAG(3,22)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN23
-    case 23:
-        retValue = (bool)BR_LLWU_PIN_FLAG(3,23)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN24
-    case 24:
-        retValue = (bool)BR_LLWU_PIN_FLAG(4,24)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN25
-    case 25:
-        retValue = (bool)BR_LLWU_PIN_FLAG(4,25)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN26
-    case 26:
-        retValue = (bool)BR_LLWU_PIN_FLAG(4,26)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN27
-    case 27:
-        retValue = (bool)BR_LLWU_PIN_FLAG(4,27)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN28
-    case 28:
-        retValue = (bool)BR_LLWU_PIN_FLAG(4,28)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN29
-    case 29:
-        retValue = (bool)BR_LLWU_PIN_FLAG(4,29)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN30
-    case 30:
-        retValue = (bool)BR_LLWU_PIN_FLAG(4,30)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN31
-    case 31:
-        retValue = (bool)BR_LLWU_PIN_FLAG(4,31)(baseAddr);
-        break;
-#endif
-    default:
-        retValue = false;
-        break;
-    }
+    uint8_t bitMask  = 0U;
+    uint8_t bitInReg = 1U << ((uint8_t)pinNumber & 0x07U); // Which bit to check.
 
-    return retValue;
+    switch (((uint32_t)pinNumber) >> 3U) // Which register to check.
+    {
+#if (LLWU_HAS_PIN_0_7)
+        case 0: // PIN0 ~ PIN7
+            bitMask = LLWU_RD_PINFLAG(1)(base);
+            break;
+#endif
+#if (LLWU_HAS_PIN_8_15)
+        case 1: // PIN8 ~ PIN15
+            bitMask = LLWU_RD_PINFLAG(2)(base);
+            break;
+#endif
+#if (LLWU_HAS_PIN_16_23)
+        case 2: // PIN16 ~ PIN23
+            bitMask = LLWU_RD_PINFLAG(3)(base);
+            break;
+#endif
+#if (LLWU_HAS_PIN_24_31)
+        case 3: // PIN24 ~ PIN31
+            bitMask = LLWU_RD_PINFLAG(4)(base);
+            break;
+#endif
+        default:
+            break;
+    }
+    return (bitInReg & bitMask) ? true : false;
 }
 
 /*FUNCTION**********************************************************************
@@ -725,183 +271,44 @@ bool LLWU_HAL_GetExternalPinWakeupFlag(uint32_t baseAddr, llwu_wakeup_pin_t pinN
  * This function will clear the external wakeup source flag for specific pin.
  * 
  *END**************************************************************************/
-void LLWU_HAL_ClearExternalPinWakeupFlag(uint32_t baseAddr, llwu_wakeup_pin_t pinNumber)
+void LLWU_HAL_ClearExternalPinWakeupFlag(LLWU_Type * base, llwu_wakeup_pin_t pinNumber)
 {
-    switch (pinNumber)
+    uint8_t bitInReg = 1U << ((uint8_t)pinNumber & 0x07U); // Which bit to clear.
+
+    switch (((uint32_t)pinNumber) >> 3U) // Which register to check.
     {
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN0
-    case 0:
-        BW_LLWU_PIN_FLAG(1,0)(baseAddr, 1);
-        break;
+#if (LLWU_HAS_PIN_0_7)
+        case 0: // PIN0 ~ PIN7
+            LLWU_WR_PINFLAG(1)(base, bitInReg);
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN1
-    case 1:
-        BW_LLWU_PIN_FLAG(1,1)(baseAddr, 1);
-        break;
+#if (LLWU_HAS_PIN_8_15)
+        case 1: // PIN8 ~ PIN15
+            LLWU_WR_PINFLAG(2)(base, bitInReg);
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN2
-    case 2:
-        BW_LLWU_PIN_FLAG(1,2)(baseAddr, 1);
-        break;
+#if (LLWU_HAS_PIN_16_23)
+        case 2: // PIN16 ~ PIN23
+            LLWU_WR_PINFLAG(3)(base, bitInReg);
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN3
-    case 3:
-        BW_LLWU_PIN_FLAG(1,3)(baseAddr, 1);
-        break;
+#if (LLWU_HAS_PIN_24_31)
+        case 3: // PIN24 ~ PIN31
+            LLWU_WR_PINFLAG(4)(base, bitInReg);
+            break;
 #endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN4
-    case 4:
-        BW_LLWU_PIN_FLAG(1,4)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN5
-    case 5:
-        BW_LLWU_PIN_FLAG(1,5)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN6
-    case 6:
-        BW_LLWU_PIN_FLAG(1,6)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN7
-    case 7:
-        BW_LLWU_PIN_FLAG(1,7)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN8
-    case 8:
-        BW_LLWU_PIN_FLAG(2,8)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN9
-    case 9:
-        BW_LLWU_PIN_FLAG(2,9)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN10
-    case 10:
-        BW_LLWU_PIN_FLAG(2,10)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN11
-    case 11:
-        BW_LLWU_PIN_FLAG(2,11)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN12
-    case 12:
-        BW_LLWU_PIN_FLAG(2,12)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN13
-    case 13:
-        BW_LLWU_PIN_FLAG(2,13)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN14
-    case 14:
-        BW_LLWU_PIN_FLAG(2,14)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN15
-    case 15:
-        BW_LLWU_PIN_FLAG(2,15)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN16
-    case 16:
-        BW_LLWU_PIN_FLAG(3,16)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN17
-    case 17:
-        BW_LLWU_PIN_FLAG(3,17)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN18
-    case 18:
-        BW_LLWU_PIN_FLAG(3,18)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN19
-    case 19:
-        BW_LLWU_PIN_FLAG(3,19)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN20
-    case 20:
-        BW_LLWU_PIN_FLAG(3,20)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN21
-    case 21:
-        BW_LLWU_PIN_FLAG(3,21)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN22
-    case 22:
-        BW_LLWU_PIN_FLAG(3,22)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN23
-    case 23:
-        BW_LLWU_PIN_FLAG(3,23)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN24
-    case 24:
-        BW_LLWU_PIN_FLAG(4,24)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN25
-    case 25:
-        BW_LLWU_PIN_FLAG(4,25)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN26
-    case 26:
-        BW_LLWU_PIN_FLAG(4,26)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN27
-    case 27:
-        BW_LLWU_PIN_FLAG(4,27)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN28
-    case 28:
-        BW_LLWU_PIN_FLAG(4,28)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN29
-    case 29:
-        BW_LLWU_PIN_FLAG(4,29)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN30
-    case 30:
-        BW_LLWU_PIN_FLAG(4,30)(baseAddr, 1);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN31
-    case 31:
-        BW_LLWU_PIN_FLAG(4,31)(baseAddr, 1);
-        break;
-#endif
-    default:
-        break;
+        default:
+            break;
     }
 }
 #endif
 
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE
 
-/* If LLWU_MF is used. */
 #if FSL_FEATURE_LLWU_HAS_MF
-#define BR_LLWU_MODULE_FLAG(index) BR_LLWU_MF5_MWUF##index
+#define LLWU_RD_MODULE_FLAG LLWU_RD_MF5
 #else
-#define BR_LLWU_MODULE_FLAG(index) BR_LLWU_F3_MWUF##index
+#define LLWU_RD_MODULE_FLAG LLWU_RD_F3
 #endif
 
 /*FUNCTION**********************************************************************
@@ -912,58 +319,11 @@ void LLWU_HAL_ClearExternalPinWakeupFlag(uint32_t baseAddr, llwu_wakeup_pin_t pi
  * module
  * 
  *END**************************************************************************/
-bool LLWU_HAL_GetInternalModuleWakeupFlag(uint32_t baseAddr, llwu_wakeup_module_t moduleNumber)
+bool LLWU_HAL_GetInternalModuleWakeupFlag(LLWU_Type * base, llwu_wakeup_module_t moduleNumber)
 {
-    bool retValue = false;
+    uint8_t bitMask = (uint8_t)(1U << (uint8_t)moduleNumber);
 
-    switch (moduleNumber)
-    {
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE0
-    case 0:
-        retValue = (bool)BR_LLWU_MODULE_FLAG(0)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE1
-    case 1:
-        retValue = (bool)BR_LLWU_MODULE_FLAG(1)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE2
-    case 2:
-        retValue = (bool)BR_LLWU_MODULE_FLAG(2)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE3
-    case 3:
-        retValue = (bool)BR_LLWU_MODULE_FLAG(3)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE4
-    case 4:
-        retValue = (bool)BR_LLWU_MODULE_FLAG(4)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE5
-    case 5:
-        retValue = (bool)BR_LLWU_MODULE_FLAG(5)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE6
-    case 6:
-        retValue = (bool)BR_LLWU_MODULE_FLAG(6)(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE7
-    case 7:
-        retValue = (bool)BR_LLWU_MODULE_FLAG(7)(baseAddr);
-        break;
-#endif
-    default:
-        retValue = false;
-        break;
-    }
-
-    return retValue;
+    return (LLWU_RD_MODULE_FLAG(base) & bitMask) ?  true : false;
 }
 #endif
 
@@ -975,7 +335,7 @@ bool LLWU_HAL_GetInternalModuleWakeupFlag(uint32_t baseAddr, llwu_wakeup_module_
  * This function will set the pin filter configuration.
  * 
  *END**************************************************************************/
-void LLWU_HAL_SetPinFilterMode(uint32_t baseAddr,
+void LLWU_HAL_SetPinFilterMode(LLWU_Type * base,
                                uint32_t filterNumber,
                                llwu_external_pin_filter_mode_t pinFilterMode)
 {
@@ -987,72 +347,26 @@ void LLWU_HAL_SetPinFilterMode(uint32_t baseAddr,
     {
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 1)
     case 0:
-        BW_LLWU_FILT1_FILTSEL(baseAddr, pinFilterMode.pinNumber);
-        BW_LLWU_FILT1_FILTE(baseAddr, pinFilterMode.filterMode);
+        LLWU_BWR_FILT1_FILTSEL(base, pinFilterMode.pinNumber);
+        LLWU_BWR_FILT1_FILTE(base, pinFilterMode.filterMode);
         break;
 #endif
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 2)
     case 1:
-        BW_LLWU_FILT2_FILTSEL(baseAddr, pinFilterMode.pinNumber);
-        BW_LLWU_FILT2_FILTE(baseAddr, pinFilterMode.filterMode);
+        LLWU_BWR_FILT2_FILTSEL(base, pinFilterMode.pinNumber);
+        LLWU_BWR_FILT2_FILTE(base, pinFilterMode.filterMode);
         break;
 #endif
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 3)
     case 2:
-        BW_LLWU_FILT3_FILTSEL(baseAddr, pinFilterMode.pinNumber);
-        BW_LLWU_FILT3_FILTE(baseAddr, pinFilterMode.filterMode);
+        LLWU_BWR_FILT3_FILTSEL(base, pinFilterMode.pinNumber);
+        LLWU_BWR_FILT3_FILTE(base, pinFilterMode.filterMode);
         break;
 #endif
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 4)
     case 3:
-        BW_LLWU_FILT4_FILTSEL(baseAddr, pinFilterMode.pinNumber);
-        BW_LLWU_FILT4_FILTE(baseAddr, pinFilterMode.filterMode);
-        break;
-#endif
-    default:
-        break;
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : LLWU_HAL_GetPinFilterMode
- * Description   : Get pin filter configuration.
- * This function will get the pin filter configuration.
- * 
- *END**************************************************************************/
-void LLWU_HAL_GetPinFilterMode(uint32_t baseAddr,
-                               uint32_t filterNumber, 
-                               llwu_external_pin_filter_mode_t *pinFilterMode)
-{
-    /* check filter and pin number */
-    assert(filterNumber < FSL_FEATURE_LLWU_HAS_PIN_FILTER);
-
-    /* branch to filter number */
-    switch(filterNumber)
-    {
-#if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 1)
-    case 0:
-        pinFilterMode->pinNumber = (llwu_wakeup_pin_t)BR_LLWU_FILT1_FILTSEL(baseAddr);
-        pinFilterMode->filterMode = (llwu_filter_modes_t)BR_LLWU_FILT1_FILTE(baseAddr);
-        break;
-#endif
-#if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 2)
-    case 1:
-        pinFilterMode->pinNumber = (llwu_wakeup_pin_t)BR_LLWU_FILT2_FILTSEL(baseAddr);
-        pinFilterMode->filterMode = (llwu_filter_modes_t)BR_LLWU_FILT2_FILTE(baseAddr);
-        break;
-#endif
-#if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 3)
-    case 2:
-        pinFilterMode->pinNumber = (llwu_wakeup_pin_t)BR_LLWU_FILT3_FILTSEL(baseAddr);
-        pinFilterMode->filterMode = (llwu_filter_modes_t)BR_LLWU_FILT3_FILTE(baseAddr);
-        break;
-#endif
-#if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 4)
-    case 3:
-        pinFilterMode->pinNumber = (llwu_wakeup_pin_t)BR_LLWU_FILT4_FILTSEL(baseAddr);
-        pinFilterMode->filterMode = (llwu_filter_modes_t)BR_LLWU_FILT4_FILTE(baseAddr);
+        LLWU_BWR_FILT4_FILTSEL(base, pinFilterMode.pinNumber);
+        LLWU_BWR_FILT4_FILTE(base, pinFilterMode.filterMode);
         break;
 #endif
     default:
@@ -1067,7 +381,7 @@ void LLWU_HAL_GetPinFilterMode(uint32_t baseAddr,
  * This function will get the filter detect flag.
  * 
  *END**************************************************************************/
-bool LLWU_HAL_GetFilterDetectFlag(uint32_t baseAddr, uint32_t filterNumber)
+bool LLWU_HAL_GetFilterDetectFlag(LLWU_Type * base, uint32_t filterNumber)
 {
     bool retValue = false;
 
@@ -1079,22 +393,22 @@ bool LLWU_HAL_GetFilterDetectFlag(uint32_t baseAddr, uint32_t filterNumber)
     {
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 1)
     case 0:
-        retValue = (bool)BR_LLWU_FILT1_FILTF(baseAddr);
+        retValue = (bool)LLWU_BRD_FILT1_FILTF(base);
         break;
 #endif
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 2)
     case 1:
-        retValue = (bool)BR_LLWU_FILT2_FILTF(baseAddr);
+        retValue = (bool)LLWU_BRD_FILT2_FILTF(base);
         break;
 #endif
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 3)
     case 2:
-        retValue = (bool)BR_LLWU_FILT3_FILTF(baseAddr);
+        retValue = (bool)LLWU_BRD_FILT3_FILTF(base);
         break;
 #endif
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 4)
     case 3:
-        retValue = (bool)BR_LLWU_FILT4_FILTF(baseAddr);
+        retValue = (bool)LLWU_BRD_FILT4_FILTF(base);
         break;
 #endif
     default:
@@ -1112,7 +426,7 @@ bool LLWU_HAL_GetFilterDetectFlag(uint32_t baseAddr, uint32_t filterNumber)
  * This function will clear the filter detect flag.
  * 
  *END**************************************************************************/
-void LLWU_HAL_ClearFilterDetectFlag(uint32_t baseAddr, uint32_t filterNumber)
+void LLWU_HAL_ClearFilterDetectFlag(LLWU_Type * base, uint32_t filterNumber)
 {
     /* check filter and pin number */
     assert(filterNumber < FSL_FEATURE_LLWU_HAS_PIN_FILTER);
@@ -1122,22 +436,22 @@ void LLWU_HAL_ClearFilterDetectFlag(uint32_t baseAddr, uint32_t filterNumber)
     {
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 1)
     case 0:
-        BW_LLWU_FILT1_FILTF(baseAddr, 1);
+        LLWU_BWR_FILT1_FILTF(base, 1U);
         break;
 #endif
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 2)
     case 1:
-        BW_LLWU_FILT2_FILTF(baseAddr, 1);
+        LLWU_BWR_FILT2_FILTF(base, 1U);
         break;
 #endif
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 3)
     case 2:
-        BW_LLWU_FILT3_FILTF(baseAddr, 1);
+        LLWU_BWR_FILT3_FILTF(base, 1U);
         break;
 #endif
 #if (FSL_FEATURE_LLWU_HAS_PIN_FILTER >= 4)
     case 3:
-        BW_LLWU_FILT4_FILTF(baseAddr, 1);
+        LLWU_BWR_FILT4_FILTF(base, 1U);
         break;
 #endif
     default:
@@ -1149,29 +463,17 @@ void LLWU_HAL_ClearFilterDetectFlag(uint32_t baseAddr, uint32_t filterNumber)
 #if FSL_FEATURE_LLWU_HAS_RESET_ENABLE
 /*FUNCTION**********************************************************************
  *
- * Function Name : LLWU_HAL_SetResetEnableMode
- * Description   : Set reset enable mode
- * This function will set the reset enable mode.
+ * Function Name : LLWU_HAL_SetResetPinMode
+ * Description   : Set RESET pin mode.
+ * This function will set the RESET pin mode.
  * 
  *END**************************************************************************/
-void LLWU_HAL_SetResetEnableMode(uint32_t baseAddr, llwu_reset_enable_mode_t resetEnableMode)
+void LLWU_HAL_SetResetPinMode(LLWU_Type * base, llwu_reset_pin_mode_t resetPinMode)
 {
-    BW_LLWU_RST_RSTFILT(baseAddr, resetEnableMode.digitalFilterMode);
-    BW_LLWU_RST_LLRSTE(baseAddr, resetEnableMode.lowLeakageMode);
+    LLWU_WR_RST(base, LLWU_RST_RSTFILT(resetPinMode.filter) |
+                      LLWU_RST_LLRSTE(resetPinMode.enable));
 }
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : LLWU_HAL_GetResetEnableMode
- * Description   : Get reset enable mode
- * This function will get the reset enable mode.
- * 
- *END**************************************************************************/
-void LLWU_HAL_GetResetEnableMode(uint32_t baseAddr, llwu_reset_enable_mode_t *resetEnableMode)
-{
-    resetEnableMode->digitalFilterMode = (bool)BR_LLWU_RST_RSTFILT(baseAddr);
-    resetEnableMode->lowLeakageMode = (bool)BR_LLWU_RST_LLRSTE(baseAddr);
-}
+#endif
 #endif
 
 /*******************************************************************************

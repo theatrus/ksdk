@@ -34,12 +34,13 @@
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_UART_COUNT
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Pointer to uart runtime state structure */
-extern void * g_uartStatePtr[HW_UART_INSTANCE_COUNT];
+extern void * g_uartStatePtr[UART_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Private Functions
@@ -81,9 +82,10 @@ uart_status_t UART_DRV_Init(uint32_t instance, uart_state_t * uartStatePtr,
                             const uart_user_config_t * uartUserConfig)
 {
     assert(uartStatePtr && uartUserConfig);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(g_uartBase[instance]);
+    assert(instance < UART_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
     uint32_t uartSourceClock;
 
     /* Exit if current instance is already initialized. */
@@ -102,7 +104,7 @@ uart_status_t UART_DRV_Init(uint32_t instance, uart_state_t * uartStatePtr,
     CLOCK_SYS_EnableUartClock(instance);
 
     /* Initialize UART to a known state. */
-    UART_HAL_Init(baseAddr);
+    UART_HAL_Init(base);
 
     /* Create Semaphore for txIrq and rxIrq. */
     OSA_SemaCreate(&uartStatePtr->txIrqSync, 0);
@@ -112,17 +114,17 @@ uart_status_t UART_DRV_Init(uint32_t instance, uart_state_t * uartStatePtr,
     uartSourceClock = CLOCK_SYS_GetUartFreq(instance);
 
     /* Initialize UART baud rate, bit count, parity and stop bit. */
-    UART_HAL_SetBaudRate(baseAddr, uartSourceClock, uartUserConfig->baudRate);
-    UART_HAL_SetBitCountPerChar(baseAddr, uartUserConfig->bitCountPerChar);
-    UART_HAL_SetParityMode(baseAddr, uartUserConfig->parityMode);
+    UART_HAL_SetBaudRate(base, uartSourceClock, uartUserConfig->baudRate);
+    UART_HAL_SetBitCountPerChar(base, uartUserConfig->bitCountPerChar);
+    UART_HAL_SetParityMode(base, uartUserConfig->parityMode);
 #if FSL_FEATURE_UART_HAS_STOP_BIT_CONFIG_SUPPORT
-    UART_HAL_SetStopBitCount(baseAddr, uartUserConfig->stopBitCount);
+    UART_HAL_SetStopBitCount(base, uartUserConfig->stopBitCount);
 #endif
 
 #if FSL_FEATURE_UART_HAS_FIFO
     uint8_t fifoSize;
     /* Obtain raw TX FIFO size bit setting */
-    fifoSize = UART_HAL_GetTxFifoSize(baseAddr);
+    fifoSize = UART_HAL_GetTxFifoSize(base);
     /* Now calculate the number of data words per given FIFO size */
     uartStatePtr->txFifoEntryCount = (fifoSize == 0 ? 1 : 0x1 << (fifoSize + 1));
 
@@ -135,11 +137,11 @@ uart_status_t UART_DRV_Init(uint32_t instance, uart_state_t * uartStatePtr,
      * watermark. */
     if (uartStatePtr->txFifoEntryCount > 1)
     {
-        UART_HAL_SetTxFifoWatermark(baseAddr, (uartStatePtr->txFifoEntryCount >> 1U));
+        UART_HAL_SetTxFifoWatermark(base, (uartStatePtr->txFifoEntryCount >> 1U));
     }
     else
     {
-        UART_HAL_SetTxFifoWatermark(baseAddr, 0);
+        UART_HAL_SetTxFifoWatermark(base, 0);
     }
 
     /* Configure the RX FIFO watermark to be 1.
@@ -150,13 +152,13 @@ uart_status_t UART_DRV_Init(uint32_t instance, uart_state_t * uartStatePtr,
      * watermark, this will involve shutting down the receiver first - which is
      * not a desirable operation when the UART is actively receiving data.
      * Hence, the best solution is to set the RX FIFO watermark to 1. */
-    UART_HAL_SetRxFifoWatermark(baseAddr, 1);
+    UART_HAL_SetRxFifoWatermark(base, 1);
 
     /* Enable and flush the FIFO prior to enabling the TX/RX */
-    UART_HAL_SetTxFifoCmd(baseAddr, true);
-    UART_HAL_SetRxFifoCmd(baseAddr, true);
-    UART_HAL_FlushTxFifo(baseAddr);
-    UART_HAL_FlushRxFifo(baseAddr);
+    UART_HAL_SetTxFifoCmd(base, true);
+    UART_HAL_SetRxFifoCmd(base, true);
+    UART_HAL_FlushTxFifo(base);
+    UART_HAL_FlushRxFifo(base);
 #else
     /* For modules that do not support a FIFO, they have a data buffer that
      * essentially acts likes a one-entry FIFO, thus to make the code cleaner,
@@ -169,8 +171,8 @@ uart_status_t UART_DRV_Init(uint32_t instance, uart_state_t * uartStatePtr,
     INT_SYS_EnableIRQ(g_uartRxTxIrqId[instance]);
 
     /* Finally, enable the UART transmitter and receiver*/
-    UART_HAL_EnableTransmitter(baseAddr);
-    UART_HAL_EnableReceiver(baseAddr);
+    UART_HAL_EnableTransmitter(base);
+    UART_HAL_EnableReceiver(base);
 
     return kStatus_UART_Success;
 }
@@ -184,28 +186,35 @@ uart_status_t UART_DRV_Init(uint32_t instance, uart_state_t * uartStatePtr,
  * receiver, and flushes the FIFOs (for modules that support FIFOs).
  *
  *END**************************************************************************/
-void UART_DRV_Deinit(uint32_t instance)
+uart_status_t UART_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
+    assert(g_uartBase[instance]);
 
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    /* Exit if current instance is already de-initialized or is gated.*/
+    if ((!g_uartStatePtr[instance]) || (!CLOCK_SYS_GetUartGateCmd(instance)))
+    {
+        return kStatus_UART_Fail;
+    }
+
+    UART_Type * base = g_uartBase[instance];
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
 
     /* In case there is still data in the TX FIFO or shift register that is
      * being transmitted wait till transmit is complete. */
 #if FSL_FEATURE_UART_HAS_FIFO
     /* Wait until there all of the data has been drained from the TX FIFO */
-    while(UART_HAL_GetTxDatawordCountInFifo(baseAddr) != 0) { }
+    while(UART_HAL_GetTxDatawordCountInFifo(base) != 0) { }
 #endif
     /* Wait until the data is completely shifted out of shift register */
-    while(!(UART_HAL_IsTxComplete(baseAddr))) { }
+    while(!(UART_BRD_S1_TC(base))) { }
 
     /* Disable the interrupt */
     INT_SYS_DisableIRQ(g_uartRxTxIrqId[instance]);
 
     /* Disable TX and RX */
-    UART_HAL_DisableTransmitter(baseAddr);
-    UART_HAL_DisableReceiver(baseAddr);
+    UART_HAL_DisableTransmitter(base);
+    UART_HAL_DisableReceiver(base);
 
     /* Destroy TX and RX sema. */
     OSA_SemaDestroy(&uartState->txIrqSync);
@@ -213,10 +222,10 @@ void UART_DRV_Deinit(uint32_t instance)
 
 #if FSL_FEATURE_UART_HAS_FIFO
     /* Disable the FIFOs; should be done after disabling the TX/RX */
-    UART_HAL_SetTxFifoCmd(baseAddr, false);
-    UART_HAL_SetRxFifoCmd(baseAddr, false);
-    UART_HAL_FlushTxFifo(baseAddr);
-    UART_HAL_FlushRxFifo(baseAddr);
+    UART_HAL_SetTxFifoCmd(base, false);
+    UART_HAL_SetRxFifoCmd(base, false);
+    UART_HAL_FlushTxFifo(base);
+    UART_HAL_FlushRxFifo(base);
 #endif
 
     /* Cleared state pointer. */
@@ -224,6 +233,8 @@ void UART_DRV_Deinit(uint32_t instance)
 
     /* Gate UART module clock */
     CLOCK_SYS_DisableUartClock(instance);
+
+    return kStatus_UART_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -239,8 +250,8 @@ uart_rx_callback_t UART_DRV_InstallRxCallback(uint32_t instance,
                                               void * callbackParam,
                                               bool alwaysEnableRxIrq)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    assert(instance < UART_INSTANCE_COUNT);
+    UART_Type * base = g_uartBase[instance];
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
 
     uart_rx_callback_t currentCallback = uartState->rxCallback;
@@ -250,7 +261,30 @@ uart_rx_callback_t UART_DRV_InstallRxCallback(uint32_t instance,
 
     /* Enable/Disable the receive data full interrupt */
     uartState->isRxBusy = true;
-    UART_HAL_SetRxDataRegFullIntCmd(baseAddr, alwaysEnableRxIrq);
+    UART_BWR_C2_RIE(base, alwaysEnableRxIrq);
+
+    return currentCallback;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : UART_DRV_InstallTxCallback
+ * Description   : Install transmit data callback function, pass in NULL pointer
+ * as callback will uninstall.
+ *
+ *END**************************************************************************/
+uart_tx_callback_t UART_DRV_InstallTxCallback(uint32_t instance,
+                                              uart_tx_callback_t function,
+                                              uint8_t * txBuff,
+                                              void * callbackParam)
+{
+    assert(instance < UART_INSTANCE_COUNT);
+    uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
+
+    uart_tx_callback_t currentCallback = uartState->txCallback;
+    uartState->txCallback = function;
+    uartState->txCallbackParam = callbackParam;
+    uartState->txBuff = txBuff;
 
     return currentCallback;
 }
@@ -271,10 +305,10 @@ uart_status_t UART_DRV_SendDataBlocking(uint32_t instance,
                                         uint32_t timeout)
 {
     assert(txBuff);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
     uart_status_t retVal = kStatus_UART_Success;
     osa_status_t syncStatus;
 
@@ -295,7 +329,7 @@ uart_status_t UART_DRV_SendDataBlocking(uint32_t instance,
         if (syncStatus != kStatus_OSA_Success)
         {
             /* Disable the transmitter data register empty interrupt */
-            UART_HAL_SetTxDataRegEmptyIntCmd(baseAddr, false);
+            UART_BWR_C2_TIE(base, 0U);
 
             /* Update the information of the module driver state */
             uartState->isTxBusy = false;
@@ -305,7 +339,7 @@ uart_status_t UART_DRV_SendDataBlocking(uint32_t instance,
 
 #if FSL_FEATURE_UART_HAS_FIFO
         /* Wait till the TX FIFO is empty before returning. */
-        while(UART_HAL_GetTxDatawordCountInFifo(baseAddr) != 0) { }
+        while(UART_HAL_GetTxDatawordCountInFifo(base) != 0) { }
 #endif
     }
 
@@ -331,7 +365,7 @@ uart_status_t UART_DRV_SendData(uint32_t instance,
                                 uint32_t txSize)
 {
     assert(txBuff);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_status_t retVal = kStatus_UART_Success;
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
@@ -358,7 +392,7 @@ uart_status_t UART_DRV_SendData(uint32_t instance,
  *END**************************************************************************/
 uart_status_t UART_DRV_GetTransmitStatus(uint32_t instance, uint32_t * bytesRemaining)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
     uart_status_t retVal = kStatus_UART_Success;
@@ -378,9 +412,9 @@ uart_status_t UART_DRV_GetTransmitStatus(uint32_t instance, uint32_t * bytesRema
     }
 
 #if FSL_FEATURE_UART_HAS_FIFO
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
 
-    if (UART_HAL_GetTxDatawordCountInFifo(baseAddr))
+    if (UART_HAL_GetTxDatawordCountInFifo(base))
     {
         retVal = kStatus_UART_TxBusy;
     }
@@ -399,7 +433,7 @@ uart_status_t UART_DRV_GetTransmitStatus(uint32_t instance, uint32_t * bytesRema
  *END**************************************************************************/
 uart_status_t UART_DRV_AbortSendingData(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
 
@@ -428,10 +462,10 @@ uart_status_t UART_DRV_ReceiveDataBlocking(uint32_t instance, uint8_t * rxBuff,
                                            uint32_t rxSize, uint32_t timeout)
 {
     assert(rxBuff);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
     uart_status_t retVal = kStatus_UART_Success;
     osa_status_t syncStatus;
 
@@ -451,8 +485,8 @@ uart_status_t UART_DRV_ReceiveDataBlocking(uint32_t instance, uint8_t * rxBuff,
         if (syncStatus != kStatus_OSA_Success)
         {
             /* Disable receive data full and rx overrun interrupt */
-            UART_HAL_SetRxDataRegFullIntCmd(baseAddr, false);
-            UART_HAL_SetIntMode(baseAddr, kUartIntRxOverrun, false);
+            UART_BWR_C2_RIE(base, 0);
+            UART_HAL_SetIntMode(base, kUartIntRxOverrun, false);
 
             /* Update the information of the module driver state */
             uartState->isRxBusy = false;
@@ -483,7 +517,7 @@ uart_status_t UART_DRV_ReceiveData(uint32_t instance,
                                    uint32_t rxSize)
 {
     assert(rxBuff);
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_status_t retVal = kStatus_UART_Success;
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
@@ -510,7 +544,7 @@ uart_status_t UART_DRV_ReceiveData(uint32_t instance,
 uart_status_t UART_DRV_GetReceiveStatus(uint32_t instance,
                                         uint32_t * bytesRemaining)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
     uart_status_t retVal = kStatus_UART_Success;
     uint32_t rxSize = uartState->rxSize;
@@ -540,7 +574,7 @@ uart_status_t UART_DRV_GetReceiveStatus(uint32_t instance,
  *END**************************************************************************/
 uart_status_t UART_DRV_AbortReceivingData(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
 
     /* Check if a transfer is running. */
@@ -566,7 +600,7 @@ uart_status_t UART_DRV_AbortReceivingData(uint32_t instance)
 void UART_DRV_IRQHandler(uint32_t instance)
 {
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
 
     /* Exit the ISR if no transfer is happening for this instance. */
     if ((!uartState->isTxBusy) && (!uartState->isRxBusy))
@@ -574,17 +608,17 @@ void UART_DRV_IRQHandler(uint32_t instance)
         return;
     }
 
-    /* Handle receive data register full interrupt */
-    if((UART_HAL_GetRxDataRegFullIntCmd(baseAddr))
-      && (UART_HAL_IsRxDataRegFull(baseAddr)))
+    /* Handle receive data register full interrupt, if rx data register full
+     * interrupt is enabled AND there is data available. */
+    if((UART_BRD_C2_RIE(base)) && (UART_BRD_S1_RDRF(base)))
     {
 #if FSL_FEATURE_UART_HAS_FIFO
         /* Read out all data from RX FIFO */
-        while(UART_HAL_GetRxDatawordCountInFifo(baseAddr))
+        while(UART_HAL_GetRxDatawordCountInFifo(base))
         {
 #endif
             /* Get data and put into receive buffer */
-            UART_HAL_Getchar(baseAddr, uartState->rxBuff);
+            UART_HAL_Getchar(base, uartState->rxBuff);
 
             /* Invoke callback if there is one */
             if (uartState->rxCallback != NULL)
@@ -595,8 +629,9 @@ void UART_DRV_IRQHandler(uint32_t instance)
             {
                 ++uartState->rxBuff;
                 --uartState->rxSize;
-                /* Check and see if this was the last byte received */
-                if (uartState->rxSize == 0)
+
+                /* Check and see if this was the last byte */
+                if (uartState->rxSize == 0U)
                 {
                     UART_DRV_CompleteReceiveData(instance);
                     #if FSL_FEATURE_UART_HAS_FIFO
@@ -609,9 +644,9 @@ void UART_DRV_IRQHandler(uint32_t instance)
 #endif
     }
 
-    /* Handle transmit data register empty interrupt */
-    if((UART_HAL_GetTxDataRegEmptyIntCmd(baseAddr))
-      && (UART_HAL_IsTxDataRegEmpty(baseAddr)))
+    /* Handle transmit data register empty interrupt, if tx data register empty
+     * interrupt is enabled AND tx data register is currently empty. */
+    if((UART_BRD_C2_TIE(base)) && (UART_BRD_S1_TDRE(base)))
     {
         /* Check to see if there are any more bytes to send */
         if (uartState->txSize)
@@ -619,18 +654,30 @@ void UART_DRV_IRQHandler(uint32_t instance)
             uint8_t emptyEntryCountInFifo;
 #if FSL_FEATURE_UART_HAS_FIFO
             emptyEntryCountInFifo = uartState->txFifoEntryCount -
-                                    UART_HAL_GetTxDatawordCountInFifo(baseAddr);
+                                    UART_HAL_GetTxDatawordCountInFifo(base);
 #else
             emptyEntryCountInFifo = uartState->txFifoEntryCount;
 #endif
             while(emptyEntryCountInFifo--)
             {
                 /* Transmit data and update tx size/buff */
-                UART_HAL_Putchar(baseAddr, *(uartState->txBuff));
-                ++uartState->txBuff;
-                --uartState->txSize;
+                UART_HAL_Putchar(base, *(uartState->txBuff));
 
-                if (!uartState->txSize)
+                /* Invoke callback if there is one */
+                if (uartState->txCallback != NULL)
+                {
+                   /* The callback MUST set the txSize to 0 if the
+                    * transmit is ended.*/
+                   uartState->txCallback(instance, uartState);
+                }
+                else
+                {
+                    ++uartState->txBuff;
+                    --uartState->txSize;
+                }
+
+                /* Check and see if this was the last byte */
+                if (uartState->txSize == 0U)
                 {
                     UART_DRV_CompleteSendData(instance);
                     break;
@@ -640,10 +687,10 @@ void UART_DRV_IRQHandler(uint32_t instance)
     }
 
     /* Handle receive overrun interrupt */
-    if (UART_HAL_GetStatusFlag(baseAddr, kUartRxOverrun))
+    if (UART_HAL_GetStatusFlag(base, kUartRxOverrun))
     {
         /* Clear the flag, OR the rxDataRegFull will not be set any more */
-        UART_HAL_ClearStatusFlag(baseAddr, kUartRxOverrun);
+        UART_HAL_ClearStatusFlag(base, kUartRxOverrun);
     }
 }
 
@@ -657,13 +704,13 @@ void UART_DRV_IRQHandler(uint32_t instance)
  *END**************************************************************************/
 static void UART_DRV_CompleteSendData(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
 
     /* Disable the transmitter data register empty interrupt */
-    UART_HAL_SetTxDataRegEmptyIntCmd(baseAddr, false);
+    UART_BWR_C2_TIE(base, 0U);
 
     /* Signal the synchronous completion object. */
     if (uartState->isTxBlocking)
@@ -687,9 +734,9 @@ static uart_status_t UART_DRV_StartSendData(uint32_t instance,
                                             const uint8_t * txBuff,
                                             uint32_t txSize)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
 
     /* Check that we're not busy already transmitting data from a previous
@@ -709,42 +756,11 @@ static uart_status_t UART_DRV_StartSendData(uint32_t instance,
     uartState->txSize = txSize;
     uartState->isTxBusy = true;
 
-    /* Fill the TX FIFO or TX data buffer. In the event that there still might
-     * be data in the TX FIFO, first ascertain the number of empty spaces and
-     * then fill those up. */
-    uint8_t emptyEntryCountInFifo;
-#if FSL_FEATURE_UART_HAS_FIFO
-    emptyEntryCountInFifo = uartState->txFifoEntryCount -
-                            UART_HAL_GetTxDatawordCountInFifo(baseAddr);
-#else
-    /* For modules that don't have FIFO, there is no FIFO data count register */
-    emptyEntryCountInFifo = uartState->txFifoEntryCount;
-    /* Make sure the transmit data register is empty and ready for data */
-    while(!UART_HAL_IsTxDataRegEmpty(baseAddr)) { }
-#endif
-
-    /* Fill up FIFO, if only a 1-entry FIFO, then just fill the data buffer */
-    while(emptyEntryCountInFifo--)
-    {
-        /* put data into FIFO */
-        UART_HAL_Putchar(baseAddr, *(uartState->txBuff));
-        ++uartState->txBuff;
-        --uartState->txSize;
-        /* If there are no more bytes in the buffer to send, then complete
-         * transmit. No need to spend time enabling the interrupt and going
-         * to the ISR.  */
-        if (uartState->txSize == 0)
-        {
-            UART_DRV_CompleteSendData(instance);
-            return kStatus_UART_Success;
-        }
-    }
-
     /* Enable the transmitter data register empty interrupt. The TDRE flag will
      * set whenever the TX buffer is emptied into the TX shift register (for
      * non-FIFO IPs) or when the data in the TX FIFO is at or below the
      * programmed watermark (for FIFO-supported IPs). */
-    UART_HAL_SetTxDataRegEmptyIntCmd(baseAddr, true);
+    UART_BWR_C2_TIE(base, 1U);
 
     return kStatus_UART_Success;
 }
@@ -759,14 +775,14 @@ static uart_status_t UART_DRV_StartSendData(uint32_t instance,
  *END**************************************************************************/
 static void UART_DRV_CompleteReceiveData(uint32_t instance)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
 
     /* Disable receive data full and rx overrun interrupt */
-    UART_HAL_SetRxDataRegFullIntCmd(baseAddr, false);
-    UART_HAL_SetIntMode(baseAddr, kUartIntRxOverrun, false);
+    UART_BWR_C2_RIE(base, 0U);
+    UART_HAL_SetIntMode(base, kUartIntRxOverrun, false);
 
     /* Signal the synchronous completion object. */
     if (uartState->isRxBlocking)
@@ -790,10 +806,10 @@ static uart_status_t UART_DRV_StartReceiveData(uint32_t instance,
                                                uint8_t * rxBuff,
                                                uint32_t rxSize)
 {
-    assert(instance < HW_UART_INSTANCE_COUNT);
+    assert(instance < UART_INSTANCE_COUNT);
 
     uart_state_t * uartState = (uart_state_t *)g_uartStatePtr[instance];
-    uint32_t baseAddr = g_uartBaseAddr[instance];
+    UART_Type * base = g_uartBase[instance];
 
     /* Check that we're not busy receiving data from a previous function call. */
     if ((uartState->isRxBusy) && (!uartState->rxCallback))
@@ -813,14 +829,15 @@ static uart_status_t UART_DRV_StartReceiveData(uint32_t instance,
     uartState->isRxBusy = true;
 
     /* Enable the receive data overrun interrupt */
-    UART_HAL_SetIntMode(baseAddr, kUartIntRxOverrun, true);
+    UART_HAL_SetIntMode(base, kUartIntRxOverrun, true);
 
     /* Enable the receive data full interrupt */
-    UART_HAL_SetRxDataRegFullIntCmd(baseAddr, true);
+    UART_BWR_C2_RIE(base, 1U);
 
     return kStatus_UART_Success;
 }
 
+#endif /* FSL_FEATURE_SOC_UART_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

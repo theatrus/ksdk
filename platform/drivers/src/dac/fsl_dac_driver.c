@@ -33,6 +33,8 @@
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_DAC_COUNT
+
 /*FUNCTION*********************************************************************
  *
  * Function Name : DAC_DRV_StructInitUserConfigNormal
@@ -42,14 +44,13 @@
  * the DAC module work as a common and simple converter.
  *
  *END*************************************************************************/
-dac_status_t DAC_DRV_StructInitUserConfigNormal(dac_user_config_t *userConfigPtr)
+dac_status_t DAC_DRV_StructInitUserConfigNormal(dac_converter_config_t *userConfigPtr)
 {
     if (!userConfigPtr)
     {
         return kStatus_DAC_InvalidArgument;
     }
-    userConfigPtr->refVoltSrcMode = kDacRefVoltSrcOfVref2; /* Vdda */
-    userConfigPtr->triggerMode = kDacTriggerBySoftware;
+    userConfigPtr->dacRefVoltSrc = kDacRefVoltSrcOfVref2; /* Vdda */
     userConfigPtr->lowPowerEnable = false;
     return kStatus_DAC_Success;
 }
@@ -64,30 +65,20 @@ dac_status_t DAC_DRV_StructInitUserConfigNormal(dac_user_config_t *userConfigPtr
  * least as a common simple DAC converter.
  *
  *END*************************************************************************/
-dac_status_t DAC_DRV_Init(uint32_t instance, dac_user_config_t *userConfigPtr)
+dac_status_t DAC_DRV_Init(uint32_t instance, const dac_converter_config_t *userConfigPtr)
 {
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
-    bool mEnable;
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
 
-    if (!userConfigPtr)
-    {
-        return kStatus_DAC_InvalidArgument;
-    }
-
-    /* Enable the clock gate from clock manager. */
-    mEnable = CLOCK_SYS_GetDacGateCmd(instance);
-    if (!mEnable)
-    {
-        CLOCK_SYS_EnableDacClock(instance);
-    }
+    CLOCK_SYS_EnableDacClock(instance);
 
     /* Reset the registers for DAC module to reset state. */
-    DAC_HAL_Init(baseAddr);
-    DAC_HAL_Enable(baseAddr);
-    DAC_HAL_SetRefVoltSrcMode(baseAddr, userConfigPtr->refVoltSrcMode);
-    DAC_HAL_SetTriggerMode(baseAddr, userConfigPtr->triggerMode);
-    DAC_HAL_SetLowPowerCmd(baseAddr, userConfigPtr->lowPowerEnable);
+    DAC_HAL_Init(base);
+    DAC_HAL_Enable(base);
+    DAC_HAL_ConfigConverter(base, userConfigPtr);
+
+    /* Enable DAC interrupt in NVIC level.*/
+    INT_SYS_EnableIRQ(g_dacIrqId[instance] );
 
     return kStatus_DAC_Success;
 }
@@ -99,13 +90,17 @@ dac_status_t DAC_DRV_Init(uint32_t instance, dac_user_config_t *userConfigPtr)
  * DAC module and shut down its clock to reduce the power consumption.
  *
  *END*************************************************************************/
-void DAC_DRV_Deinit(uint32_t instance)
+dac_status_t DAC_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
 
-    DAC_HAL_Disable(baseAddr);
+    INT_SYS_DisableIRQ(g_dacIrqId[instance] );
+    DAC_HAL_Disable(base);
+    DAC_HAL_Init(base);
     CLOCK_SYS_DisableDacClock(instance);
+
+    return kStatus_DAC_Success;
 }
 
 /*FUNCTION*********************************************************************
@@ -119,89 +114,33 @@ void DAC_DRV_Deinit(uint32_t instance)
  *END*************************************************************************/
 void DAC_DRV_Output(uint32_t instance, uint16_t value)
 {
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
 
-    DAC_HAL_SetBuffValue(baseAddr, 0U, value);
-    DAC_HAL_SetBuffCurrentIndex(baseAddr, 0U);
+    DAC_HAL_SetBuffValue(base, 0U, value);
+    DAC_HAL_SetBuffCurIdx(base, 0U);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : DAC_DRV_EnableBuff
+ * Function Name : DAC_DRV_ConfigBuffer
  * Description   : Configure the feature of internal buffer for DAC module.
  * By default, the feature of buffer is disabled. Calling this API will enable
  * the buffer and configure it.
  *
  *END*************************************************************************/
-dac_status_t DAC_DRV_EnableBuff(uint32_t instance, dac_buff_config_t *buffConfigPtr)
+dac_status_t DAC_DRV_ConfigBuffer(uint32_t instance, const dac_buffer_config_t *configPtr)
 {
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
 
-    if (!buffConfigPtr)
+    if (!configPtr)
     {
         return kStatus_DAC_InvalidArgument;
     }
-
-    /* Configure the buffer for DAC. */
-    DAC_HAL_SetBuffCmd(baseAddr, true);
-    DAC_HAL_SetBuffUpperIndex(baseAddr, buffConfigPtr->buffUpperIndex);
-    DAC_HAL_SetBuffWorkMode(baseAddr, buffConfigPtr->buffWorkMode);
-
-    /* Configure the interrupt for DAC. */    
-    DAC_HAL_SetBuffIndexStartIntCmd(baseAddr, buffConfigPtr->buffIndexStartIntEnable);
-    DAC_HAL_SetBuffIndexUpperIntCmd(baseAddr, buffConfigPtr->buffIndexUpperIntEnable);
-    DAC_HAL_SetDmaCmd(baseAddr, buffConfigPtr->dmaEnable);
-
-    /* Configure the watermark for buffer. */
-#if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
-    DAC_HAL_SetBuffWatermarkMode(baseAddr, buffConfigPtr->watermarkMode);
-    DAC_HAL_SetBuffIndexWatermarkIntCmd(baseAddr, buffConfigPtr->buffIndexWatermarkIntEnable);
-#endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */    
-
-    /* Configure the DAC IRQ in NVIC. */
-    if (    (buffConfigPtr->buffIndexStartIntEnable)
-#if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
-         || (buffConfigPtr->buffIndexWatermarkIntEnable)
-#endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
-         || (buffConfigPtr->buffIndexUpperIntEnable)  )
-    {
-        /* Enable ADC interrupt in NVIC level.*/
-        INT_SYS_EnableIRQ(g_dacIrqId[instance] );
-    }
-    else
-    {
-        /* Disable ADC interrupt in NVIC level.*/
-        INT_SYS_DisableIRQ(g_dacIrqId[instance] );
-    }
+    DAC_HAL_ConfigBuffer(base, configPtr);
 
     return kStatus_DAC_Success;
-}
-
-/*FUNCTION*********************************************************************
- *
- * Function Name : DAC_DRV_DisableBuff
- * Description   : Disable the feature of internal buffer for DAC module.
- * Calling this API will disable the feature of internal buffer and reset the
- * DAC module as a common and simple DAC converter.
- *
- *END*************************************************************************/
-void DAC_DRV_DisableBuff(uint32_t instance)
-{
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
-
-    /* Disable ADC interrupt in NVIC level.*/
-    INT_SYS_DisableIRQ(g_dacIrqId[instance] );
-
-    DAC_HAL_SetDmaCmd(baseAddr, false);
-    DAC_HAL_SetBuffIndexStartIntCmd(baseAddr, false);
-#if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
-    DAC_HAL_SetBuffIndexWatermarkIntCmd(baseAddr, false);
-#endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
-    DAC_HAL_SetBuffIndexUpperIntCmd(baseAddr, false);
-    DAC_HAL_SetBuffCmd(baseAddr, false);
 }
 
 /*FUNCTION*********************************************************************
@@ -214,19 +153,19 @@ void DAC_DRV_DisableBuff(uint32_t instance)
  *END*************************************************************************/
 dac_status_t DAC_DRV_SetBuffValue(uint32_t instance, uint8_t start, uint8_t offset, uint16_t arr[])
 {
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
 
     uint8_t i;
 
-    if (  (!arr) || (start + offset > HW_DAC_DATnL_COUNT) )
+    if (  (!arr) || (start + offset > DAC_DATL_COUNT) )
     {
         return kStatus_DAC_InvalidArgument;
     }
 
     for (i = 0; i < offset; i++)
     {
-        DAC_HAL_SetBuffValue(baseAddr, start+i, arr[i]);
+        DAC_HAL_SetBuffValue(base, start+i, arr[i]);
     }
 
     return kStatus_DAC_Success;
@@ -234,96 +173,108 @@ dac_status_t DAC_DRV_SetBuffValue(uint32_t instance, uint8_t start, uint8_t offs
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : DAC_DRV_SoftTriggerBuff
+ * Function Name : DAC_DRV_SoftTriggerBuffCmd
  * Description   : Trigger the buffer by software and return the current
  * value. After triggered, the buffer index will update according to work mode.
  * Then the value kept inside the pointed item will be output immediately.
  *
  *END*************************************************************************/
-uint16_t DAC_DRV_SoftTriggerBuff(uint32_t instance)
+void DAC_DRV_SoftTriggerBuffCmd(uint32_t instance)
 {
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
 
-    uint8_t i;
-    DAC_HAL_SetSoftTriggerCmd(baseAddr);
-    i = DAC_HAL_GetBuffCurrentIndex(baseAddr);
-    return DAC_HAL_GetBuffValue(baseAddr, i);
+    DAC_HAL_SetSoftTriggerCmd(base);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : DAC_DRV_GetBufferIndex
- * Description   : Get the current index of DAC's buffer.
+ * Function Name : DAC_DRV_SetBuffCurIdx
+ * Description   : Set the current read pointer in DAC buffer.
  *
  *END*************************************************************************/
-uint8_t DAC_DRV_GetBufferIndex(uint32_t instance)
+void DAC_DRV_SetBuffCurIdx(uint32_t instance, uint8_t idx)
 {
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
 
-    return DAC_HAL_GetBuffCurrentIndex(baseAddr);
+    DAC_HAL_SetBuffCurIdx(base, idx);
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : DAC_DRV_ClearFlag
+ * Function Name : DAC_DRV_GetBuffCurIdx
+ * Description   : Get the current read pointer in DAC buffer.
+ *
+ *END*************************************************************************/
+uint8_t DAC_DRV_GetBuffCurIdx(uint32_t instance)
+{
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
+    
+    return DAC_HAL_GetBuffCurIdx(base);
+
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : DAC_DRV_ClearBuffFlag
  * Description   : Clear the flag for indicated event causing interrupt.
  *
  *END*************************************************************************/
-void DAC_DRV_ClearFlag(uint32_t instance, dac_flag_t flag)
+void DAC_DRV_ClearBuffFlag(uint32_t instance, dac_flag_t flag)
 {
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
 
     switch (flag)
     {
     case kDacBuffIndexStartFlag:
-        DAC_HAL_ClearBuffIndexStartFlag(baseAddr);
+        DAC_HAL_ClearBuffIdxStartFlag(base);
         break;
 #if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
     case kDacBuffIndexWatermarkFlag:
-        DAC_HAL_ClearBuffIndexWatermarkFlag(baseAddr);
+        DAC_HAL_ClearBuffIdxWatermarkFlag(base);
         break;
 #endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
     case kDacBuffIndexUpperFlag:
-        DAC_HAL_ClearBuffIndexUpperFlag(baseAddr);
+        DAC_HAL_ClearBuffIdxUpperFlag(base);
         break;
     default:
-        DAC_HAL_ClearBuffIndexStartFlag(baseAddr);
+        DAC_HAL_ClearBuffIdxStartFlag(base);
 #if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
-        DAC_HAL_ClearBuffIndexWatermarkFlag(baseAddr);
+        DAC_HAL_ClearBuffIdxWatermarkFlag(base);
 #endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
-        DAC_HAL_ClearBuffIndexUpperFlag(baseAddr);
+        DAC_HAL_ClearBuffIdxUpperFlag(base);
         break;
     }
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : DAC_DRV_GetFlag
+ * Function Name : DAC_DRV_GetBuffFlag
  * Description   : Get the flag for indicated event causing interrupt.
  * If the event occurs, the return value will be asserted.
  *
  *END*************************************************************************/
-bool DAC_DRV_GetFlag(uint32_t instance, dac_flag_t flag)
+bool DAC_DRV_GetBuffFlag(uint32_t instance, dac_flag_t flag)
 {
-    assert(instance < HW_DAC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_dacBaseAddr[instance];
-    bool bRet;
+    assert(instance < DAC_INSTANCE_COUNT);
+    DAC_Type * base = g_dacBase[instance];
+    bool bRet = true;
 
     switch (flag)
     {
     case kDacBuffIndexStartFlag:
-        bRet = DAC_HAL_GetBuffIndexStartFlag(baseAddr);
+        bRet = DAC_HAL_GetBuffIdxStartFlag(base);
         break;
 #if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
     case kDacBuffIndexWatermarkFlag:
-        bRet = DAC_HAL_GetBuffIndexWatermarkFlag(baseAddr);
+        bRet = DAC_HAL_GetBuffIdxWatermarkFlag(base);
         break;
 #endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
     case kDacBuffIndexUpperFlag:
-        bRet = DAC_HAL_GetBuffIndexUpperFlag(baseAddr);
+        bRet = DAC_HAL_GetBuffIdxUpperFlag(base);
         break;
     default:
         bRet = false;
@@ -335,3 +286,5 @@ bool DAC_DRV_GetFlag(uint32_t instance, dac_flag_t flag)
 /******************************************************************************
  * EOF
  *****************************************************************************/
+
+#endif

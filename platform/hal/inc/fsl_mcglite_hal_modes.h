@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2014-2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_mcglite_hal.h"
+#if FSL_FEATURE_SOC_MCGLITE_COUNT
 
 /*! @addtogroup mcglite_hal*/
 /*! @{*/
@@ -47,19 +48,19 @@
 /*! @brief MCG_Lite clock mode definitions */
 typedef enum _mcglite_mode
 {
-    kMcgliteModeHirc48M,                     /* clock mode is HIRC 48M*/
-    kMcgliteModeLirc8M,                      /* clock mode is LIRC 8M  */
-    kMcgliteModeLirc2M,                      /* clock mode is LIRC 2M  */
-    kMcgliteModeExt,                         /* clock mode is EXT  */
-    kMcgliteModeStop,                        /* clock mode is STOP  */
-    kMcgliteModeError                        /* Unknown mode */
+    kMcgliteModeHirc48M,                     /*!< clock mode is HIRC 48M*/
+    kMcgliteModeLirc8M,                      /*!< clock mode is LIRC 8M  */
+    kMcgliteModeLirc2M,                      /*!< clock mode is LIRC 2M  */
+    kMcgliteModeExt,                         /*!< clock mode is EXT  */
+    kMcgliteModeStop,                        /*!< clock mode is STOP  */
+    kMcgliteModeError                        /*!< Unknown mode */
 } mcglite_mode_t;
 
 /*! @brief MCG_Lite mode transition API error code definitions */
 typedef enum McgliteModeErrorCode {
     /* MCG_Lite mode error codes */
-    kMcgliteModeErrNone = 0x00,    /* - No error */
-    kMcgliteModeErrExt  = 0x01,    /* - External clock source not available. */
+    kMcgliteModeErrNone = 0x00,    /*!< - No error */
+    kMcgliteModeErrExt  = 0x01,    /*!< - External clock source not available. */
 } mcglite_mode_error_t;
 
 /*******************************************************************************
@@ -79,11 +80,11 @@ extern "C" {
  * This is an internal function that checks the MCG registers and determine
  * the current MCG_lite mode.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  *
  * @return Current MCG_Lite mode or error code.
  */
-mcglite_mode_t CLOCK_HAL_GetMode(uint32_t baseAddr);
+mcglite_mode_t CLOCK_HAL_GetMode(MCG_Type * base);
 
 /*!
  * @brief Sets the MCG_Lite to HIRC mode.
@@ -91,12 +92,12 @@ mcglite_mode_t CLOCK_HAL_GetMode(uint32_t baseAddr);
  * This is an internal function that changes MCG_Lite
  * to HRIC mode.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  * @param outclkfreq MCGOUTCLK frequency in new mode.
  *
  * @return Error code.
  */
-mcglite_mode_error_t CLOCK_HAL_SetHircMode(uint32_t baseAddr, uint32_t *outClkFreq);
+mcglite_mode_error_t CLOCK_HAL_SetHircMode(MCG_Type * base, uint32_t *outClkFreq);
 
 /*!
  * @brief Sets the MCG_Lite to LIRC mode.
@@ -104,14 +105,14 @@ mcglite_mode_error_t CLOCK_HAL_SetHircMode(uint32_t baseAddr, uint32_t *outClkFr
  * This is an internal function that changes MCG_Lite
  * to LIRC mode.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  * @param lirc     Set to LIRC2M or LIRC8M.
  * @param div1     The FCRDIV setting.
  * @param outclkfreq MCGOUTCLK frequency in new mode.
  *
  * @return Error code.
  */
-mcglite_mode_error_t CLOCK_HAL_SetLircMode(uint32_t baseAddr,
+mcglite_mode_error_t CLOCK_HAL_SetLircMode(MCG_Type * base,
                                mcglite_lirc_select_t lirc,
                                mcglite_lirc_div_t div1,
                                uint32_t *outClkFreq);
@@ -123,12 +124,12 @@ mcglite_mode_error_t CLOCK_HAL_SetLircMode(uint32_t baseAddr,
  * to EXT mode. Before this function, please make sure
  * the OSC or external clock source is ready.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  * @param outclkfreq MCGOUTCLK frequency in new mode.
  *
  * @return Error code.
  */
-mcglite_mode_error_t CLOCK_HAL_SetExtMode(uint32_t baseAddr, uint32_t *outClkFreq);
+mcglite_mode_error_t CLOCK_HAL_SetExtMode(MCG_Type * base, uint32_t *outClkFreq);
 
 /*! @}*/
 
@@ -138,6 +139,7 @@ mcglite_mode_error_t CLOCK_HAL_SetExtMode(uint32_t baseAddr, uint32_t *outClkFre
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_MCGLITE_HAL_MODES_H__*/
 /*******************************************************************************
  * EOF

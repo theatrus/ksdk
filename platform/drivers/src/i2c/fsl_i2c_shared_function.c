@@ -33,19 +33,27 @@
 #include "fsl_i2c_shared_function.h"
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_I2C_COUNT
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /*! @brief Table of base addresses for I2C instances. */
-extern const uint32_t g_i2cBaseAddr[HW_I2C_INSTANCE_COUNT];
+extern I2C_Type * const g_i2cBase[I2C_INSTANCE_COUNT];
+
+/* External for the I2C master driver interrupt handler.*/
+extern void I2C_DRV_MasterIRQHandler(uint32_t instance);
+
+/* External for the I2C slave driver interrupt handler.*/
+extern void I2C_DRV_SlaveIRQHandler(uint32_t instance);
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
 
 /*!
- * @brief Pass IRQ control to either the master or slave driver. 
+ * @brief Pass IRQ control to either the master or slave driver.
  *
  * The address of the IRQ handlers are checked to make sure they are non-zero before
  * they are called. If the IRQ handler's address is zero, it means that driver was
@@ -57,10 +65,10 @@ extern const uint32_t g_i2cBaseAddr[HW_I2C_INSTANCE_COUNT];
  */
 void I2C_DRV_IRQHandler(uint32_t instance)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    assert(instance < I2C_INSTANCE_COUNT);
+    I2C_Type * base = g_i2cBase[instance];
 
-    if (I2C_HAL_IsMaster(baseAddr))
+    if (I2C_HAL_IsMaster(base))
     {
         /* Master mode.*/
         I2C_DRV_MasterIRQHandler(instance);
@@ -72,6 +80,7 @@ void I2C_DRV_IRQHandler(uint32_t instance)
     }
 }
 
+#endif /* FSL_FEATURE_SOC_I2C_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

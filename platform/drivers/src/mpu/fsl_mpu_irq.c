@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_mpu_driver.h"
+#if FSL_FEATURE_SOC_MPU_COUNT
 
 /******************************************************************************
  * Code
@@ -40,6 +41,7 @@ void BusFault_Handler()
 {
 }
 
+#endif
 
 /******************************************************************************
  * EOF

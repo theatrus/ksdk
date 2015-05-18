@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_DMAMUX_COUNT
 
 /*!
  * @addtogroup dmamux_hal
@@ -69,9 +70,9 @@ extern "C" {
  *
  * Initializes the DMAMUX module to the reset state.
  *
- * @param baseAddr Register base address for DMAMUX module.
+ * @param base Register base address for DMAMUX module.
  */
-void DMAMUX_HAL_Init(uint32_t baseAddr);
+void DMAMUX_HAL_Init(DMAMUX_Type * base);
 
 /*!
  * @brief Enables/Disables the DMAMUX channel.
@@ -79,28 +80,28 @@ void DMAMUX_HAL_Init(uint32_t baseAddr);
  * Enables the hardware request. If enabled, the hardware request is  sent to
  * the corresponding DMA channel.
  *
- * @param baseAddr Register base address for DMAMUX module.
+ * @param base Register base address for DMAMUX module.
  * @param channel DMAMUX channel number.
  * @param enable Enables (true) or Disables (false) DMAMUX channel.
  */
-static inline void DMAMUX_HAL_SetChannelCmd(uint32_t baseAddr, uint32_t channel, bool enable)
+static inline void DMAMUX_HAL_SetChannelCmd(DMAMUX_Type * base, uint32_t channel, bool enable)
 {
     assert(channel < FSL_FEATURE_DMAMUX_MODULE_CHANNEL);
-    BW_DMAMUX_CHCFGn_ENBL(baseAddr, channel, enable);
+    DMAMUX_BWR_CHCFG_ENBL(base, channel, enable);
 }
 
 #if (FSL_FEATURE_DMAMUX_HAS_TRIG == 1)
 /*!
  * @brief Enables/Disables the period trigger.
  *
- * @param baseAddr Register base address for DMAMUX module.
+ * @param base Register base address for DMAMUX module.
  * @param channel DMAMUX channel number.
  * @param enable Enables (true) or Disables (false) period trigger.
  */
-static inline void DMAMUX_HAL_SetPeriodTriggerCmd(uint32_t baseAddr, uint32_t channel, bool enable)
+static inline void DMAMUX_HAL_SetPeriodTriggerCmd(DMAMUX_Type * base, uint32_t channel, bool enable)
 {
     assert(channel < FSL_FEATURE_DMAMUX_MODULE_CHANNEL);
-    BW_DMAMUX_CHCFGn_TRIG(baseAddr, channel, enable);
+    DMAMUX_BWR_CHCFG_TRIG(base, channel, enable);
 }
 #endif
 
@@ -110,14 +111,14 @@ static inline void DMAMUX_HAL_SetPeriodTriggerCmd(uint32_t baseAddr, uint32_t ch
  * Sets the trigger source for the DMA channel. The trigger source is in the file
  * fsl_dma_request.h.
  *
- * @param baseAddr Register base address for DMAMUX module.
+ * @param base Register base address for DMAMUX module.
  * @param channel DMAMUX channel number.
  * @param source DMA request source.
  */
-static inline void DMAMUX_HAL_SetTriggerSource(uint32_t baseAddr, uint32_t channel, uint8_t source)
+static inline void DMAMUX_HAL_SetTriggerSource(DMAMUX_Type * base, uint32_t channel, uint8_t source)
 {
     assert(channel < FSL_FEATURE_DMAMUX_MODULE_CHANNEL);
-    BW_DMAMUX_CHCFGn_SOURCE(baseAddr, channel, source);
+    DMAMUX_BWR_CHCFG_SOURCE(base, channel, source);
 }
 
 /* @} */
@@ -128,6 +129,7 @@ static inline void DMAMUX_HAL_SetTriggerSource(uint32_t baseAddr, uint32_t chann
 
 /*! @} */
 
+#endif
 #endif /* __FSL_DMAMUX_HAL_H__ */
 /*******************************************************************************
  * EOF

@@ -30,20 +30,22 @@
 
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_LPSCI_COUNT
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Pointer to lpsci runtime state structure.*/
-void * g_lpsciStatePtr[HW_UART0_INSTANCE_COUNT] = { NULL };
+void * g_lpsciStatePtr[UART0_INSTANCE_COUNT] = { NULL };
 
 /* Table of base addresses for lpsci instances. */
-const uint32_t g_lpsciBaseAddr[HW_UART0_INSTANCE_COUNT] = UART0_BASE_ADDRS;
+UART0_Type * const g_lpsciBase[UART0_INSTANCE_COUNT] = UART0_BASE_PTRS;
 
 /* Table to save UART0 IRQ numbers defined in CMSIS files. */
 /* FIX ME: this should be replaced when KL25 header file is ready. */
-IRQn_Type g_lpsciRxTxIrqId[HW_UART0_INSTANCE_COUNT] = { UART0_IRQn };
+IRQn_Type g_lpsciRxTxIrqId[UART0_INSTANCE_COUNT] = { UART0_IRQn };
 
+#endif /* FSL_FEATURE_SOC_LPSCI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

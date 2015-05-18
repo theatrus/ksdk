@@ -53,8 +53,9 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/FreeRTOS/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/FreeRTOS/src)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include/device)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MK64F12)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK64F12/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK64F12/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/drivers/inc)
@@ -66,8 +67,9 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/FreeRTOS/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/FreeRTOS/src)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include/device)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MK64F12)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK64F12/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK64F12/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/drivers/inc)
@@ -101,6 +103,11 @@ ADD_LIBRARY(KsdkFreertosLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_adc16_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/adc16/fsl_adc16_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/src/adc16/fsl_adc16_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/flexbus/fsl_flexbus_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_flexbus_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/flexbus/fsl_flexbus_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_flexbus_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/flexbus/fsl_flexbus_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/flexcan/fsl_flexcan_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_flexcan_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/flexcan/fsl_flexcan_driver.c"
@@ -137,7 +144,7 @@ ADD_LIBRARY(KsdkFreertosLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/dspi/fsl_dspi_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_dspi_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_shared_function.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_shared_function.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_shared_function.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_common.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_master_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_master_driver.c"
@@ -148,7 +155,7 @@ ADD_LIBRARY(KsdkFreertosLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_slave_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_slave_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_shared_function.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_shared_function.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_shared_function.h"
     "${ProjDirPath}/../../../../platform/hal/src/ftm/fsl_ftm_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_ftm_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/ftm/fsl_ftm_driver.c"
@@ -162,7 +169,7 @@ ADD_LIBRARY(KsdkFreertosLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/i2c/fsl_i2c_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_i2c_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_shared_function.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_shared_function.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_i2c_shared_function.h"
     "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_common.c"
     "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_master_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_i2c_master_driver.h"
@@ -199,7 +206,6 @@ ADD_LIBRARY(KsdkFreertosLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/pit/fsl_pit_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_pit_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/pit/fsl_pit_driver.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/pit/fsl_pit_irq.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_pit_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/pit/fsl_pit_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/port/fsl_port_hal.c"
@@ -224,14 +230,13 @@ ADD_LIBRARY(KsdkFreertosLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/sdhc/fsl_sdhc_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_sdhc_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_sdhc.h"
-    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_sdmmc_card.h"
+    "${ProjDirPath}/../../../../platform/composite/inc/fsl_sdmmc_card.h"
     "${ProjDirPath}/../../../../platform/drivers/src/sdhc/fsl_sdhc_common.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_sim_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/sim/MK64F12/fsl_sim_hal_MK64F12.c"
     "${ProjDirPath}/../../../../platform/hal/src/sim/MK64F12/fsl_sim_hal_MK64F12.h"
     "${ProjDirPath}/../../../../platform/hal/src/smc/fsl_smc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_smc_hal.h"
-    "${ProjDirPath}/../../../../platform/hal/src/pmc/fsl_pmc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_pmc_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/rcm/fsl_rcm_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_rcm_hal.h"
@@ -247,6 +252,11 @@ ADD_LIBRARY(KsdkFreertosLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/wdog/fsl_wdog_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_wdog_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/wdog/fsl_wdog_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/vref/fsl_vref_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_vref_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_vref_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/vref/fsl_vref_common.c"
+    "${ProjDirPath}/../../../../platform/drivers/src/vref/fsl_vref_driver.c"
 )
 
 SET_TARGET_PROPERTIES(KsdkFreertosLib PROPERTIES OUTPUT_NAME "libksdk_platform_freertos.a")

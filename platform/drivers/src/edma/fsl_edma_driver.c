@@ -33,6 +33,7 @@
 #include "fsl_edma_driver.h"
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
+#if FSL_FEATURE_SOC_EDMA_COUNT
 
 /*******************************************************************************
  * Variabled
@@ -68,7 +69,8 @@ static void EDMA_DRV_ClearIntStatus(uint8_t channel);
 edma_status_t EDMA_DRV_Init(edma_state_t *edmaState, const edma_user_config_t *userConfig)
 {
     uint32_t i, j;
-    uint32_t edmaRegBase, dmamuxRegBase;
+    DMA_Type * edmaRegBase;
+    DMAMUX_Type * dmamuxRegBase;
     IRQn_Type irqNumber;
 
     if (g_edma)
@@ -83,9 +85,9 @@ edma_status_t EDMA_DRV_Init(edma_state_t *edmaState, const edma_user_config_t *u
     OSA_MutexCreate(&g_edma->lock);
 #endif
 
-    for (i = 0; i < HW_DMA_INSTANCE_COUNT; i++)
+    for (i = 0; i < DMA_INSTANCE_COUNT; i++)
     {
-        edmaRegBase = g_edmaBaseAddr[i];
+        edmaRegBase = g_edmaBase[i];
         /* Enable clock gate of eDMA module. */
         CLOCK_SYS_EnableDmaClock(i);
 
@@ -99,9 +101,11 @@ edma_status_t EDMA_DRV_Init(edma_state_t *edmaState, const edma_user_config_t *u
 #endif
         EDMA_HAL_SetHaltOnErrorCmd(edmaRegBase, !userConfig->notHaltOnError);
 
+#if !defined FSL_FEATURE_EDMA_HAS_ERROR_IRQ
         /* Enable the error interrupt for eDMA module. */
         irqNumber = g_edmaErrIrqId[i];
         INT_SYS_EnableIRQ(irqNumber);
+#endif
 
         /* Register all edma channl interrupt handler into vector table. */
         for (j = 0; j < FSL_FEATURE_EDMA_MODULE_CHANNEL; j++)
@@ -112,12 +116,12 @@ edma_status_t EDMA_DRV_Init(edma_state_t *edmaState, const edma_user_config_t *u
         }
     }
 
-    for (i = 0; i < HW_DMAMUX_INSTANCE_COUNT; i++)
+    for (i = 0; i < DMAMUX_INSTANCE_COUNT; i++)
     {
-        dmamuxRegBase = g_dmamuxBaseAddr[i];
+        dmamuxRegBase = g_dmamuxBase[i];
         /* Enable dmamux clock gate */
         CLOCK_SYS_EnableDmamuxClock(i);
-         
+
         /* Init dmamux module in hardware level */
         DMAMUX_HAL_Init(dmamuxRegBase);
     }
@@ -138,11 +142,13 @@ edma_status_t EDMA_DRV_Deinit(void)
     edma_chn_state_t *chn;
 
     /* Release all edma channel. */
-    for (i = 0; i < HW_DMA_INSTANCE_COUNT; i++)
+    for (i = 0; i < DMA_INSTANCE_COUNT; i++)
     {
+#if !defined FSL_FEATURE_EDMA_HAS_ERROR_IRQ
         /* Disable the error interrupt for eDMA module. */
         irqNumber = g_edmaErrIrqId[i];
         INT_SYS_DisableIRQ(irqNumber);
+#endif
 
         for (j = i * FSL_FEATURE_EDMA_MODULE_CHANNEL; j < (i + 1) * FSL_FEATURE_EDMA_MODULE_CHANNEL; j++)
         {
@@ -163,7 +169,7 @@ edma_status_t EDMA_DRV_Deinit(void)
     }
 
     /* Disable dmamux clock gate. */
-    for (i = 0; i < HW_DMAMUX_INSTANCE_COUNT; i++)
+    for (i = 0; i < DMAMUX_INSTANCE_COUNT; i++)
     {
         CLOCK_SYS_DisableDmamuxClock(i);
     }
@@ -259,9 +265,9 @@ static edma_status_t EDMA_DRV_ClaimChannel(
                 uint8_t channel, dma_request_source_t source, edma_chn_state_t *chn)
 {
     uint8_t src = (uint32_t)source & 0xFF;
-    uint32_t edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+    DMA_Type * edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
-    uint32_t dmamuxRegBase = VIRTUAL_CHN_TO_DMAMUX_MODULE_REGBASE(channel);
+    DMAMUX_Type * dmamuxRegBase = VIRTUAL_CHN_TO_DMAMUX_MODULE_REGBASE(channel);
     uint32_t dmamuxChannel = VIRTUAL_CHN_TO_DMAMUX_CHN(channel);
 
     /* Reset the channel state structure to default value. */
@@ -293,7 +299,7 @@ static edma_status_t EDMA_DRV_ClaimChannel(
 edma_status_t EDMA_DRV_ReleaseChannel(edma_chn_state_t *chn)
 {
     uint32_t channel = chn->channel;
-    uint32_t edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+    DMA_Type * edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
 
     if (!g_edma->chn[channel])
@@ -320,7 +326,7 @@ edma_status_t EDMA_DRV_ReleaseChannel(edma_chn_state_t *chn)
  *END**************************************************************************/
 static void EDMA_DRV_ClearIntStatus(uint8_t channel)
 {
-    uint32_t edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+    DMA_Type * edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
 
     EDMA_HAL_ClearDoneStatusFlag(edmaRegBase, (edma_channel_indicator_t)edmaChannel);
@@ -340,7 +346,6 @@ void EDMA_DRV_IRQHandler(uint8_t channel)
 
     if (!chn)
     {
-        EDMA_DRV_StopChannel(chn);
         return;
     }
 
@@ -362,14 +367,8 @@ void EDMA_DRV_IRQHandler(uint8_t channel)
 void EDMA_DRV_IRQHandler(uint8_t channel)
 {
     edma_chn_state_t *chn = g_edma->chn[channel];
-    uint32_t edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+    DMA_Type * edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
-
-    if (!chn)
-    {
-        EDMA_DRV_StopChannel(chn);
-        return;
-    }
 
     while (channel < 32)
     {
@@ -378,12 +377,14 @@ void EDMA_DRV_IRQHandler(uint8_t channel)
         if ((chn != NULL) && (EDMA_HAL_GetIntStatusFlag(edmaRegBase, edmaChannel) != 0))
         {
             EDMA_DRV_ClearIntStatus(channel);
-        }
-        if (chn->callback)
-        {
-            chn->callback(chn->parameter, chn->status);
+            if (chn->callback)
+            {
+                chn->callback(chn->parameter, chn->status);
+            }
         }
         channel += 16;
+        edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+        edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
     }
 }
 #endif
@@ -397,7 +398,7 @@ void EDMA_DRV_IRQHandler(uint8_t channel)
 void EDMA_DRV_ErrorIRQHandler(uint8_t instance)
 {
     uint32_t channel, error, j = 0;
-    uint32_t edmaRegBase = g_edmaBaseAddr[instance];
+    DMA_Type * edmaRegBase = g_edmaBase[instance];
     edma_chn_state_t *chn;
 
     error = EDMA_HAL_GetErrorIntStatusFlag(edmaRegBase);
@@ -620,6 +621,7 @@ edma_status_t EDMA_DRV_ConfigScatterGatherTransfer(
              * is not required to prepare the software TCD memory. */
             edma_software_tcd_t temp[2];
             edma_software_tcd_t *tempTCD = STCD_ADDR(temp);
+            memset((void*) tempTCD,0, sizeof(edma_software_tcd_t));
             EDMA_DRV_PrepareDescriptorTransfer(chn, tempTCD, &config, true, true);
             EDMA_DRV_PushDescriptorToReg(chn, tempTCD);
         }
@@ -648,7 +650,7 @@ edma_status_t EDMA_DRV_ConfigScatterGatherTransfer(
 edma_status_t EDMA_DRV_StartChannel(edma_chn_state_t *chn)
 {
     uint32_t channel = chn->channel;
-    uint32_t edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+    DMA_Type * edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
 
     EDMA_HAL_SetDmaRequestCmd(edmaRegBase,(edma_channel_indicator_t)edmaChannel,true);
@@ -665,7 +667,7 @@ edma_status_t EDMA_DRV_StartChannel(edma_chn_state_t *chn)
 edma_status_t EDMA_DRV_StopChannel(edma_chn_state_t *chn)
 {
     uint32_t channel = chn->channel;
-    uint32_t edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+    DMA_Type * edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
 
     EDMA_HAL_SetDmaRequestCmd(edmaRegBase,(edma_channel_indicator_t)edmaChannel, false);
@@ -682,7 +684,7 @@ edma_status_t EDMA_DRV_StopChannel(edma_chn_state_t *chn)
 edma_status_t EDMA_DRV_PushDescriptorToReg(edma_chn_state_t *chn, edma_software_tcd_t *stcd)
 {
     uint32_t channel = chn->channel;
-    uint32_t edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+    DMA_Type * edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
     uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
 
     EDMA_HAL_HTCDClearReg(edmaRegBase, edmaChannel);
@@ -690,6 +692,7 @@ edma_status_t EDMA_DRV_PushDescriptorToReg(edma_chn_state_t *chn, edma_software_
 
     return kStatus_EDMA_Success;
 }
+#endif
 
 /*******************************************************************************
  * EOF

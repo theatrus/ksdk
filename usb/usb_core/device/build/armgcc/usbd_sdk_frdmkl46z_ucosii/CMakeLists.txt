@@ -37,15 +37,15 @@ SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-format  -fno-strict-ali
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
 
 # C MACRO
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DDEBUG")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D_DEBUG=1")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MKL46Z256VLL4")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_UCOSII")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFRDM_KL46Z48M")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFRDM_KL46Z")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFREEDOM")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DNDEBUG")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D_DEBUG=0")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MKL46Z256VLL4")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_UCOSII")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFRDM_KL46Z48M")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFRDM_KL46Z")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFREEDOM")
 
 # CXX MACRO
@@ -72,15 +72,18 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/classes/phdc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller/khci)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller/ehci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../hal)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup/MKL46Z4)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device/MKL46Z4)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKL46Z4/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKL46Z4/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKL46Z4)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../include/frdmkl46z)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Ports/ARM-Cortex-M0/Generic/GNU)
@@ -103,15 +106,18 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/classes/phdc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller/khci)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller/ehci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../hal)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup/MKL46Z4)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device/MKL46Z4)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKL46Z4/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKL46Z4/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKL46Z4)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../include/frdmkl46z)
 ENDIF()
 
@@ -156,11 +162,11 @@ ADD_LIBRARY(KsdkUsbDeviceUcosiiLib STATIC
     "${ProjDirPath}/../../../sources/classes/msd/usb_msc_scsi.h"
     "${ProjDirPath}/../../../sources/classes/phdc/usb_phdc.c"
     "${ProjDirPath}/../../../sources/classes/phdc/usb_phdc.h"
-    "${ProjDirPath}/../../../sources/controller/khci_interface.c"
     "${ProjDirPath}/../../../sources/controller/usb_dev.c"
     "${ProjDirPath}/../../../sources/controller/usb_dev.h"
     "${ProjDirPath}/../../../sources/controller/usb_framework.c"
     "${ProjDirPath}/../../../sources/controller/usb_framework.h"
+    "${ProjDirPath}/../../../sources/controller/khci/device_khci_interface.c"
     "${ProjDirPath}/../../../sources/controller/khci/khci_dev.c"
     "${ProjDirPath}/../../../sources/controller/khci/khci_dev.h"
     "${ProjDirPath}/../../../sources/controller/khci/khci_dev_misc.h"

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2014, Freescale Semiconductor, Inc.
+* Copyright (c) 2014-2015, Freescale Semiconductor, Inc.
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification,
@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_MCGLITE_COUNT
 
 /*! @addtogroup mcglite_hal*/
 /*! @{*/
@@ -45,11 +46,12 @@
 * Definitions
 ******************************************************************************/
 extern uint32_t g_xtalRtcClkFreq;         /* EXTAL RTC clock */
+extern uint32_t g_xtal0ClkFreq;           /* EXTAL0 clock */
+
 /*! @brief MCG_Lite constant definitions. */
 enum _mcglite_constant
 {
     kMcgliteConst0   =          0U,
-    
     kMcgliteConst2M  =    2000000U,
     kMcgliteConst8M  =    8000000U,
     kMcgliteConst48M =   48000000U,
@@ -58,63 +60,54 @@ enum _mcglite_constant
 /*! @brief MCG_Lite clock source selection. */
 typedef enum _mcglite_mcgoutclk_source
 {
-    kMcgliteClkSrcHirc,      /* MCGOUTCLK source is HIRC */
-    kMcgliteClkSrcLirc,      /* MCGOUTCLK source is LIRC */
-    kMcgliteClkSrcExt,       /* MCGOUTCLK source is external clock source */
+    kMcgliteClkSrcHirc,      /*!< MCGOUTCLK source is HIRC */
+    kMcgliteClkSrcLirc,      /*!< MCGOUTCLK source is LIRC */
+    kMcgliteClkSrcExt,       /*!< MCGOUTCLK source is external clock source */
     kMcgliteClkSrcReserved
 } mcglite_mcgoutclk_source_t;
 
 /*! @brief MCG_Lite LIRC select. */
 typedef enum _mcglite_lirc_select
 {
-    kMcgliteLircSel2M,          /* slow internal reference(LIRC) 2MHz clock selected */
-    kMcgliteLircSel8M,          /* slow internal reference(LIRC) 8MHz clock selected */
+    kMcgliteLircSel2M,          /*!< slow internal reference(LIRC) 2MHz clock selected */
+    kMcgliteLircSel8M,          /*!< slow internal reference(LIRC) 8MHz clock selected */
 } mcglite_lirc_select_t;
-
-/*! @brief MCG_Lite external clock Select */
-typedef enum _mcglite_ext_select
-{
-    kMcgliteExtInput,                /* Selects external input clock */
-    kMcgliteExtOsc                   /* Selects Oscillator  */
-} mcglite_ext_select_t;
 
 /*! @brief MCG_Lite divider factor selection for clock source*/
 typedef enum _mcglite_lirc_div
 {
-    kMcgliteLircDivBy1 = 0U,          /* divider is 1 */
-    kMcgliteLircDivBy2 ,              /* divider is 2 */
-    kMcgliteLircDivBy4 ,              /* divider is 4 */
-    kMcgliteLircDivBy8 ,              /* divider is 8 */
-    kMcgliteLircDivBy16,              /* divider is 16 */
-    kMcgliteLircDivBy32,              /* divider is 32 */
-    kMcgliteLircDivBy64,              /* divider is 64 */
-    kMcgliteLircDivBy128              /* divider is 128 */
+    kMcgliteLircDivBy1 = 0U,          /*!< divider is 1 */
+    kMcgliteLircDivBy2 ,              /*!< divider is 2 */
+    kMcgliteLircDivBy4 ,              /*!< divider is 4 */
+    kMcgliteLircDivBy8 ,              /*!< divider is 8 */
+    kMcgliteLircDivBy16,              /*!< divider is 16 */
+    kMcgliteLircDivBy32,              /*!< divider is 32 */
+    kMcgliteLircDivBy64,              /*!< divider is 64 */
+    kMcgliteLircDivBy128              /*!< divider is 128 */
 } mcglite_lirc_div_t;
 
-/*! @brief MCG_Lite external oscillator status */
-typedef enum _mcglite_ext_osc_status
+/*! @brief MCG_Lite external clock Select */
+typedef enum _osc_src
 {
-    kMcgliteOscUnready = 0U,             /* osc clock is not ready */
-    kMcgliteOscReady                     /* osc clock is ready     */
-} mcglite_ext_osc_status_t;
+    kOscSrcExt,                /*!< Selects external input clock */
+    kOscSrcOsc                 /*!< Selects Oscillator  */
+} osc_src_t;
 
 /*! @brief MCG frequency range select */
-typedef enum _mcg_freq_range_select
+typedef enum _osc_range
 {
-    kMcgFreqRangeSelLow,         /* Low frequency range selected for the crystal OSC */
-    kMcgFreqRangeSelHigh,        /* High frequency range selected for the crystal OSC */
-    kMcgFreqRangeSelVeryHigh,    /* Very High frequency range selected for the crystal OSC */
-    kMcgFreqRangeSelVeryHigh1    /* Very High frequency range selected for the crystal OSC */
-} mcg_freq_range_select_t;
+    kOscRangeLow,         /*!< Low frequency range selected for the crystal OSC */
+    kOscRangeHigh,        /*!< High frequency range selected for the crystal OSC */
+    kOscRangeVeryHigh,    /*!< Very High frequency range selected for the crystal OSC */
+    kOscRangeVeryHigh1    /*!< Very High frequency range selected for the crystal OSC */
+} osc_range_t;
 
 /*! @brief MCG high gain oscillator select */
-typedef enum _mcg_high_gain_osc_select
+typedef enum _osc_gain
 {
-    kMcgHighGainOscSelLow,               /* Configure crystal oscillator for low-power operation */
-    kMcgHighGainOscSelHigh               /* Configure crystal oscillator for high-gain operation */
-} mcg_high_gain_osc_select_t;
-
-extern uint32_t g_xtal0ClkFreq;           /* EXTAL0 clock */
+    kOscGainLow,               /*!< Configure crystal oscillator for low-power operation */
+    kOscGainHigh               /*!< Configure crystal oscillator for high-gain operation */
+} osc_gain_t;
 
 /*******************************************************************************
 * API
@@ -127,17 +120,30 @@ extern "C" {
 /*@{*/
 
 /*!
+* @brief Gets the current MCGPCLK frequency.
+*
+* This function returns the MCGPCLK frequency (Hertz) based on
+* the current MCG_Lite configurations and settings. The configuration should be
+* properly done in order to get the valid value.
+*
+* @param base MCG_Lite register base address.
+*
+* @return Frequency value in Hertz of MCGPCLK.
+*/
+uint32_t CLOCK_HAL_GetPeripheralClk(MCG_Type * base);
+
+/*!
 * @brief Gets the current MCG_Lite low internal reference clock(2MHz or 8MHz)
 *
 * This function returns the MCG_Lite LIRC frequency (Hertz) based
 * on the current MCG_Lite configurations and settings. Please make sure LIRC
 * has been properly configured to get the valid value.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @return Frequency value in Hertz of the MCG_Lite LIRC.
 */
-uint32_t CLOCK_HAL_GetLircClk(uint32_t baseAddr);
+uint32_t CLOCK_HAL_GetLircClk(MCG_Type * base);
 
 /*!
 * @brief Gets the current MCG_Lite LIRC_DIV1_CLK frequency.
@@ -146,11 +152,11 @@ uint32_t CLOCK_HAL_GetLircClk(uint32_t baseAddr);
 * on the current MCG_Lite configurations and settings. Please make sure LIRC
 * has been properly configured to get the valid value.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @return Frequency value in Hertz of the MCG_Lite LIRC_DIV1_CLK.
 */
-uint32_t CLOCK_HAL_GetLircDiv1Clk(uint32_t baseAddr);
+uint32_t CLOCK_HAL_GetLircDiv1Clk(MCG_Type * base);
 
 /*!
 * @brief Gets the current MCGIRCLK frequency.
@@ -159,11 +165,11 @@ uint32_t CLOCK_HAL_GetLircDiv1Clk(uint32_t baseAddr);
 * on the current MCG_Lite configurations and settings. Please make sure LIRC
 * has been properly configured to get the valid value.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @return Frequency value in Hertz of MCGIRCLK.
 */
-uint32_t CLOCK_HAL_GetInternalRefClk(uint32_t baseAddr);
+uint32_t CLOCK_HAL_GetInternalRefClk(MCG_Type * base);
 
 /*!
 * @brief Gets the current MCGOUTCLK frequency.
@@ -172,11 +178,11 @@ uint32_t CLOCK_HAL_GetInternalRefClk(uint32_t baseAddr);
 * the current MCG_Lite configurations and settings. The configuration should be
 * properly done in order to get the valid value.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @return Frequency value in Hertz of MCGOUTCLK.
 */
-uint32_t CLOCK_HAL_GetOutClk(uint32_t baseAddr);
+uint32_t CLOCK_HAL_GetOutClk(MCG_Type * base);
 
 /*@}*/
 
@@ -184,77 +190,17 @@ uint32_t CLOCK_HAL_GetOutClk(uint32_t baseAddr);
 /*@{*/
 
 /*!
-* @brief Sets the Clock Source Select.
-*
-* This function selects the clock source for MCGOUTCLK.
-*
-* @param baseAddr  MCG_Lite register base address.
-* @param select    Clock source selection
-*                  - 00: HIRC clock is select.
-*                  - 01: LIRC(low Internal reference clock) is selected.
-*                  - 10: External reference clock is selected.
-*                  - 11: Reserved.
-*/
-static inline void CLOCK_HAL_SetClkSrcMode(uint32_t baseAddr, mcglite_mcgoutclk_source_t select)
-{
-    BW_MCG_C1_CLKS(baseAddr, select);
-}
-
-/*!
-* @brief Gets the Clock Source Select.
-*
-* This function checks the register MCG_C1 CLKS and returns the clock source
-* selection for the MCGOUTCLK.
-*
-* @param baseAddr MCG_Lite register base address.
-*
-* @return Clock source selection
-*/
-static inline mcglite_mcgoutclk_source_t CLOCK_HAL_GetClkSrcMode(uint32_t baseAddr)
-{
-    return (mcglite_mcgoutclk_source_t)BR_MCG_C1_CLKS(baseAddr);
-}
-
-/*!
 * @brief Sets the Low Internal Reference Select.
 *
 * This function sets the LIRC to work at 2MHz or 8MHz.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
-* @param Select 2MHz or 8MHz.
+* @param select 2MHz or 8MHz.
 */
-static inline void CLOCK_HAL_SetLircSelMode(uint32_t baseAddr, mcglite_lirc_select_t select)
+static inline void CLOCK_HAL_SetLircSelMode(MCG_Type * base, mcglite_lirc_select_t select)
 {
-    BW_MCG_C2_IRCS(baseAddr, select);
-}
-
-/*!
-* @brief Gets the Low Internal Reference Select.
-*
-* This function gets current LIRC is working at 2MHz or 8MHz.
-*
-* @param baseAddr MCG_Lite register base address.
-*
-* @return Current LIRC run status.
-*/
-static inline mcglite_lirc_select_t CLOCK_HAL_GetLircSelMode(uint32_t baseAddr)
-{
-    return (mcglite_lirc_select_t)BR_MCG_C2_IRCS(baseAddr);
-}
-
-/*!
-* @brief Gets the low internal reference divider 1.
-*
-* This function gets the low internal reference divider 1, the register FCRDIV.
-*
-* @param baseAddr MCG_Lite register base address.
-*
-* @return Current LIRC divider 1 setting.
-*/
-static inline mcglite_lirc_div_t CLOCK_HAL_GetLircRefDiv(uint32_t baseAddr)
-{
-    return (mcglite_lirc_div_t)BR_MCG_SC_FCRDIV(baseAddr);
+    MCG_BWR_C2_IRCS(base, select);
 }
 
 /*!
@@ -262,13 +208,13 @@ static inline mcglite_lirc_div_t CLOCK_HAL_GetLircRefDiv(uint32_t baseAddr)
 *
 * This function sets the low internal reference divider 1, the register FCRDIV.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @param setting LIRC divider 1 setting value.
 */
-static inline void CLOCK_HAL_SetLircRefDiv(uint32_t baseAddr, mcglite_lirc_div_t setting)
+static inline void CLOCK_HAL_SetLircRefDiv(MCG_Type * base, mcglite_lirc_div_t setting)
 {
-    BW_MCG_SC_FCRDIV(baseAddr, setting);
+    MCG_BWR_SC_FCRDIV(base, setting);
 }
 
 /*!
@@ -276,27 +222,13 @@ static inline void CLOCK_HAL_SetLircRefDiv(uint32_t baseAddr, mcglite_lirc_div_t
 *
 * This function sets the low internal reference divider 2.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @param setting LIRC divider 2 setting value.
 */
-static inline void CLOCK_HAL_SetLircDiv2(uint32_t baseAddr, mcglite_lirc_div_t setting)
+static inline void CLOCK_HAL_SetLircDiv2(MCG_Type * base, mcglite_lirc_div_t setting)
 {
-    BW_MCG_MC_LIRC_DIV2(baseAddr, setting);
-}
-
-/*!
-* @brief Gets the low internal reference divider 2.
-*
-* This function gets the low internal reference divider 2 setting.
-*
-* @param baseAddr MCG_Lite register base address.
-*
-* @return Current LIRC divider 2 setting.
-*/
-static inline mcglite_lirc_div_t CLOCK_HAL_GetLircDiv2(uint32_t baseAddr)
-{
-    return (mcglite_lirc_div_t)BR_MCG_MC_LIRC_DIV2(baseAddr);
+    MCG_BWR_MC_LIRC_DIV2(base, setting);
 }
 
 /*!
@@ -304,30 +236,15 @@ static inline mcglite_lirc_div_t CLOCK_HAL_GetLircDiv2(uint32_t baseAddr)
 *
 * This function enables/disables the low internal reference clock.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @param enable Enable or disable internal reference clock.
 *                 - true: MCG_Lite Low IRCLK active
 *                 - false: MCG_Lite Low IRCLK inactive
 */
-static inline void CLOCK_HAL_SetLircCmd(uint32_t baseAddr, bool enable)
+static inline void CLOCK_HAL_SetLircCmd(MCG_Type * base, bool enable)
 {
-    BW_MCG_C1_IRCLKEN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Get the Low Internal Reference Clock enable or not.
-*
-* This function checks the low internal reference is enabled or disabled.
-*
-* @param baseAddr MCG_Lite register base address.
-*
-* @retval true  LIRC is enabled
-* @retval false LIRC is disabled
-*/
-static inline bool CLOCK_HAL_GetLircCmd(uint32_t baseAddr)
-{
-    return BR_MCG_C1_IRCLKEN(baseAddr);
+    MCG_BWR_C1_IRCLKEN(base, enable);
 }
 
 /*!
@@ -336,31 +253,16 @@ static inline bool CLOCK_HAL_GetLircCmd(uint32_t baseAddr)
 * This function controls whether or not the low internal reference clock remains
 * enabled when the MCG_Lite enters STOP mode.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @param enable Enable or disable low internal reference clock stop setting.
 *                 - true: Internal reference clock is enabled in stop mode if IRCLKEN is set
 before entering STOP mode.
 *                 - false: Low internal reference clock is disabled in STOP mode
 */
-static inline void CLOCK_HAL_SetLircStopCmd(uint32_t baseAddr, bool enable)
+static inline void CLOCK_HAL_SetLircStopCmd(MCG_Type * base, bool enable)
 {
-    BW_MCG_C1_IREFSTEN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Gets the Low Internal Reference Clock disabled or not in STOP mode.
-*
-* This function gets the Low Internal Reference Clock Stop Enable setting.
-*
-* @param baseAddr MCG_Lite register base address.
-*
-* @retval true  LIRC is enabled in STOP mode if IRCLKEN is set.
-* @retval false LIRC is disabled in STOP mode.
-*/
-static inline bool CLOCK_HAL_GetLircStopCmd(uint32_t baseAddr)
-{
-    return BR_MCG_C1_IREFSTEN(baseAddr);
+    MCG_BWR_C1_IREFSTEN(base, enable);
 }
 
 /*!
@@ -368,29 +270,15 @@ static inline bool CLOCK_HAL_GetLircStopCmd(uint32_t baseAddr)
 *
 * This function enables/disables the internal reference clock for use as MCGPCLK.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @param enable Enable or disable HIRC.
 *                 - true: MCG_Lite HIRC active
 *                 - false: MCG_Lite HIRC inactive
 */
-static inline void CLOCK_HAL_SetHircCmd(uint32_t baseAddr, bool enable)
+static inline void CLOCK_HAL_SetHircCmd(MCG_Type * base, bool enable)
 {
-    BW_MCG_MC_HIRCEN(baseAddr, enable ? 1 : 0);
-}
-
-/*!
-* @brief Gets the High Internal Reference Clock is enabled or not.
-*
-* This function gets the high internal reference clock enable setting.
-*
-* @param baseAddr MCG_Lite register base address.
-*
-* @return True if high internal reference clock is enabled
-*/
-static inline bool CLOCK_HAL_GetHircCmd(uint32_t baseAddr)
-{
-    return BR_MCG_MC_HIRCEN(baseAddr);
+    MCG_BWR_MC_HIRCEN(base, enable);
 }
 
 /*!
@@ -399,29 +287,15 @@ static inline bool CLOCK_HAL_GetHircCmd(uint32_t baseAddr)
 * This function selects the source for the external reference clock.
 * Refer to the Oscillator (OSC) for more details.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @param select  External Reference Select.
 *                 - 0: External input clock requested
 *                 - 1: Crystal requested
 */
-static inline void CLOCK_HAL_SetExtRefSelMode0(uint32_t baseAddr, mcglite_ext_select_t select)
+static inline void CLOCK_HAL_SetExtRefSelMode0(MCG_Type * base, osc_src_t select)
 {
-    BW_MCG_C2_EREFS0(baseAddr, select);
-}
-
-/*!
-* @brief Gets the External Reference Select.
-*
-* This function gets the External Reference Select.
-*
-* @param baseAddr MCG_Lite register base address.
-*
-* @return External Reference Select.
-*/
-static inline mcglite_ext_select_t CLOCK_HAL_GetExtRefSelMode0(uint32_t baseAddr)
-{
-    return (mcglite_ext_select_t)BR_MCG_C2_EREFS0(baseAddr);
+    MCG_BWR_C2_EREFS0(base, select);
 }
 
 /*!
@@ -431,7 +305,7 @@ static inline mcglite_ext_select_t CLOCK_HAL_GetExtRefSelMode0(uint32_t baseAddr
 * The CLKST bits do not update immediately after a write to the CLKS bits due to
 * internal synchronization between clock domains.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @return status  Clock Mode Status
 *                  - 00: HIRC clock is select.
@@ -439,9 +313,9 @@ static inline mcglite_ext_select_t CLOCK_HAL_GetExtRefSelMode0(uint32_t baseAddr
 *                  - 10: External reference clock is selected.
 *                  - 11: Reserved.
 */
-static inline mcglite_mcgoutclk_source_t CLOCK_HAL_GetClkSrcStat(uint32_t baseAddr)
+static inline mcglite_mcgoutclk_source_t CLOCK_HAL_GetClkSrcStat(MCG_Type * base)
 {
-    return (mcglite_mcgoutclk_source_t)BR_MCG_S_CLKST(baseAddr);
+    return (mcglite_mcgoutclk_source_t)MCG_BRD_S_CLKST(base);
 }
 
 /*!
@@ -453,13 +327,13 @@ static inline mcglite_mcgoutclk_source_t CLOCK_HAL_GetClkSrcStat(uint32_t baseAd
 * is cleared to 0 if the OSC is subsequently disabled. See
 * the OSC module's detailed description for more information.
 *
-* @param baseAddr MCG_Lite register base address.
+* @param base MCG_Lite register base address.
 *
 * @return OSC initialization status
 */
-static inline mcglite_ext_osc_status_t CLOCK_HAL_GetOscInit0(uint32_t baseAddr)
+static inline bool CLOCK_HAL_IsOscStable(MCG_Type * base)
 {
-    return (mcglite_ext_osc_status_t)BR_MCG_S_OSCINIT0(baseAddr);
+    return (bool)MCG_BRD_S_OSCINIT0(base);
 }
 
 #if FSL_FEATURE_MCGLITE_HAS_RANGE0
@@ -470,28 +344,15 @@ static inline mcglite_ext_osc_status_t CLOCK_HAL_GetOscInit0(uint32_t baseAddr)
  * or an external clock source. See the Oscillator chapter for more details and
  * the device data sheet for the frequency ranges used.
  *
- * @param baseAddr MCG_Lite register base address.
- * @params setting  Frequency Range0 Select Setting
+ * @param base MCG_Lite register base address.
+ * @param setting  Frequency Range0 Select Setting
  *                  - 00: Low frequency range selected for the crystal oscillator.
  *                  - 01: High frequency range selected for the crystal oscillator.
  *                  - 1X: Very high frequency range selected for the crystal oscillator.
  */
-static inline void CLOCK_HAL_SetRange0Mode(uint32_t baseAddr, mcg_freq_range_select_t setting)
+static inline void CLOCK_HAL_SetRange0Mode(MCG_Type * base, osc_range_t setting)
 {
-    BW_MCG_C2_RANGE0(baseAddr, setting);
-}
-
-/*!
- * @brief Gets the Frequency Range0 Select Setting.
- *
- * This function  gets the Frequency Range0 Select Setting.
- *
- * @param baseAddr MCG_Lite register base address.
- * @return setting  Frequency Range0 Select Setting
- */
-static inline mcg_freq_range_select_t CLOCK_HAL_GetRange0Mode(uint32_t baseAddr)
-{
-    return (mcg_freq_range_select_t)BR_MCG_C2_RANGE0(baseAddr);
+    MCG_BWR_C2_RANGE0(base, setting);
 }
 #endif
 
@@ -502,28 +363,15 @@ static inline mcg_freq_range_select_t CLOCK_HAL_GetRange0Mode(uint32_t baseAddr)
  * This function controls the OSC0 crystal oscillator mode of operation.
  * See the Oscillator chapter for more details.
  *
- * @param baseAddr MCG_Lite register base address.
- * @params setting  High Gain Oscillator0 Select Setting
+ * @param base MCG_Lite register base address.
+ * @param setting  High Gain Oscillator0 Select Setting
  *                  - 0: Configure crystal oscillator for low-power operation.
  *                  - 1: Configure crystal oscillator for high-gain operation.
  */
-static inline void CLOCK_HAL_SetHighGainOsc0Mode(uint32_t baseAddr,
-                                                 mcg_high_gain_osc_select_t setting)
+static inline void CLOCK_HAL_SetHighGainOsc0Mode(MCG_Type * base,
+                                                 osc_gain_t setting)
 {
-    BW_MCG_C2_HGO0(baseAddr, setting);
-}
-
-/*!
- * @brief Gets the High Gain Oscillator0 Select Setting.
- *
- * This function  gets the High Gain Oscillator0 Select Setting.
- *
- * @param baseAddr MCG_Lite register base address.
- * @return setting  High Gain Oscillator0 Select Setting
- */
-static inline mcg_high_gain_osc_select_t CLOCK_HAL_GetHighGainOsc0Mode(uint32_t baseAddr)
-{
-    return (mcg_high_gain_osc_select_t)BR_MCG_C2_HGO0(baseAddr);
+    MCG_BWR_C2_HGO0(base, setting);
 }
 #endif
 
@@ -533,11 +381,11 @@ static inline mcg_high_gain_osc_select_t CLOCK_HAL_GetHighGainOsc0Mode(uint32_t 
  *
  * This function gets the High-frequency IRC coarse trim value.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  */
-static inline uint8_t CLOCK_HAL_GetHircCoarseTrim(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetHircCoarseTrim(MCG_Type * base)
 {
-    return BR_MCG_HCTRIM_COARSE_TRIM(baseAddr);
+    return MCG_BRD_HCTRIM_COARSE_TRIM(base);
 }
 #endif
 
@@ -547,11 +395,11 @@ static inline uint8_t CLOCK_HAL_GetHircCoarseTrim(uint32_t baseAddr)
  *
  * This function gets the High-frequency IRC tempco trim value.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  */
-static inline uint8_t CLOCK_HAL_GetHircTempcoTrim(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetHircTempcoTrim(MCG_Type * base)
 {
-    return BR_MCG_HTTRIM_TEMPCO_TRIM(baseAddr);
+    return MCG_BRD_HTTRIM_TEMPCO_TRIM(base);
 }
 #endif
 
@@ -561,11 +409,11 @@ static inline uint8_t CLOCK_HAL_GetHircTempcoTrim(uint32_t baseAddr)
  *
  * This function gets the High-frequency IRC fine trim value.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  */
-static inline uint8_t CLOCK_HAL_GetHircFineTrim(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetHircFineTrim(MCG_Type * base)
 {
-    return BR_MCG_HFTRIM_FINE_TRIM(baseAddr);
+    return MCG_BRD_HFTRIM_FINE_TRIM(base);
 }
 #endif
 
@@ -575,11 +423,11 @@ static inline uint8_t CLOCK_HAL_GetHircFineTrim(uint32_t baseAddr)
  *
  * This function gets the LIRC 8M RANGE value.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  */
-static inline uint8_t CLOCK_HAL_GetLirc8MTrimRange(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetLirc8MTrimRange(MCG_Type * base)
 {
-    return BR_MCG_LTRIMRNG_FTRIMRNG(baseAddr);
+    return MCG_BRD_LTRIMRNG_FTRIMRNG(base);
 }
 
 /*!
@@ -587,11 +435,11 @@ static inline uint8_t CLOCK_HAL_GetLirc8MTrimRange(uint32_t baseAddr)
  *
  * This function gets the LIRC 2M RANGE value.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  */
-static inline uint8_t CLOCK_HAL_GetLirc2MTrimRange(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetLirc2MTrimRange(MCG_Type * base)
 {
-    return BR_MCG_LTRIMRNG_STRIMRNG(baseAddr);
+    return MCG_BRD_LTRIMRNG_STRIMRNG(base);
 }
 #endif
 
@@ -601,11 +449,11 @@ static inline uint8_t CLOCK_HAL_GetLirc2MTrimRange(uint32_t baseAddr)
  *
  * This function gets the LIRC 8M trim value.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  */
-static inline uint8_t CLOCK_HAL_GetLirc8MTrim(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetLirc8MTrim(MCG_Type * base)
 {
-    return BR_MCG_LFTRIM_LIRC_FTRIM(baseAddr);
+    return MCG_BRD_LFTRIM_LIRC_FTRIM(base);
 }
 #endif
 
@@ -615,11 +463,11 @@ static inline uint8_t CLOCK_HAL_GetLirc8MTrim(uint32_t baseAddr)
  *
  * This function gets the LIRC 2M trim value.
  *
- * @param baseAddr MCG_Lite register base address.
+ * @param base MCG_Lite register base address.
  */
-static inline uint8_t CLOCK_HAL_GetLirc2MTrim(uint32_t baseAddr)
+static inline uint8_t CLOCK_HAL_GetLirc2MTrim(MCG_Type * base)
 {
-    return BR_MCG_LSTRIM_LIRC_STRIM(baseAddr);
+    return MCG_BRD_LSTRIM_LIRC_STRIM(base);
 }
 #endif
 
@@ -632,6 +480,7 @@ static inline uint8_t CLOCK_HAL_GetLirc2MTrim(uint32_t baseAddr)
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_MCGLITE_HAL_H__*/
 /*******************************************************************************
 * EOF

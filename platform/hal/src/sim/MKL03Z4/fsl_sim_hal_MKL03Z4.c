@@ -49,7 +49,7 @@
 * This function will set the setting for all clock out dividers.
 *
 *END**************************************************************************/
-void CLOCK_HAL_SetOutDiv(uint32_t baseAddr,
+void CLOCK_HAL_SetOutDiv(SIM_Type * base,
                          uint8_t outdiv1,
                          uint8_t outdiv2,
                          uint8_t outdiv3,
@@ -57,10 +57,10 @@ void CLOCK_HAL_SetOutDiv(uint32_t baseAddr,
 {
     uint32_t clkdiv1 = 0;
     
-    clkdiv1 |= BF_SIM_CLKDIV1_OUTDIV1(outdiv1);
-    clkdiv1 |= BF_SIM_CLKDIV1_OUTDIV4(outdiv4);
+    clkdiv1 |= SIM_CLKDIV1_OUTDIV1(outdiv1);
+    clkdiv1 |= SIM_CLKDIV1_OUTDIV4(outdiv4);
     
-    HW_SIM_CLKDIV1_WR(baseAddr, clkdiv1);
+    SIM_WR_CLKDIV1(base, clkdiv1);
 }
 
 /*FUNCTION**********************************************************************
@@ -70,16 +70,16 @@ void CLOCK_HAL_SetOutDiv(uint32_t baseAddr,
  * This function will get the setting for all clock out dividers.
  *
  *END**************************************************************************/
-void CLOCK_HAL_GetOutDiv(uint32_t baseAddr,
+void CLOCK_HAL_GetOutDiv(SIM_Type * base,
                          uint8_t *outdiv1,
                          uint8_t *outdiv2,
                          uint8_t *outdiv3,
                          uint8_t *outdiv4)
 {
-    *outdiv1 = BR_SIM_CLKDIV1_OUTDIV1(baseAddr);
+    *outdiv1 = SIM_BRD_CLKDIV1_OUTDIV1(base);
     *outdiv2 = 0U;
     *outdiv3 = 0U;
-    *outdiv4 = BR_SIM_CLKDIV1_OUTDIV4(baseAddr);
+    *outdiv4 = SIM_BRD_CLKDIV1_OUTDIV4(base);
 }
 
 
@@ -90,20 +90,20 @@ void CLOCK_HAL_GetOutDiv(uint32_t baseAddr,
 * This function sets ADC alternate trigger, pre-trigger mode and trigger mode.
 *
 *END**************************************************************************/
-void SIM_HAL_SetAdcTriggerModeOneStep(uint32_t baseAddr,
+void SIM_HAL_SetAdcTriggerModeOneStep(SIM_Type * base,
                                       uint32_t instance,
                                       bool    altTrigEn,
                                       sim_adc_pretrg_sel_t preTrigSel,
                                       sim_adc_trg_sel_t trigSel)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
+    assert(instance < ADC_INSTANCE_COUNT);
     
-    BW_SIM_SOPT7_ADC0ALTTRGEN(baseAddr, altTrigEn ? 1 : 0);
-    BW_SIM_SOPT7_ADC0PRETRGSEL(baseAddr, preTrigSel);
+    SIM_BWR_SOPT7_ADC0ALTTRGEN(base, altTrigEn ? 1 : 0);
+    SIM_BWR_SOPT7_ADC0PRETRGSEL(base, preTrigSel);
     
     if (altTrigEn)
     {
-        BW_SIM_SOPT7_ADC0TRGSEL(baseAddr, trigSel);
+        SIM_BWR_SOPT7_ADC0TRGSEL(base, trigSel);
     }
     
 }
@@ -115,19 +115,19 @@ void SIM_HAL_SetAdcTriggerModeOneStep(uint32_t baseAddr,
 * This function will select the source of Timer/PWM x external clock pin select
 * 
 *END**************************************************************************/
-void SIM_HAL_SetTpmExternalClkPinSelMode(uint32_t baseAddr,
+void SIM_HAL_SetTpmExternalClkPinSelMode(SIM_Type * base,
                                          uint32_t instance,
                                          sim_tpm_clk_sel_t select)
 {
-    assert (instance < HW_TPM_INSTANCE_COUNT);
+    assert (instance < TPM_INSTANCE_COUNT);
     
     switch (instance)
     {
     case 0:
-        BW_SIM_SOPT4_TPM0CLKSEL(baseAddr, select);
+        SIM_BWR_SOPT4_TPM0CLKSEL(base, select);
         break;
     case 1:
-        BW_SIM_SOPT4_TPM1CLKSEL(baseAddr, select);
+        SIM_BWR_SOPT4_TPM1CLKSEL(base, select);
         break;
     default:
         break;
@@ -141,19 +141,19 @@ void SIM_HAL_SetTpmExternalClkPinSelMode(uint32_t baseAddr,
 * This function will get Timer/PWM x external clock pin select setting.
 * 
 *END**************************************************************************/
-sim_tpm_clk_sel_t SIM_HAL_GetTpmExternalClkPinSelMode(uint32_t baseAddr, uint32_t instance)
+sim_tpm_clk_sel_t SIM_HAL_GetTpmExternalClkPinSelMode(SIM_Type * base, uint32_t instance)
 {
     sim_tpm_clk_sel_t retValue = (sim_tpm_clk_sel_t)0;
     
-    assert (instance < HW_TPM_INSTANCE_COUNT);
+    assert (instance < TPM_INSTANCE_COUNT);
     
     switch (instance)
     {
     case 0:
-        retValue = (sim_tpm_clk_sel_t)BR_SIM_SOPT4_TPM0CLKSEL(baseAddr);
+        retValue = (sim_tpm_clk_sel_t)SIM_BRD_SOPT4_TPM0CLKSEL(base);
         break;
     case 1:
-        retValue = (sim_tpm_clk_sel_t)BR_SIM_SOPT4_TPM1CLKSEL(baseAddr);
+        retValue = (sim_tpm_clk_sel_t)SIM_BRD_SOPT4_TPM1CLKSEL(base);
         break;
     default:
         break;

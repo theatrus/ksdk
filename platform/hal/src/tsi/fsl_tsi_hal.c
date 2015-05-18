@@ -29,13 +29,15 @@
  */
 #include "fsl_tsi_hal.h"
 #include <assert.h>
+#if FSL_FEATURE_SOC_TSI_COUNT
 
 /*FUNCTION**********************************************************************
 *
 * Function Name : TSI_HAL_DisableLowPower
 * Description   : Function disables low power
 *END**************************************************************************/
-void TSI_HAL_DisableLowPower(uint32_t baseAddr)
+void TSI_HAL_DisableLowPower(TSI_Type * base)
 {
-    TSI_HAL_DisableStop(baseAddr);
+    TSI_HAL_DisableStop(base);
 }
+#endif

@@ -28,8 +28,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <assert.h>
 #include "fsl_cadc_driver.h"
+#include "fsl_clock_manager.h"
+#include "fsl_interrupt_manager.h"
+#if FSL_FEATURE_SOC_CADC_COUNT
 
 /*******************************************************************************
  * Code
@@ -40,25 +42,24 @@
  * Function Name : CADC_DRV_StructInitUserConfigDefault
  * Description   : Help user to fill the cadc_user_config_t structure with
  * default setting, which can be used in polling mode for ADC conversion.
- * These setting are:
  *
  *END**************************************************************************/
-cadc_status_t CADC_DRV_StructInitUserConfigDefault(cadc_user_config_t *configPtr)
+cadc_status_t CADC_DRV_StructInitUserConfigDefault(cadc_controller_config_t *userConfigPtr)
 {
-    if (!configPtr)
+    if (!userConfigPtr)
     {
         return kStatus_CADC_InvalidArgument;
     }
-    configPtr->zeroCrossingIntEnable = false;
-    configPtr->lowLimitIntEnable = false;
-    configPtr->highLimitIntEnable = false;
-    configPtr->scanMode = kCAdcScanOnceSequential;
-    configPtr->parallelSimultModeEnable = false;
-    configPtr->dmaSrcMode = kCAdcDmaTriggeredByEndOfScan;
-    configPtr->autoStandbyEnable = false;
-    configPtr->powerUpDelayCount = 0x2AU;
-    configPtr->autoPowerDownEnable = false;
-    
+    userConfigPtr->zeroCrossingIntEnable = false;
+    userConfigPtr->lowLimitIntEnable = false;
+    userConfigPtr->highLimitIntEnable = false;
+    userConfigPtr->scanMode = kCAdcScanOnceSequential;
+    userConfigPtr->parallelSimultModeEnable = false;
+    userConfigPtr->dmaSrc = kCAdcDmaTriggeredByEndOfScan;
+    userConfigPtr->autoStandbyEnable = false;
+    userConfigPtr->powerUpDelayCount = 0x2AU;
+    userConfigPtr->autoPowerDownEnable = false;
+
     return kStatus_CADC_Success;
 }
 
@@ -69,60 +70,46 @@ cadc_status_t CADC_DRV_StructInitUserConfigDefault(cadc_user_config_t *configPtr
  * which are shared by all the converter.
  *
  *END**************************************************************************/
-cadc_status_t CADC_DRV_Init(uint32_t instance, cadc_user_config_t *configPtr)
+cadc_status_t CADC_DRV_Init(uint32_t instance, const cadc_controller_config_t *userConfigPtr)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
-    
-    if (!configPtr)
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
+
+    if (!userConfigPtr)
     {
         return kStatus_CADC_InvalidArgument;
     }
     /* Ungate the clock for the ADC module. */
-    CLOCK_SYS_EnableAdcClock(instance); /* BW_SIM_SCGC5_ADC(SIM_BASE,1U); */
+    CLOCK_SYS_EnableAdcClock(instance);
 
     /* Configure the common setting for ADC module. */
-    CADC_HAL_Init(baseAddr);
+    CADC_HAL_Init(base);
 
-    CADC_HAL_SetZeroCrossingIntCmd(baseAddr, configPtr->zeroCrossingIntEnable);
-    CADC_HAL_SetLowLimitIntCmd(baseAddr, configPtr->lowLimitIntEnable);
-    CADC_HAL_SetHighLimitIntCmd(baseAddr, configPtr->highLimitIntEnable);
-    if (   (configPtr->zeroCrossingIntEnable) || (configPtr->lowLimitIntEnable)
-        || (configPtr->highLimitIntEnable) )
-    {
-        NVIC_EnableIRQ(g_cadcErrIrqId[instance]);
-    }
-    else
-    {
-        NVIC_DisableIRQ(g_cadcErrIrqId[instance]);
-    }
-    CADC_HAL_SetScanMode(baseAddr, configPtr->scanMode);
-    CADC_HAL_SetParallelSimultCmd(baseAddr, configPtr->parallelSimultModeEnable);
+    CADC_HAL_ConfigController(base, userConfigPtr);
 
-    CADC_HAL_SetAutoStandbyCmd(baseAddr, configPtr->autoStandbyEnable);
-    CADC_HAL_SetPowerUpDelayClk(baseAddr, configPtr->powerUpDelayCount);
-    CADC_HAL_SetAutoPowerDownCmd(baseAddr, configPtr->autoPowerDownEnable);
-    CADC_HAL_SetDmaTriggerSrcMode(baseAddr, configPtr->dmaSrcMode);
-    
+    INT_SYS_EnableIRQ(g_cadcErrIrqId[instance]);
+    INT_SYS_EnableIRQ(g_cadcConvAIrqId[instance]);
+    INT_SYS_EnableIRQ(g_cadcConvBIrqId[instance]);
     return kStatus_CADC_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : CADC_DRV_Deinit
- * Description   : Help user to fill the cadc_conv_config_t structure with
- * default setting, which can be used in polling mode for ADC conversion.
- * These setting are:
+ * Description   : Deinit the CADC module. This function would disable all the
+ * interrupts and clock.
  *
  *END**************************************************************************/
-void CADC_DRV_Deinit(uint32_t instance)
+cadc_status_t CADC_DRV_Deinit(uint32_t instance)
 {
-    NVIC_DisableIRQ(g_cadcErrIrqId[instance]);
-    NVIC_DisableIRQ(g_cadcConvAIrqId[instance]);
-    NVIC_DisableIRQ(g_cadcConvBIrqId[instance]);
-    
+    INT_SYS_DisableIRQ(g_cadcErrIrqId[instance]);
+    INT_SYS_DisableIRQ(g_cadcConvAIrqId[instance]);
+    INT_SYS_DisableIRQ(g_cadcConvBIrqId[instance]);
+
     /* Gate the access to ADC module. */
     CLOCK_SYS_DisableAdcClock(instance); /* BW_SIM_SCGC5_ADC(SIM_BASE,0U); */
+
+    return kStatus_CADC_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -134,7 +121,7 @@ void CADC_DRV_Deinit(uint32_t instance)
  * Reference Manual document.
  *
  *END**************************************************************************/
-cadc_status_t CADC_DRV_StructInitConvConfigDefault(cadc_conv_config_t *configPtr)
+cadc_status_t CADC_DRV_StructInitConvConfigDefault(cadc_converter_config_t *configPtr)
 {
     if (!configPtr)
     {
@@ -145,12 +132,8 @@ cadc_status_t CADC_DRV_StructInitConvConfigDefault(cadc_conv_config_t *configPtr
     configPtr->stopEnable = false; /* Release the converter. */
     configPtr->syncEnable = false; /* No hardware trigger. */
 
-    /* No interrupt. */
-    configPtr->endOfScanIntEnable = false; 
-    configPtr->convIRQEnable = false;
-
+    configPtr->endOfScanIntEnable = false;
     configPtr->clkDivValue = 0x3FU;
-    configPtr->powerOnEnable = true;
     configPtr->useChnInputAsVrefH = false;
     configPtr->useChnInputAsVrefL = false;
     configPtr->speedMode = kCAdcConvClkLimitBy25MHz;
@@ -169,10 +152,10 @@ cadc_status_t CADC_DRV_StructInitConvConfigDefault(cadc_conv_config_t *configPtr
  *
  *END**************************************************************************/
 cadc_status_t CADC_DRV_ConfigConverter(uint32_t instance, cadc_conv_id_t convId,
-    cadc_conv_config_t *configPtr)
+    const cadc_converter_config_t *configPtr)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
 
     if (!configPtr)
     {
@@ -180,45 +163,19 @@ cadc_status_t CADC_DRV_ConfigConverter(uint32_t instance, cadc_conv_id_t convId,
     }
 
     /* Configure the ADC converter. */
-    CADC_HAL_SetConvDmaCmd(baseAddr, convId, configPtr->dmaEnable);
-    CADC_HAL_SetConvStopCmd(baseAddr, convId, configPtr->stopEnable);
-    CADC_HAL_SetConvSyncCmd(baseAddr, convId, configPtr->syncEnable);
-    CADC_HAL_SetConvEndOfScanIntCmd(baseAddr, convId, configPtr->endOfScanIntEnable);
-
-    if (configPtr->convIRQEnable) /* NVIC Interrupt. */
+    switch (convId)
     {
-        switch (convId)
-        {
         case kCAdcConvA:
-            NVIC_EnableIRQ(g_cadcConvAIrqId[instance]);
+            CADC_HAL_ConfigConvA(base, configPtr);
+            CADC_HAL_SetConvAPowerDownCmd(base, false);
             break;
         case kCAdcConvB:
-            NVIC_EnableIRQ(g_cadcConvBIrqId[instance]);
+            CADC_HAL_ConfigConvB(base, configPtr);
+            CADC_HAL_SetConvBPowerDownCmd(base, false);
             break;
         default:
             break;
-        }
     }
-    else
-    {
-        switch (convId)
-        {
-        case kCAdcConvA:
-            NVIC_DisableIRQ(g_cadcConvAIrqId[instance]);
-            break;
-        case kCAdcConvB:
-            NVIC_DisableIRQ(g_cadcConvBIrqId[instance]);
-            break;
-        default:
-            break;
-        }
-    }
-    CADC_HAL_SetConvClkDiv(baseAddr, convId, configPtr->clkDivValue);
-    CADC_HAL_SetConvPowerUpCmd(baseAddr, convId, configPtr->powerOnEnable);
-    CADC_HAL_SetConvUseChnVrefHCmd(baseAddr, convId, configPtr->useChnInputAsVrefH);
-    CADC_HAL_SetConvUseChnVrefLCmd(baseAddr, convId, configPtr->useChnInputAsVrefL);
-    CADC_HAL_SetConvSpeedLimitMode(baseAddr, convId, configPtr->speedMode);
-    CADC_HAL_SetConvSampleWindow(baseAddr, convId, configPtr->sampleWindowCount);
 
     return kStatus_CADC_Success;
 }
@@ -231,39 +188,18 @@ cadc_status_t CADC_DRV_ConfigConverter(uint32_t instance, cadc_conv_id_t convId,
  * be set for each of channel in the pair.
  *
  *END**************************************************************************/
-cadc_status_t CADC_DRV_ConfigSampleChn(uint32_t instance,
-    cadc_diff_chn_mode_t diffChns, cadc_chn_config_t *configPtr)
+cadc_status_t CADC_DRV_ConfigSampleChn(uint32_t instance, const cadc_chn_config_t *configPtr)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
-    uint32_t chnNum;
-    
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
+
     if (!configPtr)
     {
         return kStatus_CADC_InvalidArgument;
     }
 
-    CADC_HAL_SetChnDiffCmd(baseAddr, diffChns, configPtr->diffEnable);
+    CADC_HAL_ConfigChn(base, configPtr);
 
-    /* Configure gain mode for indicated input channel. */
-    switch (configPtr->diffSelMode)
-    {
-    case kCAdcChnSelN:
-        chnNum = (uint32_t)(diffChns) * 2U;
-        CADC_HAL_SetChnGainMode(baseAddr, chnNum,  configPtr->gainMode);
-        break;
-    case kCAdcChnSelP:
-        chnNum = 1U + ((uint32_t)(diffChns) * 2U);
-        CADC_HAL_SetChnGainMode(baseAddr, chnNum,  configPtr->gainMode);
-        break;
-    case kCAdcChnSelBoth:
-        chnNum = (uint32_t)(diffChns) * 2U;
-        CADC_HAL_SetChnGainMode(baseAddr, chnNum,  configPtr->gainMode);
-        CADC_HAL_SetChnGainMode(baseAddr, 1U+chnNum,  configPtr->gainMode);
-        break;
-    default:
-        break;
-    }
     return kStatus_CADC_Success;
 }
 
@@ -276,25 +212,19 @@ cadc_status_t CADC_DRV_ConfigSampleChn(uint32_t instance,
  * slot that is configured as disable.
  *
  *END**************************************************************************/
-cadc_status_t CADC_DRV_ConfigSeqSlot(uint32_t instance, uint32_t slotNum,
-    cadc_slot_config_t *configPtr)
+cadc_status_t CADC_DRV_ConfigSeqSlot(uint32_t instance, uint32_t slotIdx,
+    const cadc_slot_config_t *configPtr)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
-    
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
+
     if (!configPtr)
     {
         return kStatus_CADC_InvalidArgument;
     }
-    CADC_HAL_SetSlotZeroCrossingMode(baseAddr, slotNum, configPtr->zeroCrossingMode);
-    CADC_HAL_SetSlotSampleChn(baseAddr, slotNum, configPtr->diffChns, configPtr->diffSel);
-    CADC_HAL_SetSlotSampleEnableCmd(baseAddr, slotNum, configPtr->slotEnable);
-    CADC_HAL_SetSlotLowLimitValue(baseAddr, slotNum, configPtr->lowLimitValue);
-    CADC_HAL_SetSlotHighLimitValue(baseAddr, slotNum, configPtr->highLimitValue);
-    CADC_HAL_SetSlotOffsetValue(baseAddr, slotNum, configPtr->offsetValue);
-    CADC_HAL_SetSlotSyncPointCmd(baseAddr, slotNum, configPtr->syncPointEnable);
-    CADC_HAL_SetSlotScanIntCmd(baseAddr, slotNum, configPtr->scanIntEnable);
-    
+
+    CADC_HAL_ConfigSeqSlot(base, slotIdx, configPtr);
+
     return kStatus_CADC_Success;
 }
 
@@ -307,47 +237,34 @@ cadc_status_t CADC_DRV_ConfigSeqSlot(uint32_t instance, uint32_t slotNum,
  *END**************************************************************************/
 void CADC_DRV_SoftTriggerConv(uint32_t instance, cadc_conv_id_t convId)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
 
-    CADC_HAL_SetConvStartCmd(baseAddr, convId);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_DRV_GetSeqSlotConvValueRAW
- * Description   : Read the conversion value from each slot in conversion sequence.
- * the return value would be just the absolute value without signed. 
- *
- *END**************************************************************************/
-uint16_t CADC_DRV_GetSeqSlotConvValueRAW(uint32_t instance, uint32_t slotNum)
-{
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    assert(slotNum < HW_ADC_RSLTn_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
-    
-    return CADC_HAL_GetSlotValueData(baseAddr, slotNum);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CADC_DRV_GetSeqSlotConvValueSigned
- * Description   : Help to get the global flag of CyclicADC module. 
- *
- *END**************************************************************************/
-int16_t CADC_DRV_GetSeqSlotConvValueSigned(uint32_t instance, uint32_t slotNum)
-{
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    assert(slotNum < HW_ADC_RSLTn_COUNT);
-    
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
-    int16_t ret = (int16_t)CADC_HAL_GetSlotValueData(baseAddr, slotNum);
-
-    if (CADC_HAL_GetSlotValueNegativeSign(baseAddr, slotNum))
+    switch (convId)
     {
-        ret *= (-1);
+    case kCAdcConvA:
+        CADC_HAL_SetConvAStartCmd(base);
+        break;
+    case kCAdcConvB:
+        CADC_HAL_SetConvBStartCmd(base);
+        break;
+    default:
+        break;
     }
-    return ret;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CADC_DRV_GetSeqSlotConvValue
+ * Description   : Read the conversion value from each slot in conversion sequence.
+ *
+ *END**************************************************************************/
+uint16_t CADC_DRV_GetSeqSlotConvValue(uint32_t instance, uint32_t slotIdx)
+{
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
+
+    return CADC_HAL_GetSampleValue(base, slotIdx);
 }
 
 /*FUNCTION**********************************************************************
@@ -358,20 +275,20 @@ int16_t CADC_DRV_GetSeqSlotConvValueSigned(uint32_t instance, uint32_t slotNum)
  *END**************************************************************************/
 bool CADC_DRV_GetFlag(uint32_t instance, cadc_flag_t flag)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
     bool bRet = false;
 
     switch(flag)
     {
     case kCAdcZeroCrossingInt:
-        bRet = CADC_HAL_GetZeroCrossingIntFlag(baseAddr);
+        bRet = CADC_HAL_GetZeroCrossingIntFlag(base);
         break;
     case kCAdcLowLimitInt:
-        bRet = CADC_HAL_GetLowLimitIntFlag(baseAddr);
+        bRet = CADC_HAL_GetLowLimitIntFlag(base);
         break;
     case kCAdcHighLimitInt:
-        bRet = CADC_HAL_GetHighLimitIntFlag(baseAddr);
+        bRet = CADC_HAL_GetHighLimitIntFlag(base);
         break;
     default:
         break;
@@ -387,19 +304,19 @@ bool CADC_DRV_GetFlag(uint32_t instance, cadc_flag_t flag)
  *END**************************************************************************/
 void CADC_DRV_ClearFlag(uint32_t instance, cadc_flag_t flag)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
 
     switch(flag)
     {
     case kCAdcZeroCrossingInt:
-        CADC_HAL_ClearAllZeorCrossingFlag(baseAddr);
+        CADC_HAL_ClearSlotZeroCrossingFlag(base, 0xFFFF);
         break;
     case kCAdcLowLimitInt:
-        CADC_HAL_ClearAllLowLimitFlag(baseAddr);
+        CADC_HAL_ClearSlotLowLimitFlag(base, 0xFFFF);
         break;
     case kCAdcHighLimitInt:
-        CADC_HAL_ClearAllHighLimitFlag(baseAddr);
+        CADC_HAL_ClearSlotHighLimitFlag(base, 0xFFFF);
         break;
     default:
         break;
@@ -414,20 +331,50 @@ void CADC_DRV_ClearFlag(uint32_t instance, cadc_flag_t flag)
  *END**************************************************************************/
 bool CADC_DRV_GetConvFlag(uint32_t instance, cadc_conv_id_t convId, cadc_flag_t flag)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
     bool bRet = false;
 
     switch (flag)
     {
     case kCAdcConvInProgress:
-        bRet = CADC_HAL_GetConvInProgressFlag(baseAddr, convId);
+        switch (convId)
+        {
+        case kCAdcConvA:
+            bRet = CADC_HAL_GetConvAInProgressFlag(base);
+            break;
+        case kCAdcConvB:
+            bRet = CADC_HAL_GetConvBInProgressFlag(base);
+            break;
+        default:
+            break;
+        }
         break;
     case kCAdcConvEndOfScanInt:
-        bRet = CADC_HAL_GetConvEndOfScanIntFlag(baseAddr, convId);
+        switch (convId)
+        {
+        case kCAdcConvA:
+            bRet = CADC_HAL_GetConvAEndOfScanIntFlag(base);
+            break;
+        case kCAdcConvB:
+            bRet = CADC_HAL_GetConvBEndOfScanIntFlag(base);
+            break;
+        default:
+            break;
+        }
         break;
-    case kCAdcConvPowerUp:
-        bRet = CADC_HAL_GetConvPowerUpFlag(baseAddr, convId);
+    case kCAdcConvPowerDown:
+        switch (convId)
+        {
+        case kCAdcConvA:
+            bRet = CADC_HAL_GetConvAPowerDownFlag(base);
+            break;
+        case kCAdcConvB:
+            bRet = CADC_HAL_GetConvBPowerDownFlag(base);
+            break;
+        default:
+            break;
+        }
         break;
     default:
         break;
@@ -443,13 +390,23 @@ bool CADC_DRV_GetConvFlag(uint32_t instance, cadc_conv_id_t convId, cadc_flag_t 
  *END**************************************************************************/
 void CADC_DRV_ClearConvFlag(uint32_t instance, cadc_conv_id_t convId, cadc_flag_t flag)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
 
     switch (flag)
     {
     case kCAdcConvEndOfScanInt:
-        CADC_HAL_ClearConvEndOfScanIntFlag(baseAddr, convId);
+        switch (convId)
+        {
+        case kCAdcConvA:
+            CADC_HAL_ClearConvAEndOfScanIntFlag(base);
+            break;
+        case kCAdcConvB:
+            CADC_HAL_ClearConvBEndOfScanIntFlag(base);
+            break;
+        default:
+            break;
+        }
         break;
     default:
         break;
@@ -459,63 +416,64 @@ void CADC_DRV_ClearConvFlag(uint32_t instance, cadc_conv_id_t convId, cadc_flag_
 /*FUNCTION**********************************************************************
  *
  * Function Name : CADC_DRV_GetSlotFlag
- * Description   : Help to get the flag of each slot's event in conversion in 
- * sequence. 
+ * Description   : Help to get the flag of each slot's event in conversion in
+ * sequence.
  *
  *END**************************************************************************/
-bool CADC_DRV_GetSlotFlag(uint32_t instance, uint32_t slotNum, cadc_flag_t flag)
+uint16_t CADC_DRV_GetSlotFlag(uint32_t instance, uint16_t slotIdxMask, cadc_flag_t flag)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
 
-    bool bRet = false;
+    uint16_t mskRet = 0U;
     switch (flag)
     {
     case kCAdcSlotReady:
-        bRet = CADC_HAL_GetSlotReadyFlag(baseAddr, slotNum);
+        mskRet = CADC_HAL_GetSlotReadyFlag(base, slotIdxMask);
         break;
     case kCAdcSlotLowLimitEvent:
-        bRet = CADC_HAL_GetSlotLowLimitFlag(baseAddr, slotNum);
+        mskRet = CADC_HAL_GetSlotLowLimitFlag(base, slotIdxMask);
         break;
     case kCAdcSlotHighLimitEvent:
-        bRet = CADC_HAL_GetSlotHighLimitFlag(baseAddr, slotNum);
+        mskRet = CADC_HAL_GetSlotHighLimitFlag(base, slotIdxMask);
         break;
     case kCAdcSlotCrossingEvent:
-        bRet = CADC_HAL_GetSlotZeroCrossingFlag(baseAddr, slotNum);
+        mskRet = CADC_HAL_GetSlotZeroCrossingFlag(base, slotIdxMask);
         break;
     default:
         break;
     }
-    return bRet;
+    return mskRet;
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : CADC_DRV_ClearSlotFlag
- * Description   : Help to clear the flag of each slot's event in conversion in 
+ * Description   : Help to clear the flag of each slot's event in conversion in
  * sequence.
  *
  *END**************************************************************************/
-void CADC_DRV_ClearSlotFlag(uint32_t instance, uint32_t slotNum, cadc_flag_t flag)
+void CADC_DRV_ClearSlotFlag(uint32_t instance, uint16_t slotIdxMask, cadc_flag_t flag)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
-    uint32_t baseAddr = g_cadcBaseAddr[instance];
+    assert(instance < ADC_INSTANCE_COUNT);
+    ADC_Type * base = g_cadcBaseAddr[instance];
 
     switch (flag)
     {
     case kCAdcSlotLowLimitEvent:
-        CADC_HAL_ClearSlotLowLimitFlag(baseAddr, slotNum);
+        CADC_HAL_ClearSlotLowLimitFlag(base, slotIdxMask);
         break;
     case kCAdcSlotHighLimitEvent:
-        CADC_HAL_ClearSlotHighLimitFlag(baseAddr, slotNum);
+        CADC_HAL_ClearSlotHighLimitFlag(base, slotIdxMask);
         break;
     case kCAdcSlotCrossingEvent:
-        CADC_HAL_ClearSlotZeroCrossingFlag(baseAddr, slotNum);
+        CADC_HAL_ClearSlotZeroCrossingFlag(base, slotIdxMask);
         break;
     default:
         break;
     }
 }
+#endif
 
 /******************************************************************************
  * EOF

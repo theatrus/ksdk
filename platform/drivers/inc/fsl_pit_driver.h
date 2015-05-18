@@ -29,11 +29,11 @@
  */
 #ifndef __FSL_PIT_DRIVER_H__
 #define __FSL_PIT_DRIVER_H__
- 
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_pit_hal.h"
- 
+
 /*!
  * @addtogroup pit_driver
  * @{
@@ -44,7 +44,7 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for pit instances. */
-extern const uint32_t g_pitBaseAddr[];
+extern PIT_Type * const g_pitBase[];
 
 /* Table to save pit IRQ enumeration numbers defined in the CMSIS header file */
 extern const IRQn_Type g_pitIrqId[];
@@ -59,45 +59,43 @@ extern const IRQn_Type g_pitIrqId[];
  * Defines a structure PitConfig and uses the PIT_DRV_InitChannel() function to make necessary
  * initializations. You may also use the remaining functions for PIT configuration.
  *
- * @note The timer chain feature is not valid in all devices. Check the 
+ * @note The timer chain feature is not valid in all devices. Check the
  * fsl_pit_features.h for accurate settings. If it's not valid, the value set here
- * will be bypassed inside the PIT_DRV_InitChannel() function. 
+ * is bypassed inside the PIT_DRV_InitChannel() function.
+ * @internal gui name="PIT configuration" id="pitCfg"
  */
 typedef struct PitUserConfig {
-    bool isInterruptEnabled;  /*!< Timer interrupt 0-disable/1-enable*/
-    bool isTimerChained;      /*!< Chained with previous timer, 0-not/1-chained*/
-    uint32_t periodUs;        /*!< Timer period in unit of microseconds*/
+    bool isInterruptEnabled;  /*!< Timer interrupt 0-disable/1-enable @internal gui name="Interrupt" id="Interrupt" default="true" */
+    uint32_t periodUs;        /*!< Timer period in unit of microseconds @internal gui name="Period" id="Period" */
 } pit_user_config_t;
-
-/*! @brief PIT ISR callback function typedef */
-typedef void (*pit_isr_callback_t)(uint32_t channel);
 
 /*******************************************************************************
  * API
  ******************************************************************************/
- 
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
 /*!
- * @name Initialize and Shutdown
+ * @name Initialization and Shutdown
  * @{
  */
 
 /*!
  * @brief Initializes the PIT module.
- * 
- * This function must be called before calling all the other PIT driver functions.
- * This function ungates the PIT clock and enables the PIT module. The isRunInDebug
- * passed into function affects all timer channels. 
+ *
+ * Call this function before calling all the other PIT driver functions.
+ * This function un-gates the PIT clock and enables the PIT module. The isRunInDebug
+ * passed into function affects all timer channels.
  *
  * @param instance PIT module instance number.
  * @param isRunInDebug Timers run or stop in debug mode.
  *        - true:  Timers continue to run in debug mode.
  *        - false: Timers stop in debug mode.
+ * @return Error or success status returned by API.
  */
-void PIT_DRV_Init(uint32_t instance, bool isRunInDebug);
+pit_status_t PIT_DRV_Init(uint32_t instance, bool isRunInDebug);
 
 /*!
  * @brief Disables the PIT module and gate control.
@@ -106,24 +104,22 @@ void PIT_DRV_Init(uint32_t instance, bool isRunInDebug);
  * PIT clock control. PIT_DRV_Init must be called if you want to use PIT again.
  *
  * @param instance PIT module instance number.
+ * @return Error or success status returned by API.
  */
-void PIT_DRV_Deinit(uint32_t instance);
+pit_status_t PIT_DRV_Deinit(uint32_t instance);
 
 /*!
  * @brief Initializes the PIT channel.
- * 
+ *
  * This function initializes the PIT timers by using a channel. Pass in the timer number and its
  * configuration structure. Timers do not start counting by default after calling this
- * function. The function PIT_DRV_StartTimer must be called to start the timer counting. 
+ * function. The function PIT_DRV_StartTimer must be called to start the timer counting.
  * Call the PIT_DRV_SetTimerPeriodByUs to re-set the period.
  *
  * This is an example demonstrating how to define a PIT channel configuration structure:
    @code
    pit_user_config_t pitTestInit = {
         .isInterruptEnabled = true,
-        // Only takes effect when chain feature is available.
-        // Otherwise, pass in arbitrary value(true/false).
-        .isTimerChained = false, 
         // In unit of microseconds.
         .periodUs = 1000,
    };
@@ -138,7 +134,7 @@ void PIT_DRV_InitChannel(uint32_t instance, uint32_t channel, const pit_user_con
 /* @} */
 
 /*!
- * @name Timer Start and Stop 
+ * @name Timer Start and Stop
  * @{
  */
 
@@ -176,10 +172,10 @@ void PIT_DRV_StopTimer(uint32_t instance, uint32_t channel);
  * @brief Sets the timer period in microseconds.
  *
  * The period range depends on the frequency of the PIT source clock. If the required period
- * is out of range, use the lifetime timer if applicable. 
+ * is out of range, use the lifetime timer if applicable.
  * This function is only valid for one single channel. If channels are chained together,
  * the period here makes no sense.
- * 
+ *
  * @param instance PIT module instance number.
  * @param channel Timer channel number.
  * @param us Timer period in microseconds.
@@ -188,7 +184,7 @@ void PIT_DRV_SetTimerPeriodByUs(uint32_t instance, uint32_t channel, uint32_t us
 
 /*!
  * @brief Gets the timer period in microseconds for one single channel.
- * 
+ *
  * @param instance PIT module instance number.
  * @param channel Timer channel number.
  * @return Timer period in microseconds.
@@ -197,11 +193,11 @@ uint32_t PIT_DRV_GetTimerPeriodByUs(uint32_t instance, uint32_t channel);
 
 /*!
  * @brief Reads the current timer value in microseconds.
- * 
+ *
  * This function returns an absolute time stamp in microseconds.
  * One common use of this function is to measure the running time of a part of
  * code. Call this function at both the beginning and end of code. The time
- * difference between these two time stamps is the running time. Make sure the 
+ * difference between these two time stamps is the running time. Make sure the
  * running time does not exceed the timer period. The time stamp returned is
  * up-counting.
  *
@@ -213,7 +209,7 @@ uint32_t PIT_DRV_ReadTimerUs(uint32_t instance, uint32_t channel);
 
 /*!
  * @brief Sets the timer period in units of count.
- * 
+ *
  * Timers begin counting from the value set by this function.
  * The counter period of a running timer can be modified by first stopping
  * the timer, setting a new load value, and  starting the timer again. If
@@ -237,7 +233,7 @@ uint32_t PIT_DRV_GetTimerPeriodByCount(uint32_t instance, uint32_t channel);
 
 /*!
  * @brief Reads the current timer counting value.
- * 
+ *
  * This function returns the real-time timer counting value, in a range from 0 to a
  * timer period.
  *
@@ -250,20 +246,20 @@ uint32_t PIT_DRV_ReadTimerCount(uint32_t instance, uint32_t channel);
 #if FSL_FEATURE_PIT_HAS_LIFETIME_TIMER
 /*!
  * @brief Sets the lifetime timer period.
- * 
+ *
  * Timer 1 must be chained with timer 0 before using the lifetime timer. The period
  * range is restricted by "period * pitSourceClock < max of an uint64_t integer",
  * or it may cause an overflow and be unable to set the correct period.
  *
  * @param instance PIT module instance number.
- * @param period Lifetime timer period in microseconds.
+ * @param us Lifetime timer period in microseconds.
  */
 void PIT_DRV_SetLifetimeTimerPeriodByUs(uint32_t instance, uint64_t us);
 
 /*!
  * @brief Reads the current lifetime value in microseconds.
  *
- * This feature returns an absolute time stamp in microseconds. The time stamp 
+ * This feature returns an absolute time stamp in microseconds. The time stamp
  * value does not exceed the timer period. The timer is up-counting.
  *
  * @param instance PIT module instance number.
@@ -282,12 +278,12 @@ uint64_t PIT_DRV_ReadLifetimeTimerUs(uint32_t instance);
 
 /*!
  * @brief Initializes two PIT channels to serve as a microseconds unit.
- * 
- * This function is in parallel with PIT_DRV_InitChannel and functions  will overwrite each other.
+ *
+ * Because this function is in parallel with the PIT_DRV_InitChannel function, the two functions overwrite each other.
  * The PIT_DRV_Init function must be called before calling this function.
- * If the device has dedicated lifetime timer, it is more effective than the set of timers.
+ * If the device has a dedicated lifetime timer, it is more effective than the set of timers.
  * The microseconds unit uses two chained channels to simulate a lifetime timer. The
- * channel number passed in and the "channel -1" channel are used. 
+ * channel number passed in and the "channel -1" channel are used.
  * @note
  * 1. These two channels are occupied and could not be used with other purposes.
  * 2. The channel number passed in must be greater than 0.
@@ -300,19 +296,19 @@ void PIT_DRV_InitUs(uint32_t instance, uint32_t channel);
 
 /*!
  * @brief Gets an absolute time stamp.
- * 
- * This function is useful to get elapsed time through calling this function in time A
- * and call it in time B. The elapsed time could be obtained by B-A. The result may have
- * 3-5 microseconds error depending on system clock frequency.
+ *
+ * This function gets the elapsed time in time A
+ * and calls it in time B. The elapsed time can be obtained by B-A. The result may have
+ * 3-5 microseconds error depending on the system clock frequency.
  *
  * @return Absolute time stamp from the chained lifetime timers in microsecond units.
  */
 uint32_t PIT_DRV_GetUs(void);
 
 /*!
- * @brief Delays specific microseconds.
- * 
- * The delay may have a 3-5 microseconds error depending on system clock frequency.
+ * @brief Delays the specific microseconds.
+ *
+ * The delay may have a 3-5 microseconds error depending on the system clock frequency.
  *
  * @param us Number of microseconds to delay.
  */
@@ -322,33 +318,42 @@ void PIT_DRV_DelayUs(uint32_t us);
 #endif /* FSL_FEATURE_PIT_HAS_CHAIN_MODE */
 
 /*!
- * @name ISR Callback Function 
+ * @name Interrupt
  * @{
  */
 
 /*!
- * @brief Registers the PIT ISR callback function. 
+ * @brief Clears the timer interrupt flag.
  *
- * System default ISR interfaces are already defined in the fsl_pit_irq.c. Users 
- * can either edit these ISRs or use this function to register a callback
- * function. The default ISR runs the callback function if there is one
- * installed.
+ * This function clears the timer interrupt flag after a timeout event
+ * occurs.
  *
  * @param instance PIT module instance number.
- * @param channel  Timer channel number.
- * @param function Pointer to pit ISR callback function, pass NULL to uninstall.
- * @return Function pointer which was installed before.
+ * @param channel Timer channel number
  */
-pit_isr_callback_t PIT_DRV_InstallCallback(uint32_t instance, uint32_t channel, pit_isr_callback_t function);
+void PIT_DRV_ClearIntFlag(uint32_t instance, uint32_t channel);
+
+/*!
+ * @brief Reads the current timer timeout flag.
+ *
+ * Every time the timer counts to 0, this flag is set.
+ *
+ * @param instance PIT module instance number.
+ * @param channel Timer channel number
+ * @return Current status of the timeout flag
+ *         - true:  Timeout has occurred.
+ *         - false: Timeout has not yet occurred.
+ */
+bool PIT_DRV_IsIntPending(uint32_t instance, uint32_t channel);
 
 /* @} */
 
 #if defined(__cplusplus)
 }
 #endif
- 
+
 /*! @}*/
- 
+
 #endif /* __FSL_PIT_DRIVER_H__*/
 /*******************************************************************************
  * EOF

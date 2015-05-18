@@ -36,13 +36,15 @@
 #include <assert.h>
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_DAC_COUNT
+
 /*!
  * @addtogroup dac_hal
  * @{
  */
 
 /******************************************************************************
- * Definitions
+ * Enumerations
  *****************************************************************************/
 
 /*!
@@ -62,8 +64,8 @@ typedef enum _dac_status
  */
 typedef enum _dac_ref_volt_src_mode
 {
-    kDacRefVoltSrcOfVref1 = 0U, /*!< Select DACREF_1 as the reference voltage. */
-    kDacRefVoltSrcOfVref2 = 1U  /*!< Select DACREF_2 as the reference voltage. */
+    kDacRefVoltSrcOfVref1 = 0U, /*!< Select DACREF_1 as the reference voltage. @internal gui name="Reference 1" */
+    kDacRefVoltSrcOfVref2 = 1U  /*!< Select DACREF_2 as the reference voltage. @internal gui name="Reference 2" */
 } dac_ref_volt_src_mode_t;
 
 /*!
@@ -71,8 +73,8 @@ typedef enum _dac_ref_volt_src_mode
  */
 typedef enum _dac_trigger_mode
 {
-    kDacTriggerByHardware = 0U, /*!< Select hardware trigger. */
-    kDacTriggerBySoftware = 1U  /*!< Select software trigger. */
+    kDacTriggerByHardware = 0U, /*!< Select hardware trigger. @internal gui name="HW" */
+    kDacTriggerBySoftware = 1U  /*!< Select software trigger. @internal gui name="SW" */
 } dac_trigger_mode_t;
 
 /*!
@@ -83,10 +85,10 @@ typedef enum _dac_trigger_mode
  */
 typedef enum _dac_buff_watermark_mode
 {
-    kDacBuffWatermarkFromUpperAs1Word = 0U, /*!< Select 1 word away from the upper of buffer. */
-    kDacBuffWatermarkFromUpperAs2Word = 1U, /*!< Select 2 word away from the upper of buffer. */
-    kDacBuffWatermarkFromUpperAs3Word = 2U, /*!< Select 3 word away from the upper of buffer. */
-    kDacBuffWatermarkFromUpperAs4Word = 3U  /*!< Select 4 word away from the upper of buffer. */
+    kDacBuffWatermarkFromUpperAs1Word = 0U, /*!< Select 1 word away from the upper limit of buffer. @internal gui name="1 word in normal, 2 words in FIFO mode" */
+    kDacBuffWatermarkFromUpperAs2Word = 1U, /*!< Select 2 word away from the upper limit of buffer. @internal gui name="2 word in normal, 4 words in FIFO mode" */
+    kDacBuffWatermarkFromUpperAs3Word = 2U, /*!< Select 3 word away from the upper limit of buffer. @internal gui name="3 word in normal, 8 words in FIFO mode" */
+    kDacBuffWatermarkFromUpperAs4Word = 3U  /*!< Select 4 word away from the upper limit of buffer. @internal gui name="4 word in normal, 14 words in FIFO mode" */
 } dac_buff_watermark_mode_t;
 
 /*!
@@ -107,21 +109,59 @@ typedef enum _dac_buff_watermark_mode
  */
 typedef enum _dac_buff_work_mode
 {
-    kDacBuffWorkAsNormalMode = 0U /*!< Buffer works as Normal. */
+    kDacBuffWorkAsNormalMode = 0U /*!< Buffer works as Normal. @internal gui name="Normal" */
 /* For 1-bit DACBFMD. */
-#if BS_DAC_C1_DACBFMD==1
-    ,kDacBuffWorkAsOneTimeScanMode = 1U /*!< Buffer works as one time scan.*/
+#if DAC_C1_DACBFMD_WIDTH==1
+    ,kDacBuffWorkAsOneTimeScanMode = 1U /*!< Buffer works as one time scan. @internal gui name="" */
 /* For 2-bit DACBFMD. */
-#elif BS_DAC_C1_DACBFMD==2
+#elif DAC_C1_DACBFMD_WIDTH==2
 #if FSL_FEATURE_DAC_HAS_BUFFER_SWING_MODE
-    ,kDacBuffWorkAsSwingMode = 1U /*!< Buffer works as swing. */
+    ,kDacBuffWorkAsSwingMode = 1U /*!< Buffer works as swing. @internal gui name="Swing mode" */
 #endif /* FSL_FEATURE_DAC_HAS_BUFFER_SWING_MODE */
-    ,kDacBuffWorkAsOneTimeScanMode = 2U /*!< Buffer works as one time scan.*/
+    ,kDacBuffWorkAsOneTimeScanMode = 2U /*!< Buffer works as one time scan. @internal gui name="One-time scan" */
 #if FSL_FEATURE_DAC_HAS_BUFFER_FIFO_MODE
-    ,kDacBuffWorkAsFIFOMode = 3U /*!< Buffer works as FIFO.*/
+    ,kDacBuffWorkAsFIFOMode = 3U /*!< Buffer works as FIFO. @internal gui name="FIFO" */
 #endif /* FSL_FEATURE_DAC_HAS_BUFFER_FIFO_MODE */
-#endif /* BS_DAC_C1_DACBFMD */
+#endif /* DAC_C1_DACBFMD_WIDTH */
 } dac_buff_work_mode_t;
+
+/******************************************************************************
+ * Definitions
+ *****************************************************************************/
+/*!
+ * @brief Defines the type of structure for configuring the DAC converter.
+ * @internal gui name="Basic configuration" id="dacCfg"
+ */
+typedef struct DacConverterConfig
+{
+    dac_ref_volt_src_mode_t dacRefVoltSrc; /*!< Select the reference voltage source. @internal gui name="Voltage reference" id="VoltageReference" */
+    bool lowPowerEnable; /*!< Enable the low power mode. @internal gui name="Low power mode" id="LowPowerMode" */
+} dac_converter_config_t;
+
+/*!
+ * @brief Defines the type of structure for configuring the DAC buffer.
+ * @internal gui name="Buffer configuration" id="dacBuffCfg"
+ */
+typedef struct DacBufferConfig
+{
+    bool bufferEnable; /*!< Enable the buffer function. @internal gui name="Buffer" id="Buffer" */
+    dac_trigger_mode_t triggerMode; /*!< Select the trigger mode. @internal gui name="Trigger mode" id="TriggerMode" */
+    /* Buffer interrupt. */
+#if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
+    bool idxWatermarkIntEnable; 
+        /*!< Switcher to enable interrupt when buffer index hits the watermark. @internal gui name="Watermark interrupt" id="WatermarkInterrupt" */
+    dac_buff_watermark_mode_t watermarkMode;
+        /*!< Selection of watermark setting. See "dac_buff_watermark_mode_t". @internal gui name="Watermark mode" id="WatermarkMode" */
+#endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
+    bool idxStartIntEnable;
+        /*!< Switcher to enable interrupt when buffer index hits the start (0). @internal gui name="Buffer bottom interrupt" id="BufferBottomInterrupt" */
+    bool idxUpperIntEnable;
+        /*!< Switcher to enable interrupt when buffer index hits the upper limit. @internal gui name="Buffer top interrupt" id="BufferTopInterrupt" */
+    bool dmaEnable; /*!< Switcher to enable DMA request by original interrupts. @internal gui name="DMA" id="DMASupport" */
+    dac_buff_work_mode_t buffWorkMode;
+        /*!< Selection of buffer's work mode. See "dac_buff_work_mode_t". @internal gui name="Buffer mode" id="BufferMode" */
+    uint8_t upperIdx; /*!< Setting of the buffer's upper limit, 0-15. @internal gui name="Upper limit" id="UpperLimit" */
+} dac_buffer_config_t;
 
 #if defined(__cplusplus)
 extern "C" {
@@ -137,9 +177,38 @@ extern "C" {
  * This function resets all configurable registers to be in the reset state for DAC.
  * It should be called before configuring the DAC module.
  *
- * @param baseAddr The DAC peripheral base address.
+ * @param base The DAC peripheral base address.
  */
-void DAC_HAL_Init(uint32_t baseAddr);
+void DAC_HAL_Init(DAC_Type * base);
+
+/*--------------------------------------------------------------------------*
+* DAC converter.
+*--------------------------------------------------------------------------*/
+/*!
+ * @brief Configures the converter for DAC.
+ *
+ * This function configures the converter for DAC. The features it covers are a
+ * one-time setting in the application. 
+ *
+ * @param base The DAC peripheral base address.
+ * @param configPtr The pointer to configure structure.
+ */
+void DAC_HAL_ConfigConverter(DAC_Type * base, const dac_converter_config_t *configPtr);
+
+/*--------------------------------------------------------------------------*
+* DAC buffer.
+*--------------------------------------------------------------------------*/
+
+/*!
+ * @brief Configures the buffer for DAC.
+ *
+ * This function configures the converter for DAC. The features it covers are used
+ * for the buffer. 
+ *
+ * @param base The DAC peripheral base address.
+ * @param configPtr The pointer to configure structure.
+ */
+void DAC_HAL_ConfigBuffer(DAC_Type * base, const dac_buffer_config_t *configPtr);
 
 /*!
  * @brief Sets the 12-bit value for the DAC items in the buffer.
@@ -147,23 +216,11 @@ void DAC_HAL_Init(uint32_t baseAddr);
  * This function sets the value assembled by the low 8 bits and high 4
  * bits of 12-bit DAC item in the buffer.
  *
- * @param baseAddr The DAC peripheral base address.
- * @param index Buffer index.
+ * @param base The DAC peripheral base address.
+ * @param idx Buffer index.
  * @param value Setting value.
  */
-void DAC_HAL_SetBuffValue(uint32_t baseAddr, uint8_t index, uint16_t value);
-
-/*!
- * @brief Gets the 12-bit value from the DAC item in the buffer.
- *
- * This function gets the value assembled by the low 8 bits and high 4
- * bits of 12-bit DAC item in the buffer.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param index Buffer index.
- * @return Current setting value.
- */
-uint16_t DAC_HAL_GetBuffValue(uint32_t baseAddr, uint8_t index);
+void DAC_HAL_SetBuffValue(DAC_Type * base, uint8_t idx, uint16_t value);
 
 /*!
  * @brief Clears the flag of the DAC buffer read pointer.
@@ -171,25 +228,25 @@ uint16_t DAC_HAL_GetBuffValue(uint32_t baseAddr, uint8_t index);
  * This function clears the flag of the DAC buffer read pointer when it hits the
  * bottom position.
  *
- * @param baseAddr The DAC peripheral base address.
+ * @param base The DAC peripheral base address.
  */
-static inline void DAC_HAL_ClearBuffIndexUpperFlag(uint32_t baseAddr)
+static inline void DAC_HAL_ClearBuffIdxUpperFlag(DAC_Type * base)
 {
-    BW_DAC_SR_DACBFRPBF(baseAddr, 0U);
+    DAC_BWR_SR_DACBFRPBF(base, 0U);
 }
 
 /*!
- * @brief Gets the flag of DAC buffer read pointer when it hits the bottom position.
+ * @brief Gets the flag of the DAC buffer read pointer when it hits the bottom position.
  *
  * This function gets the flag of DAC buffer read pointer when it hits the
  * bottom position.
  *
- * @param baseAddr The DAC peripheral base address.
+ * @param base The DAC peripheral base address.
  * @return Assertion of indicated event.
  */
-static inline bool DAC_HAL_GetBuffIndexUpperFlag(uint32_t baseAddr)
+static inline bool DAC_HAL_GetBuffIdxUpperFlag(DAC_Type * base)
 {
-    return ( 1U == BR_DAC_SR_DACBFRPBF(baseAddr) );
+    return ( 1U == DAC_BRD_SR_DACBFRPBF(base) );
 }
 
 /*!
@@ -198,11 +255,11 @@ static inline bool DAC_HAL_GetBuffIndexUpperFlag(uint32_t baseAddr)
  * This function clears the flag of the DAC buffer read pointer when it hits the
  * top position.
  *
- * @param baseAddr The DAC peripheral base address.
+ * @param base The DAC peripheral base address.
  */
-static inline void DAC_HAL_ClearBuffIndexStartFlag(uint32_t baseAddr)
+static inline void DAC_HAL_ClearBuffIdxStartFlag(DAC_Type * base)
 {
-    BW_DAC_SR_DACBFRPTF(baseAddr, 0U);
+    DAC_BWR_SR_DACBFRPTF(base, 0U);
 }
 
 /*!
@@ -211,12 +268,12 @@ static inline void DAC_HAL_ClearBuffIndexStartFlag(uint32_t baseAddr)
  * This function gets the flag of the DAC buffer read pointer when it hits the
  * top position.
  *
- * @param baseAddr The DAC peripheral base address.
+ * @param base The DAC peripheral base address.
  * @return Assertion of indicated event.
  */
-static inline bool DAC_HAL_GetBuffIndexStartFlag(uint32_t baseAddr)
+static inline bool DAC_HAL_GetBuffIdxStartFlag(DAC_Type * base)
 {
-    return ( 1U == BR_DAC_SR_DACBFRPTF(baseAddr) );
+    return ( 1U == DAC_BRD_SR_DACBFRPTF(base) );
 }
 
 #if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
@@ -227,12 +284,12 @@ static inline bool DAC_HAL_GetBuffIndexStartFlag(uint32_t baseAddr)
  * This function gets the flag of the DAC buffer read pointer when it hits the
  * watermark position.
  *
- * @param baseAddr The DAC peripheral base address.
+ * @param base The DAC peripheral base address.
  * @return Assertion of indicated event.
  */
-static inline bool DAC_HAL_GetBuffIndexWatermarkFlag(uint32_t baseAddr)
+static inline bool DAC_HAL_GetBuffIdxWatermarkFlag(DAC_Type * base)
 {
-    return ( 1U == BR_DAC_SR_DACBFWMF(baseAddr) );
+    return ( 1U == DAC_BRD_SR_DACBFWMF(base) );
 }
 
 /*!
@@ -241,65 +298,38 @@ static inline bool DAC_HAL_GetBuffIndexWatermarkFlag(uint32_t baseAddr)
  * This function clears the flag of the DAC buffer read pointer when it hits the
  * watermark position.
  *
- * @param baseAddr The DAC peripheral base address.
- * @return Assertion of indicated event.
+ * @param base The DAC peripheral base address.
  */
-static inline void DAC_HAL_ClearBuffIndexWatermarkFlag(uint32_t baseAddr)
+static inline void DAC_HAL_ClearBuffIdxWatermarkFlag(DAC_Type * base)
 {
-    BW_DAC_SR_DACBFWMF(baseAddr, 0U);
+    DAC_BWR_SR_DACBFWMF(base, 0U);
 }
 #endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
 
 /*!
  * @brief Enables the Programmable Reference Generator.
  *
- * This function enables the Programmable Reference Generator. Then the
+ * This function enables the Programmable Reference Generator. Then, the
  * DAC system is enabled.
  *
- * @param baseAddr The DAC peripheral base address.
+ * @param base The DAC peripheral base address.
  */
-static inline void DAC_HAL_Enable(uint32_t baseAddr)
+static inline void DAC_HAL_Enable(DAC_Type * base)
 {
-    BW_DAC_C0_DACEN(baseAddr, 1U);
+    DAC_BWR_C0_DACEN(base, 1U);
 }
 
 /*!
  * @brief Disables the Programmable Reference Generator.
  *
- * This function disables the Programmable Reference Generator. Then the
+ * This function disables the Programmable Reference Generator. Then, the
  * DAC system is disabled.
  *
- * @param baseAddr The DAC peripheral base address.
+ * @param base The DAC peripheral base address.
  */
-static inline void DAC_HAL_Disable(uint32_t baseAddr)
+static inline void DAC_HAL_Disable(DAC_Type * base)
 {
-    BW_DAC_C0_DACEN(baseAddr, 0U);
-}
-
-/*!
- * @brief Sets the reference voltage source mode for the DAC module.
- *
- * This function sets the reference voltage source mode for the DAC module. 
- *
- * @param baseAddr The DAC peripheral base address.
- * @param mode Selection of enumeration mode. See to "dac_ref_volt_src_mode_t".
- */
-static inline void DAC_HAL_SetRefVoltSrcMode(uint32_t baseAddr, dac_ref_volt_src_mode_t mode)
-{
-    BW_DAC_C0_DACRFS(baseAddr, ((kDacRefVoltSrcOfVref1==mode)?0U:1U) );
-}
-
-/*!
- * @brief Sets the trigger mode for the DAC module.
- *
- * This function sets the trigger mode for the DAC module. 
- *
- * @param baseAddr The DAC peripheral base address.
- * @param mode Selection of enumeration mode. See to "dac_trigger_mode_t".
- */
-static inline void DAC_HAL_SetTriggerMode(uint32_t baseAddr, dac_trigger_mode_t mode)
-{
-    BW_DAC_C0_DACTRGSEL(baseAddr, ((kDacTriggerByHardware==mode)?0U:1U) );
+    DAC_BWR_C0_DACEN(base, 0U);
 }
 
 /*!
@@ -309,184 +339,44 @@ static inline void DAC_HAL_SetTriggerMode(uint32_t baseAddr, dac_trigger_mode_t 
  * trigger is selected and buffer enabled, calling this API advances the
  * buffer read pointer once.
  *
- * @param baseAddr The DAC peripheral base address.
+ * @param base The DAC peripheral base address.
  */
-static inline void DAC_HAL_SetSoftTriggerCmd(uint32_t baseAddr)
+static inline void DAC_HAL_SetSoftTriggerCmd(DAC_Type * base)
 {
-    /* BW_DAC_C0_DACSWTRG(baseAddr, 1U); */
+    /* DAC_BWR_C0_DACSWTRG(base, 1U); */
     /* For supporting some chips with no bit-band access. */
-    HW_DAC_C0_SET(baseAddr, BM_DAC_C0_DACSWTRG);  
-}
-
-/*!
- * @brief Switches to enable working in low power mode for the DAC module.
- *
- * This function switches to enable working in low power mode for the DAC module.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param enable Switcher to assert the feature.
- */
-static inline void DAC_HAL_SetLowPowerCmd(uint32_t baseAddr, bool enable)
-{
-    BW_DAC_C0_LPEN(baseAddr, (enable?1U:0U) );
-}
-
-#if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
-/*!
- * @brief Switches to enable the interrupt when buffer read pointer hits the watermark position.
- *
- * This function switches to enable the interrupt when the buffer read pointer hits
- * the watermark position.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param enable Switcher to assert the feature.
- */
-static inline void DAC_HAL_SetBuffIndexWatermarkIntCmd(uint32_t baseAddr, bool enable)
-{
-    BW_DAC_C0_DACBWIEN(baseAddr, (enable?1U:0U) );
-}
-#endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
-
-/*!
- * @brief Switches to enable the interrupt when the buffer read pointer hits the top position.
- *
- * This function switches to enable the interrupt when the buffer read pointer hits
- * the top position.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param enable Switcher to assert the feature.
- */
-static inline void DAC_HAL_SetBuffIndexStartIntCmd(uint32_t baseAddr, bool enable)
-{
-    BW_DAC_C0_DACBTIEN(baseAddr, (enable?1U:0U) );
-}
-
-/*!
- * @brief Switches to enable the interrupt when the buffer read pointer hits the bottom position.
- *
- * This function switches to enable the interrupt when the buffer read pointer hits
- * the bottom position.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param enable Switcher to assert the feature.
- */
-static inline void DAC_HAL_SetBuffIndexUpperIntCmd(uint32_t baseAddr, bool enable)
-{
-    BW_DAC_C0_DACBBIEN(baseAddr, (enable?1U:0U) );
-}
-
-/*!
- * @brief Switches to enable the DMA for DAC.
- *
- * This function switches to enable the DMA for the DAC module. When the DMA is enabled,
- * DMA request is generated by the original interrupts, which are
- * not presented on this module at the same time.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param enable Switcher to assert the feature.
- */
-static inline void DAC_HAL_SetDmaCmd(uint32_t baseAddr, bool enable)
-{
-    BW_DAC_C1_DMAEN(baseAddr, (enable?1U:0U) );
-}
-
-#if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
-/*!
- * @brief Sets the watermark mode of the buffer for the DAC module.
- *
- * This function sets the watermark mode of the buffer for the DAC module.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param mode Selection of enumeration mode. See to "dac_buff_watermark_mode_t".
- */
-static inline void DAC_HAL_SetBuffWatermarkMode(uint32_t baseAddr, dac_buff_watermark_mode_t mode)
-{
-    BW_DAC_C1_DACBFWM(baseAddr, (uint8_t)mode);
-}
-#endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
-
-/*!
- * @brief Sets the work mode of the buffer for the DAC module.
- *
- * This function sets the work mode of the buffer for the DAC module.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param mode Selection of enumeration mode. See to "dac_buff_work_mode_t".
- */
-static inline void DAC_HAL_SetBuffWorkMode(uint32_t baseAddr, dac_buff_work_mode_t mode)
-{
-    BW_DAC_C1_DACBFMD(baseAddr, (uint8_t)mode );
-}
-
-/*!
- * @brief Switches to enable the buffer for the DAC module.
- *
- * This function switches to enable the buffer for the DAC module.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param enable Switcher to assert the feature.
- */
-static inline void DAC_HAL_SetBuffCmd(uint32_t baseAddr, bool enable)
-{
-    BW_DAC_C1_DACBFEN(baseAddr, (enable?1U:0U) );
-}
-
-/*!
- * @brief Gets the buffer index upper limitation for the DAC module.
- *
- * This function gets the upper buffer index upper limitation for the DAC module.
- *
- * @param baseAddr The DAC peripheral base address.
- * @return Value of buffer index upper limitation.
- */
-static inline uint8_t DAC_HAL_GetBuffUpperIndex(uint32_t baseAddr)
-{
-    return BR_DAC_C2_DACBFUP(baseAddr);
-}
-
-/*!
- * @brief Sets the buffer index upper limitation for the DAC module.
- *
- * This function sets the upper buffer index upper limitation for the DAC module.
- *
- * @param baseAddr The DAC peripheral base address.
- * @param index Setting value of upper limitation for buffer index.
- */
-static inline void DAC_HAL_SetBuffUpperIndex(uint32_t baseAddr, uint8_t index)
-{
-    assert(index < HW_DAC_DATnL_COUNT);
-    BW_DAC_C2_DACBFUP(baseAddr , index);
-}
-
-/*!
- * @brief Gets the current buffer index upper limitation for the DAC module.
- *
- * This function gets the current buffer index for the DAC module.
- *
- * @param baseAddr The DAC peripheral base address.
- * @return Value of current buffer index.
- */
-static inline uint8_t DAC_HAL_GetBuffCurrentIndex(uint32_t baseAddr)
-{
-    return BR_DAC_C2_DACBFRP(baseAddr);
+    DAC_SET_C0(base, DAC_C0_DACSWTRG_MASK);  
 }
 
 /*!
  * @brief Sets the buffer index for the DAC module.
  *
- * This function sets the upper buffer index for the DAC module.
+ * This function sets the current buffer index for the DAC module.
  *
- * @param baseAddr the DAC peripheral base address.
- * @param index Setting value for buffer index.
+ * @param base the DAC peripheral base address.
+ * @param idx Setting buffer index.
  */
-static inline void DAC_HAL_SetBuffCurrentIndex(uint32_t baseAddr, uint8_t index)
+static inline void DAC_HAL_SetBuffCurIdx(DAC_Type * base, uint8_t idx)
 {
-    assert(index < HW_DAC_DATnL_COUNT);
-    BW_DAC_C2_DACBFRP(baseAddr, index);
+    assert(idx < DAC_DATL_COUNT);
+    DAC_BWR_C2_DACBFRP(base, idx);
+}
+
+/*!
+ * @brief Gets the buffer index for the DAC module.
+ *
+ * This function gets the current buffer index for the DAC module.
+ *
+ * @param base the DAC peripheral base address.
+ * @return Current index of buffer.
+ */
+static inline uint8_t DAC_HAL_GetBuffCurIdx(DAC_Type * base)
+{
+    return DAC_BRD_C2_DACBFRP(base);
 }
 
 #if defined(__cplusplus)
-extern }
+}
 #endif
 
 /*!
@@ -499,3 +389,5 @@ extern }
  * EOF
  *****************************************************************************/
 
+
+#endif

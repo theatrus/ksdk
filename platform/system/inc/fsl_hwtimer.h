@@ -80,8 +80,6 @@ typedef void (* hwtimer_callback_t)(void *p);
  * @see HWTIMER_SYS_deinit
  * @see HWTIMER_SYS_start
  * @see HWTIMER_SYS_stop
- * @see HWTIMER_SYS_set_freq
- * @see HWTIMER_SYS_get_freq
  * @see HWTIMER_SYS_set_period
  * @see HWTIMER_SYS_get_period
  * @see HWTIMER_SYS_get_modulo
@@ -96,8 +94,8 @@ typedef struct Hwtimer
 {
     /*! @brief Pointer to device interface structure */
     const struct Hwtimer_devif *    devif;
-    /*! @brief Clock identifier used for obtaining timer's source clock. */
-    clock_names_t                   clockName;
+    /*! @brief Timer's source clock frequency */
+    uint32_t                        clockFreq;
     /*! @brief Actual total divider */
     uint32_t                        divider;
     /*! @brief Determine how many sub ticks are in one tick */
@@ -135,7 +133,7 @@ typedef struct Hwtimer_time
 /*!
  * @brief Type defines init function for devif structure.
  */
-typedef _hwtimer_error_code_t (*  hwtimer_devif_init_t)(hwtimer_t *hwtimer, uint32_t id, uint32_t isr_prior, void *data);
+typedef _hwtimer_error_code_t (*  hwtimer_devif_init_t)(hwtimer_t *hwtimer, uint32_t id, void *data);
 
 /*!
  * @brief Type defines deinit function for devif structure.
@@ -145,7 +143,7 @@ typedef _hwtimer_error_code_t (*  hwtimer_devif_deinit_t)(hwtimer_t *hwtimer);
 /*!
  * @brief Type defines set_div function for devif structure.
  */
-typedef _hwtimer_error_code_t (*  hwtimer_devif_set_div_t)(hwtimer_t *hwtimer, uint32_t divider);
+typedef _hwtimer_error_code_t (*  hwtimer_devif_set_div_t)(hwtimer_t *hwtimer, uint32_t period);
 
 /*!
  * @brief Type defines start function for devif structure.
@@ -209,7 +207,6 @@ extern "C" {
  * @param hwtimer [out]  Returns initialized hwtimer structure handle.
  * @param kDevif [in]    Structure determines low layer driver to be used.
  * @param id [in]        Numerical identifier of the timer.
- * @param isrPrior [in]  Priority of interrupt.
  * @param data [in]      Specific data for low level of interrupt.
  *
  * @return success or an error code returned from low level init function.
@@ -223,7 +220,7 @@ extern "C" {
  * @see HWTIMER_SYS_start
  * @see HWTIMER_SYS_stop
  */
-_hwtimer_error_code_t HWTIMER_SYS_Init(hwtimer_t *hwtimer, const hwtimer_devif_t * kDevif, uint32_t id, uint32_t isrPrior, void *data);
+_hwtimer_error_code_t HWTIMER_SYS_Init(hwtimer_t *hwtimer, const hwtimer_devif_t * kDevif, uint32_t id, void *data);
 
 /*!
  * @brief De-initialization of the hwtimer.
@@ -245,43 +242,12 @@ _hwtimer_error_code_t HWTIMER_SYS_Init(hwtimer_t *hwtimer, const hwtimer_devif_t
 _hwtimer_error_code_t HWTIMER_SYS_Deinit(hwtimer_t *hwtimer);
 
 /*!
- * @brief The function configures timer to tick at frequency as close as possible to the requested one.
- *
- * Actual accuracy depends on the timer module.
- * The function gets the value of the base frequency of the timer via clock manager, calculates required divider ratio and calls low layer driver to set up the timer accordingly.
- * Call to this function might be expensive as it may require complex calculation to choose the best configuration of dividers. The actual complexity depends on timer module implementation.
- * If there is only single divider or counter preload value (typical case) then there is no significant overhead.
- *
- * @param hwtimer [in]   Pointer to hwtimer structure.
- * @param clockName [in] Clock identifier used for obtaining timer's source clock.
- * @param freq [in]      Required frequency of timer in Hz.
- *
- * @return success or an error code returned from low level SETDIV function.
- * @retval kHwtimerSuccess           Success
- * @retval kHwtimerInvalidInput      When input parameter hwtimer is a NULL pointer
- * @retval kHwtimerInvalidPointer    When device structure points to NULL.
- * @retval kHwtimerClockManagerError When Clock manager returns error.
- *
- * @see HWTIMER_SYS_GetFreq
- * @see HWTIMER_SYS_SetPeriod
- * @see HWTIMER_SYS_GetPeriod
- * @see HWTIMER_SYS_GetModulo
- * @see HWTIMER_SYS_GetTime
- * @see HWTIMER_SYS_GetTicks
- */
-_hwtimer_error_code_t HWTIMER_SYS_SetFreq(hwtimer_t *hwtimer, clock_names_t clockName, uint32_t freq);
-
-/*!
  * @brief Set period of hwtimer.
  *
- * The function provides an alternate way to set up the timer to desired period specified in microseconds rather than to frequency in Hz.
- * The function gets the value of the base frequency of the timer via clock manager, calculates required divider ratio and calls low layer driver to set up the timer accordingly.
- * Call to this function might be expensive as it may require complex calculation to choose the best configuration of dividers.
- * The actual complexity depends on timer module implementation.
- * If there is only single divider or counter preload value (typical case) then there is no significant overhead.
+ * The function provides a way to set up the timer to desired period specified in microseconds.
+ * Calls the low layer driver to set up the timer divider according to the specified period.
  *
  * @param hwtimer [in]   Pointer to hwtimer structure.
- * @param clockName [in] Clock identifier used for obtaining timer's source clock.
  * @param period [in]    Required period of timer in micro seconds.
  *
  * @return success or an error code returned from low level SETDIV function.
@@ -290,33 +256,12 @@ _hwtimer_error_code_t HWTIMER_SYS_SetFreq(hwtimer_t *hwtimer, clock_names_t cloc
  * @retval kHwtimerInvalidPointer    When low level SETDIV function point to NULL.
  * @retval kHwtimerClockManagerError When Clock manager returns error.
  *
- * @see HWTIMER_SYS_SetFreq
- * @see HWTIMER_SYS_GetFreq
  * @see HWTIMER_SYS_GetPeriod
  * @see HWTIMER_SYS_GetModulo
  * @see HWTIMER_SYS_GetTime
  * @see HWTIMER_SYS_GetTicks
  */
-_hwtimer_error_code_t HWTIMER_SYS_SetPeriod(hwtimer_t *hwtimer, clock_names_t clockName, uint32_t period);
-
-/*!
- * @brief Get frequency of hwtimer.
- *
- * The function returns current frequency of the timer calculated from the base frequency and actual divider settings of the timer or zero in case of an error.
- *
- * @param hwtimer [in]   Pointer to hwtimer structure.
- *
- * @return already set frequency of hwtimer
- * @retval 0  When input parameter hwtimer is NULL pointer or his divider member is zero or clock manager returns error.
- *
- * @see HWTIMER_SYS_SetFreq
- * @see HWTIMER_SYS_SetPeriod
- * @see HWTIMER_SYS_GetPeriod
- * @see HWTIMER_SYS_GetModulo
- * @see HWTIMER_SYS_GetTime
- * @see HWTIMER_SYS_GetTicks
- */
-uint32_t HWTIMER_SYS_GetFreq(hwtimer_t *hwtimer);
+_hwtimer_error_code_t HWTIMER_SYS_SetPeriod(hwtimer_t *hwtimer, uint32_t period);
 
 /*!
  * @brief Get period of hwtimer.
@@ -328,8 +273,6 @@ uint32_t HWTIMER_SYS_GetFreq(hwtimer_t *hwtimer);
  * @return already set period of hwtimer.
  * @retval 0  Input parameter hwtimer is NULL pointer or clock manager returns error.
  *
- * @see HWTIMER_SYS_SetFreq
- * @see HWTIMER_SYS_GetFreq
  * @see HWTIMER_SYS_SetPeriod
  * @see HWTIMER_SYS_GetModulo
  * @see HWTIMER_SYS_GetTime
@@ -376,15 +319,13 @@ _hwtimer_error_code_t HWTIMER_SYS_Stop(hwtimer_t *hwtimer);
 /*!
  * @brief The function returns period of the timer in sub-ticks.
  *
- * It is typically called after HWTIMER_SYS_SetFreq() or HWTIMER_SYS_SetPeriod() to obtain actual resolution of the timer in the current configuration.
+ * It is typically called after HWTIMER_SYS_SetPeriod() to obtain actual resolution of the timer in the current configuration.
  *
  * @param hwtimer [in]   Pointer to hwtimer structure.
  *
  * @return resolution of hwtimer.
  * @retval 0 Input parameter hwtimer is NULL pointer.
  *
- * @see HWTIMER_SYS_SetFreq
- * @see HWTIMER_SYS_GetFreq
  * @see HWTIMER_SYS_SetPeriod
  * @see HWTIMER_SYS_GetPeriod
  * @see HWTIMER_SYS_GetTime
@@ -406,8 +347,6 @@ uint32_t HWTIMER_SYS_GetModulo(hwtimer_t *hwtimer);
  * @retval kHwtimerInvalidInput   When input parameter hwtimer or input parameter time are NULL pointers.
  * @retval kHwtimerInvalidPointer When device structure points to NULL.
  *
- * @see HWTIMER_SYS_SetFreq
- * @see HWTIMER_SYS_GetFreq
  * @see HWTIMER_SYS_SetPeriod
  * @see HWTIMER_SYS_GetPeriod
  * @see HWTIMER_SYS_GetModulo
@@ -427,8 +366,6 @@ _hwtimer_error_code_t HWTIMER_SYS_GetTime(hwtimer_t *hwtimer, hwtimer_time_t *ti
  * @return low 32 bits of 64 bit tick value.
  * @retval 0  When input parameter hwtimer is NULL pointer.
  *
- * @see HWTIMER_SYS_SetFreq
- * @see HWTIMER_SYS_GetFreq
  * @see HWTIMER_SYS_SetPeriod
  * @see HWTIMER_SYS_GetPeriod
  * @see HWTIMER_SYS_GetModulo

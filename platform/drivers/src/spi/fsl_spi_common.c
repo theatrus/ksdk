@@ -29,8 +29,18 @@
  */
 #include "fsl_device_registers.h"
 
-/*! @brief Table of base addresses for SPI instances. */
-const uint32_t g_spiBaseAddr[] = SPI_BASE_ADDRS;
+#if FSL_FEATURE_SOC_SPI_COUNT
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
+/* Pointer to runtime state structure.*/
+void * g_spiStatePtr[SPI_INSTANCE_COUNT] = { NULL };
+
+/*! @brief Table of base pointers for SPI instances. */
+SPI_Type * const g_spiBase[SPI_INSTANCE_COUNT] = SPI_BASE_PTRS;
+
+/*! @brief Table of SPI FIFO sizes per instance. */
+const uint32_t g_spiFifoSize[SPI_INSTANCE_COUNT] = FSL_FEATURE_SPI_FIFO_SIZEx;
 
 /*!
  * @brief Table to save SPI IRQ enum numbers defined in CMSIS files.
@@ -38,8 +48,9 @@ const uint32_t g_spiBaseAddr[] = SPI_BASE_ADDRS;
  * This is used by SPI master and slave init functions to enable or disable SPI interrupts.
  * This table is indexed by the module instance number and returns SPI IRQ numbers.
  */
-const IRQn_Type g_spiIrqId[] = SPI_IRQS;
+const IRQn_Type g_spiIrqId[SPI_INSTANCE_COUNT] = SPI_IRQS;
 
+#endif /* FSL_FEATURE_SOC_SPI_COUNT */
 /*******************************************************************************
 * EOF
 ******************************************************************************/

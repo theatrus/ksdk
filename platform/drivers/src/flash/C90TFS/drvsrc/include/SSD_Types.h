@@ -122,62 +122,62 @@ typedef struct _ssd_config
 } FLASH_SSD_CONFIG, *PFLASH_SSD_CONFIG;
 
 /* -------------------- Function Pointer ------------------------------- */
-/*! @brief FlashCommandSequence function poiter */
+/*! @brief FlashCommandSequence function pointer */
 typedef uint32_t (*pFLASHCOMMANDSEQUENCE) (PFLASH_SSD_CONFIG pSSDConfig);
 
-/*! @brief FlashInit function poiter */
+/*! @brief FlashInit function pointer */
 typedef uint32_t (*pFLASHINIT) (PFLASH_SSD_CONFIG pSSDConfig);
 
-/*! @brief PFlashGetProtection function poiter */
+/*! @brief PFlashGetProtection function pointer */
 typedef uint32_t (*pPFLASHGETPROTECTION) (PFLASH_SSD_CONFIG pSSDConfig, \
                                         uint32_t*  protectStatus);
 
-/*! @brief PFlashSetProtection function poiter */
+/*! @brief PFlashSetProtection function pointer */
 typedef uint32_t (*pPFLASHSETPROTECTION) (PFLASH_SSD_CONFIG  pSSDConfig, \
                                         uint32_t  protectStatus);
 
-/*! @brief FlashGetSecurityState function poiter */
+/*! @brief FlashGetSecurityState function pointer */
 typedef uint32_t (*pFLASHGETSECURITYSTATE) (PFLASH_SSD_CONFIG pSSDConfig, \
                                           uint8_t* securityState);
 
-/*! @brief FlashSecurityByPass function poiter */
+/*! @brief FlashSecurityByPass function pointer */
 typedef uint32_t (*pFLASHSECURITYBYPASS) (PFLASH_SSD_CONFIG pSSDConfig, \
                                         uint8_t* keyBuffer, \
                                         pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief FlashEraseAllBlock function poiter */
+/*! @brief FlashEraseAllBlock function pointer */
 typedef uint32_t (*pFLASHERASEALLBLOCK) (PFLASH_SSD_CONFIG pSSDConfig, \
                                        pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief FlashEraseBlock function poiter */
+/*! @brief FlashEraseBlock function pointer */
 typedef uint32_t (*pFLASHERASEBLOCK) (PFLASH_SSD_CONFIG pSSDConfig, \
                                     uint32_t dest, \
                                     pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief FlashEraseSector function poiter */
+/*! @brief FlashEraseSector function pointer */
 typedef uint32_t (*pFLASHERASESECTOR) (PFLASH_SSD_CONFIG pSSDConfig, \
                                      uint32_t dest, \
                                      uint32_t size, \
                                      pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
-/*! @brief FlashEraseSuspend function poiter */
+/*! @brief FlashEraseSuspend function pointer */
 typedef uint32_t (*pFLASHERASESUSPEND) (PFLASH_SSD_CONFIG pSSDConfig);
 
-/*! @brief FlashEraseResume function poiter */
+/*! @brief FlashEraseResume function pointer */
 typedef uint32_t (*pFLASHERASERESUME) (PFLASH_SSD_CONFIG pSSDConfig);
 
-/*! @brief FlashProgramSection function poiter */
+/*! @brief FlashProgramSection function pointer */
 typedef uint32_t (*pFLASHPROGRAMSECTION) (PFLASH_SSD_CONFIG pSSDConfig, \
                                         uint32_t dest, \
                                         uint16_t number, \
                                         pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief FlashChecksum function poiter */
+/*! @brief FlashChecksum function pointer */
 typedef uint32_t (*pFLASHCHECKSUM) (PFLASH_SSD_CONFIG pSSDConfig, \
                                   uint32_t dest, \
                                   uint32_t size, \
                                   uint32_t* pSum);
 
-/*! @brief FlashVerifyAllBlock function poiter */
+/*! @brief FlashVerifyAllBlock function pointer */
 typedef uint32_t (*pFLASHVERIFYALLBLOCK) (PFLASH_SSD_CONFIG pSSDConfig, \
                                         uint8_t marginLevel, \
                                         pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
@@ -188,23 +188,23 @@ typedef uint32_t (*pFLASHVERIFYBLOCK) (PFLASH_SSD_CONFIG pSSDConfig, \
                                      uint8_t marginLevel, \
                                      pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief FlashVerifySection function poiter */
+/*! @brief FlashVerifySection function pointer */
 typedef uint32_t (*pFLASHVERIFYSECTION) (PFLASH_SSD_CONFIG pSSDConfig, \
                                        uint32_t dest, \
                                        uint16_t number, \
                                        uint8_t marginLevel, \
                                        pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief FlashReadOnce function poiter */
+/*! @brief FlashReadOnce function pointer */
 typedef uint32_t (*pFLASHREADONCE) (PFLASH_SSD_CONFIG pSSDConfig, \
                                   uint8_t* pDataArray, \
                                   pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief FlashProgramOnce function poiter */
+/*! @brief FlashProgramOnce function pointer */
 typedef uint32_t (*pFLASHPROGRAMONCE) (PFLASH_SSD_CONFIG pSSDConfig, \
                                      uint8_t* pDataArray, \
                                      pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
-/*! @brief FlashProgramCheck function poiter */
+/*! @brief FlashProgramCheck function pointer */
 typedef uint32_t (*pFLASHPROGRAMCHECK) (PFLASH_SSD_CONFIG pSSDConfig, \
                                       uint32_t  dest, \
                                       uint32_t  size, \
@@ -213,21 +213,21 @@ typedef uint32_t (*pFLASHPROGRAMCHECK) (PFLASH_SSD_CONFIG pSSDConfig, \
                                       uint8_t   marginLevel, \
                                       pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief FlashReadResource function poiter */
+/*! @brief FlashReadResource function pointer */
 typedef uint32_t (*pFLASHREADRESOURCE) (PFLASH_SSD_CONFIG pSSDConfig, \
                                       uint32_t dest, \
                                       uint8_t* pDataArray, \
                                       uint8_t  resourceSelectCode, \
                                       pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief FlashProgram function poiter */
+/*! @brief FlashProgram function pointer */
 typedef uint32_t (*pFLASHPROGRAM) (PFLASH_SSD_CONFIG pSSDConfig, \
                                          uint32_t dest, \
                                          uint32_t size, \
                                          uint8_t* pData, \
                                          pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief PFlashSwapCtrl function poiter */
+/*! @brief PFlashSwapCtrl function pointer */
 typedef uint32_t (*pPFLASHSWAPCTRL) (PFLASH_SSD_CONFIG pSSDConfig, \
                              uint32_t addr, \
                              uint8_t swapcmd, \
@@ -236,35 +236,35 @@ typedef uint32_t (*pPFLASHSWAPCTRL) (PFLASH_SSD_CONFIG pSSDConfig, \
                              uint8_t* pNextSwapBlockStatus, \
                              pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief PFlashSwap function poiter */
+/*! @brief PFlashSwap function pointer */
 typedef uint32_t (*pFLASHSWAP)(PFLASH_SSD_CONFIG pSSDConfig, \
                              uint32_t flashAddress, \
                              PFLASH_SWAP_CALLBACK pSwapCallback, \
                              pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
-/*! @brief DFlashGetProtection function poiter */
+/*! @brief DFlashGetProtection function pointer */
 typedef uint32_t (*pDFLASHGETPROTECTION) (PFLASH_SSD_CONFIG pSSDConfig, \
                                         uint8_t*  protectStatus);
-/*! @brief DFlashSetProtection function poiter */
+/*! @brief DFlashSetProtection function pointer */
 typedef uint32_t (*pDFLASHSETPROTECTION) (PFLASH_SSD_CONFIG pSSDConfig, \
                                         uint8_t  protectStatus);
 
-/*! @brief EERAMGetProtection function poiter */
+/*! @brief EERAMGetProtection function pointer */
 typedef uint32_t (*pEERAMGETPROTECTION) (PFLASH_SSD_CONFIG pSSDConfig, \
                                        uint8_t*  protectStatus);
 
-/*! @brief EERAMSetProtection function poiter */
+/*! @brief EERAMSetProtection function pointer */
 typedef uint32_t (*pEERAMSETPROTECTION) (PFLASH_SSD_CONFIG pSSDConfig, \
                                        uint8_t  protectStatus);
-/*! @brief DEFlashParition function poiter */
+/*! @brief DEFlashParition function pointer */
 typedef uint32_t (*pDEFLASHPARTITION) (PFLASH_SSD_CONFIG pSSDConfig, \
                                      uint8_t EEEDataSizeCode, \
                                      uint8_t DEPartitionCode, \
                                      pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
-/*! @brief SetEEEEnable function poiter */
+/*! @brief SetEEEEnable function pointer */
 typedef uint32_t (*pSETEEEENABLE) (PFLASH_SSD_CONFIG pSSDConfig, \
                                  uint8_t EEEEnable,pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
-/*! @brief EEEWrite function poiter */
+/*! @brief EEEWrite function pointer */
 typedef uint32_t (*pEEEWRITE) (PFLASH_SSD_CONFIG pSSDConfig, \
                              uint32_t dest, \
                              uint32_t size, \

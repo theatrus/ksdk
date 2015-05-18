@@ -30,9 +30,10 @@
 
 #include <string.h>
 #include "fsl_spi_dma_slave_driver.h"
-#include "fsl_spi_dma_shared_function.h"
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
+
+#if FSL_FEATURE_SOC_SPI_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -49,7 +50,7 @@ typedef enum _spi_dma_event_flags {
  * Variables
  ******************************************************************************/
 /* Pointer to runtime state structure.*/
-extern void * g_spiDmaStatePtr[HW_SPI_INSTANCE_COUNT];
+extern void * g_spiStatePtr[SPI_INSTANCE_COUNT];
 
 static uint8_t s_byteToSend;  /* Word to send, if no send buffer, this variable is used
                                  as the word to send, which should be initialized to 0. Needs
@@ -58,6 +59,9 @@ static uint8_t s_byteToSend;  /* Word to send, if no send buffer, this variable 
 
 static uint8_t s_rxBuffIfNull; /* If no receive buffer provided, direct rx DMA channel to this
                                   destination */
+
+/* Table of SPI FIFO sizes per instance. */
+extern const uint32_t g_spiFifoSize[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Code
@@ -109,15 +113,15 @@ void SPI_DRV_DmaSlaveCallback(void *param, dma_channel_status_t chanStatus)
     uint32_t instance = (uint32_t)(param);
 
     /* instantiate local variable of type spi_master_state_t and point to global state */
-    spi_dma_slave_state_t * spiDmaState = (spi_dma_slave_state_t *)g_spiDmaStatePtr[instance];
+    spi_dma_slave_state_t * spiDmaState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
 
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    SPI_Type *base = g_spiBase[instance];
 
     /* If hasExtraByte flag was set, need to enable the TX empty interrupt to get the last byte */
     if ((spiDmaState->hasExtraByte) && (spiDmaState->remainingReceiveByteCount))
     {
-        SPI_HAL_SetTxDmaCmd(baseAddr, false);
-        SPI_HAL_SetTransmitIntCmd(baseAddr, true);
+        SPI_HAL_SetTxDmaCmd(base, false);
+        SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, true);
     }
     else
     {
@@ -138,9 +142,9 @@ void SPI_DRV_DmaSlaveCallback(void *param, dma_channel_status_t chanStatus)
 spi_status_t SPI_DRV_DmaSlaveInit(uint32_t instance, spi_dma_slave_state_t * spiState,
                        const spi_dma_slave_user_config_t * slaveConfig)
 {
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    SPI_Type *base = g_spiBase[instance];
     assert(slaveConfig);
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
     assert(spiState);
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
@@ -149,10 +153,10 @@ spi_status_t SPI_DRV_DmaSlaveInit(uint32_t instance, spi_dma_slave_state_t * spi
         /* bits/frame larger than hardware support */
         return kStatus_SPI_InvalidParameter;
     }
-#endif
+#endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
 
     /* Check if the slave already initialized */
-    if (g_spiDmaStatePtr[instance])
+    if (g_spiStatePtr[instance])
     {
         return kStatus_SPI_AlreadyInitialized;
     }
@@ -169,37 +173,37 @@ spi_status_t SPI_DRV_DmaSlaveInit(uint32_t instance, spi_dma_slave_state_t * spi
     CLOCK_SYS_EnableSpiClock(instance);
 
     /* Reset the SPI module to its default settings including disabling SPI */
-    SPI_HAL_Init(baseAddr);
+    SPI_HAL_Init(base);
 
     /* Initialize the event structure */
     OSA_EventCreate(&spiState->event, kEventAutoClear);
 
     /* Set SPI to slave mode */
-    SPI_HAL_SetMasterSlave(baseAddr, kSpiSlave);
+    SPI_HAL_SetMasterSlave(base, kSpiSlave);
 
     /* Configure the slave clock polarity, phase and data direction */
-    SPI_HAL_SetDataFormat(baseAddr, slaveConfig->polarity, slaveConfig->phase,
+    SPI_HAL_SetDataFormat(base, slaveConfig->polarity, slaveConfig->phase,
             slaveConfig->direction);
 
     /* Set the SPI pin mode to normal mode */
-    SPI_HAL_SetPinMode(baseAddr, kSpiPinMode_Normal);
+    SPI_HAL_SetPinMode(base, kSpiPinMode_Normal);
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-    SPI_HAL_Set8or16BitMode(baseAddr, slaveConfig->bitCount);
-#endif
+    SPI_HAL_Set8or16BitMode(base, slaveConfig->bitCount);
+#endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
 
 #if FSL_FEATURE_SPI_FIFO_SIZE
-    if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+    if (g_spiFifoSize[instance] != 0)
     {
         /* If SPI module contains a FIFO, enable it and set watermarks to half full/empty */
-        SPI_HAL_SetFifoMode(baseAddr, true, kSpiTxFifoOneHalfEmpty, kSpiRxFifoOneHalfFull);
+        SPI_HAL_SetFifoMode(base, true, kSpiTxFifoOneHalfEmpty, kSpiRxFifoOneHalfFull);
 
         /* Set the interrupt clearing mechansim select for later use in driver to clear
          * status flags
          */
-        SPI_HAL_SetIntClearCmd(baseAddr, true);
+        SPI_HAL_SetIntClearCmd(base, true);
     }
-#endif
+#endif /* FSL_FEATURE_SPI_FIFO_SIZE */
 
     /*****************************************
      * Request DMA channel for RX and TX FIFO
@@ -222,7 +226,7 @@ spi_status_t SPI_DRV_DmaSlaveInit(uint32_t instance, spi_dma_slave_state_t * spi
             return kStatus_SPI_DMAChannelInvalid;
         }
     }
-#if (HW_SPI_INSTANCE_COUNT > 1)
+#if (SPI_INSTANCE_COUNT > 1)
     else if (instance == 1)
     {
         /* Request DMA channel for RX FIFO */
@@ -247,7 +251,7 @@ spi_status_t SPI_DRV_DmaSlaveInit(uint32_t instance, spi_dma_slave_state_t * spi
 #endif
 
     /* Save runtime structure pointers to irq handler can point to the correct state structure */
-    g_spiDmaStatePtr[instance] = spiState;
+    g_spiStatePtr[instance] = spiState;
 
     /* Enable SPI interrupt. The transmit interrupt should immediately cause an interrupt
      * which will fill in the transmit buffer and will be ready to send once the slave initiates
@@ -256,7 +260,7 @@ spi_status_t SPI_DRV_DmaSlaveInit(uint32_t instance, spi_dma_slave_state_t * spi
     INT_SYS_EnableIRQ(g_spiIrqId[instance]);
 
     /* SPI module enable */
-    SPI_HAL_Enable(baseAddr);
+    SPI_HAL_Enable(base);
 
     return kStatus_SPI_Success;
 }
@@ -268,28 +272,28 @@ spi_status_t SPI_DRV_DmaSlaveInit(uint32_t instance, spi_dma_slave_state_t * spi
  * Clears the control register and turns off the clock to the module.
  *
  *END**************************************************************************/
-void SPI_DRV_DmaSlaveDeinit(uint32_t instance)
+spi_status_t SPI_DRV_DmaSlaveDeinit(uint32_t instance)
 {
-    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiDmaStatePtr[instance];
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
+    SPI_Type *base = g_spiBase[instance];
 
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     /* Disable SPI interrupt */
     INT_SYS_DisableIRQ(g_spiIrqId[instance]);
 
     /* Reset the SPI module to its default settings including disabling SPI and its interrupts */
-    SPI_HAL_Init(baseAddr);
+    SPI_HAL_Init(base);
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-    if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+    if (g_spiFifoSize[instance] != 0)
     {
-        SPI_HAL_SetFifoIntCmd(baseAddr, kSpiRxFifoNearFullInt, false);
+        SPI_HAL_SetFifoIntCmd(base, kSpiRxFifoNearFullInt, false);
     }
 
     /* disable transmit interrupt */
-    SPI_HAL_SetTransmitIntCmd(baseAddr, false);
-#endif
+    SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, false);
+#endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
 
     /* Free DMA channels */
     DMA_DRV_FreeChannel(&spiState->dmaReceive);
@@ -302,7 +306,9 @@ void SPI_DRV_DmaSlaveDeinit(uint32_t instance)
     OSA_EventDestroy(&spiState->event);
 
     /* Clear state pointer */
-    g_spiDmaStatePtr[instance] = NULL;
+    g_spiStatePtr[instance] = NULL;
+
+    return kStatus_SPI_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -317,11 +323,11 @@ spi_status_t SPI_DRV_DmaSlaveTransfer(uint32_t instance,
                                    uint8_t *receiveBuffer,
                                    uint32_t transferByteCount)
 {
-    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiDmaStatePtr[instance];
+    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
     spi_status_t errorStatus = kStatus_SPI_Success;
 
     /* Validate the parameter */
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     if ((!sendBuffer) && (!receiveBuffer))
     {
@@ -371,7 +377,7 @@ spi_status_t SPI_DRV_DmaSlaveTransferBlocking(uint32_t instance,
                                            uint32_t transferByteCount,
                                            uint32_t timeout)
 {
-    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiDmaStatePtr[instance];
+    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
     spi_status_t errorStatus = kStatus_SPI_Success;
     event_flags_t setFlags = 0;
 
@@ -418,14 +424,12 @@ spi_status_t SPI_DRV_DmaSlaveTransferBlocking(uint32_t instance,
  *END**************************************************************************/
 static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
 {
-    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiDmaStatePtr[instance];
+    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
 
     /* For temporarily storing DMA register channel */
     uint8_t txChannel, rxChannel;
     void * param;
-    uint32_t spiBaseAddr = g_spiBaseAddr[instance];
-    uint32_t dmaBaseAddr;
-    uint32_t dmamuxBaseAddr;
+    SPI_Type *base = g_spiBase[instance];
     uint32_t transferSizeInBytes;  /* DMA transfer size in bytes */
 
     /* Initialize s_byteToSend */
@@ -446,12 +450,12 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
     }
 
     /* In order to flush any remaining data in the shift register, disable then enable the SPI */
-    SPI_HAL_Disable(spiBaseAddr);
-    SPI_HAL_Enable(spiBaseAddr);
+    SPI_HAL_Disable(base);
+    SPI_HAL_Enable(base);
 
     /* First, set the DMA transfer size in bytes */
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-    if (SPI_HAL_Get8or16BitMode(spiBaseAddr) == kSpi16BitMode)
+    if (SPI_HAL_Get8or16BitMode(base) == kSpi16BitMode)
     {
         transferSizeInBytes = 2;
         /* If bits/frame > 8, meaning 2 bytes, then the transfer byte count must not be an odd
@@ -475,31 +479,31 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
     }
 #else
     transferSizeInBytes = 1;
-#endif
+#endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
 
     param = (void *)(instance);     /* For DMA callback, set "param" as the SPI instance number */
     rxChannel = spiState->dmaReceive.channel;
     txChannel = spiState->dmaTransmit.channel;
     /* Only need to set the DMA reg base addr once since it should be the same for all code */
-    dmaBaseAddr = g_dmaRegBaseAddr[rxChannel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
-    dmamuxBaseAddr = g_dmamuxRegBaseAddr[txChannel/FSL_FEATURE_DMAMUX_MODULE_CHANNEL];
+    DMA_Type *dmabase = g_dmaBase[rxChannel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+    DMAMUX_Type *dmamuxbase = g_dmamuxBase[txChannel/FSL_FEATURE_DMAMUX_MODULE_CHANNEL];
 
     /* Save information about the transfer for use by the ISR. */
     spiState->isTransferInProgress = true;
 
     /* The DONE needs to be cleared before programming the channel's TCDs for the next transfer. */
-    DMA_HAL_ClearStatus(dmaBaseAddr, rxChannel);
-    DMA_HAL_ClearStatus(dmaBaseAddr, txChannel);
+    DMA_HAL_ClearStatus(dmabase, rxChannel);
+    DMA_HAL_ClearStatus(dmabase, txChannel);
 
     /* Disable and enable the TX DMA channel at the DMA mux. Doing so will prevent an
      * inadvertent DMA transfer when the TX DMA channel ERQ bit is set after having been
      * cleared from a previous DMA transfer (clearing of the ERQ bit is automatically performed
      * at the end of a transfer when D_REQ is set).
      */
-    DMAMUX_HAL_SetChannelCmd(dmamuxBaseAddr, txChannel, false);
-    DMAMUX_HAL_SetChannelCmd(dmamuxBaseAddr, txChannel, true);
-    DMAMUX_HAL_SetChannelCmd(dmamuxBaseAddr, rxChannel, false);
-    DMAMUX_HAL_SetChannelCmd(dmamuxBaseAddr, rxChannel, true);
+    DMAMUX_HAL_SetChannelCmd(dmamuxbase, txChannel, false);
+    DMAMUX_HAL_SetChannelCmd(dmamuxbase, txChannel, true);
+    DMAMUX_HAL_SetChannelCmd(dmamuxbase, rxChannel, false);
+    DMAMUX_HAL_SetChannelCmd(dmamuxbase, rxChannel, true);
 
     /************************************************************************************
      * Set up the RX DMA channel Transfer Control Descriptor (TCD)
@@ -523,12 +527,12 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
             DMA_DRV_ConfigTransfer(&spiState->dmaReceive,
                                    kDmaPeripheralToMemory,
                                    transferSizeInBytes,
-                                   SPI_HAL_GetDataRegAddr(spiBaseAddr), /* src is data register */
+                                   SPI_HAL_GetDataRegAddr(base), /* src is data register */
                                    (uint32_t)(&s_rxBuffIfNull), /* dest is temporary location */
                                    (uint32_t)(receiveSize));
 
             /* Do not increment the destination address */
-            DMA_HAL_SetDestIncrementCmd(dmaBaseAddr, rxChannel, false);
+            DMA_HAL_SetDestIncrementCmd(dmabase, rxChannel, false);
         }
         else
         {
@@ -536,7 +540,7 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
             DMA_DRV_ConfigTransfer(&spiState->dmaReceive,
                                    kDmaPeripheralToMemory,
                                    transferSizeInBytes,
-                                   SPI_HAL_GetDataRegAddr(spiBaseAddr), /* src is data register */
+                                   SPI_HAL_GetDataRegAddr(base), /* src is data register */
                                    (uint32_t)(spiState->receiveBuffer), /* dest is rx buffer */
                                    (uint32_t)(receiveSize));
         }
@@ -547,11 +551,11 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
          */
         if (transferSizeInBytes == 2)
         {
-            DMA_HAL_SetDestTransferSize(dmaBaseAddr, rxChannel, kDmaTransfersize8bits);
+            DMA_HAL_SetDestTransferSize(dmabase, rxChannel, kDmaTransfersize8bits);
         }
 
         /* Enable the cycle steal mode which forces a single read/write transfer per request */
-        DMA_HAL_SetCycleStealCmd(dmaBaseAddr, rxChannel, true);
+        DMA_HAL_SetCycleStealCmd(dmabase, rxChannel, true);
 
         /* Enable the DMA peripheral request */
         DMA_DRV_StartChannel(&spiState->dmaReceive);
@@ -569,7 +573,7 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
      * to decrement the sendByteCount and perform other driver maintenance functions.
      */
     /* Read the SPI Status register */
-    SPI_HAL_IsTxBuffEmptyPending(spiBaseAddr);
+    SPI_HAL_IsTxBuffEmptyPending(base);
 
     /* Start the transfer by writing the first byte/word to the SPI data register.
      * If a send buffer was provided, the byte/word comes from there. Otherwise we just send zeros.
@@ -580,17 +584,17 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
         if (spiState->sendBuffer)
         {
             s_byteToSend = *(spiState->sendBuffer);
-            SPI_HAL_WriteDataLow(spiBaseAddr, s_byteToSend);
+            SPI_HAL_WriteDataLow(base, s_byteToSend);
             ++spiState->sendBuffer;
 
             s_byteToSend = *(spiState->sendBuffer);
-            SPI_HAL_WriteDataHigh(spiBaseAddr, s_byteToSend);
+            SPI_HAL_WriteDataHigh(base, s_byteToSend);
             ++spiState->sendBuffer;
         }
         else  /* Else, if no send buffer, write zeros */
         {
-            SPI_HAL_WriteDataLow(spiBaseAddr, s_byteToSend);
-            SPI_HAL_WriteDataHigh(spiBaseAddr, s_byteToSend);
+            SPI_HAL_WriteDataLow(base, s_byteToSend);
+            SPI_HAL_WriteDataHigh(base, s_byteToSend);
         }
         spiState->remainingSendByteCount -= 2;  /* Decrement the send byte count by 2 */
     }
@@ -601,7 +605,7 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
             s_byteToSend = *(spiState->sendBuffer);
             ++spiState->sendBuffer;
         }
-        SPI_HAL_WriteDataLow(spiBaseAddr, s_byteToSend);  /* If no send buffer, s_byteToSend=0 */
+        SPI_HAL_WriteDataLow(base, s_byteToSend);  /* If no send buffer, s_byteToSend=0 */
         --spiState->remainingSendByteCount; /* Decrement the send byte count for use in DMA setup */
     }
 #else
@@ -611,9 +615,9 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
         s_byteToSend = *(spiState->sendBuffer);
         ++spiState->sendBuffer;
     }
-    SPI_HAL_WriteData(spiBaseAddr, s_byteToSend); /* If no send buffer, s_byteToSend=0 */
+    SPI_HAL_WriteData(base, s_byteToSend); /* If no send buffer, s_byteToSend=0 */
     --spiState->remainingSendByteCount; /* Decrement the send byte count for use in DMA setup */
-#endif
+#endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
 
     /* If there are no more bytes to send then return without setting up the TX DMA channel.
      * Else, set up the TX DMA channel and enable the TX DMA request.
@@ -623,12 +627,12 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
         if ((spiState->remainingReceiveByteCount) || (spiState->hasExtraByte))
         {
             /* Enable the RX DMA channel request now */
-            SPI_HAL_SetRxDmaCmd(spiBaseAddr, true);
+            SPI_HAL_SetRxDmaCmd(base, true);
             return kStatus_SPI_Success;
         }
         else    /* If RX DMA chan not setup then enable the interrupt to get the received byte */
         {
-            SPI_HAL_SetTransmitIntCmd(spiBaseAddr, true);
+            SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, true);
             return kStatus_SPI_Success;
         }
     }
@@ -641,7 +645,7 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
             DMA_DRV_ConfigTransfer(&spiState->dmaTransmit, kDmaMemoryToPeripheral,
                                    transferSizeInBytes,
                                    (uint32_t)(spiState->sendBuffer),
-                                   SPI_HAL_GetDataRegAddr(spiBaseAddr),
+                                   SPI_HAL_GetDataRegAddr(base),
                                    (uint32_t)(spiState->remainingSendByteCount));
         }
         else /* Configure TX DMA channel to send zeros */
@@ -650,11 +654,11 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
             DMA_DRV_ConfigTransfer(&spiState->dmaTransmit, kDmaMemoryToPeripheral,
                                    transferSizeInBytes,
                                    (uint32_t)(&s_byteToSend),
-                                   SPI_HAL_GetDataRegAddr(spiBaseAddr),
+                                   SPI_HAL_GetDataRegAddr(base),
                                    (uint32_t)(spiState->remainingSendByteCount));
 
             /* Now clear SINC since we are only sending zeroes, don't increment source */
-            DMA_HAL_SetSourceIncrementCmd(dmaBaseAddr, txChannel, false);
+            DMA_HAL_SetSourceIncrementCmd(dmabase, txChannel, false);
         }
 
         /* For SPI16 modules, if the bits/frame is 16, then we need to adjust the source
@@ -663,23 +667,23 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
          */
         if (transferSizeInBytes == 2)
         {
-            DMA_HAL_SetSourceTransferSize(dmaBaseAddr, txChannel, kDmaTransfersize8bits);
+            DMA_HAL_SetSourceTransferSize(dmabase, txChannel, kDmaTransfersize8bits);
         }
 
         /* Enable the cycle steal mode which forces a single read/write transfer per request */
-        DMA_HAL_SetCycleStealCmd(dmaBaseAddr, txChannel, true);
+        DMA_HAL_SetCycleStealCmd(dmabase, txChannel, true);
 
         /* Now, disable the TX chan interrupt since we'll use the RX chan interrupt */
-        DMA_HAL_SetIntCmd(dmaBaseAddr, txChannel, false);
+        DMA_HAL_SetIntCmd(dmabase, txChannel, false);
 
         /* Enable the DMA peripheral request */
         DMA_DRV_StartChannel(&spiState->dmaTransmit);
 
         /* Enable the SPI TX DMA Request */
-        SPI_HAL_SetTxDmaCmd(spiBaseAddr, true);
+        SPI_HAL_SetTxDmaCmd(base, true);
 
         /* Enable the SPI RX DMA request also. */
-        SPI_HAL_SetRxDmaCmd(spiBaseAddr, true);
+        SPI_HAL_SetRxDmaCmd(base, true);
     }
 
     return kStatus_SPI_Success;
@@ -695,28 +699,28 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
  *END**************************************************************************/
 static void SPI_DRV_DmaSlaveCompleteTransfer(uint32_t instance)
 {
-    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiDmaStatePtr[instance];
+    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
 
-    uint32_t spiBaseAddr = g_spiBaseAddr[instance];
+    SPI_Type *base = g_spiBase[instance];
 
     /* Disable DMA requests and interrupts. */
-    SPI_HAL_SetRxDmaCmd(spiBaseAddr, false);
-    SPI_HAL_SetTxDmaCmd(spiBaseAddr, false);
-    SPI_HAL_SetTransmitIntCmd(spiBaseAddr, false);
+    SPI_HAL_SetRxDmaCmd(base, false);
+    SPI_HAL_SetTxDmaCmd(base, false);
+    SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, false);
 
     /* Stop DMA channels */
     DMA_DRV_StopChannel(&spiState->dmaTransmit);
     DMA_DRV_StopChannel(&spiState->dmaReceive);
 
     /* Disable interrupts */
-    SPI_HAL_SetReceiveAndFaultIntCmd(spiBaseAddr, false);
+    SPI_HAL_SetIntMode(base, kSpiRxFullAndModfInt, false);
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-    if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+    if (g_spiFifoSize[instance] != 0)
     {
         /* Now disable the SPI FIFO interrupts */
-        SPI_HAL_SetFifoIntCmd(spiBaseAddr, kSpiTxFifoNearEmptyInt, false);
-        SPI_HAL_SetFifoIntCmd(spiBaseAddr, kSpiRxFifoNearFullInt, false);
+        SPI_HAL_SetFifoIntCmd(base, kSpiTxFifoNearEmptyInt, false);
+        SPI_HAL_SetFifoIntCmd(base, kSpiRxFifoNearFullInt, false);
     }
 
     /* Receive extra byte if remaining receive byte is 0 */
@@ -724,9 +728,9 @@ static void SPI_DRV_DmaSlaveCompleteTransfer(uint32_t instance)
         (spiState->receiveBuffer))
     {
         spiState->receiveBuffer[spiState->remainingReceiveByteCount] =
-                                                                 SPI_HAL_ReadDataLow(spiBaseAddr);
+                                                                 SPI_HAL_ReadDataLow(base);
     }
-#endif
+#endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
 
     if (spiState->isSync)
     {
@@ -752,10 +756,10 @@ static void SPI_DRV_DmaSlaveCompleteTransfer(uint32_t instance)
  *END**************************************************************************/
 spi_status_t SPI_DRV_DmaSlaveAbortTransfer(uint32_t instance)
 {
-    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiDmaStatePtr[instance];
+    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
 
     /* Check instance is valid or not */
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     /* Check driver is initialized */
     if (!spiState)
@@ -788,7 +792,7 @@ spi_status_t SPI_DRV_DmaSlaveAbortTransfer(uint32_t instance)
 spi_status_t SPI_DRV_DmaSlaveGetTransferStatus(uint32_t instance,
                                             uint32_t * framesTransferred)
 {
-    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiDmaStatePtr[instance];
+    spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
 
     /* Fill in the bytes transferred. */
     if (framesTransferred)
@@ -801,69 +805,73 @@ spi_status_t SPI_DRV_DmaSlaveGetTransferStatus(uint32_t instance,
 }
 
 
-/*!
- * @brief Interrupt handler for SPI master mode.
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SPI_DRV_DmaSlaveIRQHandler
+ * Description   : Interrupt handler for SPI master mode.
  * This handler is used when the hasExtraByte flag is set to retrieve the received last byte.
- * This is not a public API as it is called whenever an interrupt occurs.
- */
+ *
+ *END**************************************************************************/
 void SPI_DRV_DmaSlaveIRQHandler(uint32_t instance)
 {
-    /* instantiate local variable of type spi_master_state_t and point to global state */
-    spi_dma_slave_state_t * spiDmaState = (spi_dma_slave_state_t *)g_spiDmaStatePtr[instance];
-
-    uint32_t baseAddr = g_spiBaseAddr[instance];
-
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-        /* If the SPI module contains a FIFO, check the FIFO empty flag */
-        if ((FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0) && (SPI_HAL_GetFifoCmd(baseAddr)))
-        {
-            if (SPI_HAL_GetFifoStatusFlag(baseAddr, kSpiRxFifoEmpty) == 0)
-            {
-                /* If there is a receive buffer, copy the final byte from the SPI data register
-                 *  to the receive buffer
-                 */
-                if (spiDmaState->receiveBuffer)
-                {
-                    spiDmaState->receiveBuffer[spiDmaState->remainingReceiveByteCount] =
-                                                                  SPI_HAL_ReadDataLow(baseAddr);
-                }
-                /* Else, read out the data register and throw away the bytes read */
-                else
-                {
-                    /* Read and throw away the lower data buffer to clear it out */
-                    s_rxBuffIfNull = SPI_HAL_ReadDataLow(baseAddr);
-                }
-                /* Read and throw away the upper data buffer to clear it out */
-                s_rxBuffIfNull = SPI_HAL_ReadDataHigh(baseAddr);
+    /* instantiate local variable of type spi_master_state_t and point to global state */
+    spi_dma_slave_state_t * spiDmaState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
 
-                SPI_DRV_DmaSlaveCompleteTransfer(instance);
-            }
-        }
-        else /* Check the read pending flag */
+    SPI_Type *base = g_spiBase[instance];
+
+    /* If the SPI module contains a FIFO (and if it is enabled), check the FIFO empty flag */
+    if ((g_spiFifoSize[instance] != 0) && (SPI_HAL_GetFifoCmd(base)))
+    {
+        if (SPI_HAL_GetFifoStatusFlag(base, kSpiRxFifoEmpty) == 0)
         {
-            if (SPI_HAL_IsReadBuffFullPending(baseAddr) == 1)
+            /* If there is a receive buffer, copy the final byte from the SPI data register
+             *  to the receive buffer
+             */
+            if (spiDmaState->receiveBuffer)
             {
-                /* If there is a receive buffer, copy the final byte from the SPI data register
-                 *  to the receive buffer
-                 */
-                if (spiDmaState->receiveBuffer)
-                {
-                    spiDmaState->receiveBuffer[spiDmaState->remainingReceiveByteCount] =
-                                                                  SPI_HAL_ReadDataLow(baseAddr);
-                }
-                /* Else, read out the data register and throw away the bytes read */
-                else
-                {
-                    /* Read and throw away the lower data buffer to clear it out */
-                    s_rxBuffIfNull = SPI_HAL_ReadDataLow(baseAddr);
-                }
-                /* Read and throw away the upper data buffer to clear it out */
-                s_rxBuffIfNull = SPI_HAL_ReadDataHigh(baseAddr);
-                SPI_DRV_DmaSlaveCompleteTransfer(instance);
+                spiDmaState->receiveBuffer[spiDmaState->remainingReceiveByteCount] =
+                                                              SPI_HAL_ReadDataLow(base);
             }
+            /* Else, read out the data register and throw away the bytes read */
+            else
+            {
+                /* Read and throw away the lower data buffer to clear it out */
+                s_rxBuffIfNull = SPI_HAL_ReadDataLow(base);
+            }
+            /* Read and throw away the upper data buffer to clear it out */
+            s_rxBuffIfNull = SPI_HAL_ReadDataHigh(base);
+
+            SPI_DRV_DmaSlaveCompleteTransfer(instance);
         }
-#endif
+    }
+    else /* Check the read pending flag */
+    {
+        if (SPI_HAL_IsReadBuffFullPending(base) == 1)
+        {
+            /* If there is a receive buffer, copy the final byte from the SPI data register
+             *  to the receive buffer
+             */
+            if (spiDmaState->receiveBuffer)
+            {
+                spiDmaState->receiveBuffer[spiDmaState->remainingReceiveByteCount] =
+                                                              SPI_HAL_ReadDataLow(base);
+            }
+            /* Else, read out the data register and throw away the bytes read */
+            else
+            {
+                /* Read and throw away the lower data buffer to clear it out */
+                s_rxBuffIfNull = SPI_HAL_ReadDataLow(base);
+            }
+            /* Read and throw away the upper data buffer to clear it out */
+            s_rxBuffIfNull = SPI_HAL_ReadDataHigh(base);
+            SPI_DRV_DmaSlaveCompleteTransfer(instance);
+        }
+    }
+#endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
 }
+
+#endif /* FSL_FEATURE_SOC_SPI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2014, Freescale Semiconductor, Inc.
+* Copyright (c) 2014-2015, Freescale Semiconductor, Inc.
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification,
@@ -31,6 +31,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_mcglite_hal.h"
+#if FSL_FEATURE_SOC_MCGLITE_COUNT
 /*******************************************************************************
 * Definitions
 ******************************************************************************/
@@ -47,6 +48,28 @@ uint32_t g_xtalRtcClkFreq;		   /* EXTAL RTC clock */
 
 /*FUNCTION**********************************************************************
 *
+* Function Name : CLOCK_HAL_GetPeripheralClk
+* Description   : Get the current mcg_lite MCGPCLK clock
+* This function will return the lirc_clk value in frequency(Hz) based
+* on current mcg_lite configurations and settings.
+*
+*END**************************************************************************/
+uint32_t CLOCK_HAL_GetPeripheralClk(MCG_Type * base)
+{
+    /* Check whether the HIRC is enabled. */
+    if ((0U != MCG_BRD_MC_HIRCEN(base)) ||
+        (kMcgliteClkSrcHirc == CLOCK_HAL_GetClkSrcStat(base)))
+    {
+        return kMcgliteConst48M;
+    }
+    else
+    {
+        return kMcgliteConst0;
+    }
+}
+
+/*FUNCTION**********************************************************************
+*
 * Function Name : CLOCK_HAL_GetLircClk
 * Description   : Get the current mcg_lite lirc_clk clock
 * This function will return the lirc_clk value in frequency(Hz) based
@@ -54,12 +77,13 @@ uint32_t g_xtalRtcClkFreq;		   /* EXTAL RTC clock */
 * this function returns 0.
 *
 *END**************************************************************************/
-uint32_t CLOCK_HAL_GetLircClk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetLircClk(MCG_Type * base)
 {
     /* Check whether the LIRC is enabled. */
-    if (CLOCK_HAL_GetLircCmd(baseAddr))
+    if ((0U != MCG_BRD_C1_IRCLKEN(base)) ||
+        (kMcgliteClkSrcLirc == CLOCK_HAL_GetClkSrcStat(base)))
     {
-        if (CLOCK_HAL_GetLircSelMode(baseAddr) == kMcgliteLircSel8M)
+        if (MCG_BRD_C2_IRCS(base) == kMcgliteLircSel8M)
         {
             /* LIRC8M internal reference clock is selected*/
             return kMcgliteConst8M;
@@ -84,9 +108,9 @@ uint32_t CLOCK_HAL_GetLircClk(uint32_t baseAddr)
 * mcg_lite irclk is enabled or not, just calculate and return the value.
 *
 *END**************************************************************************/
-uint32_t CLOCK_HAL_GetLircDiv1Clk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetLircDiv1Clk(MCG_Type * base)
 {
-    return CLOCK_HAL_GetLircClk(baseAddr) >> CLOCK_HAL_GetLircRefDiv(baseAddr);
+    return CLOCK_HAL_GetLircClk(base) >> MCG_BRD_SC_FCRDIV(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -97,12 +121,12 @@ uint32_t CLOCK_HAL_GetLircDiv1Clk(uint32_t baseAddr)
 * on current mcg_lite configurations and settings.
 *
 *END**************************************************************************/
-uint32_t CLOCK_HAL_GetInternalRefClk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetInternalRefClk(MCG_Type * base)
 {
-    uint8_t divider1 = CLOCK_HAL_GetLircRefDiv(baseAddr);
-    uint8_t divider2 = CLOCK_HAL_GetLircDiv2(baseAddr);
+    uint8_t divider1 = MCG_BRD_SC_FCRDIV(base);
+    uint8_t divider2 = MCG_BRD_MC_LIRC_DIV2(base);
     /* LIRC internal reference clock is selected*/
-    return CLOCK_HAL_GetLircClk(baseAddr) >> (divider1 + divider2);
+    return CLOCK_HAL_GetLircClk(base) >> (divider1 + divider2);
 }
 
 /*FUNCTION**********************************************************************
@@ -114,10 +138,10 @@ uint32_t CLOCK_HAL_GetInternalRefClk(uint32_t baseAddr)
 * properly done in order to get the valid value.
 *
 *END**************************************************************************/
-uint32_t CLOCK_HAL_GetOutClk(uint32_t baseAddr)
+uint32_t CLOCK_HAL_GetOutClk(MCG_Type * base)
 {
-    mcglite_mcgoutclk_source_t clkSrc = CLOCK_HAL_GetClkSrcStat(baseAddr);
-    
+    mcglite_mcgoutclk_source_t clkSrc = CLOCK_HAL_GetClkSrcStat(base);
+
     if (clkSrc == kMcgliteClkSrcHirc)
     {
         /*  HIRC 48MHz is selected*/
@@ -125,7 +149,7 @@ uint32_t CLOCK_HAL_GetOutClk(uint32_t baseAddr)
     }
     else if (clkSrc == kMcgliteClkSrcLirc)
     {
-        return CLOCK_HAL_GetLircClk(baseAddr) >> (CLOCK_HAL_GetLircRefDiv(baseAddr));
+        return CLOCK_HAL_GetLircClk(base) >> MCG_BRD_SC_FCRDIV(base);
     }
     else if (clkSrc == kMcgliteClkSrcExt)
     {
@@ -138,6 +162,7 @@ uint32_t CLOCK_HAL_GetOutClk(uint32_t baseAddr)
         return kMcgliteConst0;
     }
 }
+#endif
 
 /*******************************************************************************
 * EOF

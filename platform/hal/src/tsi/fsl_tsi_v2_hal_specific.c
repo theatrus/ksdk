@@ -29,18 +29,19 @@
  */
 #include "fsl_tsi_hal.h"
 #include <assert.h>
+#if FSL_FEATURE_SOC_TSI_COUNT
 #if defined(FSL_FEATURE_TSI_VERSION) && (FSL_FEATURE_TSI_VERSION < 3)
 
-static int32_t TSI_HAL_MeasurementBlocking(uint32_t baseAddr);
+static int32_t TSI_HAL_MeasurementBlocking(TSI_Type * base);
 
 /*FUNCTION**********************************************************************
 *
 * Function Name : TSI_HAL_EnableLowPower
 * Description   : Function enables low power
 *END**************************************************************************/
-void TSI_HAL_EnableLowPower(uint32_t baseAddr)
+void TSI_HAL_EnableLowPower(TSI_Type * base)
 {
-    TSI_HAL_EnableStop(baseAddr);
+    TSI_HAL_EnableStop(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -49,10 +50,10 @@ void TSI_HAL_EnableLowPower(uint32_t baseAddr)
 * Description   : Function resets the TSI peripheral to default state
 *
 *END**************************************************************************/
-void TSI_HAL_Init(uint32_t baseAddr)
+void TSI_HAL_Init(TSI_Type * base)
 {
-    HW_TSI_GENCS_WR(baseAddr, 0);
-    HW_TSI_SCANC_WR(baseAddr, 0);
+    TSI_WR_GENCS(base, 0);
+    TSI_WR_SCANC(base, 0);
 }
 
 /*FUNCTION**********************************************************************
@@ -61,25 +62,25 @@ void TSI_HAL_Init(uint32_t baseAddr)
 * Description   : Function inits the whole TSI peripheral by the handled configuration
 *
 *END**************************************************************************/
-void TSI_HAL_SetConfiguration(uint32_t baseAddr, tsi_config_t *config)
+void TSI_HAL_SetConfiguration(TSI_Type * base, tsi_config_t *config)
 {
     assert(config != NULL);
 
-    TSI_HAL_SetPrescaler(baseAddr, config->ps);
-    TSI_HAL_SetNumberOfScans(baseAddr, config->nscn);
-    TSI_HAL_SetLowPowerScanInterval(baseAddr, config->lpscnitv);
-    TSI_HAL_SetLowPowerClock(baseAddr, config->lpclks);
-    TSI_HAL_SetActiveModeSource(baseAddr, config->amclks);
-    TSI_HAL_SetActiveModePrescaler(baseAddr, config->ampsc);
+    TSI_HAL_SetPrescaler(base, config->ps);
+    TSI_HAL_SetNumberOfScans(base, config->nscn);
+    TSI_HAL_SetLowPowerScanInterval(base, config->lpscnitv);
+    TSI_HAL_SetLowPowerClock(base, config->lpclks);
+    TSI_HAL_SetActiveModeSource(base, config->amclks);
+    TSI_HAL_SetActiveModePrescaler(base, config->ampsc);
 
 #if (FSL_FEATURE_TSI_VERSION == 1)
-    TSI_HAL_SetActiveModePrescaler(baseAddr, config->amclkdiv);
-    TSI_HAL_SetDeltaVoltage(baseAddr, config->delvol);
-    TSI_HAL_SetInternalCapacitanceTrim(baseAddr, config->captrm);
+    TSI_HAL_SetActiveModePrescaler(base, config->amclkdiv);
+    TSI_HAL_SetDeltaVoltage(base, config->delvol);
+    TSI_HAL_SetInternalCapacitanceTrim(base, config->captrm);
 #endif
 
-    TSI_HAL_SetReferenceChargeCurrent(baseAddr, config->refchrg);
-    TSI_HAL_SetElectrodeChargeCurrent(baseAddr, config->extchrg);
+    TSI_HAL_SetReferenceChargeCurrent(base, config->refchrg);
+    TSI_HAL_SetElectrodeChargeCurrent(base, config->extchrg);
 
 #if (FSL_FEATURE_TSI_VERSION == 1) /* TODO HAL for VER 1 */
     for (uint32_t i = 0U; i < 16U; i++) {
@@ -87,8 +88,8 @@ void TSI_HAL_SetConfiguration(uint32_t baseAddr, tsi_config_t *config)
                             TSI_THRESHOLD_LTHH(config->thresl);
     }
 #elif (FSL_FEATURE_TSI_VERSION == 2)
-    TSI_HAL_SetLowThreshold(baseAddr, config->thresl);
-    TSI_HAL_SetHighThreshold(baseAddr, config->thresh);
+    TSI_HAL_SetLowThreshold(base, config->thresl);
+    TSI_HAL_SetHighThreshold(base, config->thresh);
 #endif
 }
 
@@ -101,32 +102,32 @@ void TSI_HAL_SetConfiguration(uint32_t baseAddr, tsi_config_t *config)
 *END**************************************************************************/
 #define TSI_RECALIBRATE_MAX_SIGNAL_VAL (65535U)
 
-uint32_t TSI_HAL_Recalibrate(uint32_t baseAddr, tsi_config_t *config, const uint32_t electrodes, const tsi_parameter_limits_t *parLimits)
+uint32_t TSI_HAL_Recalibrate(TSI_Type * base, tsi_config_t *config, const uint32_t electrodes, const tsi_parameter_limits_t *parLimits)
 {
     assert(config != NULL);
     
-    uint32_t is_enabled = TSI_HAL_IsModuleEnabled(baseAddr);
-    uint32_t is_int_enabled = TSI_HAL_IsInterruptEnabled(baseAddr);
+    uint32_t is_enabled = TSI_HAL_IsModuleEnabled(base);
+    uint32_t is_int_enabled = TSI_HAL_IsInterruptEnabled(base);
     uint32_t lowest_signal = TSI_RECALIBRATE_MAX_SIGNAL_VAL;
     
     if (is_enabled) {
-        TSI_HAL_DisableModule(baseAddr);
+        TSI_HAL_DisableModule(base);
     }
     if (is_int_enabled) {
-        TSI_HAL_DisableInterrupt(baseAddr);
+        TSI_HAL_DisableInterrupt(base);
     }
 
-    TSI_HAL_SetNumberOfScans(baseAddr, config->nscn);
-    TSI_HAL_SetPrescaler(baseAddr, config->ps);
-    TSI_HAL_SetElectrodeChargeCurrent(baseAddr, config->extchrg);
-    TSI_HAL_SetReferenceChargeCurrent(baseAddr, config->refchrg);
+    TSI_HAL_SetNumberOfScans(base, config->nscn);
+    TSI_HAL_SetPrescaler(base, config->ps);
+    TSI_HAL_SetElectrodeChargeCurrent(base, config->extchrg);
+    TSI_HAL_SetReferenceChargeCurrent(base, config->refchrg);
 
-    TSI_HAL_EnableModule(baseAddr);
+    TSI_HAL_EnableModule(base);
 
-    if (TSI_HAL_MeasurementBlocking(baseAddr) == 0) {
+    if (TSI_HAL_MeasurementBlocking(base) == 0) {
         for (uint32_t i = 0U; i < 16U; i++) {
-            if (TSI_HAL_GetEnabledChannel(baseAddr, i)) {
-                int32_t counter = TSI_HAL_GetCounter(baseAddr, i);
+            if (TSI_HAL_GetEnabledChannel(base, i)) {
+                int32_t counter = TSI_HAL_GetCounter(base, i);
                 if (counter < lowest_signal) {
                     lowest_signal = counter;
                 }
@@ -135,10 +136,10 @@ uint32_t TSI_HAL_Recalibrate(uint32_t baseAddr, tsi_config_t *config, const uint
     }
 
     if (!is_enabled) {
-        TSI_HAL_EnableModule(baseAddr);
+        TSI_HAL_EnableModule(base);
     }
     if (is_int_enabled) {
-        TSI_HAL_EnableInterrupt(baseAddr);
+        TSI_HAL_EnableInterrupt(base);
     }
     if (lowest_signal == TSI_RECALIBRATE_MAX_SIGNAL_VAL) {
         lowest_signal = 0U;  /* not valid */
@@ -153,24 +154,24 @@ uint32_t TSI_HAL_Recalibrate(uint32_t baseAddr, tsi_config_t *config, const uint
 * Description   : Function do blocking measurement of enabled electrodes
 *                 It used just for recalibration process
 *END**************************************************************************/
-static int32_t TSI_HAL_MeasurementBlocking(uint32_t baseAddr)
+static int32_t TSI_HAL_MeasurementBlocking(TSI_Type * base)
 {
   int32_t result = -1;
   uint32_t timeout = 10000000; /* Big timeout */ 
   
-  if (HW_TSI_PEN_RD(baseAddr)) {
+  if (TSI_RD_PEN(base)) {
 
     /* measure only if at least one electrode is enabled */
-    TSI_HAL_EnableSoftwareTriggerScan(baseAddr);
-    TSI_HAL_EnableModule(baseAddr);
-    TSI_HAL_StartSoftwareTrigger(baseAddr);
+    TSI_HAL_EnableSoftwareTriggerScan(base);
+    TSI_HAL_EnableModule(base);
+    TSI_HAL_StartSoftwareTrigger(base);
 
-    while((TSI_HAL_GetEndOfScanFlag(baseAddr) == 0U) && (timeout--))
+    while((TSI_HAL_GetEndOfScanFlag(base) == 0U) && (timeout--))
     {
       /* Do nothing, just to meet MISRA C 2004 rule 14.3 . */
     }
-    TSI_HAL_ClearEndOfScanFlag(baseAddr);
-    TSI_HAL_DisableModule(baseAddr);
+    TSI_HAL_ClearEndOfScanFlag(base);
+    TSI_HAL_DisableModule(base);
 
     if(timeout)
     {
@@ -180,4 +181,5 @@ static int32_t TSI_HAL_MeasurementBlocking(uint32_t baseAddr)
   return result;
 }
 
+#endif
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -30,11 +30,12 @@
 
 #ifndef __FSL_ENET_HAL_H__
 #define __FSL_ENET_HAL_H__
-
+#include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_device_registers.h"
-#include <assert.h>
+#include "core_cmInstr.h"
+#if FSL_FEATURE_SOC_ENET_COUNT
 
 /*!
  * @addtogroup enet_hal
@@ -45,17 +46,13 @@
  * Definitions
  ******************************************************************************/
 /*! @brief Defines the system endian type.*/
-#define SYSTEM_LITTLE_ENDIAN      (1)
 
-/*! @brief Define macro to do the endianness swap*/
-#define BSWAP_16(x)	(uint16_t)((uint16_t)(((uint16_t)(x) & (uint16_t)0xFF00) >> 0x8) | (uint16_t)(((uint16_t)(x) & (uint16_t)0xFF) << 0x8))
-#define BSWAP_32(x) (uint32_t)((((uint32_t)(x) & 0x00FFU) << 24) | (((uint32_t)(x) & 0x00FF00U) << 8) | (((uint32_t)(x) & 0xFF0000U) >> 8) | (((uint32_t)(x) & 0xFF000000U) >> 24))
 /*! @brief Defines the alignment operation.*/
 #define ENET_ALIGN(x,align)        ((unsigned int)((x) + ((align)-1)) & (unsigned int)(~(unsigned int)((align)- 1)))
 /*! @brief Defines the macro used for byte order change on Buffer descriptor*/
-#if SYSTEM_LITTLE_ENDIAN && FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY 
-#define BD_SHORTSWAP(n)                     BSWAP_16(n)
-#define BD_LONGSWAP(n)                      BSWAP_32(n)
+#if FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY 
+#define BD_SHORTSWAP(n)                     __REV16(n)
+#define BD_LONGSWAP(n)                      __REV(n)
 #else
 #define BD_SHORTSWAP(n)                      (n)
 #define BD_LONGSWAP(n)                       (n)
@@ -102,8 +99,7 @@ typedef enum _enet_status
     kStatus_ENET_PHYAutoDiscoverFail /*!< Failed to automatically discover PHY*/
 } enet_status_t;
 
-
-#if FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY && SYSTEM_LITTLE_ENDIAN
+#if FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY 
 /*! @brief Defines the control and status regions of the receive buffer descriptor.*/
 typedef enum _enet_rx_bd_control_status
 {
@@ -251,18 +247,18 @@ typedef enum _enet_constant_parameter
     kEnetMdcFreq     = 2500000U  /*!< MDC frequency*/
 } enet_constant_parameter_t;
 
-/*! @brief Defines the normal fifo configuration for ENET MAC.*/
+/*! @brief Defines the normal FIFO configuration for ENET MAC.*/
 typedef enum _enet_fifo_configure
 {
-    kEnetMinTxFifoAlmostFull     = 6U,   /*!< ENET minimum transmit fifo almost full value*/
+    kEnetMinTxFifoAlmostFull     = 6U,   /*!< ENET minimum transmit FIFO almost full value*/
     kEnetMinFifoAlmostEmpty      = 4U,   /*!<  ENET minimum FIFO almost empty value*/
-    kEnetDefaultTxFifoAlmostFull = 8U    /*!< ENET default tranmit fifo almost full value*/
+    kEnetDefaultTxFifoAlmostFull = 8U    /*!< ENET default transmit FIFO almost full value*/
 } enet_fifo_configure_t;
 
 /*! @brief Defines the normal operating mode and sleep mode for ENET MAC.*/
 typedef enum _enet_mac_operate_mode
 {
-    kEnetMacNormalMode = 0U,   /*!< Normal operationg mode for ENET MAC*/
+    kEnetMacNormalMode = 0U,   /*!< Normal operating mode for ENET MAC*/
     kEnetMacSleepMode  = 1U    /*!< Sleep mode for ENET MAC*/
 } enet_mac_operate_mode_t;
 
@@ -381,7 +377,7 @@ typedef enum _enet_frame_max
     kEnetMaxFrameBdNumbers   = 6,     /*!< Maximum buffer descriptor numbers of a frame*/
     kEnetFrameFcsLen         = 4,     /*!< FCS length*/
     kEnetEthernetHeadLen     = 14,    /*!< Ethernet Frame header length*/
-    kEnetEthernetVlanHeadLen = 18     /*!< Ethernet Vlan frame header length*/
+    kEnetEthernetVlanHeadLen = 18     /*!< Ethernet VLAN frame header length*/
 } enet_frame_max_t;
 
 /*! @brief Defines the transmit accelerator configuration*/
@@ -427,7 +423,7 @@ typedef enum _enet_mac_control_flag
     kEnetMacEnhancedEnable        = 0x40000U /*!< Enable enhanced MAC feature (1588 feature/enhanced buff descriptor)*/
 } enet_mac_control_flag_t;
 
-#if (!FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY) && SYSTEM_LITTLE_ENDIAN
+#if (!FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY) 
 /*! @brief Defines the buffer descriptor structure for the little-Endian system and endianness configurable IP.*/
 typedef struct ENETBdStruct
 {
@@ -486,6 +482,11 @@ typedef struct ENETConfigPtpTimer
     bool isSlaveEnabled;        /*!< Master or slave PTP timer*/
     uint32_t clockIncease;      /*!< Timer increase value each clock period*/
     uint32_t period;            /*!< Timer period for generate interrupt event  */
+#if FSL_FEATURE_ENET_PTP_TIMER_CHANNEL_INTERRUPT_ERRATA_2579 
+    /*!< If support for IEEE 1588 timestamp timer overflow interrupt, \
+    set the channel for overflow interrupt */
+    enet_timer_channel_t channel; 
+#endif
 } enet_config_ptp_timer_t;
 
 /*! @brief Defines the transmit FIFO configuration.*/
@@ -497,7 +498,7 @@ typedef struct ENETConfigTxFifo
                          written to the Tx FiFO before transmission of a frame begins*/
     uint8_t txEmpty;        /*!< Transmit FIFO section empty threshold, default zero*/
     uint8_t txAlmostEmpty;  /*!< Transmit FIFO section almost empty threshold, The minimum value of 4 should be set*/
-    uint8_t txAlmostFull;   /*!< Transmit FIFO section almost full threshold, The minmum value of 6 is reruired
+    uint8_t txAlmostFull;   /*!< Transmit FIFO section almost full threshold, The minimum value of 6 is required
                               a recommended value of at least 8 should be set*/
 } enet_config_tx_fifo_t;
 
@@ -583,12 +584,11 @@ typedef struct ENETMacConfig
 {
     enet_mac_operate_mode_t macMode;  /*!< Mac Normal or sleep mode*/   
     uint8_t *macAddr;    /*!< MAC hardware address*/
-    enet_config_rmii_t *rmiiCfgPtr;/*!< RMII configure mode*/
-    /*!< Mac control configure, it is recommended to use enet_mac_control_flag_t
-       it is special control set for loop mode, sleep mode, crc forward/terminate etc*/
-    uint32_t macCtlConfigure;
-    enet_config_rx_fifo_t *rxFifoPtr;    /*!< Receive fifo configuration, if NULL default values will be used*/
-    enet_config_tx_fifo_t *txFifoPtr;    /*!< Transmit fifo configuration, if NULL default values will be used*/
+    enet_config_rmii_t *rmiiCfgPtr;/*!< RMII configure mode*/    
+    uint32_t macCtlConfigure;/*!< Mac control configure, it is recommended to use enet_mac_control_flag_t 
+                      it is special control set for loop mode, sleep mode, crc forward/terminate etc*/
+    enet_config_rx_fifo_t *rxFifoPtr;    /*!< Receive FIFO configuration, if NULL default values will be used*/
+    enet_config_tx_fifo_t *txFifoPtr;    /*!< Transmit FIFO configuration, if NULL default values will be used*/
     uint8_t rxAccelerCfg; /*!< Receive accelerator configure, should be set when kEnetTxAccelEnable is set*/
     uint8_t txAccelerCfg; /*!< Transmit accelerator configure, should be set when kEnetRxAccelEnable is set*/
     uint16_t pauseDuration;          /*!< Pause duration, should be set when kEnetRxFlowControlEnable is set*/
@@ -598,6 +598,171 @@ typedef struct ENETMacConfig
 #endif
 } enet_mac_config_t;
 
+/*! @brief The configuration structure of buffer descriptor */
+typedef struct ENETBdConfig
+{
+    volatile enet_bd_struct_t *txBds; /*!< The start address of ENET transmit buffer descriptors.    
+                                   This address must always be evenly divisible by 16. */      
+    uint8_t *txBuffer;/*!< The transmit data buffer start address. This address must 
+                         always be evenly divisible by 16. */
+    uint32_t txBdNumber;       /*!< The transmit buffer descriptor numbers. */
+    uint32_t txBuffSizeAlign;  /*!< The aligned transmit buffer size. */    
+    volatile enet_bd_struct_t *rxBds; /*!< The start address of ENET receive buffer descriptors.   
+                                  This address must always be evenly divisible by 16. */
+    uint8_t *rxBuffer;       /*!< The receive data buffer start address. This address must 
+                             always be evenly divisible by 16. */  
+    uint32_t rxBdNumber;       /*!<  The receive buffer descriptor numbers. */
+    uint32_t rxBuffSizeAlign;  /*!< The aligned receive transmit buffer size. */
+} enet_bd_config;
+
+/* The mask to get MIB RX static event counter */
+#define ENET_GET_MIB_RX_STATIC_MASK           (1 << 0)
+/* The mask to get MIB TX static event counter */
+#define ENET_GET_MIB_TX_STATIC_MASK           (1 << 1)
+/* The mask to get TX pause frame status */
+#define ENET_GET_TX_PAUSE_MASK                (1 << 2)
+/* The mask to get RX pause frame status */
+#define ENET_GET_RX_PAUSE_MASK                (1 << 3)
+/* The mask to get the SMI interface configuration status */
+#define ENET_GET_SMI_CONFIG_MASK              (1 << 4)
+/* The mask to get MIB updating status */
+#define ENET_GET_MIB_UPDATE_MASK              (1 << 5)
+/* The mask to get max frame length */
+#define ENET_GET_MAX_FRAME_LEN_MASK           (1 << 6)
+
+/* The status of the transmitted flow control frames
+      - 1 if the MAC is transmitting a MAC control PAUSE frame.
+      - 0 if No PAUSE frame transmit. */     
+#define ENET_TX_PUASE_FLAG                 (1 << 0)   
+/* The status of the received flow control frames
+     - 1 if the flow control pause frame is received and the transmitter pauses
+         for the duration defined in this pause frame.
+     - 0 if there is no flow control frame received or the pause duration is complete.*/
+#define ENET_RX_PAUSE_FLAG                 (1 << 1)
+/* The MII configuration status.
+     - 1 if the MII has been configured. 
+     - 0 if the MII has not been configured. */ 
+#define ENET_SMI_CONFIG_FLAG               (1 << 2)
+/* The MIB updating status
+     - 1 if MIB is idle and MIB is not updating. 
+     - 0 if MIB is updating */
+#define ENET_MIB_UPDATE_FLAG               (1 << 3)
+
+/*! @brief The structure to save current status */
+typedef struct ENETCurStatus
+{
+    enet_mib_rx_stat_t rxStatic; /*!< The Rx static event counter */
+    enet_mib_tx_stat_t txStatic; /*!< The Tx static event counter */
+    uint16_t maxFrameLen;        /*!< The max frame length */
+    uint32_t statusFlags;        /*!< The status flag */
+}enet_cur_status_t;
+
+/* Gets the control and the status region of the receive/transmit buffer descriptors. */   
+#define ENET_BD_CTL_MASK                     (1 << 0)
+/* Gets the extended control region of the transmit buffer descriptors. */
+#define ENET_RX_BD_EXT_CTL_MASK              (1 << 1)
+/* Gets the extended control region one of the receive buffer descriptor. */ 
+#define ENET_RX_BD_EXT_CTL1_MASK             (1 << 2)
+/* Gets the extended control region two of the receive buffer descriptor. */  
+#define ENET_RX_BD_EXT_CTL2_MASK             (1 << 3)
+/* Gets the data length of the buffer descriptors. */ 
+#define ENET_BD_LEN_MASK                     (1 << 5)
+/* Gets  the timestamp of the buffer descriptors. */  
+#define ENET_BD_TIMESTAMP_MASK               (1 << 6)
+/* Check if input buffer descriptor is the last one in the ring buffer */
+#define ENET_RX_BD_WRAP_FLAG_MASK            (1 << 7)
+/* Check if buffer descriptor empty flag is set. */  
+#define ENET_RX_BD_EMPTY_FLAG_MASK           (1 << 8)
+/* Check if buffer descriptor truncate flag is set. */    
+#define ENET_RX_BD_TRUNC_FLAG_MASK           (1 << 9)
+/* Check if buffer descriptor last flag is set. */  
+#define ENET_RX_BD_LAST_FLAG_MASK            (1 << 10)   
+/* Check if buffer descriptor ready flag is set. */ 
+#define ENET_TX_BD_READY_FLAG_MASK           (1 << 11)
+/* Check if buffer descriptor last flag is set. */  
+#define ENET_TX_BD_LAST_FLAG_MASK            (1 << 12)
+/* Check if buffer descriptor wrap flag is set. */ 
+#define ENET_TX_BD_WRAP_FLAG_MASK            (1 << 13)
+/* Check if buffer descriptor Receive over run flag is set. */  
+#define ENET_RX_BD_OVERRUN_FLAG_MASK         (1 << 14)
+/* Check if buffer descriptor Receive length violation flag is set. */ 
+#define ENET_RX_BD_LEN_VIOLAT_FLAG_MASK      (1 << 15)
+/* Check if buffer descriptor Receive non-octet aligned frame flag is set. */
+#define ENET_RX_BD_NO_OCTET_FLAG_MASK        (1 << 16)
+/* Check if buffer descriptor Receive crc error flag is set. */
+#define ENET_RX_BD_CRC_ERR_FLAG_MASK         (1 << 17)
+/* Check if buffer descriptor late collision frame discard flag is set. */ 
+#define ENET_RX_BD_COLLISION_FLAG_MASK       (1 << 18)
+/* Check if buffer descriptor TxErr flag is set. */ 
+#define ENET_TX_BD_TX_ERR_FLAG_MASK          (1 << 19)
+/* Check if buffer descriptor Transmit excess collision flag is set. */ 
+#define ENET_TX_BD_EXC_COL_FLAG_MASK         (1 << 20)
+/* Check if buffer descriptor Transmit late collision flag is set. */ 
+#define ENET_TX_BD_LATE_COL_FLAG_MASK        (1 << 21)
+/* Check if buffer descriptor Transmit underflow flag is set. */ 
+#define ENET_TX_BD_UNDERFLOW_FLAG_MASK       (1 << 22)
+/* Check if buffer descriptor Transmit overflow flag is set. */ 
+#define ENET_TX_BD_OVERFLOW_FLAG_MASK        (1 << 23)
+/* Check if buffer descriptor Transmit timestamp flag is set. */
+#define ENET_TX_BD_TIMESTAMP_FLAG_MASK       (1 << 24)
+
+/* If input buffer descriptor is the last one, equals 1 */
+#define ENET_RX_BD_WRAP_FLAG                   (1 << 0)
+/* If buffer descriptor empty flag is set, equals 1 */
+#define ENET_RX_BD_EMPTY_FLAG                  (1 << 1)
+/* If buffer descriptor truncate flag is set, equals 1 */
+#define ENET_RX_BD_TRUNC_FLAG                  (1 << 2)
+/* If buffer descriptor last flag is set, equals 1 */
+#define ENET_RX_BD_LAST_FLAG                   (1 << 3)
+/* If buffer descriptor ready flag is set, equals 1 */
+#define ENET_TX_BD_READY_FLAG                  (1 << 4)
+/* If buffer descriptor last flag is set, equals 1 */
+#define ENET_TX_BD_LAST_FLAG                   (1 << 5)
+/* If buffer descriptor last flag is set, equals 1 */
+#define ENET_TX_BD_WRAP_FLAG                   (1 << 6)
+/* If buffer descriptor Receive over run flag is set, equals 1 */
+#define ENET_RX_BD_OVERRUN_FLAG                (1 << 7)
+/* If buffer descriptor Receive length violation flag is set, equals 1 */
+#define ENET_RX_BD_LEN_VIOLAT_FLAG             (1 << 8)
+/* If buffer descriptor Receive non-octet aligned frame flag is set, equals 1 */
+#define ENET_RX_BD_NO_OCTET_FLAG               (1 << 9)
+/* If buffer descriptor Receive crc error flag is set, equals 1 */
+#define ENET_RX_BD_CRC_ERR_FLAG                (1 << 10)
+/* If buffer descriptor late collision frame discard flag is set, equals 1 */
+#define ENET_RX_BD_COLLISION_FLAG              (1 << 11)
+/* If buffer descriptor TxRrr flag is set, equals 1 */
+#define ENET_TX_BD_TX_ERR_FLAG                 (1 << 12)
+/* If buffer descriptor Transmit excess collision flag is set, equals 1 */
+#define ENET_TX_BD_EXC_COL_ERR_FLAG            (1 << 13)
+/* If buffer descriptor Transmit late collision flag is set, equals 1 */
+#define ENET_TX_BD_LATE_COL_ERR_FLAG           (1 << 14)
+/* If buffer descriptor Transmit underflow flag is set, equals 1 */
+#define ENET_TX_BD_UNDERFLOW_ERR_FLAG          (1 << 15)
+/* If buffer descriptor Transmit overflow flag is set, equals 1 */
+#define ENET_TX_BD_OVERFLOW_FLAG               (1 << 16)
+/* If buffer descriptor Transmit timestamp flag is set, equals 1 */
+#define ENET_TX_BD_TIMESTAMP_FLAG              (1 << 17)
+
+/*! @brief The buffer descriptor attribute */
+typedef struct EnetBdAttr
+{
+    uint16_t bdCtl;           /*!< Buffer descriptor control field */
+    uint16_t rxBdExtCtl;      /*!< Buffer descriptor extend control field  */
+    uint16_t rxBdExtCtl1;     /*!< Buffer descriptor extend control field 1 */
+    uint16_t rxBdExtCtl2;     /*!< Buffer descriptor extend control field 2 */
+    uint16_t bdLen;           /*!< Buffer descriptor data length field */
+    uint32_t bdTimestamp;     /*!< Buffer descriptor time stamp field */
+    uint64_t flags;           /*!< The status flag in the buffer descriptor */
+}enet_bd_attr_t;
+
+/*! @brief The action of mac which should be enabled dynamically */
+typedef enum EnetEnableDynamicalAct
+{
+    kEnGraceSendStop,     /*!< Enable/disable mac to stop the sending process gracefully */ 
+    kEnSendPauseFrame,    /*!< Enable/disable mac to send the pause frame after current data frame is sent */ 
+    kEnClearMibCounter,     /*!< Enable/disable mac to clear the mib counter */
+}enet_en_dynamical_act_t;
+  
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -613,154 +778,32 @@ extern "C" {
 /*!
  * @brief Initializes the ENET module to reset status.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @return The status of the initialize operation.
- *          - kStatus_ENET_InitTimeout initialize failure for timeout.
- *          - kStatus_ENET_Success initialize success.
+ *          - false initialize failure.
+ *          - true initialize success.
  */
-uint32_t ENET_HAL_Init(uint32_t baseAddr);
+enet_status_t ENET_HAL_Init(ENET_Type * base);
 
 /*!
- * @brief Configures the Mac controller of the ENET device.
+ * @brief Configures the ENET.
  *
- * @param baseAddr The ENET peripheral base address.
- * @param macCfgPtr The mac configure structure.
- * @param sysClk The system clock for ENET module.
+ * @param base The ENET peripheral base address.
+ * @param macCfgPtr MAC controller related configuration.
+ * @param sysClk The system clock
+ * @param bufDespConfig buffer descriptor related configuration
  */
- void ENET_HAL_SetMac(uint32_t baseAddr, const enet_mac_config_t *macCfgPtr, uint32_t sysClk);
+void ENET_HAL_Config(ENET_Type * base, const enet_mac_config_t *macCfgPtr, \
+  const uint32_t sysClk, const enet_bd_config* bdConfig); 
 
 /*!
- * @brief Configures the ENET transmit buffer descriptors.
+ * @brief Gets the ENET status.
  *
- * @param baseAddr The ENET peripheral base address.
- * @param txBds The start address of ENET transmit buffer descriptors.     
- * This address must always be evenly divisible by 16.
- *   
- * @param txBuffer The transmit data buffer start address. This address must 
- * always be evenly divisible by 16.
- * @param txBdNumber The transmit buffer descriptor numbers.
- * @param txBuffSizeAlign The aligned transmit buffer size.
+ * @param base The ENET peripheral base address.
+ * @param mask The mask represent which status user want to get.
+ * @param curStatus The structure to save the status result
  */
-void ENET_HAL_SetTxBuffDescriptors(uint32_t baseAddr, volatile enet_bd_struct_t * txBds, uint8_t * txBuffer, uint32_t txBdNumber, uint32_t txBuffSizeAlign);
-
-/*!
- * @brief Configures the ENET receive buffer descriptors.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param rxBds The start address of ENET receive buffer descriptors.   
- * This address must always be evenly divisible by 16.
- * @param rxBuffer The receive data buffer start address. This address must 
- * always be evenly divisible by 16.
- * @param rxBdNumber The receive buffer descriptor numbers.
- * @param rxBuffSizeAlign The aligned receive transmit buffer size.
- */
-void ENET_HAL_SetRxBuffDescriptors(uint32_t baseAddr, volatile enet_bd_struct_t *rxBds, uint8_t *rxBuffer, uint32_t rxBdNumber, uint32_t rxBuffSizeAlign);
-
-/*!
- * @brief Configures the transmit and receive FIFO of the ENET device.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param macCfgPtr The ENET MAC configuration structure.
- */
- void ENET_HAL_SetFifo(uint32_t baseAddr, const enet_mac_config_t *macCfgPtr);
-
-/*!
- * @brief Gets all received statistics from MIB.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param rxStat The received statistics from MIB.
- */
-void ENET_HAL_GetMibRxStat(uint32_t baseAddr, enet_mib_rx_stat_t *rxStat);   
-
-/*!
- * @brief Gets all transmitted statistics from MIB.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param txStat The received statistics from MIB.
- */
-void ENET_HAL_GetMibTxStat(uint32_t baseAddr, enet_mib_tx_stat_t *txStat);   
-
-
-/*!
- * @brief Enables or disables the stop enable signal control. This controls device
- *                         behavior in doze mode.
- *
- * In doze mode, all clocks of the ENET 
- * assembly are disabled, except the RMII/MII clock. Doze mode is similar
- * to a conditional stop mode entry for the ENET assembly depending on the
- * stop enable signal control enable/disable.
- *
- * @param baseAddr The ENET peripheral base address..
- * @param enable The switch to enable/disable stop mode.
- *               - true to enable the stop mode.
- *               - false to disable the stop mode.
- */
-static inline void ENET_HAL_SetStopCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_ECR_STOPEN(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Enables or disables Mac entering the hardware freeze mode when the device 
- *                          enters debug mode.
- *
- * Enabling the debug mode enables  Mac to enter the hardware freeze when the device
- * enters debug mode. Disabling the  debug mode enables Mac to continue operation
- * in debug mode.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable the sleep mode.
- *               - true MAC enter hardware freeze mode in debug mode.
- *               - false MAC continues operation in debug mode.
- */
- static inline void ENET_HAL_SetDebugCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_ECR_DBGEN(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Configures the  Mac operating mode.
- *
- * Enabling the sleep mode disables the normal operating mode. When enabling the sleep
- * mode, the magic packet detection is also enabled so that a remote agent can 
- * wake up the node.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param mode The normal operating mode or sleep mode.
- */
-void ENET_HAL_SetMacMode(uint32_t baseAddr, enet_mac_operate_mode_t mode);
-
-/*!
- * @brief Sets the Mac address.
- *
- * This interface sets the six-byte Mac address of the ENET interface.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param hwAddr The pointer to the array of the six-bytes Mac address.
- * The six-bytes mac address is used by ENET MAC to filtering the incoming
- * Ethernet frames.
- * 
- */
-void ENET_HAL_SetMacAddr(uint32_t baseAddr, uint8_t *hwAddr);
-
-/*!
- * @brief Enables or disables Mac address modification on transmit.
- *
- * This interface enables the six-byte Mac address modification on transmit.
- * If this is enabled, the MAC overwrites the source Mac address with the given
- * Mac address through the ENET_HAL_SetMacAddr.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable the Mac address modification on transmit.
- *               - true enable Mac address modification on transmit.
- *               - false disable Mac address modification on transmit.
- * 
- */
-static inline void ENET_HAL_SetMacAddrInsertCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_TCR_ADDSEL(baseAddr, 0);
-    BW_ENET_TCR_ADDINS(baseAddr, (enable ? 1U : 0U));
-}
+void ENET_HAL_GetStatus(ENET_Type * base, const uint32_t mask, enet_cur_status_t* curStatus);
 
 /*!
  * @brief Sets the hardware addressing filtering to a multicast group address.
@@ -768,377 +811,37 @@ static inline void ENET_HAL_SetMacAddrInsertCmd(uint32_t baseAddr, bool enable)
  * This interface is used to add the ENET device to a multicast group address.
  * After joining the group,  Mac  receives all frames with the group Mac address.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param crcValue The CRC value of the multicast group address.
- * @param mode The operation for init/enable/disable the specified hardware address.
+ * @param mode The operation for initialize/enable/disable the specified hardware address.
  */
-void ENET_HAL_SetMulticastAddrHash(uint32_t baseAddr, uint32_t crcValue, enet_special_address_filter_t mode);
+void ENET_HAL_SetMulticastAddrHash(ENET_Type * base, uint32_t crcValue, enet_special_address_filter_t mode);
 
 /*!
- * @brief Sets the hardware addressing filtering to an individual address.
+ * @brief Gets the attribute field value of buffer descriptor structure and flag
+ * status in the control field.
+ * 
+ * @param curBd The ENET buffer descriptor address.
+ * @param mask The attribute mask represent which field user want to get.
+ * @param resultAttr the attribute value which is updated according to the mask value.
+ */
+void ENET_HAL_GetBufDescripAttr(volatile enet_bd_struct_t *curBd, const uint64_t mask, enet_bd_attr_t* resultAttr);
+ 
+ /*!
+ * @brief Gets the buffer address of the buffer descriptors.
  *
- * This interface is used to add an individual address to the hardware address
- * filter. Mac  receives all frames with the individual address as a destination address.
+ * @param curBd The current buffer descriptor.
+ * @return The buffer address of the buffer descriptor.
+ */ 
+uint8_t* ENET_HAL_GetBuffDescripData(volatile enet_bd_struct_t *curBd);
+
+/*!
+ * @brief Clears the receive buffer descriptor flag after it has been received or 
+ * encountered some error in the receiving process.
  *
- * @param baseAddr The ENET peripheral base address.
- * @param crcValue The CRC value of the special address.
- * @param mode The operation for init/enable/disable the specified hardware address.
- */
-void ENET_HAL_SetUnicastAddrHash(uint32_t baseAddr, uint32_t crcValue, enet_special_address_filter_t mode);
-
-/*!
- * @brief Enables/disables the forwarding frame from an application with the CRC for the transmitted frames.
- * 
- * If transmitting the CRC forward is enabled, the transmitter does not append a CRC to transmitted
- * frames, because it is expecting a frame with the CRC from the application. If transmitting the CRC 
- * forward is disabled, the transmit buffer descriptor controls whether the frame
- * has a CRC from the application.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable forwarding frame from application with CRC
- *              for transmitted frames.
- *             - True the transmitter forwarding the frames with CRC from the application.
- *               so the transmitter doesn't append any CRC to transmitted frames.
- *             - False the transmit buffer descriptor controls whether the frame has a
- *               CRC from the application.
- */
-static inline void ENET_HAL_SetTxcrcFwdCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_TCR_CRCFWD(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Enables/disables forward the CRC field of the received frame.
- * 
- * This function decides whether the CRC field of the received frame is transmitted
- * or stripped. Enabling this feature strips the CRC field from the frame.
- * If padding remove is enabled, this feature is ignored and 
- * the CRC field is checked and always terminated and removed. 
- * Note that if the padding is enabled, the CRC field is checked and always 
- * terminated and removed.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable transmit the receive CRC.
- *             - True to transmit the received CRC.
- *             - False to strip the received CRC.
- */
-static inline void ENET_HAL_SetRxcrcFwdCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_RCR_CRCFWD(baseAddr, (enable ? 0U : 1U));
-}
-/*!
- * @brief Enables/disables pause frames forwarding.
- * 
- * This is used to decide whether pause frames is forwarded or discarded.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable forward PAUSE frames
- *             - True to forward PAUSE frames.
- *             - False to terminate and discard PAUSE frames.
- */
-static inline void ENET_HAL_SetPauseFwdCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_RCR_PAUFWD(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Enables/disables frame padding remove on receive.
- * 
- * Enabling the frame padding remove removes the padding from the received frames.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable remove padding
- *             - True to remove padding from frames.
- *             - False to disable padding remove.
- */
-static inline void ENET_HAL_SetPadRemoveCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_RCR_PADEN(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Enables/disables the flow control.
- * 
- * If the flow control is enabled, the receive detects paused frames.
- * Upon pause frame detection, the transmitter stops transmitting
- * data frames for a given duration. 
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable flow control.
- *             - True to enable the flow control.
- *             - False to disable the flow control.
- */
-static inline void ENET_HAL_SetFlowControlCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_RCR_CFEN(baseAddr, (enable ? 1U : 0U));
-    BW_ENET_RCR_FCE(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Enables/disables the broadcast frame reject.
- * 
- * If the broadcast frame reject is enabled, frames with destination address 
- * equal to 0xffff_ffff_ffff are rejected unless the promiscuous mode is open.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable reject broadcast frames.
- *             - True to reject broadcast frames.
- *             - False to accept broadcast frames.
- */
-static inline void ENET_HAL_SetBroadcastRejectCmd(uint32_t baseAddr, bool enable)
-{    
-    BW_ENET_RCR_BC_REJ(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Enables/disables the payload length check.
- * 
- * If the length/type is less than 0x600, when enable payload length check is enabled,
- * the core checks the fame's payload length. If the length/type is greater
- * than or equal to 0x600, Mac interprets the field as a type and no
- * payload length check is performed.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable payload length check.
- *             - True to enable payload length check.
- *             - False to disable payload length check.
- */
-static inline void ENET_HAL_SetPayloadCheckCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_RCR_NLC(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Enables/disables the graceful transmit stop.
- * 
- * When this field is set, Mac stops transmission after a currently transmitted frame 
- * is complete. 
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable graceful transmit stop
- *             - True to enable graceful transmit stop.
- *             - False to disable graceful transmit stop.
- */
-static inline void ENET_HAL_SetGraceTxStopCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_TCR_GTS(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Sets the pause duration for the pause frame.
- * 
- * This function sets the pause duration used in a transmission 
- * of a PAUSE frame. When another node detects a PAUSE frame, that node
- * pauses transmission for the pause duration.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param pauseDuration The PAUSE duration for the transmitted PAUSE frame
- *                      the maximum pause duration is 0xFFFF.
- */
-static inline void ENET_HAL_SetPauseDuration(uint32_t baseAddr, uint32_t pauseDuration)
-{
-    assert(pauseDuration <= BM_ENET_OPD_PAUSE_DUR);
-    BW_ENET_OPD_PAUSE_DUR(baseAddr, pauseDuration);
-}
-
-/*!
- * @brief Configures the pause duration field and transmits the pause frame.
- * 
- * This function enables pausing the frame transmission. 
- * When this is set, with transmission of data frames stopped,  Mac
- * transmits a Mac control pause frame. Next, Mac clears 
- * and resumes transmitting data frames.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable transmit pause frame.
- */
-static inline void ENET_HAL_SetTxPauseCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_TCR_TFC_PAUSE(baseAddr, enable);
-}
-
-/*!
- * @brief Gets the transmit pause frame status.
- * 
- * This function gets the transmitted pause frame status. 
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The status of the received flow control frames.
- *         - True if the MAC is transmitting a MAC control PAUSE frame.
- *         - False if No PAUSE frame transmit. 
- */
-static inline bool ENET_HAL_GetTxPause(uint32_t baseAddr)
-{
-    return BR_ENET_TCR_TFC_PAUSE(baseAddr);
-}
-
-/*!
- * @brief Gets the receive pause frame status.
- * 
- * This function gets the received pause frame status. 
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The status of the received flow control frames
- *         - True if the flow control pause frame is received and the transmitter pauses
- *              for the duration defined in this pause frame.
- *         - False if there is no flow control frame received or the pause duration is complete. 
- */
-static inline bool ENET_HAL_GetRxPause(uint32_t baseAddr)
-{
-    return BR_ENET_TCR_RFC_PAUSE(baseAddr);
-}
-
-/*!
- * @brief Sets the transmit inter-packet gap.
- * 
- * This function indicates the inter-packet gap, in bytes, between transmitted 
- * frames. Valid values range from 8 to 27. If value is less than 8, the IPG is 8.
- * If value is greater than 27, the IPG is 27.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param ipgValue The Inter-Packet-Gap for transmitted frames
- *                 The default value is 12, the maximum value set to IPG is 0x1F.
- *              
- */
-void ENET_HAL_SetTxInterPacketGap(uint32_t baseAddr, uint32_t ipgValue);
-
-/*!
- * @brief Sets the receive frame truncation length.
- * 
- * This function indicates the value a receive frame is truncated,
- * if it is greater than this value. The frame truncation length must be greater
- * than or equal to the receive maximum frame length.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param length The truncation length. The maximum value is 0x3FFF
- *               The default truncation length is 2047(0x7FF).
- *              
- */
-static inline void ENET_HAL_SetTruncLen(uint32_t baseAddr, uint32_t length)
-{
-    assert(length <= BM_ENET_FTRL_TRUNC_FL);
-    BW_ENET_FTRL_TRUNC_FL(baseAddr, length);
-}
-
-/*!
- * @brief Sets the maximum receive frame length.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @param maxFrameSize The maximum receive frame size, the reset value is 1518 or 1522 if the VLAN tags are 
- *        supported. The length is measured starting at DA and including the CRC.
- */
-static inline void ENET_HAL_SetRxMaxFrameLen(uint32_t baseAddr, uint32_t maxFrameSize)
-{
-    assert(maxFrameSize <= (BM_ENET_RCR_MAX_FL >> BP_ENET_RCR_MAX_FL));
-
-    BW_ENET_RCR_MAX_FL(baseAddr, maxFrameSize);
-}
-
-/*!
- * @brief Gets the maximum receive frame length.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @return The maximum receive frame size, The length is measured starting at DA and including the CRC.
- */
-static inline uint16_t ENET_HAL_GetRxMaxFrameLen(uint32_t baseAddr)
-{
-    return BR_ENET_RCR_MAX_FL(baseAddr);
-}
-
-/*!
- * @brief Sets the maximum receive buffer size for receive buffer descriptor.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @param maxBufferSize The maximum receive buffer size, which  should not be smaller than 256
- *        It should be evenly divisible by 16 and the maximum receive size should not be larger than 0x3ff0.
- */
-static inline void ENET_HAL_SetRxMaxBuffSize(uint32_t baseAddr, uint32_t maxBufferSize)
-{
-    /* max buffer size must larger than 256 to minimize bus usage*/
-    assert(maxBufferSize >= kEnetMinBuffSize); 
-    HW_ENET_MRBR_WR(baseAddr, (maxBufferSize & BM_ENET_MRBR_R_BUF_SIZE));
-}
-
-
-/*!
- * @brief Configures the ENET transmit FIFO.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param thresholdCfg The FIFO threshold configuration
- */
-void ENET_HAL_SetTxFifo(uint32_t baseAddr, enet_config_tx_fifo_t *thresholdCfg);
-
-/*!
- * @brief Configures the ENET receive FIFO.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param thresholdCfg The FIFO threshold configuration
- */
-void ENET_HAL_SetRxFifo(uint32_t baseAddr, enet_config_rx_fifo_t *thresholdCfg);
-
-/*!
- * @brief Sets the start address for ENET receive buffer descriptors.
- *
- * This interface provides the beginning of the receive buffer descriptor queue
- * in the external memory. The rxBdAddr is recommended to be 128-bit aligned,
- * must be evenly divisible by 16.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param rxBdAddr The start address of receive buffer descriptor.
- *                 This address must always be evenly divisible by 16.
- */
-static inline void ENET_HAL_SetRxBuffDescripAddr(uint32_t baseAddr, uint32_t rxBdAddr)
-{
-    HW_ENET_RDSR_WR(baseAddr,rxBdAddr);   /* Initialize receive buffer descriptor start address*/
-}
-/*!
- * @brief Sets the start address for ENET transmit buffer descriptors.
- *
- * This interface provides the beginning of the transmit buffer descriptor queue 
- * in the external memory. The txBdAddr is recommended to be 128-bit aligned,
- * must be evenly divisible by 16.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param txBdAddr The start address of transmit buffer descriptors
- *                 This address must always be evenly divisible by 16.
- */
-static inline void ENET_HAL_SetTxBuffDescripAddr(uint32_t baseAddr, uint32_t txBdAddr)
-{
-    HW_ENET_TDSR_WR(baseAddr,txBdAddr);   /* Initialize transmit buffer descriptor start address*/
-}
-
-/*!
- * @brief Initializes receive buffer descriptors.
- *
- * To make sure the uDMA will do the right data transfer after you activate
- * with wrap flag and all the buffer descriptors should be initialized with an empty bit.
- * 
- * @param rxBds The current receive buffer descriptor.
- * @param rxBuff The data buffer on receive buffer descriptor. 
- *               This address must always be evenly divisible by 16.
- * @param rxbdNum The number of the receive buffer descriptors.
- * @param rxBuffSizeAlign The aligned receive buffer size.
- */
-void ENET_HAL_InitRxBuffDescriptors(volatile enet_bd_struct_t *rxBds, uint8_t *rxBuff, uint32_t rxbdNum, uint32_t rxBuffSizeAlign);
-
-/*!
- * @brief Initializes transmit buffer descriptors.
- *
- * To make sure the uDMA will do the right data transfer after you active
- * with wrap flag. 
- * 
- * @param txBds The current transmit buffer descriptor.
- * @param txBuff The data buffer on transmit buffer descriptor.
- * @param txbdNum The number of transmit buffer descriptors. 
- * @param txBuffSizeAlign The aligned transmit buffer size.
- */
-void ENET_HAL_InitTxBuffDescriptors(volatile enet_bd_struct_t *txBds, uint8_t *txBuff, uint32_t txbdNum, uint32_t txBuffSizeAlign);
-
-/*!
- * @brief Updates the receive buffer descriptor.
- *
- * This interface mainly clears the status region and updates the received
- * buffer descriptor to ensure that the BD is  correctly used.
+ * This interface mainly clears the status region and update the buffer pointer of 
+ * the rx descriptor to a null buffer to ensure that the BD is  correctly available 
+ * to receive data.
  *
  * @param rxBds The current receive buffer descriptor.
  * @param data The data buffer address. This address must be divided by 16
@@ -1147,13 +850,13 @@ void ENET_HAL_InitTxBuffDescriptors(volatile enet_bd_struct_t *txBds, uint8_t *t
  *        the data buffer of the buffer descriptor ensure that this flag
  *        is set.
  */
-void ENET_HAL_UpdateRxBuffDescriptor(volatile enet_bd_struct_t *rxBds, uint8_t *data, bool isbufferUpdate);
+void ENET_HAL_ClrRxBdAfterHandled(volatile enet_bd_struct_t *rxBds, uint8_t *data, bool isbufferUpdate);
 
 /*!
- * @brief Updates the transmit buffer descriptor.
+ * @brief Sets the transmit buffer descriptor flag before sending a frame.
  *
- * This interface mainly clears the status region and updates the transmit
- * buffer descriptor to ensure tat the BD is  correctly used again.
+ * This interface mainly clears the status region of TX buffer descriptor to 
+ * ensure tat the BD is correctly available to send.
  * You should set the isTxtsCfged when the transmit timestamp feature is required. 
  *
  * @param txBds The current transmit buffer descriptor.
@@ -1170,7 +873,8 @@ void ENET_HAL_UpdateRxBuffDescriptor(volatile enet_bd_struct_t *rxBds, uint8_t *
  *        - True the last BD in a frame.
  *        - False not the last BD in a frame.
  */
-void ENET_HAL_UpdateTxBuffDescriptor(volatile enet_bd_struct_t *txBds, uint16_t length, bool isTxtsCfged, bool isTxCrcEnable, bool isLastOne);
+void ENET_HAL_SetTxBdBeforeSend(volatile enet_bd_struct_t *txBds, uint16_t length, \
+  bool isTxtsCfged, bool isTxCrcEnable, bool isLastOne);
 
 /*!
  * @brief Clears the context in the transmit buffer descriptors.
@@ -1179,7 +883,7 @@ void ENET_HAL_UpdateTxBuffDescriptor(volatile enet_bd_struct_t *txBds, uint16_t 
  *
  * @param curBd The current buffer descriptor.
  */
-static inline void ENET_HAL_ClearTxBuffDescriptor(volatile enet_bd_struct_t *curBd)
+static inline void ENET_HAL_ClrTxBdAfterSend(volatile enet_bd_struct_t *curBd)
 {
     assert(curBd);
 
@@ -1189,141 +893,16 @@ static inline void ENET_HAL_ClearTxBuffDescriptor(volatile enet_bd_struct_t *cur
 }
 
 /*!
- * @brief Gets the control and the status region of the receive buffer descriptors.
- *
- * This interface can get the whole control and status region of the 
- * receive buffer descriptor. The enet_rx_bd_control_status_t enum type 
- * definition should be used if you want to get each status bit of
- * the control and status region.
- *
- * @param curBd The current receive buffer descriptor.
- * @return The control and status data on buffer descriptors.
- */
-static inline uint16_t ENET_HAL_GetRxBuffDescripControl(volatile enet_bd_struct_t *curBd)
-{
-    assert(curBd);
-
-    return curBd->control;	
-}
-/*!
- * @brief Gets the control and the status region of the transmit buffer descriptors.
- *
- * This interface can get the whole control and status region of the 
- * transmit buffer descriptor. The enet_tx_bd_control_status_t enum type 
- * definition should be used if you want to get each status bit of
- * the control and status region.
- *
- * @param curBd The current transmit buffer descriptor.
- * @return The extended control region of transmit buffer descriptor.
- */
-static inline uint16_t ENET_HAL_GetTxBuffDescripControl(volatile enet_bd_struct_t *curBd)
-{
-    assert(curBd);
-    return curBd->control;	
-}
-/*!
- * @brief Gets the extended control region one of the receive buffer descriptor.
- *
- * This interface can get the whole control and status region of the 
- * receive buffer descriptor. The enet_rx_bd_control_extend0_t enum type 
- * definition should be used if you want to get each status bit of
- * the control and status region.
- *
- * @param curBd The current receive buffer descriptor.
- * @return The extended control region0 data of receive buffer descriptor.
- */
-static inline uint16_t ENET_HAL_GetRxbuffDescripExtControlOne(volatile enet_bd_struct_t *curBd)
-{
-     assert(curBd);
-
-    return curBd->controlExtend0;
-}
-
-/*!
- * @brief Gets the extended control region two of the receive buffer descriptor.
- *
- * This interface can get the whole control and status region of the 
- * receive buffer descriptor. The enet_rx_bd_control_extend1_t enum type 
- * definition should be used if you want to get each status bit of
- * the control and status region.
- *
- * @param curBd The current receive buffer descriptor.
- * @return The extended control region1 data of receive buffer descriptor.
- */
-static inline uint16_t ENET_HAL_GetRxbuffDescripExtControlTwo(volatile enet_bd_struct_t *curBd)
-{
-    assert(curBd);
-
-    return curBd->controlExtend1;
-}
-/*!
- * @brief Gets the extended control region of the transmit buffer descriptors.
- *
- * This interface can get the whole control and status region of the 
- * transmit buffer descriptor. The enet_tx_bd_control_extend0_t enum type 
- * definition should be used if you want to get each status bit of
- * the control and status region.
- *
- * @param curBd The current transmit buffer descriptor.
- * @return The extended control data.
- */
-static inline uint16_t ENET_HAL_GetTxBuffDescripExtControl(volatile enet_bd_struct_t *curBd)
-{
-    assert(curBd);
-
-    return curBd->controlExtend0;	
-}
-
-/*!
- * @brief Gets the transmit buffer descriptor timestamp flag.
- *
- * @param curBd The ENET transmit buffer descriptor.
- * @return true if timestamp region is set else false.
- */
-static inline bool ENET_HAL_GetTxBuffDescripTsFlag(volatile enet_bd_struct_t *curBd)
-{
-    assert(curBd);
-    return ((curBd->controlExtend1 & kEnetTxBdTimeStamp) != 0);	
-}
-
-
-/*!
- * @brief Gets the data length of the buffer descriptors.
- *
- * @param curBd The current buffer descriptor.
- * @return The data length of the buffer descriptor.
- */
-uint16_t ENET_HAL_GetBuffDescripLen(volatile enet_bd_struct_t *curBd);
-
-/*!
- * @brief Gets the buffer address of the buffer descriptors.
- *
- * @param curBd The current buffer descriptor.
- * @return The buffer address of the buffer descriptor.
- */ 
-uint8_t* ENET_HAL_GetBuffDescripData(volatile enet_bd_struct_t *curBd);
-
-/*!
- * @brief Gets  the timestamp of the buffer descriptors.
- *
- * @param curBd The current buffer descriptor.
- * @return The time stamp of the frame in the buffer descriptor.
- *         Notice that the frame timestamp is only set in the last  
- *         buffer descriptor of the frame. 
- */
-uint32_t ENET_HAL_GetBuffDescripTs(volatile enet_bd_struct_t *curBd);
-
-/*!
  * @brief Activates the receive buffer descriptor.
  *
  * The buffer descriptor activation
  * should be done after the ENET module is enabled. Otherwise, the activation  fails.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  */
- static inline void ENET_HAL_SetRxBuffDescripActive(uint32_t baseAddr)
+ static inline void ENET_HAL_SetRxBdActive(ENET_Type * base)
 {
-    HW_ENET_RDAR_SET(baseAddr, BM_ENET_RDAR_RDAR);
+    ENET_SET_RDAR(base, ENET_RDAR_RDAR_MASK);
 }
 
 /*!
@@ -1332,243 +911,120 @@ uint32_t ENET_HAL_GetBuffDescripTs(volatile enet_bd_struct_t *curBd);
  * The  buffer descriptor activation should be done after the ENET module is
  * enabled. Otherwise, the activation  fails.
  * 
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  */
-static inline void ENET_HAL_SetTxBuffDescripActive(uint32_t baseAddr)
+static inline void ENET_HAL_SetTxBdActive(ENET_Type * base)
 {
-    HW_ENET_TDAR_SET(baseAddr, BM_ENET_TDAR_TDAR);
+    ENET_SET_TDAR(base, ENET_TDAR_TDAR_MASK);
 }
 
 /*!
  * @brief Configures the (R)MII data interface of ENET.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param rmiiCfgPtr The RMII/MII configuration structure pointer.
  */
-void ENET_HAL_SetRMIIMode(uint32_t baseAddr, enet_config_rmii_t *rmiiCfgPtr);
-
-/*!
- * @brief Configures the (R)MII speed of ENET.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param speed The RMII/MII speed.
- */
-static inline void ENET_HAL_SetRMIISpeed(uint32_t baseAddr, enet_config_speed_t speed)
-{
-    BW_ENET_RCR_RMII_10T(baseAddr, speed);
-}
-/*!
- * @brief Configures the SMI(serial Management interface) of ENET.
- *
- * Sets the SMI(MDC/MDIO) between Mac and PHY. The miiSpeed is 
- * a value that controls the frequency of the MDC, relative to the internal module clock(InterClockSrc).
- * A value of zero in this parameter turns the MDC off and leaves it in the low voltage state.
- * Any non-zero value results in the MDC frequency MDC = InterClockSrc/((miiSpeed + 1)*2).
- * So miiSpeed = InterClockSrc/(2*MDC) - 1.
- * The Maximum MDC clock is 2.5MHZ(maximum). The recommended action is to round up and plus one to simplify:
- *  miiSpeed = InterClockSrc/(2*2.5MHZ).
- *
- * @param baseAddr The ENET peripheral base address.
- * @param miiSpeed The MII speed and it is ranged from 0~0x3F.
- * @param clkCycle The hold on clock cycles for MDIO output 
- * @param isPreambleDisabled The preamble disabled flag.
- */
-static inline void ENET_HAL_SetSMI(uint32_t baseAddr, uint32_t miiSpeed, 
-                              uint32_t clkCycle, bool isPreambleDisabled)
-{
-    assert(clkCycle <= kEnetMaxMdioHoldCycle);
-    BW_ENET_MSCR_MII_SPEED(baseAddr, miiSpeed);          /* MII speed set*/
-    BW_ENET_MSCR_DIS_PRE(baseAddr, isPreambleDisabled);  /* Preamble is disabled*/
-    BW_ENET_MSCR_HOLDTIME(baseAddr, clkCycle);  /* hold on clock cycles for MDIO output*/
-}
-
-/*!
- * @brief Gets SMI configuration status.
- *
- * This interface is usually called to check the SMI(serial Management interface) before 
- * the Mac  writes or reads the PHY registers.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The MII configuration status.
- *         - true if the MII has been configured. 
- *         - false if the MII has not been configured.
- */
-static inline bool ENET_HAL_GetSMI(uint32_t baseAddr)
-{
-    return (HW_ENET_MSCR_RD(baseAddr)& 0x7E)!= 0;	
-}
+void ENET_HAL_SetRMIIMode(ENET_Type * base, enet_config_rmii_t *rmiiCfgPtr);
 
 /*!
  * @brief Reads data from PHY. 
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @return The data read from PHY
  */
-static inline uint32_t ENET_HAL_GetSMIData(uint32_t baseAddr)
+static inline uint32_t ENET_HAL_GetSMIData(ENET_Type * base)
 {
-    return (uint32_t)BR_ENET_MMFR_DATA(baseAddr);
+    return (uint32_t)ENET_BRD_MMFR_DATA(base);
 }
 
 /*!
  * @brief Sets the SMI(serial Management interface) read command.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param phyAddr The PHY address.
  * @param phyReg The PHY register.
  * @param operation The read operation.
  */
-void ENET_HAL_SetSMIRead(uint32_t baseAddr, uint32_t phyAddr, uint32_t phyReg, enet_mii_read_t operation);
+void ENET_HAL_SetSMIRead(ENET_Type * base, uint32_t phyAddr, uint32_t phyReg, enet_mii_read_t operation);
 
 /*!
  * @brief Sets the SMI(serial Management interface) write command.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param phyAddr The PHY address.
  * @param phyReg The PHY register.
  * @param operation The write operation.
  * @param data The data written to PHY.
  */
-void ENET_HAL_SetSMIWrite(uint32_t baseAddr, uint32_t phyAddr, uint32_t phyReg, enet_mii_write_t operation, uint32_t data);
+void ENET_HAL_SetSMIWrite(ENET_Type * base, uint32_t phyAddr, uint32_t phyReg, enet_mii_write_t operation, uint32_t data);
+
+/*!
+ * @brief Enables/disables the MAC dynamical action.
+ *
+ * @param base The ENET peripheral base address.
+ * @param action The action which will be enabled/disabled.
+ * @param enable The switch to enable/disable the action of the MAC.
+ */
+void ENET_HAL_EnDynamicalAct(ENET_Type * base, enet_en_dynamical_act_t action, bool enable);
 
 /*!
  * @brief Enables the ENET module.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  */
-static inline void ENET_HAL_Enable(uint32_t baseAddr)
+static inline void ENET_HAL_Enable(ENET_Type * base)
 {    
-    HW_ENET_ECR_SET(baseAddr, BM_ENET_ECR_ETHEREN); /* Enable Ethernet module*/
+    ENET_SET_ECR(base, ENET_ECR_ETHEREN_MASK); /* Enable Ethernet module*/
 
-#if SYSTEM_LITTLE_ENDIAN && !FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY
-    BW_ENET_ECR_DBSWP(baseAddr,1);    /* buffer descriptor byte swapping for little-endian system and endianness configurable IP*/
+#if (!FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY)
+    ENET_BWR_ECR_DBSWP(base,1);    /* buffer descriptor byte swapping for little-endian system and endianness configurable IP*/
 #endif
 }
 
 /*!
  * @brief Disables the ENET module.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  */
-static inline void ENET_HAL_Disable(uint32_t baseAddr)
+static inline void ENET_HAL_Disable(ENET_Type * base)
 {    
-    HW_ENET_ECR_CLR(baseAddr, BM_ENET_ECR_ETHEREN); /* Disable Ethernet module*/
+    ENET_CLR_ECR(base, ENET_ECR_ETHEREN_MASK); /* Disable Ethernet module*/
 }
 
-
-/*!
- * @brief Enables or disables the enhanced functionality of the MAC(1588 feature).
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The enable/disable switch to the enhanced functionality of the MAC(1588 feature).
- */
-static inline void ENET_HAL_SetEnhancedMacCmd(uint32_t baseAddr, bool enable)
-{    
-    BW_ENET_ECR_EN1588(baseAddr,(enable ? 1U : 0U));	 /* Enable/Disable enhanced frame feature*/
-}	
 /*!
  * @brief Enables/Disables the ENET interrupt.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param source The interrupt sources.
  * @param enable The interrupt enable switch.
  */
-void ENET_HAL_SetIntMode(uint32_t baseAddr, enet_interrupt_request_t source, bool enable);
+void ENET_HAL_SetIntMode(ENET_Type * base, enet_interrupt_request_t source, bool enable);
 
 /*!
  * @brief Clears  ENET interrupt events. 
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param source The interrupt source to be cleared. enet_interrupt_request_t 
  *        enum types is recommended as the interrupt source.
  */
-static inline void ENET_HAL_ClearIntStatusFlag(uint32_t baseAddr, enet_interrupt_request_t source)
+static inline void ENET_HAL_ClearIntStatusFlag(ENET_Type * base, enet_interrupt_request_t source)
 { 
-    HW_ENET_EIR_WR(baseAddr,source);    
+    ENET_WR_EIR(base,source);    
 }
 
 /*!
  * @brief Gets the ENET interrupt status.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param source The interrupt sources. enet_interrupt_request_t 
  *        enum types is recommended as the interrupt source.
  * @return The event status of the interrupt source
  *         - true if the interrupt event happened. 
  *         - false if the interrupt event has not happened.
  */
-static inline bool ENET_HAL_GetIntStatusFlag(uint32_t baseAddr, enet_interrupt_request_t source)
+static inline bool ENET_HAL_GetIntStatusFlag(ENET_Type * base, enet_interrupt_request_t source)
 {
-    return ((HW_ENET_EIR_RD(baseAddr) & (uint32_t)source) != 0);  
-}
-
-/*!
- * @brief Enables/disables the ENET promiscuous mode.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable the promiscuous mode. 
- */
-static inline void ENET_HAL_SetPromiscuousCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_RCR_PROM(baseAddr,(enable ? 1U : 0U));	
-}
-
-/*!
- * @brief Enables/disables the clear MIB counter. 
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable the MIB counter.
- */
-static inline void ENET_HAL_SetMibClearCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_MIBC_MIB_CLEAR(baseAddr, (enable ? 1U : 0U));
-}
-
-/*!
- * @brief Sets the enable/disable of the MIB block. 
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The switch to enable/disable the MIB block.
- *             - True to enable MIB block.
- *             - False to disable MIB block.
- */
-static inline void ENET_HAL_SetMibCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ENET_MIBC_MIB_DIS(baseAddr,(enable ? 0U : 1U));
-}
-
-/*!
- * @brief Gets the MIB idle status. 
- *
- * @param baseAddr The ENET peripheral base address.
- * @return true if in MIB idle and MIB is not updating else false.
- */
-static inline bool ENET_HAL_GetMibStatus(uint32_t baseAddr)
-{    
-    return BR_ENET_MIBC_MIB_IDLE(baseAddr);
-}
-
-/*!
- * @brief Sets the transmit accelerator.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param txConfig The transmit accelerator configuration. The enet_txaccelerator_config_t
- *        is recommended to be used to do the configure.
- */
-static inline void ENET_HAL_SetTxAccelerator(uint32_t baseAddr, uint32_t txConfig)
-{
-    HW_ENET_TACC_WR(baseAddr, txConfig);
-}
-
-/*!
- * @brief Sets the receive accelerator. 
- *
- * @param baseAddr The ENET peripheral base address.
- * @param rxConfig The receive accelerator configuration. The enet_rxaccelerator_config_t
- *        is recommended to be used to do the configure.
- */
-static inline void ENET_HAL_SetRxAccelerator(uint32_t baseAddr, uint32_t rxConfig)
-{
-    HW_ENET_RACC_WR(baseAddr, rxConfig);
+    return ((ENET_RD_EIR(base) & (uint32_t)source) != 0);  
 }
 
 /*!
@@ -1577,61 +1033,19 @@ static inline void ENET_HAL_SetRxAccelerator(uint32_t baseAddr, uint32_t rxConfi
  * This interface configures the 1588 timer and starts the 1588 timer.
  * After the timer starts the 1588 timer starts incrementing.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param ptpCfgPtr The 1588 timer configuration structure pointer.
  */
-void ENET_HAL_Set1588TimerStart(uint32_t baseAddr, enet_config_ptp_timer_t * ptpCfgPtr);
+void ENET_HAL_Start1588Timer(ENET_Type * base, enet_config_ptp_timer_t * ptpCfgPtr);
 
 /*!
- * @brief Configures the 1588 timer channel compare feature.
+ * @brief Stop the 1588 timer.
  *
- * This interface configures the 1588 timer channel with the compare feature.
+ * This interface stop the 1588 timer and clear its count value.
  *
- * @param baseAddr The ENET peripheral base address.
- * @param channel The 1588 timer channel.
- * @param cmpValOld The old compare value.
- * @param cmpValNew The new compare value.
+ * @param base The ENET peripheral base address.
  */
- void ENET_HAL_Set1588TimerChnCmp(uint32_t baseAddr, enet_timer_channel_t channel, uint32_t cmpValOld, uint32_t cmpValNew);
-
-/*!
- * @brief Initializes the 1588 timer.
- *
- * This interface  initializes the 1588 context structure.
- * Initialize 1588 parameters according to the user configuration structure.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param ptpCfgPtr The 1588 timer configuration.
- */
-void ENET_HAL_Set1588Timer(uint32_t baseAddr, enet_config_ptp_timer_t *ptpCfgPtr);
-
-/*!
- * @brief Enables or disables the 1588 PTP timer.
- *
- * Enable the PTP timer will starts the timer. Disable the timer will stop timer
- * at the current value.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param enable The 1588 timer Enable switch
- *              - True enabled the 1588 PTP timer.
- *              - False disable or stop the 1588 PTP timer.
- */
-static inline void ENET_HAL_Set1588TimerCmd(uint32_t baseAddr, uint32_t enable)
-{
-    BW_ENET_ATCR_EN(baseAddr, (enable ? 1U : 0U));                          
-}
-
-/*!
- * @brief Restarts the 1588 timer.
- *
- * Restarting the PTP timer  clears all PTP-timer counters to zero.
- *
- * @param baseAddr The ENET peripheral base address.
- */
-static inline void ENET_HAL_Set1588TimerRestart(uint32_t baseAddr)
-{
-    BW_ENET_ATCR_RESTART(baseAddr,1);                          
-}
+void ENET_HAL_Stop1588Timer(ENET_Type * base);
 
 /*!
  * @brief Adjusts the 1588 timer.
@@ -1639,684 +1053,74 @@ static inline void ENET_HAL_Set1588TimerRestart(uint32_t baseAddr)
  * Adjust the 1588 timer according to the increase and correction period
  * of the configured correction.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param increaseCorrection The increase correction for 1588 timer.
  * @param periodCorrection The period correction for 1588 timer.
  */
-static inline void ENET_HAL_Set1588TimerAdjust(uint32_t baseAddr, uint32_t increaseCorrection, uint32_t periodCorrection)
+static inline void ENET_HAL_Adjust1588Timer(ENET_Type * base, uint32_t increaseCorrection, uint32_t periodCorrection)
 {
     assert(increaseCorrection <= ENET_ATINC_INC_MASK);
-    assert(periodCorrection <= BM_ENET_ATCOR_COR);
+    assert(periodCorrection <= ENET_ATCOR_COR_MASK);
     /* Set correction for PTP timer increment*/     
-    BW_ENET_ATINC_INC_CORR(baseAddr, increaseCorrection);
+    ENET_BWR_ATINC_INC_CORR(base, increaseCorrection);
     /* Set correction for PTP timer period*/
-    BW_ENET_ATCOR_COR(baseAddr, periodCorrection);
-}
-
-/*!
- * @brief Sets the capture command to the 1588 timer.
- *
- * This is used before reading the current time register.
- * After set timer capture, please wait for about 1us before read
- * the captured timer. 
- *
- * @param baseAddr The ENET peripheral base address.
- */
-static inline void ENET_HAL_Set1588TimerCapture(uint32_t baseAddr)
-{
-    HW_ENET_ATCR_SET(baseAddr, BM_ENET_ATCR_CAPTURE);
+    ENET_BWR_ATCOR_COR(base, periodCorrection);
 }
 
 /*!
  * @brief Sets the 1588 timer.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param nanSecond The nanosecond set to 1588 timer.
  */
-static inline void ENET_HAL_Set1588TimerNewTime(uint32_t baseAddr, uint32_t nanSecond)
+static inline void ENET_HAL_Set1588TimerNewTime(ENET_Type * base, uint32_t nanSecond)
 {
-    HW_ENET_ATVR_WR(baseAddr,nanSecond);
+    ENET_WR_ATVR(base,nanSecond);
 }
 
 /*!
  * @brief Gets the time from the 1588 timer.
  *
- * @param baseAddr The ENET peripheral base address.
+ * Sets the capture command to the 1588 timer is used before reading the current
+ * time register.After set timer capture, please wait for about 1us before read
+ * the captured timer.
+ * @param base The ENET peripheral base address.
  * @return the current time from 1588 timer.
  */
-static inline uint32_t ENET_HAL_Get1588TimerCurrentTime(uint32_t baseAddr)
+static inline uint32_t ENET_HAL_Get1588TimerCurrentTime(ENET_Type * base)
 {
-    return HW_ENET_ATVR_RD(baseAddr);   
-}
-
-/*!
- * @brief Initializes one channel for the four-channel 1588 timer.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param channel The 1588 timer channel number.
- * @param mode Compare or capture mode for the four-channel 1588 timer channel.
- */
-static inline void ENET_HAL_Set1588TimerChnMode(uint32_t baseAddr, enet_timer_channel_t channel, enet_timer_channel_mode_t mode)
-{
-    assert(mode <= (BM_ENET_TCSRn_TMODE >> BP_ENET_TCSRn_TMODE));
-    /* Disable timer mode before set*/
-    BW_ENET_TCSRn_TMODE(baseAddr, channel, 0);
-    /* Set timer mode*/
-    BW_ENET_TCSRn_TMODE(baseAddr, channel, mode);
-}
-
-/*!
- * @brief Sets the 1588 time channel interrupt.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param channel The 1588 timer channel number.
- * @param enable The switch to enable or disable interrupt.
- */
-static inline void ENET_HAL_Set1588TimerChnInt(uint32_t baseAddr, enet_timer_channel_t channel, bool enable)
-{
-    BW_ENET_TCSRn_TIE(baseAddr, channel, (enable ? 1U : 0U));
-}
-
-
-/*!
- * @brief Sets the compare value for the 1588 timer channel.
- *
- * @param baseAddr The ENET peripheral base address.
- * @param channel The 1588 timer channel number.
- * @param compareValue Compare value for 1588 timer channel.
- */
-static inline void ENET_HAL_Set1588TimerChnCmpVal(uint32_t baseAddr, enet_timer_channel_t channel, uint32_t compareValue)
-{
-    HW_ENET_TCCRn_WR(baseAddr, channel, compareValue);   
+    ENET_SET_ATCR(base, ENET_ATCR_CAPTURE_MASK);
+    /*Bug of IC need repeat*/
+    ENET_SET_ATCR(base, ENET_ATCR_CAPTURE_MASK);
+    return ENET_RD_ATVR(base);   
 }
 
 /*!
  * @brief Gets the 1588 timer channel status.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param channel The 1588 timer channel number.
  * @return Compare or capture operation status
  *         - True if the compare or capture has occurred.
  *         - False if the compare or capture has not occurred. 
  */
-static inline bool ENET_HAL_Get1588TimerChnStatus(uint32_t baseAddr, enet_timer_channel_t channel)
+static inline bool ENET_HAL_Get1588TimerChnStatus(ENET_Type * base, enet_timer_channel_t channel)
 {
-    return BR_ENET_TCSRn_TF(baseAddr,channel);  
+    return ENET_BRD_TCSR_TF(base,channel);  
 }
 
 /*!
- * @brief Clears the 1588 timer channel interrupt flag.
+ * @brief Resets the 1588 timer compare value and clears the 1588 timer channel interrupt flag.
  *
- * @param baseAddr The ENET peripheral base address.
+ * @param base The ENET peripheral base address.
  * @param channel The 1588 timer channel number.
+ * @param compareValue Compare value for 1588 timer channel.
  */
-static inline void ENET_HAL_Clear1588TimerChnFlag(uint32_t baseAddr, enet_timer_channel_t channel)
+static inline void ENET_HAL_Rst1588TimerCmpValAndClrFlag(ENET_Type * base, enet_timer_channel_t channel, uint32_t compareValue)
 {           
-    HW_ENET_TCSRn_SET(baseAddr, channel, BM_ENET_TCSRn_TF);/* clear interrupt flag*/
-    HW_ENET_TGSR_WR(baseAddr,(1U << channel));            /* clear channel flag*/
-}
-
-/*!
- * @brief Gets the transmit timestamp.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The timestamp of the last transmitted frame.
- */
-static inline uint32_t ENET_HAL_GetTxTs(uint32_t baseAddr)
-{
-    return HW_ENET_ATSTMP_RD(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packet count statistic.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packet count.
- */
-static inline uint16_t ENET_HAL_GetTxPackets(uint32_t baseAddr)
-{
-    return  BR_ENET_RMON_T_PACKETS_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit broadcast packet statistic.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit broadcast packet statistic.
- */
-static inline uint16_t ENET_HAL_GetTxBroadCastPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_BC_PKT_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit multicast packet statistic.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit multicast packet statistic.
- */
-static inline uint16_t ENET_HAL_GetTxMultiCastPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_MC_PKT_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packets with CRC/Align error.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets with CRC/Align error.
- */
-static inline uint16_t ENET_HAL_GetTxCrcAlignErrorPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_CRC_ALIGN_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packets less than 64 bytes and good CRC.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets less than 64 bytes and good CRC.
- */
-static inline uint16_t ENET_HAL_GetTxUnderSizePacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_UNDERSIZE_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packets less than 64 bytes and bad CRC.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets less than 64 bytes and bad CRC.
- */
-static inline uint16_t ENET_HAL_GetTxFragPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_FRAG_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packets over than MAX_FL bytes and good CRC.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets over size than MAX_FL and good CRC.
- */
-static inline uint16_t ENET_HAL_GetTxOverSizePacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_OVERSIZE_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packets over than MAX_FL bytes and bad CRC.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets over size than MAX_FL bytes and bad CRC.
- */
-static inline uint16_t ENET_HAL_GetTxJabPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_JAB_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit collision packets.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit collision packets.
- */
-static inline uint16_t ENET_HAL_GetTxCollisionPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_COL_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit 64-byte packet statistic.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit 64-byte packet. 
- */
-static inline uint16_t ENET_HAL_GetTxByte64Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_P64_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit 65-byte to 127-byte packet statistic.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit 65-byte to 127-byte packet statistic. 
- */
-static inline uint16_t ENET_HAL_GetTxByte65to127Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_P65TO127_TXPKTS(baseAddr);
-}
-/*!
- * @brief Gets the transmit packets 128-byte to 255-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets 128 byte to 255-byte.
- */
-static inline uint16_t ENET_HAL_GetTxByte128to255Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_P128TO255_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packets 256-byte to 511-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets 256 byte to 511-byte.
- */
-static inline uint16_t ENET_HAL_GetTxByte256to511Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_P256TO511_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packets 512-byte to 1023-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets 512 byte to 1023-byte.
- */
-static inline uint16_t ENET_HAL_GetTxByte512to1023Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_P512TO1023_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packets 1024-byte to 2047-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets 1024 byte to 2047-byte.
- */
-static inline uint16_t ENET_HAL_GetTxByte1024to2047Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_P1024TO2047_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit packets greater than 2048-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit packets greater than 2048-bytes.
- */
-static inline uint16_t ENET_HAL_GetTxOverByte2048Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_P_GTE2048_TXPKTS(baseAddr);
-}
-
-/*!
- * @brief Gets the transmit octets.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmit Octets.
- */
-static inline uint32_t ENET_HAL_GetTxOctets(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_T_OCTETS_TXOCTS(baseAddr);
-}
-
-/*!
- * @brief Gets the Frames transmitted OK.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The Frames transmitted well.
- */
-static inline uint16_t ENET_HAL_GetTxFramesOk(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_FRAME_OK_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the Frames transmitted with single collision.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The frames transmitted with single collision.
- */
-static inline uint16_t ENET_HAL_GetTxFramesOneCollision(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_1COL_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the frames transmitted with multiple collision.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The frames transmitted with multiple collision.
- */
-static inline uint16_t ENET_HAL_GetTxFramesMultiCollision(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_MCOL_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the frames transmitted with carrier sense error.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The frames transmitted with carrier sense error.
- */
-static inline uint16_t ENET_HAL_GetTxFrameCarrSenseError(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_CSERR_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the frames transmitted after deferral delay.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The frames transmitted after deferral delay
- */
-static inline uint16_t ENET_HAL_GetTxFramesDelay(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_DEF_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the frames transmitted with late collision.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The frames transmitted with late collision.
- */
-static inline uint16_t ENET_HAL_GetTxFramesLateCollision(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_LCOL_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the frames transmitted with excessive collisions.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The frames transmitted with excessive collisions.
- */
-static inline uint16_t ENET_HAL_GetTxFramesExcessiveCollision(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_EXCOL_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the frames transmitted with the Tx FIFO underrun.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The Frames transmitted with the Tx FIFO underrun.
- */
-static inline uint16_t ENET_HAL_GetTxFramesMacError(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_MACERR_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the transmitted flow control Pause Frames.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The transmitted flow control Pause Frames. 
- */
-static inline uint16_t ENET_HAL_GetTxFramesPause(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_FDXFC_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the octet count for frames transmitted without error.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The octet count for frames transmitted without error. 
- */
-static inline uint32_t ENET_HAL_GetTxOctetFramesOk(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_T_OCTETS_OK_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packet count.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packet count.  
- */
-static inline uint16_t ENET_HAL_GetRxPackets(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_PACKETS_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive broadcast packet count.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive broadcast packet count.  
- */
-static inline uint16_t ENET_HAL_GetRxBroadCastPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_BC_PKT_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive multicast packet count.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive multicast packet count.  
- */
-static inline uint16_t ENET_HAL_GetRxMultiCastPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_MC_PKT_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets with CRC/Align error.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets with CRC/Align error.
- */
-static inline uint16_t ENET_HAL_GetRxCrcAlignErrorPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_CRC_ALIGN_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets less than 64-byte and good CRC.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets less than 64-byte and good CRC.  
- */
-static inline uint16_t ENET_HAL_GetRxUnderSizePacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_UNDERSIZE_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets greater than MAX_FL and good CRC.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets greater than MAX_FL and good CRC.  
- */
-static inline uint16_t ENET_HAL_GetRxOverSizePacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_OVERSIZE_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets less than 64-byte and bad CRC.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets less than 64-byte and bad CRC.  
- */
-static inline uint16_t ENET_HAL_GetRxFragPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_FRAG_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets greater than MAX_FL and bad CRC.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets greater than MAX_FL and bad CRC.  
- */
-static inline uint16_t ENET_HAL_GetRxJabPacket(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_JAB_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets with 64-byte.
- *
- * @param baseAddr baseAddr The ENET peripheral base address.
- * @return The receive packets with 64-byte.  
- */
-static inline uint16_t ENET_HAL_GetRxByte64Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_P64_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets with 65-byte to 127-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets with 65-byte to 127-byte.  
- */
-static inline uint16_t ENET_HAL_GetRxByte65to127Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_P65TO127_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets with 128-byte to 255-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets with 128-byte to 255-byte.  
- */
-static inline uint16_t ENET_HAL_GetRxByte128to255Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_P128TO255_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets with 256-byte to 511-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets with 256-byte to 511-byte.  
- */
-static inline uint16_t ENET_HAL_GetRxByte256to511Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_P256TO511_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets with 512-byte to 1023-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets with 512-byte to 1023-byte.  
- */
-static inline uint16_t ENET_HAL_GetRxByte512to1023Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_P512TO1023_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets with 1024-byte to 2047-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets with 1024-byte to 2047-byte.  
- */
-static inline uint16_t ENET_HAL_GetRxByte1024to2047Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_P1024TO2047_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive packets greater than 2048-byte.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive packets greater than 2048.  
- */
-static inline uint16_t ENET_HAL_GetRxOverByte2048Packet(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_P_GTE2048_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive octets.
- *
- * @param baseAddr The ENET peripheral base address.
- * @return The receive octets.
- */
-static inline uint32_t ENET_HAL_GetRxOctets(uint32_t baseAddr)
-{
-    return BR_ENET_RMON_R_OCTETS_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the receive Frames not counted correctly.
- *
- * If a frame with invalid or missing SFD character is detected and 
- * has been dropped.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @return The receive Frames not counted correctly.  
- */
-static inline uint16_t ENET_HAL_GetRxFramesDrop(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_R_DROP_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the Frames received OK.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @return The Frames received OK.  
- */
-static inline uint16_t ENET_HAL_GetRxFramesOk(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_R_FRAME_OK_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the Frames received with CRC error.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @return The Frames received with CRC error.  
- */
-static inline uint16_t ENET_HAL_GetRxFramesCrcError(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_R_CRC_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the Frames received with Alignment error.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @return The Frames received with Alignment error.  
- */
-static inline uint16_t ENET_HAL_GetRxFramesAlignError(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_R_ALIGN_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the FIFO overflow count.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @return The FIFO overflow count.  
- */
-static inline uint16_t ENET_HAL_GetRxFramesMacError(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_R_MACERR_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the received flow control Pause frames.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @return The received flow control Pause frames.  
- */
-static inline uint16_t ENET_HAL_GetRxFramesFlowControl(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_R_FDXFC_COUNT(baseAddr);
-}
-
-/*!
- * @brief Gets the octet count for Frames received without Error.
- * 
- * @param baseAddr The ENET peripheral base address.
- * @return The octet count for frames received without error.  
- */
-static inline uint32_t ENET_HAL_GetRxOtetsFramesOk(uint32_t baseAddr)
-{
-    return BR_ENET_IEEE_R_OCTETS_OK_COUNT(baseAddr);
+    ENET_WR_TCCR(base, channel, compareValue);   
+    ENET_SET_TCSR(base, channel, ENET_TCSR_TF_MASK);/* clear interrupt flag*/
+    ENET_WR_TGSR(base,(1U << channel));            /* clear channel flag*/
 }
 
 /* @} */
@@ -2326,6 +1130,7 @@ static inline uint32_t ENET_HAL_GetRxOtetsFramesOk(uint32_t baseAddr)
 #endif
 
 /*! @}*/
+#endif
 #endif /*!< __FSL_ENET_HAL_H__*/
 
 /*******************************************************************************

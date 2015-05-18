@@ -35,7 +35,7 @@
  ******************************************************************************/
 
 /* Table of base addresses for CAN instances. */
-const uint32_t g_flexcanBaseAddr[] = CAN_BASE_ADDRS;
+CAN_Type * const g_flexcanBase[] = CAN_BASE_PTRS;
 
 /* Tables to save CAN IRQ enum numbers defined in CMSIS header file. */
 const IRQn_Type g_flexcanRxWarningIrqId[] = CAN_Rx_Warning_IRQS;

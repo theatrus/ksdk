@@ -55,19 +55,20 @@
 typedef enum _lpuart_status
 {
     kStatus_LPUART_Success                  = 0x00U,
-    kStatus_LPUART_BaudRateCalculationError = 0x01U,
-    kStatus_LPUART_RxStandbyModeError       = 0x02U,
-    kStatus_LPUART_ClearStatusFlagError     = 0x03U,
-    kStatus_LPUART_TxNotDisabled            = 0x04U,
-    kStatus_LPUART_RxNotDisabled            = 0x05U,
-    kStatus_LPUART_TxBusy                   = 0x06U,
-    kStatus_LPUART_RxBusy                   = 0x07U,
-    kStatus_LPUART_NoTransmitInProgress     = 0x08U,
-    kStatus_LPUART_NoReceiveInProgress      = 0x09U,
-    kStatus_LPUART_Timeout                  = 0x0AU,
-    kStatus_LPUART_Initialized              = 0x0BU,
-    kStatus_LPUART_NoDataToDeal             = 0x0CU,
-    kStatus_LPUART_RxOverRun                = 0x0DU
+    kStatus_LPUART_Fail                     = 0x01U,
+    kStatus_LPUART_BaudRateCalculationError = 0x02U,
+    kStatus_LPUART_RxStandbyModeError       = 0x03U,
+    kStatus_LPUART_ClearStatusFlagError     = 0x04U,
+    kStatus_LPUART_TxNotDisabled            = 0x05U,
+    kStatus_LPUART_RxNotDisabled            = 0x06U,
+    kStatus_LPUART_TxBusy                   = 0x07U,
+    kStatus_LPUART_RxBusy                   = 0x08U,
+    kStatus_LPUART_NoTransmitInProgress     = 0x09U,
+    kStatus_LPUART_NoReceiveInProgress      = 0x0AU,
+    kStatus_LPUART_Timeout                  = 0x0BU,
+    kStatus_LPUART_Initialized              = 0x0CU,
+    kStatus_LPUART_NoDataToDeal             = 0x0DU,
+    kStatus_LPUART_RxOverRun                = 0x0EU
 } lpuart_status_t;
 
 /*! @brief LPUART number of stop bits*/
@@ -191,40 +192,40 @@ typedef struct LpuartIdleLineConfig {
  * This provides constants for the LPUART status flags for use in the UART functions.
  */
 typedef enum _lpuart_status_flag {
-    kLpuartTxDataRegEmpty         = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_TDRE,    /*!< Tx data register empty flag, sets when Tx buffer is empty */
-    kLpuartTxComplete             = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_TC,      /*!< Transmission complete flag, sets when transmission activity complete */
-    kLpuartRxDataRegFull          = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_RDRF,    /*!< Rx data register full flag, sets when the receive data buffer is full */
-    kLpuartIdleLineDetect         = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_IDLE,    /*!< Idle line detect flag, sets when idle line detected */
-    kLpuartRxOverrun              = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_OR,      /*!< Rxr Overrun, sets when new data is received before data is read from receive register */
-    kLpuartNoiseDetect            = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_NF,      /*!< Rxr takes 3 samples of each received bit.  If any of these samples differ, noise flag sets */
-    kLpuartFrameErr               = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_FE,      /*!< Frame error flag, sets if logic 0 was detected where stop bit expected */
-    kLpuartParityErr              = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_PF,      /*!< If parity enabled, sets upon parity error detection */
-    kLpuartLineBreakDetect        = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_LBKDE,   /*!< LIN break detect interrupt flag, sets when LIN break char detected and LIN circuit enabled */
-    kLpuartRxActiveEdgeDetect     = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_RXEDGIF, /*!< Rx pin active edge interrupt flag, sets when active edge detected */
-    kLpuartRxActive               = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_RAF,     /*!< Receiver Active Flag (RAF), sets at beginning of valid start bit */
-    kLpuartNoiseInCurrentWord     = LPUART_DATA_REG_ID << LPUART_SHIFT | BP_LPUART_DATA_NOISY,     /*!< NOISY bit, sets if noise detected in current data word */
-    kLpuartParityErrInCurrentWord = LPUART_DATA_REG_ID << LPUART_SHIFT | BP_LPUART_DATA_PARITYE,   /*!< PARITYE bit, sets if noise detected in current data word */
+    kLpuartTxDataRegEmpty         = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_TDRE_SHIFT,    /*!< Tx data register empty flag, sets when Tx buffer is empty */
+    kLpuartTxComplete             = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_TC_SHIFT,      /*!< Transmission complete flag, sets when transmission activity complete */
+    kLpuartRxDataRegFull          = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_RDRF_SHIFT,    /*!< Rx data register full flag, sets when the receive data buffer is full */
+    kLpuartIdleLineDetect         = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_IDLE_SHIFT,    /*!< Idle line detect flag, sets when idle line detected */
+    kLpuartRxOverrun              = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_OR_SHIFT,      /*!< Rx Overrun, sets when new data is received before data is read from receive register */
+    kLpuartNoiseDetect            = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_NF_SHIFT,      /*!< Rx takes 3 samples of each received bit.  If any of these samples differ, noise flag sets */
+    kLpuartFrameErr               = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_FE_SHIFT,      /*!< Frame error flag, sets if logic 0 was detected where stop bit expected */
+    kLpuartParityErr              = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_PF_SHIFT,      /*!< If parity enabled, sets upon parity error detection */
+    kLpuartLineBreakDetect        = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_LBKDE_SHIFT,   /*!< LIN break detect interrupt flag, sets when LIN break char detected and LIN circuit enabled */
+    kLpuartRxActiveEdgeDetect     = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_RXEDGIF_SHIFT, /*!< Rx pin active edge interrupt flag, sets when active edge detected */
+    kLpuartRxActive               = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_RAF_SHIFT,     /*!< Receiver Active Flag (RAF), sets at beginning of valid start bit */
+    kLpuartNoiseInCurrentWord     = LPUART_DATA_REG_ID << LPUART_SHIFT | LPUART_DATA_NOISY_SHIFT,     /*!< NOISY bit, sets if noise detected in current data word */
+    kLpuartParityErrInCurrentWord = LPUART_DATA_REG_ID << LPUART_SHIFT | LPUART_DATA_PARITYE_SHIFT,   /*!< PARITYE bit, sets if noise detected in current data word */
 #if FSL_FEATURE_LPUART_HAS_ADDRESS_MATCHING
-    kLpuartMatchAddrOne              = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_MA1F,    /*!< Address one match flag */
-    kLpuartMatchAddrTwo              = LPUART_STAT_REG_ID << LPUART_SHIFT | BP_LPUART_STAT_MA2F,    /*!< Address two match flag */
+    kLpuartMatchAddrOne              = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_MA1F_SHIFT,    /*!< Address one match flag */
+    kLpuartMatchAddrTwo              = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_MA2F_SHIFT,    /*!< Address two match flag */
 #endif
 } lpuart_status_flag_t;
 
 /*! @brief LPUART interrupt configuration structure, default settings are 0 (disabled)*/
 typedef enum _lpuart_interrupt {
-    kLpuartIntLinBreakDetect = LPUART_BAUD_REG_ID << LPUART_SHIFT | BP_LPUART_BAUD_LBKDIE,  /*!< LIN break detect. */
-    kLpuartIntRxActiveEdge   = LPUART_BAUD_REG_ID << LPUART_SHIFT | BP_LPUART_BAUD_RXEDGIE, /*!< RX Active Edge. */
-    kLpuartIntTxDataRegEmpty = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_TIE,     /*!< Transmit data register empty. */
-    kLpuartIntTxComplete     = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_TCIE,    /*!< Transmission complete. */
-    kLpuartIntRxDataRegFull  = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_RIE,     /*!< Receiver data register full. */
-    kLpuartIntIdleLine       = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_ILIE,    /*!< Idle line. */
-    kLpuartIntRxOverrun      = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_ORIE,    /*!< Receiver Overrun. */
-    kLpuartIntNoiseErrFlag   = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_NEIE,    /*!< Noise error flag. */
-    kLpuartIntFrameErrFlag   = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_FEIE,    /*!< Framing error flag. */
-    kLpuartIntParityErrFlag  = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_PEIE,    /*!< Parity error flag. */
+    kLpuartIntLinBreakDetect = LPUART_BAUD_REG_ID << LPUART_SHIFT | LPUART_BAUD_LBKDIE_SHIFT,  /*!< LIN break detect. */
+    kLpuartIntRxActiveEdge   = LPUART_BAUD_REG_ID << LPUART_SHIFT | LPUART_BAUD_RXEDGIE_SHIFT, /*!< RX Active Edge. */
+    kLpuartIntTxDataRegEmpty = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_TIE_SHIFT,     /*!< Transmit data register empty. */
+    kLpuartIntTxComplete     = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_TCIE_SHIFT,    /*!< Transmission complete. */
+    kLpuartIntRxDataRegFull  = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_RIE_SHIFT,     /*!< Receiver data register full. */
+    kLpuartIntIdleLine       = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_ILIE_SHIFT,    /*!< Idle line. */
+    kLpuartIntRxOverrun      = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_ORIE_SHIFT,    /*!< Receiver Overrun. */
+    kLpuartIntNoiseErrFlag   = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_NEIE_SHIFT,    /*!< Noise error flag. */
+    kLpuartIntFrameErrFlag   = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_FEIE_SHIFT,    /*!< Framing error flag. */
+    kLpuartIntParityErrFlag  = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_PEIE_SHIFT,    /*!< Parity error flag. */
 #if FSL_FEATURE_LPUART_HAS_ADDRESS_MATCHING
-    kLpuartIntMatchAddrOne   = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_MA1IE,   /*!< Match address one flag. */
-    kLpuartIntMatchAddrTwo   = LPUART_CTRL_REG_ID << LPUART_SHIFT | BP_LPUART_CTRL_MA2IE,   /*!< Match address two flag. */
+    kLpuartIntMatchAddrOne   = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_MA1IE_SHIFT,   /*!< Match address one flag. */
+    kLpuartIntMatchAddrTwo   = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_MA2IE_SHIFT,   /*!< Match address two flag. */
 #endif
 } lpuart_interrupt_t;
 
@@ -245,52 +246,52 @@ extern "C" {
 /*!
  * @brief Initializes the LPUART controller to known state.
  *
- * @param baseAddr LPUART base address.
+ * @param base LPUART base pointer.
  */
-void LPUART_HAL_Init(uint32_t baseAddr);
+void LPUART_HAL_Init(LPUART_Type * base);
 
 /*!
  * @brief Enable/Disable the LPUART transmitter.
  *
- * @param baseAddr LPUART base address.
+ * @param base LPUART base pointer.
  * @param enable Enable(true) or disable(false) transmitter.
  */
-static inline void LPUART_HAL_SetTransmitterCmd(uint32_t baseAddr, bool enable)
+static inline void LPUART_HAL_SetTransmitterCmd(LPUART_Type * base, bool enable)
 {
-    BW_LPUART_CTRL_TE(baseAddr, enable);
+    LPUART_BWR_CTRL_TE(base, enable);
 }
 
 /*!
  * @brief Gets the LPUART transmitter enabled/disabled configuration.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @return State of LPUART transmitter enable(true)/disable(false)
  */
-static inline bool LPUART_HAL_GetTransmitterCmd(uint32_t baseAddr)
+static inline bool LPUART_HAL_GetTransmitterCmd(LPUART_Type * base)
 {
-    return BR_LPUART_CTRL_TE(baseAddr);
+    return LPUART_BRD_CTRL_TE(base);
 }
 
 /*!
  * @brief Enable/Disable the LPUART receiver.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @param enable Enable(true) or disable(false) receiver.
  */
-static inline void LPUART_HAL_SetReceiverCmd(uint32_t baseAddr, bool enable)
+static inline void LPUART_HAL_SetReceiverCmd(LPUART_Type * base, bool enable)
 {
-    BW_LPUART_CTRL_RE(baseAddr, enable);
+    LPUART_BWR_CTRL_RE(base, enable);
 }
 
 /*!
  * @brief Gets the LPUART receiver enabled/disabled configuration.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @return State of LPUART receiver enable(true)/disable(false)
  */
-static inline bool LPUART_HAL_GetReceiverCmd(uint32_t baseAddr)
+static inline bool LPUART_HAL_GetReceiverCmd(LPUART_Type * base)
 {
-    return BR_LPUART_CTRL_RE(baseAddr);
+    return LPUART_BRD_CTRL_RE(base);
 }
 
 /*!
@@ -300,25 +301,25 @@ static inline bool LPUART_HAL_GetReceiverCmd(uint32_t baseAddr)
  *  before calling this function.
  *  Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
- * @param baseAddr LPUART base address.
+ * @param base LPUART base pointer.
  * @param sourceClockInHz LPUART source input clock in Hz.
  * @param desiredBaudRate LPUART desired baud rate.
  * @return  An error code or kStatus_Success
  */
-lpuart_status_t LPUART_HAL_SetBaudRate(uint32_t baseAddr,
+lpuart_status_t LPUART_HAL_SetBaudRate(LPUART_Type * base,
                                        uint32_t sourceClockInHz,
                                        uint32_t desiredBaudRate);
 
 /*!
  * @brief Sets the LPUART baud rate modulo divisor.
  *
- * @param baseAddr LPUART base address.
+ * @param base LPUART base pointer.
  * @param baudRateDivisor The baud rate modulo division "SBR"
  */
-static inline void LPUART_HAL_SetBaudRateDivisor(uint32_t baseAddr, uint32_t baudRateDivisor)
+static inline void LPUART_HAL_SetBaudRateDivisor(LPUART_Type * base, uint32_t baudRateDivisor)
 {
     assert ((baudRateDivisor < 0x1FFF) && (baudRateDivisor > 1));
-    BW_LPUART_BAUD_SBR(baseAddr, baudRateDivisor);
+    LPUART_BWR_BAUD_SBR(base, baudRateDivisor);
 }
 
 #if FSL_FEATURE_LPUART_HAS_BAUD_RATE_OVER_SAMPLING_SUPPORT
@@ -331,13 +332,13 @@ static inline void LPUART_HAL_SetBaudRateDivisor(uint32_t baseAddr, uint32_t bau
  *        IDisable the transmitter/receiver before calling
  *        this function.
  *
- * @param baseAddr LPUART base address.
+ * @param base LPUART base pointer.
  * @param overSamplingRatio The oversampling ratio "OSR"
  */
-static inline void LPUART_HAL_SetOversamplingRatio(uint32_t baseAddr, uint32_t overSamplingRatio)
+static inline void LPUART_HAL_SetOversamplingRatio(LPUART_Type * base, uint32_t overSamplingRatio)
 {
     assert(overSamplingRatio < 0x1F);
-    BW_LPUART_BAUD_OSR(baseAddr, overSamplingRatio);
+    LPUART_BWR_BAUD_OSR(base, overSamplingRatio);
 }
 #endif
 
@@ -349,13 +350,13 @@ static inline void LPUART_HAL_SetOversamplingRatio(uint32_t baseAddr, uint32_t o
  *        This must be set when the oversampling ratio is between 4x and 7x.
  *        This function should only be called when the receiver is disabled.
  *
- * @param baseAddr LPUART base address.
+ * @param base LPUART base pointer.
  * @param enable   Enable (1) or Disable (0) Both Edge Sampling
  * @return An error code or kStatus_Success
  */
-static inline void LPUART_HAL_SetBothEdgeSamplingCmd(uint32_t baseAddr, bool enable)
+static inline void LPUART_HAL_SetBothEdgeSamplingCmd(LPUART_Type * base, bool enable)
 {
-    BW_LPUART_BAUD_BOTHEDGE(baseAddr, enable);
+    LPUART_BWR_BAUD_BOTHEDGE(base, enable);
 }
 #endif
 
@@ -366,10 +367,10 @@ static inline void LPUART_HAL_SetBothEdgeSamplingCmd(uint32_t baseAddr, bool ena
  *  before calling this function.
  *  Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
- * @param baseAddr LPUART base address.
+ * @param base LPUART base pointer.
  * @param bitCountPerChar  Number of bits per char (8, 9, or 10, depending on the LPUART instance)
  */
-void LPUART_HAL_SetBitCountPerChar(uint32_t baseAddr, lpuart_bit_count_per_char_t bitCountPerChar);
+void LPUART_HAL_SetBitCountPerChar(LPUART_Type * base, lpuart_bit_count_per_char_t bitCountPerChar);
 
 /*!
  * @brief Configures parity mode in the LPUART controller.
@@ -378,10 +379,10 @@ void LPUART_HAL_SetBitCountPerChar(uint32_t baseAddr, lpuart_bit_count_per_char_
  *  before calling this function.
  *  Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
- * @param baseAddr LPUART base address.
+ * @param base LPUART base pointer.
  * @param parityModeType  Parity mode (enabled, disable, odd, even - see parity_mode_t struct)
  */
-void LPUART_HAL_SetParityMode(uint32_t baseAddr, lpuart_parity_mode_t parityModeType);
+void LPUART_HAL_SetParityMode(LPUART_Type * base, lpuart_parity_mode_t parityModeType);
 
 /*!
  * @brief Configures the number of stop bits in the LPUART controller.
@@ -389,39 +390,13 @@ void LPUART_HAL_SetParityMode(uint32_t baseAddr, lpuart_parity_mode_t parityMode
  *  before calling this function.
  *  Generally, this may be applied to all LPUARTs to ensure safe operation.
  *
- * @param baseAddr LPUART base address.
+ * @param base LPUART base pointer.
  * @param stopBitCount Number of stop bits (1 or 2 - see lpuart_stop_bit_count_t struct)
  * @return  An error code (an unsupported setting in some LPUARTs) or kStatus_Success
  */
-static inline void LPUART_HAL_SetStopBitCount(uint32_t baseAddr, lpuart_stop_bit_count_t stopBitCount)
+static inline void LPUART_HAL_SetStopBitCount(LPUART_Type * base, lpuart_stop_bit_count_t stopBitCount)
 {
-    BW_LPUART_BAUD_SBNS(baseAddr, stopBitCount);
-}
-
-/*!
- * @brief Configures the transmit and receive inversion control in the LPUART controller.
- *
- * This function should only be called when the LPUART is between transmit and receive packets.
- *
- * @param baseAddr LPUART base address.
- * @param enable Enable (1) or disable (0) transmit inversion
- */
-static inline void LPUART_HAL_SetTxInversionCmd(uint32_t baseAddr, bool enable)
-{
-    BW_LPUART_CTRL_TXINV(baseAddr, enable);
-}
-
-/*!
- * @brief Configures the transmit and receive inversion control in the LPUART controller.
- *
- * This function should only be called when the LPUART is between transmit and receive packets.
- *
- * @param baseAddr LPUART base address.
- * @param enable Enable (1) or disable (0) receive inversion
- */
-static inline void LPUART_HAL_SetRxInversionCmd(uint32_t baseAddr, bool enable)
-{
-    BW_LPUART_STAT_RXINV(baseAddr, enable);
+    LPUART_BWR_BAUD_SBNS(base, stopBitCount);
 }
 
 /*!
@@ -429,9 +404,9 @@ static inline void LPUART_HAL_SetRxInversionCmd(uint32_t baseAddr, bool enable)
  *
  * @return  LPUART tx/rx data register address.
  */
-static inline uint32_t LPUART_HAL_GetDataRegAddr(uint32_t baseAddr)
+static inline uint32_t LPUART_HAL_GetDataRegAddr(LPUART_Type * base)
 {
-    return (uint32_t)HW_LPUART_DATA_ADDR(baseAddr);
+    return (uint32_t)(&LPUART_DATA_REG(base));
 }
 
 /*@}*/
@@ -444,108 +419,64 @@ static inline uint32_t LPUART_HAL_GetDataRegAddr(uint32_t baseAddr)
 /*!
  * @brief Configures the LPUART module interrupts to enable/disable various interrupt sources.
  *
- * @param   baseAddr LPUART module base address.
+ * @param   base LPUART module base pointer.
  * @param   interrupt LPUART interrupt configuration data.
  * @param   enable   true: enable, false: disable.
  */
-void LPUART_HAL_SetIntMode(uint32_t baseAddr, lpuart_interrupt_t interrupt, bool enable);
+void LPUART_HAL_SetIntMode(LPUART_Type * base, lpuart_interrupt_t interrupt, bool enable);
 
 /*!
  * @brief Returns whether the LPUART module interrupts is enabled/disabled.
  *
- * @param   baseAddr LPUART module base address.
+ * @param   base LPUART module base pointer.
  * @param   interrupt LPUART interrupt configuration data.
  * @return  true: enable, false: disable.
  */
-bool LPUART_HAL_GetIntMode(uint32_t baseAddr, lpuart_interrupt_t interrupt);
-
-/*!
- * @brief Enable/Disable the transmission_complete_interrupt.
- *
- * @param baseAddr LPUART base address
- * @param enable   true: enable, false: disable.
- */
-static inline void LPUART_HAL_SetTxDataRegEmptyIntCmd(uint32_t baseAddr, bool enable)
-{
-    BW_LPUART_CTRL_TIE(baseAddr, enable);
-}
-
-/*!
- * @brief Gets the configuration of the transmission_data_register_empty_interrupt enable setting.
- *
- * @param baseAddr LPUART base address
- * @return  Bit setting of the interrupt enable bit
- */
-static inline bool LPUART_HAL_GetTxDataRegEmptyIntCmd(uint32_t baseAddr)
-{
-    return BR_LPUART_CTRL_TIE(baseAddr);
-}
-
-/*!
- * @brief Enables the rx_data_register_full_interrupt.
- *
- * @param baseAddr LPUART base address
- * @param enable   true: enable, false: disable.
- */
-static inline void LPUART_HAL_SetRxDataRegFullIntCmd(uint32_t baseAddr, bool enable)
-{
-    BW_LPUART_CTRL_RIE(baseAddr, enable);
-}
-
-/*!
- * @brief Gets the configuration of the rx_data_register_full_interrupt enable.
- *
- * @param baseAddr LPUART base address
- * @return Bit setting of the interrupt enable bit
- */
-static inline bool LPUART_HAL_GetRxDataRegFullIntCmd(uint32_t baseAddr)
-{
-    return BR_LPUART_CTRL_RIE(baseAddr);
-}
+bool LPUART_HAL_GetIntMode(LPUART_Type * base, lpuart_interrupt_t interrupt);
 
 #if FSL_FEATURE_LPUART_HAS_DMA_ENABLE
 /*!
  * @brief  LPUART configures DMA requests for Transmitter and Receiver.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @param enable Transmit DMA request configuration (enable:1 /disable: 0)
  */
-static inline void LPUART_HAL_SetTxDmaCmd(uint32_t baseAddr, bool enable)
+static inline void LPUART_HAL_SetTxDmaCmd(LPUART_Type * base, bool enable)
 {
-    BW_LPUART_BAUD_TDMAE(baseAddr, enable);
+    LPUART_BWR_BAUD_TDMAE(base, enable);
 }
 
 /*!
  * @brief  LPUART configures DMA requests for Transmitter and Receiver.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @param enable Receive DMA request configuration (enable: 1/disable: 0)
  */
-static inline void LPUART_HAL_SetRxDmaCmd(uint32_t baseAddr, bool enable)
+static inline void LPUART_HAL_SetRxDmaCmd(LPUART_Type * base, bool enable)
 {
-    BW_LPUART_BAUD_RDMAE(baseAddr, enable);
+    LPUART_BWR_BAUD_RDMAE(base, enable);
 }
 
 /*!
  * @brief  Gets the LPUART Transmit DMA request configuration.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @return Transmit DMA request configuration (enable: 1/disable: 0)
  */
-static inline bool LPUART_HAL_IsTxDmaEnabled(uint32_t baseAddr)
+static inline bool LPUART_HAL_IsTxDmaEnabled(LPUART_Type * base)
 {
-    return BR_LPUART_BAUD_TDMAE(baseAddr);
+    return LPUART_BRD_BAUD_TDMAE(base);
 }
 
 /*!
  * @brief  Gets the LPUART receive DMA request configuration.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @return Receives the DMA request configuration (enable: 1/disable: 0).
  */
-static inline bool LPUART_HAL_IsRxDmaEnabled(uint32_t baseAddr)
+static inline bool LPUART_HAL_IsRxDmaEnabled(LPUART_Type * base)
 {
-    return BR_LPUART_BAUD_RDMAE(baseAddr);
+    return LPUART_BRD_BAUD_RDMAE(base);
 }
 
 #endif
@@ -560,505 +491,80 @@ static inline bool LPUART_HAL_IsRxDmaEnabled(uint32_t baseAddr)
 /*!
  * @brief Sends the LPUART 8-bit character.
  *
- * @param baseAddr LPUART Instance
+ * @param base LPUART Instance
  * @param data     data to send (8-bit)
  */
-static inline void LPUART_HAL_Putchar(uint32_t baseAddr, uint8_t data)
+static inline void LPUART_HAL_Putchar(LPUART_Type * base, uint8_t data)
 {
-    HW_LPUART_DATA_WR(baseAddr, data);
+    LPUART_WR_DATA(base, data);
 }
 
 /*!
  * @brief Sends the LPUART 9-bit character.
  *
- * @param baseAddr LPUART Instance
+ * @param base LPUART Instance
  * @param data     data to send (9-bit)
  */
-void LPUART_HAL_Putchar9(uint32_t baseAddr, uint16_t data);
+void LPUART_HAL_Putchar9(LPUART_Type * base, uint16_t data);
 
 /*!
  * @brief Sends the LPUART 10-bit character (Note: Feature available on select LPUART instances).
  *
- * @param baseAddr LPUART Instance
+ * @param base LPUART Instance
  * @param data   data to send (10-bit)
  * @return An error code or kStatus_Success
  */
-lpuart_status_t LPUART_HAL_Putchar10(uint32_t baseAddr, uint16_t data);
+lpuart_status_t LPUART_HAL_Putchar10(LPUART_Type * base, uint16_t data);
 
 /*!
  * @brief Gets the LPUART 8-bit character.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @param readData Data read from receive (8-bit)
  */
-static inline void  LPUART_HAL_Getchar(uint32_t baseAddr, uint8_t *readData)
+static inline void  LPUART_HAL_Getchar(LPUART_Type * base, uint8_t *readData)
 {
-    *readData = (uint8_t)HW_LPUART_DATA_RD(baseAddr);
+    *readData = (uint8_t)LPUART_RD_DATA(base);
 }
 
 /*!
  * @brief Gets the LPUART 9-bit character.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @param readData Data read from receive (9-bit)
  */
-void LPUART_HAL_Getchar9(uint32_t baseAddr, uint16_t *readData);
+void LPUART_HAL_Getchar9(LPUART_Type * base, uint16_t *readData);
 
 /*!
  * @brief Gets the LPUART 10-bit character.
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @param readData Data read from receive (10-bit)
  */
-void LPUART_HAL_Getchar10(uint32_t baseAddr, uint16_t *readData);
+void LPUART_HAL_Getchar10(LPUART_Type * base, uint16_t *readData);
 
 /*!
  * @brief Send out multiple bytes of data using polling method.
  *
  * This function only supports 8-bit transaction.
  *
- * @param   baseAddr LPUART module base address.
+ * @param   base LPUART module base pointer.
  * @param   txBuff The buffer pointer which saves the data to be sent.
  * @param   txSize Size of data to be sent in unit of byte.
  */
-void LPUART_HAL_SendDataPolling(uint32_t baseAddr, const uint8_t *txBuff, uint32_t txSize);
+void LPUART_HAL_SendDataPolling(LPUART_Type * base, const uint8_t *txBuff, uint32_t txSize);
 
 /*!
  * @brief Receive multiple bytes of data using polling method.
  *
  * This function only supports 8-bit transaction.
  *
- * @param   baseAddr LPUART module base address.
+ * @param   base LPUART module base pointer.
  * @param   rxBuff The buffer pointer which saves the data to be received.
  * @param   rxSize Size of data need to be received in unit of byte.
  * @return  Whether the transaction is success or rx overrun.
  */
-lpuart_status_t LPUART_HAL_ReceiveDataPolling(uint32_t baseAddr, uint8_t *rxBuff, uint32_t rxSize);
-
-/*!
- * @brief Configures the number of idle characters that must be received before the IDLE flag is set.
- *
- * @param baseAddr LPUART base address
- * @param idleConfig Idle characters configuration
- */
-static inline void LPUART_HAL_SetIdleChar(uint32_t baseAddr, lpuart_idle_char_t idleConfig)
-{
-    BW_LPUART_CTRL_IDLECFG(baseAddr, idleConfig);
-}
-
-/*!
- * @brief Gets the configuration of the number of idle characters that must be received
- * before the IDLE flag is set.
- *
- * @param baseAddr LPUART base address
- * @return  idle characters configuration
- */
-static inline lpuart_idle_char_t LPUART_HAL_GetIdleChar(uint32_t baseAddr)
-{
-    return (lpuart_idle_char_t)BR_LPUART_CTRL_IDLECFG(baseAddr);
-}
-
-/*!
- * @brief  Checks whether the current data word was received with noise.
- *
- * @param baseAddr LPUART base address.
- * @return The status of the NOISY bit in the LPUART extended data register
- */
-static inline bool LPUART_HAL_IsCurrentDataWithNoise(uint32_t baseAddr)
-{
-    return BR_LPUART_DATA_NOISY(baseAddr);
-}
-
-/*!
- * @brief Checks whether the current data word was received with frame error.
- *
- * @param baseAddr LPUART base address
- * @return The status of the FRETSC bit in the LPUART extended data register
- */
-static inline bool LPUART_HAL_IsCurrentDataWithFrameError(uint32_t baseAddr)
-{
-    return BR_LPUART_DATA_FRETSC(baseAddr);
-}
-
-/*!
- * @brief Set this bit to indicate a break or idle character is to be transmitted
- *        instead of the contents in DATA[T9:T0].
- *
- * @param baseAddr LPUART base address
- * @param specialChar T9 is used to indicate a break character when 0 an idle
- * character when 1, the contents of DATA[T8:T0] should be zero.
- */
-static inline void LPUART_HAL_SetTxSpecialChar(uint32_t baseAddr, uint8_t specialChar)
-{
-    BW_LPUART_DATA_FRETSC(baseAddr, specialChar);
-}
-
-/*!
- * @brief Checks whether the current data word was received with parity error.
- *
- * @param baseAddr LPUART base address
- * @return The status of the PARITYE bit in the LPUART extended data register
- */
-static inline bool LPUART_HAL_IsCurrentDataWithParityError(uint32_t baseAddr)
-{
-    return BR_LPUART_DATA_PARITYE(baseAddr);
-}
-
-/*!
- * @brief Checks whether the receive buffer is empty.
- *
- * @param baseAddr LPUART base address
- * @return TRUE if the receive-buffer is empty, else FALSE.
- */
-static inline bool LPUART_HAL_IsReceiveBufferEmpty(uint32_t baseAddr)
-{
-    return BR_LPUART_DATA_RXEMPT(baseAddr);
-}
-
-/*!
- * @brief Checks whether the previous BUS state was idle before this byte is received.
- *
- * @param baseAddr LPUART base address
- * @return TRUE if the previous BUS state was IDLE, else FALSE.
- */
-static inline bool LPUART_HAL_WasPreviousReceiverStateIdle(uint32_t baseAddr)
-{
-    return BR_LPUART_DATA_IDLINE(baseAddr);
-}
-
-/*@}*/
-
-/*!
- * @name LPUART Special Feature Configurations
- * @{
- */
-
-/*!
- * @brief Configures the LPUART operation in wait mode (operates or stops operations in wait mode).
- *
- * In some LPUART instances, the user should disable the transmitter/receiver
- * before calling this function.
- * Generally, this may be applied to all LPUARTs to ensure safe operation.
- *
- * @param baseAddr LPUART base address
- * @param mode     LPUART wait mode operation - operates or stops to operate in wait mode.
- */
-static inline void  LPUART_HAL_SetWaitModeOperation(uint32_t baseAddr, lpuart_operation_config_t mode)
-{
-    /* In CPU wait mode: 0 - lpuart clocks continue to run; 1 - lpuart clocks freeze */
-    BW_LPUART_CTRL_DOZEEN(baseAddr, mode);
-}
-
-/*!
- * @brief Gets the LPUART operation in wait mode (operates or stops operations in wait mode).
- *
- * @param baseAddr LPUART base address
- * @return LPUART wait mode operation configuration
- *         - kLpuartOperates or KLpuartStops in wait mode
- */
-static inline lpuart_operation_config_t LPUART_HAL_GetWaitModeOperation(uint32_t baseAddr)
-{
-    /* In CPU wait mode: 0 - lpuart clocks continue to run; 1 - lpuart clocks freeze  */
-    return (lpuart_operation_config_t)BR_LPUART_CTRL_DOZEEN(baseAddr);
-}
-
-/*!
- * @brief Configures the LPUART loopback operation (enable/disable loopback operation)
- *
- * In some LPUART instances, the user should disable the transmitter/receiver
- * before calling this function.
- * Generally, this may be applied to all LPUARTs to ensure safe operation.
- *
- * @param baseAddr LPUART base address
- * @param enable   LPUART loopback mode - disabled (0) or enabled (1)
- */
-void LPUART_HAL_SetLoopbackCmd(uint32_t baseAddr, bool enable);
-
-/*!
- * @brief Configures the LPUART single-wire operation (enable/disable single-wire mode)
- *
- * In some LPUART instances, the user should disable the transmitter/receiver
- * before calling this function.
- * Generally, this may be applied to all LPUARTs to ensure safe operation.
- *
- * @param baseAddr LPUART base address
- * @param enable   LPUART loopback mode - disabled (0) or enabled (1)
- */
-void LPUART_HAL_SetSingleWireCmd(uint32_t baseAddr, bool enable);
-
-/*!
- * @brief Configures the LPUART transmit direction while in single-wire mode.
- *
- * @param baseAddr LPUART base address
- * @param direction LPUART single-wire transmit direction - input or output
- */
-static inline void LPUART_HAL_SetTxdirInSinglewireMode(uint32_t baseAddr,
-                                                 lpuart_singlewire_txdir_t direction)
-{
-    BW_LPUART_CTRL_TXDIR(baseAddr, direction);
-}
-
-/*!
- * @brief  Places the LPUART receiver in standby mode.
- *
- * @param baseAddr LPUART base address
- * @return Error code or kStatus_Success
- */
-lpuart_status_t LPUART_HAL_SetReceiverInStandbyMode(uint32_t baseAddr);
-
-/*!
- * @brief  Places the LPUART receiver in a normal mode (disable standby mode operation).
- *
- * @param baseAddr LPUART base address
- */
-static inline void LPUART_HAL_PutReceiverInNormalMode(uint32_t baseAddr)
-{
-    BW_LPUART_CTRL_RWU(baseAddr, 0);
-}
-
-/*!
- * @brief  Checks whether the LPUART receiver is in a standby mode.
- *
- * @param baseAddr LPUART base address
- * @return LPUART in normal more (0) or standby (1)
- */
-static inline bool LPUART_HAL_IsReceiverInStandby(uint32_t baseAddr)
-{
-    return BR_LPUART_CTRL_RWU(baseAddr);
-}
-
-/*!
- * @brief  LPUART receiver wakeup method (idle line or addr-mark) from standby mode
- *
- * @param baseAddr LPUART base address
- * @param method   LPUART wakeup method: 0 - Idle-line wake (default), 1 - addr-mark wake
- */
-static inline void LPUART_HAL_SetReceiverWakeupMode(uint32_t baseAddr,
-                                                    lpuart_wakeup_method_t method)
-{
-    BW_LPUART_CTRL_WAKE(baseAddr, method);
-}
-
-/*!
- * @brief  Gets the LPUART receiver wakeup method (idle line or addr-mark) from standby mode.
- *
- * @param baseAddr LPUART base address
- * @return  LPUART wakeup method: kLpuartIdleLineWake: 0 - Idle-line wake (default),
- *          kLpuartAddrMarkWake: 1 - addr-mark wake
- */
-static inline lpuart_wakeup_method_t LPUART_HAL_GetReceiverWakeupMode(uint32_t baseAddr)
-{
-    return (lpuart_wakeup_method_t)BR_LPUART_CTRL_WAKE(baseAddr);
-}
-
-/*!
- * @brief  LPUART idle-line detect operation configuration (idle line bit-count start and wake
- *         up affect on IDLE status bit).
- *
- * In some LPUART instances, the user should disable the transmitter/receiver
- * before calling this function.
- * Generally, this may be applied to all LPUARTs to ensure safe operation.
- *
- * @param baseAddr LPUART base address
- * @param config   LPUART configuration data for idle line detect operation
- */
-void LPUART_HAL_SetIdleLineDetect(uint32_t baseAddr,
-                                  const lpuart_idle_line_config_t *config);
-
-/*!
- * @brief  LPUART break character transmit length configuration
- *
- * In some LPUART instances, the user should disable the transmitter before calling
- * this function. Generally, this may be applied to all LPUARTs to ensure safe operation.
- *
- * @param baseAddr LPUART base address
- * @param length   LPUART break character length setting: 0 - minimum 10-bit times (default),
- *                   1 - minimum 13-bit times
- */
-static inline void LPUART_HAL_SetBreakCharTransmitLength(uint32_t baseAddr,
-                                             lpuart_break_char_length_t length)
-{
-    BW_LPUART_STAT_BRK13(baseAddr, length);
-}
-
-/*!
- * @brief  LPUART break character detect length configuration
- *
- * @param baseAddr LPUART base address
- * @param length  LPUART break character length setting: 0 - minimum 10-bit times (default),
- *                  1 - minimum 13-bit times
- */
-static inline void LPUART_HAL_SetBreakCharDetectLength(uint32_t baseAddr,
-                                           lpuart_break_char_length_t length)
-{
-    BW_LPUART_STAT_LBKDE(baseAddr, length);
-}
-
-/*!
- * @brief  LPUART transmit sends break character configuration.
- *
- * @param baseAddr LPUART base address
- * @param enable LPUART normal/queue break char - disabled (normal mode, default: 0) or
- *                 enabled (queue break char: 1)
- */
-static inline void LPUART_HAL_QueueBreakCharToSend(uint32_t baseAddr, bool enable)
-{
-    BW_LPUART_CTRL_SBK(baseAddr, enable);
-}
-
-/*!
- * @brief LPUART configures match address mode control
- *
- * @param baseAddr LPUART base address
- * @param config MATCFG: Configures the match addressing mode used.
- */
-static inline void LPUART_HAL_SetMatchAddressMode(uint32_t baseAddr, lpuart_match_config_t config)
-{
-    BW_LPUART_BAUD_MATCFG(baseAddr, config);
-}
-
-/*!
- * @brief Configures address match register 1
- *
- * The MAEN bit must be cleared before configuring MA value, so the enable/disable
- * and set value must be included inside one function.
- *
- * @param baseAddr LPUART base address
- * @param enable Match address model enable (true)/disable (false)
- * @param value Match address value to program into match address register 1
- */
-void LPUART_HAL_SetMatchAddressReg1(uint32_t baseAddr, bool enable, uint8_t value);
-
-/*!
- * @brief Configures address match register 2
- *
- * The MAEN bit must be cleared before configuring MA value, so the enable/disable
- * and set value must be included inside one function.
- *
- * @param baseAddr LPUART base address
- * @param enable Match address model enable (true)/disable (false)
- * @param value Match address value to program into match address register 2
- */
-void LPUART_HAL_SetMatchAddressReg2(uint32_t baseAddr, bool enable, uint8_t value);
-
-/*!
- * @brief LPUART sends the MSB first configuration
- *
- * In some LPUART instances, the user should disable the transmitter/receiver
- * before calling this function.
- * Generally, this may be applied to all LPUARTs to ensure safe operation.
- *
- * @param baseAddr LPUART base address
- * @param enable  false - LSB (default, disabled), true - MSB (enabled)
- */
-static inline void LPUART_HAL_SetSendMsbFirstCmd(uint32_t baseAddr, bool enable)
-{
-    BW_LPUART_STAT_MSBF(baseAddr, enable);
-}
-
-/*!
- * @brief  LPUART enable/disable re-sync of received data configuration
- *
- * @param baseAddr LPUART base address
- * @param enable  re-sync of received data word configuration:
- *                true - re-sync of received data word (default)
- *                false - disable the re-sync
- */
-static inline void LPUART_HAL_SetReceiveResyncCmd(uint32_t baseAddr, bool enable)
-{
-    /* When disabled, the resynchronization of the received data word when a data
-     * one followed by data zero transition is detected. This bit should only be
-     * changed when the receiver is disabled. */
-    BW_LPUART_BAUD_RESYNCDIS(baseAddr, enable);
-}
-
-#if FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT
-/*!
- * @brief  Transmits the CTS source configuration.
- *
- * @param baseAddr LPUART base address
- * @param source   LPUART CTS source
- */
-static inline void LPUART_HAL_SetCtsSource(uint32_t baseAddr,
-                                           lpuart_cts_source_t source)
-{
-    BW_LPUART_MODIR_TXCTSSRC(baseAddr, source);
-}
-
-/*!
- * @brief  Transmits the CTS configuration.
- *
- * Note: configures if the CTS state is checked at the start of each character
- * or only when the transmitter is idle.
- *
- * @param baseAddr LPUART base address
- * @param mode     LPUART CTS configuration
- */
-static inline void LPUART_HAL_SetCtsMode(uint32_t baseAddr, lpuart_cts_config_t mode)
-{
-    BW_LPUART_MODIR_TXCTSC(baseAddr, mode);
-}
-
-/*!
- * @brief Enable/Disable the transmitter clear-to-send.
- *
- * @param baseAddr LPUART base address
- * @param enable  disable(0)/enable(1) transmitter CTS.
- */
-static inline void LPUART_HAL_SetTxCtsCmd(uint32_t baseAddr, bool enable)
-{
-    BW_LPUART_MODIR_TXCTSE(baseAddr, enable);
-}
-
-/*!
- * @brief  Enable/Disable the receiver request-to-send.
- *
- * Note: do not enable both Receiver RTS (RXRTSE) and Transmit RTS (TXRTSE).
- *
- * @param baseAddr LPUART base address
- * @param enable  disable(0)/enable(1) receiver RTS.
- */
-static inline void LPUART_HAL_SetRxRtsCmd(uint32_t baseAddr, bool enable)
-{
-    BW_LPUART_MODIR_RXRTSE(baseAddr, enable);
-}
-
-/*!
- * @brief  Enable/Disable the transmitter request-to-send.
- * Note: do not enable both Receiver RTS (RXRTSE) and Transmit RTS (TXRTSE).
- *
- * @param baseAddr LPUART base address
- * @param enable  disable(0)/enable(1) transmitter RTS.
- */
-static inline void LPUART_HAL_SetTxRtsCmd(uint32_t baseAddr, bool enable)
-{
-    BW_LPUART_MODIR_TXRTSE(baseAddr, enable);
-}
-
-/*!
- * @brief Configures the transmitter RTS polarity.
- *
- * @param baseAddr LPUART base address
- * @param polarity Settings to choose RTS polarity (0=active low, 1=active high)
- */
-static inline void LPUART_HAL_SetTxRtsPolarityMode(uint32_t baseAddr, bool polarity)
-{
-    BW_LPUART_MODIR_TXRTSPOL(baseAddr, polarity);
-}
-
-#endif  /* FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT */
-
-#if FSL_FEATURE_LPUART_HAS_IR_SUPPORT
-/*!
- * @brief  Configures the LPUART infrared operation.
- *
- * @param baseAddr LPUART base address
- * @param enable    Enable (1) or disable (0) the infrared operation
- * @param pulseWidth The transmit narrow pulse width of type lpuart_ir_tx_pulsewidth_t
- */
-void LPUART_HAL_SetInfrared(uint32_t baseAddr, bool enable,
-                            lpuart_ir_tx_pulsewidth_t pulseWidth);
-#endif  /* FSL_FEATURE_LPUART_HAS_IR_SUPPORT */
+lpuart_status_t LPUART_HAL_ReceiveDataPolling(LPUART_Type * base, uint8_t *rxBuff, uint32_t rxSize);
 
 /*@}*/
 
@@ -1070,57 +576,445 @@ void LPUART_HAL_SetInfrared(uint32_t baseAddr, bool enable,
 /*!
  * @brief  LPUART get status flag
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @param statusFlag  The status flag to query
  * @return Whether the current status flag is set(true) or not(false).
  */
-bool LPUART_HAL_GetStatusFlag(uint32_t baseAddr, lpuart_status_flag_t statusFlag);
-
-/*!
- * @brief  Gets the LPUART Transmit data register empty flag.
- *
- * This function returns the state of the LPUART Transmit data register empty flag.
- *
- * @param baseAddr LPUART module base address.
- * @return The status of Transmit data register empty flag, which is set when
- * transmit buffer is empty.
- */
-static inline bool LPUART_HAL_IsTxDataRegEmpty(uint32_t baseAddr)
-{
-    return BR_LPUART_STAT_TDRE(baseAddr);
-}
-
-/*!
- * @brief  Gets the LPUART receive data register full flag.
- *
- * @param baseAddr LPUART base address
- * @return Status of the receive data register full flag, sets when the receive data buffer is full.
- */
-static inline bool LPUART_HAL_IsRxDataRegFull(uint32_t baseAddr)
-{
-    return BR_LPUART_STAT_RDRF(baseAddr);
-}
-
-/*!
- * @brief  Gets the LPUART transmission complete flag.
- *
- * @param   baseAddr LPUART base address
- * @return  Status of Transmission complete flag, sets when transmitter is idle
- *          (transmission activity complete)
- */
-static inline bool LPUART_HAL_IsTxComplete(uint32_t baseAddr)
-{
-    return BR_LPUART_STAT_TC(baseAddr);
-}
+bool LPUART_HAL_GetStatusFlag(LPUART_Type * base, lpuart_status_flag_t statusFlag);
 
 /*!
  * @brief LPUART clears an individual status flag (see lpuart_status_flag_t for list of status bits).
  *
- * @param baseAddr LPUART base address
+ * @param base LPUART base pointer
  * @param statusFlag  Desired LPUART status flag to clear
  * @return An error code or kStatus_Success
  */
-lpuart_status_t LPUART_HAL_ClearStatusFlag(uint32_t baseAddr, lpuart_status_flag_t statusFlag);
+lpuart_status_t LPUART_HAL_ClearStatusFlag(LPUART_Type * base, lpuart_status_flag_t statusFlag);
+
+/*@}*/
+
+/*!
+ * @name LPUART Special Feature Configurations
+ * @{
+ */
+
+/*!
+ * @brief Configures the number of idle characters that must be received before the IDLE flag is set.
+ *
+ * @param base LPUART base pointer
+ * @param idleConfig Idle characters configuration
+ */
+static inline void LPUART_HAL_SetIdleChar(LPUART_Type * base, lpuart_idle_char_t idleConfig)
+{
+    LPUART_BWR_CTRL_IDLECFG(base, idleConfig);
+}
+
+/*!
+ * @brief Gets the configuration of the number of idle characters that must be received
+ * before the IDLE flag is set.
+ *
+ * @param base LPUART base pointer
+ * @return  idle characters configuration
+ */
+static inline lpuart_idle_char_t LPUART_HAL_GetIdleChar(LPUART_Type * base)
+{
+    return (lpuart_idle_char_t)LPUART_BRD_CTRL_IDLECFG(base);
+}
+
+/*!
+ * @brief  Checks whether the current data word was received with noise.
+ *
+ * @param base LPUART base pointer.
+ * @return The status of the NOISY bit in the LPUART extended data register
+ */
+static inline bool LPUART_HAL_IsCurrentDataWithNoise(LPUART_Type * base)
+{
+    return LPUART_BRD_DATA_NOISY(base);
+}
+
+/*!
+ * @brief Checks whether the current data word was received with frame error.
+ *
+ * @param base LPUART base pointer
+ * @return The status of the FRETSC bit in the LPUART extended data register
+ */
+static inline bool LPUART_HAL_IsCurrentDataWithFrameError(LPUART_Type * base)
+{
+    return LPUART_BRD_DATA_FRETSC(base);
+}
+
+/*!
+ * @brief Set this bit to indicate a break or idle character is to be transmitted
+ *        instead of the contents in DATA[T9:T0].
+ *
+ * @param base LPUART base pointer
+ * @param specialChar T9 is used to indicate a break character when 0 an idle
+ * character when 1, the contents of DATA[T8:T0] should be zero.
+ */
+static inline void LPUART_HAL_SetTxSpecialChar(LPUART_Type * base, uint8_t specialChar)
+{
+    LPUART_BWR_DATA_FRETSC(base, specialChar);
+}
+
+/*!
+ * @brief Checks whether the current data word was received with parity error.
+ *
+ * @param base LPUART base pointer
+ * @return The status of the PARITYE bit in the LPUART extended data register
+ */
+static inline bool LPUART_HAL_IsCurrentDataWithParityError(LPUART_Type * base)
+{
+    return LPUART_BRD_DATA_PARITYE(base);
+}
+
+/*!
+ * @brief Checks whether the receive buffer is empty.
+ *
+ * @param base LPUART base pointer
+ * @return TRUE if the receive-buffer is empty, else FALSE.
+ */
+static inline bool LPUART_HAL_IsReceiveBufferEmpty(LPUART_Type * base)
+{
+    return LPUART_BRD_DATA_RXEMPT(base);
+}
+
+/*!
+ * @brief Checks whether the previous BUS state was idle before this byte is received.
+ *
+ * @param base LPUART base pointer
+ * @return TRUE if the previous BUS state was IDLE, else FALSE.
+ */
+static inline bool LPUART_HAL_WasPreviousReceiverStateIdle(LPUART_Type * base)
+{
+    return LPUART_BRD_DATA_IDLINE(base);
+}
+
+/*!
+ * @brief Configures the LPUART operation in wait mode (operates or stops operations in wait mode).
+ *
+ * In some LPUART instances, the user should disable the transmitter/receiver
+ * before calling this function.
+ * Generally, this may be applied to all LPUARTs to ensure safe operation.
+ *
+ * @param base LPUART base pointer
+ * @param mode     LPUART wait mode operation - operates or stops to operate in wait mode.
+ */
+static inline void  LPUART_HAL_SetWaitModeOperation(LPUART_Type * base, lpuart_operation_config_t mode)
+{
+    /* In CPU wait mode: 0 - lpuart clocks continue to run; 1 - lpuart clocks freeze */
+    LPUART_BWR_CTRL_DOZEEN(base, mode);
+}
+
+/*!
+ * @brief Gets the LPUART operation in wait mode (operates or stops operations in wait mode).
+ *
+ * @param base LPUART base pointer
+ * @return LPUART wait mode operation configuration
+ *         - kLpuartOperates or KLpuartStops in wait mode
+ */
+static inline lpuart_operation_config_t LPUART_HAL_GetWaitModeOperation(LPUART_Type * base)
+{
+    /* In CPU wait mode: 0 - lpuart clocks continue to run; 1 - lpuart clocks freeze  */
+    return (lpuart_operation_config_t)LPUART_BRD_CTRL_DOZEEN(base);
+}
+
+/*!
+ * @brief Configures the LPUART loopback operation (enable/disable loopback operation)
+ *
+ * In some LPUART instances, the user should disable the transmitter/receiver
+ * before calling this function.
+ * Generally, this may be applied to all LPUARTs to ensure safe operation.
+ *
+ * @param base LPUART base pointer
+ * @param enable   LPUART loopback mode - disabled (0) or enabled (1)
+ */
+void LPUART_HAL_SetLoopbackCmd(LPUART_Type * base, bool enable);
+
+/*!
+ * @brief Configures the LPUART single-wire operation (enable/disable single-wire mode)
+ *
+ * In some LPUART instances, the user should disable the transmitter/receiver
+ * before calling this function.
+ * Generally, this may be applied to all LPUARTs to ensure safe operation.
+ *
+ * @param base LPUART base pointer
+ * @param enable   LPUART loopback mode - disabled (0) or enabled (1)
+ */
+void LPUART_HAL_SetSingleWireCmd(LPUART_Type * base, bool enable);
+
+/*!
+ * @brief Configures the LPUART transmit direction while in single-wire mode.
+ *
+ * @param base LPUART base pointer
+ * @param direction LPUART single-wire transmit direction - input or output
+ */
+static inline void LPUART_HAL_SetTxdirInSinglewireMode(LPUART_Type * base,
+                                                 lpuart_singlewire_txdir_t direction)
+{
+    LPUART_BWR_CTRL_TXDIR(base, direction);
+}
+
+/*!
+ * @brief  Places the LPUART receiver in standby mode.
+ *
+ * @param base LPUART base pointer
+ * @return Error code or kStatus_Success
+ */
+lpuart_status_t LPUART_HAL_SetReceiverInStandbyMode(LPUART_Type * base);
+
+/*!
+ * @brief  Places the LPUART receiver in a normal mode (disable standby mode operation).
+ *
+ * @param base LPUART base pointer
+ */
+static inline void LPUART_HAL_PutReceiverInNormalMode(LPUART_Type * base)
+{
+    LPUART_BWR_CTRL_RWU(base, 0);
+}
+
+/*!
+ * @brief  Checks whether the LPUART receiver is in a standby mode.
+ *
+ * @param base LPUART base pointer
+ * @return LPUART in normal more (0) or standby (1)
+ */
+static inline bool LPUART_HAL_IsReceiverInStandby(LPUART_Type * base)
+{
+    return LPUART_BRD_CTRL_RWU(base);
+}
+
+/*!
+ * @brief  LPUART receiver wakeup method (idle line or addr-mark) from standby mode
+ *
+ * @param base LPUART base pointer
+ * @param method   LPUART wakeup method: 0 - Idle-line wake (default), 1 - addr-mark wake
+ */
+static inline void LPUART_HAL_SetReceiverWakeupMode(LPUART_Type * base,
+                                                    lpuart_wakeup_method_t method)
+{
+    LPUART_BWR_CTRL_WAKE(base, method);
+}
+
+/*!
+ * @brief  Gets the LPUART receiver wakeup method (idle line or addr-mark) from standby mode.
+ *
+ * @param base LPUART base pointer
+ * @return  LPUART wakeup method: kLpuartIdleLineWake: 0 - Idle-line wake (default),
+ *          kLpuartAddrMarkWake: 1 - addr-mark wake
+ */
+static inline lpuart_wakeup_method_t LPUART_HAL_GetReceiverWakeupMode(LPUART_Type * base)
+{
+    return (lpuart_wakeup_method_t)LPUART_BRD_CTRL_WAKE(base);
+}
+
+/*!
+ * @brief  LPUART idle-line detect operation configuration (idle line bit-count start and wake
+ *         up affect on IDLE status bit).
+ *
+ * In some LPUART instances, the user should disable the transmitter/receiver
+ * before calling this function.
+ * Generally, this may be applied to all LPUARTs to ensure safe operation.
+ *
+ * @param base LPUART base pointer
+ * @param config   LPUART configuration data for idle line detect operation
+ */
+void LPUART_HAL_SetIdleLineDetect(LPUART_Type * base,
+                                  const lpuart_idle_line_config_t *config);
+
+/*!
+ * @brief  LPUART break character transmit length configuration
+ *
+ * In some LPUART instances, the user should disable the transmitter before calling
+ * this function. Generally, this may be applied to all LPUARTs to ensure safe operation.
+ *
+ * @param base LPUART base pointer
+ * @param length   LPUART break character length setting: 0 - minimum 10-bit times (default),
+ *                   1 - minimum 13-bit times
+ */
+static inline void LPUART_HAL_SetBreakCharTransmitLength(LPUART_Type * base,
+                                             lpuart_break_char_length_t length)
+{
+    LPUART_BWR_STAT_BRK13(base, length);
+}
+
+/*!
+ * @brief  LPUART break character detect length configuration
+ *
+ * @param base LPUART base pointer
+ * @param length  LPUART break character length setting: 0 - minimum 10-bit times (default),
+ *                  1 - minimum 13-bit times
+ */
+static inline void LPUART_HAL_SetBreakCharDetectLength(LPUART_Type * base,
+                                           lpuart_break_char_length_t length)
+{
+    LPUART_BWR_STAT_LBKDE(base, length);
+}
+
+/*!
+ * @brief  LPUART transmit sends break character configuration.
+ *
+ * @param base LPUART base pointer
+ * @param enable LPUART normal/queue break char - disabled (normal mode, default: 0) or
+ *                 enabled (queue break char: 1)
+ */
+static inline void LPUART_HAL_QueueBreakCharToSend(LPUART_Type * base, bool enable)
+{
+    LPUART_BWR_CTRL_SBK(base, enable);
+}
+
+/*!
+ * @brief LPUART configures match address mode control
+ *
+ * @param base LPUART base pointer
+ * @param config MATCFG: Configures the match addressing mode used.
+ */
+static inline void LPUART_HAL_SetMatchAddressMode(LPUART_Type * base, lpuart_match_config_t config)
+{
+    LPUART_BWR_BAUD_MATCFG(base, config);
+}
+
+/*!
+ * @brief Configures address match register 1
+ *
+ * The MAEN bit must be cleared before configuring MA value, so the enable/disable
+ * and set value must be included inside one function.
+ *
+ * @param base LPUART base pointer
+ * @param enable Match address model enable (true)/disable (false)
+ * @param value Match address value to program into match address register 1
+ */
+void LPUART_HAL_SetMatchAddressReg1(LPUART_Type * base, bool enable, uint8_t value);
+
+/*!
+ * @brief Configures address match register 2
+ *
+ * The MAEN bit must be cleared before configuring MA value, so the enable/disable
+ * and set value must be included inside one function.
+ *
+ * @param base LPUART base pointer
+ * @param enable Match address model enable (true)/disable (false)
+ * @param value Match address value to program into match address register 2
+ */
+void LPUART_HAL_SetMatchAddressReg2(LPUART_Type * base, bool enable, uint8_t value);
+
+/*!
+ * @brief LPUART sends the MSB first configuration
+ *
+ * In some LPUART instances, the user should disable the transmitter/receiver
+ * before calling this function.
+ * Generally, this may be applied to all LPUARTs to ensure safe operation.
+ *
+ * @param base LPUART base pointer
+ * @param enable  false - LSB (default, disabled), true - MSB (enabled)
+ */
+static inline void LPUART_HAL_SetSendMsbFirstCmd(LPUART_Type * base, bool enable)
+{
+    LPUART_BWR_STAT_MSBF(base, enable);
+}
+
+/*!
+ * @brief  LPUART enable/disable re-sync of received data configuration
+ *
+ * @param base LPUART base pointer
+ * @param enable  re-sync of received data word configuration:
+ *                true - re-sync of received data word (default)
+ *                false - disable the re-sync
+ */
+static inline void LPUART_HAL_SetReceiveResyncCmd(LPUART_Type * base, bool enable)
+{
+    /* When disabled, the resynchronization of the received data word when a data
+     * one followed by data zero transition is detected. This bit should only be
+     * changed when the receiver is disabled. */
+    LPUART_BWR_BAUD_RESYNCDIS(base, enable);
+}
+
+#if FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT
+/*!
+ * @brief  Transmits the CTS source configuration.
+ *
+ * @param base LPUART base pointer
+ * @param source   LPUART CTS source
+ */
+static inline void LPUART_HAL_SetCtsSource(LPUART_Type * base,
+                                           lpuart_cts_source_t source)
+{
+    LPUART_BWR_MODIR_TXCTSSRC(base, source);
+}
+
+/*!
+ * @brief  Transmits the CTS configuration.
+ *
+ * Note: configures if the CTS state is checked at the start of each character
+ * or only when the transmitter is idle.
+ *
+ * @param base LPUART base pointer
+ * @param mode     LPUART CTS configuration
+ */
+static inline void LPUART_HAL_SetCtsMode(LPUART_Type * base, lpuart_cts_config_t mode)
+{
+    LPUART_BWR_MODIR_TXCTSC(base, mode);
+}
+
+/*!
+ * @brief Enable/Disable the transmitter clear-to-send.
+ *
+ * @param base LPUART base pointer
+ * @param enable  disable(0)/enable(1) transmitter CTS.
+ */
+static inline void LPUART_HAL_SetTxCtsCmd(LPUART_Type * base, bool enable)
+{
+    LPUART_BWR_MODIR_TXCTSE(base, enable);
+}
+
+/*!
+ * @brief  Enable/Disable the receiver request-to-send.
+ *
+ * Note: do not enable both Receiver RTS (RXRTSE) and Transmit RTS (TXRTSE).
+ *
+ * @param base LPUART base pointer
+ * @param enable  disable(0)/enable(1) receiver RTS.
+ */
+static inline void LPUART_HAL_SetRxRtsCmd(LPUART_Type * base, bool enable)
+{
+    LPUART_BWR_MODIR_RXRTSE(base, enable);
+}
+
+/*!
+ * @brief  Enable/Disable the transmitter request-to-send.
+ * Note: do not enable both Receiver RTS (RXRTSE) and Transmit RTS (TXRTSE).
+ *
+ * @param base LPUART base pointer
+ * @param enable  disable(0)/enable(1) transmitter RTS.
+ */
+static inline void LPUART_HAL_SetTxRtsCmd(LPUART_Type * base, bool enable)
+{
+    LPUART_BWR_MODIR_TXRTSE(base, enable);
+}
+
+/*!
+ * @brief Configures the transmitter RTS polarity.
+ *
+ * @param base LPUART base pointer
+ * @param polarity Settings to choose RTS polarity (0=active low, 1=active high)
+ */
+static inline void LPUART_HAL_SetTxRtsPolarityMode(LPUART_Type * base, bool polarity)
+{
+    LPUART_BWR_MODIR_TXRTSPOL(base, polarity);
+}
+
+#endif  /* FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT */
+
+#if FSL_FEATURE_LPUART_HAS_IR_SUPPORT
+/*!
+ * @brief  Configures the LPUART infrared operation.
+ *
+ * @param base LPUART base pointer
+ * @param enable    Enable (1) or disable (0) the infrared operation
+ * @param pulseWidth The transmit narrow pulse width of type lpuart_ir_tx_pulsewidth_t
+ */
+void LPUART_HAL_SetInfrared(LPUART_Type * base, bool enable,
+                            lpuart_ir_tx_pulsewidth_t pulseWidth);
+#endif  /* FSL_FEATURE_LPUART_HAS_IR_SUPPORT */
 
 /*@}*/
 

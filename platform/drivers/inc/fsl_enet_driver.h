@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include "fsl_enet_hal.h"
 #include "fsl_os_abstraction.h"
+#if FSL_FEATURE_SOC_ENET_COUNT
 /*! 
  * @addtogroup enet_driver
  * @{
@@ -43,7 +44,7 @@
  * Variables
  ******************************************************************************/
 /*! @brief Array for ENET module register base address. */
-extern const uint32_t g_enetBaseAddr[];
+extern ENET_Type * const g_enetBase[];
 
 /*! @brief Two-dimensional array for the ENET interrupt vector number. */
 extern const IRQn_Type g_enetTxIrqId[];
@@ -56,23 +57,20 @@ extern const IRQn_Type g_enetErrIrqId[];
 
  ******************************************************************************/
 /*! @brief Defines the approach: ENET interrupt handler receive */
+#ifndef ENET_RECEIVE_ALL_INTERRUPT
 #define ENET_RECEIVE_ALL_INTERRUPT  1
+#endif
 
 /*! @brief Defines the statistic enable macro.*/
+#ifndef ENET_ENABLE_DETAIL_STATS
 #define ENET_ENABLE_DETAIL_STATS    0
+#endif
 
 /*! brief Defines the macro for converting constants from host byte order to network byte order*/
-#if SYSTEM_LITTLE_ENDIAN 
-#define ENET_HTONS(n)                      BSWAP_16(n)
-#define ENET_HTONL(n)                      BSWAP_32(n)
-#define ENET_NTOHS(n)                      BSWAP_16(n)
-#define ENET_NTOHL(n)                      BSWAP_32(n)
-#else
-#define ENET_HTONS(n)                       (n)
-#define ENET_HTONL(n)                       (n)
-#define ENET_NTOHS(n)                       (n)
-#define ENET_NTOHL(n)                       (n)
-#endif
+#define ENET_HTONS(n)                      __REV16(n)
+#define ENET_HTONL(n)                      __REV(n)
+#define ENET_NTOHS(n)                      __REV16(n)
+#define ENET_NTOHL(n)                      __REV(n)
 
 /*! @brief Defines the CRC-32 calculation constant. */
 #define  ENET_ORIGINAL_CRC32   0xFFFFFFFFU      /*!< CRC-32 Original data*/
@@ -141,7 +139,7 @@ typedef enum _enet_ethernetl2_ptpv2_content_offset
 /*! @brief Defines the 1588 timer parameters.*/
 typedef enum _enet_ptp_timer_wrap_period
 {
-    kEnetPtpAtperVaule    = 1000000000, /*!< PTP timer wrap around one second */
+    kEnetPtpAtperValue    = 1000000000, /*!< PTP timer wrap around one second */
     kEnetBaseIncreaseUnit = 2           /*!< PTP timer adjusts clock and increases value to 2*/
 } enet_ptp_timer_wrap_period_t;
 #endif
@@ -272,7 +270,7 @@ typedef struct ENET8021vlanHeader
     uint16_t type;         /*!< Protocol type*/
 } enet_8021vlan_header_t;
 
-/*! @brief Defines the structure for ENET buffer descriptors stats.*/
+/*! @brief Defines the structure for ENET buffer descriptors status.*/
 typedef struct ENETBuffDescripContext
 {
     volatile enet_bd_struct_t * rxBdBasePtr;   /*!< Receive buffer descriptor base address pointer*/
@@ -379,6 +377,14 @@ typedef struct ENETDevIf
     mutex_t enetContextSync;     /*!< Sync signal*/
 } enet_dev_if_t;
 
+/*! @brief Defines the ENET user configuration structure. */
+typedef struct ENETUserConfig
+{
+    const enet_mac_config_t* macCfgPtr;   /*!< MAC configuration structure */
+    const enet_buff_config_t* buffCfgPtr;   /*!< ENET buffer configuration structure */
+} enet_user_config_t;
+
+
 /*******************************************************************************
  * API 
  ******************************************************************************/
@@ -405,7 +411,7 @@ extern "C" {
  * @param isSlaveEnabled The flag to enable or disable slave mode.
  * @return The execution status.
  */
-uint32_t ENET_DRV_1588Init(enet_dev_if_t *enetIfPtr, enet_mac_ptp_ts_data_t *ptpTsRxDataPtr,uint32_t rxBuffNum, 
+enet_status_t ENET_DRV_1588Init(enet_dev_if_t *enetIfPtr, enet_mac_ptp_ts_data_t *ptpTsRxDataPtr,uint32_t rxBuffNum, 
             enet_mac_ptp_ts_data_t *ptpTsTxDataPtr, uint32_t txBuffNum, bool isSlaveEnabled);
   
 /*!
@@ -414,7 +420,7 @@ uint32_t ENET_DRV_1588Init(enet_dev_if_t *enetIfPtr, enet_mac_ptp_ts_data_t *ptp
  * @param enetIfPtr The basic Ethernet structure pointer.
  * @return The execution status.
  */
-uint32_t ENET_DRV_1588Deinit(enet_dev_if_t *enetIfPtr);
+enet_status_t ENET_DRV_1588Deinit(enet_dev_if_t *enetIfPtr);
 
 /*!
  * @brief Initializes the ENET PTP timer with the basic configuration.
@@ -426,7 +432,7 @@ uint32_t ENET_DRV_1588Deinit(enet_dev_if_t *enetIfPtr);
  * @param isSlaveEnabled The switch to enable or disable the PTP timer slave mode.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Start1588Timer(uint32_t instance, bool isSlaveEnabled);
+enet_status_t ENET_DRV_Start1588Timer(uint32_t instance, bool isSlaveEnabled);
 
 /*!
  * @brief Stops the ENET PTP timer.
@@ -449,7 +455,7 @@ void ENET_DRV_Stop1588Timer(uint32_t instance);
  *        and doesn't store any PTP message.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Parse1588Packet(uint8_t *packet, enet_mac_ptp_ts_data_t *ptpTsPtr, 
+enet_status_t ENET_DRV_Parse1588Packet(uint8_t *packet, enet_mac_ptp_ts_data_t *ptpTsPtr, 
                          bool *isPtpMsg, bool isFastEnabled);
 /*!
  * @brief Gets the current value of the ENET PTP time.
@@ -457,7 +463,7 @@ uint32_t ENET_DRV_Parse1588Packet(uint8_t *packet, enet_mac_ptp_ts_data_t *ptpTs
  * @param ptpTimerPtr The PTP timer structure.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Get1588timer(enet_mac_ptp_time_t *ptpTimerPtr);
+enet_status_t ENET_DRV_Get1588timer(enet_mac_ptp_time_t *ptpTimerPtr);
 
 /*!
  * @brief Sets the current value of the ENET PTP time.
@@ -465,7 +471,7 @@ uint32_t ENET_DRV_Get1588timer(enet_mac_ptp_time_t *ptpTimerPtr);
  * @param ptpTimerPtr The PTP timer structure.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Set1588timer(enet_mac_ptp_time_t *ptpTimerPtr);
+enet_status_t ENET_DRV_Set1588timer(enet_mac_ptp_time_t *ptpTimerPtr);
 
 /*!
  * @brief Adjusts the ENET PTP time.
@@ -474,7 +480,7 @@ uint32_t ENET_DRV_Set1588timer(enet_mac_ptp_time_t *ptpTimerPtr);
  * @param drift The PTP timer drift value.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Adjust1588timer(uint32_t instance, int32_t drift);
+enet_status_t ENET_DRV_Adjust1588timer(uint32_t instance, int32_t drift);
 
 /*!
  * @brief Stores the transmit timestamp.
@@ -484,7 +490,7 @@ uint32_t ENET_DRV_Adjust1588timer(uint32_t instance, int32_t drift);
  * @param lastBdPtr The last buffer descriptor of the current transmit frame.
  * @return The execution status.
  */	
-uint32_t ENET_DRV_GetTxTs(enet_private_ptp_buffer_t *ptpBuffer, volatile enet_bd_struct_t *firstBdPtr, volatile enet_bd_struct_t *lastBdPtr);
+enet_status_t ENET_DRV_GetTxTs(enet_private_ptp_buffer_t *ptpBuffer, volatile enet_bd_struct_t *firstBdPtr, volatile enet_bd_struct_t *lastBdPtr);
 
 /*!
  * @brief Stores receive timestamp.
@@ -494,7 +500,7 @@ uint32_t ENET_DRV_GetTxTs(enet_private_ptp_buffer_t *ptpBuffer, volatile enet_bd
  * @param bdPtr The current receive buffer descriptor.
  * @return The execution status.
  */
-uint32_t ENET_DRV_GetRxTs(enet_private_ptp_buffer_t *ptpBuffer, uint8_t *packet, volatile enet_bd_struct_t *bdPtr);
+enet_status_t ENET_DRV_GetRxTs(enet_private_ptp_buffer_t *ptpBuffer, uint8_t *packet, volatile enet_bd_struct_t *bdPtr);
 
 /*!
  * @brief Initializes the buffer queue for the PTP layer2 Ethernet packets.
@@ -505,7 +511,7 @@ uint32_t ENET_DRV_GetRxTs(enet_private_ptp_buffer_t *ptpBuffer, uint8_t *packet,
  * @param ptpL2BuffNum The PTP layer2 buffer numbers.
  * @return The execution status.
  */
-uint32_t ENET_DRV_1588l2queueInit(enet_dev_if_t *enetIfPtr, enet_mac_ptp_l2buffer_t *ptpL2BufferPtr,
+enet_status_t ENET_DRV_1588l2queueInit(enet_dev_if_t *enetIfPtr, enet_mac_ptp_l2buffer_t *ptpL2BufferPtr,
                                        uint32_t ptpL2BuffNum);
 
 /*!
@@ -515,7 +521,7 @@ uint32_t ENET_DRV_1588l2queueInit(enet_dev_if_t *enetIfPtr, enet_mac_ptp_l2buffe
  * @param packBuffer The packet buffer pointer.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Service_l2packet(enet_dev_if_t * enetIfPtr, enet_mac_packet_buffer_t *packBuffer);
+enet_status_t ENET_DRV_Service_l2packet(enet_dev_if_t * enetIfPtr, enet_mac_packet_buffer_t *packBuffer);
 
 /*!
  * @brief Sends the PTP layer2 Ethernet packet to the Net.
@@ -524,7 +530,7 @@ uint32_t ENET_DRV_Service_l2packet(enet_dev_if_t * enetIfPtr, enet_mac_packet_bu
  * @param paramPtr The buffer from upper layer. 
  * @return The execution status.
  */
-uint32_t ENET_DRV_Send_l2packet(enet_dev_if_t * enetIfPtr, enet_mac_ptp_l2_packet_t *paramPtr);
+enet_status_t ENET_DRV_Send_l2packet(enet_dev_if_t * enetIfPtr, enet_mac_ptp_l2_packet_t *paramPtr);
 
 /*!
  * @brief Receives the PTP layer2 Ethernet packet from the Net.
@@ -533,7 +539,7 @@ uint32_t ENET_DRV_Send_l2packet(enet_dev_if_t * enetIfPtr, enet_mac_ptp_l2_packe
  * @param paramPtr The buffer receive from net and will send to upper layer. 
  * @return The execution status.
  */
-uint32_t ENET_DRV_Receive_l2packet(enet_dev_if_t * enetIfPtr, enet_mac_ptp_l2_packet_t *paramPtr);
+enet_status_t ENET_DRV_Receive_l2packet(enet_dev_if_t * enetIfPtr, enet_mac_ptp_l2_packet_t *paramPtr);
 
 /*!
  * @brief Provides the handler for the 1588 stack for the PTP IOCTL.
@@ -543,7 +549,7 @@ uint32_t ENET_DRV_Receive_l2packet(enet_dev_if_t * enetIfPtr, enet_mac_ptp_l2_pa
  * @param inOutPtr The data buffer. 
  * @return The execution status.
  */
-uint32_t ENET_DRV_1588Ioctl(enet_dev_if_t * enetIfPtr, uint32_t commandId, void * inOutPtr);
+enet_status_t ENET_DRV_1588Ioctl(enet_dev_if_t * enetIfPtr, uint32_t commandId, void * inOutPtr);
 
 
 /*!
@@ -564,7 +570,7 @@ bool ENET_DRV_Is1588TsBuffFull(enet_mac_ptp_ts_ring_t *ptpTsRingPtr);
  * @param data The PTP data buffer.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Update1588TsBuff(enet_mac_ptp_ts_ring_t *ptpTsRingPtr, enet_mac_ptp_ts_data_t *data);
+enet_status_t ENET_DRV_Update1588TsBuff(enet_mac_ptp_ts_ring_t *ptpTsRingPtr, enet_mac_ptp_ts_data_t *data);
 
 /*!
  * @brief Searches the element in ring buffers with the message ID and Clock ID.
@@ -573,7 +579,7 @@ uint32_t ENET_DRV_Update1588TsBuff(enet_mac_ptp_ts_ring_t *ptpTsRingPtr, enet_ma
  * @param data The PTP data buffer.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Search1588TsBuff(enet_mac_ptp_ts_ring_t *ptpTsRingPtr, enet_mac_ptp_ts_data_t *data);
+enet_status_t ENET_DRV_Search1588TsBuff(enet_mac_ptp_ts_ring_t *ptpTsRingPtr, enet_mac_ptp_ts_data_t *data);
 
 /*!
  * @brief Calculates the ENET PTP 1588 timestamp ring buffer index.
@@ -600,11 +606,10 @@ void ENET_DRV_TsIRQHandler(uint32_t instance);
  * @brief Initializes the ENET with the basic configuration.
  *
  * @param enetIfPtr The pointer to the basic Ethernet structure.
- * @param macCfgPtr The Mac configure structure pointer.
- * @param buffCfgPtr The buffer configure structure pointer.
+ * @param userConfig The ENET user configuration structure pointer.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Init(enet_dev_if_t * enetIfPtr, const enet_mac_config_t *macCfgPtr, enet_buff_config_t *buffCfgPtr);
+enet_status_t ENET_DRV_Init(enet_dev_if_t * enetIfPtr, const enet_user_config_t* userConfig);
 
 
 /*!
@@ -613,7 +618,7 @@ uint32_t ENET_DRV_Init(enet_dev_if_t * enetIfPtr, const enet_mac_config_t *macCf
  * @param enetIfPtr The ENET context structure.
  * @return The execution status.
  */
-uint32_t ENET_DRV_Deinit(enet_dev_if_t * enetIfPtr);
+enet_status_t ENET_DRV_Deinit(enet_dev_if_t * enetIfPtr);
 
 /*!
  * @brief Updates the receive buffer descriptor.
@@ -628,7 +633,7 @@ uint32_t ENET_DRV_Deinit(enet_dev_if_t * enetIfPtr);
  * @param isBuffUpdate The data buffer update flag.
  * @return The execution status.
  */
-uint32_t ENET_DRV_UpdateRxBuffDescrip(enet_dev_if_t * enetIfPtr, bool isBuffUpdate);
+enet_status_t ENET_DRV_UpdateRxBuffDescrip(enet_dev_if_t * enetIfPtr, bool isBuffUpdate);
 
 /*!
  * @brief ENET transmit buffer descriptor cleanup.
@@ -641,7 +646,7 @@ uint32_t ENET_DRV_UpdateRxBuffDescrip(enet_dev_if_t * enetIfPtr, bool isBuffUpda
  * @param enetIfPtr The ENET context structure.
  * @return The execution status.
  */
-uint32_t ENET_DRV_CleanupTxBuffDescrip(enet_dev_if_t * enetIfPtr);
+enet_status_t ENET_DRV_CleanupTxBuffDescrip(enet_dev_if_t * enetIfPtr);
 
 /*!
  * @brief Increases the receive buffer descriptor to the next one.
@@ -669,12 +674,12 @@ volatile enet_bd_struct_t * ENET_DRV_IncrTxBuffDescripIndex(enet_dev_if_t * enet
  * should be called when processing the last BD of a frame.
  *
  * @param enetIfPtr The ENET context structure.
- * @param data The current control and status data of the buffer descriptor.
+ * @param curBd The current buffer descriptor.
  * @return The frame error status.
  *         - True if the frame has an error. 
  *         - False if the frame does not have an error.
  */
-bool ENET_DRV_RxErrorStats(enet_dev_if_t * enetIfPtr, uint32_t data);
+bool ENET_DRV_RxErrorStats(enet_dev_if_t * enetIfPtr, volatile enet_bd_struct_t *curBd);
 
 /*!
  * @brief Processes the ENET transmit frame statistics.
@@ -696,7 +701,7 @@ void ENET_DRV_TxErrorStats(enet_dev_if_t * enetIfPtr, volatile enet_bd_struct_t 
  * @param packBuffer The received data buffer.
  * @return The execution status.
  */
-uint32_t ENET_DRV_ReceiveData(enet_dev_if_t * enetIfPtr, enet_mac_packet_buffer_t *packBuffer);
+enet_status_t ENET_DRV_ReceiveData(enet_dev_if_t * enetIfPtr, enet_mac_packet_buffer_t *packBuffer);
 #else
 /*!
  * @brief Receives ENET packets.
@@ -704,7 +709,7 @@ uint32_t ENET_DRV_ReceiveData(enet_dev_if_t * enetIfPtr, enet_mac_packet_buffer_
  * @param enetIfPtr The ENET context structure.
  * @return The execution status.
  */
-uint32_t ENET_DRV_ReceiveData(enet_dev_if_t * enetIfPtr);
+enet_status_t ENET_DRV_ReceiveData(enet_dev_if_t * enetIfPtr);
 
 /*!
  * @brief Installs ENET TCP/IP stack net interface callback function.
@@ -713,7 +718,7 @@ uint32_t ENET_DRV_ReceiveData(enet_dev_if_t * enetIfPtr);
  * @param function The ENET TCP/IP stack net interface callback function.
  * @return The execution status.
  */
-uint32_t ENET_DRV_InstallNetIfCall(enet_dev_if_t * enetIfPtr, enet_netif_callback_t function);
+enet_status_t ENET_DRV_InstallNetIfCall(enet_dev_if_t * enetIfPtr, enet_netif_callback_t function);
 #endif
 
 
@@ -725,7 +730,7 @@ uint32_t ENET_DRV_InstallNetIfCall(enet_dev_if_t * enetIfPtr, enet_netif_callbac
  * @param bdNumUsed The buffer descriptor need to be used.
  * @return The execution status.
  */
-uint32_t ENET_DRV_SendData(enet_dev_if_t * enetIfPtr, uint32_t dataLen, uint32_t bdNumUsed);
+enet_status_t ENET_DRV_SendData(enet_dev_if_t * enetIfPtr, uint32_t dataLen, uint32_t bdNumUsed);
 
 /*!
  * @brief The ENET receive interrupt handler.
@@ -757,7 +762,7 @@ void ENET_DRV_CalculateCrc32(uint8_t *address, uint32_t *crcValue);
  * @param hash The hash value of the multicast group address.
  * @return The execution status.
  */
- uint32_t ENET_DRV_AddMulticastGroup(uint32_t instance, uint8_t *address, uint32_t *hash);
+enet_status_t ENET_DRV_AddMulticastGroup(uint32_t instance, uint8_t *address, uint32_t *hash);
 
 /*!
  * @brief Moves the ENET device from a multicast group.
@@ -766,7 +771,7 @@ void ENET_DRV_CalculateCrc32(uint8_t *address, uint32_t *crcValue);
  * @param address The multicast group address.
  * @return The execution status.
  */
-uint32_t ENET_DRV_LeaveMulticastGroup(uint32_t instance, uint8_t *address);
+enet_status_t ENET_DRV_LeaveMulticastGroup(uint32_t instance, uint8_t *address);
 
 /*!
  * @brief ENET buffer enqueue.
@@ -787,11 +792,12 @@ void *enet_mac_dequeue_buffer( void **queue);
 /* @} */
 
 #if defined(__cplusplus)
-extern }
+}
 #endif
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_ENET_DRIVER_H__ */
 /*******************************************************************************
  * EOF

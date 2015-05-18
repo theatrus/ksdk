@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include "fsl_device_registers.h"
 #include "fsl_tsi_hal.h"
+#if FSL_FEATURE_SOC_TSI_COUNT
 
 /*!
  * @addtogroup tsi_hal
@@ -41,6 +42,8 @@
 
 
 /*! @file*/
+
+extern uint32_t tsi_hal_gencs/*[TSI_INSTANCE_COUNT]*/;
 
 /*******************************************************************************
  * Definitions
@@ -188,327 +191,466 @@ extern "C" {
 /*!
  * @brief Enable low power for TSI module.
  *
- * @param   baseAddr TSI module base address.
+ * @param   base TSI module base address.
  *
  * @return  none
  *
  */
-void TSI_HAL_EnableLowPower(uint32_t baseAddr);
+void TSI_HAL_EnableLowPower(TSI_Type * base);
+
+/*!
+* @brief Enable out of range interrupt.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_EnableOutOfRangeInterrupt(TSI_Type * base)
+{
+    tsi_hal_gencs &= ~TSI_GENCS_ESOR_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);    
+}
+
+/*!
+* @brief Enable end of scan interrupt.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_EnableEndOfScanInterrupt(TSI_Type * base)
+{
+    tsi_hal_gencs |= TSI_GENCS_ESOR_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
+}
+
+/*!
+* @brief Enable Touch Sensing Input Module.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_EnableModule(TSI_Type * base)
+{
+    tsi_hal_gencs |= TSI_GENCS_TSIEN_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
+}
+
+/*!
+* @brief Disable Touch Sensing Input Module.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_DisableModule(TSI_Type * base)
+{
+    tsi_hal_gencs &= ~TSI_GENCS_TSIEN_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
+}
 
 /*!
 * @brief Enable TSI module interrupt.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_EnableInterrupt(uint32_t baseAddr)
+static inline void TSI_HAL_EnableInterrupt(TSI_Type * base)
 {
-    BW_TSI_GENCS_TSIIEN(baseAddr, 1);
+    tsi_hal_gencs |= TSI_GENCS_TSIIEN_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Disable TSI interrupt.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_DisableInterrupt(uint32_t baseAddr)
+static inline void TSI_HAL_DisableInterrupt(TSI_Type * base)
 {
-    BW_TSI_GENCS_TSIIEN(baseAddr, 0);
+    tsi_hal_gencs &= ~TSI_GENCS_TSIIEN_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Get interrupt enable flag.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   State of enable interrupt flag.
 */
-static inline uint32_t TSI_HAL_IsInterruptEnabled(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_IsInterruptEnabled(TSI_Type * base)
 {
-    return BR_TSI_GENCS_TSIIEN(baseAddr);
+    return TSI_BRD_GENCS_TSIIEN(base);
 }
 
 /*!
 * @brief Get TSI STOP enable.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Number of scans.
 */
-static inline uint32_t TSI_HAL_GetEnableStop(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetEnableStop(TSI_Type * base)
 {
-    return (uint32_t)BR_TSI_GENCS_STPE(baseAddr);
+    return (uint32_t)TSI_BRD_GENCS_STPE(base);
 }
 
 /*!
 * @brief Set TSI STOP enable. This enables TSI module function in low power modes.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_SetEnableStop(uint32_t baseAddr)
+static inline void TSI_HAL_EnableStop(TSI_Type * base)
 {
-    BW_TSI_GENCS_STPE(baseAddr, 1);
+    tsi_hal_gencs |= TSI_GENCS_STPE_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Set TSI STOP disable. The TSI is disabled in low power modes.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_SetDisableStop(uint32_t baseAddr)
+static inline void TSI_HAL_DisableStop(TSI_Type * base)
 {
-    BW_TSI_GENCS_STPE(baseAddr, 0);
+    tsi_hal_gencs &= ~TSI_GENCS_STPE_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Enable periodical (hardware) trigger scan.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_EnableHardwareTriggerScan(uint32_t baseAddr)
+static inline void TSI_HAL_EnableHardwareTriggerScan(TSI_Type * base)
 {
-    BW_TSI_GENCS_STM(baseAddr, 1);
+    tsi_hal_gencs |= TSI_GENCS_STM_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
+}
+
+/*!
+* @brief Enable periodical (hardware) trigger scan.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_EnableSoftwareTriggerScan(TSI_Type * base)
+{
+    tsi_hal_gencs &= ~TSI_GENCS_STM_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief The current sources (CURSW) of electrode oscillator and reference
 * oscillator are swapped.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_CurrentSourcePairSwapped(uint32_t baseAddr)
+static inline void TSI_HAL_CurrentSourcePairSwapped(TSI_Type * base)
 {
-    BW_TSI_GENCS_CURSW(baseAddr, 1);
+    tsi_hal_gencs |= TSI_GENCS_CURSW_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief The current sources (CURSW) of electrode oscillator and reference
 * oscillator are not swapped.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_CurrentSourcePairNotSwapped(uint32_t baseAddr)
+static inline void TSI_HAL_CurrentSourcePairNotSwapped(TSI_Type * base)
 {
-    BW_TSI_GENCS_CURSW(baseAddr, 0);
+    tsi_hal_gencs &= ~TSI_GENCS_CURSW_MASK;
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Get current source pair swapped status.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   Current source pair swapped status.
 */
-static inline uint32_t TSI_HAL_GetCurrentSourcePairSwapped(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetCurrentSourcePairSwapped(TSI_Type * base)
 {
-    return (uint32_t)BR_TSI_GENCS_CURSW(baseAddr);
+    return (uint32_t)TSI_BRD_GENCS_CURSW(base);
+}
+
+/*!
+* @brief Clear out of range flag.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_ClearOutOfRangeFlag(TSI_Type * base)
+{    
+    TSI_WR_GENCS(base, (tsi_hal_gencs | TSI_GENCS_OUTRGF_MASK));
+}
+
+
+/*!
+* @brief Clear end of scan flag.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_ClearEndOfScanFlag(TSI_Type * base)
+{
+    TSI_WR_GENCS(base, (tsi_hal_gencs | TSI_GENCS_EOSF_MASK));
+}
+
+/*!
+* @brief Set prescaler.
+*
+* @param    base    TSI module base address.
+* @param    prescaler   Prescaler value.
+* @return   None.
+*/
+static inline void TSI_HAL_SetPrescaler(TSI_Type * base, tsi_electrode_osc_prescaler_t prescaler)
+{
+    tsi_hal_gencs &= ~TSI_GENCS_PS_MASK;
+    tsi_hal_gencs |= TSI_GENCS_PS(prescaler);
+    TSI_WR_GENCS(base, tsi_hal_gencs);
+}
+
+/*!
+* @brief Set number of scans (NSCN).
+*
+* @param    base    TSI module base address.
+* @param    number      Number of scans.
+* @return   None.
+*/
+static inline void TSI_HAL_SetNumberOfScans(TSI_Type * base, tsi_n_consecutive_scans_t number)
+{
+    tsi_hal_gencs &= ~TSI_GENCS_NSCN_MASK;
+    tsi_hal_gencs |= TSI_GENCS_NSCN(number);
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Set the measured channel number.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    channel     Channel number 0 ... 15.
 * @return   None.
 */
-static inline void TSI_HAL_SetMeasuredChannelNumber(uint32_t baseAddr, uint32_t channel)
+static inline void TSI_HAL_SetMeasuredChannelNumber(TSI_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_TSI_CHANNEL_COUNT);  
-    BW_TSI_DATA_TSICH(baseAddr, channel);
+    TSI_BWR_DATA_TSICH(base, channel);
 }
 
 /*!
 * @brief Get the measured channel number.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   uint32_t    Channel number 0 ... 15.
 */
-static inline uint32_t TSI_HAL_GetMeasuredChannelNumber(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetMeasuredChannelNumber(TSI_Type * base)
 {
-    return (uint32_t)BR_TSI_DATA_TSICH(baseAddr);
+    return (uint32_t)TSI_BRD_DATA_TSICH(base);
 }
 
 /*!
 * @brief DMA transfer enable.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_DmaTransferEnable(uint32_t baseAddr)
+static inline void TSI_HAL_DmaTransferEnable(TSI_Type * base)
 {
-    BW_TSI_DATA_DMAEN(baseAddr, 1);
+    TSI_BWR_DATA_DMAEN(base, 1);
 }
 
 /*!
 * @brief DMA transfer disable - do not generate DMA transfer request.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_DmaTransferDisable(uint32_t baseAddr)
+static inline void TSI_HAL_DmaTransferDisable(TSI_Type * base)
 {
-    BW_TSI_DATA_DMAEN(baseAddr, 0);
+    TSI_BWR_DATA_DMAEN(base, 0);
 }
 
 /*!
 * @brief Get DMA transfer enable flag.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   State of enable module flag.
 */
-static inline uint32_t TSI_HAL_IsDmaTransferEnable(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_IsDmaTransferEnable(TSI_Type * base)
 {
-    return BR_TSI_DATA_DMAEN(baseAddr);
+    return TSI_BRD_DATA_DMAEN(base);
 }
 
 /*!
 * @brief Start measurement (trigger the new measurement).
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_StartSoftwareTrigger(uint32_t baseAddr)
+static inline void TSI_HAL_StartSoftwareTrigger(TSI_Type * base)
 {
-    HW_TSI_DATA_SET(baseAddr, BF_TSI_DATA_SWTS(1));
+    TSI_SET_DATA(base, TSI_DATA_SWTS(1));
 }
 
 /*!
 * @brief Get conversion counter value.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   Accumulated scan counter value ticked by the reference clock.
 */
-static inline uint32_t TSI_HAL_GetCounter(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetCounter(TSI_Type * base)
 {
-    return (uint32_t)BR_TSI_DATA_TSICNT(baseAddr);
+    return (uint32_t)TSI_BRD_DATA_TSICNT(base);
 }
 
 /*!
 * @brief Set TSI wake-up channel low threshold.
 *
-* @param    baseAddr        TSI module base address.
+* @param    base        TSI module base address.
 * @param    low_threshold   Low counter threshold.
 * @return   None.
 */
-static inline void TSI_HAL_SetLowThreshold(uint32_t baseAddr, uint32_t low_threshold)
+static inline void TSI_HAL_SetLowThreshold(TSI_Type * base, uint32_t low_threshold)
 {
     assert(low_threshold < 65535U);
-    BW_TSI_TSHD_THRESL(baseAddr, low_threshold);
+    TSI_BWR_TSHD_THRESL(base, low_threshold);
 }
 
 /*!
 * @brief Set TSI wake-up channel high threshold.
 *
-* @param    baseAddr        TSI module base address.
+* @param    base        TSI module base address.
 * @param    high_threshold  High counter threshold.
 * @return   None.
 */
-static inline void TSI_HAL_SetHighThreshold(uint32_t baseAddr, uint32_t high_threshold)
+static inline void TSI_HAL_SetHighThreshold(TSI_Type * base, uint32_t high_threshold)
 {
     assert(high_threshold < 65535U);  
-    BW_TSI_TSHD_THRESH(baseAddr, high_threshold);
+    TSI_BWR_TSHD_THRESH(base, high_threshold);
 }
 
 /*!
 * @brief Set analog mode of the TSI module.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    mode   Mode value.
 * @return   None.
 */
-static inline void TSI_HAL_SetMode(uint32_t baseAddr, tsi_analog_mode_select_t mode)
+static inline void TSI_HAL_SetMode(TSI_Type * base, tsi_analog_mode_select_t mode)
 {
-    BW_TSI_GENCS_MODE(baseAddr, mode);
+    tsi_hal_gencs &= ~TSI_GENCS_MODE_MASK;
+    tsi_hal_gencs |= TSI_GENCS_MODE(mode);
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Get analog mode of the TSI module.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   tsi_analog_mode_select_t   Mode value.
 */
-static inline tsi_analog_mode_select_t TSI_HAL_GetMode(uint32_t baseAddr)
+static inline tsi_analog_mode_select_t TSI_HAL_GetMode(TSI_Type * base)
 {
-    return (tsi_analog_mode_select_t)BR_TSI_GENCS_MODE(baseAddr);
+    return (tsi_analog_mode_select_t)((tsi_hal_gencs & TSI_GENCS_MODE_MASK) >> TSI_GENCS_MODE_SHIFT);
+}
+
+/*!
+* @brief Get analog mode of the TSI module.
+*
+* @param    base    TSI module base address.
+* @return   tsi_analog_mode_select_t   Mode value.
+*/
+static inline uint32_t TSI_HAL_GetNoiseResult(TSI_Type * base)
+{
+    uint32_t gencs = TSI_RD_GENCS(base);
+    
+    return (gencs & TSI_GENCS_MODE_MASK) >> TSI_GENCS_MODE_SHIFT;
 }
 
 /*!
 * @brief Set the reference oscilator charge current.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    current     The charge current.
 * @return   None.
 */
-static inline void TSI_HAL_SetReferenceChargeCurrent(uint32_t baseAddr, tsi_reference_osc_charge_current_t current)
+static inline void TSI_HAL_SetReferenceChargeCurrent(TSI_Type * base, tsi_reference_osc_charge_current_t current)
 {
-    BW_TSI_GENCS_REFCHRG(baseAddr, current);
+    tsi_hal_gencs &= ~TSI_GENCS_REFCHRG_MASK;
+    tsi_hal_gencs |= TSI_GENCS_REFCHRG(current);
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Get the reference oscilator charge current.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   tsi_reference_osc_charge_current_t The charge current.
 */
-static inline tsi_reference_osc_charge_current_t TSI_HAL_GetReferenceChargeCurrent(uint32_t baseAddr)
+static inline tsi_reference_osc_charge_current_t TSI_HAL_GetReferenceChargeCurrent(TSI_Type * base)
 {
-    return (tsi_reference_osc_charge_current_t)BR_TSI_GENCS_REFCHRG(baseAddr);
+    return (tsi_reference_osc_charge_current_t)TSI_GENCS_REFCHRG(tsi_hal_gencs);
 }
 
 /*!
 * @brief Set the oscilator's volatage rails.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    dvolt     The voltage rails.
 * @return   None.
 */
-static inline void TSI_HAL_SetOscilatorVoltageRails(uint32_t baseAddr, tsi_oscilator_voltage_rails_t dvolt)
+static inline void TSI_HAL_SetOscilatorVoltageRails(TSI_Type * base, tsi_oscilator_voltage_rails_t dvolt)
 {
-    BW_TSI_GENCS_DVOLT(baseAddr, dvolt);
+    tsi_hal_gencs &= ~TSI_GENCS_DVOLT_MASK;
+    tsi_hal_gencs |= TSI_GENCS_DVOLT(dvolt);
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Get the oscilator's volatage rails.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   dvolt     The voltage rails..
 */
-static inline tsi_oscilator_voltage_rails_t TSI_HAL_GetOscilatorVoltageRails(uint32_t baseAddr)
+static inline tsi_oscilator_voltage_rails_t TSI_HAL_GetOscilatorVoltageRails(TSI_Type * base)
 {
-    return (tsi_oscilator_voltage_rails_t)BR_TSI_GENCS_DVOLT(baseAddr);
+    return (tsi_oscilator_voltage_rails_t)TSI_BRD_GENCS_DVOLT(base);
 }
 
 /*!
 * @brief Set external electrode charge current.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    current     Electrode current.
 * @return   None.
 */
-static inline void TSI_HAL_SetElectrodeChargeCurrent(uint32_t baseAddr, tsi_external_osc_charge_current_t current)
+static inline void TSI_HAL_SetElectrodeChargeCurrent(TSI_Type * base, tsi_external_osc_charge_current_t current)
 {
-    BW_TSI_GENCS_EXTCHRG(baseAddr, current);
+    tsi_hal_gencs &= ~TSI_GENCS_EXTCHRG_MASK;
+    tsi_hal_gencs |= TSI_GENCS_EXTCHRG(current);
+    TSI_WR_GENCS(base, tsi_hal_gencs);
 }
 
 /*!
 * @brief Get electrode charge current.
 *
-* @param   baseAddr    TSI module base address.
+* @param   base    TSI module base address.
 * @return  Charge current.
 */
-static inline tsi_external_osc_charge_current_t TSI_HAL_GetElectrodeChargeCurrent(uint32_t baseAddr)
+static inline tsi_external_osc_charge_current_t TSI_HAL_GetElectrodeChargeCurrent(TSI_Type * base)
 {
-    return (tsi_external_osc_charge_current_t)BR_TSI_GENCS_EXTCHRG(baseAddr);
+    return (tsi_external_osc_charge_current_t)TSI_BRD_GENCS_EXTCHRG(base);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-//#endif
+#endif
 
 /*! @}*/
 

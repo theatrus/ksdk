@@ -37,20 +37,20 @@
 #include "fsl_pit_hal.h"
 #include "fsl_os_abstraction.h"
 #include "fsl_interrupt_manager.h"
+#include "fsl_clock_manager.h"
 
 /*******************************************************************************
  * Internal type definition
  ******************************************************************************/
-extern const uint32_t g_pitBaseAddr[];
+extern PIT_Type * const g_pitBase[];
 extern const IRQn_Type g_pitIrqId[];
 /*******************************************************************************
  * Internal Variables
  ******************************************************************************/
-
-static void HWTIMER_SYS_PitIsr(void);
-static _hwtimer_error_code_t HWTIMER_SYS_PitInit(hwtimer_t *hwtimer, uint32_t pitId, uint32_t isrPrior, void *data);
+void HWTIMER_SYS_PitIsrAction(uint8_t pitChannel);
+static _hwtimer_error_code_t HWTIMER_SYS_PitInit(hwtimer_t *hwtimer, uint32_t pitId, void *data);
 static _hwtimer_error_code_t HWTIMER_SYS_PitDeinit(hwtimer_t *hwtimer);
-static _hwtimer_error_code_t HWTIMER_SYS_PitSetDiv(hwtimer_t *hwtimer, uint32_t divider);
+static _hwtimer_error_code_t HWTIMER_SYS_PitSetDiv(hwtimer_t *hwtimer, uint32_t period);
 static _hwtimer_error_code_t HWTIMER_SYS_PitStart(hwtimer_t *hwtimer);
 static _hwtimer_error_code_t HWTIMER_SYS_PitStop(hwtimer_t *hwtimer);
 static _hwtimer_error_code_t HWTIMER_SYS_PitGetTime(hwtimer_t *hwtimer, hwtimer_time_t *time);
@@ -75,7 +75,7 @@ static hwtimer_t *g_hwtimersPit[FSL_FEATURE_PIT_TIMER_COUNT] = {0U};
 /*!
  * @cond DOXYGEN_PRIVATE
  *
- * @brief Interrupt service routine.
+ * @brief Called from the Interrupt service routine.
  *
  * Checks whether callback_func is not NULL,
  * and unless callback is blocked by callback_blocked being non-zero it calls the callback function with callback_data as parameter,
@@ -88,52 +88,44 @@ static hwtimer_t *g_hwtimersPit[FSL_FEATURE_PIT_TIMER_COUNT] = {0U};
  * @see HWTIMER_SYS_Pitstart
  * @see HWTIMER_SYS_Pitstop
  * @see HWTIMER_SYS_PitgetTime
- * @see HWTIMER_SYS_PitisrShared
  */
-static void HWTIMER_SYS_PitIsr(void)
+void HWTIMER_SYS_PitIsrAction(uint8_t pitChannel)
 {
-    uint32_t baseAddr = g_pitBaseAddr[0];
-    int i;
-    for (i = 0U; i < FSL_FEATURE_PIT_TIMER_COUNT; i++)
+    PIT_Type * base = g_pitBase[0];
+    hwtimer_t *hwtimer =  g_hwtimersPit[pitChannel];
+
+    /* If hwtimer exist*/
+    if (NULL != hwtimer)
     {
-        hwtimer_t *hwtimer =  g_hwtimersPit[i];
-        /* If hwtimer exist*/
-        if (NULL != hwtimer)
+        /* Check if interrupt is enabled for this channel. Cancel spurious interrupt */
+        if (!(PIT_BRD_TCTRL_TIE(base, pitChannel)))
         {
-            uint32_t pitChannel =  hwtimer->llContext[0U];
-            assert(pitChannel < FSL_FEATURE_PIT_TIMER_COUNT);
+            return;
+        }
 
-            /* Check if interrupt is enabled for this channel. Cancel spurious interrupt */
-            if (!(BR_PIT_TCTRLn_TIE(baseAddr, pitChannel)))
+        /* If interrupt occurred for this pit and channel*/
+        if(PIT_HAL_IsIntPending(base, pitChannel))
+        {
+            /* Clear interrupt flag */
+            PIT_HAL_ClearIntFlag(base, pitChannel);
+            /* Following part of function is typically the same for all low level hwtimer drivers */
+            hwtimer->ticks++;
+
+            if (NULL != hwtimer->callbackFunc)
             {
-                continue;
-            }
-
-            /* If interrupt occurred for this pit and channel*/
-            if(PIT_HAL_IsIntPending(baseAddr, pitChannel))
-            {
-                /* Clear interrupt flag */
-                PIT_HAL_ClearIntFlag(baseAddr, pitChannel);
-                /* Following part of function is typically the same for all low level hwtimer drivers */
-                hwtimer->ticks++;
-
-                if (NULL != hwtimer->callbackFunc)
+                if (hwtimer->callbackBlocked)
                 {
-                    if (hwtimer->callbackBlocked)
-                    {
-                        hwtimer->callbackPending = 1U;
-                    }
-                    else
-                    {
-                        /* Run user function*/
-                        hwtimer->callbackFunc(hwtimer->callbackData);
-                    }
+                    hwtimer->callbackPending = 1U;
+                }
+                else
+                {
+                    /* Run user function*/
+                    hwtimer->callbackFunc(hwtimer->callbackData);
                 }
             }
         }
     }
 }
-
 
 /*!
  * @cond DOXYGEN_PRIVATE
@@ -143,11 +135,9 @@ static void HWTIMER_SYS_PitIsr(void)
  *
  * Called by hwtimer_init().
  * Initializes the HWTIMER structure.
- * Sets interrupt priority and registers ISR.
  *
  * @param hwtimer[in]   Returns initialized hwtimer structure handle.
  * @param pitId[in]     Determines PIT module and pit channel.
- * @param isrPrior[in]  Interrupt priority for PIT
  * @param data[in]      Specific data. Not used in this timer.
  *
  * @return kHwtimerSuccess              Success.
@@ -159,13 +149,12 @@ static void HWTIMER_SYS_PitIsr(void)
  * @see HWTIMER_SYS_PitStart
  * @see HWTIMER_SYS_PitStop
  * @see HWTIMER_SYS_PitGetTime
- * @see HWTIMER_SYS_PitIsr
- * @see HWTIMER_SYS_PitIsrShared
+ * @see HWTIMER_SYS_PitIsrAction
  */
-static _hwtimer_error_code_t HWTIMER_SYS_PitInit(hwtimer_t * hwtimer, uint32_t pitId, uint32_t isrPrior, void *data)
+static _hwtimer_error_code_t HWTIMER_SYS_PitInit(hwtimer_t * hwtimer, uint32_t pitId, void *data)
 {
     uint32_t pitChannel;
-    uint32_t baseAddr = g_pitBaseAddr[0];
+    PIT_Type * base = g_pitBase[0];
     if (FSL_FEATURE_PIT_TIMER_COUNT < pitId)
     {
         return kHwtimerInvalidInput;
@@ -182,27 +171,21 @@ static _hwtimer_error_code_t HWTIMER_SYS_PitInit(hwtimer_t * hwtimer, uint32_t p
     CLOCK_SYS_EnablePitClock(0U);
 
     /* Enable PIT module clock */
-    PIT_HAL_Enable(baseAddr);
+    PIT_HAL_Enable(base);
 
     /* Allows the timers to be stopped when the device enters the Debug mode. */
-    PIT_HAL_SetTimerRunInDebugCmd(baseAddr, false);
+    PIT_HAL_SetTimerRunInDebugCmd(base, false);
 
     /* Disable timer and interrupt */
-    PIT_HAL_StopTimer(baseAddr, pitChannel);
-    PIT_HAL_SetIntCmd(baseAddr, pitChannel, false);
+    PIT_HAL_StopTimer(base, pitChannel);
+    PIT_HAL_SetIntCmd(base, pitChannel, false);
     /* Clear any pending interrupt */
-    PIT_HAL_ClearIntFlag(baseAddr, pitChannel);
+    PIT_HAL_ClearIntFlag(base, pitChannel);
 
     /* Store hwtimer in global array */
     g_hwtimersPit[pitChannel] = hwtimer;
 
-    /* Enable PIT interrupt.*/
-    if (kStatus_OSA_Success != OSA_InstallIntHandler(g_pitIrqId[pitChannel], HWTIMER_SYS_PitIsr))
-    {
-        return kHwtimerRegisterHandlerError;
-    }
-
-    PIT_HAL_SetIntCmd(baseAddr, pitChannel, true);
+    PIT_HAL_SetIntCmd(base, pitChannel, true);
     INT_SYS_EnableIRQ(g_pitIrqId[pitChannel]);
 
     return kHwtimerSuccess;
@@ -225,13 +208,12 @@ static _hwtimer_error_code_t HWTIMER_SYS_PitInit(hwtimer_t * hwtimer, uint32_t p
  * @see HWTIMER_SYS_PitStart
  * @see HWTIMER_SYS_PitStop
  * @see HWTIMER_SYS_PitGetTime
- * @see HWTIMER_SYS_PitIsr
- * @see HWTIMER_SYS_PitIsrShared
+ * @see HWTIMER_SYS_PitIsrAction
  */
 static _hwtimer_error_code_t HWTIMER_SYS_PitDeinit(hwtimer_t * hwtimer)
 {
-    /* We belive that if isr is shared ,than is shared for every chanells */
-    uint32_t baseAddr = g_pitBaseAddr[0];
+    /* We believe that if isr is shared ,than is shared for every channels */
+    PIT_Type * base = g_pitBase[0];
     uint32_t pitChannel;
     int i;
 
@@ -241,9 +223,9 @@ static _hwtimer_error_code_t HWTIMER_SYS_PitDeinit(hwtimer_t * hwtimer)
     assert(pitChannel < FSL_FEATURE_PIT_TIMER_COUNT);
 
     /* Remove Hwtimer from global array and disable interrupt on this channel */
-    PIT_HAL_StopTimer(baseAddr, pitChannel);
-    PIT_HAL_SetIntCmd(baseAddr, pitChannel, false);
-    PIT_HAL_ClearIntFlag(baseAddr, pitChannel);
+    PIT_HAL_StopTimer(base, pitChannel);
+    PIT_HAL_SetIntCmd(base, pitChannel, false);
+    PIT_HAL_ClearIntFlag(base, pitChannel);
 
     /* Pit can have shared interrupt vectors. We need un-register interrupt only when all hwtimers are de-inited(set to NULL) */
     g_hwtimersPit[pitChannel] = NULL;
@@ -257,27 +239,22 @@ static _hwtimer_error_code_t HWTIMER_SYS_PitDeinit(hwtimer_t * hwtimer)
         }
     }
 
-    if (i == FSL_FEATURE_PIT_TIMER_COUNT)
-    {
-        if(kStatus_OSA_Success != OSA_InstallIntHandler(g_pitIrqId[pitChannel], NULL))
-        {
-            return kHwtimerRegisterHandlerError;
-        }
-    }
-
     return kHwtimerSuccess;
 }
 
 /*!
  * @cond DOXYGEN_PRIVATE
  *
- * @brief Sets up timer with divider settings closest to the requested total divider factor.
+ * @brief Sets up timer with divider settings closest to the requested period in microseconds.
+ *
+ * The function gets the value of the base frequency of the timer via clock manager and calculates required
+ * divider ratio.
  *
  * Called by hwtimer_set_freq() and hwtimer_set_period().
  * Fills in the divider (actual total divider) and modulo (sub-tick resolution) members of the HWTIMER structure.
  *
  * @param hwtimer[in] Pointer to hwtimer structure.
- * @param divider[in] Value which divide input clock of pit timer module to obtain requested period of timer.
+ * @param period[in] Required period of timer in micro seconds.
  *
  * @return kHwtimerSuccess                Success.
  *
@@ -286,21 +263,36 @@ static _hwtimer_error_code_t HWTIMER_SYS_PitDeinit(hwtimer_t * hwtimer)
  * @see HWTIMER_SYS_PitStart
  * @see HWTIMER_SYS_PitStop
  * @see HWTIMER_SYS_PitGetTime
- * @see HWTIMER_SYS_PitIsr
- * @see HWTIMER_SYS_PitIsrShared
+ * @see HWTIMER_SYS_PitIsrAction
  */
-static _hwtimer_error_code_t HWTIMER_SYS_PitSetDiv(hwtimer_t * hwtimer, uint32_t divider)
+static _hwtimer_error_code_t HWTIMER_SYS_PitSetDiv(hwtimer_t * hwtimer, uint32_t period)
 {
     uint32_t pitChannel;
-    uint32_t baseAddr = g_pitBaseAddr[0];
+    PIT_Type * base = g_pitBase[0];
+    uint64_t divider;
+
     assert(NULL != hwtimer);
-    assert(0U != divider);
+
+    /* Store clock frequency in struct. */
+    hwtimer->clockFreq = CLOCK_SYS_GetPitFreq(0);
+
+    divider = (((uint64_t)hwtimer->clockFreq * period)) / 1000000U ;
+    /* If required frequency is higher than input clock frequency, we set divider 1 (for setting the highest possible frequency) */
+    if (0U == divider)
+    {
+        divider = 1U;
+    }
+    /* if divider is greater than 32b value we set divider to max 32b value */
+    else if (divider & 0xFFFFFFFF00000000U)
+    {
+        return kHwtimerInvalidInput;
+    }
 
     pitChannel = hwtimer->llContext[0U];
     assert(pitChannel < FSL_FEATURE_PIT_TIMER_COUNT);
 
     /* Set divider for pit chanell */
-    PIT_HAL_SetTimerPeriodByCount(baseAddr, pitChannel, divider - 1U);
+    PIT_HAL_SetTimerPeriodByCount(base, pitChannel, divider - 1U);
 
     hwtimer->divider    = divider;
     hwtimer->modulo     = divider;
@@ -326,22 +318,21 @@ static _hwtimer_error_code_t HWTIMER_SYS_PitSetDiv(hwtimer_t * hwtimer, uint32_t
  * @see HWTIMER_SYS_PitSetDiv
  * @see HWTIMER_SYS_PitStop
  * @see HWTIMER_SYS_PitGet_time
- * @see HWTIMER_SYS_PitIsr
- * @see HWTIMER_SYS_PitIsrShared
+ * @see HWTIMER_SYS_PitIsrAction
  */
 static _hwtimer_error_code_t HWTIMER_SYS_PitStart(hwtimer_t * hwtimer)
 {
     uint32_t pitChannel;
-    uint32_t baseAddr = g_pitBaseAddr[0];
+    PIT_Type * base = g_pitBase[0];
     assert(NULL != hwtimer);
 
     pitChannel = hwtimer->llContext[0U];
     assert(pitChannel < FSL_FEATURE_PIT_TIMER_COUNT);
 
-    PIT_HAL_StopTimer(baseAddr, pitChannel);
-    PIT_HAL_ClearIntFlag(baseAddr, pitChannel);
-    PIT_HAL_SetIntCmd(baseAddr, pitChannel, true);
-    PIT_HAL_StartTimer(baseAddr, pitChannel);
+    PIT_HAL_StopTimer(base, pitChannel);
+    PIT_HAL_ClearIntFlag(base, pitChannel);
+    PIT_HAL_SetIntCmd(base, pitChannel, true);
+    PIT_HAL_StartTimer(base, pitChannel);
 
     return kHwtimerSuccess;
 }
@@ -362,22 +353,21 @@ static _hwtimer_error_code_t HWTIMER_SYS_PitStart(hwtimer_t * hwtimer)
  * @see HWTIMER_SYS_PitSetDiv
  * @see HWTIMER_SYS_PitStart
  * @see HWTIMER_SYS_PitGetTime
- * @see HWTIMER_SYS_PitIsr
- * @see HWTIMER_SYS_PitIsrShared
+ * @see HWTIMER_SYS_PitIsrAction
  */
 static _hwtimer_error_code_t HWTIMER_SYS_PitStop(hwtimer_t * hwtimer)
 {
     uint32_t pitChannel;
-    uint32_t baseAddr = g_pitBaseAddr[0];
+    PIT_Type * base = g_pitBase[0];
     assert(NULL != hwtimer);
 
     pitChannel = hwtimer->llContext[0U];
     assert(pitChannel < FSL_FEATURE_PIT_TIMER_COUNT);
 
     /* Disable timer and interrupt */
-    PIT_HAL_StopTimer(baseAddr, pitChannel);
-    PIT_HAL_SetIntCmd(baseAddr, pitChannel, false);
-    PIT_HAL_ClearIntFlag(baseAddr, pitChannel);
+    PIT_HAL_StopTimer(base, pitChannel);
+    PIT_HAL_SetIntCmd(base, pitChannel, false);
+    PIT_HAL_ClearIntFlag(base, pitChannel);
 
     return kHwtimerSuccess;
 }
@@ -399,14 +389,13 @@ static _hwtimer_error_code_t HWTIMER_SYS_PitStop(hwtimer_t * hwtimer)
  * @see HWTIMER_SYS_PitSetDiv
  * @see HWTIMER_SYS_PitStart
  * @see HWTIMER_SYS_PitStop
- * @see HWTIMER_SYS_PitIsr
- * @see HWTIMER_SYS_PitIsrShared
+ * @see HWTIMER_SYS_PitIsrAction
  */
 static _hwtimer_error_code_t HWTIMER_SYS_PitGetTime(hwtimer_t *hwtimer, hwtimer_time_t *time)
 {
     uint32_t    pitChannel;
     uint32_t    tempCval;
-    uint32_t baseAddr = g_pitBaseAddr[0];
+    PIT_Type * base = g_pitBase[0];
     assert(NULL != hwtimer);
     assert(NULL != time);
 
@@ -415,24 +404,24 @@ static _hwtimer_error_code_t HWTIMER_SYS_PitGetTime(hwtimer_t *hwtimer, hwtimer_
 
     /* Enter critical section to avoid disabling interrupt from pit for very long time */
     OSA_EnterCritical(kCriticalDisableInt);
-    PIT_HAL_SetIntCmd(baseAddr, pitChannel, false);
+    PIT_HAL_SetIntCmd(base, pitChannel, false);
 
     time->ticks = hwtimer->ticks;
 
-    tempCval = PIT_HAL_ReadTimerCount(baseAddr, pitChannel);
+    tempCval = PIT_HAL_ReadTimerCount(base, pitChannel);
     /* Check pending interrupt flag */
-   if (PIT_HAL_IsIntPending(baseAddr, pitChannel))
+   if (PIT_HAL_IsIntPending(base, pitChannel))
     {
-        PIT_HAL_SetIntCmd(baseAddr, pitChannel, true);
+        PIT_HAL_SetIntCmd(base, pitChannel, true);
         OSA_ExitCritical(kCriticalDisableInt);
         time->subTicks = hwtimer->modulo - 1U;
     }
     else
     {
-        PIT_HAL_SetIntCmd(baseAddr, pitChannel, true);
+        PIT_HAL_SetIntCmd(base, pitChannel, true);
         OSA_ExitCritical(kCriticalDisableInt);
         /* todo: following line should be updated when HAL will be updated with this functionality. */
-        time->subTicks = HW_PIT_LDVALn_RD(baseAddr, pitChannel) - tempCval;
+        time->subTicks = PIT_RD_LDVAL(base, pitChannel) - tempCval;
     }
 
     return kHwtimerSuccess;

@@ -51,7 +51,7 @@
 
 #define AUDIO_CONTROLLER    AUDIO_CONTROLLER_SAI /*!< Define audio controller sai */
 #define AUDIO_CONTROLLER_SAI    1
-#define AUDIO_CONTROLLER_NUM  HW_I2S_INSTANCE_COUNT
+#define AUDIO_CONTROLLER_NUM  I2S_INSTANCE_COUNT
 
 #define AUDIO_CODEC AUDIO_CODEC_SGTL5000 /*!< Define audio codec sgtl5000 */
 #define AUDIO_CODEC_SGTL5000    1
@@ -131,8 +131,8 @@ typedef struct AudioControllerOperation
     void (*Ctrl_RxSetDmaCmd)(uint32_t instance, bool enable); /*!< Enable/disable Rx DMA. */
     uint32_t (*Ctrl_TxGetWatermark)(uint32_t instance); /*!< Get watermark of T. */
     uint32_t (*Ctrl_RxGetWatermark)(uint32_t instance); /*!< Get watermark of Rx. */
-    uint32_t* (*Ctrl_TxGetFifoAddr)(uint32_t instance,uint32_t fifo_channel); /*!< Gets Tx FIFO address */
-    uint32_t* (*Ctrl_RxGetFifoAddr)(uint32_t instance,uint32_t fifo_channel); /*!< Gets Rx FIFO address */
+    uint32_t (*Ctrl_TxGetFifoAddr)(uint32_t instance,uint32_t fifo_channel); /*!< Gets Tx FIFO address */
+    uint32_t (*Ctrl_RxGetFifoAddr)(uint32_t instance,uint32_t fifo_channel); /*!< Gets Rx FIFO address */
     uint32_t (*Ctrl_SendData)(uint32_t instance, uint8_t *addr, uint32_t len); /*!< Sends data function*/
     uint32_t (*Ctrl_ReceiveData)(uint32_t instance, uint8_t *addr, uint32_t len); /*!< Receives data*/
 } audio_ctrl_operation_t;

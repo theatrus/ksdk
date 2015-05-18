@@ -30,16 +30,19 @@
 
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_PIT_COUNT
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Table of base addresses for pit instances. */
-const uint32_t g_pitBaseAddr[] = PIT_BASE_ADDRS;
+PIT_Type * const g_pitBase[] = PIT_BASE_PTRS;
 
 /* Table to save PIT IRQ enum numbers defined in CMSIS files. */
 const IRQn_Type g_pitIrqId[] = PIT_IRQS;
 
+#endif /* FSL_FEATURE_SOC_PIT_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

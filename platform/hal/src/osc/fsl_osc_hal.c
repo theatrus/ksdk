@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,6 +29,7 @@
  */
 
 #include "fsl_osc_hal.h"
+#if FSL_FEATURE_SOC_OSC_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -40,149 +41,21 @@
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : OSC_HAL_SetExternalRefClkCmd
- * Description   : Enable/disable the external reference clock 
- * This function will enable/disable the external reference clock output 
- * for oscillator - that is the OSCERCLK. This clock will be used by many 
- * peripherals. It should be enabled at early system init stage to ensure the 
- * peripherals could select it and use it.
- * 
- *END**************************************************************************/
-void OSC_HAL_SetExternalRefClkCmd(uint32_t baseAddr, bool enable)
-{
-    BW_OSC_CR_ERCLKEN(baseAddr, enable);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : OSC_HAL_GetExternalRefClkCmd
- * Description   : Get the external reference clock enable setting for osc
- * This function will get the external reference clock output enable setting 
- * for oscillator - that is the OSCERCLK. This clock will be used by many 
- * peripherals. It should be enabled at early system init stage to ensure the 
- * peripherals could select it and use it.
- * 
- *END**************************************************************************/
-bool OSC_HAL_GetExternalRefClkCmd(uint32_t baseAddr)
-{
-    return (bool)BR_OSC_CR_ERCLKEN(baseAddr);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : OSC_HAL_SetExternalRefClkInStopModeCmd
- * Description   : Enable/disable the external ref clock in stop mode 
- * This function will enable/disable the external reference clock (OSCERCLK) 
- * when MCU enters Stop mode. 
- * 
- *END**************************************************************************/
-void OSC_HAL_SetExternalRefClkInStopModeCmd(uint32_t baseAddr, bool enable)
-{
-    BW_OSC_CR_EREFSTEN(baseAddr, enable);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : OSC_HAL_GetExternalRefClkInStopModeCmd
- * Description   : Get the external ref clock enable setting for osc in stop mode 
- * This function will get the external reference clock (OSCERCLK) setting when 
- * MCU enters Stop mode. 
- * 
- *END**************************************************************************/
-bool OSC_HAL_GetExternalRefClkInStopModeCmd(uint32_t baseAddr)
-{
-    return (bool)BR_OSC_CR_EREFSTEN(baseAddr);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : OSC_HAL_SetCapacitorCmd
+ * Function Name : OSC_HAL_SetCapacitor
  * Description   : Enable/disable the capacitor configuration for oscillator
  * This function will enable/disable the specified capacitors configuration for  
  * oscillator. This should be done in early system level init function call
  * based on system configuration.
  * 
  *END**************************************************************************/
-void OSC_HAL_SetCapacitorCmd(uint32_t baseAddr, 
-                             osc_capacitor_config_t capacitorConfig,
-                             bool enable)
+void OSC_HAL_SetCapacitor(OSC_Type * base, uint32_t bitMask)
 {
-    if (capacitorConfig == kOscCapacitor2p)
-    {
-        BW_OSC_CR_SC2P(baseAddr, enable);
-    }
-    else if (capacitorConfig == kOscCapacitor4p)
-    {
-        BW_OSC_CR_SC4P(baseAddr, enable);
-    }
-    else if (capacitorConfig == kOscCapacitor8p)
-    {
-        BW_OSC_CR_SC8P(baseAddr, enable);
-    }
-    else if (capacitorConfig == kOscCapacitor16p)
-    {
-        BW_OSC_CR_SC16P(baseAddr, enable);
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : OSC_HAL_GetCapacitorCmd
- * Description   : Get the capacitor configuration for specific oscillator
- * This function will get the specified capacitors configuration for the 
- * oscillator.
- * 
- *END**************************************************************************/
-bool OSC_HAL_GetCapacitorCmd(uint32_t baseAddr, 
-                             osc_capacitor_config_t capacitorConfig)
-{
-    if (capacitorConfig == kOscCapacitor2p)
-    {
-        return (bool)BR_OSC_CR_SC2P(baseAddr);
-    }
-    else if (capacitorConfig == kOscCapacitor4p)
-    {
-        return (bool)BR_OSC_CR_SC4P(baseAddr);
-    }
-    else if (capacitorConfig == kOscCapacitor8p)
-    {
-        return (bool)BR_OSC_CR_SC8P(baseAddr);
-    }
-    else if (capacitorConfig == kOscCapacitor16p)
-    {
-        return (bool)BR_OSC_CR_SC16P(baseAddr);
-    }
-
-    return 0;
-}
-
-#if FSL_FEATURE_OSC_HAS_EXT_REF_CLOCK_DIVIDER
-/*FUNCTION**********************************************************************
- *
- * Function Name : OSC_HAL_SetExternalRefClkDivCmd
- * Description   : Set the external reference clock divider setting for osc
- * This function will get the external reference clock divider setting 
- * for oscillator - that is the OSCERCLK. This clock will be used by many 
- * peripherals. 
- * 
- *END**************************************************************************/
-void OSC_HAL_SetExternalRefClkDivCmd(uint32_t baseAddr, uint32_t divider)
-{
-    BW_OSC_DIV_ERPS(baseAddr, divider);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : OSC_HAL_GetExternalRefClkDivCmd
- * Description   : Get the external reference clock divider setting for osc
- * This function will get the external reference clock divider setting 
- * for oscillator - that is the OSCERCLK. This clock will be used by many 
- * peripherals. 
- * 
- *END**************************************************************************/
-uint32_t OSC_HAL_GetExternalRefClkDivCmd(uint32_t baseAddr)
-{
-    return BR_OSC_DIV_ERPS(baseAddr);
+    OSC_WR_CR(base, (OSC_RD_CR(base)
+                    & ~(OSC_CR_SC2P_MASK |
+                        OSC_CR_SC4P_MASK |
+                        OSC_CR_SC8P_MASK |
+                        OSC_CR_SC16P_MASK))
+                    | bitMask);
 }
 #endif
 

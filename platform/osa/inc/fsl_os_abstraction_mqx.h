@@ -34,7 +34,7 @@
 #if defined ( __IAR_SYSTEMS_ICC__ )
 /**
  * Workaround to disable MISRA C message suppress warnings for IAR compiler.
- * Will be removed when MQX gets MISRA C compliant.
+ * Will be removed when MQX RTOS gets MISRA C compliant.
  * http://supp.iar.com/Support/?note=24725
  */
 #define MISRAC_DISABLE _Pragma ("diag_suppress=                       \
@@ -80,7 +80,7 @@
 #include <stdint.h>
 /* Include MQX RTOS API */
 MISRAC_DISABLE
-#include "mqx_sdk_config.h"
+#include "mqx_cnfg.h"
 #include "mqx.h"
 #include "psp.h"
 #include "lwevent.h"
@@ -99,7 +99,7 @@ MISRAC_ENABLE
  * Declarations
  ******************************************************************************/
 
-/*! @brief Type for MQX mutex. */
+/*! @brief Type for MQX RTOS mutex. */
 
 /*! @brief Type for a semaphore. */
 typedef LWSEM_STRUCT semaphore_t;
@@ -141,10 +141,25 @@ typedef void *msg_queue_handler_t;
 /*! @brief OSA's time range in millisecond, OSA time wraps if exceeds this value. */
 #define FSL_OSA_TIME_RANGE 0xFFFFFFFFU
 
-/*! @brief The priority of MQX's Main_Task. */
+/*! @brief The default interrupt handler installed in vector table. */
+#define OSA_DEFAULT_INT_HANDLER  (OSA_DefaultIntHandler())
+
+/*! @brief The default interrupt handler installed in vector table. */
+static inline osa_int_handler_t OSA_DefaultIntHandler(void)
+{
+#if defined ( __IAR_SYSTEMS_ICC__ )
+_Pragma ("diag_suppress = Pm138")
+#endif
+    return (osa_int_handler_t)_int_default_isr;
+#if defined ( __IAR_SYSTEMS_ICC__ )
+_Pragma ("diag_remark = PM138")
+#endif
+}
+
+/*! @brief The priority of MQX RTOS Main_Task. */
 /*
- * OSA provides priority 0~15, these priorities are converted to MQX's priority
- * by adding 7. MQX's Main_Task should have the lowest priority(except idle),
+ * OSA provides priority 0~15, these priorities are converted to MQX RTOS priority
+ * by adding 7. MQX RTOS Main_Task should have the lowest priority(except idle),
  * so that other tasks could be created dynamically.
  */
 #define MQX_MAIN_TASK_PRIORITY (7+16)
@@ -163,13 +178,13 @@ typedef void *msg_queue_handler_t;
  * @param task The task function.
  * @param stackSize The stack size this task needs in bytes.
  */
-#define OSA_TASK_DEFINE(task, stackSize)                             \
-    task_stack_t task##_stack[MQX_REQUIRED_STACK_SIZE((stackSize)/sizeof(task_stack_t))+1]; \
+#define OSA_TASK_DEFINE(task, stackSize) \
+    task_stack_t task##_stack[MQX_REQUIRED_STACK_SIZE(stackSize)/sizeof(task_stack_t)+1]; \
     task_handler_t task##_task_handler;
 
 /*!
- * @brief To provide unified task piority for upper layer, OSA layer makes conversion.
- * MQX's highest 7 priorities are special priorities.
+ * @brief To provide unified task priority for upper layer, OSA layer makes conversion.
+ * MQX RTOS highest 7 priorities are special priorities.
  */
 #define PRIORITY_OSA_TO_RTOS(osa_prio)   ((osa_prio)+7U)
 #define PRIORITY_RTOS_TO_OSA(rtos_prio)  ((rtos_prio)-7U)

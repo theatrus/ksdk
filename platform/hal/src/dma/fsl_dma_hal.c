@@ -28,6 +28,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "fsl_dma_hal.h"
+#if FSL_FEATURE_SOC_DMA_COUNT
 
 /*******************************************************************************
  * Code
@@ -39,13 +40,13 @@
  * Description   : Set all registers for the channel to 0.
  *
  *END**************************************************************************/
-void DMA_HAL_Init(uint32_t baseAddr,uint32_t channel)
+void DMA_HAL_Init(DMA_Type * base,uint32_t channel)
 {
     assert(channel < FSL_FEATURE_DMA_DMAMUX_CHANNELS);
-    HW_DMA_SARn_WR(baseAddr,channel,0);
-    HW_DMA_DARn_WR(baseAddr,channel,0);
-    HW_DMA_DCRn_WR(baseAddr,channel,0);
-    HW_DMA_DSRn_WR(baseAddr,channel, 0);
+    DMA_WR_SAR(base,channel,0);
+    DMA_WR_DAR(base,channel,0);
+    DMA_WR_DCR(base,channel,0);
+    DMA_WR_DSR(base,channel, 0);
 }
 
 /*FUNCTION**********************************************************************
@@ -55,7 +56,7 @@ void DMA_HAL_Init(uint32_t baseAddr,uint32_t channel)
  *
  *END**************************************************************************/
 void DMA_HAL_ConfigTransfer(
-    uint32_t baseAddr,uint32_t channel,dma_transfer_size_t size,dma_transfer_type_t type,
+    DMA_Type * base,uint32_t channel,dma_transfer_size_t size,dma_transfer_type_t type,
     uint32_t sourceAddr, uint32_t destAddr, uint32_t length)
 {
 
@@ -66,34 +67,34 @@ void DMA_HAL_ConfigTransfer(
     config.linkType = kDmaChannelLinkDisable;
 
     /* Common configuration. */
-    DMA_HAL_SetAutoAlignCmd(baseAddr, channel, false);
-    DMA_HAL_SetCycleStealCmd(baseAddr, channel, false);
-    DMA_HAL_SetAsyncDmaRequestCmd(baseAddr, channel, false);
-    DMA_HAL_SetDisableRequestAfterDoneCmd(baseAddr, channel, true);
-    DMA_HAL_SetChanLink(baseAddr, channel, &config);
+    DMA_HAL_SetAutoAlignCmd(base, channel, false);
+    DMA_HAL_SetCycleStealCmd(base, channel, true);
+    DMA_HAL_SetAsyncDmaRequestCmd(base, channel, false);
+    DMA_HAL_SetDisableRequestAfterDoneCmd(base, channel, true);
+    DMA_HAL_SetChanLink(base, channel, &config);
 
-    DMA_HAL_SetIntCmd(baseAddr, channel, true);
-    DMA_HAL_SetSourceAddr(baseAddr, channel, sourceAddr);
-    DMA_HAL_SetDestAddr(baseAddr, channel, destAddr);
-    DMA_HAL_SetSourceModulo(baseAddr, channel, kDmaModuloDisable);
-    DMA_HAL_SetDestModulo(baseAddr, channel, kDmaModuloDisable);
-    DMA_HAL_SetSourceTransferSize(baseAddr, channel, size);
-    DMA_HAL_SetDestTransferSize(baseAddr, channel, size);
-    DMA_HAL_SetTransferCount(baseAddr, channel, length);
+    DMA_HAL_SetIntCmd(base, channel, true);
+    DMA_HAL_SetSourceAddr(base, channel, sourceAddr);
+    DMA_HAL_SetDestAddr(base, channel, destAddr);
+    DMA_HAL_SetSourceModulo(base, channel, kDmaModuloDisable);
+    DMA_HAL_SetDestModulo(base, channel, kDmaModuloDisable);
+    DMA_HAL_SetSourceTransferSize(base, channel, size);
+    DMA_HAL_SetDestTransferSize(base, channel, size);
+    DMA_HAL_SetTransferCount(base, channel, length);
 
     switch (type)
     {
       case kDmaMemoryToPeripheral:
-          DMA_HAL_SetSourceIncrementCmd(baseAddr, channel, true);
-          DMA_HAL_SetDestIncrementCmd(baseAddr, channel, false);
+          DMA_HAL_SetSourceIncrementCmd(base, channel, true);
+          DMA_HAL_SetDestIncrementCmd(base, channel, false);
           break;
       case kDmaPeripheralToMemory:
-          DMA_HAL_SetSourceIncrementCmd(baseAddr, channel, false);
-          DMA_HAL_SetDestIncrementCmd(baseAddr, channel, true);
+          DMA_HAL_SetSourceIncrementCmd(base, channel, false);
+          DMA_HAL_SetDestIncrementCmd(base, channel, true);
           break;
       case kDmaMemoryToMemory:
-          DMA_HAL_SetSourceIncrementCmd(baseAddr, channel, true);
-          DMA_HAL_SetDestIncrementCmd(baseAddr, channel, true);
+          DMA_HAL_SetSourceIncrementCmd(base, channel, true);
+          DMA_HAL_SetDestIncrementCmd(base, channel, true);
           break;
       default:
           break;
@@ -108,32 +109,56 @@ void DMA_HAL_ConfigTransfer(
  *
  *END**************************************************************************/
 void DMA_HAL_SetChanLink(
-        uint32_t baseAddr, uint8_t channel, dma_channel_link_config_t *mode)
+        DMA_Type * base, uint8_t channel, dma_channel_link_config_t *mode)
 {
     assert(channel < FSL_FEATURE_DMA_DMAMUX_CHANNELS);
 
-    BW_DMA_DCRn_LINKCC(baseAddr, channel, mode->linkType);
+    DMA_BWR_DCR_LINKCC(base, channel, mode->linkType);
 
     switch(mode->linkType)
     {
         case kDmaChannelLinkDisable:
             break;
         case kDmaChannelLinkChan1AndChan2:
-            BW_DMA_DCRn_LCH1(baseAddr, channel, mode->channel1);
-            BW_DMA_DCRn_LCH2(baseAddr, channel, mode->channel2);
-            DMA_HAL_SetCycleStealCmd(baseAddr,channel,true);
+            DMA_BWR_DCR_LCH1(base, channel, mode->channel1);
+            DMA_BWR_DCR_LCH2(base, channel, mode->channel2);
+            DMA_HAL_SetCycleStealCmd(base,channel,true);
             break;
         case kDmaChannelLinkChan1:
-            BW_DMA_DCRn_LCH1(baseAddr, channel, mode->channel1);
-            DMA_HAL_SetCycleStealCmd(baseAddr,channel,true);
+            DMA_BWR_DCR_LCH1(base, channel, mode->channel1);
+            DMA_HAL_SetCycleStealCmd(base,channel,true);
             break;
         case kDmaChannelLinkChan1AfterBCR0:
-            BW_DMA_DCRn_LCH1(baseAddr, channel, mode->channel1);
+            DMA_BWR_DCR_LCH1(base, channel, mode->channel1);
             break;
         default:
             break;
     }
 }
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : DMA_HAL_GetStatus
+ * Description   : Get dma transfer status.
+ *
+ *END**************************************************************************/
+dma_error_status_t DMA_HAL_GetStatus(DMA_Type * base, uint8_t channel)
+{
+    assert(channel < FSL_FEATURE_DMA_DMAMUX_CHANNELS);
+    
+    dma_error_status_t status;
+    uint32_t val = DMA_RD_DSR_BCR(base,channel);
+    status.dmaBytesToBeTransffered = val & DMA_DSR_BCR_BCR_MASK;
+    status.dmaBusy = (bool)((val & DMA_DSR_BCR_BSY_MASK) >> DMA_DSR_BCR_BSY_SHIFT);
+    status.dmaTransDone = (bool)((val & DMA_DSR_BCR_DONE_MASK) >> DMA_DSR_BCR_DONE_SHIFT);
+    status.dmaPendingRequest = (bool)((val & DMA_DSR_BCR_REQ_MASK) >> DMA_DSR_BCR_REQ_SHIFT);
+    status.dmaDestBusError = (bool)((val & DMA_DSR_BCR_BED_MASK) >> DMA_DSR_BCR_BED_SHIFT);
+    status.dmaSourceBusError = (bool)((val & DMA_DSR_BCR_BES_MASK) >> DMA_DSR_BCR_BES_SHIFT);
+    status.dmaConfigError = (bool)((val & DMA_DSR_BCR_CE_MASK) >> DMA_DSR_BCR_CE_SHIFT);
+    return status;
+}
+
+#endif
 
 /*******************************************************************************
  * EOF

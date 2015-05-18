@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,8 +35,6 @@
 #include "fsl_device_registers.h"
 #include "fsl_mcg_hal.h"
 #include "fsl_sim_hal.h"
-#include "fsl_osc_hal.h"
-#include "fsl_lptmr_hal.h"
 #include "fsl_clock_manager.h"
 
 /*
@@ -52,115 +50,6 @@
  * Definitions
  ******************************************************************************/
 uint32_t g_ftmClkFreq[FTM_EXT_CLK_COUNT];          /* FTM_CLK          */
-
-/* Default pre-defined clock configurations. */
-clock_manager_user_config_t g_defaultClockConfigurations[CLOCK_CONFIG_NUM] =
-{
-    /* Configuration for enter VLPR mode. Core clock = 4MHz. */
-    {
-        .mcgConfig =
-        {
-            .mcg_mode           = kMcgModeBLPI,   // Work in BLPI mode.
-            .irclkEnable        = true,  // MCGIRCLK enable.
-            .irclkEnableInStop  = false, // MCGIRCLK disable in STOP mode.
-            .ircs               = kMcgInternalRefClkSelFast, // Select IRC4M.
-            .fcrdiv             = 0U,    // FCRDIV is 0.
-
-            .frdiv   = 0U,
-            .drs     = kMcgDcoRangeSelLow,  // Low frequency range
-            .dmx32   = kMcgDmx32Default,    // DCO has a default range of 25%
-            .oscsel  = kMcgOscselOsc,       // Select OSC
-
-            .pll0Enable        = false,  // PLL0 disable
-            .pll0EnableInStop  = false,  // PLL0 disalbe in STOP mode
-            .prdiv0            = 0U,
-            .vdiv0             = 0U,
-        },
-        .simConfig =
-        {
-            .PllFllSel = kClockPllFllSelIrc48M, // PLLFLLSEL select IRC48MCLK.
-            .er32kSrc  = kClockEr32kSrcLpo,     // ERCLK32K selection, use LPO.
-            .outdiv1   = 0U,
-            .outdiv2   = 0U,
-            .outdiv4   = 4U,
-        },
-        .oscerConfig =
-        {
-            .Enable       = true,  // OSCERCLK enable.
-            .EnableInStop = false, // OSCERCLK disable in STOP mode.
-        }
-    },
-
-    /* Configuration for enter RUN mode. Core clock = 80MHz. */
-    {
-        .mcgConfig =
-        {
-            .mcg_mode           = kMcgModePEE,   // Work in PEE mode.
-            .irclkEnable        = true,  // MCGIRCLK enable.
-            .irclkEnableInStop  = false, // MCGIRCLK disable in STOP mode.
-            .ircs               = kMcgInternalRefClkSelSlow, // Select IRC32k.
-            .fcrdiv             = 0U,    // FCRDIV is 0.
-
-            .frdiv   = 3U,
-            .drs     = kMcgDcoRangeSelLow,  // Low frequency range
-            .dmx32   = kMcgDmx32Default,    // DCO has a default range of 25%
-            .oscsel  = kMcgOscselOsc,       // Select OSC
-
-            .pll0Enable        = false,  // PLL0 disable
-            .pll0EnableInStop  = false,  // PLL0 disalbe in STOP mode
-            .prdiv0            = 0x3U,
-            .vdiv0             = 0x10U,
-        },
-        .simConfig =
-        {
-            .PllFllSel = kClockPllFllSelPll,    // PLLFLLSEL select PLL.
-            .er32kSrc  = kClockEr32kSrcLpo,     // ERCLK32K selection, use LPO.
-            .outdiv1   = 0U,
-            .outdiv2   = 1U,
-            .outdiv4   = 3U,
-        },
-        .oscerConfig =
-        {
-            .Enable       = true,  // OSCERCLK enable.
-            .EnableInStop = false, // OSCERCLK disable in STOP mode.
-        }
-    },
-
-    /* Configuration for HSRUN mode. Core clock = 120MHz. */
-    {
-        .mcgConfig =
-        {
-            .mcg_mode           = kMcgModePEE,   // Work in PEE mode.
-            .irclkEnable        = true,  // MCGIRCLK enable.
-            .irclkEnableInStop  = false, // MCGIRCLK disable in STOP mode.
-            .ircs               = kMcgInternalRefClkSelSlow, // Select IRC32k.
-            .fcrdiv             = 0U,    // FCRDIV is 0.
-
-            .frdiv   = 3U,
-            .drs     = kMcgDcoRangeSelLow,  // Low frequency range
-            .dmx32   = kMcgDmx32Default,    // DCO has a default range of 25%
-            .oscsel  = kMcgOscselOsc,       // Select OSC
-
-            .pll0Enable        = false,  // PLL0 disable
-            .pll0EnableInStop  = false,  // PLL0 disalbe in STOP mode
-            .prdiv0            = 0x1U,
-            .vdiv0             = 0x6U,
-        },
-        .simConfig =
-        {
-            .PllFllSel = kClockPllFllSelPll,    // PLLFLLSEL select PLL.
-            .er32kSrc  = kClockEr32kSrcLpo,     // ERCLK32K selection, use LPO.
-            .outdiv1   = 0U,
-            .outdiv2   = 1U,
-            .outdiv4   = 4U,
-        },
-        .oscerConfig =
-        {
-            .Enable       = true,  // OSCERCLK enable.
-            .EnableInStop = false, // OSCERCLK disable in STOP mode.
-        }
-    },
-};
 
 /*******************************************************************************
  * Code
@@ -198,31 +87,15 @@ static void CLOCK_SYS_FllStableDelay(void)
  *END**************************************************************************/
 static void CLOCK_SYS_SetSimConfigration(sim_config_t const *simConfig)
 {
-    CLOCK_HAL_SetOutDiv(SIM_BASE,
+    CLOCK_HAL_SetOutDiv(SIM,
                         simConfig->outdiv1,
                         simConfig->outdiv2,
                         0U,
                         simConfig->outdiv4);
 
-    CLOCK_HAL_SetPllfllSel(SIM_BASE, simConfig->PllFllSel);
+    CLOCK_HAL_SetPllfllSel(SIM, simConfig->pllFllSel);
 
-    CLOCK_HAL_SetExternalRefClock32kSrc(SIM_BASE, simConfig->er32kSrc);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CLOCK_SYS_SetOscerConfigration
- * Description   : This funtion sets the OSCERCLK for clock transition.
- *
- *END**************************************************************************/
-static void CLOCK_SYS_SetOscerConfigration(uint32_t instance,
-                                           oscer_config_t const *oscerConfig)
-{
-    OSC_HAL_SetExternalRefClkCmd(g_oscBaseAddr[instance],
-                                 oscerConfig->Enable);
-
-    OSC_HAL_SetExternalRefClkInStopModeCmd(g_oscBaseAddr[instance],
-                                           oscerConfig->EnableInStop);
+    CLOCK_HAL_SetExternalRefClock32kSrc(SIM, simConfig->er32kSrc);
 }
 
 /*FUNCTION**********************************************************************
@@ -239,7 +112,7 @@ clock_manager_error_code_t CLOCK_SYS_SetConfiguration(clock_manager_user_config_
 
     /* Set outdiv for safe output clock frequency. */
 
-    CLOCK_HAL_SetOutDiv(SIM_BASE, 1U, 2U, 0U, 4U);
+    CLOCK_HAL_SetOutDiv(SIM, 1U, 3U, 0U, 7U);
 
     /* Set MCG mode. */
     CLOCK_SYS_SetMcgMode(&config->mcgConfig, CLOCK_SYS_FllStableDelay);
@@ -249,6 +122,7 @@ clock_manager_error_code_t CLOCK_SYS_SetConfiguration(clock_manager_user_config_
 
     /* Set OSCERCLK setting. */
     CLOCK_SYS_SetOscerConfigration(0, &config->oscerConfig);
+    SystemCoreClock = CLOCK_SYS_GetCoreClockFreq();
 
     return kClockManagerSuccess;
 }
@@ -286,22 +160,25 @@ clock_manager_error_code_t CLOCK_SYS_GetFreq(clock_names_t clockName,
             *frequency = CLOCK_SYS_GetFixedFreqClockFreq();
             break;
         case kMcgFllClock:
-            *frequency = CLOCK_HAL_GetFllClk(MCG_BASE);
+            *frequency = CLOCK_HAL_GetFllClk(MCG);
             break;
         case kMcgPll0Clock:
-            *frequency = CLOCK_HAL_GetPll0Clk(MCG_BASE);
+            *frequency = CLOCK_HAL_GetPll0Clk(MCG);
             break;
         case kMcgOutClock:
-            *frequency = CLOCK_HAL_GetOutClk(MCG_BASE);
+            *frequency = CLOCK_HAL_GetOutClk(MCG);
             break;
         case kMcgIrClock:
-            *frequency = CLOCK_HAL_GetInternalRefClk(MCG_BASE);
+            *frequency = CLOCK_HAL_GetInternalRefClk(MCG);
             break;
         case kIrc48mClock:
             *frequency = CPU_INTERNAL_IRC_48M; 
             break;
         case kLpoClock:
             *frequency = CLOCK_SYS_GetLpoClockFreq();
+            break;
+        case kSystickClock:
+            *frequency = CLOCK_SYS_GetSystickFreq();
             break;
         default:
             *frequency = 0U;
@@ -321,7 +198,7 @@ clock_manager_error_code_t CLOCK_SYS_GetFreq(clock_names_t clockName,
  *END**************************************************************************/
 uint32_t CLOCK_SYS_GetCoreClockFreq(void)
 {
-    return CLOCK_HAL_GetOutClk(MCG_BASE) / (CLOCK_HAL_GetOutDiv1(SIM_BASE) + 1);
+    return CLOCK_HAL_GetOutClk(MCG) / (CLOCK_HAL_GetOutDiv1(SIM) + 1);
 }
 
 /*FUNCTION**********************************************************************
@@ -333,7 +210,7 @@ uint32_t CLOCK_SYS_GetCoreClockFreq(void)
  *END**************************************************************************/
 uint32_t CLOCK_SYS_GetSystemClockFreq(void)
 {
-    return CLOCK_HAL_GetOutClk(MCG_BASE) / (CLOCK_HAL_GetOutDiv1(SIM_BASE) + 1);
+    return CLOCK_HAL_GetOutClk(MCG) / (CLOCK_HAL_GetOutDiv1(SIM) + 1);
 }
 
 /*FUNCTION**********************************************************************
@@ -345,7 +222,7 @@ uint32_t CLOCK_SYS_GetSystemClockFreq(void)
  *END**************************************************************************/
 uint32_t CLOCK_SYS_GetBusClockFreq(void)
 {
-    return CLOCK_HAL_GetOutClk(MCG_BASE) / (CLOCK_HAL_GetOutDiv2(SIM_BASE) + 1);
+    return CLOCK_HAL_GetOutClk(MCG) / (CLOCK_HAL_GetOutDiv2(SIM) + 1);
 }
 
 /*FUNCTION**********************************************************************
@@ -357,7 +234,7 @@ uint32_t CLOCK_SYS_GetBusClockFreq(void)
  *END**************************************************************************/
 uint32_t CLOCK_SYS_GetFlashClockFreq(void)
 {
-    return CLOCK_HAL_GetOutClk(MCG_BASE) / (CLOCK_HAL_GetOutDiv4(SIM_BASE) + 1);
+    return CLOCK_HAL_GetOutClk(MCG) / (CLOCK_HAL_GetOutDiv4(SIM) + 1);
 }
 
 /*FUNCTION**********************************************************************
@@ -372,15 +249,15 @@ uint32_t CLOCK_SYS_GetPllFllClockFreq(void)
     uint32_t freq;
     clock_pllfll_sel_t src;
 
-    src = CLOCK_HAL_GetPllfllSel(SIM_BASE);
+    src = CLOCK_HAL_GetPllfllSel(SIM);
 
     switch (src)
     {
         case kClockPllFllSelFll:
-            freq = CLOCK_HAL_GetFllClk(MCG_BASE);
+            freq = CLOCK_HAL_GetFllClk(MCG);
             break;
         case kClockPllFllSelPll:
-            freq = CLOCK_HAL_GetPll0Clk(MCG_BASE);
+            freq = CLOCK_HAL_GetPll0Clk(MCG);
             break;
         case kClockPllFllSelIrc48M:
             freq = CPU_INTERNAL_IRC_48M;
@@ -404,7 +281,7 @@ uint32_t CLOCK_SYS_GetExternalRefClock32kFreq(void)
     clock_er32k_src_t src;
     uint32_t freq;
 
-    src = CLOCK_HAL_GetExternalRefClock32kSrc(SIM_BASE);
+    src = CLOCK_HAL_GetExternalRefClock32kSrc(SIM);
 
     switch (src)
     {
@@ -431,7 +308,7 @@ uint32_t CLOCK_SYS_GetExternalRefClock32kFreq(void)
  *END**************************************************************************/
 uint32_t CLOCK_SYS_GetOsc0ExternalRefClockUndivFreq(void)
 {
-    if (OSC_HAL_GetExternalRefClkCmd(g_oscBaseAddr[0]))
+    if (OSC_HAL_GetExternalRefClkCmd(g_oscBase[0]))
     {
         return g_xtal0ClkFreq;
     }
@@ -451,7 +328,7 @@ uint32_t CLOCK_SYS_GetOsc0ExternalRefClockUndivFreq(void)
 uint32_t CLOCK_SYS_GetOsc0ExternalRefClockFreq(void)
 {
     return CLOCK_SYS_GetOsc0ExternalRefClockUndivFreq()
-        >> OSC_HAL_GetExternalRefClkDivCmd(g_oscBaseAddr[0]);
+        >> OSC_HAL_GetExternalRefClkDiv(g_oscBase[0]);
 }
 
 /*FUNCTION**********************************************************************
@@ -482,11 +359,11 @@ uint32_t CLOCK_SYS_GetWdogFreq(uint32_t instance, clock_wdog_src_t wdogSrc)
  *END**************************************************************************/
 uint32_t CLOCK_SYS_GetTraceFreq(uint32_t instance)
 {
-    clock_trace_src_t src = CLOCK_HAL_GetTraceClkSrc(SIM_BASE);
+    clock_trace_src_t src = CLOCK_HAL_GetTraceClkSrc(SIM);
 
     if (kClockTraceSrcMcgoutClk == src)
     {
-        return CLOCK_HAL_GetOutClk(MCG_BASE);
+        return CLOCK_HAL_GetOutClk(MCG);
     }
     else
     {
@@ -527,7 +404,7 @@ uint32_t CLOCK_SYS_GetLptmrFreq(uint32_t instance, clock_lptmr_src_t lptmrSrc)
     switch (lptmrSrc)
     {
         case kClockLptmrSrcMcgIrClk:        /* MCG out clock  */
-            freq = CLOCK_HAL_GetInternalRefClk(MCG_BASE);
+            freq = CLOCK_HAL_GetInternalRefClk(MCG);
             break;
         case kClockLptmrSrcLpoClk:             /* LPO clock     */
             freq = CLOCK_SYS_GetLpoClockFreq();
@@ -558,7 +435,7 @@ uint32_t CLOCK_SYS_GetLpuartFreq(uint32_t instance)
     clock_lpuart_src_t src;
     uint32_t freq;
 
-    src = CLOCK_HAL_GetLpuartSrc(SIM_BASE, instance);
+    src = CLOCK_HAL_GetLpuartSrc(SIM, instance);
     switch (src)
     {
         case kClockLpuartSrcPllFllSel:
@@ -568,7 +445,7 @@ uint32_t CLOCK_SYS_GetLpuartFreq(uint32_t instance)
             freq = CLOCK_SYS_GetOsc0ExternalRefClockFreq();
             break;
         case kClockLpuartSrcMcgIrClk:
-            freq = CLOCK_HAL_GetInternalRefClk(MCG_BASE);
+            freq = CLOCK_HAL_GetInternalRefClk(MCG);
             break;
         default:
             freq = 0U;
@@ -613,7 +490,7 @@ uint32_t CLOCK_SYS_GetUartFreq(uint32_t instance)
  *END**************************************************************************/
 uint32_t CLOCK_SYS_GetFtmExternalFreq(uint32_t instance)
 {
-    sim_ftm_clk_sel_t sel = SIM_HAL_GetFtmExternalClkPinMode(SIM_BASE, instance);
+    sim_ftm_clk_sel_t sel = SIM_HAL_GetFtmExternalClkPinMode(SIM, instance);
 
     if (kSimFtmClkSel0 == sel)
     {
@@ -646,7 +523,7 @@ void CLOCK_SYS_EnablePortClock(uint32_t instance)
 {
     assert(instance < sizeof(portGateTable)/sizeof(portGateTable[0]));
 
-    SIM_HAL_EnableClock(SIM_BASE, portGateTable[instance]);
+    SIM_HAL_EnableClock(SIM, portGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -660,7 +537,7 @@ void CLOCK_SYS_DisablePortClock(uint32_t instance)
 {
     assert(instance < sizeof(portGateTable)/sizeof(portGateTable[0]));
 
-    SIM_HAL_DisableClock(SIM_BASE, portGateTable[instance]);
+    SIM_HAL_DisableClock(SIM, portGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -674,7 +551,7 @@ bool CLOCK_SYS_GetPortGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(portGateTable)/sizeof(portGateTable[0]));
 
-    return SIM_HAL_GetGateCmd(SIM_BASE, portGateTable[instance]);
+    return SIM_HAL_GetGateCmd(SIM, portGateTable[instance]);
 }
 
 /* ADC instance table. */
@@ -695,7 +572,7 @@ void CLOCK_SYS_EnableAdcClock(uint32_t instance)
 {
     assert(instance < sizeof(adcGateTable)/sizeof(adcGateTable[0]));
 
-    SIM_HAL_EnableClock(SIM_BASE, adcGateTable[instance]);
+    SIM_HAL_EnableClock(SIM, adcGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -709,7 +586,7 @@ void CLOCK_SYS_DisableAdcClock(uint32_t instance)
 {
     assert(instance < sizeof(adcGateTable)/sizeof(adcGateTable[0]));
 
-    SIM_HAL_DisableClock(SIM_BASE, adcGateTable[instance]);
+    SIM_HAL_DisableClock(SIM, adcGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -723,7 +600,7 @@ bool CLOCK_SYS_GetAdcGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(adcGateTable)/sizeof(adcGateTable[0]));
 
-    return SIM_HAL_GetGateCmd(SIM_BASE, adcGateTable[instance]);
+    return SIM_HAL_GetGateCmd(SIM, adcGateTable[instance]);
 }
 
 /* DAC instance table. */
@@ -743,7 +620,7 @@ void CLOCK_SYS_EnableDacClock(uint32_t instance)
 {
     assert(instance < sizeof(dacGateTable)/sizeof(dacGateTable[0]));
 
-    SIM_HAL_EnableClock(SIM_BASE, dacGateTable[instance]);
+    SIM_HAL_EnableClock(SIM, dacGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -757,7 +634,7 @@ void CLOCK_SYS_DisableDacClock(uint32_t instance)
 {
     assert(instance < sizeof(dacGateTable)/sizeof(dacGateTable[0]));
 
-    SIM_HAL_DisableClock(SIM_BASE, dacGateTable[instance]);
+    SIM_HAL_DisableClock(SIM, dacGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -771,7 +648,7 @@ bool CLOCK_SYS_GetDacGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(dacGateTable)/sizeof(dacGateTable[0]));
 
-    return SIM_HAL_GetGateCmd(SIM_BASE, dacGateTable[instance]);
+    return SIM_HAL_GetGateCmd(SIM, dacGateTable[instance]);
 }
 
 /* FTM instance table. */
@@ -793,7 +670,7 @@ void CLOCK_SYS_EnableFtmClock(uint32_t instance)
 {
     assert(instance < sizeof(ftmGateTable)/sizeof(ftmGateTable[0]));
 
-    SIM_HAL_EnableClock(SIM_BASE, ftmGateTable[instance]);
+    SIM_HAL_EnableClock(SIM, ftmGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -807,7 +684,7 @@ void CLOCK_SYS_DisableFtmClock(uint32_t instance)
 {
     assert(instance < sizeof(ftmGateTable)/sizeof(ftmGateTable[0]));
 
-    SIM_HAL_DisableClock(SIM_BASE, ftmGateTable[instance]);
+    SIM_HAL_DisableClock(SIM, ftmGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -821,7 +698,7 @@ bool CLOCK_SYS_GetFtmGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(ftmGateTable)/sizeof(ftmGateTable[0]));
 
-    return SIM_HAL_GetGateCmd(SIM_BASE, ftmGateTable[instance]);
+    return SIM_HAL_GetGateCmd(SIM, ftmGateTable[instance]);
 }
 
 /* SPI instance table. */
@@ -842,7 +719,7 @@ void CLOCK_SYS_EnableSpiClock(uint32_t instance)
 {
     assert(instance < sizeof(spiGateTable)/sizeof(spiGateTable[0]));
 
-    SIM_HAL_EnableClock(SIM_BASE, spiGateTable[instance]);
+    SIM_HAL_EnableClock(SIM, spiGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -856,7 +733,7 @@ void CLOCK_SYS_DisableSpiClock(uint32_t instance)
 {
     assert(instance < sizeof(spiGateTable)/sizeof(spiGateTable[0]));
 
-    SIM_HAL_DisableClock(SIM_BASE, spiGateTable[instance]);
+    SIM_HAL_DisableClock(SIM, spiGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -870,7 +747,7 @@ bool CLOCK_SYS_GetSpiGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(spiGateTable)/sizeof(spiGateTable[0]));
 
-    return SIM_HAL_GetGateCmd(SIM_BASE, spiGateTable[instance]);
+    return SIM_HAL_GetGateCmd(SIM, spiGateTable[instance]);
 }
 
 /* I2C instance table. */
@@ -891,7 +768,7 @@ void CLOCK_SYS_EnableI2cClock(uint32_t instance)
 {
     assert(instance < sizeof(i2cGateTable)/sizeof(i2cGateTable[0]));
 
-    SIM_HAL_EnableClock(SIM_BASE, i2cGateTable[instance]);
+    SIM_HAL_EnableClock(SIM, i2cGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -905,7 +782,7 @@ void CLOCK_SYS_DisableI2cClock(uint32_t instance)
 {
     assert(instance < sizeof(i2cGateTable)/sizeof(i2cGateTable[0]));
 
-    SIM_HAL_DisableClock(SIM_BASE, i2cGateTable[instance]);
+    SIM_HAL_DisableClock(SIM, i2cGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -919,7 +796,7 @@ bool CLOCK_SYS_GetI2cGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(i2cGateTable)/sizeof(i2cGateTable[0]));
 
-    return SIM_HAL_GetGateCmd(SIM_BASE, i2cGateTable[instance]);
+    return SIM_HAL_GetGateCmd(SIM, i2cGateTable[instance]);
 }
 
 /* Uart instance table. */
@@ -941,7 +818,7 @@ void CLOCK_SYS_EnableUartClock(uint32_t instance)
 {
     assert(instance < sizeof(uartGateTable)/sizeof(uartGateTable[0]));
 
-    SIM_HAL_EnableClock(SIM_BASE, uartGateTable[instance]);
+    SIM_HAL_EnableClock(SIM, uartGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -955,7 +832,7 @@ void CLOCK_SYS_DisableUartClock(uint32_t instance)
 {
     assert(instance < sizeof(uartGateTable)/sizeof(uartGateTable[0]));
 
-    SIM_HAL_DisableClock(SIM_BASE, uartGateTable[instance]);
+    SIM_HAL_DisableClock(SIM, uartGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -969,80 +846,7 @@ bool CLOCK_SYS_GetUartGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(uartGateTable)/sizeof(uartGateTable[0]));
 
-    return SIM_HAL_GetGateCmd(SIM_BASE, uartGateTable[instance]);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CLOCK_SYS_Osc0Init
- * Description   : Initialize OSC0.
- *
- * This function initializes OSC0 according to configuration.
- *
- *END**************************************************************************/
-clock_manager_error_code_t CLOCK_SYS_Osc0Init(osc_user_config_t *config)
-{
-    mcg_freq_range_select_t range = (mcg_freq_range_select_t)0U;
-    uint32_t freq = config->freq;
-
-    if (kMcgExternalRefClkSelOsc == config->erefs) /* oscillator is used. */
-    {
-        if ((freq < kMcgConstant1000) ||
-           ((freq > kMcgConstant32768) && (freq < kMcgConstant3000000)) ||
-            (freq > kMcgConstant32000000))
-        {
-            return kClockManagerInvalidParam;
-        }
-        else if (freq < kMcgConstant32768)
-        {
-            range = kMcgFreqRangeSelLow;
-        }
-        else if (freq < kMcgConstant8000000)
-        {
-            range = kMcgFreqRangeSelHigh;
-        }
-        else
-        {
-            range = kMcgFreqRangeSelVeryHigh;
-        }
-    }
-
-    CLOCK_HAL_SetOsc0Mode(MCG_BASE, range, config->hgo, config->erefs);
-
-    if (kMcgExternalRefClkSelOsc == config->erefs) /* oscillator is used. */
-    {
-        while(CLOCK_HAL_GetOscInit0(MCG_BASE)){}
-    }
-
-    if (config->enableExternalRef)
-    {
-        OSC_HAL_SetExternalRefClkCmd(g_oscBaseAddr[0], true);
-        if (config->enableExternalRefInStop)
-        {
-            OSC_HAL_SetExternalRefClkInStopModeCmd(g_oscBaseAddr[0], true);
-        }
-    }
-
-    g_xtal0ClkFreq = freq;
-
-    return kClockManagerSuccess;
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CLOCK_SYS_Osc0Deinit
- * Description   : Deinitialize OSC0.
- *
- *END**************************************************************************/
-void CLOCK_SYS_Osc0Deinit(void)
-{
-    OSC_HAL_SetExternalRefClkInStopModeCmd(g_oscBaseAddr[0], false);
-    OSC_HAL_SetExternalRefClkCmd(g_oscBaseAddr[0], false);
-    CLOCK_HAL_SetRange0Mode(MCG_BASE, kMcgFreqRangeSelLow);
-    CLOCK_HAL_SetHighGainOsc0Mode(MCG_BASE, kMcgHighGainOscSelLow);
-    CLOCK_HAL_SetExternalRefSel0Mode(MCG_BASE, kMcgExternalRefClkSelExternal);
-
-    g_xtal0ClkFreq = 0U;
+    return SIM_HAL_GetGateCmd(SIM, uartGateTable[instance]);
 }
 
 /*******************************************************************************

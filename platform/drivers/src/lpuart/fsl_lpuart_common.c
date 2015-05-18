@@ -30,19 +30,22 @@
 
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_LPUART_COUNT
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Pointer to lpuart runtime state structure.*/
-void * g_lpuartStatePtr[HW_LPUART_INSTANCE_COUNT] = { NULL };
+void * g_lpuartStatePtr[LPUART_INSTANCE_COUNT] = { NULL };
 
 /* Table of base addresses for lpuart instances. */
-const uint32_t g_lpuartBaseAddr[HW_LPUART_INSTANCE_COUNT] = LPUART_BASE_ADDRS;
+LPUART_Type * const g_lpuartBase[LPUART_INSTANCE_COUNT] = LPUART_BASE_PTRS;
 
 /* Table to save LPUART enum numbers defined in CMSIS files. */
-IRQn_Type g_lpuartRxTxIrqId[HW_LPUART_INSTANCE_COUNT] = LPUART_RX_TX_IRQS;
+IRQn_Type g_lpuartRxTxIrqId[LPUART_INSTANCE_COUNT] = LPUART_RX_TX_IRQS;
 
+#endif /* FSL_FEATURE_SOC_LPUART_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

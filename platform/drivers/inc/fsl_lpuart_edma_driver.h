@@ -38,7 +38,7 @@
 #include "fsl_edma_driver.h"
 #include "fsl_clock_manager.h"
 
-/*! 
+/*!
  * @addtogroup lpuart_driver
  * @{
  */
@@ -48,10 +48,10 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for LPUART instances. */
-extern const uint32_t g_lpuartBaseAddr[HW_LPUART_INSTANCE_COUNT];
+extern LPUART_Type * const g_lpuartBase[LPUART_INSTANCE_COUNT];
 
 /*******************************************************************************
- * Definitions  
+ * Definitions
  ******************************************************************************/
 
 /*!
@@ -79,7 +79,7 @@ typedef struct LpuartEdmaUserConfig {
 } lpuart_edma_user_config_t;
 
 /*******************************************************************************
- * API 
+ * API
  ******************************************************************************/
 
 #if defined(__cplusplus)
@@ -95,7 +95,7 @@ extern "C" {
  * @brief Initializes an LPUART instance to work with DMA.
  *
  * This function initializes the run-time state structure to keep track of the on-going
- * transfers, ungates the clock to the LPUART module, initializes the module
+ * transfers, un-gates the clock to the LPUART module, initializes the module
  * to user-defined settings and default settings, configures the IRQ state structure and enables
  * the module-level interrupt to the core, and enables the LPUART module transmitter and receiver.
  * This example shows how to set up the lpuart_edma_state_t and the
@@ -129,8 +129,9 @@ lpuart_status_t LPUART_DRV_EdmaInit(uint32_t instance, lpuart_edma_state_t * lpu
  * This function disables the LPUART-DMA trigger, the transmitter, and the receiver.
  *
  * @param instance The LPUART instance number.
+ * @return An error code or kStatus_LPUART_Success.
  */
-void LPUART_DRV_EdmaDeinit(uint32_t instance);
+lpuart_status_t LPUART_DRV_EdmaDeinit(uint32_t instance);
 
 /*!
  * @brief Sends (transmits) data out through the LPUART-DMA module using a blocking method.

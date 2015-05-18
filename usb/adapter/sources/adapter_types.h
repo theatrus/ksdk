@@ -34,8 +34,8 @@
 #define _OSADAPTER_TYPES_H 1
 
 
-typedef void (* task_start_t)( void *);
-typedef void (* osa_int_isr_fptr)(void *);
+typedef void (* task_start_t)( void * param);
+typedef void (* osa_int_isr_fptr)(void * param);
 typedef void* os_event_handle;
 typedef void* os_msgq_handle;
 typedef void* os_gpio_handle;

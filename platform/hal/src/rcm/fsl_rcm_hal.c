@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,6 +29,8 @@
  */
 
 #include "fsl_rcm_hal.h"
+#if FSL_FEATURE_SOC_RCM_COUNT
+
 
 /*******************************************************************************
  * Definitions
@@ -46,140 +48,50 @@
  * This function will get the current reset source status for specified source
  *
  *END**************************************************************************/
-bool RCM_HAL_GetSrcStatusCmd(uint32_t baseAddr, rcm_source_names_t srcName)
+uint32_t RCM_HAL_GetSrcStatus(RCM_Type * base, uint32_t statusMask)
 {
-    bool retValue = false;
+    uint32_t regStatus = 0U;  // RCM_SRS register status.
 
-    assert(srcName < kRcmSrcNameMax);
+    /* There are only SRS0 and SRS1. */
+    regStatus  = ((uint32_t)RCM_RD_SRS0(base));
+    regStatus |= ((uint32_t)RCM_RD_SRS1(base) << 8U);
 
-    switch (srcName)
+    if (kRcmSrcAll == statusMask)
     {
-    case kRcmWakeup:                     /* low-leakage wakeup reset */
-        retValue = (bool)BR_RCM_SRS0_WAKEUP(baseAddr);
-        break;
-    case kRcmLowVoltDetect:              /* low voltage detect reset */
-        retValue = (bool)BR_RCM_SRS0_LVD(baseAddr);
-        break;
-#if FSL_FEATURE_RCM_HAS_LOC
-    case kRcmLossOfClk:                  /* loss of clock reset */
-        retValue = (bool)BR_RCM_SRS0_LOC(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_RCM_HAS_LOL
-    case kRcmLossOfLock:                 /* loss of lock reset */
-        retValue = (bool)BR_RCM_SRS0_LOL(baseAddr);
-        break;
-#endif
-    case kRcmWatchDog:                   /* watch dog reset */
-        retValue = (bool)BR_RCM_SRS0_WDOG(baseAddr);
-        break;
-    case kRcmExternalPin:                /* external pin reset */
-        retValue = (bool)BR_RCM_SRS0_PIN(baseAddr);
-        break;
-    case kRcmPowerOn:                    /* power on reset */
-        retValue = (bool)BR_RCM_SRS0_POR(baseAddr);
-        break;
-#if FSL_FEATURE_RCM_HAS_JTAG
-    case kRcmJtag:                       /* JTAG generated reset */
-        retValue = (bool)BR_RCM_SRS1_JTAG(baseAddr);
-        break;
-#endif
-    case kRcmCoreLockup:                 /* core lockup reset */
-        retValue = (bool)BR_RCM_SRS1_LOCKUP(baseAddr);
-        break;
-    case kRcmSoftware:                   /* software reset */
-        retValue = (bool)BR_RCM_SRS1_SW(baseAddr);
-        break;
-    case kRcmMdmAp:                     /* MDM-AP system reset */
-        retValue = (bool)BR_RCM_SRS1_MDM_AP(baseAddr);
-        break;
-#if FSL_FEATURE_RCM_HAS_EZPORT
-    case kRcmEzport:                     /* EzPort reset */
-        retValue = (bool)BR_RCM_SRS1_EZPT(baseAddr);
-        break;
-#endif
-    case kRcmStopModeAckErr:             /* stop mode ack error reset */
-        retValue = (bool)BR_RCM_SRS1_SACKERR(baseAddr);
-        break;
-    default:
-        retValue = false;
-        break;
+        return regStatus;
     }
-
-    return retValue;
+    else
+    {
+        return regStatus & statusMask;
+    }
 }
 
 #if FSL_FEATURE_RCM_HAS_SSRS
 /*FUNCTION**********************************************************************
  *
- * Function Name : RCM_HAL_GetStickySrcStatusCmd
+ * Function Name : RCM_HAL_GetStickySrcStatus
  * Description   : Get the sticy reset source status
  *
  * This function gets the current reset source status that have not been cleared
  * by software for a specified source.
  *
  *END**************************************************************************/
-bool RCM_HAL_GetStickySrcStatusCmd(uint32_t baseAddr, rcm_source_names_t srcName)
+uint32_t RCM_HAL_GetStickySrcStatus(RCM_Type * base, uint32_t statusMask)
 {
-    bool retValue = false;
+    uint32_t regStatus = 0U;  // RCM_SRS register status.
 
-    assert(srcName < kRcmSrcNameMax);
+    /* There are only SRS0 and SRS1. */
+    regStatus  = ((uint32_t)RCM_RD_SSRS0(base));
+    regStatus |= ((uint32_t)RCM_RD_SSRS1(base) << 8U);
 
-    switch (srcName)
+    if (kRcmSrcAll == statusMask)
     {
-    case kRcmWakeup:                     /* low-leakage wakeup reset */
-        retValue = (bool)BR_RCM_SSRS0_SWAKEUP(baseAddr);
-        break;
-    case kRcmLowVoltDetect:              /* low voltage detect reset */
-        retValue = (bool)BR_RCM_SSRS0_SLVD(baseAddr);
-        break;
-#if FSL_FEATURE_RCM_HAS_LOC
-    case kRcmLossOfClk:                  /* loss of clock reset */
-        retValue = (bool)BR_RCM_SSRS0_SLOC(baseAddr);
-        break;
-#endif
-#if FSL_FEATURE_RCM_HAS_LOL
-    case kRcmLossOfLock:                 /* loss of lock reset */
-        retValue = (bool)BR_RCM_SSRS0_SLOL(baseAddr);
-        break;
-#endif
-    case kRcmWatchDog:                   /* watch dog reset */
-        retValue = (bool)BR_RCM_SSRS0_SWDOG(baseAddr);
-        break;
-    case kRcmExternalPin:                /* external pin reset */
-        retValue = (bool)BR_RCM_SSRS0_SPIN(baseAddr);
-        break;
-    case kRcmPowerOn:                    /* power on reset */
-        retValue = (bool)BR_RCM_SSRS0_SPOR(baseAddr);
-        break;
-#if FSL_FEATURE_RCM_HAS_JTAG
-    case kRcmJtag:                       /* JTAG generated reset */
-        retValue = (bool)BR_RCM_SSRS1_SJTAG(baseAddr);
-        break;
-#endif
-    case kRcmCoreLockup:                 /* core lockup reset */
-        retValue = (bool)BR_RCM_SSRS1_SLOCKUP(baseAddr);
-        break;
-    case kRcmSoftware:                   /* software reset */
-        retValue = (bool)BR_RCM_SSRS1_SSW(baseAddr);
-        break;
-    case kRcmMdmAp:                     /* MDM-AP system reset */
-        retValue = (bool)BR_RCM_SSRS1_SMDM_AP(baseAddr);
-        break;
-#if FSL_FEATURE_RCM_HAS_EZPORT
-    case kRcmEzport:                     /* EzPort reset */
-        retValue = (bool)BR_RCM_SSRS1_SEZPT(baseAddr);
-        break;
-#endif
-    case kRcmStopModeAckErr:             /* stop mode ack error reset */
-        retValue = (bool)BR_RCM_SSRS1_SSACKERR(baseAddr);
-        break;
-    default:
-        retValue = false;
-        break;
+        return regStatus;
     }
-
-    return retValue;
+    else
+    {
+        return regStatus & statusMask;
+    }
 }
 
 /*FUNCTION**********************************************************************
@@ -190,14 +102,36 @@ bool RCM_HAL_GetStickySrcStatusCmd(uint32_t baseAddr, rcm_source_names_t srcName
  * This function clears all the sticky system reset flags.
  *
  *END**************************************************************************/
-void RCM_HAL_ClearStickySrcStatus(uint32_t baseAddr)
+void RCM_HAL_ClearStickySrcStatus(RCM_Type * base)
 {
     uint8_t status;
 
-    status = HW_RCM_SSRS0_RD(baseAddr);
-    HW_RCM_SSRS0_WR(baseAddr, status);
-    status = HW_RCM_SSRS1_RD(baseAddr);
-    HW_RCM_SSRS1_WR(baseAddr, status);
+    status = RCM_RD_SSRS0(base);
+    RCM_WR_SSRS0(base, status);
+    status = RCM_RD_SSRS1(base);
+    RCM_WR_SSRS1(base, status);
+}
+#endif
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : RCM_HAL_SetResetPinFilterConfig
+ * Description   : Sets the reset pin filter.
+ *
+ *END**************************************************************************/
+void RCM_HAL_SetResetPinFilterConfig(RCM_Type * base, rcm_reset_pin_filter_config_t *config)
+{
+    // Set filter in stop mode.
+    RCM_BWR_RPFC_RSTFLTSS(base, config->filterInStop);
+
+    // Set filter width if bus clock is used as filter.
+    if (kRcmFilterBusClk == config->filterInRunWait)
+    {
+        RCM_BWR_RPFW_RSTFLTSEL(base, config->busClockFilterCount);
+    }
+
+    // Set filter in run and wait mode.
+    RCM_BWR_RPFC_RSTFLTSRW(base, config->filterInRunWait);
 }
 #endif
 

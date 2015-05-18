@@ -31,11 +31,12 @@
 #include "fsl_tsi_driver.h"
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
+#if FSL_FEATURE_SOC_TSI_COUNT
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-extern IRQn_Type tsi_irq_ids[HW_TSI_INSTANCE_COUNT];
+extern IRQn_Type tsi_irq_ids[TSI_INSTANCE_COUNT];
 extern void TSI_DRV_IRQHandler0(void);
 
 /*******************************************************************************
@@ -46,71 +47,95 @@ const tsi_parameter_limits_t g_tsiParamLimits[tsi_OpModeCnt] =
 {
     /* Normal operation mode. */
     {
-        .consNumberOfScan =
+        /* consNumberOfScan */
         {
-            .upper = kTsiConsecutiveScansNumber_32time,
-            .lower = kTsiConsecutiveScansNumber_1time
+            /* upper */
+            kTsiConsecutiveScansNumber_32time,
+            /* lower */
+            kTsiConsecutiveScansNumber_1time
         },
-        .refOscChargeCurrent =
+        /* refOscChargeCurrent */
         {
-            .upper = kTsiRefOscChargeCurrent_32uA,
-            .lower = kTsiRefOscChargeCurrent_1uA
+            /* upper */
+            kTsiRefOscChargeCurrent_32uA,
+            /* lower */
+            kTsiRefOscChargeCurrent_2uA
         },
-        .extOscChargeCurrent =
+        /* extOscChargeCurrent */
         {
-            .upper = kTsiExtOscChargeCurrent_32uA,
-            .lower = kTsiExtOscChargeCurrent_1uA
+            /* upper */
+            kTsiExtOscChargeCurrent_32uA,
+            /* lower */
+            kTsiExtOscChargeCurrent_2uA
         },
-        .activeModePrescaler =
+        /* activeModePrescaler */
         {
-            .upper = kTsiActiveModePrescaler_1div,
-            .lower = kTsiActiveModePrescaler_128div
+            /* upper */
+            kTsiActiveModePrescaler_1div,
+            /* lower */
+            kTsiActiveModePrescaler_128div
         }
     },
     /* Proximity operation mode. */
     {
-        .consNumberOfScan =
+        /* consNumberOfScan */
         {
-            .upper = kTsiConsecutiveScansNumber_32time,
-            .lower = kTsiConsecutiveScansNumber_1time
+            /* upper */
+            kTsiConsecutiveScansNumber_32time,
+            /* lower */
+            kTsiConsecutiveScansNumber_1time
         },
-        .refOscChargeCurrent =
+        /* refOscChargeCurrent */
         {
-            .upper = kTsiRefOscChargeCurrent_32uA,
-            .lower = kTsiRefOscChargeCurrent_1uA
+            /* upper */
+            kTsiRefOscChargeCurrent_32uA,
+            /* lower */
+            kTsiRefOscChargeCurrent_2uA
         },
-        .extOscChargeCurrent =
+        /* extOscChargeCurrent */
         {
-            .upper = kTsiExtOscChargeCurrent_32uA,
-            .lower = kTsiExtOscChargeCurrent_1uA
+            /* upper */
+            kTsiExtOscChargeCurrent_32uA,
+            /* lower */
+            kTsiExtOscChargeCurrent_2uA
         },
-        .activeModePrescaler =
+        /* activeModePrescaler */
         {
-            .upper = kTsiActiveModePrescaler_1div,
-            .lower = kTsiActiveModePrescaler_128div
+            /* upper */
+            kTsiActiveModePrescaler_1div,
+            /* lower */
+            kTsiActiveModePrescaler_128div
         }
     },
     /* Low Power operation mode. */
     {
-        .consNumberOfScan =
+        /* consNumberOfScan */
         {
-            .upper = kTsiConsecutiveScansNumber_32time,
-            .lower = kTsiConsecutiveScansNumber_1time
+            /* upper */
+            kTsiConsecutiveScansNumber_32time,
+            /* lower */
+            kTsiConsecutiveScansNumber_1time
         },
-        .refOscChargeCurrent =
+        /* refOscChargeCurrent */
         {
-            .upper = kTsiRefOscChargeCurrent_32uA,
-            .lower = kTsiRefOscChargeCurrent_1uA
+            /* upper */
+            kTsiRefOscChargeCurrent_32uA,
+            /* lower */
+            kTsiRefOscChargeCurrent_2uA
         },
-        .extOscChargeCurrent =
+        /*extOscChargeCurrent */
         {
-            .upper = kTsiExtOscChargeCurrent_32uA,
-            .lower = kTsiExtOscChargeCurrent_1uA
+            /* upper */
+            kTsiExtOscChargeCurrent_32uA,
+            /* lower */
+            kTsiExtOscChargeCurrent_2uA
         },
-        .activeModePrescaler =
+        /* activeModePrescaler */
         {
-            .upper = kTsiActiveModePrescaler_1div,
-            .lower = kTsiActiveModePrescaler_128div
+            /* upper */
+            kTsiActiveModePrescaler_1div,
+            /* lower */
+            kTsiActiveModePrescaler_128div
         }
     }
 };
@@ -125,12 +150,12 @@ const tsi_parameter_limits_t g_tsiParamLimits[tsi_OpModeCnt] =
 * Description   : Enables/Disables the electrode for measuring.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_EnableElectrode(const uint32_t instance, const uint32_t channel, const bool enable)
+tsi_status_t TSI_DRV_EnableElectrode(uint32_t instance, const uint32_t channel, const bool enable)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
     assert(channel < FSL_FEATURE_TSI_CHANNEL_COUNT);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
 
     /* Critical section. Access to global variable */
@@ -155,19 +180,19 @@ tsi_status_t TSI_DRV_EnableElectrode(const uint32_t instance, const uint32_t cha
           /* Only one elctrode can be enabled in low power mode and proximity. */
 
           /* Disable al previous enabled. */
-          TSI_HAL_DisableChannels(baseAddr, 0xffffffff);
+          TSI_HAL_DisableChannels(base, 0xffffffff);
       }
     }
 
     if(enable)
     {
         tsiState->opModesData[tsiState->opMode].enabledElectrodes |= (1U << channel);
-        TSI_HAL_EnableChannel(baseAddr, channel);
+        TSI_HAL_EnableChannel(base, channel);
     }
     else
     {
         tsiState->opModesData[tsiState->opMode].enabledElectrodes &= ~(1U << channel);
-        TSI_HAL_DisableChannel(baseAddr, channel);
+        TSI_HAL_DisableChannel(base, channel);
     }
 
     /* End of critical section. */
@@ -182,16 +207,16 @@ tsi_status_t TSI_DRV_EnableElectrode(const uint32_t instance, const uint32_t cha
 * Description   : Function returns the counter value of selected channel
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_GetCounter(const uint32_t instance, const uint32_t channel, uint16_t * counter)
+tsi_status_t TSI_DRV_GetCounter(uint32_t instance, const uint32_t channel, uint16_t * counter)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
     assert(channel < FSL_FEATURE_TSI_CHANNEL_COUNT);
     assert(counter);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
 
-    if(!TSI_HAL_GetEnabledChannel(baseAddr, channel))
+    if(!TSI_HAL_GetEnabledChannel(base, channel))
     {
         return kStatus_TSI_InvalidChannel;
     }
@@ -208,11 +233,11 @@ tsi_status_t TSI_DRV_GetCounter(const uint32_t instance, const uint32_t channel,
 *               from the TSI module using a non-blocking method.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_Measure(const uint32_t instance)
+tsi_status_t TSI_DRV_Measure(uint32_t instance)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
 
     /* Critical section. Access to global variable */
@@ -234,10 +259,10 @@ tsi_status_t TSI_DRV_Measure(const uint32_t instance)
     /* End of critical section. */
     OSA_MutexUnlock(&tsiState->lock);
 
-    TSI_HAL_DisableModule(baseAddr);
-    TSI_HAL_EnableSoftwareTriggerScan(baseAddr);
-    TSI_HAL_EnableModule(baseAddr);
-    TSI_HAL_StartSoftwareTrigger(baseAddr);
+    TSI_HAL_DisableModule(base);
+    TSI_HAL_EnableSoftwareTriggerScan(base);
+    TSI_HAL_EnableModule(base);
+    TSI_HAL_StartSoftwareTrigger(base);
 
     return kStatus_TSI_Success;
 }
@@ -248,11 +273,11 @@ tsi_status_t TSI_DRV_Measure(const uint32_t instance)
 * Description   : Enables/Disables the low power module.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_EnableLowPower(const uint32_t instance)
+tsi_status_t TSI_DRV_EnableLowPower(uint32_t instance)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
     tsi_status_t status;
     uint32_t i;
@@ -308,12 +333,12 @@ tsi_status_t TSI_DRV_EnableLowPower(const uint32_t instance)
     tsiState->status = kStatus_TSI_LowPower;
     
     /* Configurate the peripheral for next use */
-    TSI_HAL_EnableOutOfRangeInterrupt(baseAddr);
-    TSI_HAL_EnablePeriodicalScan(baseAddr);
-    TSI_HAL_SetLowPowerChannel(baseAddr, channel);
-    TSI_HAL_EnableLowPower(baseAddr);
-    TSI_HAL_EnableInterrupt(baseAddr);
-    TSI_HAL_EnableModule(baseAddr);
+    TSI_HAL_EnableOutOfRangeInterrupt(base);
+    TSI_HAL_EnablePeriodicalScan(base);
+    TSI_HAL_SetLowPowerChannel(base, channel);
+    TSI_HAL_EnableLowPower(base);
+    TSI_HAL_EnableInterrupt(base);
+    TSI_HAL_EnableModule(base);
 
     /* End of critical section. */
     OSA_MutexUnlock(&tsiState->lock);
@@ -328,11 +353,11 @@ tsi_status_t TSI_DRV_EnableLowPower(const uint32_t instance)
 * Description   : The function change the current mode.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_ChangeMode(const uint32_t instance, const tsi_modes_t mode)
+tsi_status_t TSI_DRV_ChangeMode(uint32_t instance, const tsi_modes_t mode)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
 
     if((mode == tsiState->opMode) || (mode == tsi_OpModeNoChange))
@@ -360,13 +385,13 @@ tsi_status_t TSI_DRV_ChangeMode(const uint32_t instance, const tsi_modes_t mode)
 
     tsiState->opMode = mode;
 
-    TSI_HAL_SetConfiguration(baseAddr, &tsiState->opModesData[mode].config);
+    TSI_HAL_SetConfiguration(base, &tsiState->opModesData[mode].config);
 
     /* Disable all electrodes */
-    TSI_HAL_DisableChannels(baseAddr, 0xffff);
+    TSI_HAL_DisableChannels(base, 0xffff);
 
     /* Enable the set electrodes for current operation mode */
-    TSI_HAL_EnableChannels(baseAddr, tsiState->opModesData[mode].enabledElectrodes);
+    TSI_HAL_EnableChannels(base, tsiState->opModesData[mode].enabledElectrodes);
 
     /* End of critical section. */
     OSA_MutexUnlock(&tsiState->lockChangeMode);
@@ -381,11 +406,11 @@ tsi_status_t TSI_DRV_ChangeMode(const uint32_t instance, const tsi_modes_t mode)
 * Description   : The function load the configuration for one mode of operation.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_LoadConfiguration(const uint32_t instance, const tsi_modes_t mode, const tsi_operation_mode_t * operationMode)
+tsi_status_t TSI_DRV_LoadConfiguration(uint32_t instance, const tsi_modes_t mode, const tsi_operation_mode_t * operationMode)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
     assert(operationMode);
-    uint32_t baseAddr;
+    TSI_Type * base;
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
     
     if(mode >= tsi_OpModeCnt)
@@ -404,18 +429,18 @@ tsi_status_t TSI_DRV_LoadConfiguration(const uint32_t instance, const tsi_modes_
     /* In case that the loaded configuration is active one, update the HW also. */
     if(mode == tsiState->opMode)
     {
-        baseAddr = g_tsiBaseAddr[instance];
+        base = g_tsiBase[instance];
 
-        TSI_HAL_SetConfiguration(baseAddr, &tsiState->opModesData[mode].config);
+        TSI_HAL_SetConfiguration(base, &tsiState->opModesData[mode].config);
 
         /* Disable all electrodes */
-        TSI_HAL_DisableChannels(baseAddr, 0xffff);
+        TSI_HAL_DisableChannels(base, 0xffff);
 
         /* Enable the set electrodes for current operation mode */
-        TSI_HAL_EnableChannels(baseAddr, tsiState->opModesData[mode].enabledElectrodes);
+        TSI_HAL_EnableChannels(base, tsiState->opModesData[mode].enabledElectrodes);
 
-        TSI_HAL_EnableInterrupt(baseAddr);
-        TSI_HAL_EnableEndOfScanInterrupt(baseAddr);
+        TSI_HAL_EnableInterrupt(base);
+        TSI_HAL_EnableEndOfScanInterrupt(base);
     }
 
     /* End of critical section. */
@@ -431,8 +456,8 @@ tsi_status_t TSI_DRV_LoadConfiguration(const uint32_t instance, const tsi_modes_
  */
 void TSI_DRV_IRQHandler(uint32_t instance)
 {
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
-    uint32_t channels = TSI_HAL_GetEnabledChannels(baseAddr);
+    TSI_Type * base = g_tsiBase[instance];
+    uint32_t channels = TSI_HAL_GetEnabledChannels(base);
     uint32_t i;
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
     /* Check if a measure is running and wanted. */
@@ -442,14 +467,14 @@ void TSI_DRV_IRQHandler(uint32_t instance)
         return;
     }
 
-    TSI_HAL_ClearOutOfRangeFlag(baseAddr);
-    TSI_HAL_ClearEndOfScanFlag(baseAddr);
+    TSI_HAL_ClearOutOfRangeFlag(base);
+    TSI_HAL_ClearEndOfScanFlag(base);
 
     for(i = 0; i < FSL_FEATURE_TSI_CHANNEL_COUNT; i++)
     {
         if((uint32_t)(1 << i) & channels)
         {
-            tsiState->counters[i] = TSI_HAL_GetCounter(baseAddr, i);
+            tsiState->counters[i] = TSI_HAL_GetCounter(base, i);
         }
     }
 
@@ -472,6 +497,7 @@ void TSI_DRV_IRQHandler(uint32_t instance)
     }
 }
 
+#endif
 
 /*******************************************************************************
  * EOF

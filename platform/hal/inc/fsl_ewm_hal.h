@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_EWM_COUNT
 
 /*! 
  * @addtogroup ewm_hal
@@ -43,34 +44,31 @@
 /*******************************************************************************
  * Definitions
  *******************************************************************************/
-
-
-#define EWM_FIRST_SERVICE_VALUE  (0xB4U)
-#define EWM_SECOND_SERVICE_VALUE (0x2CU)
-
-/*! @brief EWM_in's assertion state.*/
-typedef enum _ewm_in_assertion_state{
-    kEWMLogicZeroAssert = 0,         /*!< assert state of EWM_in signal is logic zero */
-    kEWMLogicOneAssert  = 1          /*!< assert state of EWM_in signal is logic one */
-}ewm_in_assertion_state_t;
-
-/*! @brief ewm common config structure.*/
-typedef union _ewm_common_config{
-    uint8_t U;
-    struct CommonConfig{
-      uint8_t ewmEnable:          1;
-      uint8_t ewmInAssertState:   1;
-      uint8_t ewmInputEnable:     1;
-      uint8_t ewmIntEnable:       1;
-      uint8_t reserved:           4;
-    }commonConfig;
-}ewm_common_config_t;
+/*! 
+ * @brief Data structure for EWM initialize
+ *
+ * This structure is used when initializing the EWM.
+ * @internal gui name="Basic configuration" id="ewmCfg"
+ */
+typedef struct _ewm_config
+{
+    bool ewmEnable;   	       /*!< Enable EWM module @internal gui name="Enable EWM module" id="EnableModule" */
+    bool ewmInEnable;  	       /*!< Enable EWM_in input enable @internal gui name="EWM_in input" id="Input" */
+    bool ewmInAssertLogic;     /*!< Set EWM_in signal assertion state @internal gui name="EWM_in signal assertion" id="Assertion" */
+    bool intEnable;   	       /*!< Enable EWM interrupt enable @internal gui name="EWM interrupt" id="Interrupt" */
+#if FSL_FEATURE_EWM_HAS_PRESCALER
+    uint8_t ewmPrescalerValue; /*!< Set EWM prescaler value @internal gui name="Prescaler" id="Prescaler" */
+#endif    
+    uint8_t ewmCmpLowValue;    /*!< Set EWM compare low register value @internal gui name="Compare low register value" id="LowValue" */
+    uint8_t ewmCmpHighValue;   /*!< Set EWM compare high register value, the maximum value should be 0xfe otherwise the counter will never expire @internal gui name="Compare high register value" id="HighValue" */
+}ewm_config_t;
 
 /*! @brief ewm status return codes.*/
-typedef enum _EWM_status {
-    kStatus_EWM_Success         = 0x0U, /*!< Succeed. */
-    kStatus_EWM_NotInitlialized = 0x1U, /*!< EWM is not initialized yet. */
-    kStatus_EWM_NullArgument    = 0x2U, /*!< Argument is NULL.*/
+typedef enum _ewm_status {
+    kStatus_EWM_Success         = 0x0U, /*!< EWM operation Succeed      */
+    kStatus_EWM_Fail            = 0x01, /*!< EWM operation Failed       */
+    kStatus_EWM_NotInitlialized = 0x2U, /*!< EWM is not initialized yet */
+    kStatus_EWM_NullArgument    = 0x3U, /*!< Argument is NULL           */
 }ewm_status_t;
 
 /*******************************************************************************
@@ -81,18 +79,32 @@ typedef enum _EWM_status {
  * API
  *******************************************************************************/
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /*!
- * @brief Config EWM control register.
+ * @brief Enable the EWM.
  * 
- * This function configures EWM control register,
- * EWM enable bitfeild, EWM ASSIN bitfeild and EWM INPUT enable bitfeild are WRITE ONCE, one more write will cause bus fault.
+ * This function checks whether the EWM is enabled.
  *
- * @param baseAddr The EWM peripheral base address
- * @param commonConfig config EWM CTRL register
+ * @param base The EWM peripheral base address
  */
-static inline void EWM_HAL_SetCommonConfig(uint32_t baseAddr, ewm_common_config_t commonConfig)
+static inline void EWM_HAL_Enable(EWM_Type * base)
 {
-    HW_EWM_CTRL_WR(baseAddr, commonConfig.U);
+    EWM_BWR_CTRL_EWMEN(base, 1U);
+}
+
+/*!
+ * @brief Enable the EWM.
+ * 
+ * This function checks whether the EWM is enabled.
+ *
+ * @param base The EWM peripheral base address
+ */
+static inline void EWM_HAL_Disable(EWM_Type * base)
+{
+    EWM_BWR_CTRL_EWMEN(base, 0U);
 }
 
 /*!
@@ -100,55 +112,14 @@ static inline void EWM_HAL_SetCommonConfig(uint32_t baseAddr, ewm_common_config_
  * 
  * This function checks whether the EWM is enabled.
  *
- * @param baseAddr The EWM peripheral base address
+ * @param base The EWM peripheral base address
+ * @return State of the module
  * @retval false means EWM is disabled
  * @retval true means WODG is enabled
  */
-static inline bool EWM_HAL_IsEnabled(uint32_t baseAddr)
+static inline bool EWM_HAL_IsEnable(EWM_Type * base)
 {
-    return ((bool)BR_EWM_CTRL_EWMEN(baseAddr));
-}
-
-/*!
- * @brief Checks EWM_in assertion state.
- * 
- * This function checks EWM_in assertion state.
- *
- * @param baseAddr The EWM peripheral base address
- * @retval kEWMLogicZeroAssert means assert state of EWM_in signal is logic zero
- * @retval kEWMLogicOneAssert means assert state of EWM_in signal is logic one
- */
-static inline ewm_in_assertion_state_t EWM_HAL_GetAssertionStateMode(uint32_t baseAddr)
-{
-    return ((ewm_in_assertion_state_t)BR_EWM_CTRL_ASSIN(baseAddr));
-}
-
-/*!
- * @brief Checks if EWM_in input is enabled.
- * 
- * This function checks whether the EWM_in is enabled.
- *
- * @param baseAddr The EWM peripheral base address
- * @retval true means EWM_in input is enable
- * @retval false means EWM_in input is disable
- */
-static inline  bool EWM_HAL_GetInputCmd(uint32_t baseAddr)
-{
-    return ((bool)BR_EWM_CTRL_INEN(baseAddr));
-}
-
-/*!
- * @brief Checks if EWM interrupt is enabled.
- * 
- * This function checks whether the EWM interrupt is enabled.
- *
- * @param baseAddr The EWM peripheral base address
- * @retval true means EWM_in interrupt is enable
- * @retval false means EWM_in interrupt is disable
- */
-static inline bool EWM_HAL_GetIntCmd(uint32_t baseAddr)
-{
-   return ((bool)BR_EWM_CTRL_INTEN(baseAddr));
+    return ((bool)EWM_BRD_CTRL_EWMEN(base));
 }
 
 /*!
@@ -156,12 +127,12 @@ static inline bool EWM_HAL_GetIntCmd(uint32_t baseAddr)
  * 
  * This function sets EWM enable/disable.
  *
- * @param baseAddr The EWM peripheral base address
+ * @param base The EWM peripheral base address
  * @param enable Set EWM interrupt enable/disable
  */
-static inline void EWM_HAL_SetIntCmd(uint32_t baseAddr, bool enable)
+static inline void EWM_HAL_SetIntCmd(EWM_Type * base, bool enable)
 {
-   BW_EWM_CTRL_INTEN(baseAddr, enable);
+   EWM_BWR_CTRL_INTEN(base, enable);
 }
 
 /*!
@@ -171,25 +142,12 @@ static inline void EWM_HAL_SetIntCmd(uint32_t baseAddr, bool enable)
  * when counter value is greater than or equal to ewm compare low register value, refresh EWM can be successful,
  * and this register is write once, one more write will cause bus fault.
  *
- * @param baseAddr The EWM peripheral base address
+ * @param base The EWM peripheral base address
  * @param minServiceCycles The EWM compare low register value 
  */
-static inline void EWM_HAL_SetCmpLowRegValue(uint32_t baseAddr, uint8_t minServiceCycles)
+static inline void EWM_HAL_SetCmpLowRegValue(EWM_Type * base, uint8_t minServiceCycles)
 {
-    BW_EWM_CMPL_COMPAREL(baseAddr, minServiceCycles);
-}
-
-/*!
- * @brief Return EWM compare low register value.
- * 
- * This function return compare low register value.
- *
- * @param baseAddr The EWM peripheral base address
- * @retval compare low register value
-*/
-static inline uint8_t EWM_HAL_GetCmpLowRegValue(uint32_t baseAddr)
-{
-    return (BR_EWM_CMPL_COMPAREL(baseAddr));
+    EWM_WR_CMPL(base, minServiceCycles);
 }
 
 /*!
@@ -200,56 +158,13 @@ static inline uint8_t EWM_HAL_GetCmpLowRegValue(uint32_t baseAddr)
  * the compare high register value must be greater than compare low register value,
  * and this register is write once, one more write will cause bus fault.
  *
- * @param baseAddr The EWM peripheral base address
+ * @param base The EWM peripheral base address
  * @param maxServiceCycles The EWM compare low register value 
  */
-static inline void EWM_HAL_SetCmpHighRegValue(uint32_t baseAddr, uint8_t maxServiceCycles)
+static inline void EWM_HAL_SetCmpHighRegValue(EWM_Type * base, uint8_t maxServiceCycles)
 {
-    BW_EWM_CMPH_COMPAREH(baseAddr, maxServiceCycles);
+    EWM_WR_CMPH(base, maxServiceCycles);
 }
-
-/*!
- * @brief Return EWM compare high register value.
- * 
- * This function return compare high register value, the maximum value is 0xfe, otherwise EWM counter never expires.
- *
- * @param baseAddr The EWM peripheral base address
- * @retval compare high register value
-*/
-static inline uint8_t EWM_HAL_GetCmpHighRegValue(uint32_t baseAddr)
-{
-    return (BR_EWM_CMPH_COMPAREH(baseAddr));
-}
-
-#if FSL_FEATURE_EWM_HAS_PRESCALER
-/*!
- * @brief Return EWM prescaler register value.
- * 
- * This function returns prescaler register value.
- *
- * @param baseAddr The EWM peripheral base address
- * @retval prescaler register value
-*/
-static inline uint8_t EWM_HAL_GetPrescalerValue(uint32_t baseAddr)
-{
-    return (BR_EWM_CLKPRESCALER_CLK_DIV(baseAddr));
-}
-#endif
-
-#if FSL_FEATURE_EWM_HAS_PRESCALER
-/*!
- * @brief Set EWM prescaler register value.
- * 
- * This function Set prescaler register value, and this register is writen once.
- *
- * @param baseAddr The EWM peripheral base address
- * @param prescalerValue The prescaler register value
-*/
-static inline void EWM_HAL_SetPrescalerValue(uint32_t baseAddr,uint8_t prescalerValue)
-{
-    BW_EWM_CLKPRESCALER_CLK_DIV(baseAddr, prescalerValue);
-}
-#endif
 
 /*!
  * @brief Service EWM.
@@ -257,22 +172,33 @@ static inline void EWM_HAL_SetPrescalerValue(uint32_t baseAddr,uint8_t prescaler
  * This function reset EWM counter to zero and 
  * the period of writing the frist value and the second value should be within 15 bus cycles.
  *
- * @param baseAddr The EWM peripheral base address
+ * @param base The EWM peripheral base address
 */
-static inline void EWM_HAL_Refresh(uint32_t baseAddr)
+static inline void EWM_HAL_Refresh(EWM_Type * base)
 {
-    BW_EWM_SERV_SERVICE(baseAddr, (uint8_t)EWM_FIRST_SERVICE_VALUE);
-    BW_EWM_SERV_SERVICE(baseAddr, (uint8_t)EWM_SECOND_SERVICE_VALUE);
+    EWM_WR_SERV(base, (uint8_t)0xB4U);
+    EWM_WR_SERV(base, (uint8_t)0x2CU);
 }
+
+/*!
+ * @brief Config EWM control register.
+ * 
+ * This function configures EWM control register,
+ * EWM enable bitfeild, EWM ASSIN bitfeild and EWM INPUT enable bitfeild are WRITE ONCE, one more write will cause bus fault.
+ *
+ * @param base The EWM peripheral base address
+ * @param ewmConfigPtr config EWM CTRL register
+ */
+void EWM_HAL_SetConfig(EWM_Type * base, const ewm_config_t *ewmConfigPtr);
 
 /*!
  * @brief Restores the EWM module to reset value.
  *
  * This function restores the EWM module to reset value.
  *
- * @param baseAddr The EWM peripheral base address
+ * @param base The EWM peripheral base address
  */
-void EWM_HAL_Init(uint32_t baseAddr);
+void EWM_HAL_Init(EWM_Type * base);
 
 /*@}*/
 
@@ -282,6 +208,7 @@ void EWM_HAL_Init(uint32_t baseAddr);
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_EWM_HAL_H__*/
 /*******************************************************************************
  * EOF

@@ -31,46 +31,69 @@
 #include "fsl_ftm_driver.h"
 #include "fsl_clock_manager.h"
 
+#if FSL_FEATURE_SOC_FTM_COUNT
+
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
+
+/* Table of number of channels for each FTM instance */
+const int32_t g_ftmChannelCount[FTM_INSTANCE_COUNT] = FSL_FEATURE_FTM_CHANNEL_COUNTx;
+/*! Stores FTM clock source setting */
+static ftm_clock_source_t s_ftmClockSource = kClock_source_FTM_None;
+
 /*******************************************************************************
  * Code
  ******************************************************************************/
 
-/*See fsl_ftm_driver.h for documentation of this function.*/
-void FTM_DRV_Init(uint8_t instance, ftm_user_config_t * info)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_Init
+ * Description   : Initializes the FTM driver.
+ *
+ *END**************************************************************************/
+ftm_status_t FTM_DRV_Init(uint32_t instance, const ftm_user_config_t * info)
 {
-    assert(instance < HW_FTM_INSTANCE_COUNT);
-    assert(g_ftmBaseAddr[instance] != 0);
+    assert(instance < FTM_INSTANCE_COUNT);
+    assert(g_ftmBase[instance] != NULL);
 
-    uint32_t ftmBaseAddr = g_ftmBaseAddr[instance];
-    uint8_t chan = FSL_FEATURE_FTM_CHANNEL_COUNTn(instance);
+    FTM_Type *ftmBase = g_ftmBase[instance];
+    uint8_t chan = g_ftmChannelCount[instance];
 
     /* clock setting initialization*/
     CLOCK_SYS_EnableFtmClock(instance);
 
-    FTM_HAL_Reset(ftmBaseAddr);
+    FTM_HAL_Reset(ftmBase);
     /* Reset the channel registers */
     for(int i = 0; i < chan; i++)
     {
-        HW_FTM_CnSC_WR(ftmBaseAddr, i, 0);
-        HW_FTM_CnV_WR(ftmBaseAddr, i, 0);
+        FTM_WR_CnSC(ftmBase, i, 0);
+        FTM_WR_CnV(ftmBase, i, 0);
     }
 
-    FTM_HAL_Init(ftmBaseAddr);
+    FTM_HAL_Init(ftmBase);
 
-    FTM_HAL_SetSyncMode(ftmBaseAddr, info->syncMethod);
+    FTM_HAL_SetSyncMode(ftmBase, info->syncMethod);
 
-    FTM_HAL_SetTofFreq(ftmBaseAddr, info->tofFrequency);
-    FTM_HAL_SetWriteProtectionCmd(ftmBaseAddr, info->isWriteProtection);
-    FTM_HAL_SetBdmMode(ftmBaseAddr,info->BDMMode);
+    FTM_HAL_SetTofFreq(ftmBase, info->tofFrequency);
+    FTM_HAL_SetWriteProtectionCmd(ftmBase, info->isWriteProtection);
+    FTM_HAL_SetBdmMode(ftmBase,info->BDMMode);
 
     NVIC_ClearPendingIRQ(g_ftmIrqId[instance]);
     INT_SYS_EnableIRQ(g_ftmIrqId[instance]);
+
+    return kStatusFtmSuccess;
 }
 
-/*See fsl_ftm_driver.h for documentation of this function.*/
-void FTM_DRV_Deinit(uint8_t instance)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_Deinit
+ * Description   : Shuts down the FTM driver.
+ *
+ *END**************************************************************************/
+void FTM_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_FTM_INSTANCE_COUNT);
+    assert(instance < FTM_INSTANCE_COUNT);
 
     /* disable clock for FTM.*/
     CLOCK_SYS_DisableFtmClock(instance);
@@ -78,173 +101,284 @@ void FTM_DRV_Deinit(uint8_t instance)
     INT_SYS_DisableIRQ(g_ftmIrqId[instance]);
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_SetFaultIntCmd
+ * Description   : Enables or disables the fault interrupt.
+ *
+ *END**************************************************************************/
 void FTM_DRV_SetFaultIntCmd(uint32_t instance, bool faultEnable)
 {
     if (faultEnable)
     {
-        FTM_HAL_EnableFaultInt(g_ftmBaseAddr[instance]);
+        FTM_HAL_EnableFaultInt(g_ftmBase[instance]);
     }
     else
     {
-        FTM_HAL_DisableFaultInt(g_ftmBaseAddr[instance]);
+        FTM_HAL_DisableFaultInt(g_ftmBase[instance]);
     }
 
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_SetTimeOverflowIntCmd
+ * Description   : Enables or disables the timer overflow interrupt.
+ *
+ *END**************************************************************************/
 void FTM_DRV_SetTimeOverflowIntCmd(uint32_t instance, bool overflowEnable)
 {
     if (overflowEnable)
     {
-        FTM_HAL_EnableTimerOverflowInt(g_ftmBaseAddr[instance]);
+        FTM_HAL_EnableTimerOverflowInt(g_ftmBase[instance]);
     }
     else
     {
-        FTM_HAL_DisableTimerOverflowInt(g_ftmBaseAddr[instance]);
+        FTM_HAL_DisableTimerOverflowInt(g_ftmBase[instance]);
     }
 }
 
-void FTM_DRV_QuadDecodeStart(uint8_t instance, ftm_phase_params_t *phaseAParams,
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_QuadDecodeStart
+ * Description   : Configures the parameters needed and activates quadrature
+ * decode mode.
+ *
+ *END**************************************************************************/
+void FTM_DRV_QuadDecodeStart(uint32_t instance, ftm_phase_params_t *phaseAParams,
                                       ftm_phase_params_t *phaseBParams, ftm_quad_decode_mode_t quadMode)
 {
-    assert(instance < HW_FTM_INSTANCE_COUNT);
+    assert(instance < FTM_INSTANCE_COUNT);
     assert(phaseAParams);
     assert(phaseBParams);
 
-    uint32_t ftmBaseAddr = g_ftmBaseAddr[instance];
+    FTM_Type *ftmBase = g_ftmBase[instance];
 
-    FTM_HAL_SetQuadMode(ftmBaseAddr, quadMode);
-    FTM_HAL_SetQuadPhaseAFilterCmd(ftmBaseAddr, phaseAParams->kFtmPhaseInputFilter);
+    FTM_HAL_SetQuadMode(ftmBase, quadMode);
+    FTM_HAL_SetQuadPhaseAFilterCmd(ftmBase, phaseAParams->kFtmPhaseInputFilter);
     if (phaseAParams->kFtmPhaseInputFilter)
     {
         /* Set Phase A filter value if phase filter is enabled */
-        FTM_HAL_SetChnInputCaptureFilter(ftmBaseAddr, HW_CHAN0, phaseAParams->kFtmPhaseFilterVal);
+        FTM_HAL_SetChnInputCaptureFilter(ftmBase, CHAN0_IDX, phaseAParams->kFtmPhaseFilterVal);
     }
-    FTM_HAL_SetQuadPhaseBFilterCmd(ftmBaseAddr, phaseBParams->kFtmPhaseInputFilter);
+    FTM_HAL_SetQuadPhaseBFilterCmd(ftmBase, phaseBParams->kFtmPhaseInputFilter);
     if (phaseBParams->kFtmPhaseInputFilter)
     {
         /* Set Phase B filter value if phase filter is enabled */
-        FTM_HAL_SetChnInputCaptureFilter(ftmBaseAddr, HW_CHAN1, phaseBParams->kFtmPhaseFilterVal);
+        FTM_HAL_SetChnInputCaptureFilter(ftmBase, CHAN1_IDX, phaseBParams->kFtmPhaseFilterVal);
     }
-    FTM_HAL_SetQuadPhaseAPolarity(ftmBaseAddr, phaseAParams->kFtmPhasePolarity);
-    FTM_HAL_SetQuadPhaseBPolarity(ftmBaseAddr, phaseBParams->kFtmPhasePolarity);
+    FTM_HAL_SetQuadPhaseAPolarity(ftmBase, phaseAParams->kFtmPhasePolarity);
+    FTM_HAL_SetQuadPhaseBPolarity(ftmBase, phaseBParams->kFtmPhasePolarity);
 
-    FTM_HAL_SetQuadDecoderCmd(ftmBaseAddr, true);
+    FTM_HAL_SetQuadDecoderCmd(ftmBase, true);
 
     /* Set clock source to start the counter */
-    FTM_HAL_SetClockSource(ftmBaseAddr, kClock_source_FTM_SystemClk);
+    FTM_HAL_SetClockSource(ftmBase, s_ftmClockSource);
 }
 
-void FTM_DRV_QuadDecodeStop(uint8_t instance)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_QuadDecodeStop
+ * Description   : De-activates quadrature decode mode.
+ * This function will initialize the Real Time Clock module.
+ *
+ *END**************************************************************************/
+void FTM_DRV_QuadDecodeStop(uint32_t instance)
 {
     /* Stop the FTM counter */
-    FTM_HAL_SetClockSource(g_ftmBaseAddr[instance], kClock_source_FTM_None);
+    FTM_HAL_SetClockSource(g_ftmBase[instance], kClock_source_FTM_None);
 
-    FTM_HAL_SetQuadDecoderCmd(g_ftmBaseAddr[instance], false);
+    FTM_HAL_SetQuadDecoderCmd(g_ftmBase[instance], false);
 }
 
-void FTM_DRV_CounterStart(uint8_t instance, ftm_counting_mode_t countMode, uint32_t countStartVal,
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_CounterStart
+ * Description   : Starts the FTM counter. This function provides access to the
+ * FTM counter. The counter can be run in Up-counting and Up-down counting modes.
+ * To run the counter in Free running mode, choose Up-counting option and provide
+ * 0x0 for the countStartVal and 0xFFFF for countFinalVal.
+ *
+ *END**************************************************************************/
+void FTM_DRV_CounterStart(uint32_t instance, ftm_counting_mode_t countMode, uint32_t countStartVal,
                                  uint32_t countFinalVal, bool enableOverflowInt)
 {
-    assert(instance < HW_FTM_INSTANCE_COUNT);
+    assert(instance < FTM_INSTANCE_COUNT);
 
-    uint32_t ftmBaseAddr = g_ftmBaseAddr[instance];
+    FTM_Type *ftmBase = g_ftmBase[instance];
     uint32_t channel = 0;
 
     /* Clear the overflow flag */
-    FTM_HAL_ClearTimerOverflow(ftmBaseAddr);
-    FTM_HAL_SetCounterInitVal(ftmBaseAddr, countStartVal);
-    FTM_HAL_SetMod(ftmBaseAddr, countFinalVal);
-    FTM_HAL_SetCounter(ftmBaseAddr, 0);
+    FTM_HAL_ClearTimerOverflow(ftmBase);
+    FTM_HAL_SetCounterInitVal(ftmBase, countStartVal);
+    FTM_HAL_SetMod(ftmBase, countFinalVal);
+    FTM_HAL_SetCounter(ftmBase, 0);
 
     /* Use FTM as counter, disable all the channels */
-    for (channel = 0; channel < FSL_FEATURE_FTM_CHANNEL_COUNTn(instance); channel++)
+    for (channel = 0; channel < g_ftmChannelCount[instance]; channel++)
     {
-        FTM_HAL_SetChnEdgeLevel(ftmBaseAddr, channel, 0);
+        FTM_HAL_SetChnEdgeLevel(ftmBase, channel, 0);
     }
 
     if (countMode == kCounting_FTM_UP)
     {
-        FTM_HAL_SetQuadDecoderCmd(ftmBaseAddr, false);
-        FTM_HAL_SetCpwms(ftmBaseAddr, 0);
+        FTM_HAL_SetQuadDecoderCmd(ftmBase, false);
+        FTM_HAL_SetCpwms(ftmBase, 0);
     }
     else if (countMode == kCounting_FTM_UpDown)
     {
-        FTM_HAL_SetQuadDecoderCmd(ftmBaseAddr, false);
-        FTM_HAL_SetCpwms(ftmBaseAddr, 1);
+        FTM_HAL_SetQuadDecoderCmd(ftmBase, false);
+        FTM_HAL_SetCpwms(ftmBase, 1);
     }
 
     /* Activate interrupts if required */
     FTM_DRV_SetTimeOverflowIntCmd(instance, enableOverflowInt);
 
     /* Set clock source to start the counter */
-    FTM_HAL_SetClockSource(ftmBaseAddr, kClock_source_FTM_SystemClk);
+    FTM_HAL_SetClockSource(ftmBase, s_ftmClockSource);
 }
 
-void FTM_DRV_CounterStop(uint8_t instance)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_CounterStop
+ * Description   : Stops the FTM counter.
+ *
+ *END**************************************************************************/
+void FTM_DRV_CounterStop(uint32_t instance)
 {
     /* Stop the FTM counter */
-    FTM_HAL_SetClockSource(g_ftmBaseAddr[instance], kClock_source_FTM_None);
+    FTM_HAL_SetClockSource(g_ftmBase[instance], kClock_source_FTM_None);
 
-    FTM_HAL_SetCpwms(g_ftmBaseAddr[instance], 0);
+    FTM_HAL_SetCpwms(g_ftmBase[instance], 0);
 
     /* Disable the overflow interrupt */
     FTM_DRV_SetTimeOverflowIntCmd(instance, false);
 }
 
-uint32_t FTM_DRV_CounterRead(uint8_t instance)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_CounterRead
+ * Description   : Reads back the current value of the FTM counter.
+ *
+ *END**************************************************************************/
+uint32_t FTM_DRV_CounterRead(uint32_t instance)
 {
-    assert(instance < HW_FTM_INSTANCE_COUNT);
+    assert(instance < FTM_INSTANCE_COUNT);
 
-    return FTM_HAL_GetCounter(g_ftmBaseAddr[instance]);
+    return FTM_HAL_GetCounter(g_ftmBase[instance]);
 }
 
-/*See fsl_ftm_driver.h for documentation of this function.*/
-void FTM_DRV_PwmStop(uint8_t instance, ftm_pwm_param_t *param, uint8_t channel)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_SetClock
+ * Description   : Set FTM clock source.
+ * This function will save the users clock source selection in the driver and
+ * uses this to set the clock source whenever the user decides to use features provided
+ * by this driver like counter, PWM generation etc. It will also set the clock divider.
+ *
+ *END**************************************************************************/
+void FTM_DRV_SetClock(uint8_t instance, ftm_clock_source_t clock, ftm_clock_ps_t clockPs)
+{
+    assert(instance < FTM_INSTANCE_COUNT);
+    assert(clock != kClock_source_FTM_None);
+
+    /*Clock prescaler*/
+    FTM_HAL_SetClockPs(g_ftmBase[instance], clockPs);
+    s_ftmClockSource = clock;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_GetClock
+ * Description   : Retrieves the frequency of the clock source feeding the FTM counter.
+ * Function will return a 0 if no clock source is selected and the FTM counter is disabled
+ *
+ *END**************************************************************************/
+uint32_t FTM_DRV_GetClock(uint8_t instance)
+{
+    assert(instance < FTM_INSTANCE_COUNT);
+
+    FTM_Type *ftmBase = g_ftmBase[instance];
+    uint8_t clkPs;
+    uint32_t freq = 0;
+
+    clkPs = (1 << FTM_HAL_GetClockPs(ftmBase));
+
+    switch(s_ftmClockSource)
+    {
+        case kClock_source_FTM_ExternalClk:
+            freq = CLOCK_SYS_GetFtmExternalFreq(instance) / clkPs;
+            break;
+        case kClock_source_FTM_FixedClk:
+            freq = CLOCK_SYS_GetFtmFixedFreq(instance) / clkPs;
+            break;
+        case kClock_source_FTM_SystemClk:
+            freq = CLOCK_SYS_GetFtmSystemClockFreq(instance) / clkPs;
+            break;
+        default:
+            break;
+    }
+
+    return freq;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_PwmStop
+ * Description   : Stops channel PWM.
+ *
+ *END**************************************************************************/
+void FTM_DRV_PwmStop(uint32_t instance, ftm_pwm_param_t *param, uint8_t channel)
 {
     assert((param->mode == kFtmEdgeAlignedPWM) || (param->mode == kFtmCenterAlignedPWM) ||
            (param->mode == kFtmCombinedPWM));
-    assert(instance < HW_FTM_INSTANCE_COUNT);
-    assert(channel < FSL_FEATURE_FTM_CHANNEL_COUNTn(instance));
+    assert(instance < FTM_INSTANCE_COUNT);
+    assert(channel < g_ftmChannelCount[instance]);
 
-    uint32_t ftmBaseAddr = g_ftmBaseAddr[instance];
+    FTM_Type *ftmBase = g_ftmBase[instance];
 
     /* Stop the FTM counter */
-    FTM_HAL_SetClockSource(ftmBaseAddr, kClock_source_FTM_None);
+    FTM_HAL_SetClockSource(ftmBase, kClock_source_FTM_None);
 
-    FTM_HAL_DisablePwmMode(ftmBaseAddr, param, channel);
+    FTM_HAL_DisablePwmMode(ftmBase, param, channel);
 
     /* Clear out the registers */
-    FTM_HAL_SetMod(ftmBaseAddr, 0);
-    FTM_HAL_SetCounter(ftmBaseAddr, 0);
+    FTM_HAL_SetMod(ftmBase, 0);
+    FTM_HAL_SetCounter(ftmBase, 0);
 }
 
-/*See fsl_ftm_driver.h for documentation of this function.*/
-void FTM_DRV_PwmStart(uint8_t instance, ftm_pwm_param_t *param, uint8_t channel)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_PwmStart
+ * Description   : Configures duty cycle and frequency and starts outputting
+ * PWM on specified channel .
+ *
+ *END**************************************************************************/
+ftm_status_t FTM_DRV_PwmStart(uint32_t instance, ftm_pwm_param_t *param, uint8_t channel)
 {
     uint32_t uFTMhz;
     uint16_t uMod, uCnv, uCnvFirstEdge = 0;
 
-    assert(instance < HW_FTM_INSTANCE_COUNT);
+    assert(instance < FTM_INSTANCE_COUNT);
     assert(param->uDutyCyclePercent <= 100);
-    assert(channel < FSL_FEATURE_FTM_CHANNEL_COUNTn(instance));
+    assert(channel < g_ftmChannelCount[instance]);
 
-    uint32_t ftmBaseAddr = g_ftmBaseAddr[instance];
+    FTM_Type *ftmBase = g_ftmBase[instance];
 
     /* Clear the overflow flag */
-    FTM_HAL_ClearTimerOverflow(g_ftmBaseAddr[instance]);
+    FTM_HAL_ClearTimerOverflow(ftmBase);
 
-    FTM_HAL_EnablePwmMode(ftmBaseAddr, param, channel);
+    FTM_HAL_EnablePwmMode(ftmBase, param, channel);
 
-#if FSL_FEATURE_FTM_BUS_CLOCK
-    CLOCK_SYS_GetFreq(kBusClock, &uFTMhz);
-#else
-    CLOCK_SYS_GetFreq(kSystemClock, &uFTMhz);
-#endif
+    if (s_ftmClockSource == kClock_source_FTM_None)
+    {
+        return kStatusFtmError;
+    }
+
+    uFTMhz = FTM_DRV_GetClock(instance);
 
     /* Based on Ref manual, in PWM mode CNTIN is to be set 0*/
-    FTM_HAL_SetCounterInitVal(ftmBaseAddr, 0);
-
-    uFTMhz = uFTMhz / (1 << FTM_HAL_GetClockPs(ftmBaseAddr));
+    FTM_HAL_SetCounterInitVal(ftmBase, 0);
 
     switch(param->mode)
     {
@@ -256,8 +390,8 @@ void FTM_DRV_PwmStart(uint8_t instance, ftm_pwm_param_t *param, uint8_t channel)
             {
                 uCnv = uMod + 1;
             }
-            FTM_HAL_SetMod(ftmBaseAddr, uMod);
-            FTM_HAL_SetChnCountVal(ftmBaseAddr, channel, uCnv);
+            FTM_HAL_SetMod(ftmBase, uMod);
+            FTM_HAL_SetChnCountVal(ftmBase, channel, uCnv);
             break;
         case kFtmCenterAlignedPWM:
             uMod = uFTMhz / (param->uFrequencyHZ * 2);
@@ -267,8 +401,8 @@ void FTM_DRV_PwmStart(uint8_t instance, ftm_pwm_param_t *param, uint8_t channel)
             {
                 uCnv = uMod + 1;
             }
-            FTM_HAL_SetMod(ftmBaseAddr, uMod);
-            FTM_HAL_SetChnCountVal(ftmBaseAddr, channel, uCnv);
+            FTM_HAL_SetMod(ftmBase, uMod);
+            FTM_HAL_SetChnCountVal(ftmBase, channel, uCnv);
             break;
         case kFtmCombinedPWM:
             uMod = uFTMhz / (param->uFrequencyHZ) - 1;
@@ -279,10 +413,10 @@ void FTM_DRV_PwmStart(uint8_t instance, ftm_pwm_param_t *param, uint8_t channel)
             {
                 uCnv = uMod + 1;
             }
-            FTM_HAL_SetMod(ftmBaseAddr, uMod);
-            FTM_HAL_SetChnCountVal(ftmBaseAddr, FTM_HAL_GetChnPairIndex(channel) * 2,
+            FTM_HAL_SetMod(ftmBase, uMod);
+            FTM_HAL_SetChnCountVal(ftmBase, FTM_HAL_GetChnPairIndex(channel) * 2,
                                    uCnvFirstEdge);
-            FTM_HAL_SetChnCountVal(ftmBaseAddr, FTM_HAL_GetChnPairIndex(channel) * 2 + 1,
+            FTM_HAL_SetChnCountVal(ftmBase, FTM_HAL_GetChnPairIndex(channel) * 2 + 1,
                                    uCnv + uCnvFirstEdge);
             break;
         default:
@@ -291,19 +425,159 @@ void FTM_DRV_PwmStart(uint8_t instance, ftm_pwm_param_t *param, uint8_t channel)
     }
 
     /* Set clock source to start counter */
-    FTM_HAL_SetClockSource(ftmBaseAddr, kClock_source_FTM_SystemClk);
+    FTM_HAL_SetClockSource(ftmBase, s_ftmClockSource);
+    return kStatusFtmSuccess;
 }
 
-void FTM_DRV_IRQHandler(uint8_t instance)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_SetupChnInputCapture
+ * Description   : Enables capture of an input signal on the channel using the
+ * paramters specified to this function. When the edge specified in the captureMode
+ * argument occurs on the channel the FTM counter is captured into the CnV register.
+ * The user will have to read the CnV register separately to get this value. The filter
+ * function is disabled if the filterVal argument passed in is 0. The filter function
+ * is available only on channels 0,1,2,3.
+ *
+ *END**************************************************************************/
+void FTM_DRV_SetupChnInputCapture(uint32_t instance, ftm_input_capture_edge_mode_t captureMode,
+                                            uint8_t channel, uint8_t filterVal)
 {
-    uint32_t ftmBaseAddr = g_ftmBaseAddr[instance];
+    assert(instance < FTM_INSTANCE_COUNT);
+    assert(channel < g_ftmChannelCount[instance]);
+
+    FTM_Type *ftmBase = g_ftmBase[instance];
+    uint32_t chnlPairnum = FTM_HAL_GetChnPairIndex(channel);
+
+    FTM_HAL_SetClockSource(ftmBase, kClock_source_FTM_None);
+
+    FTM_HAL_SetCounterInitVal(ftmBase, 0);
+    FTM_HAL_SetMod(ftmBase, 0xFFFF);
+    FTM_HAL_SetCpwms(ftmBase, 0);
+    FTM_HAL_SetDualChnCombineCmd(ftmBase, chnlPairnum, false);
+    FTM_HAL_SetDualEdgeCaptureCmd(ftmBase, chnlPairnum, false);
+    FTM_HAL_SetChnEdgeLevel(ftmBase, channel, captureMode);
+
+    if (channel < CHAN4_IDX)
+    {
+        FTM_HAL_SetChnInputCaptureFilter(ftmBase, channel, filterVal);
+    }
+
+    FTM_HAL_SetChnMSnBAMode(ftmBase, channel, 0);
+
+    /* Set clock source to start the counter */
+    FTM_HAL_SetClockSource(ftmBase, s_ftmClockSource);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_SetupChnOutputCompare
+ * Description   : Configures the FTM to generate timed pulses
+ * When the FTM counter matches the value of compareVal argument (this is
+ * written into CnV reg), the channel output is changed based on what is specified
+ * in the compareMode argument.
+ *
+ *END**************************************************************************/
+void FTM_DRV_SetupChnOutputCompare(uint32_t instance, ftm_output_compare_edge_mode_t compareMode,
+                                               uint8_t channel, uint32_t compareVal)
+{
+    assert(instance < FTM_INSTANCE_COUNT);
+    assert(channel < g_ftmChannelCount[instance]);
+
+    FTM_Type *ftmBase = g_ftmBase[instance];
+    uint32_t chnlPairnum = FTM_HAL_GetChnPairIndex(channel);
+
+    FTM_HAL_SetClockSource(ftmBase, kClock_source_FTM_None);
+
+    FTM_HAL_SetCounterInitVal(ftmBase, 0);
+    FTM_HAL_SetMod(ftmBase, 0xFFFF);
+    FTM_HAL_SetCpwms(ftmBase, 0);
+    FTM_HAL_SetDualChnCombineCmd(ftmBase, chnlPairnum, false);
+    FTM_HAL_SetDualEdgeCaptureCmd(ftmBase, chnlPairnum, false);
+    FTM_HAL_SetChnEdgeLevel(ftmBase, channel, compareMode);
+    FTM_HAL_SetChnMSnBAMode(ftmBase, channel, 1);
+    FTM_HAL_SetChnCountVal(ftmBase, channel, compareVal);
+
+    /* Set clock source to start the counter */
+    FTM_HAL_SetClockSource(ftmBase, s_ftmClockSource);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_SetupChnDualEdgeCapture
+ * Description   : Configures the Dual Edge Capture mode of the FTM
+ * This function sets up the dual edge capture mode on a channel pair.
+ * The capture edge for the channel pair and the capture mode (one-shot or continuous)
+ * is specified in the param argument. The filter function is disabled if the
+ * filterVal argument passed in is 0. The filter function is available only on
+ * channels 0 and 2. The user will have to read the channel CnV registers separately
+ * to get the capture values.
+ *
+ *END**************************************************************************/
+void FTM_DRV_SetupChnDualEdgeCapture(uint32_t instance, ftm_dual_edge_capture_param_t *param,
+                                                 uint8_t channel, uint8_t filterVal)
+{
+    assert(instance < FTM_INSTANCE_COUNT);
+    assert(channel < g_ftmChannelCount[instance]);
+
+    FTM_Type *ftmBase = g_ftmBase[instance];
+    uint32_t chnlPairnum = FTM_HAL_GetChnPairIndex(channel);
+
+    /* Stop the counter */
+    FTM_HAL_SetClockSource(ftmBase, kClock_source_FTM_None);
+
+    FTM_HAL_SetCounterInitVal(ftmBase, 0);
+    FTM_HAL_SetMod(ftmBase, 0xFFFF);
+    FTM_HAL_SetCpwms(ftmBase, 0);
+    FTM_HAL_SetDualChnCombineCmd(ftmBase, chnlPairnum, false);
+    /* Enable the DECAPEN bit */
+    FTM_HAL_SetDualEdgeCaptureCmd(ftmBase, chnlPairnum, true);
+    /* Setup the edge detection from channel n and n + 1 */
+    FTM_HAL_SetChnEdgeLevel(ftmBase, chnlPairnum * 2, param->currChanEdgeMode);
+    FTM_HAL_SetChnEdgeLevel(ftmBase, (chnlPairnum * 2) + 1, param->nextChanEdgeMode);
+
+    FTM_HAL_ClearChnEventFlag(ftmBase, channel);
+    FTM_HAL_ClearChnEventFlag(ftmBase, channel + 1);
+    FTM_HAL_SetDualChnDecapCmd(ftmBase, chnlPairnum, true);
+    FTM_HAL_SetChnMSnBAMode(ftmBase, chnlPairnum * 2, param->mode);
+
+    if (channel < CHAN4_IDX)
+    {
+        FTM_HAL_SetChnInputCaptureFilter(ftmBase, channel, filterVal);
+    }
+
+    /* Set clock source to start the counter */
+    FTM_HAL_SetClockSource(ftmBase, s_ftmClockSource);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_DRV_IRQHandler
+ * Description   : Initializes the Real Time Clock module
+ * This function will initialize the Real Time Clock module.
+ *
+ *END**************************************************************************/
+void FTM_DRV_IRQHandler(uint32_t instance)
+{
+    FTM_Type *ftmBase = g_ftmBase[instance];
+    uint16_t channel;
 
     /* Clear the Status flag if the interrupt is enabled */
-    if (FTM_HAL_IsOverflowIntEnabled(ftmBaseAddr))
+    if (FTM_HAL_IsOverflowIntEnabled(ftmBase))
     {
-        FTM_HAL_ClearTimerOverflow(ftmBaseAddr);
+        FTM_HAL_ClearTimerOverflow(ftmBase);
+    }
+
+    for (channel = 0; channel < g_ftmChannelCount[instance]; channel++)
+    {
+        if (FTM_HAL_IsChnIntEnabled(ftmBase, channel))
+        {
+            FTM_HAL_ClearChnEventStatus(ftmBase, channel);
+        }
     }
 }
+
+#endif /* FSL_FEATURE_SOC_FTM_COUNT */
 
 /*******************************************************************************
  * EOF

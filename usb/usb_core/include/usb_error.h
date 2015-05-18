@@ -1,37 +1,37 @@
 /**HEADER********************************************************************
-* 
-* Copyright (c) 2008, 2013 Freescale Semiconductor;
-* All Rights Reserved
-*
-* Copyright (c) 1989-2008 ARC International;
-* All Rights Reserved
-*
-*************************************************************************** 
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: usb_error.h$
-* $Version : 
-* $Date    : 
-*
-* Comments:
-*
-*   This file contains USB Device API defines for state and function
-*   returns.
-*
-*END************************************************************************/
+ * 
+ * Copyright (c) 2008, 2013 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ * Copyright (c) 1989-2008 ARC International;
+ * All Rights Reserved
+ *
+ *************************************************************************** 
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: usb_error.h$
+ * $Version : 
+ * $Date    : 
+ *
+ * Comments:
+ *
+ *   This file contains USB Device API defines for state and function
+ *   returns.
+ *
+ *END************************************************************************/
 #ifndef __usb_error_h__
 #define __usb_error_h__ 1
 
@@ -84,6 +84,9 @@
 #define USBERR_INVALID_ANCHOR               (0xCD)
 #define USBERR_INVALID_REQ_TYPE             (0xCE)
 #define USBERR_DEVICE_DETACH                (0xCF)
+#define USBERR_INTERFACE_NOT_OPENED         (0xD0)
+#define USBERR_LACK_OF_SWAP_BUFFER          (0xD1)
+#define USBERR_LEAK_OF_SWAP_BUFFER          (0xD2)
 
 #define USBERR_ERROR                        (0xFF)
 

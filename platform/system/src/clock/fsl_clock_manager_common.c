@@ -29,6 +29,7 @@
  */
 
 #include "fsl_device_registers.h"
+#include "fsl_clock_manager.h"
 
 /*******************************************************************************
  * Variables
@@ -38,9 +39,22 @@
  * Definitions
  ******************************************************************************/
 /* Table of base addresses for instances. */
-const uint32_t g_simBaseAddr[] = SIM_BASE_ADDRS;
-const uint32_t g_mcgBaseAddr[] = MCG_BASE_ADDRS;
-const uint32_t g_oscBaseAddr[] = OSC_BASE_ADDRS; 
+SIM_Type * const g_simBase[] = SIM_BASE_PTRS;
+#if (defined(CLOCK_USE_MCG) || defined(CLOCK_USE_MCG_LITE))
+MCG_Type * const g_mcgBase[] = MCG_BASE_PTRS;
+#endif
+
+#if (defined(CLOCK_USE_SCG))
+const uint32_t g_scgBase[] = SCG_BASE_PTRS;
+#endif
+
+#if (!defined(CLOCK_USE_SCG))
+OSC_Type * const g_oscBase[] = OSC_BASE_PTRS; 
+#endif
+
+#if (defined(PCC_INSTANCE_COUNT))
+PCC_Type * const g_pccBase[] = PCC_BASE_PTRS; 
+#endif
 
 /*******************************************************************************
  * EOF

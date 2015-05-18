@@ -91,11 +91,11 @@
 #define  USB_ATTACH_INTF_NOT_SUPPORT         (5)   /* device attach while some interfaces not supported */
 #define  USB_ATTACH_DEVICE_NOT_SUPPORT       (6)   /* device attach while all interfaces not supported */
 
-/* Alignement of buffer for DMA transfer, needed in some cases,
-** USB DMA bus could not possibly be intializes properly and 
+/* Alignment of buffer for DMA transfer, needed in some cases,
+** USB DMA bus could not possibly be initializes properly and
 ** first data transfered is the one aligned at 4-byte boundary
 */
-#define USB_MEM4_ALIGN(n)               ((n) + (-(n) & 3))
+#define USB_MEM4_ALIGN(n)               ((uint32_t)(n) + ((uint32_t)(-(n)) & 3U))
 #define USB_DMA_ALIGN(n)                USB_MEM4_ALIGN(n)
 #define USB_DMA_ALIGN_MASK              (0x03)
 #define USB_SETUP_PKT_SIZE              (8)/* Setup Packet Size */
@@ -112,32 +112,32 @@ typedef struct xd_struct
     uint32_t           wsofar;           /* number of bytes recv'd so far */
     struct xd_struct*  next;
     uint16_t           wmaxpacketsize;   /* max packet size */   
-	uint8_t            dont_zero_terminate;
-#if USBCFG_KHCI_4BYTE_ALIGN_FIX
-	uint8_t	           internal_dma_align;
+    uint8_t            dont_zero_terminate;
+#if (defined USBCFG_KHCI_4BYTE_ALIGN_FIX && USBCFG_KHCI_4BYTE_ALIGN_FIX)
+    uint8_t               internal_dma_align;
 #endif
     uint8_t            max_pkts_per_uframe;
 } xd_struct_t;
 
-typedef struct usb_instance
+typedef struct
 {
-	uint8_t* 			name;
-	uint8_t 			instance;
+    uint8_t*             name;
+    uint8_t             instance;
 } usb_instance_t;
 
-#if USBCFG_DEV_KHCI || USBCFG_DEV_EHCI
+#if (defined USBCFG_DEV_KHCI && USBCFG_DEV_KHCI) || (defined USBCFG_DEV_EHCI && USBCFG_DEV_EHCI)
 typedef struct usb_dev_data
 {
-    uint8_t             control_out[96];/* control_out must be 32 byte align, 
+    uint8_t             control_out[(((MAX_EXPECTED_CONTROL_OUT_SIZE-1)/32) + 1) * 32];
+                         /* control_out must be 32 byte align, 
                                         ** 96 = (((MAX_EXPECTED_CONTROL_OUT_SIZE-1)/32) + 1) * 32
                                         */
 } usb_dev_data_t;
 #endif
 
-#if USBCFG_DEV_KHCI
+#if (defined USBCFG_DEV_KHCI && USBCFG_DEV_KHCI)
 typedef struct usb_device_khci_data
 {
-    uint8_t             bdt[512];
     uint8_t             setup_packet[16];
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
     uint8_t             reserver1[16];
@@ -149,7 +149,7 @@ typedef struct usb_device_khci_data
 }usb_device_khci_data_t;
 #endif
 
-#if USBCFG_DEV_EHCI
+#if (defined USBCFG_DEV_EHCI && USBCFG_DEV_EHCI)
 typedef struct usb_device_ehci_data
 {
     uint8_t             qh_base[USBCFG_DEV_EHCI_MAX_ENDPOINTS * 2 * 64];
@@ -184,7 +184,7 @@ typedef enum
 
 typedef enum
 {
-    USB_CONTROLLER_KHCI_0,
+    USB_CONTROLLER_KHCI_0 = 0x00,
     USB_CONTROLLER_KHCI_1,
     USB_CONTROLLER_EHCI_0,
     USB_CONTROLLER_EHCI_1

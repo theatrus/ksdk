@@ -132,13 +132,16 @@ typedef struct _lba_app_struct
     uint32_t             size;     /*!< size need to access*/
     uint8_t*             buff_ptr; /*!< used to save the content by access the target block*/
 }lba_app_struct_t;
-extern void USB_Class_Periodic_Task(void);
+//extern void USB_Class_Periodic_Task(void);
 #define USB_MSC_Periodic_Task USB_Class_Periodic_Task 
 /******************************************************************************
  * Global Functions
  *****************************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif 
 /*!
-* @brief The funtion initializes the Device and Controller layer.
+* @brief The function initializes the Device and Controller layer.
 *
 * The application calls this API function to initialize the MSD class, the underlying layers, and
 * the controller hardware.
@@ -156,9 +159,9 @@ extern usb_status USB_Class_MSC_Init
 ); 
 
 /*!
- * @brief The funtion De-initializes the Device and Controller layer.
+ * @brief The function De-initializes the Device and Controller layer.
  *
- * The application calls this API function to un-initialize the MSD class, the underlying layers, and
+ * The application calls this API function to de-initialize the MSD class, the underlying layers, and
  * the controller hardware.
  *
  * @param msd_handle MSC class handler  
@@ -168,6 +171,29 @@ extern usb_status USB_Class_MSC_Deinit
 (
     msd_handle_t msd_handle
 );
+
+
+/**************************************************************************//*!
+ *
+ * @name  USB_Class_MSC_Get_Speed
+ *
+ * @brief This functions get speed from Host.
+ *
+ * @param handle          :   handle returned by USB_Class_MSC_Init
+ * @param speed           :   speed
+ *
+ * @return status       
+ *         USB_OK         : When Successfull 
+ *         Others         : Errors
+ *****************************************************************************/
+extern usb_status USB_Class_MSC_Get_Speed
+(
+    msd_handle_t         handle,
+    uint16_t *           speed/* [OUT] the requested error */
+);
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

@@ -32,6 +32,7 @@
 #include "fsl_dma_driver.h"
 #include "fsl_interrupt_manager.h"
 #include "fsl_clock_manager.h"
+#if FSL_FEATURE_SOC_DMA_COUNT
 
 /*******************************************************************************
  * Variables
@@ -67,16 +68,16 @@ dma_status_t DMA_DRV_Init(dma_state_t *state)
     OSA_MutexCreate(&state->lock);
 #endif
     /* Enable DMA clock. */
-    for (i = 0; i < HW_DMA_INSTANCE_COUNT; i ++)
+    for (i = 0; i < DMA_INSTANCE_COUNT; i ++)
     {
         CLOCK_SYS_EnableDmaClock(i);
     }
 
     /* Enable DMAMUX clock and init. */
-    for (i = 0; i < HW_DMAMUX_INSTANCE_COUNT; i++)
+    for (i = 0; i < DMAMUX_INSTANCE_COUNT; i++)
     {
         CLOCK_SYS_EnableDmamuxClock(i);
-        DMAMUX_HAL_Init(g_dmamuxRegBaseAddr[i]);
+        DMAMUX_HAL_Init(g_dmamuxBase[i]);
     }
 
     return kStatus_DMA_Success;
@@ -103,13 +104,13 @@ dma_status_t DMA_DRV_Deinit(void)
     }
 
     /* Disable DMA clcok. */
-    for (i = 0; i < HW_DMA_INSTANCE_COUNT; i++)
+    for (i = 0; i < DMA_INSTANCE_COUNT; i++)
     {
         CLOCK_SYS_DisableDmaClock(i);
     }
 
     /* Disable DMAMUX clock. */
-    for (i = 0; i < HW_DMAMUX_INSTANCE_COUNT; i++)
+    for (i = 0; i < DMAMUX_INSTANCE_COUNT; i++)
     {
         CLOCK_SYS_DisableDmaClock(i);
     }
@@ -199,7 +200,7 @@ dma_status_t DMA_DRV_ClaimChannel(
 {
     IRQn_Type irqNumber;
     uint32_t dmaInstance = channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS;
-    uint32_t dmamuxBaseAddr = g_dmamuxRegBaseAddr[channel/FSL_FEATURE_DMAMUX_MODULE_CHANNEL];
+    DMAMUX_Type * dmamuxBaseAddr = g_dmamuxBase[channel/FSL_FEATURE_DMAMUX_MODULE_CHANNEL];
     memset(chn, 0, sizeof(dma_channel_t));
 
     DMA_DRV_LOCK();
@@ -256,7 +257,7 @@ dma_status_t DMA_DRV_FreeChannel(dma_channel_t *chn)
  *END**************************************************************************/
 dma_status_t DMA_DRV_StartChannel(dma_channel_t *chn)
 {
-    uint32_t dmaBaseAddr = g_dmaRegBaseAddr[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+    DMA_Type * dmaBaseAddr = g_dmaBase[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
     DMA_HAL_SetDmaRequestCmd(dmaBaseAddr, chn->channel, true);
     return kStatus_DMA_Success;
 }
@@ -269,7 +270,7 @@ dma_status_t DMA_DRV_StartChannel(dma_channel_t *chn)
  *END**************************************************************************/
 dma_status_t DMA_DRV_StopChannel(dma_channel_t *chn)
 {
-    uint32_t dmaBaseAddr = g_dmaRegBaseAddr[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+    DMA_Type * dmaBaseAddr = g_dmaBase[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
     DMA_HAL_SetDmaRequestCmd(dmaBaseAddr, chn->channel, false);
     return kStatus_DMA_Success;
 }
@@ -282,7 +283,7 @@ dma_status_t DMA_DRV_StopChannel(dma_channel_t *chn)
  *END**************************************************************************/
 uint32_t DMA_DRV_GetUnfinishedBytes(dma_channel_t *chn)
 {
-    uint32_t dmaBaseAddr = g_dmaRegBaseAddr[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+    DMA_Type * dmaBaseAddr = g_dmaBase[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
     return DMA_HAL_GetUnfinishedByte(dmaBaseAddr, chn->channel);
 }
 
@@ -295,7 +296,7 @@ uint32_t DMA_DRV_GetUnfinishedBytes(dma_channel_t *chn)
 void DMA_DRV_IRQhandler(uint32_t channel)
 {
     dma_channel_t *chn = g_dma->dmaChan[channel];
-    uint32_t dmaBaseAddr = g_dmaRegBaseAddr[channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+    DMA_Type * dmaBaseAddr = g_dmaBase[channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
     dma_error_status_t status;
 
     if (!chn)
@@ -305,7 +306,7 @@ void DMA_DRV_IRQhandler(uint32_t channel)
 
     status = DMA_HAL_GetStatus(dmaBaseAddr, channel);
 
-    if ((status.u.dmaConfigError) || (status.u.dmaDestBusError) || (status.u.dmaSourceBusError))
+    if ((status.dmaConfigError) || (status.dmaDestBusError) || (status.dmaSourceBusError))
     {
         chn->status = kDmaError;
         status = DMA_HAL_GetStatus(dmaBaseAddr, channel);
@@ -330,7 +331,7 @@ dma_status_t DMA_DRV_ConfigTransfer(
         dma_channel_t *chn, dma_transfer_type_t type, uint32_t size,
         uint32_t sourceAddr, uint32_t destAddr, uint32_t length)
 {
-    uint32_t dmaBaseAddr = g_dmaRegBaseAddr[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+    DMA_Type * dmaBaseAddr = g_dmaBase[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
     dma_transfer_size_t transfersize;
     switch (size)
     {
@@ -363,10 +364,11 @@ dma_status_t DMA_DRV_ConfigChanLink(
     dma_channel_t * chn,dma_channel_link_config_t * link_config)
 {
     uint32_t channel = chn->channel;
-    uint32_t baseAddr = g_dmaRegBaseAddr[channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
-    DMA_HAL_SetChanLink(baseAddr, channel,link_config);
+    DMA_Type * base = g_dmaBase[channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+    DMA_HAL_SetChanLink(base, channel,link_config);
     return kStatus_DMA_Success;
 }
+#endif
 
 /*******************************************************************************
  * EOF

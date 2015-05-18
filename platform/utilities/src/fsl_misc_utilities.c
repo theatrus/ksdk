@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "fsl_misc_utilities.h"
-#if (defined(__GNUC__) && (!defined(KDS)) && (!defined(ATOLLIC)))
+#if defined(__GNUC__)
 #include <errno.h>
 #endif
 #include "fsl_debug_console.h"
@@ -51,23 +51,9 @@ void __aeabi_assert(const char *expr, const char *file, int line)
     printf("assert failed:%s, file %s:%d\r\n",expr,file,line);
 }
 
-#elif (defined(KDS))
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : _isatty
- * Description   : used to enable the overwrite of the _write
- * This function is used to enable the overwrite of the _write.
- *
- *END**************************************************************************/
-int _isatty (int fd) 
-{ 
-	return 1; 
-}
-
 #endif
 
-#if (defined(__GNUC__) && (!defined(KDS)) && (!defined(ATOLLIC)))
+#if defined(__GNUC__)
 caddr_t
 _sbrk (int incr)
 {
@@ -83,7 +69,11 @@ _sbrk (int incr)
 
   if (heap_end + incr > &heap_limit)
     {
-      errno = ENOMEM;
+#ifdef NIO_ENOMEM   //TODO: Update NIO error code for MQX
+        errno = NIO_ENOMEM;
+#else
+        errno = ENOMEM;
+#endif
       return (caddr_t) -1;
     }
 

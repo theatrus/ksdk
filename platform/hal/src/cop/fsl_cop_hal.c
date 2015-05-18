@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -41,31 +41,45 @@
 /*******************************************************************************
  * Code
  ******************************************************************************/
- 
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : COP_HAL_SetConfig
+ * Description   : Configures COP.
+ *
+ *END**************************************************************************/    
+void COP_HAL_SetConfig(SIM_Type * base, const cop_config_t *configPtr)
+{
+   uint32_t value = 0;
+#if FSL_FEATURE_COP_HAS_LONGTIME_MODE
+   value = SIM_COPC_COPW(configPtr->copWindowModeEnable) | SIM_COPC_COPCLKS(configPtr->copTimeoutMode) | 
+           SIM_COPC_COPT(configPtr->copTimeout) | SIM_COPC_COPSTPEN(configPtr->copStopModeEnable) | 
+           SIM_COPC_COPDBGEN(configPtr->copDebugModeEnable) | SIM_COPC_COPCLKSEL(configPtr->copClockSource);
+#else
+   value = SIM_COPC_COPW(configPtr->copWindowModeEnable) | SIM_COPC_COPCLKS(configPtr->copClockSource) | 
+           SIM_COPC_COPT(configPtr->copTimeout);
+#endif
+   SIM_WR_COPC(base, value);
+}
+
 /*FUNCTION**********************************************************************
  *
  * Function Name : COP_HAL_Init
- * Description   : Initialize COP peripheral to reset state.
+ * Description   : Initialize COP peripheral to workable state.
  *
  *END**************************************************************************/ 
-void COP_HAL_Init(uint32_t baseAddr)
+void COP_HAL_Init(SIM_Type * base)
 {
-    cop_common_config_t copCommonConfig;
-    
-    copCommonConfig.commonConfig.copWindowEnable    = (uint8_t)false;
-#if FSL_FEATURE_COP_HAS_LONGTIME_MODE    
-    copCommonConfig.commonConfig.copTimeoutMode     = kCopShortTimeoutMode;
-    copCommonConfig.commonConfig.copStopModeEnable  = (uint8_t)false;
-    copCommonConfig.commonConfig.copDebugModeEnable = (uint8_t)false;
-    copCommonConfig.commonConfig.copClockSource     = kCopLpoClock;
-#else
-    copCommonConfig.commonConfig.copClockSelect     = kCopLpoClock;
-    copCommonConfig.commonConfig.reserved0          = 0;
+	cop_config_t copCommonConfig;
+	copCommonConfig.copWindowModeEnable = false;
+#if FSL_FEATURE_COP_HAS_LONGTIME_MODE
+	copCommonConfig.copTimeoutMode = kCopShortTimeoutMode;
+	copCommonConfig.copStopModeEnable = false;
+	copCommonConfig.copDebugModeEnable = true;
 #endif
-    copCommonConfig.commonConfig.copTimeout         = kCopTimeout_short_2to10_or_long_2to18;
-    copCommonConfig.commonConfig.reserved1          = 0;
-    
-    COP_HAL_SetCommonConfiguration(baseAddr, copCommonConfig);
+	copCommonConfig.copClockSource = kCopLpoClock;
+	copCommonConfig.copTimeout = kCopTimeout_short_2to10_or_long_2to18;
+    COP_HAL_SetConfig(base, &copCommonConfig);
 }
 
 /*******************************************************************************

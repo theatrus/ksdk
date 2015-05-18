@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ProjectWorkspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_mpw.xsd">
+  <SchemaVersion>1.0</SchemaVersion>
+  <Header>### uVision Project, (C) Keil Software</Header>
+  <WorkspaceName>WorkSpace</WorkspaceName>
+<project><PathAndName>../../../../../../../../rtos/mqx/mqx/build/mdk/mqx_twrk64f120m/mqx_twrk64f120m.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../rtos/mqx/mqx_stdlib/build/mdk/mqx_stdlib_twrk64f120m/mqx_stdlib_twrk64f120m.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../usb/usb_core/device/build/mdk/usbd_sdk_twrk64f120m_mqx/usbd_sdk_twrk64f120m_mqx.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../lib/ksdk_mqx_lib/mdk/K64F12/ksdk_mqx_lib.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>dev_msd_disk_twrk64f120m_mqx.uvprojx</PathAndName><NodeIsActive>1</NodeIsActive></project></ProjectWorkspace>

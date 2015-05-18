@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_CADC_COUNT
 
 /*!
  * @addtogroup cadc_hal
@@ -42,7 +43,7 @@
  */
 
 /******************************************************************************
- * Definitions
+ * Enumerations.
  *****************************************************************************/
 
 /*!
@@ -56,84 +57,75 @@ typedef enum _cadc_status
 } cadc_status_t;
 
 /*!
- * @brief Defines the type of enumerating ADC converter's ID.
- */
-typedef enum _cadc_conv_id
-{
-    kCAdcConvA = 0U,/*!< ID for ADC converter A. */
-    kCAdcConvB = 1U /*!< ID for ADC converter B. */
-} cadc_conv_id_t;
-
-/*!
  * @brief Defines the type of enumerating ADC differential channel pair.
- * 
- * Note, "cadc_diff_chn_mode_t" and "cadc_chn_sel_mode_t" can determine to
+ *
+ * Note, "cadc_diff_chn_t" and "cadc_chn_sel_mode_t" can determine to
  * select the single ADC sample channel.
  */
-typedef enum _cadc_diff_chn_mode
+typedef enum _cadc_diff_chn
 {
-    kCAdcDiffChnANA0_1 = 0U, /*!< ConvA's Chn 0 & 1. */
-    kCAdcDiffChnANA2_3 = 1U, /*!< ConvA's Chn 2 & 3. */
-    kCAdcDiffChnANA4_5 = 2U, /*!< ConvA's Chn 4 & 5. */
-    kCAdcDiffChnANA6_7 = 3U, /*!< ConvA's Chn 6 & 7. */
-    kCAdcDiffChnANB0_1 = 4U, /*!< ConvB's Chn 0 & 1. */
-    kCAdcDiffChnANB2_3 = 5U, /*!< ConvB's Chn 2 & 3. */
-    kCAdcDiffChnANB4_5 = 6U, /*!< ConvB's Chn 4 & 5. */
-    kCAdcDiffChnANB6_7 = 7U  /*!< ConvB's Chn 6 & 7. */
-} cadc_diff_chn_mode_t;
+    kCAdcDiffChnANA0_1 = 0U, /*!< ConvA's Chn 0 & 1. @internal gui name="ANA 0 & 1" */
+    kCAdcDiffChnANA2_3 = 1U, /*!< ConvA's Chn 2 & 3. @internal gui name="ANA 2 & 3" */
+    kCAdcDiffChnANA4_5 = 2U, /*!< ConvA's Chn 4 & 5. @internal gui name="ANA 4 & 5" */
+    kCAdcDiffChnANA6_7 = 3U, /*!< ConvA's Chn 6 & 7. @internal gui name="ANA 6 & 7" */
+    kCAdcDiffChnANB0_1 = 4U, /*!< ConvB's Chn 0 & 1. @internal gui name="ANB 0 & 1" */
+    kCAdcDiffChnANB2_3 = 5U, /*!< ConvB's Chn 2 & 3. @internal gui name="ANB 2 & 3" */
+    kCAdcDiffChnANB4_5 = 6U, /*!< ConvB's Chn 4 & 5. @internal gui name="ANB 4 & 5" */
+    kCAdcDiffChnANB6_7 = 7U  /*!< ConvB's Chn 6 & 7. @internal gui name="ANB 6 & 7" */
+} cadc_diff_chn_t;
 
 /*!
  * @brief Defines the type of enumerating ADC channel in differential pair.
- * 
- * Note, "cadc_diff_chn_mode_t" and "cadc_chn_sel_mode_t" can determine to
- * select the single ADC sample channel.
+ *
+ * Note, "cadc_diff_chn_t" and "cadc_chn_sel_mode_t" can determine
+ * selecting the single ADC sample channel.
  */
 typedef enum _cadc_chn_sel_mode
 {
-    kCAdcChnSelN = 0U, /*!< Select negative side channel. */
-    kCAdcChnSelP = 1U, /*!< Select positive side channel. */
-    kCAdcChnSelBoth = 2U /*!< Select both of them in differential mode..**/
+    kCAdcChnSelN = 0U, /*!< Select negative side channel. @internal gui name="Negative channel side" */
+    kCAdcChnSelP = 1U, /*!< Select positive side channel. @internal gui name="Positive channel side" */
+    kCAdcChnSelBoth = 2U /*!< Select both of them in differential mode.. @internal gui name="Both - differential mode" */
 } cadc_chn_sel_mode_t;
 
 /*!
  * @brief Defines the type of enumerating ADC converter's scan mode.
  *
- * See to ADC_CTRL1[SMODE] from Reference Manual for more detailed information
- * about ADC converter's scan mode.
+ * See the ADC_CTRL1[SMODE] in the chip Reference Manual for detailed information
+ * about the ADC converter scan mode.
  */
 typedef enum _cadc_scan_mode
 {
-    kCAdcScanOnceSequential      = 0U, /*!< Once (single) sequential. */
-    kCAdcScanOnceParallel        = 1U, /*!< Once parallel. */
-    kCAdcScanLoopSequential      = 2U, /*!< Loop sequential. */
-    kCAdcScanLoopParallel        = 3U, /*!< Loop parallel. */
-    kCAdcScanTriggeredSequential = 4U, /*!< Triggered sequential. */
-    kCAdcScanTriggeredParalled   = 5U  /*!< Triggered parallel (default). */
+    kCAdcScanOnceSequential      = 0U, /*!< Once (single) sequential. @internal gui name="Once sequential" */
+    kCAdcScanOnceParallel        = 1U, /*!< Once parallel. @internal gui name="Once parallel" */
+    kCAdcScanLoopSequential      = 2U, /*!< Loop sequential. @internal gui name="Loop sequential" */
+    kCAdcScanLoopParallel        = 3U, /*!< Loop parallel. @internal gui name="Loop parallel" */
+    kCAdcScanTriggeredSequential = 4U, /*!< Triggered sequential. @internal gui name="Triggered sequential" */
+    kCAdcScanTriggeredParalled   = 5U  /*!< Triggered parallel (default). @internal gui name="Triggered parallel" */
 } cadc_scan_mode_t;
 
 /*!
- * @brief Defines the type of enumerating zero crossing detection mode for each slot.
+ * @brief Defines the type to enumerate the zero crossing detection mode for each slot.
  */
 typedef enum _cadc_zero_crossing_mode
 {
-    kCAdcZeroCrossingDisable        = 0U, /*!< Zero crossing detection disabled. */
-    kCAdcZeroCrossingAtRisingEdge   = 1U, /*!< Enable for positive to negative sign change. */
-    kCAdcZeroCrossingAtFallingEdge  = 2U, /*!< Enable for negative to positive sign change. */
-    kCAdcZeroCrossingAtBothEdge     = 3U  /*!< Enable for any sign change. */
+    kCAdcZeroCrossingDisable        = 0U, /*!< Zero crossing detection disabled. @internal gui name="Disabled" */
+    kCAdcZeroCrossingAtRisingEdge   = 1U, /*!< Enable for positive to negative sign change. @internal gui name="Rising edge" */
+    kCAdcZeroCrossingAtFallingEdge  = 2U, /*!< Enable for negative to positive sign change. @internal gui name="Falling edge" */
+    kCAdcZeroCrossingAtBothEdge     = 3U  /*!< Enable for any sign change. @internal gui name="Both edges" */
 } cadc_zero_crossing_mode_t;
 
 /*!
- * @brief Defines the type of enumerating amplification mode for each slot.
+ * @brief Defines the type to enumerate the amplification mode for each slot.
  */
 typedef enum _cadc_gain_mode
 {
-    kCAdcSGainBy1 = 0U, /*!< x1 amplification. */
-    kCAdcSGainBy2 = 1U, /*!< x2 amplification. */
-    kCAdcSGainBy4 = 2U  /*!< x4 amplification. */
+    kCAdcSGainBy1 = 0U, /*!< x1 amplification. @internal gui name="1" */
+    kCAdcSGainBy2 = 1U, /*!< x2 amplification. @internal gui name="2" */
+    kCAdcSGainBy4 = 2U  /*!< x4 amplification. @internal gui name="4" */
 } cadc_gain_mode_t;
 
 /*!
- * @brief Defines the type of enumerating speed mode for each converter.
+ * @brief Defines the type to enumerate the speed mode for each converter.
  *
  * These items represent the clock speed at which the ADC converter can operate.
  * Faster conversion speeds require greater current consumption.
@@ -141,28 +133,162 @@ typedef enum _cadc_gain_mode
 typedef enum _cadc_conv_speed_mode
 {
     kCAdcConvClkLimitBy6_25MHz  = 0U, /*!< Conversion clock frequency <= 6.25 MHz;
-                                            current consumption per converter = 6 mA. */
+                                            current consumption per converter = 6 mA. @internal gui name="Max 6.25 MHz" */
     kCAdcConvClkLimitBy12_5MHz  = 1U, /*!< Conversion clock frequency <= 12.5 MHz;
-                                            current consumption per converter = 10.8 mA. */
+                                            current consumption per converter = 10.8 mA. @internal gui name="Max 12.5 MHz" */
     kCAdcConvClkLimitBy18_75MHz = 2U, /*!< Conversion clock frequency <= 18.75 MHz;
-                                            current consumption per converter = 18 mA. */
+                                            current consumption per converter = 18 mA. @internal gui name="Max 18.75 MHz" */
     kCAdcConvClkLimitBy25MHz    = 3U  /*!< Conversion clock frequency <= 25 MHz;
-                                            current consumption per converter = 25.2 mA. */
+                                            current consumption per converter = 25.2 mA. @internal gui name="Max 25 MHz" */
 } cadc_conv_speed_mode_t;
 
 /*!
- * @brief Defines the type of DMA trigger source mode for each converter.
+ * @brief Defines the type of DMA trigger source for each converter.
  *
- * During sequential and simultaneous parallel scan modes, it selects between 
+ * During sequential and simultaneous parallel scan modes, it selects between
  * end of scan for ConvA's scan and RDY status as the DMA source. During
  * non-simultaneous parallel scan mode it selects between end of scan for
  * converters A and B, and the RDY status as the DMA source
  */
-typedef enum _cadc_dma_trigger_scr_mode
+typedef enum _cadc_dma_trigger_src
 {
-    kCAdcDmaTriggeredByEndOfScan = 0U, /*!< DMA trigger source is end of scan interrupt. */
-    kCAdcDmaTriggeredByConvReady = 1U  /*!< DMA trigger source is RDY status. */
-} cadc_dma_trigger_src_mode_t;
+    kCAdcDmaTriggeredByEndOfScan = 0U, /*!< DMA trigger source is end of scan interrupt. @internal gui name="End of scan" */
+    kCAdcDmaTriggeredByConvReady = 1U  /*!< DMA trigger source is RDY status. @internal gui name="Conversion ready status" */
+} cadc_dma_trigger_src_t;
+
+/******************************************************************************
+ * Definitions.
+ *****************************************************************************/
+
+/*!
+ * @brief Defines a structure to configure the CyclicADC module during initialization.
+ *
+ * This structure holds the configuration when initializing the CyclicADC module.
+ * @internal gui name="CADC configuration" id="cadcInitCfg"
+ */
+typedef struct CAdcControllerConfig
+{
+    /* Functional control. */
+    bool zeroCrossingIntEnable; /*!< Global zero crossing interrupt enable. @internal gui name="Zero crossing interrupt" */
+    bool lowLimitIntEnable;     /*!< Global low limit interrupt enable. @internal gui name="Low limit interrupt"*/
+    bool highLimitIntEnable;    /*!< Global high limit interrupt enable. @internal gui name="High limit interrupt" */
+    cadc_scan_mode_t scanMode;  /*!< ADC scan mode control. @internal gui name="Scan mode" */
+    bool parallelSimultModeEnable; /*!< Parallel scans done simultaneously enable. @internal gui name="Simultaneous parallel scans" */
+    cadc_dma_trigger_src_t dmaSrc; /*!< DMA trigger source. @internal gui name="DMA trigger source" */
+
+    /* Power control. */
+    bool autoStandbyEnable;     /*!< Auto standby mode enable. @internal gui name="Auto standby mode" */
+    uint16_t powerUpDelayCount; /*!< Power up delay. @internal gui name="Power up delay" */
+    bool autoPowerDownEnable;   /*!< Auto power down mode enable. @internal gui name="Auto power down mode" */
+} cadc_controller_config_t;
+
+/*!
+ * @brief Defines a structure to configure each converter in the CyclicADC module.
+ *
+ * This structure holds the configuration for each converter in the CyclicADC module.
+ * Normally, there are two converters, ConvA and ConvB in the cyclic ADC
+ * module. However, each converter can be configured separately for some features.
+ * @internal gui name="CADC Converter configuration" id="cadcConvCfg"
+ */
+typedef struct CAdcConverterConfig
+{
+    bool dmaEnable;     /*!< DMA enable. @internal gui name="DMA" */
+
+    /*
+    * When this bit is asserted, the current scan is stopped and no further
+    * scans can start.  Any further SYNC input pulses or software trigger are
+    * ignored until this bit has been cleared. After the ADC is in stop mode,
+    * the results registers can be modified by the processor. Any changes to
+    * the result registers in stop mode are treated as if the analog core
+    * supplied the data. Therefore, limit checking, zero crossing, and
+    * associated interrupts can occur when authorized.
+    */
+    bool stopEnable;    /*!< Stop mode enable. @internal gui name="Stop mode" */
+
+    bool syncEnable;    /*!< Enable external sync input to trigger conversion. @internal gui name="External synchronization" */
+    bool endOfScanIntEnable; /*!< End of scan interrupt enable. @internal gui name="End of scan interrupt" */
+
+    /*
+    * For Clock Divisor Select:
+    * The divider circuit generates the ADC clock by dividing the system clock:
+    *  - When the value is set to 0, the divisor is 2.
+    *  - For all other setting values, the divisor is 1 more than the decimal
+    *     value of the setting value.
+    * A divider value must be chosen to prevent the ADC clock from exceeding the
+    * maximum frequency.
+    */
+    uint16_t clkDivValue;    /*!< ADC clock divider from the bus clock. @internal gui name="Clock divider" */
+
+    bool useChnInputAsVrefH; /*!< Use input channel as high reference voltage, such as AN2. @internal gui name="Input channel as high voltage reference" */
+    bool useChnInputAsVrefL; /*!< Use input channel as low reference voltage, such as AN3. @internal gui name="Input channel as low voltage reference" */
+    cadc_conv_speed_mode_t speedMode; /*!< ADC speed control mode. @internal gui name="Speed mode" */
+
+    /*
+    * For ConvA:
+    * During sequential and parallel simultaneous scan modes, the
+    * "sampleWindowCount" controls the sampling time of the first sample after
+    * a scan is initiated on both converters A and B.
+    * In parallel non-simultaneous mode, this field affects ConvA only.
+    * In sequential scan mode, this field setting is ignored whenever
+    * the channel selected for the next sample is on the other converter. In
+    * other words, during a sequential scan, if a sample converts a ConvA
+    * channel (ANA0-ANA7) and the next sample converts a ConvB channel
+    * (ANB0-ANB7) or vice versa, this field is ignored and uses the
+    * default sampling time (value 0) for the next sample.
+    *
+    * For ConvB:
+    * During parallel non-simultaneous scan mode, the "sampleWindowCount" for
+    * ConvB is used to control the sampling time of the first sample after
+    * a scan is initiated. During sequential and parallel simultaneous scan
+    * modes, "sampleWindowCount" is ignored and the sampling window for both
+    * converters is controlled by the "sampleWindowCount" for ConvA.
+    *
+    * To set the value:
+    * The value 0 corresponds to a sampling time of 2 ADC clocks. Each increment
+    * of "sampleWindowCount" corresponds to an additional ADC clock cycle of
+    * sampling time with a maximum sampling time of 9 ADC clocks.
+    */
+    uint16_t sampleWindowCount; /*!< Sample window count. @internal gui name="Sample window count" */
+} cadc_converter_config_t;
+
+/*!
+ * @brief Defines a structure to configure each input channel.
+ *
+ * This structure holds the configuration for each input channel. In CcylicADC
+ * module, the input channels are handled by a differential sample.
+ * However, the user can still configure the function for each channel when
+ * set to operate as a single end sample.
+ * @internal gui name="Channel configuration" id="cadcChnCfg"
+ */
+typedef struct CAdcChnConfig
+{
+    cadc_diff_chn_t diffChns; /*!< Select the differential channel pair. @internal gui name="Channel" */
+    cadc_chn_sel_mode_t diffSelMode; /*!< Select which channel is indicated in a pair. @internal gui name="Differential mode" */
+    cadc_gain_mode_t gainMode; /*!< Gain mode for each channel. @internal gui name="Gain" */
+} cadc_chn_config_t;
+
+/*!
+ * @brief Defines a structure to configure each slot.
+ *
+ * This structure holds the configuration for each slot in a conversion sequence.
+ * @internal gui name="Slot configuration" id="cadcSlotCfg"
+ */
+typedef struct CAdcSlotConfig
+{
+    bool slotDisable; /*!< Keep the slot unavailable. @internal gui name="Slot" */
+    bool syncPointEnable; /*!< Sample waits for an enabled SYNC input to occur. @internal gui name="Synchronization point" */
+    bool syncIntEnable; /*!< Scan interrupt enable. @internal gui name="Scan interrupt" */
+
+    /* Select the input channel for slot. */
+    cadc_diff_chn_t diffChns;  /*!< Select the differential pair. @internal gui name="Channel pair" id="diffSlotChns" */
+    cadc_chn_sel_mode_t  diffSel;   /*!< Positive or negative channel in differential pair. @internal gui name="Channel select" */
+
+    /* Event detection mode. */
+    cadc_zero_crossing_mode_t zeroCrossingMode; /*!< Select zero crossing detection mode. @internal gui name="Zero cross mode" */
+    uint16_t lowLimitValue; /*!< Select low limit for hardware compare. @internal gui name="Low limit compare value" */
+    uint16_t highLimitValue;/*!< Select high limit for hardware compare. @internal gui name="High limit compare value" */
+    uint16_t offsetValue;   /*!< Select sign change limit for hardware compare. @internal gui name="Offset value" */
+} cadc_slot_config_t;
 
 #if defined(__cplusplus)
 extern "C" {
@@ -173,629 +299,410 @@ extern "C" {
  ******************************************************************************/
 
 /*!
- * @brief Initialize all the ADC registers to a known state.
+ * @brief Initializes all ADC registers to a known state.
  *
- * The initial states of ADC registers are set as the Reference Manual describes.
+ * The initial states of ADC registers are set as specified in the chip Reference Manual.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  */
-void CADC_HAL_Init(uint32_t baseAddr);
+void CADC_HAL_Init(ADC_Type * base);
 
 /*!
- * @brief Switch to enable DMA for ADC converter.
+ * @brief Configures the common features in cyclic ADC module.
  *
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
- * @param enable Assertion to enable the feature.
+ * This function configures the common features in cyclic ADC module. For
+ * detailed items, see the "cadc_controller_config_t".
+ *
+ * @param base Register base address for the module.
+ * @param configPtr Pointer to configuration structure.
  */
-void CADC_HAL_SetConvDmaCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable);
+void CADC_HAL_ConfigController(ADC_Type * base, const cadc_controller_config_t *configPtr);
 
 /*!
- * @brief Switch to enable DMA for ADC converter.
+ * @brief Configures the features for the converter A.
  *
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
- * @param enable Assertion to enable the feature.
+ * This function configures the features for the converter A. For detailed items,
+ * see the "cadc_converter_config_t".
+ *
+ * @param base Register base address for the module.
+ * @param configPtr Pointer to configuration structure.
  */
-void CADC_HAL_SetConvStopCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable);
+void CADC_HAL_ConfigConvA(ADC_Type * base, const cadc_converter_config_t *configPtr);
 
 /*!
- * @brief Trigger the ADC converter's conversion by software.
+ * @brief Configures the features for the conversion B.
  *
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
+ * This function configures the features for the conversion B. For detailed items,
+ * see the "cadc_converter_config_t".
+ *
+ * @param base Register base address for the module.
+ * @param configPtr Pointer to configuration structure.
  */
-void CADC_HAL_SetConvStartCmd(uint32_t baseAddr, cadc_conv_id_t convId);
+void CADC_HAL_ConfigConvB(ADC_Type * base, const cadc_converter_config_t *configPtr);
 
 /*!
- * @brief Switch to enable input SYNC signal to trigger conversion.
+ * @brief Configures the feature for the sample channel.
  *
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
- * @param enable Assertion to enable the feature.
+ * This function configures the features for the sample channel. For detailed
+ * items, see the "cadc_chn_config_t".
+ *
+ * @param base Register base address for the module.
+ * @param configPtr Pointer to configuration structure.
  */
-void CADC_HAL_SetConvSyncCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable);
+void CADC_HAL_ConfigChn(ADC_Type * base, const cadc_chn_config_t *configPtr);
 
 /*!
- * @brief Switch to enable interrupt caused by end of scan for each converter.
+ * @brief Configures the features for the sample sequence slot.
  *
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
- * @param enable Assertion to enable the feature.
+ * This function configures the features for the sample sequence slot. For detailed
+ * items, see the "cadc_slot_config_t".
+ *
+ * @param base Register base address for the module.
+ * @param slotIdx Sample slot index.
+ * @param configPtr Pointer to configuration structure.
  */
-void CADC_HAL_SetConvEndOfScanIntCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable);
+void CADC_HAL_ConfigSeqSlot(ADC_Type * base, uint32_t slotIdx, const cadc_slot_config_t *configPtr);
 
+/* Command. */
 /*!
- * @brief Switch to enable interrupt caused by zero crossing detection for ADC module.
+ * @brief Executes the command that starts conversion of the converter A.
  *
- * @param baseAddr Register base address for the module.
- * @param enable Assertion to enable the feature.
+ * This function executes the command that start the conversion of the converter A
+ * when using the software trigger.
+ *
+ * @param base Register base address for the module.
  */
-static inline void CADC_HAL_SetZeroCrossingIntCmd(uint32_t baseAddr, bool enable)
+static inline void CADC_HAL_SetConvAStartCmd(ADC_Type * base)
 {
-    BW_ADC_CTRL1_ZCIE(baseAddr, enable?1U:0U );
+    ADC_BWR_CTRL1_START0(base, 1U);
+/*
+    uint16_t ctrl1 = ADC_RD_CTRL1(base);
+    ctrl1 |= ADC_CTRL1_START0_MASK;
+    ADC_WR_CTRL1(base, ctrl1);
+*/
 }
 
 /*!
- * @brief Switch to enable interrupt caused by meet low limit for ADC module.
+ * @brief Executes the command that start conversion of the converter B.
  *
- * @param baseAddr Register base address for the module.
- * @param enable Assertion to enable the feature.
+ * This function executes the command that start the conversion of the converter B
+ * when using the software trigger.
+ *
+ * @param base Register base address for the module.
  */
-static inline void CADC_HAL_SetLowLimitIntCmd(uint32_t baseAddr, bool enable)
+static inline void CADC_HAL_SetConvBStartCmd(ADC_Type * base)
 {
-    BW_ADC_CTRL1_LLMTIE(baseAddr, enable?1U:0U );
+    ADC_BWR_CTRL2_START1(base, 1U);
+/*
+    uint16_t ctrl2 = ADC_RD_CTRL2(base);
+    ctrl2 |= ADC_CTRL2_START1_MASK;
+    ADC_WR_CTRL2(base, ctrl2);
+*/
+}
+
+/* Power switcher for converters. */
+/*!
+ * @brief Shuts down the conversion power manually for the converter A.
+ *
+ * This function shuts down the conversion power manually for the conversion A.
+ * The conversion stops immediately after calling this function.
+ *
+ * @param base Register base address for the module.
+ * @param enable Switcher to enable the feature or not.
+ */
+static inline void CADC_HAL_SetConvAPowerDownCmd(ADC_Type * base, bool enable)
+{
+    ADC_BWR_PWR_PD0(base, (uint16_t)enable);
 }
 
 /*!
- * @brief Switch to enable interrupt caused by meet high limit for ADC module.
+ * @brief Shuts down the conversion power manually for the converter B.
  *
- * @param baseAddr Register base address for the module.
- * @param enable Assertion to enable the feature.
+ * This function shots downs the conversion power manually for the conversion B.
+ * The conversion stops immediately after calling this function.
+ *
+ * @param base Register base address for the module.
+ * @param enable Swither to enable the feature or not.
  */
-static inline void CADC_HAL_SetHighLimitIntCmd(uint32_t baseAddr, bool enable)
+static inline void CADC_HAL_SetConvBPowerDownCmd(ADC_Type * base, bool enable)
 {
-    BW_ADC_CTRL1_HLMTIE(baseAddr, enable?1U:0U );
+    ADC_BWR_PWR_PD1(base, (uint16_t)enable);
+}
+
+/* Flags. */
+/* Conversion in progress. */
+/*!
+ * @brief Gets the flag whether the converter A is in process.
+ *
+ * This function gets the flag whether the converter A is in process.
+ *
+ * @param base Register base address for the module.
+ * @return The event is asserted or not.
+ */
+static inline bool CADC_HAL_GetConvAInProgressFlag(ADC_Type * base)
+{
+    return ADC_BRD_STAT_CIP0(base);
 }
 
 /*!
- * @brief Switch to enable differential sample mode for ADC conversion channel.
+ * @brief Gets the flag whether the converter B is in process.
  *
- * @param baseAddr Register base address for the module.
- * @param chns Selection of differential channel pair, see to "cadc_diff_chn_mode_t".
- * @param enable Assertion to enable the feature.
- */
-void CADC_HAL_SetChnDiffCmd(uint32_t baseAddr, cadc_diff_chn_mode_t chns, bool enable);
-
-/*!
- * @brief Configure the scan mode for ADC module.
+ * This function gets the flag whether the converter B is in process.
  *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of scan mode, see to "cadc_scan_mode_t".
+ * @param base Register base address for the module.
+ * @return The event is asserted or not.
  */
-static inline void CADC_HAL_SetScanMode(uint32_t baseAddr, cadc_scan_mode_t mode)
+static inline bool CADC_HAL_GetConvBInProgressFlag(ADC_Type * base)
 {
-    BW_ADC_CTRL1_SMODE(baseAddr, (uint16_t)mode );
+    return ADC_BRD_STAT_CIP1(base);
+}
+
+/* End of scan interrupt flag. */
+/*!
+ * @brief Gets the flag whether the converter A has finished the conversion.
+ *
+ * This function gets the flag whether the converter A has finished the conversion.
+ *
+ * @param base Register base address for the module.
+ * @return The event is asserted or not.
+ */
+static inline bool CADC_HAL_GetConvAEndOfScanIntFlag(ADC_Type * base)
+{
+    return ADC_BRD_STAT_EOSI0(base);
 }
 
 /*!
- * @brief Switch to enable simultaneous mode for ADC module.
+ * @brief Gets the flag whether the converter B has finished the conversion.
  *
- * @param baseAddr Register base address for the module.
- * @param enable Assertion to enable the feature.
+ * This function gets the flag whether the converter B has finished the conversion.
+ *
+ * @param base Register base address for the module.
+ * @return The event is asserted or not.
  */
-static inline void CADC_HAL_SetParallelSimultCmd(uint32_t baseAddr, bool enable)
+static inline bool CADC_HAL_GetConvBEndOfScanIntFlag(ADC_Type * base)
 {
-    BW_ADC_CTRL2_SIMULT(baseAddr, enable?1U:0U );
+    return ADC_BRD_STAT_EOSI1(base);
 }
 
 /*!
- * @brief Set divider for conversion clock from system clock.
+ * @brief Clears the flag that finishes the conversion of the converter A.
  *
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
- * @param divider 6-bit divider value.
- */
-void CADC_HAL_SetConvClkDiv(uint32_t baseAddr, cadc_conv_id_t convId, uint16_t divider);
-
-/*!
- * @brief Set zero crossing detection for each slot in conversion sequence.
+ * This function clears the flag that finishes the conversion of the converter A.
  *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @param mode Zero crossing detection mode, see to "cadc_zero_crossing_mode_t".
+ * @param base Register base address for the module.
  */
-void CADC_HAL_SetSlotZeroCrossingMode(uint32_t baseAddr, uint32_t slotNum, 
-    cadc_zero_crossing_mode_t mode);
-
-/*!
- * @brief Set sample channel for each slot in conversion sequence.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @param diffChns Selection of differential channel pair, see to "cadc_diff_chn_mode_t".
- * @param selMode  Selection of each channel in differential channel pair, see to "cadc_chn_sel_mode_t".
- */
-void CADC_HAL_SetSlotSampleChn(uint32_t baseAddr, uint32_t slotNum, 
-    cadc_diff_chn_mode_t diffChns, cadc_chn_sel_mode_t selMode);
-
-/*!
- * @brief Switch to enable sample for each slot in conversion sequence.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @param enable Assertion to enable the feature.
- */
-void CADC_HAL_SetSlotSampleEnableCmd(uint32_t baseAddr, uint32_t slotNum, bool enable);
-
-/*!
- * @brief Check if the conversion is in process for each converter.
- *
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
- * @return Assertion of indicated event.
- */
-bool CADC_HAL_GetConvInProgressFlag(uint32_t baseAddr, cadc_conv_id_t convId);
-
-/*!
- * @brief Check if the end of scan event is asserted.
- *
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
- * @return Assertion of indicated event.
- */
-bool CADC_HAL_GetConvEndOfScanIntFlag(uint32_t baseAddr, cadc_conv_id_t convId);
-
-/*!
- * @brief Clear the end of scan flag.
- *
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
- */
-void CADC_HAL_ClearConvEndOfScanIntFlag(uint32_t baseAddr, cadc_conv_id_t convId);
-
-/*!
- * @brief Check if main zero crossing event is asserted.
- *
- * @param baseAddr Register base address for the module.
- * @return assertion of indicated event.
- */
-static inline bool CADC_HAL_GetZeroCrossingIntFlag(uint32_t baseAddr)
+static inline void CADC_HAL_ClearConvAEndOfScanIntFlag(ADC_Type * base)
 {
-    return (1U == BR_ADC_STAT_ZCI(baseAddr) );
+    ADC_BWR_STAT_EOSI0(base, 1U);
 }
 
 /*!
- * @brief Clear all zero crossing flag.
+ * @brief Clears the flag that finishes the conversion of the converter B.
  *
- * This operation will clear the main zero crossing event's flag.
+ * This function clears the flag that finishes the conversion of the converter B.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  */
-static inline void CADC_HAL_ClearAllZeorCrossingFlag(uint32_t baseAddr)
+static inline void CADC_HAL_ClearConvBEndOfScanIntFlag(ADC_Type * base)
 {
-    BW_ADC_ZXSTAT_ZCS(baseAddr, 0xFFFFU);
+    ADC_BWR_STAT_EOSI1(base, 1U);
+}
+
+/* Zero-crossing interrupt flag. */
+/*!
+ * @brief Gets the flag whether a sample zero-crossing event has happened.
+ *
+ * This function gets the flag whether any sample zero-crossing event has
+ * happened.
+ *
+ * @param base Register base address for the module.
+ * @return The event is asserted or not.
+ */
+static inline bool CADC_HAL_GetZeroCrossingIntFlag(ADC_Type * base)
+{
+    return ADC_BRD_STAT_ZCI(base);
 }
 
 /*!
- * @brief Check if the slot's crossing event flag is asserted.
+ * @brief Gets the flag whether a sample zero-crossing event has happened.
  *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @return assertion of indicated event.
+ * This function gets the flags whether a sample zero-crossing event has
+ * happened.
+ *
+ * @param base Register base address for the module.
+ * @param slotIdxMask Mask for indicated slots.
+ * @return flags whether the event are happened for indicated slots.
  */
-static inline bool CADC_HAL_GetSlotZeroCrossingFlag(uint32_t baseAddr, uint32_t slotNum)
+static inline uint16_t CADC_HAL_GetSlotZeroCrossingFlag(ADC_Type * base, uint16_t slotIdxMask)
 {
-    return (0U != ((1U<<slotNum) & BR_ADC_ZXSTAT_ZCS(baseAddr)) );
+    return ( slotIdxMask & ADC_RD_ZXSTAT(base) );
 }
 
 /*!
- * @brief Clear the crossing event flag for slot.
+ * @brief Clears the flags of a sample zero-crossing events.
  *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
+ * This function clears the flags of the sample zero-crossing events.
+ *
+ * @param base Register base address for the module.
+ * @param slotIdxMask Mask for indicated slots.
  */
-static inline void CADC_HAL_ClearSlotZeroCrossingFlag(uint32_t baseAddr, uint32_t slotNum)
+static inline void CADC_HAL_ClearSlotZeroCrossingFlag(ADC_Type * base, uint16_t slotIdxMask)
 {
-    BW_ADC_ZXSTAT_ZCS(baseAddr, (1U<<slotNum) );
+    ADC_WR_ZXSTAT(base, slotIdxMask);
+}
+
+/* Low limit interrupt flag. */
+/*!
+ * @brief Gets the flag whether any sample value is lower than the low limit value.
+ *
+ * This function gets the flag whether any sample value is lower than the low
+ * limit value.
+ *
+ * @param base Register base address for the module.
+ * @return The event is asserted or not.
+ */
+static inline bool CADC_HAL_GetLowLimitIntFlag(ADC_Type * base)
+{
+    return ADC_BRD_STAT_LLMTI(base);
 }
 
 /*!
- * @brief Check if main low limit event is asserted.
+ * @brief Gets the flags whether a sample value is lower than the low limit value.
  *
- * @param baseAddr Register base address for the module.
- * @return Assertion of indicated event.
+ * This function gets the flags whether a samples value is lower than the low
+ * limit value.
+ *
+ * @param base Register base address for the module.
+ * @param slotIdxMask Mask for indicated slots.
+ * @return flags whether the event are happened for indicated slots.
  */
-static inline bool CADC_HAL_GetLowLimitIntFlag(uint32_t baseAddr)
+static inline uint16_t CADC_HAL_GetSlotLowLimitFlag(ADC_Type * base, uint16_t slotIdxMask)
 {
-    return (1U == BR_ADC_STAT_LLMTI(baseAddr) );
+    return (slotIdxMask & ADC_RD_LOLIMSTAT(base));
 }
 
 /*!
- * @brief Clear all the low limit flag.
+ * @brief Clears the flags of the sample low limit event.
  *
- * This operation will clear the main low limit event's flag.
+ * This function clears the flags of the sample low limit event.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
+ * @param slotIdxMask Mask for indicated slots.
  */
-static inline void CADC_HAL_ClearAllLowLimitFlag(uint32_t baseAddr)
+static inline void CADC_HAL_ClearSlotLowLimitFlag(ADC_Type * base, uint16_t slotIdxMask)
 {
-    BW_ADC_LOLIMSTAT_LLS(baseAddr, 0xFFFFU);
+    ADC_WR_LOLIMSTAT(base, slotIdxMask);
+}
+
+/* High limit interrupt flag. */
+/*!
+ * @brief Gets the flag whether any sample value is higher than the high limit value.
+ *
+ * This function gets the flag whether any sample value is higher than the high
+ * limit value.
+ *
+ * @param base Register base address for the module.
+ * @return The event is asserted or not.
+ */
+static inline bool CADC_HAL_GetHighLimitIntFlag(ADC_Type * base)
+{
+    return ADC_BRD_STAT_HLMTI(base);
 }
 
 /*!
- * @brief Check if slot's low limit flag is asserted.
+ * @brief Gets the flags whether a sample value is higher than the high limit value.
  *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @return Assertion of indicated event.
+ * This function gets the flags whether a sample value is higher than the
+ * high limit value.
+ *
+ * @param base Register base address for the module.
+ * @param slotIdxMask Mask for indicated slots.
+ * @return flags whether the event are happened for indicated slots.
  */
-static inline bool CADC_HAL_GetSlotLowLimitFlag(uint32_t baseAddr, uint32_t slotNum)
+static inline uint16_t CADC_HAL_GetSlotHighLimitFlag(ADC_Type * base, uint16_t slotIdxMask)
 {
-    return (0U != ((1U<<slotNum) & BR_ADC_LOLIMSTAT_LLS(baseAddr)) );
+    return (slotIdxMask & ADC_RD_HILIMSTAT(base) );
 }
 
 /*!
- * @brief Clear slot's low limit flag.
+ * @brief Clears the flags of the sample high limit event.
  *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
+ * This function clears the flags of the sample high limit event.
+ *
+ * @param base Register base address for the module.
+ * @param slotIdxMask Mask for indicated slots.
  */
-static inline void CADC_HAL_ClearSlotLowLimitFlag(uint32_t baseAddr, uint32_t slotNum)
+static inline void CADC_HAL_ClearSlotHighLimitFlag(ADC_Type * base, uint16_t slotIdxMask)
 {
-    BW_ADC_LOLIMSTAT_LLS(baseAddr, (1U<<slotNum) );
+    ADC_WR_HILIMSTAT(base, slotIdxMask );
 }
 
 /*!
- * @brief Check if the main high limit event is asserted.
+ * @brief Gets the flags whether a sample value is ready.
  *
- * @param baseAddr Register base address for the module.
- * @return Assertion of indicated event.
+ * This function gets the flags whether a sample value is ready.
+ *
+ * @param base Register base address for the module.
+ * @param slotIdxMask Mask for indicated slots.
+ * @return flags whether the event are happened for indicated slots.
  */
-static inline bool CADC_HAL_GetHighLimitIntFlag(uint32_t baseAddr)
+static inline uint16_t CADC_HAL_GetSlotReadyFlag(ADC_Type * base, uint16_t slotIdxMask)
 {
-    return (1U == BR_ADC_STAT_HLMTI(baseAddr) );
+    return (slotIdxMask & ADC_RD_RDY(base) );
+}
+
+/* ADC Converter's power status. */
+/*!
+ * @brief Gets the flag whether the converter A is powered down.
+ *
+ * This function gets the flag whether the converter A is powered down.
+ *
+ * @param base Register base address for the module.
+ * @return The event is asserted or not.
+ */
+static inline bool CADC_HAL_GetConvAPowerDownFlag(ADC_Type * base)
+{
+    return ADC_BRD_PWR_PSTS0(base);
 }
 
 /*!
- * @brief Clear all the high limit flag.
+ * @brief Gets the flag whether the converter B is powered down.
  *
- * This operation will clear the main high limit event's flag.
+ * This function gets the flag whether the converter B is powered down.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
+ * @return The event is asserted or not.
  */
-static inline void CADC_HAL_ClearAllHighLimitFlag(uint32_t baseAddr)
+static inline bool CADC_HAL_GetConvBPowerDownFlag(ADC_Type * base)
 {
-    BW_ADC_HILIMSTAT_HLS(baseAddr, 0xFFFFU);
+    return ADC_BRD_PWR_PSTS1(base);
 }
 
+/* Value. */
 /*!
- * @brief Check if slot's high limit flag is asserted.
+ * @brief Gets the sample value.
  *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @return Assertion of indicated event.
+ * This function gets the sample value. Note that the 3 LSBs are not available.
+ * When the differential conversion is executed, the MSB is the sign bit.
+ *
+ * @param base Register base address for the module.
+ * @param slotIdx Index of slot in conversion sequence.
+ * @return sample value with sign bit in MSB.
  */
-static inline bool CADC_HAL_GetSlotHighLimitFlag(uint32_t baseAddr, uint32_t slotNum)
+static inline uint16_t CADC_HAL_GetSampleValue(ADC_Type * base, uint16_t slotIdx)
 {
-    return (0U != ((1U<<slotNum) & BR_ADC_HILIMSTAT_HLS(baseAddr)) );
+    return ADC_RD_RSLT(base, slotIdx);
 }
-
-/*!
- * @brief Clear slot's high limit flag.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- */
-static inline void CADC_HAL_ClearSlotHighLimitFlag(uint32_t baseAddr, uint32_t slotNum)
-{
-    BW_ADC_HILIMSTAT_HLS(baseAddr, (1U<<slotNum) );
-}
-
-static inline bool CADC_HAL_GetSlotReadyFlag(uint32_t baseAddr, uint32_t slotNum)
-{
-    return (0U != ((1U<<slotNum) & BR_ADC_RDY_RDY(baseAddr)) );
-}
-
-/*!
- * @brief Check if the slot's conversion value is negative.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @return Assertion of indicated event.
- */
-static inline bool CADC_HAL_GetSlotValueNegativeSign(uint32_t baseAddr, uint32_t slotNum)
-{
-    return (1U == BR_ADC_RSLTn_SEXT(baseAddr, slotNum) );
-}
-
-/*!
- * @brief Get the slot's conversion value without sign.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @return 12-bit slot's conversion value.
- */
-static inline uint16_t CADC_HAL_GetSlotValueData(uint32_t baseAddr, uint32_t slotNum)
-{
-    return BR_ADC_RSLTn_RSLT(baseAddr, slotNum);
-}
-
-/*!
- * @brief Set the slot's conversion low limit value.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @param val 12-bit slot's conversion low limit value.
- */
-static inline void CADC_HAL_SetSlotLowLimitValue(uint32_t baseAddr, uint32_t slotNum, uint16_t val)
-{
-    BW_ADC_LOLIMn_LLMT(baseAddr, slotNum, val);
-}
-
-/*!
- * @brief Get the slot's conversion low limit value.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @return 12-bit slot's conversion low limit value.
- */
-static inline uint16_t CADC_HAL_GetSlotLowLimitValue(uint32_t baseAddr, uint32_t slotNum)
-{
-    return BR_ADC_LOLIMn_LLMT(baseAddr, slotNum);
-}
-
-/*!
- * @brief Set the slot's conversion high limit value.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @param val 12-bit slot's conversion high limit value.
- */
-static inline void CADC_HAL_SetSlotHighLimitValue(uint32_t baseAddr, uint32_t slotNum, uint16_t val)
-{
-    BW_ADC_HILIMn_HLMT(baseAddr, slotNum, val);
-}
-
-/*!
- * @brief Get the slot's conversion high limit value.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @return 12-bit slot's conversion high limit value.
- */
-static inline uint16_t CADC_HAL_GetSlotHighLimitValue(uint32_t baseAddr, uint32_t slotNum)
-{
-    return BR_ADC_HILIMn_HLMT(baseAddr, slotNum);
-}
-
-/*!
- * @brief Set the slot's conversion high limit value.
- *
- * The value of the offset is used to correct the ADC result before it is
- * stored in the result registers. The offset value is subtracted from the ADC
- * result.
- * 
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @param val 12-bit slot's conversion high limit value.
- */
-static inline void CADC_HAL_SetSlotOffsetValue(uint32_t baseAddr, uint32_t slotNum, uint16_t val)
-{
-    BW_ADC_OFFSTn_OFFSET(baseAddr, slotNum, val);
-}
-
-/*!
- * @brief Get the slot's conversion high limit value.
- *
- * The value of the offset is used to correct the ADC result before it is
- * stored in the result registers. The offset value is subtracted from the ADC
- * result.
- * 
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @return 12-bit slot's conversion high limit value.
- */
-static inline uint16_t CADC_HAL_GetSlotOffsetValue(uint32_t baseAddr, uint32_t slotNum)
-{
-    return BR_ADC_OFFSTn_OFFSET(baseAddr, slotNum);
-}
-
-/*!
- * @brief Switch to enable auto-standby mode for ADC module.
- *
- * This API selects auto-standby mode. Auto-standby's configuration is ignored
- * if auto-powerdown mode is active. When the ADC is idle, auto-standby mode
- * selects the standby clock as the ADC clock source and puts the converters
- * into standby current mode. At the start of any scan, the conversion clock
- * is selected as the ADC clock and then a delay of some ADC clock cycles 
- * is imposed for current levels to stabilize. After this delay, the ADC will
- * initiate the scan. When the ADC returns to the idle state, the standby 
- * clock is again selected and the converters revert to the standby current
- * state.
- * 
- * @param baseAddr Register base address for the module.
- * @param enable Assertion to enable the feature.
- */
-static inline void CADC_HAL_SetAutoStandbyCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_PWR_ASB(baseAddr, enable?1U:0U );
-}
-
-/*!
- * @brief Check if the ADC converter is powered up.
- * 
- * @param baseAddr Register base address for the module.
- * @param convId ID for ADC converter, see to "cadc_conv_id_t".
- * @return Assertion of indicated event.
- */
-bool CADC_HAL_GetConvPowerUpFlag(uint32_t baseAddr, cadc_conv_id_t convId);
-
-/*!
- * @brief Set the count power up delay of ADC clock for all the converter.
- * 
- * This 6-bit setting value determines the number of ADC clocks provided to
- * power up an ADC converter before allowing a scan to start. It also
- * determines the number of ADC clocks of delay provided in auto-powerdown
- * and auto-standby modes between when the ADC goes from the idle to active
- * state and when the scan is allowed to start. The default value is 26 ADC
- * clocks. Accuracy of the initial conversions in a scan will be degraded if
- * the setting is set to too small a value.
- *
- * @param baseAddr Register base address for the module.
- * @param val 6-bit setting value.
- */
-static inline void CADC_HAL_SetPowerUpDelayClk(uint32_t baseAddr, uint16_t val)
-{
-    BW_ADC_PWR_PUDELAY(baseAddr, val);
-}
-
-/*!
- * @brief Get the count power up delay of ADC clock for all the converter.
- *
- * @param baseAddr Register base address for the module.
- * @return 6-bit setting value.
- */
-static inline uint16_t CADC_HAL_GetPowerUpDelayClk(uint32_t baseAddr)
-{
-    return BR_ADC_PWR_PUDELAY(baseAddr);
-}
-
-/*!
- * @brief Switch to enable auto-powerdown mode for ADC module.
- *
- * Auto-powerdown mode powers down converters when not in use for a scan. 
- * Auto-powerdown (APD) takes precedence over auto-standby (ASB). When a scan
- * is started in APD mode, a delay of setting ADC clock cycles is imposed
- * during which the needed converter(s), if idle, are powered up. The ADC will
- * then initiate a scan equivalent to that done when APD is not active. When
- * the scan is completed, the converter(s) are powered down again.
- * 
- * @param baseAddr Register base address for the module.
- * @param enable Assertion to enable the feature.
- */
-static inline void CADC_HAL_SetAutoPowerDownCmd(uint32_t baseAddr, bool enable)
-{
-    BW_ADC_PWR_APD(baseAddr, enable?1U:0U );
-}
-
-/*!
- * @brief Switch to enable power up for each ADC converter.
- * 
- * @param baseAddr Register base address for the module.
- * @param convId Selection of ID for ADC converter.
- * @param enable Assertion to enable the feature.
- */
-void CADC_HAL_SetConvPowerUpCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable);
-
-/*!
- * @brief Switch to use channel 3 as VrefH for each ADC converter.
- * 
- * @param baseAddr Register base address for the module.
- * @param convId Selection of ID for ADC converter.
- * @param enable Assertion to enable the feature.
- */
-void CADC_HAL_SetConvUseChnVrefHCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable);
-
-/*!
- * @brief Switch to use channel 2 as VrefL for each ADC converter.
- * 
- * @param baseAddr Register base address for the module.
- * @param convId Selection of ID for ADC converter.
- * @param enable Assertion to enable the feature.
- */
-void CADC_HAL_SetConvUseChnVrefLCmd(uint32_t baseAddr, cadc_conv_id_t convId, bool enable);
-
-/*!
- * @brief Set the amplification for each input channel.
- * 
- * @param baseAddr Register base address for the module.
- * @param chnNum Channel number of input mux.
- * @param mode Selection of gain mode, see to "cadc_gain_mode_t".
- */
-void CADC_HAL_SetChnGainMode(uint32_t baseAddr, uint32_t chnNum, cadc_gain_mode_t mode);
-
-/*!
- * @brief Switch to enable the sync point for each slot in sequence.
- * 
- * The sync point provides the ability to pause and await a new sync while
- * processing samples programmed in conversion sequence. This API determines
- * whether a sample in a scan occurs immediately or if the sample waits for an
- * enabled sync input to occur. The sync input must occur after the conversion
- * of the current sample completes.
- *
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @param enable Assertion of indicated feature.
- */
-void CADC_HAL_SetSlotSyncPointCmd(uint32_t baseAddr, uint32_t slotNum, bool enable);
-
-/*!
- * @brief Set the conversion speed control mode for each ADC converter.
- * 
- * Note, faster conversion speeds require greater current consumption.
- *
- * @param baseAddr Register base address for the module.
- * @param convId Selection of ID for ADC converter.
- * @param mode Selection of speed mode, see to "cadc_conv_clk_limit_mode_t".
- */
-void CADC_HAL_SetConvSpeedLimitMode(uint32_t baseAddr, cadc_conv_id_t convId, cadc_conv_speed_mode_t mode);
-
-/*!
- * @brief Set the DMA trigger mode for ADC module.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of setting mode, see to "cadc_dma_trigger_src_mode_t".
- */
-static inline void CADC_HAL_SetDmaTriggerSrcMode(uint32_t baseAddr, cadc_dma_trigger_src_mode_t mode)
-{
-    BW_ADC_CTRL3_DMASRC(baseAddr, (kCAdcDmaTriggeredByConvReady==mode)?1U:0U );
-}
-
-/*!
- * @brief Set the conversion speed control mode for each ADC converter.
- * 
- * During sequential and parallel simultaneous scan modes, the setting value
- * controls the sampling time of the first sample after a scan is initiated
- * on both converters A and B. In parallel non-simultaneous mode, the setting
- * value for each converter affects converter A or B only. The default value
- * is 0 which corresponds to a sampling time of 2 ADC clocks. Each increment
- * of the setting value corresponds to an additional ADC clock cycle of
- * sampling time with a maximum sampling time of 9 ADC clocks. In sequential
- * scan mode, the converter A's setting will be ignored whenever the channel
- * selected for the next sample is on the other converter. In other words,
- * during a sequential scan, if a sample converts a converter A channel 
- * (ANA0-ANA7) and the next sample converts a converter B channel (ANB0-ANB7) 
- * or vice versa, the setting value will be ignored and use the default
- * sampling time for the next sample.
- *
- * @param baseAddr Register base address for the module.
- * @param convId Selection of ID for ADC converter.
- * @param 3-bit setting value.
- */
-void CADC_HAL_SetConvSampleWindow(uint32_t baseAddr, cadc_conv_id_t convId, uint16_t val);
-
-/*!
- * @brief Switch to enable scan interrupt for each slot in sequence.
- *
- * This API is used with ready flag detection to select the samples that will
- * generate a scan interrupt.
- * 
- * @param baseAddr Register base address for the module.
- * @param slotNum Slot number in conversion sequence.
- * @param enable Assertion of indicated feature.
- */
-void CADC_HAL_SetSlotScanIntCmd(uint32_t baseAddr, uint32_t slotNum, bool enable);
-
 
 #if defined(__cplusplus)
-extern }
+}
 #endif
 
 /*!
  * @}
  */
 
+#endif
 #endif /* __FSL_CADC_HAL_H__ */
 /******************************************************************************
  * EOF

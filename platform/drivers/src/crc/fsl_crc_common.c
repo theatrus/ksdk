@@ -35,7 +35,7 @@
  ******************************************************************************/
 
 /* Table of base addresses for crc instances. */
-const uint32_t g_crcBaseAddr[HW_CRC_INSTANCE_COUNT] = CRC_BASE_ADDRS;
+CRC_Type * const g_crcBase[CRC_INSTANCE_COUNT] = CRC_BASE_PTRS;
 
 /*******************************************************************************
  * EOF

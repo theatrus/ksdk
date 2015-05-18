@@ -33,7 +33,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "device/fsl_device_registers.h"
+#include "fsl_device_registers.h"
 
 /*! @addtogroup interrupt_manager*/
 /*! @{*/

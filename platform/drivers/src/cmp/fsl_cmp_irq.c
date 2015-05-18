@@ -29,11 +29,13 @@
  */
 
 #include "fsl_cmp_driver.h"
+#if FSL_FEATURE_SOC_CMP_COUNT
 
 /******************************************************************************
  * IRQ Handlers
  *****************************************************************************/
 /* CMP IRQ handler that would cover the same name's APIs in startup code. */
+#if CMP_INSTANCE_COUNT > 0
 void CMP0_IRQHandler(void)
 {
     /* Add user-defined ISR for CMP0. */
@@ -48,7 +50,9 @@ void CMP0_IRQHandler(void)
         CMP_DRV_ClearFlag(0U, kCmpFlagOfCoutFalling);
     }
 }
+#endif /* CMP_INSTANCE_COUNT > 0 */
 
+#if CMP_INSTANCE_COUNT > 1
 void CMP1_IRQHandler(void)
 {
     /* Add user-defined ISR for CMP1. */
@@ -63,7 +67,9 @@ void CMP1_IRQHandler(void)
         CMP_DRV_ClearFlag(1U, kCmpFlagOfCoutFalling);
     }
 }
+#endif /* CMP_INSTANCE_COUNT > 1 */
 
+#if CMP_INSTANCE_COUNT > 2
 void CMP2_IRQHandler(void)
 {
     /* Add user-defined ISR for CMP2. */
@@ -78,6 +84,8 @@ void CMP2_IRQHandler(void)
         CMP_DRV_ClearFlag(2U, kCmpFlagOfCoutFalling);
     }
 }
+#endif /* CMP_INSTANCE_COUNT > 2 */
+#endif
 
 /*******************************************************************************
  * EOF

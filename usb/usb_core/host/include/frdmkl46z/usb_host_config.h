@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 *
-* Copyright (c) 2011 - 2014 Freescale Semiconductor;
+* Copyright (c) 2011 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 ***************************************************************************
@@ -20,12 +20,12 @@
 **************************************************************************
 *
 * $FileName: usb_host_config.h$
-* $Version : 
+* $Version :
 * $Date    :
 *
 * Comments:
 *
-*   
+*
 *
 *END************************************************************************/
 
@@ -39,9 +39,15 @@
 #define USBCFG_HOST_EHCI                             (0)
 
 /*
+** Maximum number of USB instance.
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_HOST_NUM                              (1)
+
+/*
 ** Maximum number of pipes.
 ** MGCT: <option type="number"/>
-*/ 
+*/
 #define USBCFG_HOST_MAX_PIPES                        (16)
 
 /*
@@ -115,6 +121,13 @@
 */
 #define  USBCFG_HOST_PHDC                             (1)
 
+
+/*
+** If the VIDEO class device supported
+** MGCT: <option type="number"/>
+*/
+#define  USBCFG_HOST_VIDEO                            (0)
+
 /*
 ** If the HUBclass device supported
 ** MGCT: <option type="number"/>
@@ -127,105 +140,117 @@
 */
 #define USBCFG_HOST_PRINTER                           (0)
 
+/*
+** If the VIDEO device supported
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_HOST_VIDEO                             (0)
+
 /** MGCT: </category> */
 
 #if USBCFG_HOST_KHCI
 
-    /** MGCT: <category name="KHCI Driver Specific Settings"> */
-    
-    /*
-    ** KHCI task priority
-    ** MGCT: <option type="number"/>
-    */  
-    #define USBCFG_HOST_KHCI_TASK_PRIORITY               (8)
+/** MGCT: <category name="KHCI Driver Specific Settings"> */
 
-    /*
-    ** Wait time in tick for events - must be above 1.
-    ** MGCT: <option type="string"/>
-    */
-    #define USBCFG_HOST_KHCI_WAIT_TICK                   100    // 5ms
+/*
+** KHCI task priority
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_HOST_KHCI_TASK_PRIORITY               (8)
 
-    /*
-    ** Maximum message count for KHCI.
-    ** MGCT: <option type="number"/>
-    */
-    #define USBCFG_HOST_KHCI_TR_QUE_MSG_CNT              (10)
+/*
+** Wait time in tick for events - must be above 1.
+** MGCT: <option type="string"/>
+*/
+#define USBCFG_HOST_KHCI_WAIT_TICK                   100    // 5ms
 
-    /*
-    ** Maximum interrupt transaction count.
-    ** MGCT: <option type="number"/>
-    */
-    #define USBCFG_HOST_KHCI_MAX_INT_TR                  (10)
-    
-	/* 
-    ** Allow workaround for bug in the peripheral when unaligned buffer @4B address is used
-    ** MGCT: <category name="USB DMA alignment fix">
-    */
-    #define USBCFG_KHCI_4BYTE_ALIGN_FIX                      (1)
+/*
+** Maximum message count for KHCI.
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_HOST_KHCI_TR_QUE_MSG_CNT              (10)
 
-#if USBCFG_KHCI_4BYTE_ALIGN_FIX    
-    /*
-    ** The aligned buffer size for IN transactions, active when USBCFG_4BYTE_ALIGN_FIX is defined
-      ** MGCT: <option type="number"/>
-    */
-    #define USBCFG_HOST_KHCI_SWAP_BUF_MAX                    (1024)
-    /** MGCT: </category> */
-#endif    
-	/* 
-    ** Choose Micro USB AB on TWR-K22F120M as host port. J26 and J27(2-3) should be shunt.
-    ** Otherwise the host port on SER board would be selected.
-    ** MGCT: <category name="USB DMA alignment fix">
-    */
-    #define USBCFG_HOST_PORT_NATIVE 					 (1)
+/*
+** Maximum interrupt transaction count.
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_HOST_KHCI_MAX_INT_TR                  (10)
+
+/*
+** Allow workaround for bug in the peripheral when unaligned buffer @4B address is used
+** MGCT: <category name="USB DMA alignment fix">
+*/
+#define USBCFG_KHCI_4BYTE_ALIGN_FIX                      (1)
+
+#if USBCFG_KHCI_4BYTE_ALIGN_FIX
+/*
+** The aligned buffer size for IN transactions, active when USBCFG_4BYTE_ALIGN_FIX is defined
+  ** MGCT: <option type="number"/>
+*/
+#define USBCFG_HOST_KHCI_SWAP_BUF_MAX                    (1024)
+/** MGCT: </category> */
+#endif
+/*
+** Choose Micro USB AB on TWR-K22F120M as host port. J26 and J27(2-3) should be shunt.
+** Otherwise the host port on SER board would be selected.
+** MGCT: <category name="USB DMA alignment fix">
+*/
+#define USBCFG_HOST_PORT_NATIVE                      (1)
 #endif
 
 #ifdef USBCFG_HOST_EHCI
 
-    
-    /** MGCT: <category name="EHCI Driver Specific Settings"> */
-    /*
-    ** MGCT: <option type="number"/>
-    */
-    #define USBCFG_EHCI_USE_SW_TOGGLING         (0)
 
-    /*
-    ** Maximum number of allocated QH descriptors.
-    ** MGCT: <option type="number"/>
-    */
-    #define USBCFG_EHCI_MAX_QH_DESCRS           (8)
+/** MGCT: <category name="EHCI Driver Specific Settings"> */
+/*
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_EHCI_USE_SW_TOGGLING         (0)
 
-    /*
-    ** Maximum number of allocated QTD descriptors.
-    ** MGCT: <option type="number"/>
-    */
-    #define USBCFG_EHCI_MAX_QTD_DESCRS          (16)
+/*
+** Maximum number of allocated QH descriptors.
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_EHCI_MAX_QH_DESCRS           (8)
+
+/*
+** Maximum number of allocated QTD descriptors.
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_EHCI_MAX_QTD_DESCRS          (16)
 
 
-    /*
-    ** Maximum number of allocated ISO descriptors.
-    ** MGCT: <option type="number"/>
-    */
-    #define USBCFG_EHCI_MAX_ITD_DESCRS          (16)
+/*
+** Maximum number of allocated ISO descriptors.
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_EHCI_MAX_ITD_DESCRS          (16)
 
-    /*
-    ** Maximum number of allocated SSPLIT descriptors.
-    ** MGCT: <option type="number"/>
-    */
-    #define USBCFG_EHCI_MAX_SITD_DESCRS         (32)
+/*
+** Maximum number of allocated SSPLIT descriptors.
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_EHCI_MAX_SITD_DESCRS         (32)
 
-    /*
-    ** MGCT: <option type="number"/>
-    */
-    #define USBCFG_EHCI_PIPE_TIMEOUT            (300)
-    
-    /** MGCT: </category> */
+/*
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_EHCI_PIPE_TIMEOUT            (300)
+
+/** MGCT: </category> */
 
 #endif // USBCFG_EHCI
+
+/* set MACRO to 1 to enable USB COMPLIANCE test
+*/
+#define USBCFG_HOST_COMPLIANCE_TEST                 (0)
+
 
 /* If the buffer provided by APP is cacheable
 * 1 cacheable, buffer cache maintenance is needed
 * 0 uncacheable, buffer cache maintenance is not needed
 */
-#define	USBCFG_BUFF_PROPERTY_CACHEABLE       0
+#define    USBCFG_HOST_BUFF_PROPERTY_CACHEABLE       0
+
 
 #endif

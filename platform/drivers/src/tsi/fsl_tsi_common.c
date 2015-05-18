@@ -36,13 +36,13 @@
  ******************************************************************************/
 
 /* Table of base addresses for tsi instances. */
-const uint32_t g_tsiBaseAddr[] = TSI_BASE_ADDRS;
+TSI_Type * const g_tsiBase[] = TSI_BASE_PTRS;
 
 /* Table to save TSI IRQ numbers defined in CMSIS files. */
-const IRQn_Type g_tsiIrqId[HW_TSI_INSTANCE_COUNT] = { TSI0_IRQn };
+const IRQn_Type g_tsiIrqId[TSI_INSTANCE_COUNT] = { TSI0_IRQn };
 
 /* Pointer to tsi runtime state structure.*/
-tsi_state_t * g_tsiStatePtr[HW_TSI_INSTANCE_COUNT] = { NULL };
+tsi_state_t * g_tsiStatePtr[TSI_INSTANCE_COUNT] = { NULL };
 
 /*******************************************************************************
  * EOF

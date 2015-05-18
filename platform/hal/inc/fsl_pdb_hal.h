@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_PDB_COUNT
 
 /*!
  * @addtogroup pdb_hal
@@ -63,22 +64,22 @@ typedef enum _pdb_status
  * The setting value is loaded from a buffer and takes effect. There are
  * four loading modes to fit different applications.
  */
-typedef enum _pdb_load_mode
+typedef enum _pdb_load_value_mode
 {
-    kPdbLoadImmediately = 0U, 
+    kPdbLoadValueImmediately = 0U, 
         /*!<  Loaded immediately after load operation. @internal gui name="Immediately" */
-    kPdbLoadAtModuloCounter = 1U, 
+    kPdbLoadValueAtModuloCounter = 1U, 
         /*!< Loaded when counter hits the modulo after load operation. @internal gui name="Modulo counter" */
-    kPdbLoadAtNextTrigger = 2U,
+    kPdbLoadValueAtNextTrigger = 2U,
         /*!< Loaded when detecting an input trigger after load operation. @internal gui name="Next trigger" */
-    kPdbLoadAtModuloCounterOrNextTrigger = 3U 
+    kPdbLoadValueAtModuloCounterOrNextTrigger = 3U 
         /*!< Loaded when counter hits the modulo or detecting an input trigger after load operation. @internal gui name="Modulo counter/Next trigger" */
-} pdb_load_mode_t;
+} pdb_load_value_mode_t;
 
 /*!
  * @brief Defines the type of prescaler divider for the PDB counter clock.
  */
-typedef enum _pdb_clk_prescaler_div_mode
+typedef enum _pdb_clk_prescaler_div
 {
     kPdbClkPreDivBy1   = 0U, /*!< Counting divided by multiplication factor selected by MULT. @internal gui name="1" */
     kPdbClkPreDivBy2   = 1U, /*!< Counting divided by multiplication factor selected by 2 times ofMULT. @internal gui name="2" */
@@ -88,7 +89,7 @@ typedef enum _pdb_clk_prescaler_div_mode
     kPdbClkPreDivBy32  = 5U, /*!< Counting divided by multiplication factor selected by 32 times ofMULT. @internal gui name="32" */
     kPdbClkPreDivBy64  = 6U, /*!< Counting divided by multiplication factor selected by 64 times ofMULT. @internal gui name="64" */
     kPdbClkPreDivBy128 = 7U, /*!< Counting divided by multiplication factor selected by 128 times ofMULT. @internal gui name="128" */
-} pdb_clk_prescaler_div_mode_t;
+} pdb_clk_prescaler_div_t;
 
 /*!
  * @brief Defines the type of trigger source mode for the PDB.
@@ -96,7 +97,7 @@ typedef enum _pdb_clk_prescaler_div_mode
  * Selects the trigger input source for the PDB. The trigger input source can
  * be internal or external (EXTRG pin), or the software trigger.
  */
-typedef enum _pdb_trigger_src_mode
+typedef enum _pdb_trigger_src
 {
     kPdbTrigger0  = 0U,  /*!< Select trigger-In 0. @internal gui name="External trigger" */
     kPdbTrigger1  = 1U,  /*!< Select trigger-In 1. @internal gui name="Trigger 1" */
@@ -114,20 +115,37 @@ typedef enum _pdb_trigger_src_mode
     kPdbTrigger13 = 13U, /*!< Select trigger-In 13. @internal gui name="Trigger 13" */
     kPdbTrigger14 = 14U, /*!< Select trigger-In 14. @internal gui name="Trigger 14" */
     kPdbSoftTrigger = 15U, /*!< Select software trigger. @internal gui name="Software trigger" */
-} pdb_trigger_src_mode_t;
+} pdb_trigger_src_t;
 
 /*!
  * @brief Defines the type of the multiplication source mode for PDB.
  *
  * Selects the multiplication factor of the prescaler divider for the PDB counter clock.
  */
-typedef enum _pdb_mult_factor_mode
+typedef enum _pdb_clk_prescaler_mult_factor
 {
-    kPdbMultFactorAs1  = 0U, /*!< Multiplication factor is 1. @internal gui name="1" */
-    kPdbMultFactorAs10 = 1U, /*!< Multiplication factor is 10. @internal gui name="10" */
-    kPdbMultFactorAs20 = 2U, /*!< Multiplication factor is 20. @internal gui name="20" */
-    kPdbMultFactorAs40 = 3U  /*!< Multiplication factor is 40. @internal gui name="40" */
-} pdb_mult_factor_mode_t;
+    kPdbClkPreMultFactorAs1  = 0U, /*!< Multiplication factor is 1. @internal gui name="1" */
+    kPdbClkPreMultFactorAs10 = 1U, /*!< Multiplication factor is 10. @internal gui name="10" */
+    kPdbClkPreMultFactorAs20 = 2U, /*!< Multiplication factor is 20. @internal gui name="20" */
+    kPdbClkPreMultFactorAs40 = 3U  /*!< Multiplication factor is 40. @internal gui name="40" */
+} pdb_clk_prescaler_mult_factor_t;
+
+/*!
+ * @brief Defines the type of structure for basic timer in PDB.
+ *
+ * @internal gui name="Basic configuration" id="pdbCfg"
+ */
+typedef struct PdbTimerConfig
+{
+    pdb_load_value_mode_t loadValueMode; /*!< Select the load mode. @internal gui name="Load mode" id="LoadMode" */
+    bool seqErrIntEnable; /*!< Enable PDB Sequence Error Interrupt. @internal gui name="Sequence error interrupt" id="SequenceErrorInterrupt" */
+    pdb_clk_prescaler_div_t clkPreDiv; /*!< Select the prescaler divider. @internal gui name="Divider" id="Divider" */
+    pdb_clk_prescaler_mult_factor_t clkPreMultFactor; /*!< Select multiplication factor for prescaler. @internal gui name="Multiplier" id="Multiplier" */
+    pdb_trigger_src_t triggerInput; /*!< Select the trigger input source. @internal gui name="Trigger" id="Trigger" */
+    bool continuousModeEnable; /*!< Enable the continuous mode. @internal gui name="Continuous mode" id="ContinuousMode" */
+    bool dmaEnable; /*!< Enable the dma for timer. @internal gui name="DMA" id="DMA" */
+    bool intEnable; /*!< Enable the interrupt for timer. @internal gui name="Interrupt" id="Interrupt" */
+} pdb_timer_config_t;
 
 #if defined(__cplusplus)
 extern "C" {
@@ -143,86 +161,31 @@ extern "C" {
  * This function resets the PDB registers to a known state. This state is
  * defined in a reference manual and is power on reset value.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  */
-void PDB_HAL_Init(uint32_t baseAddr);
+void PDB_HAL_Init(PDB_Type * base);
 
 /*!
- * @brief Sets the load mode for timing registers.
+ * @brief Configure the PDB timer.
  *
- * This function sets the load mode for some timing registers including
- * MOD, IDLY, CHnDLYm, INTx and POyDLY.
+ * This function configure the PDB's basic timer.
  *
- * @param baseAddr Register base address for the module.
- * @param mode  Selection of mode, see to "pdb_load_mode_t".
+ * @param base Register base address for the module.
+ * @param configPtr Pointer to configuration structure, see to "pdb_timer_config_t".
+ * @return Execution status.
  */
-static inline void PDB_HAL_SetLoadMode(uint32_t baseAddr, pdb_load_mode_t mode)
-{
-    BW_PDB_SC_LDMOD(baseAddr, (uint32_t)mode);
-}
-
-/*!
- * @brief Switches to enable the PDB sequence error interrupt.
- *
- * This function switches to enable the PDB sequence error interrupt.
- *
- * @param baseAddr Register base address for the module.
- * @param enable The switcher to assert the feature.
- */
-static inline void PDB_HAL_SetSeqErrIntCmd(uint32_t baseAddr, bool enable)
-{
-    BW_PDB_SC_PDBEIE(baseAddr, (enable ? 1U : 0U) );
-}
+pdb_status_t PDB_HAL_ConfigTimer(PDB_Type * base, const pdb_timer_config_t *configPtr);
 
 /*!
  * @brief Triggers the DAC by software if enabled.
  *
  * If enabled, this function triggers the DAC by using software.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  */
-static inline void PDB_HAL_SetSoftTriggerCmd(uint32_t baseAddr)
+static inline void PDB_HAL_SetSoftTriggerCmd(PDB_Type * base)
 {
-    BW_PDB_SC_SWTRIG(baseAddr, 1U);
-}
-
-/*!
- * @brief Switches to enable the PDB DMA support.
- *
- * This function switches to enable the PDB DMA support.
- *
- * @param baseAddr Register base address for the module.
- * @param enable The switcher to assert the feature.
- */
-static inline void PDB_HAL_SetDmaCmd(uint32_t baseAddr, bool enable)
-{
-    BW_PDB_SC_DMAEN(baseAddr, (enable ? 1U : 0U) );
-}
-
-/*!
- * @brief Sets the prescaler divider from the peripheral bus clock for the PDB.
- *
- * This function sets the prescaler divider from the peripheral bus clock for the PDB.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of mode, see to "pdb_clk_prescaler_div_mode_t".
- */
-static inline void PDB_HAL_SetPreDivMode(uint32_t baseAddr, pdb_clk_prescaler_div_mode_t mode)
-{
-    BW_PDB_SC_PRESCALER(baseAddr, (uint32_t)mode);
-}
-
-/*!
- * @brief Sets the trigger source mode for the PDB module.
- *
- * This function sets the trigger source mode for the PDB module.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of mode, see to "pdb_trigger_src_mode_t".
- */
-static inline void PDB_HAL_SetTriggerSrcMode(uint32_t baseAddr, pdb_trigger_src_mode_t mode)
-{
-    BW_PDB_SC_TRGSEL(baseAddr, (uint32_t)mode);
+    PDB_BWR_SC_SWTRIG(base, 1U);
 }
 
 /*!
@@ -230,23 +193,22 @@ static inline void PDB_HAL_SetTriggerSrcMode(uint32_t baseAddr, pdb_trigger_src_
  *
  * This function switches on to enable the PDB module.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  */
-static inline void PDB_HAL_Enable(uint32_t baseAddr)
+static inline void PDB_HAL_Enable(PDB_Type * base)
 {
-    BW_PDB_SC_PDBEN(baseAddr, 1U);
+    PDB_BWR_SC_PDBEN(base, 1U);
 }
-
 /*!
- * @brief Switches off to enable the PDB module.
+ * @brief Switches to disable the PDB module.
  *
- * This function switches off to enable the PDB module.
+ * This function switches to disable the PDB module.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  */
-static inline void PDB_HAL_Disable(uint32_t baseAddr)
+static inline void PDB_HAL_Disable(PDB_Type * base)
 {
-    BW_PDB_SC_PDBEN(baseAddr, 0U);
+    PDB_BWR_SC_PDBEN(base, 0U);
 }
 
 /*!
@@ -254,12 +216,12 @@ static inline void PDB_HAL_Disable(uint32_t baseAddr)
  *
  * This function gets the PDB delay interrupt flag.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @return Flat status, true if the flag is set.
  */
-static inline bool PDB_HAL_GetIntFlag(uint32_t baseAddr)
+static inline bool PDB_HAL_GetTimerIntFlag(PDB_Type * base)
 {
-    return (1U == BR_PDB_SC_PDBIF(baseAddr));
+    return (1U == PDB_BRD_SC_PDBIF(base));
 }
 
 /*!
@@ -267,52 +229,12 @@ static inline bool PDB_HAL_GetIntFlag(uint32_t baseAddr)
  *
  * This function clears PDB delay interrupt flag.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @return Flat status, true if the flag is set.
  */
-static inline void PDB_HAL_ClearIntFlag(uint32_t baseAddr)
+static inline void PDB_HAL_ClearTimerIntFlag(PDB_Type * base)
 {
-    BW_PDB_SC_PDBIF(baseAddr, 0U);
-}
-
-/*!
- * @brief Switches to enable the PDB interrupt.
- *
- * This function switches to enable the PDB interrupt.
- *
- * @param baseAddr Register base address for the module.
- * @param enable The switcher to assert the feature.
- */
-static inline void PDB_HAL_SetIntCmd(uint32_t baseAddr, bool enable)
-{
-    BW_PDB_SC_PDBIE(baseAddr, (enable ? 1U : 0U) );
-}
-
-/*!
- * @brief Sets the PDB prescaler multiplication factor.
- *
- * This function sets the PDB prescaler multiplication factor.
- *
- * @param baseAddr Register base address for the module.
- * @param mode Selection of mode, see to "pdb_mult_factor_mode_t".
- */
-static inline void PDB_HAL_SetPreMultFactorMode(uint32_t baseAddr,
-    pdb_mult_factor_mode_t mode)
-{
-    BW_PDB_SC_MULT(baseAddr, (uint32_t)mode);
-}
-
-/*!
- * @brief Switches to enable the PDB continuous mode.
- *
- * This function switches to enable the PDB continuous mode.
- *
- * @param baseAddr Register base address for the module.
- * @param enable The switcher to assert the feature.
- */
-static inline void PDB_HAL_SetContinuousModeCmd(uint32_t baseAddr, bool enable)
-{
-    BW_PDB_SC_CONT(baseAddr, (enable ? 1U : 0U) );
+    PDB_BWR_SC_PDBIF(base, 0U);
 }
 
 /*!
@@ -330,11 +252,11 @@ static inline void PDB_HAL_SetContinuousModeCmd(uint32_t baseAddr, bool enable)
  * automatically cleared either when the values in the buffers are loaded into the
  * internal registers or when the PDB is disabled.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  */
-static inline void PDB_HAL_SetLoadRegsCmd(uint32_t baseAddr)
+static inline void PDB_HAL_SetLoadValuesCmd(PDB_Type * base)
 {
-    BW_PDB_SC_LDOK(baseAddr, 1U);
+    PDB_BWR_SC_LDOK(base, 1U);
 }
 
 /*!
@@ -345,38 +267,25 @@ static inline void PDB_HAL_SetLoadRegsCmd(uint32_t baseAddr)
  * When in continuous mode, the counter begins to increase
  * again.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param value The setting value of upper limit for PDB counter.
  */
-static inline void PDB_HAL_SetModulusValue(uint32_t baseAddr, uint32_t value)
+static inline void PDB_HAL_SetTimerModulusValue(PDB_Type * base, uint32_t value)
 {
-    BW_PDB_MOD_MOD(baseAddr, value);
+    PDB_BWR_MOD_MOD(base, value);
 }
 
 /*!
- * @brief Gets the modulus value for the PDB module.
+ * @brief Gets the PDB counter value of PDB timer.
  *
- * This function gets the modulus value for the PDB module.
+ * This function gets the PDB counter value of PDB timer.
  *
- * @param baseAddr Register base address for the module.
- * @return The current value of upper limit for counter.
- */
-static inline uint32_t PDB_HAL_GetModulusValue(uint32_t baseAddr)
-{
-    return BR_PDB_MOD_MOD(baseAddr);
-}
-
-/*!
- * @brief Gets the PDB counter value.
- *
- * This function gets the PDB counter value.
- *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @return The current counter value.
  */
-static inline uint32_t PDB_HAL_GetCounterValue(uint32_t baseAddr)
+static inline uint32_t PDB_HAL_GetTimerValue(PDB_Type * base)
 {
-    return BR_PDB_CNT_CNT(baseAddr);
+    return PDB_BRD_CNT_CNT(base);
 }
 
 /*!
@@ -386,25 +295,12 @@ static inline uint32_t PDB_HAL_GetCounterValue(uint32_t baseAddr)
  * If enabled, a PDB interrupt is generated when the counter is equal to the 
  * setting value. 
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param value The setting value for interrupt delay milestone of PDB counter.
  */
-static inline void PDB_HAL_SetIntDelayValue(uint32_t baseAddr, uint32_t value)
+static inline void PDB_HAL_SetValueForTimerInterrupt(PDB_Type * base, uint32_t value)
 {
-    BW_PDB_IDLY_IDLY(baseAddr, value);
-}
-
-/*!
- * @brief Gets the current interrupt delay milestone of the PDB counter.
- *
- * This function gets the current interrupt delay milestone of the PDB counter.
- *
- * @param baseAddr Register base address for the module.
- * @return The current setting value for interrupt delay milestone of PDB counter.
- */
-static inline uint32_t PDB_HAL_GetIntDelayValue(uint32_t baseAddr)
-{
-    return BR_PDB_IDLY_IDLY(baseAddr);
+    PDB_BWR_IDLY_IDLY(base, value);
 }
 
 /*!
@@ -412,36 +308,36 @@ static inline uint32_t PDB_HAL_GetIntDelayValue(uint32_t baseAddr)
  *
  * This function switches to enable the pre-trigger back-to-back mode.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chn ADC instance index for trigger.
- * @param preChn ADC channel group index for trigger.
+ * @param preChnMask ADC channel group index mask for trigger.
  * @param enable Switcher to assert the feature.
  */
-void PDB_HAL_SetPreTriggerBackToBackCmd(uint32_t baseAddr, uint32_t chn, uint32_t preChn, bool enable);
+void PDB_HAL_SetAdcPreTriggerBackToBackEnable(PDB_Type * base, uint32_t chn, uint32_t preChnMask, bool enable);
 
 /*!
  * @brief Switches to enable the pre-trigger output.
  *
  * This function switches to enable pre-trigger output.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chn ADC instance index for trigger.
- * @param preChn ADC channel group index for trigger.
+ * @param preChnMask ADC channel group index mask for trigger.
  * @param enable Switcher to assert the feature.
  */
-void PDB_HAL_SetPreTriggerOutputCmd(uint32_t baseAddr, uint32_t chn, uint32_t preChn, bool enable);
+void PDB_HAL_SetAdcPreTriggerOutputEnable(PDB_Type * base, uint32_t chn, uint32_t preChnMask, bool enable);
 
 /*!
  * @brief Switches to enable the pre-trigger.
  *
  * This function switches to enable the pre-trigger.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chn ADC instance index for trigger.
- * @param preChn ADC channel group index for trigger.
+ * @param preChnMask ADC channel group index mask for trigger.
  * @param enable Switcher to assert the feature.
  */
-void PDB_HAL_SetPreTriggerCmd(uint32_t baseAddr, uint32_t chn, uint32_t preChn, bool enable);
+void PDB_HAL_SetAdcPreTriggerEnable(PDB_Type * base, uint32_t chn, uint32_t preChnMask, bool enable);
 
 /*!
  * @brief Gets the flag which indicates whether the PDB counter has reached the pre-trigger delay value.
@@ -449,16 +345,15 @@ void PDB_HAL_SetPreTriggerCmd(uint32_t baseAddr, uint32_t chn, uint32_t preChn, 
  * This function gets the flag which indicates the PDB counter has reached the
  * pre-trigger delay value.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chn ADC instance index for trigger.
- * @param preChn ADC channel group index for trigger.
- * @return Flag status. True if the event is asserted.
+ * @param preChnMask ADC channel group index mask for trigger.
+ * @return Flag mask. Indicated bit would be 1 if the event is asserted.
  */
-static inline bool PDB_HAL_GetPreTriggerFlag(uint32_t baseAddr, uint32_t chn, uint32_t preChn)
+static inline uint32_t PDB_HAL_GetAdcPreTriggerFlags(PDB_Type * base, uint32_t chn, uint32_t preChnMask)
 {
-    assert(chn < HW_PDB_CHnC1_COUNT);
-    assert(preChn < FSL_FEATURE_PDB_ADC_PRE_CHANNEL_COUNT);
-    return ( ((1U<< preChn) & BR_PDB_CHnS_CF(baseAddr, chn))? true: false);
+    assert(chn < PDB_C1_COUNT);
+    return (preChnMask & PDB_BRD_S_CF(base, chn) );
 }
 
 /*!
@@ -467,27 +362,26 @@ static inline bool PDB_HAL_GetPreTriggerFlag(uint32_t baseAddr, uint32_t chn, ui
  * This function clears the flag which indicates that the PDB counter has reached  the
  * pre-trigger delay value.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chn ADC instance index for trigger.
- * @param preChn ADC channel group index for trigger.
+ * @param preChnMask ADC channel group index mask for trigger.
  */
-void PDB_HAL_ClearPreTriggerFlag(uint32_t baseAddr, uint32_t chn, uint32_t preChn);
+void PDB_HAL_ClearAdcPreTriggerFlags(PDB_Type * base, uint32_t chn, uint32_t preChnMask);
 
 /*!
  * @brief Gets the flag which indicates whether a sequence error is detected.
  *
  * This function gets the flag which indicates whether a sequence error is detected.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chn ADC instance index for trigger.
- * @param preChn ADC channel group index for trigger.
- * @return Flag status. True if the event is asserted.
+ * @param preChnMask ADC channel group index mask for trigger.
+ * @return Flag mask. Indicated bit would be 1 if the event is asserted.
  */
-static inline bool PDB_HAL_GetPreTriggerSeqErrFlag(uint32_t baseAddr, uint32_t chn, uint32_t preChn)
+static inline uint32_t PDB_HAL_GetAdcPreTriggerSeqErrFlags(PDB_Type * base, uint32_t chn, uint32_t preChnMask)
 {
-    assert(chn < HW_PDB_CHnC1_COUNT);
-    assert(preChn < FSL_FEATURE_PDB_ADC_PRE_CHANNEL_COUNT);
-    return ( ((1U<< preChn) & BR_PDB_CHnS_ERR(baseAddr, chn))? true: false);
+    assert(chn < PDB_C1_COUNT);
+    return ( preChnMask & PDB_BRD_S_ERR(base, chn) );
 }
 
 /*!
@@ -495,38 +389,38 @@ static inline bool PDB_HAL_GetPreTriggerSeqErrFlag(uint32_t baseAddr, uint32_t c
  *
  * This function clears the flag which indicates that the sequence error has been detected.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chn ADC instance index for trigger.
- * @param preChn ADC channel group index for trigger.
+ * @param preChnMask ADC channel group index mask for trigger.
  */
-void PDB_HAL_ClearPreTriggerSeqErrFlag(uint32_t baseAddr, uint32_t chn, uint32_t preChn);
+void PDB_HAL_ClearAdcPreTriggerSeqErrFlags(PDB_Type * base, uint32_t chn, uint32_t preChnMask);
 
 /*!
  * @brief Sets the pre-trigger delay value.
  *
  * This function sets the pre-trigger delay value.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param chn ADC instance index for trigger.
  * @param preChn ADC channel group index for trigger.
  * @param value Setting value for pre-trigger's delay value.
  */
-void PDB_HAL_SetPreTriggerDelayCount(uint32_t baseAddr, uint32_t chn, uint32_t preChn, uint32_t value);
+void PDB_HAL_SetAdcPreTriggerDelayValue(PDB_Type * base, uint32_t chn, uint32_t preChn, uint32_t value);
 
 /*!
  * @brief Switches to enable the DAC external trigger input.
  *
  * This function switches to enable the DAC external trigger input.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param dacChn DAC instance index for trigger.
  * @param value Setting value for pre-trigger's delay value.
  * @param enable Switcher to assert the feature.
  */
-static inline void PDB_HAL_SetDacExtTriggerInputCmd(uint32_t baseAddr, uint32_t dacChn, bool enable)
+static inline void PDB_HAL_SetDacExtTriggerInputEnable(PDB_Type * base, uint32_t dacChn, bool enable)
 {
-    assert(dacChn < HW_PDB_DACINTCn_COUNT);
-    BW_PDB_DACINTCn_EXT(baseAddr, dacChn, (enable ? 1U: 0U) );
+    assert(dacChn < PDB_INTC_COUNT);
+    PDB_BWR_INTC_EXT(base, dacChn, (enable ? 1U: 0U) );
 }
 
 /*!
@@ -534,14 +428,14 @@ static inline void PDB_HAL_SetDacExtTriggerInputCmd(uint32_t baseAddr, uint32_t 
  *
  * This function switches to enable the DAC external trigger input.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param dacChn DAC instance index for trigger.
  * @param enable Switcher to assert the feature.
  */
-static inline void PDB_HAL_SetDacIntervalTriggerCmd(uint32_t baseAddr, uint32_t dacChn, bool enable)
+static inline void PDB_HAL_SetDacIntervalTriggerEnable(PDB_Type * base, uint32_t dacChn, bool enable)
 {
-    assert(dacChn < HW_PDB_DACINTCn_COUNT);
-    BW_PDB_DACINTCn_TOE(baseAddr, dacChn, (enable ? 1U: 0U) );
+    assert(dacChn < PDB_INTC_COUNT);
+    PDB_BWR_INTC_TOE(base, dacChn, (enable ? 1U: 0U) );
 }
 
 /*!
@@ -549,29 +443,14 @@ static inline void PDB_HAL_SetDacIntervalTriggerCmd(uint32_t baseAddr, uint32_t 
  *
  * This function sets the interval value for the DAC trigger.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param dacChn DAC instance index for trigger.
  * @param value Setting value for DAC trigger interval.
  */
-static inline void PDB_HAL_SetDacIntervalValue(uint32_t baseAddr, uint32_t dacChn, uint32_t value)
+static inline void PDB_HAL_SetDacIntervalValue(PDB_Type * base, uint32_t dacChn, uint32_t value)
 {
-    assert(dacChn < HW_PDB_DACINTn_COUNT);
-    BW_PDB_DACINTn_INT(baseAddr, dacChn, value);
-}
-
-/*!
- * @brief Gets the interval value for the DAC trigger.
- *
- * This function gets the interval value for the DAC trigger.
- *
- * @param baseAddr Register base address for the module.
- * @param dacChn DAC instance index for trigger.
- * @return The current setting value for DAC trigger interval.
- */
-static inline uint32_t PDB_HAL_GetDacIntervalValue(uint32_t baseAddr, uint32_t dacChn)
-{
-    assert(dacChn < HW_PDB_DACINTn_COUNT);
-    return BR_PDB_DACINTn_INT(baseAddr, dacChn);
+    assert(dacChn < PDB_INT_COUNT);
+    PDB_BWR_INT_INT(base, dacChn, value);
 }
 
 /*!
@@ -579,25 +458,25 @@ static inline uint32_t PDB_HAL_GetDacIntervalValue(uint32_t baseAddr, uint32_t d
  *
  * This function switches to enable the pulse-out trigger.
  *
- * @param baseAddr Register base address for the module.
- * @param pulseChn Pulse-out channle index for trigger.
+ * @param base Register base address for the module.
+ * @param pulseChnMask Pulse-out channle index mask for trigger.
  * @param enable Switcher to assert the feature.
  */
-void PDB_HAL_SetPulseOutCmd(uint32_t baseAddr, uint32_t pulseChn, bool enable);
+void PDB_HAL_SetCmpPulseOutEnable(PDB_Type * base, uint32_t pulseChnMask, bool enable);
 
 /*!
  * @brief Sets the counter delay value for the pulse-out goes high.
  *
  * This function sets the counter delay value for the pulse-out goes high.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param pulseChn Pulse-out channel index for trigger.
  * @param value Setting value for PDB delay .
  */
-static inline void PDB_HAL_SetPulseOutDelayForHigh(uint32_t baseAddr, uint32_t pulseChn, uint32_t value)
+static inline void PDB_HAL_SetCmpPulseOutDelayForHigh(PDB_Type * base, uint32_t pulseChn, uint32_t value)
 {
-    assert(pulseChn < HW_PDB_POnDLY_COUNT);
-    BW_PDB_POnDLY_DLY1(baseAddr, pulseChn, value);
+    assert(pulseChn < PDB_PODLY_COUNT);
+    PDB_BWR_PODLY_DLY1(base, pulseChn, value);
 }
 
 /*!
@@ -605,56 +484,25 @@ static inline void PDB_HAL_SetPulseOutDelayForHigh(uint32_t baseAddr, uint32_t p
  *
  * This function sets the counter delay value for the pulse-out goes low.
  *
- * @param baseAddr Register base address for the module.
+ * @param base Register base address for the module.
  * @param pulseChn Pulse-out channel index for trigger.
  * @param value Setting value for PDB delay .
  */
-static inline void PDB_HAL_SetPulseOutDelayForLow(uint32_t baseAddr, uint32_t pulseChn, uint32_t value)
+static inline void PDB_HAL_SetCmpPulseOutDelayForLow(PDB_Type * base, uint32_t pulseChn, uint32_t value)
 {
-    assert(pulseChn < HW_PDB_POnDLY_COUNT);
-    BW_PDB_POnDLY_DLY2(baseAddr, pulseChn, value);
-}
-
-/*!
- * @brief Sets the value roughly into ChnC1 register for special time-critical case.
- *
- * This function sets the value roughly into ChnC1 register for special 
- * time-critical case, like motor control, etc.
- *
- * @param baseAddr Register base address for the module.
- * @param chn ADC instance index for trigger.
- * @param regVal Setting value.
- */
-static inline void PDB_HAL_SetChnC1Reg(uint32_t baseAddr, uint32_t chn, uint32_t regVal)
-{
-    assert(chn < HW_PDB_CHnC1_COUNT);
-    HW_PDB_CHnC1_WR(baseAddr, chn, regVal);
-}
-
-/*!
- * @brief Gets the value roughly from ChnC1 register for special time-critical case.
- *
- * This function gets the value roughly from ChnC1 register for special 
- * time-critical case, like motor control, etc.
- *
- * @param baseAddr Register base address for the module.
- * @param chn ADC instance index for trigger.
- * @return Setting value.
- */
-static inline uint32_t PDB_HAL_GetChnC1Reg(uint32_t baseAddr, uint32_t chn)
-{
-    assert(chn < HW_PDB_CHnC1_COUNT);
-    return HW_PDB_CHnC1_RD(baseAddr, chn);
+    assert(pulseChn < PDB_PODLY_COUNT);
+    PDB_BWR_PODLY_DLY2(base, pulseChn, value);
 }
 
 #if defined(__cplusplus)
-extern }
+}
 #endif
 
 /*!
  * @}
  */
 
+#endif
 #endif /* __FSL_PDB_HAL_H__ */
 
 /******************************************************************************

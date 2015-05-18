@@ -31,14 +31,19 @@
 #include <assert.h>
 #include "fsl_spi_dma_shared_function.h"
 
+#if FSL_FEATURE_SOC_SPI_COUNT
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
-/* Pointer to runtime state structure.*/
-void * g_spiDmaStatePtr[HW_SPI_INSTANCE_COUNT] = {
-    NULL
-};
+/* Extern for the DSPI DMA master driver's interrupt handler.*/
+extern void SPI_DRV_DmaMasterIRQHandler(uint32_t instance);
+
+/* Extern for the DSPI DMA slave driver's interrupt handler.*/
+extern void SPI_DRV_DmaSlaveIRQHandler(uint32_t instance);
+
+/*! @brief Table of base pointers for SPI instances. */
+extern SPI_Type * const g_spiBase[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Code
@@ -56,10 +61,10 @@ void * g_spiDmaStatePtr[HW_SPI_INSTANCE_COUNT] = {
  */
 void SPI_DRV_DmaIRQHandler(uint32_t instance)
 {
-    assert(instance < HW_SPI_INSTANCE_COUNT);
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    assert(instance < SPI_INSTANCE_COUNT);
+    SPI_Type *base = g_spiBase[instance];
 
-    if (SPI_HAL_IsMaster(baseAddr))
+    if (SPI_HAL_IsMaster(base))
     {
         /* Master mode.*/
         SPI_DRV_DmaMasterIRQHandler(instance);
@@ -71,6 +76,7 @@ void SPI_DRV_DmaIRQHandler(uint32_t instance)
     }
 }
 
+#endif /* FSL_FEATURE_SOC_SPI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

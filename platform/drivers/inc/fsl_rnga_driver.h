@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_rnga_hal.h"
+#if FSL_FEATURE_SOC_RNG_COUNT
 /*! 
  * @addtogroup rnga_driver
  * @{
@@ -44,21 +45,22 @@
  *******************************************************************************/
 
 /*! @brief Table of base addresses for RNGA instances. */
-extern const uint32_t g_rngaBaseAddr[];
+extern RNG_Type * const g_rngaBase[];
 
 /*! @brief Table to save RNGA IRQ enumeration numbers defined in the CMSIS header file. */
-extern const IRQn_Type g_rngaIrqId[HW_RNG_INSTANCE_COUNT];
+extern const IRQn_Type g_rngaIrqId[RNG_INSTANCE_COUNT];
 
 /*! 
  * @brief Data structure for the RNGA initialization
  *
- * This structure is used when initializing the RNGA by calling the the rnga_init function.
+ * This structure initializes the RNGA by calling the the rnga_init function.
  * It contains all RNGA configurations.
+ * @internal gui name="Basic configuration" id="rngaCfg"
  */
 typedef struct _rnga_user_config
 {
-   bool isIntMasked; /*!< Mask the triggering of error interrupt */
-   bool highAssuranceEnable; /*!< Enable notification of security violations */  
+   bool isIntMasked; /*!< Mask the triggering of error interrupt @internal gui name="Interrupt mask" id="isIntMasked" */
+   bool highAssuranceEnable; /*!< Enable notification of security violations @internal gui name="High assurance" id="highAssurance" */  
 } rnga_user_config_t;
 
 
@@ -103,7 +105,7 @@ void RNGA_DRV_Deinit(uint32_t instance);
  */
 static inline void RNGA_DRV_SetMode(uint32_t instance, rnga_mode_t mode)
 {
-    RNGA_HAL_SetWorkModeCmd(g_rngaBaseAddr[instance], mode);
+    RNGA_HAL_SetWorkModeCmd(g_rngaBase[instance], mode);
 }
 
 
@@ -117,7 +119,7 @@ static inline void RNGA_DRV_SetMode(uint32_t instance, rnga_mode_t mode)
  */
 static inline rnga_mode_t RNGA_DRV_GetMode(uint32_t instance)
 {
-    return RNGA_HAL_GetWorkMode(g_rngaBaseAddr[instance]);
+    return RNGA_HAL_GetWorkMode(g_rngaBase[instance]);
 }
 
 
@@ -132,7 +134,7 @@ static inline rnga_mode_t RNGA_DRV_GetMode(uint32_t instance)
  */
 static inline rnga_status_t RNGA_DRV_GetRandomData(uint32_t instance, uint32_t *data)
 {
-    return RNGA_HAL_GetRandomData(g_rngaBaseAddr[instance], data);
+    return RNGA_HAL_GetRandomData(g_rngaBase[instance], data);
 }
 
 
@@ -147,7 +149,7 @@ static inline rnga_status_t RNGA_DRV_GetRandomData(uint32_t instance, uint32_t *
  */
 static inline void RNGA_DRV_Seed(uint32_t instance, uint32_t seed)
 {
-    RNGA_HAL_WriteSeed(g_rngaBaseAddr[instance],seed);
+    RNGA_HAL_WriteSeed(g_rngaBase[instance],seed);
 }
 
 /*!
@@ -165,6 +167,7 @@ void RNGA_DRV_IRQHandler(uint32_t instance);
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_RNGA_H__*/
 /*******************************************************************************
  * EOF

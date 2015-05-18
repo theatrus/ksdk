@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_lptmr_driver.h"
+#if FSL_FEATURE_SOC_LPTMR_COUNT
 
 /******************************************************************************
  * Code
@@ -40,6 +41,7 @@ void LPTMR0_IRQHandler(void)
 {
     LPTMR_DRV_IRQHandler(0U);
 }
+#endif
 
 /******************************************************************************
  * EOF

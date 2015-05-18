@@ -1,32 +1,32 @@
 /**HEADER********************************************************************
-* 
-* Copyright (c) 2010, 2013 Freescale Semiconductor;
-* All Rights Reserved
-*
-*************************************************************************** 
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: usb_otg_max3353.h$
-* $Version : 
-* $Date    : 
-*
-* Comments : This is the header file for the MAX3353 access functions
-*
-*         
-*****************************************************************************/
+ * 
+ * Copyright (c) 2010, 2015 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ *************************************************************************** 
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: usb_otg_max3353.h$
+ * $Version : 
+ * $Date    : 
+ *
+ * Comments : This is the header file for the MAX3353 access functions
+ *
+ *         
+ *****************************************************************************/
 #ifndef __usb_otg_max3353_h__
 #define __usb_otg_max3353_h__
 
@@ -99,48 +99,33 @@ enum
 
 #define USB_OTG_MAX3353_ISR_EVENT (0x02)
 
-
-
-typedef struct usb_otg_max3353_init_struct {
-    void*        int_port;
-    uint32_t     int_pin;
-    uint32_t     vector;
-    uint32_t     priority;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)    
-    char*        i2c_dev_id;
-#else
-    uint8_t      channel;
-#endif
-    uint8_t      i2c_address;  
-} usb_otg_max3353_init_struct_t;
-
 typedef struct usb_otg_max3353_call_struct
 {
-    usb_otg_state_struct_t *        otg_handle_ptr;
+    usb_otg_state_struct_t * otg_handle_ptr;
     usb_otg_max3353_init_struct_t * init_param_ptr;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    void*                           i2c_f_ptr;
+    #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
+    void* i2c_f_ptr;
 #else
-    uint8_t                         channel;
+    uint8_t channel;
 #endif
 } usb_otg_max3353_call_struct_t;
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/* Public functions */
-usb_status usb_otg_max3353_preinit(void*, void* *);
-usb_status usb_otg_max3353_init(void*);
-usb_status usb_otg_max3353_shut_down(void*);
-usb_status usb_otg_max3353_get_status(void*);
-usb_status usb_otg_max3353_set_vbus(void*, bool);
-usb_status usb_otg_max3353_set_pull_downs(void*, uint8_t);
+    /* Public functions */
+    usb_status usb_otg_max3353_preinit(void* uplayer_handle, void** handle);
+    usb_status usb_otg_max3353_init(void* handle);
+    usb_status usb_otg_max3353_shut_down(void* handle);
+    usb_status usb_otg_max3353_get_status(void* handle);
+    usb_status usb_otg_max3353_set_vbus(void* handle, bool enable);
+    usb_status usb_otg_max3353_set_pull_downs(void* handle, uint8_t bitfield);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif  /* _USB_OTG_MAX3353_H_ */
-
 

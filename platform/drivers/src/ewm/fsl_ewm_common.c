@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,7 +35,7 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for EWM instances. */
-const uint32_t g_ewmBaseAddr[] = EWM_BASE_ADDRS;
+EWM_Type * const g_ewmBase[] = EWM_BASE_PTRS;
 
 /*! @brief Table to save EWM IRQ enum numbers defined in CMSIS header file. */
 const IRQn_Type g_ewmIrqId[] = EWM_IRQS;

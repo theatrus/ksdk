@@ -33,6 +33,8 @@
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_DSPI_COUNT
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -41,7 +43,7 @@
  * Variables
  ******************************************************************************/
 /* Pointer to runtime state structure.*/
-extern void * g_dspiStatePtr[HW_SPI_INSTANCE_COUNT];
+extern void * g_dspiStatePtr[SPI_INSTANCE_COUNT];
 
 /* For storing DMA intermediate buffers between the source buffer and TX FIFO */
 static uint32_t s_cmdData;      /* Intermediate 16-bit command and 16-bit data buffer */
@@ -57,7 +59,7 @@ static uint8_t s_rxBuffIfNull; /* If no receive buffer provided, direct rx DMA c
  * Prototypes
  ******************************************************************************/
 static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
-                                                      const dspi_edma_device_t * restrict device,
+                                                      const dspi_edma_device_t * device,
                                                       const uint8_t * sendBuffer,
                                                       uint8_t * receiveBuffer,
                                                       size_t transferByteCount);
@@ -101,7 +103,7 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
                                       edma_software_tcd_t * stcdSrc2CmdDataLast)
 {
     uint32_t dspiSourceClock;
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* Check parameter pointers to make sure there are not NULL */
     if ((dspiEdmaState == NULL) || (userConfig == NULL) || (stcdSrc2CmdDataLast == NULL))
@@ -134,7 +136,7 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
     dspiEdmaState->isChipSelectContinuous = userConfig->isChipSelectContinuous; /* continuous PCS*/
 
     /* Initialize the DSPI module registers to default value, which disables the module */
-    DSPI_HAL_Init(baseAddr);
+    DSPI_HAL_Init(base);
 
     /* Init the interrupt sync object.*/
     if (OSA_SemaCreate(&dspiEdmaState->irqSync, 0) != kStatus_OSA_Success)
@@ -145,19 +147,19 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
     /* Initialize the DSPI module with user config */
 
     /* Set to master mode.*/
-    DSPI_HAL_SetMasterSlaveMode(baseAddr, kDspiMaster);
+    DSPI_HAL_SetMasterSlaveMode(base, kDspiMaster);
 
     /* Configure for continuous SCK operation*/
-    DSPI_HAL_SetContinuousSckCmd(baseAddr, userConfig->isSckContinuous);
+    DSPI_HAL_SetContinuousSckCmd(base, userConfig->isSckContinuous);
 
     /* Configure for peripheral chip select polarity*/
-    DSPI_HAL_SetPcsPolarityMode(baseAddr, userConfig->whichPcs, userConfig->pcsPolarity);
+    DSPI_HAL_SetPcsPolarityMode(base, userConfig->whichPcs, userConfig->pcsPolarity);
 
     /* Enable fifo operation (regardless of FIFO depth) */
-    DSPI_HAL_SetFifoCmd(baseAddr, true, true);
+    DSPI_HAL_SetFifoCmd(base, true, true);
 
     /* Initialize the configurable delays: PCS-to-SCK, prescaler = 0, scaler = 1 */
-    DSPI_HAL_SetDelay(baseAddr, userConfig->whichCtar, 0, 1, kDspiPcsToSck);
+    DSPI_HAL_SetDelay(base, userConfig->whichCtar, 0, 1, kDspiPcsToSck);
 
     /* Save runtime structure pointers to irq handler can point to the correct state structure*/
     g_dspiStatePtr[instance] = dspiEdmaState;
@@ -166,7 +168,7 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
     INT_SYS_EnableIRQ(g_dspiIrqId[instance]);
 
     /* DSPI system enable */
-    DSPI_HAL_Enable(baseAddr);
+    DSPI_HAL_Enable(base);
 
 
     /* Request DMA channels from the EDMA peripheral driver.
@@ -199,7 +201,7 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
 
     else if (instance == 1)
     {
-#if (HW_SPI_INSTANCE_COUNT > 1) /* Continue only if the MCU has another DSPI instance */
+#if (SPI_INSTANCE_COUNT > 1) /* Continue only if the MCU has another DSPI instance */
         /* Set up channels for separate RX/TX DMA requests */
 #if FSL_FEATURE_DSPI_HAS_SEPARATE_DMA_RX_TX_REQn(1)
         {
@@ -248,7 +250,7 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
 
     else
     {
-#if (HW_SPI_INSTANCE_COUNT > 2) /* Continue only if the MCU has another DSPI instance */
+#if (SPI_INSTANCE_COUNT > 2) /* Continue only if the MCU has another DSPI instance */
         /* Set up channels for separate RX/TX DMA requests */
 #if (FSL_FEATURE_DSPI_HAS_SEPARATE_DMA_RX_TX_REQn(2))
         {
@@ -311,7 +313,7 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
     dspiEdmaState->stcdSrc2CmdDataLast = stcdSrc2CmdDataLast;
 
     /* Start the transfer process in the hardware */
-    DSPI_HAL_StartTransfer(baseAddr);
+    DSPI_HAL_StartTransfer(base);
 
     return kStatus_DSPI_Success;
 }
@@ -325,17 +327,17 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
  * the core, and releases any used DMA channels.
  *
  *END**************************************************************************/
-void DSPI_DRV_EdmaMasterDeinit(uint32_t instance)
+dspi_status_t DSPI_DRV_EdmaMasterDeinit(uint32_t instance)
 {
     /* instantiate local variable of type dspi_edma_master_state_t and point to global state */
     dspi_edma_master_state_t * dspiEdmaState = (dspi_edma_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* First stop transfers */
-    DSPI_HAL_StopTransfer(baseAddr);
+    DSPI_HAL_StopTransfer(base);
 
     /* Restore the module to defaults then power it down. This also disables the DSPI module.*/
-    DSPI_HAL_Init(baseAddr);
+    DSPI_HAL_Init(base);
 
     /* destroy the interrupt sync object.*/
     OSA_SemaDestroy(&dspiEdmaState->irqSync);
@@ -355,6 +357,8 @@ void DSPI_DRV_EdmaMasterDeinit(uint32_t instance)
 
     /* Clear state pointer. */
     g_dspiStatePtr[instance] = NULL;
+
+    return kStatus_DSPI_Success;
 }
 
 
@@ -395,10 +399,10 @@ dspi_status_t DSPI_DRV_EdmaMasterSetDelay(uint32_t instance, dspi_delay_type_t w
 {
     /* instantiate local variable of type dspi_edma_master_state_t and point to global state */
     dspi_edma_master_state_t * dspiEdmaState = (dspi_edma_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
     dspi_status_t errorCode = kStatus_DSPI_Success;
 
-    *calculatedDelay = DSPI_HAL_CalculateDelay(baseAddr, dspiEdmaState->whichCtar, whichDelay,
+    *calculatedDelay = DSPI_HAL_CalculateDelay(base, dspiEdmaState->whichCtar, whichDelay,
                                                dspiEdmaState->dspiSourceClock, delayInNanoSec);
 
     /* If the desired delay exceeds the capability of the device, alert the user */
@@ -443,15 +447,15 @@ dspi_status_t DSPI_DRV_EdmaMasterConfigureBus(uint32_t instance,
     assert(device);
     /* instantiate local variable of type dspi_edma_master_state_t and point to global state */
     dspi_edma_master_state_t * dspiEdmaState = (dspi_edma_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     dspi_status_t errorCode = kStatus_DSPI_Success;
 
     /* Configure the bus to access the provided device.*/
-    *calculatedBaudRate = DSPI_HAL_SetBaudRate(baseAddr, dspiEdmaState->whichCtar,
+    *calculatedBaudRate = DSPI_HAL_SetBaudRate(base, dspiEdmaState->whichCtar,
                                                device->bitsPerSec, dspiEdmaState->dspiSourceClock);
 
-    errorCode = DSPI_HAL_SetDataFormat(baseAddr, dspiEdmaState->whichCtar, &device->dataBusConfig);
+    errorCode = DSPI_HAL_SetDataFormat(base, dspiEdmaState->whichCtar, &device->dataBusConfig);
 
     /* Check bits/frame number */
     if (device->dataBusConfig.bitsPerFrame > 16)
@@ -476,7 +480,7 @@ dspi_status_t DSPI_DRV_EdmaMasterConfigureBus(uint32_t instance,
  *
  *END**************************************************************************/
 dspi_status_t DSPI_DRV_EdmaMasterTransferBlocking(uint32_t instance,
-                                                  const dspi_edma_device_t * restrict device,
+                                                  const dspi_edma_device_t * device,
                                                   const uint8_t * sendBuffer,
                                                   uint8_t * receiveBuffer,
                                                   size_t transferByteCount,
@@ -484,7 +488,7 @@ dspi_status_t DSPI_DRV_EdmaMasterTransferBlocking(uint32_t instance,
 {
     /* instantiate local variable of type dspi_edma_master_state_t and point to global state */
     dspi_edma_master_state_t * dspiEdmaState = (dspi_edma_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
     dspi_status_t error = kStatus_DSPI_Success;
 
     dspiEdmaState->isTransferBlocking = true; /* Indicates this is a blocking transfer */
@@ -540,13 +544,13 @@ dspi_status_t DSPI_DRV_EdmaMasterTransferBlocking(uint32_t instance,
         dspiEdmaState->isTransferInProgress = false;
 
         /* Disable the Receive FIFO Drain DMA Request */
-        DSPI_HAL_SetRxFifoDrainDmaIntMode(baseAddr, kDspiGenerateDmaReq, false);
+        DSPI_HAL_SetRxFifoDrainDmaIntMode(base, kDspiGenerateDmaReq, false);
 
         /* Disable TFFF DMA request */
-        DSPI_HAL_SetTxFifoFillDmaIntMode(baseAddr, kDspiGenerateDmaReq, false);
+        DSPI_HAL_SetTxFifoFillDmaIntMode(base, kDspiGenerateDmaReq, false);
 
         /* Disable End of Queue request */
-        DSPI_HAL_SetIntMode(baseAddr, kDspiEndOfQueue, false);
+        DSPI_HAL_SetIntMode(base, kDspiEndOfQueue, false);
 
         error = kStatus_DSPI_Timeout;
     }
@@ -566,7 +570,7 @@ dspi_status_t DSPI_DRV_EdmaMasterTransferBlocking(uint32_t instance,
  *
  *END**************************************************************************/
 dspi_status_t DSPI_DRV_EdmaMasterTransfer(uint32_t instance,
-                                          const dspi_edma_device_t * restrict device,
+                                          const dspi_edma_device_t * device,
                                           const uint8_t * sendBuffer,
                                           uint8_t * receiveBuffer,
                                           size_t transferByteCount)
@@ -629,12 +633,12 @@ dspi_status_t DSPI_DRV_EdmaMasterGetTransferStatus(uint32_t instance, uint32_t *
 {
     /* instantiate local variable of type dspi_edma_master_state_t and point to global state */
     dspi_edma_master_state_t * dspiEdmaState = (dspi_edma_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* Fill in the bytes transferred.*/
     if (framesTransferred)
     {
-        *framesTransferred = DSPI_HAL_GetTransferCount(baseAddr);
+        *framesTransferred = DSPI_HAL_GetTransferCount(base);
     }
 
     return (dspiEdmaState->isTransferInProgress ? kStatus_DSPI_Busy : kStatus_DSPI_Success);
@@ -671,7 +675,7 @@ dspi_status_t DSPI_DRV_EdmaMasterAbortTransfer(uint32_t instance)
  *  other driver functions
  */
 static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
-                                                      const dspi_edma_device_t * restrict device,
+                                                      const dspi_edma_device_t * device,
                                                       const uint8_t * sendBuffer,
                                                       uint8_t * receiveBuffer,
                                                       size_t transferByteCount)
@@ -679,10 +683,11 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
     /* instantiate local variable of type dspi_edma_master_state_t and point to global state */
     dspi_edma_master_state_t * dspiEdmaState = (dspi_edma_master_state_t *)g_dspiStatePtr[instance];
     /* For temporarily storing DMA instance and channel */
-    uint32_t dmaBaseAddr, dmaChannel;
+    DMA_Type * dmaBaseAddr;
+    uint32_t dmaChannel;
     uint32_t calculatedBaudRate;
     dspi_command_config_t command;  /* create an instance of the data command struct*/
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
     edma_transfer_config_t config;
     uint32_t txTransferByteCnt = 0;
     uint32_t rxTransferByteCnt = 0;
@@ -739,23 +744,23 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
      * are under DMA controller, we won't be able to change this bit dynamically after the
      * first word is transferred.
      */
-    DSPI_HAL_PresetTransferCount(baseAddr, 0);
+    DSPI_HAL_PresetTransferCount(base, 0);
 
     /* flush the fifos*/
-    DSPI_HAL_SetFlushFifoCmd(baseAddr, true, true);
+    DSPI_HAL_SetFlushFifoCmd(base, true, true);
 
     /* Clear status flags that may have been set from previous transfers */
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxComplete);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiEndOfQueue);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoUnderflow);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoFillRequest);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoOverflow);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoDrainRequest);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxComplete);
+    DSPI_HAL_ClearStatusFlag(base, kDspiEndOfQueue);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoUnderflow);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoFillRequest);
+    DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoOverflow);
+    DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoDrainRequest);
 
     /* Enable the End Of Queue interrupt, which will set when DSPI sees EOQ bit set in the
      * last data word being sent. The ISR should clear this flag.
      */
-    DSPI_HAL_SetIntMode(baseAddr, kDspiEndOfQueue, true);
+    DSPI_HAL_SetIntMode(base, kDspiEndOfQueue, true);
 
     /* Each DMA channel's CSR[DONE] bit may be set if a previous transfer occurred.  The DONE
      * bit, as the name implies, sets when the channel is finished (completed it's MAJOR
@@ -794,7 +799,7 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
         dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaFifo2Receive.channel);
 
         /* Source addr, RX FIFO */
-        EDMA_HAL_HTCDSetSrcAddr(dmaBaseAddr,dmaChannel, DSPI_HAL_GetPoprRegAddr(baseAddr));
+        EDMA_HAL_HTCDSetSrcAddr(dmaBaseAddr,dmaChannel, DSPI_HAL_GetPoprRegAddr(base));
 
         /* Source addr offset is 0 as source addr never increments */
         EDMA_HAL_HTCDSetSrcOffset(dmaBaseAddr, dmaChannel, 0);
@@ -890,7 +895,7 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
         EDMA_HAL_SetDmaRequestCmd(dmaBaseAddr,(edma_channel_indicator_t)dmaChannel, true);
 
         /* Enable the Receive FIFO Drain Request as a DMA request */
-        DSPI_HAL_SetRxFifoDrainDmaIntMode(baseAddr, kDspiGenerateDmaReq, true);
+        DSPI_HAL_SetRxFifoDrainDmaIntMode(base, kDspiGenerateDmaReq, true);
     }
 
     /************************************************************************************
@@ -944,7 +949,7 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
     /* Now, build the last command/data word intermediate buffer */
     command.isChipSelectContinuous = false; /* Always clear CONT for last data word */
     command.isEndOfQueue = true; /* Set EOQ for last data word */
-    s_lastCmdData = DSPI_HAL_GetFormattedCommand(baseAddr, &command) | lastWord;
+    s_lastCmdData = DSPI_HAL_GetFormattedCommand(base, &command) | lastWord;
     /************************************************************************
      * Begin TX DMA channels transfer control descriptor set up.
      * 1. First, set up intermediate buffers which contain 16-bit commands.
@@ -966,7 +971,7 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
     /* restore the isChipSelectContinuous setting to the original value as it was cleared above */
     command.isChipSelectContinuous = dspiEdmaState->isChipSelectContinuous;
     command.isEndOfQueue = 0; /* Clear End of Queue (previously set for last cmd/data word)*/
-    s_cmdData = DSPI_HAL_GetFormattedCommand(baseAddr, &command);
+    s_cmdData = DSPI_HAL_GetFormattedCommand(base, &command);
 
     /* Place the next data from the send buffer into the intermediate buffer (preload it)
      * based on whether it is one byte or two.
@@ -1072,7 +1077,7 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
     EDMA_HAL_HTCDSetSrcLastAdjust(dmaBaseAddr, dmaChannel, 0);
 
     /* Destination is SPI PUSHR TX FIFO */
-    EDMA_HAL_HTCDSetDestAddr(dmaBaseAddr, dmaChannel, DSPI_HAL_GetMasterPushrRegAddr(baseAddr));
+    EDMA_HAL_HTCDSetDestAddr(dmaBaseAddr, dmaChannel, DSPI_HAL_GetMasterPushrRegAddr(base));
 
     /* No dest addr offset, since we never increment the dest addr */
     EDMA_HAL_HTCDSetDestOffset(dmaBaseAddr, dmaChannel, 0);
@@ -1240,7 +1245,7 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
         EDMA_HAL_SetDmaRequestCmd(dmaBaseAddr, (edma_channel_indicator_t)dmaChannel, true);
 
         /* Enable TFFF request in the DSPI module */
-        DSPI_HAL_SetTxFifoFillDmaIntMode(baseAddr, kDspiGenerateDmaReq, true);
+        DSPI_HAL_SetTxFifoFillDmaIntMode(base, kDspiGenerateDmaReq, true);
     }
     /* For DSPI instances with shared RX/TX DMA requests, we'll use the RX DMA request to
      * trigger ongoing transfers that will link to the TX DMA channel from the RX DMA channel.
@@ -1254,7 +1259,7 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
         EDMA_HAL_SetDmaRequestCmd(dmaBaseAddr, (edma_channel_indicator_t)dmaChannel, false);
 
         /* Disable TFFF request in the DSPI module */
-        DSPI_HAL_SetTxFifoFillDmaIntMode(baseAddr, kDspiGenerateDmaReq, false);
+        DSPI_HAL_SetTxFifoFillDmaIntMode(base, kDspiGenerateDmaReq, false);
 
         /* Manually start the TX DMA channel to get the process going */
         EDMA_HAL_TriggerChannelStart(dmaBaseAddr, (edma_channel_indicator_t)dmaChannel);
@@ -1272,7 +1277,7 @@ static void DSPI_DRV_EdmaMasterCompleteTransfer(uint32_t instance)
 {
     /* instantiate local variable of type dspi_edma_master_state_t and point to global state */
     dspi_edma_master_state_t * dspiEdmaState = (dspi_edma_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* If an odd transfer count was provided when bits/frame > 8, then there will be an extra byte
      * received. Get this byte now and put it into the receive buffer if a receive buffer was
@@ -1281,20 +1286,20 @@ static void DSPI_DRV_EdmaMasterCompleteTransfer(uint32_t instance)
     if ((dspiEdmaState->extraByte) && (dspiEdmaState->rxBuffer))
     {
         /* copy the final byte from the DSPI data register to the receive buffer */
-        dspiEdmaState->rxBuffer[dspiEdmaState->rxTransferByteCnt] = DSPI_HAL_ReadData(baseAddr);
+        dspiEdmaState->rxBuffer[dspiEdmaState->rxTransferByteCnt] = DSPI_HAL_ReadData(base);
     }
 
     /* The transfer is complete.*/
     dspiEdmaState->isTransferInProgress = false;
 
     /* Disable the Receive FIFO Drain DMA Request */
-    DSPI_HAL_SetRxFifoDrainDmaIntMode(baseAddr, kDspiGenerateDmaReq, false);
+    DSPI_HAL_SetRxFifoDrainDmaIntMode(base, kDspiGenerateDmaReq, false);
 
     /* Disable TFFF DMA request */
-    DSPI_HAL_SetTxFifoFillDmaIntMode(baseAddr, kDspiGenerateDmaReq, false);
+    DSPI_HAL_SetTxFifoFillDmaIntMode(base, kDspiGenerateDmaReq, false);
 
     /* Disable End of Queue request */
-    DSPI_HAL_SetIntMode(baseAddr, kDspiEndOfQueue, false);
+    DSPI_HAL_SetIntMode(base, kDspiEndOfQueue, false);
 
     if (dspiEdmaState->isTransferBlocking)
     {
@@ -1303,20 +1308,22 @@ static void DSPI_DRV_EdmaMasterCompleteTransfer(uint32_t instance)
     }
 }
 
-/*!
- * @brief Interrupt handler for DSPI master mode.
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : DSPI_DRV_EdmaMasterIRQHandler
+ * Description   : Interrupt handler for DSPI master mode.
  * This handler uses the buffers stored in the dspi_master_state_t structs to transfer data.
- * This is not a public API as it is called whenever an interrupt occurs.
- */
+ *
+ *END**************************************************************************/
 void DSPI_DRV_EdmaMasterIRQHandler(uint32_t instance)
 {
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* If the interrupt is due to an end-of-queue, then complete. This interrupt is
      * is used during DMA operations and we want to handle this interrupt only
      * when DMA is being used.
      */
-    if (DSPI_HAL_GetStatusFlag(baseAddr, kDspiEndOfQueue))
+    if (DSPI_HAL_GetStatusFlag(base, kDspiEndOfQueue))
     {
         /* Complete the transfer. This disables the interrupts, so we don't wind up in
          * the ISR again.
@@ -1324,6 +1331,8 @@ void DSPI_DRV_EdmaMasterIRQHandler(uint32_t instance)
         DSPI_DRV_EdmaMasterCompleteTransfer(instance);
     }
 }
+
+#endif /* FSL_FEATURE_SOC_DSPI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

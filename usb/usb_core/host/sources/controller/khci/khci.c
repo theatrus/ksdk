@@ -1,33 +1,33 @@
 /**HEADER********************************************************************
-* 
-* Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
-* All Rights Reserved
-*
-*************************************************************************** 
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: khci.c$
-* $Version : 
-* $Date    : 
-*
-* Comments:
-*
-*   This file contains KHCI-specific implementations of USB interfaces
-*
-*END************************************************************************/
+ * 
+ * Copyright (c) 2008, 2013 - 2015 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ *************************************************************************** 
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: khci.c$
+ * $Version : 
+ * $Date    : 
+ *
+ * Comments:
+ *
+ *   This file contains KHCI-specific implementations of USB interfaces
+ *
+ *END************************************************************************/
 #include "usb_host_config.h"
 #if USBCFG_HOST_KHCI
 #include "usb.h"
@@ -51,11 +51,12 @@
 #endif
 
 #ifdef KHCI_DEBUG
-struct debug_messaging {
-  char          inout;
-  tr_msg_type_t type;
-  uint8_t       ep;
-  uint16_t      size;
+struct debug_messaging
+{
+    char inout;
+    tr_msg_type_t type;
+    uint8_t ep;
+    uint16_t size;
 };
 volatile static uint16_t dm_index = 0;
 volatile static struct debug_messaging dm[1024] = { 0 }; /* note, the array is for 1024 records only */
@@ -135,89 +136,27 @@ volatile static struct debug_messaging dm[1024] = { 0 }; /* note, the array is f
 static uint8_t *_usb_khci_swap_buf_ptr = NULL;
 #endif
 
-
+#define MSG_SIZE_IN_MAX_TYPE (1 + (sizeof(tr_msg_struct_t) - 1) / sizeof(uint32_t))
 
 usb_khci_host_state_struct_t* usb_host_global_handler;
 
 /* Prototypes of functions */
-static usb_status _usb_khci_preinit(usb_host_handle upper_layer_handle, usb_host_handle *handle);
-static usb_status _usb_khci_init(uint8_t controller_id, usb_host_handle handle);
-static usb_status _usb_khci_shutdown(usb_host_handle handle);
-static usb_status _usb_khci_send(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr);
-static usb_status _usb_khci_send_setup(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr);
-static usb_status _usb_khci_recv(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr);
-//static usb_status _usb_khci_cancel(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr);
-static usb_status _usb_khci_bus_control(usb_host_handle handle, uint8_t bus_control);
-static uint32_t _usb_khci_get_frame_number(usb_host_handle handle);
-usb_status _usb_khci_open_pipe(usb_host_handle handle, usb_pipe_handle* pipe_handle_ptr, pipe_init_struct_t* pipe_init_ptr);
-usb_status _usb_khci_close_pipe(usb_host_handle handle, usb_pipe_handle pipe_handle);
-usb_status _usb_khci_cancel_pipe(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr);
 usb_status _usb_khci_host_close_interface(usb_host_handle handle);
 //static usb_status _usb_khci_host_close_pipe(usb_host_handle handle, pipe_struct_t* pipe_ptr);
-static void _usb_khci_process_tr_complete(pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr, uint32_t required, uint32_t remain, int32_t err);
-static int32_t _usb_khci_tr_done(usb_khci_host_state_struct_t*  usb_host_ptr, tr_msg_struct_t msg);
-static int32_t _usb_khci_atom_noblocking_tr(usb_khci_host_state_struct_t*  usb_host_ptr,uint32_t type, pipe_struct_t*   pipe_desc_ptr,uint8_t  *buf_ptr,uint32_t  len);
+static void _usb_khci_process_tr_complete(pipe_struct_t* pipe_desc_ptr, tr_struct_t* pipe_tr_ptr, uint32_t required, uint32_t remaining, int32_t err);
+static int32_t _usb_khci_tr_done(usb_khci_host_state_struct_t* usb_host_ptr, tr_msg_struct_t msg);
+static int32_t _usb_khci_atom_noblocking_tr(usb_khci_host_state_struct_t* usb_host_ptr,uint32_t type, pipe_struct_t* pipe_desc_ptr,uint8_t *buf_ptr,uint32_t len);
 
 //extern uint8_t usb_host_dev_mng_get_address(usb_device_instance_handle dev_handle);
 //extern uint8_t usb_host_dev_mng_get_speed(usb_device_instance_handle dev_handle);
 //extern uint8_t usb_host_dev_mng_get_level(usb_device_instance_handle dev_handle);
 //extern usb_status usb_host_dev_mng_attach(usb_host_handle handle, uint8_t speed, uint8_t hub_no, uint8_t port_no, uint8_t level, usb_device_instance_handle* dev_handle_ptr);
 //extern usb_status usb_host_dev_mng_detach(usb_host_handle handle, uint8_t hub_no, uint8_t port_no);
-extern usb_status USB_log_error(char* file, uint32_t line, usb_status error);
+//extern usb_status USB_log_error(char* file, uint32_t line, usb_status error);
 //extern uint8_t usb_host_dev_mng_get_attach_state(usb_device_instance_handle dev_handle);
 extern uint32_t OS_MsgQ_Is_Empty(os_msgq_handle msgq, void* msg);
-
 extern uint8_t soc_get_usb_vector_number(uint8_t controller_id);
 extern uint32_t soc_get_usb_base_address(uint8_t controller_id);
-    
-const struct usb_host_api_functions_struct _usb_khci_host_api_table = {
-   /* The Host/Device preinit function */
-   _usb_khci_preinit,
-
-  /* The Host/Device init function */
-   _usb_khci_init,
-
-   /* The function to shutdown the host/device */
-   _usb_khci_shutdown,
-
-   /* The function to send data */
-   _usb_khci_send,
-
-   /* The function to send setup data */
-   _usb_khci_send_setup,
-
-   /* The function to receive data */
-   _usb_khci_recv,
-   
-   /* The function to cancel the transfer */
-   _usb_khci_cancel_pipe,
-   
-   /* The function for USB bus control */
-   _usb_khci_bus_control,
-
-   /* The function for alloc bandwidth */
-   NULL,
-
-   /* The function for free controller resource */
-   NULL,
-
-   /* The function for get frame_number */
-   _usb_khci_get_frame_number,
-
-    /* The function for get micro frame_number */
-   NULL,
-
-   /* The function for open pipe */
-   _usb_khci_open_pipe,
-
-   /* The function to close pipe */
-   _usb_khci_close_pipe,
-   
-   NULL,
-   
-   NULL
-};
-
 
 // KHCI event bits
 #define KHCI_EVENT_ATTACH       0x01
@@ -232,17 +171,17 @@ const struct usb_host_api_functions_struct _usb_khci_host_api_table = {
 #define KHCI_EVENT_MASK         0xff
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_get_hot_int_tr
-*  Returned Value : 0 successful
-*  Comments       :
-*        Make a message copy for transaction which need evaluation
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_get_hot_int_tr
+ *  Returned Value : 0 successful
+ *  Comments       :
+ *        Make a message copy for transaction which need evaluation
+ *END*-----------------------------------------------------------------*/
 static uint32_t _usb_khci_get_total_frame_count(usb_khci_host_state_struct_t* usb_host_ptr)
 {
     static uint32_t total_frame_number = 0;
     static uint16_t old_frame_number = 0;
-    uint16_t  frame_number = 0xFFFF;
+    uint16_t frame_number = 0xFFFF;
 
     //frame_number = ((usb_ptr->FRMNUMH) << 8) | (usb_ptr->FRMNUML);
     frame_number = usb_hal_khci_get_frame_number(usb_host_ptr->usbRegBase);
@@ -259,27 +198,26 @@ static uint32_t _usb_khci_get_total_frame_count(usb_khci_host_state_struct_t* us
     return (frame_number + total_frame_number);
 }
 
-
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_isr
-*  Returned Value : None
-*  Comments       :
-*        Service all the interrupts in the kirin usb hardware
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_isr
+ *  Returned Value : None
+ *  Comments       :
+ *        Service all the interrupts in the kirin usb hardware
+ *END*-----------------------------------------------------------------*/
 #ifdef USBCFG_OTG
 #if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
     void _usb_host_khci_isr(usb_host_handle handle)
 #endif
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
-    void _usb_host_khci_isr()
+    void _usb_host_khci_isr(void)
 #endif
 #else
 #if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
     void _usb_khci_isr(usb_host_handle handle)
 #endif
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
-    void _usb_khci_isr()
+    void _usb_khci_isr(void)
 #endif
 #endif
 {
@@ -291,7 +229,7 @@ static uint32_t _usb_khci_get_total_frame_count(usb_khci_host_state_struct_t* us
     while (1)
     {
         status = (uint8_t)(usb_hal_khci_get_interrupt_status(usb_host_ptr->usbRegBase) &
-                           usb_hal_khci_get_interrupt_enable_status(usb_host_ptr->usbRegBase));
+        usb_hal_khci_get_interrupt_enable_status(usb_host_ptr->usbRegBase));
 
         if (!status)
         {
@@ -301,6 +239,12 @@ static uint32_t _usb_khci_get_total_frame_count(usb_khci_host_state_struct_t* us
         usb_hal_khci_clr_interrupt(usb_host_ptr->usbRegBase,status);
         //usb_ptr->ISTAT = status;
         //USB_PRINTF("0x%x\n", usb_ptr->ISTAT);
+
+        if (status & INTR_SOFTOK)
+        {
+
+            OS_Event_set(usb_host_ptr->khci_event_ptr, KHCI_EVENT_SOF_TOK);
+        }
 
         if (status & INTR_ATTACH)
         {
@@ -315,9 +259,9 @@ static uint32_t _usb_khci_get_total_frame_count(usb_khci_host_state_struct_t* us
             // atom transaction done - token done
             //USB_PRINTF("k\n");
             /*if (usb_ptr->CTL & USB_CTL_TXSUSPENDTOKENBUSY_MASK)
-            {
-                USB_PRINTF("!!!!ERROR !!!!!! in ISR\n");
-            }*/
+             {
+             USB_PRINTF("!!!!ERROR !!!!!! in ISR\n");
+             }*/
             OS_Event_set(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE);
         }
 
@@ -331,34 +275,38 @@ static uint32_t _usb_khci_get_total_frame_count(usb_khci_host_state_struct_t* us
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_init_int_tr
-*  Returned Value : None
-*  Comments       :
-*        Initialize interrupt transaction que
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_init_int_tr
+ *  Returned Value : None
+ *  Comments       :
+ *        Initialize interrupt transaction queue
+ *END*-----------------------------------------------------------------*/
 static void _usb_khci_init_tr_que(usb_khci_host_state_struct_t* usb_host_ptr)
 {
     int32_t i;
     tr_int_que_itm_struct_t* tr = usb_host_ptr->tr_int_que;
 
-    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++, tr++) {
+    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++)
+    {
         tr->msg.type = TR_MSG_UNKNOWN;
+        tr++;
     }
     tr = usb_host_ptr->tr_nak_que;
 
-    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++, tr++) {
+    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++)
+    {
         tr->msg.type = TR_MSG_UNKNOWN;
+        tr++;
     }
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_add_int_tr
-*  Returned Value : -1 que is full
-*  Comments       :
-*        Add new interrupt transaction to que
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_add_int_tr
+ *  Returned Value : -1 queue is full
+ *  Comments       :
+ *        Add new interrupt transaction to queue
+ *END*-----------------------------------------------------------------*/
 static int32_t _usb_khci_add_tr(usb_khci_host_state_struct_t* usb_host_ptr, tr_msg_struct_t *msg, uint32_t period,que_type_t type)
 {
     int32_t i = 0;
@@ -366,16 +314,16 @@ static int32_t _usb_khci_add_tr(usb_khci_host_state_struct_t* usb_host_ptr, tr_m
 
     if (type == TYPE_INT)
     {
-         tr= usb_host_ptr->tr_int_que;
+        tr= usb_host_ptr->tr_int_que;
     }
     else if(type == TYPE_NAK)
     {
-         tr= usb_host_ptr->tr_nak_que;
+        tr= usb_host_ptr->tr_nak_que;
     }
     //TIME_STRUCT tm;
-    
+
     // find free position
-    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++, tr++)
+    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++)
     {
         if (tr->msg.type == TR_MSG_UNKNOWN)
         {
@@ -386,23 +334,22 @@ static int32_t _usb_khci_add_tr(usb_khci_host_state_struct_t* usb_host_ptr, tr_m
             //USB_PRINTF("TR 0x%x added target frame is %d\n", msg->pipe_tr, tr->frame);
             break;
         }
+        tr++;
     }
 
     return (i < USBCFG_HOST_KHCI_MAX_INT_TR) ? i : -1;
 }
 
-
-
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_rm_int_tr
-*  Returned Value : 0 successful
-*  Comments       :
-*        Remove interrupt transaction from que
-*END*-----------------------------------------------------------------*/
-static int32_t _usb_khci_rm_tr(usb_khci_host_state_struct_t* usb_host_ptr, tr_msg_struct_t *msg, que_type_t type) 
+ *
+ *  Function Name  : _usb_khci_rm_int_tr
+ *  Returned Value : 0 successful
+ *  Comments       :
+ *        Remove interrupt transaction from queue
+ *END*-----------------------------------------------------------------*/
+static int32_t _usb_khci_rm_tr(usb_khci_host_state_struct_t* usb_host_ptr, tr_msg_struct_t *msg, que_type_t type)
 {
-    int32_t                  i = 0;
+    int32_t i = 0;
     tr_int_que_itm_struct_t* tr = NULL;
 
     if (type == TYPE_INT)
@@ -414,34 +361,35 @@ static int32_t _usb_khci_rm_tr(usb_khci_host_state_struct_t* usb_host_ptr, tr_ms
         tr= usb_host_ptr->tr_nak_que;
     }
     // find record
-    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++, tr++)
+    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++)
     {
-        if (tr->msg.pipe_desc == msg->pipe_desc && tr->msg.pipe_tr == msg->pipe_tr)
+        if ((tr->msg.pipe_desc == msg->pipe_desc) && (tr->msg.pipe_tr == msg->pipe_tr))
         {
             //OS_Mem_zero(tr, sizeof(tr_int_que_itm_struct_t));
             tr->msg.type = TR_MSG_UNKNOWN;
             //USB_PRINTF("TR 0x%x removed\n", tr->msg.pipe_tr);
             return 0;
         }
+        tr++;
     }
 
     return -1;
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_get_hot_int_tr
-*  Returned Value : 0 successful
-*  Comments       :
-*        Make a message copy for transaction which need evaluation
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_get_hot_int_tr
+ *  Returned Value : 0 successful
+ *  Comments       :
+ *        Make a message copy for transaction which need evaluation
+ *END*-----------------------------------------------------------------*/
 static int32_t _usb_khci_get_hot_tr(usb_khci_host_state_struct_t* usb_host_ptr, tr_msg_struct_t *msg, que_type_t type)
 {
     int32_t i, res = -1;
     //register TIME_STRUCT hot_time;
-    uint32_t  frame_number = 0xFFFFFFFF;
+    uint32_t frame_number = 0xFFFFFFFF;
 
-    tr_int_que_itm_struct_t* tr = NULL;;
+    tr_int_que_itm_struct_t* tr = NULL;
     tr_int_que_itm_struct_t* hot_tr = NULL;
 
     if(type == TYPE_INT)
@@ -453,8 +401,8 @@ static int32_t _usb_khci_get_hot_tr(usb_khci_host_state_struct_t* usb_host_ptr, 
         tr= usb_host_ptr->tr_nak_que;
     }
     //TIME_STRUCT tm;
-    
-    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++, tr++)
+
+    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++)
     {
         if (tr->msg.type != TR_MSG_UNKNOWN)
         {
@@ -464,14 +412,15 @@ static int32_t _usb_khci_get_hot_tr(usb_khci_host_state_struct_t* usb_host_ptr, 
                 frame_number = hot_tr->frame;
             }
         }
+        tr++;
     }
-    
+
     if (hot_tr)
     {
         /* test if hottest transaction was the last one with timeout - if yes, don't allow to block USB transfers with this interrupt */
         if (usb_host_ptr->last_to_pipe == hot_tr->msg.pipe_desc)
         {
-            usb_host_ptr->last_to_pipe = NULL; //it is allowed to perform this interupt next time, but not now
+            usb_host_ptr->last_to_pipe = NULL;  //it is allowed to perform this interrupt next time, but not now
             return res;
         }
 
@@ -487,19 +436,19 @@ static int32_t _usb_khci_get_hot_tr(usb_khci_host_state_struct_t* usb_host_ptr, 
             res = 0;
             hot_tr->frame += hot_tr->period;
         }
-        
+
     }
-    
+
     return res;
 }
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) && USB_ASYNC_MODE
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_attach
-*  Returned Value : none
-*  Comments       :
-*        KHCI attach event
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_attach
+ *  Returned Value : none
+ *  Comments       :
+ *        KHCI attach event
+ *END*-----------------------------------------------------------------*/
 static void _usb_khci_attach_timer_callback(void* arg)
 {
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*)arg;
@@ -512,7 +461,7 @@ static void _usb_khci_attach_timer_callback(void* arg)
 
         case USB_ATTACH_STATE_SPEED_DETECTION_BEGIN:
             usb_host_ptr->device_attach_state = USB_ATTACH_STATE_SPEED_DETECTION_TIMEOUT;
-            break;
+        break;
 
         case USB_ATTACH_STATE_RESET:
             usb_host_ptr->device_attach_state = USB_ATTACH_STATE_RESET_DONE;
@@ -525,17 +474,17 @@ static void _usb_khci_attach_timer_callback(void* arg)
         default:
             break;
     }
-    return ;
+    return;
 }
 #endif
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_attach
-*  Returned Value : none
-*  Comments       :
-*        KHCI attach event
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_attach
+ *  Returned Value : none
+ *  Comments       :
+ *        KHCI attach event
+ *END*-----------------------------------------------------------------*/
 static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
 {
     uint8_t speed;
@@ -595,7 +544,7 @@ static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
                 AddTimerQ(&timer);
                 break;
             }
-            
+
             if (temp == USB_SPEED_FULL)
             {
                 usb_hal_khci_disable_low_speed_support(usb_host_ptr->usbRegBase);
@@ -629,17 +578,17 @@ static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
         case USB_ATTACH_STATE_SOF_ENABLED:
         {
             usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, (INTR_TOKDNE | INTR_USBRST));
-            usb_host_ptr->device_attached ++;   
+            usb_host_ptr->device_attached ++;
             usb_host_dev_mng_attach((void*)usb_host_ptr->upper_layer_handle, NULL, usb_host_ptr->speed, 0, 0, 1, &dev_handle);
             usb_host_ptr->device_attach_state = USB_ATTACH_STATE_DONE;
             break;
         }
 
         default:
-            break;
+        break;
     }
 
-    return ;
+    return;
 #else
     uint8_t index = 0;
 
@@ -658,13 +607,13 @@ static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
         speed = usb_hal_khci_get_line_status(usb_host_ptr->usbRegBase);
         index++;
     }
-    while ((temp != speed) && index < USB_KHCI_MAX_SPEED_DETECTION_COUNT);
-    
+    while ((temp != speed) && (index < USB_KHCI_MAX_SPEED_DETECTION_COUNT));
+
     if (temp != speed)
     {
-    #ifdef _DEBUG
+#if _DEBUG
         USB_PRINTF("speed not match!\n");
-    #endif  
+#endif  
         return;
     }
 
@@ -682,7 +631,7 @@ static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
 
     // Delay after reset was provided to be sure about speed- HS / FS. Since the KHCI does not run HS, the delay is redundant.
     // Some kinetis devices cannot recover after the delay, so it is better not to have delayed speed detection and SOF packet generation 
-    // This is potentional risk as any high priority task will get CPU now, the host will not begin the enumeration process.
+    // This is potential risk as any high priority task will get CPU now, the host will not begin the enumeration process.
     //OS_Time_delay(10);
 
     // enable SOF sending
@@ -696,46 +645,46 @@ static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
     usb_host_ptr->device_attached ++;
 
     usb_host_dev_mng_attach((void*)usb_host_ptr->upper_layer_handle, 0, speed, 0, 0, 1, &dev_handle);
- #endif
+#endif
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_reset
-*  Returned Value : none
-*  Comments       :
-*        KHCI reset event
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_reset
+ *  Returned Value : none
+ *  Comments       :
+ *        KHCI reset event
+ *END*-----------------------------------------------------------------*/
 static void _usb_khci_reset(usb_khci_host_state_struct_t* usb_host_ptr)
 {
     // clear attach flag
     usb_hal_khci_clr_interrupt(usb_host_ptr->usbRegBase, INTR_ATTACH);
 
     /* Test the presence of USB device */
-    if (usb_hal_khci_is_interrupt_issued(usb_host_ptr->usbRegBase, INTR_ATTACH)) 
+    if (usb_hal_khci_is_interrupt_issued(usb_host_ptr->usbRegBase, INTR_ATTACH))
     {
         /* device attached, so really normal reset was performed */
         usb_hal_khci_set_device_addr(usb_host_ptr->usbRegBase,0);
         usb_hal_khci_endpoint_on_hub(usb_host_ptr->usbRegBase, 0);
     }
-    else 
+    else
     {
-        /* device was detached, the reset event is false- nevermind, notify about detach */
+        /* device was detached, the reset event is false- never mind, notify about detach */
         //USB_PRINTF("d\n");
         OS_Event_set(usb_host_ptr->khci_event_ptr, KHCI_EVENT_DETACH);
     }
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_detach
-*  Returned Value : none
-*  Comments       :
-*        KHCI detach event
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_detach
+ *  Returned Value : none
+ *  Comments       :
+ *        KHCI detach event
+ *END*-----------------------------------------------------------------*/
 static void _usb_khci_detach(usb_khci_host_state_struct_t* usb_host_ptr)
 {
-    
+
     if (usb_host_ptr->device_attached > 0)
     {
         usb_host_ptr->device_attached--;
@@ -747,19 +696,19 @@ static void _usb_khci_detach(usb_khci_host_state_struct_t* usb_host_ptr)
     usb_host_dev_mng_detach((void*)usb_host_ptr->upper_layer_handle, 0, 0);
     usb_hal_khci_set_host_mode(usb_host_ptr->usbRegBase);
 
-    /* This will clear all pending interrupts... In fact, there shouldnt be any
-      ** after detaching a device.
-      */
+    /* This will clear all pending interrupts... In fact, there shouldn't be any
+     ** after detaching a device.
+     */
 //    usb_hal_set_oddrst(usb_host_ptr->usbRegBase);
     usb_hal_khci_clr_all_interrupts(usb_host_ptr->usbRegBase);
 //  usb_host_ptr->tx_bd = 1;
-    
- //   usb_host_ptr->rx_bd = 1;
+
+    //   usb_host_ptr->rx_bd = 1;
     /* Now, enable only USB interrupt attach for host mode */
     usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, INTR_ATTACH);
 }
 
-void _usb_khci_handle_iso_msg(usb_khci_host_state_struct_t*  usb_host_ptr, tr_msg_struct_t msg)
+void _usb_khci_handle_iso_msg(usb_khci_host_state_struct_t* usb_host_ptr, tr_msg_struct_t msg)
 {
     uint32_t remain = 0;
     uint32_t required = 0;
@@ -768,66 +717,71 @@ void _usb_khci_handle_iso_msg(usb_khci_host_state_struct_t*  usb_host_ptr, tr_ms
     switch (msg.type)
     {
         case TR_MSG_RECV:
-            buf = msg.pipe_tr->rx_buffer;
-            required = remain = msg.pipe_tr->rx_length;
-            KHCI_DEBUG_LOG('p', msg.type, msg.pipe_desc->endpoint_number, required);
-            do
+        buf = msg.pipe_tr->rx_buffer;
+        required = remain = msg.pipe_tr->rx_length;
+        KHCI_DEBUG_LOG('p', msg.type, msg.pipe_desc->endpoint_number, required)
+        do
+        {
+            _usb_khci_atom_noblocking_tr(usb_host_ptr, TR_IN, msg.pipe_desc, buf, remain);
+            OS_Event_wait(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE, FALSE, USBCFG_HOST_KHCI_WAIT_TICK);
+            res = _usb_khci_tr_done(usb_host_ptr, msg);
+            OS_Event_clear(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE);
+
+            if (res >= 0)
             {
-                _usb_khci_atom_noblocking_tr(usb_host_ptr, TR_IN, msg.pipe_desc, buf, remain);
-                OS_Event_wait(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE, FALSE, USBCFG_HOST_KHCI_WAIT_TICK);
-                res = _usb_khci_tr_done(usb_host_ptr, msg);
-                OS_Event_clear(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE);
-                if (res < 0) 
-                {
-                    break;
-                }
                 buf += res;
                 remain -=res;
-                if ((remain == 0) || (res < msg.pipe_desc->max_packet_size))
+            }
+            if ((res < 0) || (remain == 0) || (res < msg.pipe_desc->max_packet_size))
+            {
+                if (res >= 0)
                 {
                     res = remain;
-                    break;
                 }
+                break;
+            }
 
-            } while (1);
-            break;
+        }while (1);
+        break;
 
         case TR_MSG_SEND:
-            buf = msg.pipe_tr->tx_buffer;
-            required = remain = msg.pipe_tr->tx_length;
-            KHCI_DEBUG_LOG('p', msg.type, msg.pipe_desc->endpoint_number, required)
-            do
-            {
-                _usb_khci_atom_noblocking_tr(usb_host_ptr, TR_OUT, msg.pipe_desc, buf, remain);
-                OS_Event_wait(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE, FALSE, USBCFG_HOST_KHCI_WAIT_TICK);
-                res = _usb_khci_tr_done(usb_host_ptr, msg);
-                OS_Event_clear(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE);
-                if (res < 0)
-                {
-                    break;
-                }
+        buf = msg.pipe_tr->tx_buffer;
+        required = remain = msg.pipe_tr->tx_length;
+        KHCI_DEBUG_LOG('p', msg.type, msg.pipe_desc->endpoint_number, required)
+        do
+        {
+            _usb_khci_atom_noblocking_tr(usb_host_ptr, TR_OUT, msg.pipe_desc, buf, remain);
+            OS_Event_wait(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE, FALSE, USBCFG_HOST_KHCI_WAIT_TICK);
+            res = _usb_khci_tr_done(usb_host_ptr, msg);
+            OS_Event_clear(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE);
 
+            if (res >= 0)
+            {
                 buf += res;
                 remain -=res;
+            }
 
-                if ((remain == 0) || (res < msg.pipe_desc->max_packet_size)) 
+            if ((res < 0) || (remain == 0) || (res < msg.pipe_desc->max_packet_size))
+            {
+                if (res >= 0)
                 {
                     res = remain;
-                    break;
                 }
-            } while (1);
                 break;
+            }
+        }while (1);
+        break;
         default:
-            break;
+        break;
     }
     _usb_khci_process_tr_complete(msg.pipe_desc, msg.pipe_tr, required, remain, res);
 }
 
-#define ISO_TRANSFER_TIMERS 3
-uint32_t _usb_process_iso_tr(usb_khci_host_state_struct_t*  usb_host_ptr )
+#define ISO_TRANSFER_TIMERS 1
+uint32_t _usb_process_iso_tr(usb_khci_host_state_struct_t* usb_host_ptr )
 {
     tr_msg_struct_t msg;
-    uint8_t  timer = ISO_TRANSFER_TIMERS; 
+    uint8_t timer = ISO_TRANSFER_TIMERS;
     uint8_t ret = 0;
 
     do
@@ -843,7 +797,7 @@ uint32_t _usb_process_iso_tr(usb_khci_host_state_struct_t*  usb_host_ptr )
         _usb_khci_handle_iso_msg( usb_host_ptr, msg);
         ret = 1;
 
-    } while (timer--);
+    }while (timer--);
 
     return ret;
 }
@@ -852,19 +806,20 @@ static tr_msg_struct_t curr_msg;
 static tr_msg_struct_t done_msg;
 static volatile uint32_t tr_state = KHCI_TR_GET_MSG;
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
-typedef struct{
+typedef struct
+{
     uint32_t rx_len;
     uint8_t *rx_buf;
     uint8_t *rx_buf_orig;
-    bool     is_dma_align;
-} khci_xfer_sts_t;
+    bool is_dma_align;
+}khci_xfer_sts_t;
 static khci_xfer_sts_t s_xfer_sts = {0, NULL, NULL, TRUE};
 #endif
 
 static uint32_t deattached = 0;
 static void _usb_khci_task(void* dev_inst_ptr)
 {
-    volatile ptr_usb_khci_host_state_struct_t usb_host_ptr = (usb_khci_host_state_struct_t*) dev_inst_ptr; 
+    volatile ptr_usb_khci_host_state_struct_t usb_host_ptr = (usb_khci_host_state_struct_t*) dev_inst_ptr;
     static uint32_t remain = 0;
     static uint32_t required = 0;
     static int32_t res;
@@ -876,11 +831,22 @@ static void _usb_khci_task(void* dev_inst_ptr)
         {
             curr_msg.type = TR_MSG_UNKNOWN;
 #if (USB_NONBLOCKING_MODE == 0)     
-            OS_Event_wait(usb_host_ptr->khci_event_ptr,  KHCI_EVENT_NAK_MSG|KHCI_EVENT_MSG|KHCI_EVENT_ISO_MSG, FALSE,5);
+            OS_Event_wait(usb_host_ptr->khci_event_ptr, KHCI_EVENT_NAK_MSG|KHCI_EVENT_MSG|KHCI_EVENT_SOF_TOK, FALSE,5);
 #else
-            OS_Event_wait(usb_host_ptr->khci_event_ptr,  KHCI_EVENT_MSG|KHCI_EVENT_ISO_MSG, FALSE,0);
+            OS_Event_wait(usb_host_ptr->khci_event_ptr, KHCI_EVENT_NAK_MSG|KHCI_EVENT_MSG|KHCI_EVENT_SOF_TOK, FALSE,0);
 #endif
-            _usb_process_iso_tr(usb_host_ptr);
+
+            if ((OS_Event_check_bit(usb_host_ptr->khci_event_ptr, KHCI_EVENT_SOF_TOK)))
+            {
+                if ((OS_Event_check_bit(usb_host_ptr->khci_event_ptr, KHCI_EVENT_ISO_MSG)))
+                {
+                    _usb_process_iso_tr(usb_host_ptr);
+                }
+
+                OS_Event_clear(usb_host_ptr->khci_event_ptr, KHCI_EVENT_SOF_TOK);
+
+            }
+
             if (_usb_khci_get_hot_tr(usb_host_ptr, &curr_msg, TYPE_INT) != 0)
             {
                 if (_usb_khci_get_hot_tr(usb_host_ptr, &curr_msg, TYPE_NAK) != 0)
@@ -929,7 +895,7 @@ static void _usb_khci_task(void* dev_inst_ptr)
 
         }
         if ((tr_state == KHCI_TR_START_TRANSMIT))
-        {  
+        {
             if ((curr_msg.msg_state == TR_MSG_NAK ))
             {
                 if((_usb_khci_get_total_frame_count(usb_host_ptr) - curr_msg.frame) > curr_msg.naktimeout )
@@ -937,7 +903,7 @@ static void _usb_khci_task(void* dev_inst_ptr)
                     res = KHCI_ATOM_TR_BUS_TIMEOUT;
                     tr_state = KHCI_TR_TRANSMIT_DONE;
                     done_msg = curr_msg;
-                     //USB_PRINTF("1TR Timeout! %d %d\n", curr_msg.msg_state,curr_msg.naktimeout);
+                    //USB_PRINTF("1TR Timeout! %d %d\n", curr_msg.msg_state,curr_msg.naktimeout);
                     return;
                 }
             }
@@ -1019,7 +985,7 @@ static void _usb_khci_task(void* dev_inst_ptr)
                         required =  curr_msg.pipe_tr->rx_length;
                         remain = required - curr_msg.pipe_tr->transfered_length;
                         buf += curr_msg.pipe_tr->transfered_length;
-                        KHCI_DEBUG_LOG('p', curr_msg.type, curr_msg.pipe_desc->endpoint_number, required);
+                        KHCI_DEBUG_LOG('p', curr_msg.type, curr_msg.pipe_desc->endpoint_number, required)
                         _usb_khci_atom_noblocking_tr(usb_host_ptr, TR_IN, curr_msg.pipe_desc, buf, remain);         
                         break;
 
@@ -1056,7 +1022,7 @@ static void _usb_khci_task(void* dev_inst_ptr)
         {
             if (done_msg.pipe_desc->pipetype == USB_INTERRUPT_PIPE)
             {
-                /* for interrupt pipes, callback only if some data was received or serious error occured */
+                /* for interrupt pipes, callback only if some data was received or serious error occurred */
                 if ((required != remain) || ((res != KHCI_ATOM_TR_NAK) ))
                 {
                     _usb_khci_process_tr_complete(done_msg.pipe_desc, done_msg.pipe_tr, required, remain, res);
@@ -1155,24 +1121,24 @@ static void _usb_khci_task(void* dev_inst_ptr)
             }
             OS_Event_clear(usb_host_ptr->khci_event_ptr, KHCI_EVENT_MSG);
             usb_hal_khci_clr_all_interrupts(usb_host_ptr->usbRegBase);
-            /* Enable week pull-downs, usefull for detecting detach (effectivelly bus discharge) */
+            /* Enable week pull-downs, useful for detecting detach (effectively bus discharge) */
             usb_hal_khci_enable_pull_down(usb_host_ptr->usbRegBase);
             /* Remove suspend state */
             usb_hal_khci_clr_suspend(usb_host_ptr->usbRegBase);
 
             usb_hal_khci_set_oddrst(usb_host_ptr->usbRegBase);
-            
+
             usb_hal_khci_set_host_mode(usb_host_ptr->usbRegBase);
 
             usb_host_ptr->tx_bd = 0;
             usb_host_ptr->rx_bd = 0;
-            
+
         }
         if (OS_Event_check_bit(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE))
         {
-            OS_Event_clear(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE); 
+            OS_Event_clear(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE);
             res = _usb_khci_tr_done(usb_host_ptr, curr_msg);
-            _usb_process_iso_tr(usb_host_ptr);
+            //_usb_process_iso_tr(usb_host_ptr);
             if (res> 0)
             {
                 if (curr_msg.type != TR_MSG_UNKNOWN)
@@ -1249,7 +1215,7 @@ static void _usb_khci_task(void* dev_inst_ptr)
                         if (curr_msg.msg_state == TR_MSG_IDLE)
                         {
                             curr_msg.msg_state = TR_MSG_NAK;
-                            _usb_khci_add_tr(usb_host_ptr, &curr_msg, 0,  TYPE_NAK);
+                            _usb_khci_add_tr(usb_host_ptr, &curr_msg, 0, TYPE_NAK);
                         }
                         OS_Event_set(usb_host_ptr->khci_event_ptr, KHCI_EVENT_NAK_MSG);
                         tr_state = KHCI_TR_GET_MSG;
@@ -1295,12 +1261,12 @@ static void _usb_khci_task(void* dev_inst_ptr)
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_task_stun
-*  Returned Value : none
-*  Comments       :
-*        KHCI task
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_task_stun
+ *  Returned Value : none
+ *  Comments       :
+ *        KHCI task
+ *END*-----------------------------------------------------------------*/
 #if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (USE_RTOS))) 
 static void _usb_khci_task_stun(void* dev_inst_ptr)
 {
@@ -1312,23 +1278,24 @@ static void _usb_khci_task_stun(void* dev_inst_ptr)
 #endif
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_task_create
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        Create KHCI task
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_task_create
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        Create KHCI task
+ *END*-----------------------------------------------------------------*/
 uint32_t task_id;
-static usb_status _usb_khci_task_create(usb_host_handle handle) {
+static usb_status _usb_khci_task_create(usb_host_handle handle)
+{
     //usb_status status;
     //task_id = _task_create_blocked(0, 0, (uint32_t)&task_template);
     task_id = OS_Task_create(USB_KHCI_TASK_ADDRESS, (void*)handle, (uint32_t)USBCFG_HOST_KHCI_TASK_PRIORITY, USB_KHCI_TASK_STACKSIZE, USB_KHCI_TASK_NAME, NULL);
-    
-    if (task_id == (uint32_t)OS_TASK_ERROR) 
+
+    if (task_id == (uint32_t)OS_TASK_ERROR)
     {
         return USBERR_ERROR;
     }
-    
+
     //_task_ready(_task_get_td(task_id));
     //OS_Task_resume(task_id);
 
@@ -1336,13 +1303,13 @@ static usb_status _usb_khci_task_create(usb_host_handle handle) {
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_preinit
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        Allocate the structures for KHCI
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_preinit(usb_host_handle upper_layer_handle, usb_host_handle *handle)
+ *
+ *  Function Name  : usb_khci_preinit
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        Allocate the structures for KHCI
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_preinit(usb_host_handle upper_layer_handle, usb_host_handle *handle)
 {
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*) OS_Mem_alloc_zero(sizeof(usb_khci_host_state_struct_t));
     pipe_struct_t* p;
@@ -1366,7 +1333,7 @@ usb_status _usb_khci_preinit(usb_host_handle upper_layer_handle, usb_host_handle
         {
             if (pp != NULL)
             {
-               pp->next = (pipe_struct_t*) p;
+                pp->next = (pipe_struct_t*) p;
             }
             pp = p;
             p++;
@@ -1374,7 +1341,7 @@ usb_status _usb_khci_preinit(usb_host_handle upper_layer_handle, usb_host_handle
         usb_host_ptr->upper_layer_handle = upper_layer_handle;
         //usb_host_ptr->G.PIPE_SIZE = sizeof(KHCI_PIPE_STRUCT);
         //usb_host_ptr->G.TR_SIZE = sizeof(KHCI_TR_STRUCT);
-        
+
         *handle = (usb_host_handle) usb_host_ptr;
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
         if (NULL == (_usb_khci_swap_buf_ptr = (uint8_t *)OS_Mem_alloc_uncached_zero(USBCFG_HOST_KHCI_SWAP_BUF_MAX + 4)))
@@ -1395,32 +1362,30 @@ usb_status _usb_khci_preinit(usb_host_handle upper_layer_handle, usb_host_handle
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_init
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        Initialize the kirin HCI controller
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_init(uint8_t controller_id, usb_host_handle handle)
+ *
+ *  Function Name  : usb_khci_init
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        Initialize the kirin HCI controller
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_init(uint8_t controller_id, usb_host_handle handle)
 {
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*)handle;
-    usb_status              status = USB_OK;
+    usb_status status = USB_OK;
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
     bdt = (uint8_t *)OS_Mem_alloc_uncached_align(512, 512);
 #endif
     usb_host_ptr->khci_event_ptr = OS_Event_create(0);
     if (usb_host_ptr->khci_event_ptr == NULL)
     {
-        #if _DEBUG
-            USB_PRINTF(" memalloc failed in _usb_khci_init\n");
-        #endif
-        
+#if _DEBUG
+        USB_PRINTF(" memalloc failed in usb_khci_init\n");
+#endif
+
         return USBERR_ALLOC;
     } /* Endif */
 
     /* The _lwmsgq_init accepts the size of tr_msg_struct_t as a multiplier of sizeof(_mqx_max_type) */
-#define MSG_SIZE_IN_MAX_TYPE (1 + (sizeof(tr_msg_struct_t) - 1) / sizeof(uint32_t))
-
     usb_host_ptr->tr_que = (os_msgq_handle)OS_MsgQ_create(USBCFG_HOST_KHCI_TR_QUE_MSG_CNT, MSG_SIZE_IN_MAX_TYPE);
     if (usb_host_ptr->tr_que == NULL)
     {
@@ -1437,22 +1402,22 @@ usb_status _usb_khci_init(uint8_t controller_id, usb_host_handle handle)
     {
         return USBERR_ALLOC;
     }
-    
+
     _usb_khci_init_tr_que(usb_host_ptr);
 
     usb_host_ptr->controller_id = controller_id;
     //usb_ptr = usb_host_ptr->DEV_PTR = soc_get_usb_base_address(controller_id);
     usb_host_ptr->vector_number = soc_get_usb_vector_number(controller_id);
-   //usb_host_ptr->vector_number = INT_USB0;
+    //usb_host_ptr->vector_number = INT_USB0;
     usb_host_ptr->usbRegBase = soc_get_usb_base_address(controller_id);
-   
+
     _usb_khci_task_create(usb_host_ptr);
-    
+
     usb_host_global_handler = usb_host_ptr;
 #ifndef USBCFG_OTG
     /* install isr */
 
-  #if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)) 
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)) 
     if (!(OS_install_isr(usb_host_ptr->vector_number, _usb_khci_isr, (void*)usb_host_ptr )))
     {
         return USBERR_INSTALL_ISR;
@@ -1462,7 +1427,7 @@ usb_status _usb_khci_init(uint8_t controller_id, usb_host_handle handle)
 #endif
 #endif 
     usb_hal_khci_clr_all_interrupts(usb_host_ptr->usbRegBase);
-    /* Enable week pull-downs, usefull for detecting detach (effectivelly bus discharge) */
+    /* Enable week pull-downs, useful for detecting detach (effectively bus discharge) */
     usb_hal_khci_enable_pull_down(usb_host_ptr->usbRegBase);
     /* Remove suspend state */
     usb_hal_khci_clr_suspend(usb_host_ptr->usbRegBase);
@@ -1477,24 +1442,22 @@ usb_status _usb_khci_init(uint8_t controller_id, usb_host_handle handle)
 
     /* Following is for OTG control instead of internal bus control */
 //    usb_ptr->OTGCTL = USB_OTGCTL_DMLOW_MASK | USB_OTGCTL_DPLOW_MASK | USB_OTGCTL_OTGEN_MASK;
-
     /* Wait for attach interrupt */
-    usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, INTR_ATTACH);
+    usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, INTR_ATTACH| INTR_SOFTOK);
 
     return status;
 }
 
-
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_shutdown - NOT IMPLEMENT YET
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        The function to shutdown the host
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_shutdown
+ *
+ *  Function Name  : usb_khci_shutdown - NOT IMPLEMENT YET
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        The function to shutdown the host
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_shutdown
 (
-    usb_host_handle handle
+usb_host_handle handle
 )
 {
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*)handle;
@@ -1551,29 +1514,29 @@ usb_status _usb_khci_shutdown
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_open_pipe
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        The function to open a pipe
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_open_pipe
+ *
+ *  Function Name  : usb_khci_open_pipe
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        The function to open a pipe
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_open_pipe
 (
-    usb_host_handle handle, 
-    /* [OUT] Handle of opened pipe */
-    usb_pipe_handle *   pipe_handle_ptr,
-    pipe_init_struct_t*     pipe_init_ptr
+usb_host_handle handle,
+/* [OUT] Handle of opened pipe */
+usb_pipe_handle * pipe_handle_ptr,
+pipe_init_struct_t* pipe_init_ptr
 )
 {
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*) handle;
-    pipe_struct_t*            pipe_ptr;
-   
-    #ifdef _HOST_DEBUG_
-        DEBUG_LOG_TRACE("_usb_khci_open_pipe");
-    #endif
-    
+    pipe_struct_t* pipe_ptr;
+
+#ifdef _HOST_DEBUG_
+    DEBUG_LOG_TRACE("usb_khci_open_pipe");
+#endif
+
     OS_Lock();
- 
+
     for (pipe_ptr = usb_host_ptr->pipe_descriptor_base_ptr; pipe_ptr != NULL; pipe_ptr = pipe_ptr->next)
     {
         if (!pipe_ptr->open)
@@ -1582,14 +1545,14 @@ usb_status _usb_khci_open_pipe
             break;
         }
     }
- 
+
     OS_Unlock();
- 
+
     if (pipe_ptr == NULL)
     {
-        #ifdef _HOST_DEBUG_
-            DEBUG_LOG_TRACE("_usb_khci_open_pipe failed");
-        #endif
+#ifdef _HOST_DEBUG_
+        DEBUG_LOG_TRACE("usb_khci_open_pipe failed");
+#endif
         return USB_log_error(__FILE__,__LINE__,USBERR_OPEN_PIPE_FAILED);
     }
 
@@ -1618,29 +1581,29 @@ usb_status _usb_khci_open_pipe
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_close_pipe
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        The function to open a pipe
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_close_pipe
-    (
-        usb_host_handle handle, 
-        /* [in] Handle of opened pipe */
-        usb_pipe_handle          pipe_handle
-    )
+ *
+ *  Function Name  : usb_khci_close_pipe
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        The function to open a pipe
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_close_pipe
+(
+usb_host_handle handle,
+/* [in] Handle of opened pipe */
+usb_pipe_handle pipe_handle
+)
 {
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*) handle;
-    pipe_struct_t*                pipe_ptr = (pipe_struct_t*)pipe_handle;
-    uint8_t                        matched = (uint8_t)FALSE;
-   
-    #ifdef _HOST_DEBUG_
-        DEBUG_LOG_TRACE("_usb_khci_close_pipe");
-    #endif
-    
+    pipe_struct_t* pipe_ptr = (pipe_struct_t*)pipe_handle;
+    uint8_t matched = (uint8_t)FALSE;
+
+#ifdef _HOST_DEBUG_
+    DEBUG_LOG_TRACE("usb_khci_close_pipe");
+#endif
+
     OS_Lock();
-    
+
     if ((pipe_ptr != NULL) && (pipe_ptr->open == (uint8_t)TRUE))
     {
         for (pipe_ptr = usb_host_ptr->pipe_descriptor_base_ptr; pipe_ptr != NULL; pipe_ptr = pipe_ptr->next)
@@ -1668,27 +1631,28 @@ usb_status _usb_khci_close_pipe
         }
         else
         {
-            USB_PRINTF("_usb_khci_close_pipe can't find target pipe\n");
+            USB_PRINTF("usb_khci_close_pipe can't find target pipe\n");
         }
     }
     else
     {
-        USB_PRINTF("_usb_khci_close_pipe invalid pipe \n");
+        USB_PRINTF("usb_khci_close_pipe invalid pipe \n");
     }
- 
+
     OS_Unlock();
 
     return USB_OK;
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_send
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        The function to send data
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_send(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr) {
+ *
+ *  Function Name  : usb_khci_send
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        The function to send data
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_send(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr)
+{
     usb_status status = USB_OK;
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*) handle;
     tr_msg_struct_t msg;
@@ -1704,11 +1668,11 @@ usb_status _usb_khci_send(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_st
     }
     else
     {
-        msg.naktimeout = pipe_ptr->nak_count *NAK_RETRY_TIME ;
+        msg.naktimeout = pipe_ptr->nak_count *NAK_RETRY_TIME;
     }
     msg.frame = _usb_khci_get_total_frame_count(usb_host_ptr);
     msg.retry = RETRY_TIME;
-    KHCI_DEBUG_LOG('i', msg.type, msg.pipe_desc->endpoint_number, msg.pipe_tr->tx_length);  
+    KHCI_DEBUG_LOG('i', msg.type, msg.pipe_desc->endpoint_number, msg.pipe_tr->tx_length)
     if (pipe_ptr->pipetype ==USB_ISOCHRONOUS_PIPE )
     {
         if (0 != OS_MsgQ_send(usb_host_ptr->tr_iso_que, (void *)&msg, 0))
@@ -1729,16 +1693,31 @@ usb_status _usb_khci_send(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_st
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_send_setup
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        The function to send setup data
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_send_setup(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr) {
+ *
+ *  Function Name  : usb_khci_send_setup
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        The function to send setup data
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_send_setup(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr)
+{
     usb_status status = USB_OK;
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*) handle;
     tr_msg_struct_t msg;
+
+#if USBCFG_KHCI_4BYTE_ALIGN_FIX
+    if ((tr_ptr->rx_length & USB_DMA_ALIGN_MASK) || ((uint32_t)tr_ptr->rx_buffer & USB_DMA_ALIGN_MASK))
+    {
+        if (_usb_khci_swap_buf_ptr == NULL)
+        {
+            return USBERR_LACK_OF_SWAP_BUFFER;
+        }
+        if (pipe_ptr->max_packet_size > USBCFG_HOST_KHCI_SWAP_BUF_MAX)
+        {
+            return USBERR_LEAK_OF_SWAP_BUFFER;
+        }
+    }
+#endif
 
     msg.type = TR_MSG_SETUP;
     msg.msg_state = TR_MSG_IDLE;
@@ -1782,16 +1761,31 @@ usb_status _usb_khci_send_setup(usb_host_handle handle, pipe_struct_t* pipe_ptr,
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_recv
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        The function to receive data
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_recv(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr) {
+ *
+ *  Function Name  : usb_khci_recv
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        The function to receive data
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_recv(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr)
+{
     usb_status status = USB_OK;
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*) handle;
     tr_msg_struct_t msg;
+
+#if USBCFG_KHCI_4BYTE_ALIGN_FIX
+    if ((tr_ptr->rx_length & USB_DMA_ALIGN_MASK) || ((uint32_t)tr_ptr->rx_buffer & USB_DMA_ALIGN_MASK))
+    {
+        if (_usb_khci_swap_buf_ptr == NULL)
+        {
+            return USBERR_LACK_OF_SWAP_BUFFER;
+        }
+        if (pipe_ptr->max_packet_size > USBCFG_HOST_KHCI_SWAP_BUF_MAX)
+        {
+            return USBERR_LEAK_OF_SWAP_BUFFER;
+        }
+    }
+#endif
 
     msg.type = TR_MSG_RECV;
     msg.msg_state = TR_MSG_IDLE;
@@ -1804,7 +1798,7 @@ usb_status _usb_khci_recv(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_st
     }
     else
     {
-        msg.naktimeout = pipe_ptr->nak_count *NAK_RETRY_TIME ;
+        msg.naktimeout = pipe_ptr->nak_count *NAK_RETRY_TIME;
     }
     msg.retry = RETRY_TIME;
     msg.frame = _usb_khci_get_total_frame_count(usb_host_ptr);
@@ -1828,15 +1822,14 @@ usb_status _usb_khci_recv(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_st
     return status;
 }
 
-
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_cancel
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        The function to cancel the transfer
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_cancel_pipe(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr)
+ *
+ *  Function Name  : usb_khci_cancel
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        The function to cancel the transfer
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_cancel_pipe(usb_host_handle handle, pipe_struct_t* pipe_ptr, tr_struct_t* tr_ptr)
 {
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*) handle;
     tr_msg_struct_t msg;
@@ -1852,11 +1845,11 @@ usb_status _usb_khci_cancel_pipe(usb_host_handle handle, pipe_struct_t* pipe_ptr
             tr_temp = (tr_struct_t*)msg.pipe_tr;
             if(msg.type ==TR_MSG_RECV )
             {
-                required =  curr_msg.pipe_tr->rx_length;
+                required = curr_msg.pipe_tr->rx_length;
             }
             else if (msg.type ==TR_MSG_SEND )
             {
-                required =  curr_msg.pipe_tr->tx_length;
+                required = curr_msg.pipe_tr->tx_length;
             }
             _usb_khci_process_tr_complete(msg.pipe_desc, msg.pipe_tr, required, 0, required);
             /* got a valid msg */
@@ -1913,7 +1906,7 @@ usb_status _usb_khci_cancel_pipe(usb_host_handle handle, pipe_struct_t* pipe_ptr
     }
 
     /* we also need to check the interrupt queue */
-    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++, tr++)
+    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++)
     {
         if ((tr->msg.type != TR_MSG_UNKNOWN) && ((pipe_struct_t*)(tr->msg.pipe_desc) == pipe_ptr))
         {
@@ -1923,12 +1916,13 @@ usb_status _usb_khci_cancel_pipe(usb_host_handle handle, pipe_struct_t* pipe_ptr
             {
                 tr_temp->callback((void*)tr_temp, tr_temp->callback_param, NULL, 0, USBERR_TR_CANCEL);
             }
-            tr->msg.type = TR_MSG_UNKNOWN;    
+            tr->msg.type = TR_MSG_UNKNOWN;
         }
+        tr++;
     }
     tr = usb_host_ptr->tr_nak_que;
-      /* we also need to check the interrupt queue */
-    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++, tr++)
+    /* we also need to check the interrupt queue */
+    for (i = 0; i < USBCFG_HOST_KHCI_MAX_INT_TR; i++)
     {
         if ((tr->msg.type != TR_MSG_UNKNOWN) && ((pipe_struct_t*)(tr->msg.pipe_desc) == pipe_ptr))
         {
@@ -1938,26 +1932,28 @@ usb_status _usb_khci_cancel_pipe(usb_host_handle handle, pipe_struct_t* pipe_ptr
             {
                 tr_temp->callback((void*)tr_temp, tr_temp->callback_param, NULL, 0, USBERR_TR_CANCEL);
             }
-            tr->msg.type = TR_MSG_UNKNOWN;    
+            tr->msg.type = TR_MSG_UNKNOWN;
         }
+        tr++;
     }
     return USB_OK;
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_bus_control
-*  Returned Value : error or USB_OK
-*  Comments       :
-*        The function for USB bus control
-*END*-----------------------------------------------------------------*/
-usb_status _usb_khci_bus_control(usb_host_handle handle, uint8_t bus_control) {
+ *
+ *  Function Name  : usb_khci_bus_control
+ *  Returned Value : error or USB_OK
+ *  Comments       :
+ *        The function for USB bus control
+ *END*-----------------------------------------------------------------*/
+usb_status usb_khci_bus_control(usb_host_handle handle, uint8_t bus_control)
+{
 
-     ptr_usb_khci_host_state_struct_t usb_host_ptr = (usb_khci_host_state_struct_t*) handle; 
+    ptr_usb_khci_host_state_struct_t usb_host_ptr = (usb_khci_host_state_struct_t*) handle;
     if(bus_control == 1)
     {
         usb_hal_khci_start_bus_reset(usb_host_ptr->usbRegBase);
-        OS_Time_delay(30);//wait for 30 milliseconds (2.5 is minimum for reset, 10 recommended)
+        OS_Time_delay(30);        //wait for 30 milliseconds (2.5 is minimum for reset, 10 recommended)
         usb_hal_khci_stop_bus_reset(usb_host_ptr->usbRegBase);
         usb_hal_khci_set_oddrst(usb_host_ptr->usbRegBase);
 
@@ -1975,41 +1971,41 @@ usb_status _usb_khci_bus_control(usb_host_handle handle, uint8_t bus_control) {
         /* Now, enable only USB interrupt attach for host mode */
         usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, INTR_ATTACH);
     }
-    
+
     return USB_OK;
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_get_frame_number
-*  Returned Value : frame number
-*  Comments       :
-*        The function to get frame number
-*END*-----------------------------------------------------------------*/
-uint32_t _usb_khci_get_frame_number(usb_host_handle handle)
+ *
+ *  Function Name  : usb_khci_get_frame_number
+ *  Returned Value : frame number
+ *  Comments       :
+ *        The function to get frame number
+ *END*-----------------------------------------------------------------*/
+uint32_t usb_khci_get_frame_number(usb_host_handle handle)
 {
-    usb_khci_host_state_struct_t*  usb_host_ptr = (usb_khci_host_state_struct_t*) handle;
+    usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*) handle;
     return usb_hal_khci_get_frame_number(usb_host_ptr->usbRegBase);
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_process_tr_complete
-*  Returned Value : none
-*  Comments       :
-*        Transaction complete
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_process_tr_complete
+ *  Returned Value : none
+ *  Comments       :
+ *        Transaction complete
+ *END*-----------------------------------------------------------------*/
 static void _usb_khci_process_tr_complete(
-    pipe_struct_t*       pipe_desc_ptr,
-    tr_struct_t*         pipe_tr_ptr,
-    uint32_t               required,
-    uint32_t               remaining,
-    int32_t                err
+pipe_struct_t* pipe_desc_ptr,
+tr_struct_t* pipe_tr_ptr,
+uint32_t required,
+uint32_t remaining,
+int32_t err
 )
 {
     uint8_t * buffer_ptr = NULL;
     uint32_t status = 0;
-    
+
     KHCI_DEBUG_LOG('o', TR_MSG_UNKNOWN, pipe_desc_ptr->endpoint_number, err)
 
     if (err == KHCI_ATOM_TR_STALL)
@@ -2019,7 +2015,7 @@ static void _usb_khci_process_tr_complete(
     else if ((err == KHCI_ATOM_TR_NAK) || (err >= 0))
     {
         status = USB_OK;
-        
+
         if (err == KHCI_ATOM_TR_NAK)
         {
             status = USBERR_TR_FAILED;
@@ -2053,50 +2049,50 @@ static void _usb_khci_process_tr_complete(
     {
         status = USBERR_TR_FAILED;
     }
-    
+
     pipe_tr_ptr->status = USB_STATUS_IDLE;
-    
+
     if (pipe_tr_ptr->status == USB_STATUS_IDLE)
     {
         /* Transfer done. Call the callback function for this 
-              ** transaction if there is one (usually true). 
-              */
+         ** transaction if there is one (usually true). 
+         */
         if (_usb_host_unlink_tr(pipe_desc_ptr, pipe_tr_ptr) != USB_OK)
         {
-        #ifdef _HOST_DEBUG_
+#ifdef _HOST_DEBUG_
             DEBUG_LOG_TRACE("_usb_host_recv_data transfer queue failed");
-        #endif
+#endif
         }
         if (pipe_tr_ptr->callback != NULL)
         {
             /* To ensure that the USB DMA transfer will work on a buffer that is not cached,
-                    ** we invalidate buffer cache lines.
-                    */
+             ** we invalidate buffer cache lines.
+             */
             pipe_tr_ptr->callback((void*)pipe_tr_ptr, pipe_tr_ptr->callback_param,
-                buffer_ptr, required - remaining, status);
-                
+            buffer_ptr, required - remaining, status);
+
         }
     }
 
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_tr_done
-*  Returned Value : none
-*  Comments       :
-*        Transaction complete
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_tr_done
+ *  Returned Value : none
+ *  Comments       :
+ *        Transaction complete
+ *END*-----------------------------------------------------------------*/
 static int32_t _usb_khci_tr_done(
-    usb_khci_host_state_struct_t*  usb_host_ptr,
-    tr_msg_struct_t msg
+usb_khci_host_state_struct_t* usb_host_ptr,
+tr_msg_struct_t msg
 )
 {
-    uint32_t        bd;
-    int32_t         res = 0;
-    uint32_t        type = 0;
-    uint32_t        *bd_ptr = NULL;
-    pipe_struct_t*  pipe_desc_ptr = msg.pipe_desc;
+    uint32_t bd;
+    int32_t res = 0;
+    uint32_t type = 0;
+    uint32_t *bd_ptr = NULL;
+    pipe_struct_t* pipe_desc_ptr = msg.pipe_desc;
 
     switch (msg.type)
     {
@@ -2146,8 +2142,8 @@ static int32_t _usb_khci_tr_done(
             break;
         default:
             return KHCI_ATOM_TR_INVALID;
-    } 
-    
+    }
+
     switch (type)
     {
         case TR_CTRL:
@@ -2168,20 +2164,21 @@ static int32_t _usb_khci_tr_done(
             break;                
         default:
             bd_ptr = NULL;
+            break;
     }
 
     bd = USB_LONG_LE_TO_HOST(*bd_ptr);
-            //USB_PRINTF("bd 0x%x 0x%x\n", bd, usb_ptr->ERRSTAT);
+    //USB_PRINTF("bd 0x%x 0x%x\n", bd, usb_ptr->ERRSTAT);
     if (usb_hal_khci_is_error_happend(usb_host_ptr->usbRegBase,
-                ERROR_PIDERR | 
+    ERROR_PIDERR |
 #if defined(KHCICFG_BASIC_SCHEDULING)
-                ERROR_CRC5EOF |
-    #endif
-                ERROR_CRC16 | 
-                ERROR_DFN8 | 
-                ERROR_DMAERR |
-                ERROR_BTSERR
-               ))
+    ERROR_CRC5EOF |
+#endif
+    ERROR_CRC16 |
+    ERROR_DFN8 |
+    ERROR_DMAERR |
+    ERROR_BTSERR
+    ))
     {
 #if defined(KHCICFG_BASIC_SCHEDULING)
         if (usb_hal_khci_is_error_happend(usb_host_ptr->usbRegBase, ERROR_CRC5EOF))
@@ -2189,10 +2186,10 @@ static int32_t _usb_khci_tr_done(
             //retry = 0;
         }
 #endif
-        res = -usb_hal_khci_get_error_interrupt_status(usb_host_ptr->usbRegBase);
+        res = -(int32_t)usb_hal_khci_get_error_interrupt_status(usb_host_ptr->usbRegBase);
         return res;
     }
-    else 
+    else
     {
         if (bd & USB_BD_OWN)
         {
@@ -2203,43 +2200,45 @@ static int32_t _usb_khci_tr_done(
         if((pipe_desc_ptr->pipetype == USB_ISOCHRONOUS_PIPE))
         {
             res = (bd >> 16) & 0x3ff;
-            goto buffer_4byte_check;
         }
-        switch (bd >> 2 & 0xf)
+        else
         {
-            case 0x03:  // DATA0
-            case 0x0b:  // DATA1
-            case 0x02:  // ACK
-                //retry = 0;
-                res = (bd >> 16) & 0x3ff;
-                pipe_desc_ptr->nextdata01 ^= 1;     // switch data toggle
-                break;
+            switch (bd >> 2 & 0xf)
+            {
+                case 0x03:  // DATA0
+                case 0x0b:  // DATA1
+                case 0x02:  // ACK
+                    //retry = 0;
+                    res = (bd >> 16) & 0x3ff;
+                    pipe_desc_ptr->nextdata01 ^= 1;     // switch data toggle
+                    break;
 
-            case 0x0e:  // STALL
-                res = KHCI_ATOM_TR_STALL;
-                //retry = 0;
-                break;
+                case 0x0e:  // STALL
+                    res = KHCI_ATOM_TR_STALL;
+                    //retry = 0;
+                    break;
 
-            case 0x0a:  // NAK
-                res = KHCI_ATOM_TR_NAK;     
-                break;
+                case 0x0a:  // NAK
+                    res = KHCI_ATOM_TR_NAK;     
+                    break;
 
-            case 0x00:  // bus timeout  
-                {
-                   //retry = 0;
-                   res = KHCI_ATOM_TR_BUS_TIMEOUT;
-                }
-                break;
+                case 0x00:  // bus timeout  
+                    {
+                       //retry = 0;
+                       res = KHCI_ATOM_TR_BUS_TIMEOUT;
+                    }
+                    break;
 
-            case 0x0f:  // data error
+                case 0x0f:  // data error
                 //if this event happens during enumeration, then return means not finished enumeration
                 res = KHCI_ATOM_TR_DATA_ERROR;
                 break;
-            default:
+                default:
                 break;
+            }
         }
     }
-buffer_4byte_check:
+
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
     if ((TR_IN == type) && (FALSE == s_xfer_sts.is_dma_align))
     {
@@ -2254,18 +2253,18 @@ buffer_4byte_check:
 }
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : _usb_khci_atom_tr
-*  Returned Value : 
-*  Comments       :
-*        Atomic transaction
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : _usb_khci_atom_tr
+ *  Returned Value : 
+ *  Comments       :
+ *        Atomic transaction
+ *END*-----------------------------------------------------------------*/
 static int32_t _usb_khci_atom_noblocking_tr(
-    usb_khci_host_state_struct_t*  usb_host_ptr,
-    uint32_t                    type,
-    pipe_struct_t*            pipe_desc_ptr,
-    uint8_t                     *buf_ptr,
-    uint32_t                    len
+usb_khci_host_state_struct_t* usb_host_ptr,
+uint32_t type,
+pipe_struct_t* pipe_desc_ptr,
+uint8_t *buf_ptr,
+uint32_t len
 )
 {
     //USB_MemMapPtr usb_ptr = (USB_MemMapPtr) usb_host_ptr->DEV_PTR;
@@ -2277,18 +2276,18 @@ static int32_t _usb_khci_atom_noblocking_tr(
     int32_t res;
     //int32_t delay_const = 10;
     //uint32_t event_value = (uint32_t)0;
-    uint8_t  speed;
-    uint8_t  address;
-    uint8_t  level;
-    uint8_t  counter = 0;
+    uint8_t speed;
+    uint8_t address;
+    uint8_t level;
+    uint8_t counter = 0;
 #if (USB_NONBLOCKING_MODE == 0)
     uint32_t ret;
 #endif
 
-    usb_host_ptr->last_to_pipe = NULL; // at the beginning, consider that there was not timeout
+    usb_host_ptr->last_to_pipe = NULL;  // at the beginning, consider that there was not timeout
     len = (len > pipe_desc_ptr->max_packet_size) ? pipe_desc_ptr->max_packet_size : len;
     level = usb_host_dev_mng_get_level(pipe_desc_ptr->dev_instance);
-    speed = usb_host_dev_mng_get_speed(pipe_desc_ptr->dev_instance);  
+    speed = usb_host_dev_mng_get_speed(pipe_desc_ptr->dev_instance);
     address = usb_host_dev_mng_get_address(pipe_desc_ptr->dev_instance);
 
     if(speed == 1)
@@ -2330,9 +2329,8 @@ static int32_t _usb_khci_atom_noblocking_tr(
     {
 
         //USB_PRINTF("%d %d\n", pipe_desc_ptr->max_packet_size, usb_ptr->SOFTHLD);
-        usb_hal_khci_clr_interrupt(usb_host_ptr->usbRegBase, INTR_SOFTOK); //clear SOF
+        usb_hal_khci_clr_interrupt(usb_host_ptr->usbRegBase, INTR_SOFTOK);//clear SOF
         usb_hal_khci_clr_all_error_interrupts(usb_host_ptr->usbRegBase);//clear error status
-
 
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
         if ((TR_IN == type) && ((len & USB_DMA_ALIGN_MASK) || ((uint32_t)buf_ptr & USB_DMA_ALIGN_MASK)))
@@ -2353,50 +2351,50 @@ static int32_t _usb_khci_atom_noblocking_tr(
 #endif
         switch (type)
         {
-            case TR_CTRL:
-                //USB_PRINTF("len %d %d\n", len, pipe_desc_ptr->max_packet_size);
-                bd_ptr = (uint32_t*) BD_PTR(0, 1, usb_host_ptr->tx_bd);
-                *(bd_ptr + 1) = USB_HOST_TO_LE_LONG((uint32_t)buf);
-                *bd_ptr = USB_HOST_TO_LE_LONG(USB_BD_BC(len) | USB_BD_OWN);
-                 usb_hal_khci_set_target_token(usb_host_ptr->usbRegBase, USB_TOKEN_TOKENPID_SETUP, (uint8_t)pipe_desc_ptr->endpoint_number);
-             //   USB_PRINTF("2 CTRL 0x%x 0x%x 0x%x %X %x\n", *bd_ptr, *(bd_ptr+1), usb_ptr->TOKEN, usb_host_ptr->tx_bd,bd_ptr);
-                usb_host_ptr->tx_bd ^= 1;
-                break;
-            case TR_IN:
-                //bd_ptr_tmp = (uint32_t*) BD_PTR(0, 0, 0);
-                bd_ptr = (uint32_t*) BD_PTR(0, 0, usb_host_ptr->rx_bd);
-                *(bd_ptr + 1) = USB_HOST_TO_LE_LONG((uint32_t)buf);
-                *bd_ptr = USB_HOST_TO_LE_LONG(USB_BD_BC(len) | USB_BD_OWN | USB_BD_DATA01(pipe_desc_ptr->nextdata01));
-                usb_hal_khci_set_target_token(usb_host_ptr->usbRegBase, USB_TOKEN_TOKENPID_IN, (uint8_t)pipe_desc_ptr->endpoint_number);
-                //USB_PRINTF("B 0x%x 0x%x %d\n", *bd_ptr_tmp,*(bd_ptr_tmp+2),usb_host_ptr->rx_bd);
+        case TR_CTRL:
+            //USB_PRINTF("len %d %d\n", len, pipe_desc_ptr->max_packet_size);
+            bd_ptr = (uint32_t*) BD_PTR(0, 1, usb_host_ptr->tx_bd);
+            *(bd_ptr + 1) = USB_HOST_TO_LE_LONG((uint32_t)buf);
+            *bd_ptr = USB_HOST_TO_LE_LONG(USB_BD_BC(len) | USB_BD_OWN);
+            usb_hal_khci_set_target_token(usb_host_ptr->usbRegBase, USB_TOKEN_TOKENPID_SETUP, (uint8_t)pipe_desc_ptr->endpoint_number);
+            //   USB_PRINTF("2 CTRL 0x%x 0x%x 0x%x %X %x\n", *bd_ptr, *(bd_ptr+1), usb_ptr->TOKEN, usb_host_ptr->tx_bd,bd_ptr);
+            usb_host_ptr->tx_bd ^= 1;
+            break;
+        case TR_IN:
+            //bd_ptr_tmp = (uint32_t*) BD_PTR(0, 0, 0);
+            bd_ptr = (uint32_t*) BD_PTR(0, 0, usb_host_ptr->rx_bd);
+            *(bd_ptr + 1) = USB_HOST_TO_LE_LONG((uint32_t)buf);
+            *bd_ptr = USB_HOST_TO_LE_LONG(USB_BD_BC(len) | USB_BD_OWN | USB_BD_DATA01(pipe_desc_ptr->nextdata01));
+            usb_hal_khci_set_target_token(usb_host_ptr->usbRegBase, USB_TOKEN_TOKENPID_IN, (uint8_t)pipe_desc_ptr->endpoint_number);
+            //USB_PRINTF("B 0x%x 0x%x %d\n", *bd_ptr_tmp,*(bd_ptr_tmp+2),usb_host_ptr->rx_bd);
             //    USB_PRINTF("IN 0x%x 0x%x 0x%x %d %x\n", *bd_ptr, *(bd_ptr+1), usb_ptr->TOKEN, usb_host_ptr->rx_bd,bd_ptr);
-                //USB_PRINTF("0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", buf, *buf, *(buf+1),*(buf+2), *(buf+3),*(buf+4), *(buf+5),*(buf+6), *(buf+7));
-                 usb_host_ptr->rx_bd ^= 1;
-                break;
-            case TR_OUT:
-                bd_ptr = (uint32_t*) BD_PTR(0, 1, usb_host_ptr->tx_bd);
-                *(bd_ptr + 1) = USB_HOST_TO_LE_LONG((uint32_t)buf);
-                *bd_ptr = USB_HOST_TO_LE_LONG(USB_BD_BC(len) | USB_BD_OWN | USB_BD_DATA01(pipe_desc_ptr->nextdata01));
-                usb_hal_khci_set_target_token(usb_host_ptr->usbRegBase, USB_TOKEN_TOKENPID_OUT, (uint8_t)pipe_desc_ptr->endpoint_number);
-          //      USB_PRINTF("OUT 0x%x 0x%x 0x%x %d %x\n", *bd_ptr, *(bd_ptr+1), usb_ptr->TOKEN, usb_host_ptr->tx_bd,bd_ptr);
-                usb_host_ptr->tx_bd ^= 1;
-                break;
-            default:
-                bd_ptr = NULL;
+            //USB_PRINTF("0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", buf, *buf, *(buf+1),*(buf+2), *(buf+3),*(buf+4), *(buf+5),*(buf+6), *(buf+7));
+            usb_host_ptr->rx_bd ^= 1;
+            break;
+        case TR_OUT:
+            bd_ptr = (uint32_t*) BD_PTR(0, 1, usb_host_ptr->tx_bd);
+            *(bd_ptr + 1) = USB_HOST_TO_LE_LONG((uint32_t)buf);
+            *bd_ptr = USB_HOST_TO_LE_LONG(USB_BD_BC(len) | USB_BD_OWN | USB_BD_DATA01(pipe_desc_ptr->nextdata01));
+            usb_hal_khci_set_target_token(usb_host_ptr->usbRegBase, USB_TOKEN_TOKENPID_OUT, (uint8_t)pipe_desc_ptr->endpoint_number);
+            //      USB_PRINTF("OUT 0x%x 0x%x 0x%x %d %x\n", *bd_ptr, *(bd_ptr+1), usb_ptr->TOKEN, usb_host_ptr->tx_bd,bd_ptr);
+            usb_host_ptr->tx_bd ^= 1;
+            break;
+        default:
+            bd_ptr = NULL;
+            break;
         }
-    //     USB_PRINTF(" %x\n" ,bd_ptr);
+        //     USB_PRINTF(" %x\n" ,bd_ptr);
 #if (USB_NONBLOCKING_MODE == 0)       
         ret = OS_Event_wait(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE, FALSE, USBCFG_HOST_KHCI_WAIT_TICK);
         if ((uint32_t)OS_EVENT_TIMEOUT == ret)
         {
             res = KHCI_ATOM_TR_TO;
-            usb_host_ptr->last_to_pipe = pipe_desc_ptr; // remember this pipe as it had timeout last time
+            usb_host_ptr->last_to_pipe = pipe_desc_ptr;  // remember this pipe as it had timeout last time
         }
 #endif
     }
     return res;
 }
 
-  
 #endif
 

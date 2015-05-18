@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,13 +35,13 @@
  ******************************************************************************/
 
 /* Table of base addresses. */
-const uint32_t g_sdhcBaseAddr[] = SDHC_BASE_ADDRS;
+SDHC_Type * const g_sdhcBase[] = SDHC_BASE_PTRS;
 
 /*!
  * @brief Table to save SDHC IRQ enum numbers defined in CMSIS files.
  *
  */
-const IRQn_Type g_sdhcIrqId[HW_SDHC_INSTANCE_COUNT] = SDHC_IRQS;
+const IRQn_Type g_sdhcIrqId[SDHC_INSTANCE_COUNT] = SDHC_IRQS;
 
 /*******************************************************************************
  * EOF

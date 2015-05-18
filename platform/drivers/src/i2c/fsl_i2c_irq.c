@@ -35,27 +35,27 @@
  * Code
  ******************************************************************************/
 
-#if (HW_I2C_INSTANCE_COUNT > 0U)
+#if (I2C_INSTANCE_COUNT > 0U)
 /* Implementation of I2C0 handler named in startup code. */
 void I2C0_IRQHandler(void)
 {
-    I2C_DRV_IRQHandler(HW_I2C0);
+    I2C_DRV_IRQHandler(I2C0_IDX);
 }
 #endif
 
-#if (HW_I2C_INSTANCE_COUNT > 1U)
+#if (I2C_INSTANCE_COUNT > 1U)
 /* Implementation of I2C1 handler named in startup code. */
 void I2C1_IRQHandler(void)
 {
-    I2C_DRV_IRQHandler(HW_I2C1);
+    I2C_DRV_IRQHandler(I2C1_IDX);
 }
 #endif
 
-#if (HW_I2C_INSTANCE_COUNT > 2U)
+#if (I2C_INSTANCE_COUNT > 2U)
 /* Implementation of I2C2 handler named in startup code. */
 void I2C2_IRQHandler(void)
 {
-    I2C_DRV_IRQHandler(HW_I2C2);
+    I2C_DRV_IRQHandler(I2C2_IDX);
 }
 #endif
 

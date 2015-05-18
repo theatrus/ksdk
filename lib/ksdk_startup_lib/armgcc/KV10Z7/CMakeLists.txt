@@ -39,29 +39,33 @@ SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
 # C MACRO
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DDEBUG")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MKV10Z32VLF7")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR_KV10Z75M")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR_KV10Z32")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DNDEBUG")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MKV10Z32VLF7")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTWR_KV10Z75M")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTWR_KV10Z32")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTWR")
 
 # CXX MACRO
 
 # INCLUDE_DIRECTORIES
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MKV10Z7)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MKV10Z7/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MKV10Z7/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MKV10Z7)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MKV10Z7/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MKV10Z7/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
 ENDIF()
 
 # ADD_LIBRARY
 ADD_LIBRARY(KsdkStartupLib STATIC
-    "${ProjDirPath}/../../../../platform/startup/MKV10Z7/system_MKV10Z7.c"
-    "${ProjDirPath}/../../../../platform/startup/startup.c"
-    "${ProjDirPath}/../../../../platform/startup/startup.h"
+    "${ProjDirPath}/../../../../platform/devices/MKV10Z7/startup/system_MKV10Z7.c"
+    "${ProjDirPath}/../../../../platform/devices/startup.c"
+    "${ProjDirPath}/../../../../platform/devices/startup.h"
 )
 
 SET_TARGET_PROPERTIES(KsdkStartupLib PROPERTIES OUTPUT_NAME "libksdk_startup.a")

@@ -30,19 +30,22 @@
 
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_I2C_COUNT
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Table of base addresses for I2C instances. */
-const uint32_t g_i2cBaseAddr[HW_I2C_INSTANCE_COUNT] = I2C_BASE_ADDRS;
+I2C_Type * const g_i2cBase[I2C_INSTANCE_COUNT] = I2C_BASE_PTRS;
 
 /* Pointer to runtime state structure.*/
-void * g_i2cStatePtr[HW_I2C_INSTANCE_COUNT] = { NULL };
+void * g_i2cStatePtr[I2C_INSTANCE_COUNT] = { NULL };
 
 /* Table to save i2c IRQ enum numbers defined in CMSIS header file. */
-const IRQn_Type g_i2cIrqId[HW_I2C_INSTANCE_COUNT] = I2C_IRQS;
+const IRQn_Type g_i2cIrqId[I2C_INSTANCE_COUNT] = I2C_IRQS;
 
+#endif /* FSL_FEATURE_SOC_I2C_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

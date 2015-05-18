@@ -34,16 +34,25 @@
 #include "fsl_edma_driver.h"
 #include "fsl_os_abstraction.h"
 
+#if FSL_FEATURE_SOC_DSPI_COUNT
+
 /*!
  * @addtogroup dspi_slave_driver
  * @{
  */
 
+/*! @brief Table of base pointers for SPI instances. */
+extern SPI_Type * const g_dspiBase[SPI_INSTANCE_COUNT];
+
+/*! @brief Table to save DSPI IRQ enumeration numbers defined in the CMSIS header file. */
+extern const IRQn_Type g_dspiIrqId[SPI_INSTANCE_COUNT];
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 
-#define DSPI_EDMA_DEFAULT_DUMMY_PATTERN     (0u)   /*!< Dummy pattern, that DSPI slave will send when transmit data was not configured */
+#define DSPI_EDMA_DEFAULT_DUMMY_PATTERN     (0u)   /*!< Dummy pattern, that DSPI slave will send
+                                                        when transmit data was not configured */
 
 /*!
  *  @brief User configuration structure for the DSPI slave driver.
@@ -66,10 +75,11 @@ typedef struct DSPIEdmaSlaveState {
     dspi_status_t status;                       /*!< Current state of slave */
     event_t event;                              /*!< Event to notify waiting task */
     uint16_t errorCount;                        /*!< Driver error count */
-    uint32_t dummyPattern;                      /*!< Dummy data will be send when do not have data in transmit buffer */
+    uint32_t dummyPattern;                      /*!< Dummy data will be send when do not have data
+                                                     in transmit buffer */
     volatile bool isTransferInProgress;         /*!< True if there is an active transfer.*/
-    const uint8_t * restrict sendBuffer;        /*!< Pointer to transmit buffer */
-    uint8_t * restrict receiveBuffer;           /*!< Pointer to receive buffer */
+    const uint8_t * sendBuffer;        /*!< Pointer to transmit buffer */
+    uint8_t * receiveBuffer;           /*!< Pointer to receive buffer */
     volatile int32_t remainingSendByteCount;    /*!< Number of bytes remaining to send.*/
     volatile int32_t remainingReceiveByteCount; /*!< Number of bytes remaining to receive.*/
     uint8_t extraReceiveByte;                   /*!< Number of extra receive bytes */
@@ -95,9 +105,9 @@ extern "C" {
  * @brief Initializes a DSPI instance for a slave mode operation, using eDMA mechanism.
  *
  * This function un-gates the clock to the DSPI module, initializes the DSPI for slave
- * mode and initializes eDMA channels. Once initialized, the DSPI module is configured
+ * mode and initializes eDMA channels. After it is initialized, the DSPI module is configured
  * in slave mode and user can start transmit, receive data by calls send, receive,
- * transfer functions. This function indicates DSPI slave will use eDMA mechanism.
+ * transfer functions. This function indicates DSPI slave uses the eDMA mechanism.
  *
  * @param instance The instance number of the DSPI peripheral.
  * @param dspiState The pointer to the DSPI slave driver state structure.
@@ -113,13 +123,14 @@ dspi_status_t DSPI_DRV_EdmaSlaveInit(uint32_t instance,
 /*!
  * @brief Shuts down a DSPI instance - eDMA mechanism.
  *
- * Disable DSPI module, gates its clock, change DSPI slave driver state to NonInit
- * for DSPI slave module which is initialized with eDMA mechanism. After de-initialized,
- * user can re-initialize DSPI slave module with other mechanisms.
+ * Disables the DSPI module, gates its clock, changes the DSPI slave driver state to NonInit
+ * for DSPI slave module which is initialized with the eDMA mechanism. After de-initialization,
+ * the user can re-initialize the DSPI slave module with other mechanisms.
  *
  * @param instance The instance number of the DSPI peripheral.
+ * @return kStatus_DSPI_Success indicating successful de-initialization or error code
  */
-void DSPI_DRV_EdmaSlaveDeinit(uint32_t instance);
+dspi_status_t DSPI_DRV_EdmaSlaveDeinit(uint32_t instance);
 /*! @} */
 
 /*!
@@ -128,20 +139,20 @@ void DSPI_DRV_EdmaSlaveDeinit(uint32_t instance);
  */
 
 /*!
- * @brief Transfers data on SPI bus using eDMA and blocking call
+ * @brief Transfers data on the SPI bus using the eDMA and blocking call.
  *
- * This function check driver status, mechanism and transmit/receive data through SPI bus.
- * If sendBuffer is NULL, transmit process will be ignored, and if receiveBuffer is NULL receive
- * process is ignored. If both receiveBuffer and sendBuffer available, transmit and receive
- * progress will be processed. If only receiveBuffer available, receiving will be processed,
- * else transmitting will be processed. This function only return when its processes
- * were completed. This function uses eDMA mechanism.
+ * This function checks driver status, mechanism and transmits/receives data through SPI bus.
+ * If sendBuffer is NULL, transmit process is ignored, and if the receiveBuffer is NULL, the receive
+ * process is ignored. If both the receiveBuffer and the sendBuffer  are available, the transmit and
+ * receive progress is processed. If only the receiveBuffer is available, the receive is processed,
+ * Otherwise, the transmit is processed. This function only returns when its processes
+ * are complete. This function uses the eDMA mechanism.
  *
  * @param instance The instance number of DSPI peripheral
  * @param sendBuffer The pointer to data that user wants to transmit.
  * @param receiveBuffer The pointer to data that user wants to store received data.
  * @param transferByteCount The number of bytes to send and receive.
- * @param timeOut The maximum number of miliseconds that function will wait before
+ * @param timeOut The maximum number of milliseconds that function will wait before
  *              timed out reached.
  *
  * @return  kStatus_DSPI_Success if driver starts to send/receive data successfully.
@@ -165,14 +176,14 @@ dspi_status_t DSPI_DRV_EdmaSlaveTransferBlocking(uint32_t instance,
 /*!
  * @brief Starts transfer data on SPI bus using eDMA
  *
- * This function check driver status then set buffer pointers to receive and transmit
- * SPI data. If sendBuffer is NULL, transmit process will be ignored, and if receiveBuffer is
- * NULL receive process is ignored. If both receiveBuffer and sendBuffer available, transfer
- * is done when kDspiTxDone and kDspiRxDone are set. If only receiveBuffer available, transfer
- * is done when kDspiRxDone flag was set, else transfer is done when kDspiTxDone was set.
- * This function uses eDMA mechanism.
+ * This function checks the driver status then sets buffer pointers to receive and transmit
+ * SPI data. If the sendBuffer is NULL, transmit process is ignored. If the receiveBuffer is
+ * NULL, the receive process is ignored. If both the receiveBuffer and sendBuffer are available, the
+ * transfer is done when the kDspiTxDone and the kDspiRxDone are set. If only the receiveBuffer is
+ * available, the transfer is done when the kDspiRxDone  flag is set. Otherwise, the transfer is
+ * done when the kDspiTxDone is set. This function uses the eDMA mechanism.
  *
- * @param instance The instance number of DSPI peripheral
+ * @param instance The instance number of DSPI peripheral.
  * @param sendBuffer The pointer to data that user wants to transmit.
  * @param receiveBuffer The pointer to data that user wants to store received data.
  * @param transferByteCount The number of bytes to send and receive.
@@ -187,9 +198,9 @@ dspi_status_t DSPI_DRV_EdmaSlaveTransfer(uint32_t instance,
                                          uint32_t transferByteCount);
 
 /*!
- * @brief Abort transfer that started by non-blocking call eDMA transfer function
+ * @brief Aborts the transfer that started by a non-blocking call to the eDMA transfer function.
  *
- * This function stops the transfer which started by function DSPI_DRV_EdmaSlaveTransfer().
+ * This function stops the transfer which was started by the DSPI_DRV_EdmaSlaveTransfer() function.
  *
  * @param instance The instance number of DSPI peripheral
  *
@@ -218,12 +229,27 @@ dspi_status_t DSPI_DRV_EdmaSlaveAbortTransfer(uint32_t instance);
  */
 dspi_status_t DSPI_DRV_EdmaSlaveGetTransferStatus(uint32_t instance,
                                                   uint32_t * framesTransferred);
+
+/*!
+ * @brief DSPI slave interrupt handler
+ * @details This function is DSPI slave interrupt handler using eDMA mechanism. The
+ *          pupose of this interrupt handler is indicates when the transfer is really
+ *          finished. The eDMA only used to copy data from/to RX FIFO/TX FIFO, but it
+ *          not sure the data was transmitted to the master. So must have to enable
+ *          this interrupt to do it. This interrupt only be enabled when the last
+ *          four FIFO will be transmitted.
+ *
+ * @param instance The SPI number
+ */
+void DSPI_DRV_EdmaSlaveIRQHandler(uint32_t instance);
+
 /*! @} */
 
 #if defined(__cplusplus)
 }
 #endif
 
+#endif /* FSL_FEATURE_SOC_DSPI_COUNT */
 #endif /* __FSL_DSPI_EDMA_SLAVE_DRIVER_H__ */
 /*******************************************************************************
  * EOF

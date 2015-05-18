@@ -31,6 +31,8 @@
 #include "fsl_i2c_hal.h"
 #include "fsl_misc_utilities.h" /* For ARRAY_SIZE*/
 
+#if FSL_FEATURE_SOC_I2C_COUNT
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -121,22 +123,22 @@ const i2c_divider_table_entry_t kI2CDividerTable[] = {
  * Description   : Initialize I2C peripheral to reset state.
  *
  *END**************************************************************************/
-void I2C_HAL_Init(uint32_t baseAddr)
+void I2C_HAL_Init(I2C_Type * base)
 {
-    
-    HW_I2C_A1_WR(baseAddr, 0u);
-    HW_I2C_F_WR(baseAddr, 0u);
-    HW_I2C_C1_WR(baseAddr, 0u);
-    HW_I2C_S_WR(baseAddr, 0u);
-    HW_I2C_C2_WR(baseAddr, 0u);
-    HW_I2C_FLT_WR(baseAddr, 0u);
-    HW_I2C_RA_WR(baseAddr, 0u);
-    
+
+    I2C_WR_A1(base, 0u);
+    I2C_WR_F(base, 0u);
+    I2C_WR_C1(base, 0u);
+    I2C_WR_S(base, 0u);
+    I2C_WR_C2(base, 0u);
+    I2C_WR_FLT(base, 0u);
+    I2C_WR_RA(base, 0u);
+
 #if FSL_FEATURE_I2C_HAS_SMBUS
-    HW_I2C_SMB_WR(baseAddr, 0u);
-    HW_I2C_A2_WR(baseAddr, 0xc2u);
-    HW_I2C_SLTH_WR(baseAddr, 0u);
-    HW_I2C_SLTL_WR(baseAddr, 0u);
+    I2C_WR_SMB(base, 0u);
+    I2C_WR_A2(base, 0xc2u);
+    I2C_WR_SLTH(base, 0u);
+    I2C_WR_SLTL(base, 0u);
 #endif /* FSL_FEATURE_I2C_HAS_SMBUS*/
 }
 
@@ -146,7 +148,7 @@ void I2C_HAL_Init(uint32_t baseAddr)
  * Description   : Sets the I2C bus frequency for master transactions.
  *
  *END**************************************************************************/
-void I2C_HAL_SetBaudRate(uint32_t baseAddr,
+void I2C_HAL_SetBaudRate(I2C_Type * base,
                          uint32_t sourceClockInHz,
                          uint32_t kbps,
                          uint32_t * absoluteError_Hz)
@@ -156,26 +158,26 @@ void I2C_HAL_SetBaudRate(uint32_t baseAddr,
     uint32_t bestError = 0xffffffffu;
     uint32_t bestMult = 0u;
     uint32_t bestIcr = 0u;
-       
+
     /* Search for the settings with the lowest error.
      * mult is the MULT field of the I2C_F register, and ranges from 0-2. It selects the
      * multiplier factor for the divider. */
     for (mult = 0u; (mult <= 2u) && (bestError != 0); ++mult)
     {
         multiplier = 1u << mult;
-        
+
         /* Scan table to find best match.*/
         for (i = 0u; i < ARRAY_SIZE(kI2CDividerTable); ++i)
         {
             computedRate = sourceClockInHz / (multiplier * kI2CDividerTable[i].sclDivider);
             absError = hz > computedRate ? hz - computedRate : computedRate - hz;
-            
+
             if (absError < bestError)
             {
                 bestMult = mult;
                 bestIcr = kI2CDividerTable[i].icr;
                 bestError = absError;
-                
+
                 /* If the error is 0, then we can stop searching
                  * because we won't find a better match.*/
                 if (absError == 0)
@@ -191,9 +193,9 @@ void I2C_HAL_SetBaudRate(uint32_t baseAddr,
     {
         *absoluteError_Hz = bestError;
     }
-    
+
     /* Set frequency register based on best settings.*/
-    HW_I2C_F_WR(baseAddr, BF_I2C_F_MULT(bestMult) | BF_I2C_F_ICR(bestIcr));
+    I2C_WR_F(base, I2C_F_MULT(bestMult) | I2C_F_ICR(bestIcr));
 }
 
 /*FUNCTION**********************************************************************
@@ -205,39 +207,39 @@ void I2C_HAL_SetBaudRate(uint32_t baseAddr,
  * is already in progress.
  *
  *END**************************************************************************/
-void I2C_HAL_SendStart(uint32_t baseAddr)
+void I2C_HAL_SendStart(I2C_Type * base)
 {
     /* Check if we're in a master mode transfer.*/
-    if (BR_I2C_C1_MST(baseAddr))
+    if (I2C_BRD_C1_MST(base))
     {
 #if FSL_FEATURE_I2C_HAS_ERRATA_6070
-        /* Errata 6070: Repeat start cannot be generated if the I2Cx_F[MULT] 
+        /* Errata 6070: Repeat start cannot be generated if the I2Cx_F[MULT]
          * field is set to a non- zero value.
          * The workaround is to either always keep MULT set to 0, or to
          * temporarily set it to 0 while performing the repeated start and then
          * restore it.*/
         uint32_t savedMult = 0;
-        if (BR_I2C_F_MULT(baseAddr) != 0)
+        if (I2C_BRD_F_MULT(base) != 0)
         {
-            savedMult = BR_I2C_F_MULT(baseAddr);
-            BW_I2C_F_MULT(baseAddr, 0U);
+            savedMult = I2C_BRD_F_MULT(base);
+            I2C_BWR_F_MULT(base, 0U);
         }
 #endif /* FSL_FEATURE_I2C_HAS_ERRATA_6070*/
 
         /* We are already in a transfer, so send a repeated start.*/
-        BW_I2C_C1_RSTA(baseAddr, 1U);
+        I2C_BWR_C1_RSTA(base, 1U);
 
 #if FSL_FEATURE_I2C_HAS_ERRATA_6070
         if (savedMult)
         {
-            BW_I2C_F_MULT(baseAddr, savedMult);
+            I2C_BWR_F_MULT(base, savedMult);
         }
 #endif /* FSL_FEATURE_I2C_HAS_ERRATA_6070*/
     }
     else
     {
         /* Initiate a transfer by sending the start signal.*/
-        HW_I2C_C1_SET(baseAddr, BM_I2C_C1_MST | BM_I2C_C1_TX);
+        I2C_SET_C1(base, I2C_C1_MST_MASK | I2C_C1_TX_MASK);
     }
 }
 
@@ -248,16 +250,16 @@ void I2C_HAL_SendStart(uint32_t baseAddr)
  * This function changes the direction to receive.
  *
  *END**************************************************************************/
-i2c_status_t I2C_HAL_SendStop(uint32_t baseAddr)
+i2c_status_t I2C_HAL_SendStop(I2C_Type * base)
 {
-    assert(BR_I2C_C1_MST(baseAddr) == 1);
+    assert(I2C_BRD_C1_MST(base) == 1);
     uint32_t i = 0;
 
     /* Start the STOP signal */
-    HW_I2C_C1_CLR(baseAddr, BM_I2C_C1_MST | BM_I2C_C1_TX);
+    I2C_CLR_C1(base, I2C_C1_MST_MASK | I2C_C1_TX_MASK);
 
     /* Wait for the STOP signal finish. */
-    while(I2C_HAL_GetStatusFlag(baseAddr, kI2CBusBusy))
+    while(I2C_HAL_GetStatusFlag(base, kI2CBusBusy))
     {
         if (++i == 0x400U)
         {
@@ -279,13 +281,13 @@ i2c_status_t I2C_HAL_SendStop(uint32_t baseAddr)
  * Description   : Sets the primary 7-bit slave address.
  *
  *END**************************************************************************/
-void I2C_HAL_SetAddress7bit(uint32_t baseAddr, uint8_t address)
+void I2C_HAL_SetAddress7bit(I2C_Type * base, uint8_t address)
 {
     /* Set 7-bit slave address.*/
-    HW_I2C_A1_WR(baseAddr, address << 1U);
-    
+    I2C_WR_A1(base, address << 1U);
+
     /* Disable the address extension option, selecting 7-bit mode.*/
-    BW_I2C_C2_ADEXT(baseAddr, 0U);
+    I2C_BWR_C2_ADEXT(base, 0U);
 }
 
 /*FUNCTION**********************************************************************
@@ -294,18 +296,18 @@ void I2C_HAL_SetAddress7bit(uint32_t baseAddr, uint8_t address)
  * Description   : Sets the primary slave address and enables 10-bit address mode.
  *
  *END**************************************************************************/
-void I2C_HAL_SetAddress10bit(uint32_t baseAddr, uint16_t address)
+void I2C_HAL_SetAddress10bit(I2C_Type * base, uint16_t address)
 {
     /* Set bottom 7 bits of slave address.*/
     uint8_t temp = address & 0x7FU;
 
-    HW_I2C_A1_WR(baseAddr, temp << 1U);
-    
+    I2C_WR_A1(base, temp << 1U);
+
     /* Enable 10-bit address extension.*/
-    BW_I2C_C2_ADEXT(baseAddr, 1U);
-    
+    I2C_BWR_C2_ADEXT(base, 1U);
+
     /* Set top 3 bits of slave address.*/
-    BW_I2C_C2_AD(baseAddr, (address & 0x0380U) >> 7U);
+    I2C_BWR_C2_AD(base, (address & 0x0380U) >> 7U);
 }
 
 /*FUNCTION**********************************************************************
@@ -315,17 +317,17 @@ void I2C_HAL_SetAddress10bit(uint32_t baseAddr, uint16_t address)
  * another read. It will wait till the transfer is actually completed.
  *
  *END**************************************************************************/
-uint8_t I2C_HAL_ReadByteBlocking(uint32_t baseAddr)
+uint8_t I2C_HAL_ReadByteBlocking(I2C_Type * base)
 {
     /* Read byte from I2C data register. */
-    uint8_t byte = HW_I2C_D_RD(baseAddr);
+    uint8_t byte = I2C_RD_D(base);
 
     /* Wait till byte transfer complete. */
-    while (!BR_I2C_S_IICIF(baseAddr))
+    while (!I2C_BRD_S_IICIF(base))
     {}
 
     /* Clear interrupt flag */
-    BW_I2C_S_IICIF(baseAddr, 0x1U);
+    I2C_BWR_S_IICIF(base, 0x1U);
 
     return byte;
 }
@@ -337,25 +339,25 @@ uint8_t I2C_HAL_ReadByteBlocking(uint32_t baseAddr)
  * byte is transfered successfully.
  *
  *END**************************************************************************/
-bool I2C_HAL_WriteByteBlocking(uint32_t baseAddr, uint8_t byte)
+bool I2C_HAL_WriteByteBlocking(I2C_Type * base, uint8_t byte)
 {
 #if FSL_FEATURE_I2C_HAS_DOUBLE_BUFFERING
-    while (!BR_I2C_S2_EMPTY(baseAddr))
+    while (!I2C_BRD_S2_EMPTY(base))
     {}
-#endif 
+#endif
 
     /* Write byte into I2C data register. */
-    HW_I2C_D_WR(baseAddr, byte);
+    I2C_WR_D(base, byte);
 
     /* Wait till byte transfer complete. */
-    while (!BR_I2C_S_IICIF(baseAddr))
+    while (!I2C_BRD_S_IICIF(base))
     {}
 
     /* Clear interrupt flag */
-    BW_I2C_S_IICIF(baseAddr, 0x1U);
+    I2C_BWR_S_IICIF(base, 0x1U);
 
     /* Return 0 if no acknowledge is detected. */
-    return !BR_I2C_S_RXAK(baseAddr);
+    return !I2C_BRD_S_RXAK(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -364,7 +366,7 @@ bool I2C_HAL_WriteByteBlocking(uint32_t baseAddr, uint8_t byte)
  * Description   : Performs a polling receive transaction on the I2C bus.
  *
  *END**************************************************************************/
-i2c_status_t I2C_HAL_MasterReceiveDataPolling(uint32_t baseAddr,
+i2c_status_t I2C_HAL_MasterReceiveDataPolling(I2C_Type * base,
                                               uint16_t slaveAddr,
                                               const uint8_t * cmdBuff,
                                               uint32_t cmdSize,
@@ -375,7 +377,7 @@ i2c_status_t I2C_HAL_MasterReceiveDataPolling(uint32_t baseAddr,
     uint8_t directionBit, address;
 
     /* Return if current I2C is already set as master. */
-    if (BR_I2C_C1_MST(baseAddr))
+    if (I2C_BRD_C1_MST(base))
     {
         return kStatus_I2C_Busy;
     }
@@ -387,16 +389,16 @@ i2c_status_t I2C_HAL_MasterReceiveDataPolling(uint32_t baseAddr,
     address = (uint8_t)slaveAddr << 1U;
 
     /* Set direction to send */
-    I2C_HAL_SetDirMode(baseAddr, kI2CSend);
+    I2C_HAL_SetDirMode(base, kI2CSend);
 
     /* Generate START signal. */
-    I2C_HAL_SendStart(baseAddr);
+    I2C_HAL_SendStart(base);
 
     /* Send slave address */
-    if (!I2C_HAL_WriteByteBlocking(baseAddr, address | directionBit))
+    if (!I2C_HAL_WriteByteBlocking(base, address | directionBit))
     {
         /* Send STOP if no ACK received */
-        I2C_HAL_SendStop(baseAddr);
+        I2C_HAL_SendStop(base);
         return kStatus_I2C_ReceivedNak;
     }
 
@@ -405,41 +407,41 @@ i2c_status_t I2C_HAL_MasterReceiveDataPolling(uint32_t baseAddr,
     {
         while (cmdSize--)
         {
-            if (!I2C_HAL_WriteByteBlocking(baseAddr, *cmdBuff--))
+            if (!I2C_HAL_WriteByteBlocking(base, *cmdBuff--))
             {
                 /* Send STOP if no ACK received */
-                I2C_HAL_SendStop(baseAddr);
+                I2C_HAL_SendStop(base);
                 return kStatus_I2C_ReceivedNak;
             }
         }
 
         /* Need to generate a repeat start before changing to receive. */
-        I2C_HAL_SendStart(baseAddr);
+        I2C_HAL_SendStart(base);
 
         /* Send slave address again */
-        if (!I2C_HAL_WriteByteBlocking(baseAddr, address | 1U))
+        if (!I2C_HAL_WriteByteBlocking(base, address | 1U))
         {
             /* Send STOP if no ACK received */
-            I2C_HAL_SendStop(baseAddr);
+            I2C_HAL_SendStop(base);
             return kStatus_I2C_ReceivedNak;
         }
     }
 
     /* Change direction to receive. */
-    I2C_HAL_SetDirMode(baseAddr, kI2CReceive);
+    I2C_HAL_SetDirMode(base, kI2CReceive);
 
     /* Send NAK if only one byte to read. */
     if (rxSize == 0x1U)
     {
-        I2C_HAL_SendNak(baseAddr);
+        I2C_HAL_SendNak(base);
     }
     else
     {
-        I2C_HAL_SendAck(baseAddr);
+        I2C_HAL_SendAck(base);
     }
 
     /* Dummy read to trigger receive of next byte. */
-    I2C_HAL_ReadByteBlocking(baseAddr);
+    I2C_HAL_ReadByteBlocking(base);
 
     /* Receive data */
     for(i=rxSize-1; i>=0; i--)
@@ -448,25 +450,25 @@ i2c_status_t I2C_HAL_MasterReceiveDataPolling(uint32_t baseAddr,
         {
             case 0x0U:
                 /* Generate STOP signal. */
-                I2C_HAL_SendStop(baseAddr);
+                I2C_HAL_SendStop(base);
                 break;
             case 0x1U:
                 /* For the byte before last, we need to set NAK */
-                I2C_HAL_SendNak(baseAddr);
+                I2C_HAL_SendNak(base);
                 break;
             default :
-                I2C_HAL_SendAck(baseAddr);
+                I2C_HAL_SendAck(base);
                 break;
         }
 
         /* Read recently received byte into buffer and update buffer index */
         if (i==0)
         {
-            *rxBuff++ = I2C_HAL_ReadByte(baseAddr);
+            *rxBuff++ = I2C_HAL_ReadByte(base);
         }
         else
         {
-            *rxBuff++ = I2C_HAL_ReadByteBlocking(baseAddr);
+            *rxBuff++ = I2C_HAL_ReadByteBlocking(base);
         }
     }
 
@@ -479,30 +481,33 @@ i2c_status_t I2C_HAL_MasterReceiveDataPolling(uint32_t baseAddr,
  * Description   : Performs a polling send transaction on the I2C bus.
  *
  *END**************************************************************************/
-i2c_status_t I2C_HAL_MasterSendDataPolling(uint32_t baseAddr,
+i2c_status_t I2C_HAL_MasterSendDataPolling(I2C_Type * base,
                                            uint16_t slaveAddr,
                                            const uint8_t * cmdBuff,
                                            uint32_t cmdSize,
                                            const uint8_t * txBuff,
                                            uint32_t txSize)
 {
+    uint16_t slaveAddress;
+    slaveAddress = (slaveAddr << 1U) & 0x00FFU;
+
     /* Return if current I2C is already set as master. */
-    if (BR_I2C_C1_MST(baseAddr))
+    if (I2C_BRD_C1_MST(base))
     {
         return kStatus_I2C_Busy;
     }
 
     /* Set direction to send. */
-    I2C_HAL_SetDirMode(baseAddr, kI2CSend);
+    I2C_HAL_SetDirMode(base, kI2CSend);
 
     /* Generate START signal. */
-    I2C_HAL_SendStart(baseAddr);
+    I2C_HAL_SendStart(base);
 
     /* Send slave address */
-    if (!I2C_HAL_WriteByteBlocking(baseAddr, (uint8_t)(slaveAddr) << 1U))
+    if (!I2C_HAL_WriteByteBlocking(base, slaveAddress))
     {
         /* Send STOP if no ACK received */
-        I2C_HAL_SendStop(baseAddr);
+        I2C_HAL_SendStop(base);
         return kStatus_I2C_ReceivedNak;
     }
 
@@ -511,10 +516,10 @@ i2c_status_t I2C_HAL_MasterSendDataPolling(uint32_t baseAddr,
     {
         while (cmdSize--)
         {
-            if (!I2C_HAL_WriteByteBlocking(baseAddr, *cmdBuff--))
+            if (!I2C_HAL_WriteByteBlocking(base, *cmdBuff--))
             {
                 /* Send STOP if no ACK received */
-                I2C_HAL_SendStop(baseAddr);
+                I2C_HAL_SendStop(base);
                 return kStatus_I2C_ReceivedNak;
             }
         }
@@ -523,19 +528,19 @@ i2c_status_t I2C_HAL_MasterSendDataPolling(uint32_t baseAddr,
     /* Send data buffer */
     while (txSize--)
     {
-        if (!I2C_HAL_WriteByteBlocking(baseAddr, *txBuff++))
+        if (!I2C_HAL_WriteByteBlocking(base, *txBuff++))
         {
             /* Send STOP if no ACK received */
-            I2C_HAL_SendStop(baseAddr);
+            I2C_HAL_SendStop(base);
             return kStatus_I2C_ReceivedNak;
         }
     }
 
     /* Generate STOP signal. */
-    I2C_HAL_SendStop(baseAddr);
+    I2C_HAL_SendStop(base);
 
     /* Set direction back to receive. */
-    I2C_HAL_SetDirMode(baseAddr, kI2CReceive);
+    I2C_HAL_SetDirMode(base, kI2CReceive);
 
     return kStatus_I2C_Success;
 }
@@ -546,63 +551,63 @@ i2c_status_t I2C_HAL_MasterSendDataPolling(uint32_t baseAddr,
  * Description   : Send out multiple bytes of data using polling method.
  *
  *END**************************************************************************/
-i2c_status_t I2C_HAL_SlaveSendDataPolling(uint32_t baseAddr, const uint8_t* txBuff, uint32_t txSize)
+i2c_status_t I2C_HAL_SlaveSendDataPolling(I2C_Type * base, const uint8_t* txBuff, uint32_t txSize)
 {
 #if FSL_FEATURE_I2C_HAS_START_STOP_DETECT
     /* Wait until start detected */
-   while(!I2C_HAL_GetStartFlag(baseAddr))
+   while(!I2C_HAL_GetStartFlag(base))
    {}
-   I2C_HAL_ClearStartFlag(baseAddr);
+   I2C_HAL_ClearStartFlag(base);
 #endif
     /* Wait until addressed as a slave */
-    while(!I2C_HAL_GetStatusFlag(baseAddr, kI2CAddressAsSlave))
+    while(!I2C_HAL_GetStatusFlag(base, kI2CAddressAsSlave))
     {}
 
     /* Wait interrupt flag is set */
-    while(!I2C_HAL_IsIntPending(baseAddr))
+    while(!I2C_HAL_IsIntPending(base))
     {}
         /* Clear interrupt flag */
-    I2C_HAL_ClearInt(baseAddr);
+    I2C_HAL_ClearInt(base);
 
     /* Set direction mode */
-    if (I2C_HAL_GetStatusFlag(baseAddr, kI2CSlaveTransmit))
+    if (I2C_HAL_GetStatusFlag(base, kI2CSlaveTransmit))
     {
         /* Switch to TX mode*/
-        I2C_HAL_SetDirMode(baseAddr, kI2CSend);
+        I2C_HAL_SetDirMode(base, kI2CSend);
     }
     else
     {
         /* Switch to RX mode.*/
-        I2C_HAL_SetDirMode(baseAddr, kI2CReceive);
+        I2C_HAL_SetDirMode(base, kI2CReceive);
 
         /* Read dummy character.*/
-        I2C_HAL_ReadByte(baseAddr);
+        I2C_HAL_ReadByte(base);
     }
 
     /* While loop to transmit data */
     while(txSize--)
     {
         /* Write byte to data register */
-        I2C_HAL_WriteByte(baseAddr, *txBuff++);
+        I2C_HAL_WriteByte(base, *txBuff++);
 
         /* Wait tranfer byte complete */
-        while(!I2C_HAL_IsIntPending(baseAddr))
+        while(!I2C_HAL_IsIntPending(base))
         {}
 
         /* Clear interrupt flag */
-        I2C_HAL_ClearInt(baseAddr);
+        I2C_HAL_ClearInt(base);
 
         /* if NACK received */
-        if ((I2C_HAL_GetStatusFlag(baseAddr, kI2CReceivedNak)) && (txSize != 0))
+        if ((I2C_HAL_GetStatusFlag(base, kI2CReceivedNak)) && (txSize != 0))
         {
             return kStatus_I2C_ReceivedNak;
         }
     }
     /* Switch to RX mode.*/
-    I2C_HAL_SetDirMode(baseAddr, kI2CReceive);
+    I2C_HAL_SetDirMode(base, kI2CReceive);
 
     /* Read dummy character.*/
-    I2C_HAL_ReadByte(baseAddr);
+    I2C_HAL_ReadByte(base);
 
     return kStatus_I2C_Success;
 }
@@ -613,56 +618,56 @@ i2c_status_t I2C_HAL_SlaveSendDataPolling(uint32_t baseAddr, const uint8_t* txBu
  * Description   : Receive multiple bytes of data using polling method.
  *
  *END**************************************************************************/
-i2c_status_t I2C_HAL_SlaveReceiveDataPolling(uint32_t baseAddr, uint8_t *rxBuff, uint32_t rxSize)
+i2c_status_t I2C_HAL_SlaveReceiveDataPolling(I2C_Type * base, uint8_t *rxBuff, uint32_t rxSize)
 {
 #if FSL_FEATURE_I2C_HAS_START_STOP_DETECT
     /* Wait until start detected */
-   while(!I2C_HAL_GetStartFlag(baseAddr))
+   while(!I2C_HAL_GetStartFlag(base))
    {}
-   I2C_HAL_ClearStartFlag(baseAddr);
+   I2C_HAL_ClearStartFlag(base);
 #endif
     /* Wait until addressed as a slave */
-    while(!I2C_HAL_GetStatusFlag(baseAddr, kI2CAddressAsSlave))
+    while(!I2C_HAL_GetStatusFlag(base, kI2CAddressAsSlave))
     {}
 
     /* Wait interrupt flag is set */
-    while(!I2C_HAL_IsIntPending(baseAddr))
+    while(!I2C_HAL_IsIntPending(base))
     {}
         /* Clear interrupt flag */
-    I2C_HAL_ClearInt(baseAddr);
+    I2C_HAL_ClearInt(base);
 
     /* Set direction mode */
-    if (I2C_HAL_GetStatusFlag(baseAddr, kI2CSlaveTransmit))
+    if (I2C_HAL_GetStatusFlag(base, kI2CSlaveTransmit))
     {
         /* Switch to TX mode*/
-        I2C_HAL_SetDirMode(baseAddr, kI2CSend);
+        I2C_HAL_SetDirMode(base, kI2CSend);
     }
     else
     {
         /* Switch to RX mode.*/
-        I2C_HAL_SetDirMode(baseAddr, kI2CReceive);
+        I2C_HAL_SetDirMode(base, kI2CReceive);
 
         /* Read dummy character.*/
-        I2C_HAL_ReadByte(baseAddr);
+        I2C_HAL_ReadByte(base);
     }
 
     /* While loop to receive data */
     while(rxSize--)
     {
         /* Wait interrupt flag is set */
-        while(!I2C_HAL_IsIntPending(baseAddr))
+        while(!I2C_HAL_IsIntPending(base))
         {}
 
         /* Read byte from data register  */
-        *rxBuff++ = I2C_HAL_ReadByte(baseAddr);
+        *rxBuff++ = I2C_HAL_ReadByte(base);
 
         /* Clear interrupt flag */
-        I2C_HAL_ClearInt(baseAddr);
+        I2C_HAL_ClearInt(base);
     }
     return kStatus_I2C_Success;
 }
 
-
+#endif /* FSL_FEATURE_SOC_I2C_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

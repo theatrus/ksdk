@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ /*
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -30,12 +30,14 @@
 #ifndef __FSL_MPU_HAL_H__
 #define __FSL_MPU_HAL_H__
 
+#define FSL_FEATURE_MPU_SLAVEPORT                  5U
+#define FSL_FEATURE_MPU_MASTER                     8U
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_device_registers.h"
-
-#define MPU_REGION_NUMBER 12
+#if FSL_FEATURE_SOC_MPU_COUNT
 
 /*!
  * @addtogroup mpu_hal
@@ -45,140 +47,229 @@
 /*******************************************************************************
  * Definitions
  *******************************************************************************/
+ 
+/* Macro should be in MK64F12.h */
+#define MPU_WORD_LOW_MASTER_SHIFT(n)             (n*6)
+#define MPU_WORD_LOW_MASTER_MASK(n)              (0x1Fu<<MPU_WORD_LOW_MASTER_SHIFT(n))
+#define MPU_WORD_LOW_MASTER_WIDTH                5
+#define MPU_WORD_LOW_MASTER(n, x)                (((uint32_t)(((uint32_t)(x))<<MPU_WORD_LOW_MASTER_SHIFT(n)))&MPU_WORD_LOW_MASTER_MASK(n))
+
+#define MPU_LOW_MASTER_PE_SHIFT(n)               (n*6+5)  
+#define MPU_LOW_MASTER_PE_MASK(n)                (0x1u << MPU_LOW_MASTER_PE_SHIFT(n))
+#define MPU_WORD_MASTER_PE_WIDTH                 1
+#define MPU_WORD_MASTER_PE(n, x)                 (((uint32_t)(((uint32_t)(x))<<MPU_LOW_MASTER_PE_SHIFT(n)))&MPU_LOW_MASTER_PE_MASK(n))
+
+#define MPU_WORD_HIGH_MASTER_SHIFT(n)            (n*2+23)
+#define MPU_WORD_HIGH_MASTER_MASK(n)             (0x03u << MPU_WORD_HIGH_MASTER_SHIFT(n))
+#define MPU_WORD_HIGH_MASTER_WIDTH               2
+#define MPU_WORD_HIGH_MASTER(n, x)               (((uint32_t)(((uint32_t)(x))<<MPU_WORD_HIGH_MASTER_SHIFT(n)))&MPU_WORD_HIGH_MASTER_MASK(n))
+
+/* Macro should be in MK64F12_extension.h */
+#define MPU_WR_WORD_LOW_MASTER(base, index, index2, n, value) (MPU_WR_WORD(base, index, index2, (MPU_RD_WORD(base, index, index2) & ~MPU_WORD_LOW_MASTER_MASK(n)) | MPU_WORD_LOW_MASTER(n, value)))
+#define MPU_WR_WORD_PE(base, index, index2, n, value) (MPU_WR_WORD(base, index, index2, (MPU_RD_WORD(base, index, index2) & ~MPU_LOW_MASTER_PE_MASK(n)) | MPU_WORD_MASTER_PE(n, value)))
+#define MPU_WR_WORD_HIGH_MASTER(base, index, index2, n, value) (MPU_WR_WORD(base, index, index2, (MPU_RD_WORD(base, index, index2) & ~MPU_WORD_HIGH_MASTER_MASK(n)) | MPU_WORD_HIGH_MASTER(n, value)))
+
+#define MPU_WR_WORD_RGDAAC_LOW_MASTER(base, index, n, value) (MPU_WR_RGDAAC(base, index, (MPU_RD_RGDAAC(base, index) & ~MPU_WORD_LOW_MASTER_MASK(n)) | MPU_WORD_LOW_MASTER(n, value)))
+#define MPU_WR_WORD_RGDAAC_PE(base, index, n, value) (MPU_WR_RGDAAC(base, index, (MPU_RD_RGDAAC(base, index) & ~MPU_LOW_MASTER_PE_MASK(n)) | MPU_WORD_MASTER_PE(n, value)))
+#define MPU_WR_WORD_RGDAAC_HIGH_MASTER(base, index, n, value) (MPU_WR_RGDAAC(base, index, (MPU_RD_RGDAAC(base, index) & ~MPU_WORD_HIGH_MASTER_MASK(n)) | MPU_WORD_HIGH_MASTER(n, value)))
 
 /*! @brief MPU region number region0~region11. */
 typedef enum _mpu_region_num{
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 0U
     kMPURegionNum00 = 0U,  /*!< MPU region number 0*/
-    kMPURegionNum01 = 1U,  /*!< MPU region number 1*/
-    kMPURegionNum02 = 2U,  /*!< MPU region number 2*/
-    kMPURegionNum03 = 3U,  /*!< MPU region number 3*/
-    kMPURegionNum04 = 4U,  /*!< MPU region number 4*/
-    kMPURegionNum05 = 5U,  /*!< MPU region number 5*/
-    kMPURegionNum06 = 6U,  /*!< MPU region number 6*/
-    kMPURegionNum07 = 7U,  /*!< MPU region number 7*/
-    kMPURegionNum08 = 8U,  /*!< MPU region number 8*/
-    kMPURegionNum09 = 9U,  /*!< MPU region number 9*/
-    kMPURegionNum10 = 10U, /*!< MPU region number 10*/
-    kMPURegionNum11 = 11U, /*!< MPU region number 11*/
-#if defined(CPU_MK70FN1M0VMF12) || defined(CPU_MK70FX512VMF12) || defined(CPU_MK70FN1M0VMF15) || defined(CPU_MK70FX512VMF15) || \
-    defined(CPU_MK70FN1M0VMJ12) || defined(CPU_MK70FX512VMJ12) || defined(CPU_MK70FN1M0VMJ15) || defined(CPU_MK70FX512VMJ15)
-    kMPURegionNum11 = 12U, /*!< MPU region number 12*/
-    kMPURegionNum11 = 13U, /*!< MPU region number 13*/
-    kMPURegionNum11 = 14U, /*!< MPU region number 14*/
-    kMPURegionNum11 = 15U, /*!< MPU region number 15*/
 #endif
-}mpu_region_num;
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 1U
+    kMPURegionNum01 = 1U,  /*!< MPU region number 1*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 2U
+    kMPURegionNum02 = 2U,  /*!< MPU region number 2*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 3U
+    kMPURegionNum03 = 3U,  /*!< MPU region number 3*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 4U
+    kMPURegionNum04 = 4U,  /*!< MPU region number 4*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 5U
+    kMPURegionNum05 = 5U,  /*!< MPU region number 5*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 6U
+    kMPURegionNum06 = 6U,  /*!< MPU region number 6*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 7U
+    kMPURegionNum07 = 7U,  /*!< MPU region number 7*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 8U
+    kMPURegionNum08 = 8U,  /*!< MPU region number 8*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 9U
+    kMPURegionNum09 = 9U,  /*!< MPU region number 9*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 10U
+    kMPURegionNum10 = 10U, /*!< MPU region number 10*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 11U
+    kMPURegionNum11 = 11U, /*!< MPU region number 11*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 12U
+    kMPURegionNum12 = 12U, /*!< MPU region number 12*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 13U
+    kMPURegionNum13 = 13U, /*!< MPU region number 13*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 14U
+    kMPURegionNum14 = 14U, /*!< MPU region number 14*/
+#endif
+#if FSL_FEATURE_MPU_DESCRIPTOR_COUNT > 15U
+    kMPURegionNum15 = 15U, /*!< MPU region number 15*/
+#endif
+}mpu_region_num_t;
 
-/*! @brief MPU error address register0~4. */
-typedef enum _mpu_error_addr_reg{
-    kMPUErrorAddrReg00 = 0U, /*!< MPU error address register 0*/
-    kMPUErrorAddrReg01 = 1U, /*!< MPU error address register 1*/
-    kMPUErrorAddrReg02 = 2U, /*!< MPU error address register 2*/
-    kMPUErrorAddrReg03 = 3U, /*!< MPU error address register 3*/
-    kMPUErrorAddrReg04 = 4U  /*!< MPU error address register 4*/
-}mpu_error_addr_reg;
+/*! @brief Descripts the number of MPU regions. */
+typedef enum _mpu_region_total_num
+{
+    kMPU8Regions  = 0x0U,    /*!< MPU supports 8 regions  */
+    kMPU12Regions = 0x1U,    /*!< MPU supports 12 regions */
+    kMPU16Regions = 0x2U     /*!< MPU supports 16 regions */
+}mpu_region_total_num_t;
 
-/*! @brief MPU error detail register0~4. */
-typedef enum _mpu_error_detail_reg{
-    kMPUErrorDetailReg00 = 0U, /*!< MPU error detail register 0*/
-    kMPUErrorDetailReg01 = 1U, /*!< MPU error detail register 1*/
-    kMPUErrorDetailReg02 = 2U, /*!< MPU error detail register 2*/
-    kMPUErrorDetailReg03 = 3U, /*!< MPU error detail register 3*/
-    kMPUErrorDetailReg04 = 4U  /*!< MPU error detail register 4*/
-}mpu_error_detail_reg;
+/*! @brief MPU hardware basic information. */
+typedef struct _mpu_hardware_info
+{
+    uint8_t                kMPUHardwareRevisionLevel;   /*!< Specifies the MPU's hardware and definition reversion level */
+    uint8_t                kMPUSupportSlavePortsNum;    /*!< Specifies the number of slave ports connnected to MPU       */
+    mpu_region_total_num_t kMPUSupportRegionsNum;       /*!< Indicates the number of region descriptors implemented      */
+}mpu_hardware_info_t;
 
 /*! @brief MPU access error. */
-typedef enum _mpu_error_access_type{
-    kMPUReadErrorType  = 0U, /*!< MPU error type---read*/
-    kMPUWriteErrorType = 1U  /*!< MPU error type---write*/
-}mpu_error_access_type;
+typedef enum _mpu_err_access_type{
+    kMPUErrTypeRead  = 0U,     /*!< MPU error type---read  */
+    kMPUErrTypeWrite = 1U      /*!< MPU error type---write */
+}mpu_err_access_type_t;
 
 /*! @brief MPU access error attributes.*/
-typedef enum _mpu_error_attributes{
-    kMPUUserModeInstructionAccess       = 0U, /*!< access instruction error in user mode*/
-    kMPUUserModeDataAccess              = 1U, /*!< access data error in user mode*/
-    kMPUSupervisorModeInstructionAccess = 2U, /*!< access instruction error in supervisor mode*/
-    kMPUSupervisorModeDataAccess        = 3U  /*!< access data error in supervisor mode*/
-}mpu_error_attributes;
+typedef enum _mpu_err_attributes{
+    kMPUInstructionAccessInUserMode       = 0U,  /*!< access instruction error in user mode       */
+    kMPUDataAccessInUserMode              = 1U,  /*!< access data error in user mode              */
+    kMPUInstructionAccessInSupervisorMode = 2U,  /*!< access instruction error in supervisor mode */
+    kMPUDataAccessInSupervisorMode        = 3U   /*!< access data error in supervisor mode        */
+}mpu_err_attributes_t;
 
 /*! @brief access MPU in which mode. */
 typedef enum _mpu_access_mode{
     kMPUAccessInUserMode       = 0U, /*!< access data or instruction in user mode*/
     kMPUAccessInSupervisorMode = 1U  /*!< access data or instruction in supervisor mode*/
-}mpu_access_mode;
+}mpu_access_mode_t;
 
 /*! @brief MPU master number. */
-typedef enum _mpu_master_num{
-    kMPUMaster00 = 0U, /*!< Core.*/
-    kMPUMaster01 = 1U, /*!< Debugger.*/
-    kMPUMaster02 = 2U, /*!< DMA.*/
-    kMPUMaster03 = 3U, /*!< ENET.*/
-    kMPUMaster04 = 4U, /*!< USB.*/
-    kMPUMaster05 = 5U, /*!< SDHC.*/
-    kMPUMaster06 = 6U, /*!< undefined.*/
-    kMPUMaster07 = 7U  /*!< undefined.*/
-}mpu_master_num;
+typedef enum _mpu_master{
+#if FSL_FEATURE_MPU_MASTER > 1U
+    kMPUMaster0  = 0U, /*!< MPU master core           */
+#endif
+#if FSL_FEATURE_MPU_MASTER > 2U
+    kMPUMaster1  = 1U, /*!< MPU master defined in SOC */
+#endif
+#if FSL_FEATURE_MPU_MASTER > 3U
+    kMPUMaster2  = 2U, /*!< MPU master defined in SOC */
+#endif
+#if FSL_FEATURE_MPU_MASTER > 4U
+    kMPUMaster3  = 3U, /*!< MPU master defined in SOC */
+#endif
+#if FSL_FEATURE_MPU_MASTER > 5U
+    kMPUMaster4  = 4U, /*!< MPU master defined in SOC */
+#endif
+#if FSL_FEATURE_MPU_MASTER > 6U
+    kMPUMaster5  = 5U, /*!< MPU master defined in SOC */
+#endif
+#if FSL_FEATURE_MPU_MASTER > 7U
+    kMPUMaster6  = 6U, /*!< MPU master defined in SOC */
+#endif
+#if FSL_FEATURE_MPU_MASTER > 8U
+    kMPUMaster7  = 7U  /*!< MPU master defined in SOC */
+#endif
+}mpu_master_t;
 
 /*! @brief MPU error access control detail. */
-typedef enum _mpu_error_access_control{
-    kMPUNoRegionHitError        = 0U, /*!< no region hit error*/
-    kMPUNoneOverlappRegionError = 1U, /*!< access single region error*/
-    kMPUOverlappRegionError     = 2U  /*!< access overlapping region error*/
-}mpu_error_access_control;
+typedef enum _mpu_err_access_ctr{
+    kMPUNoRegionHit        = 0U,   /*!< no region hit error             */
+    kMPUNoneOverlappRegion = 1U,   /*!< access single region error      */
+    kMPUOverlappRegion     = 2U    /*!< access overlapping region error */
+}mpu_err_access_ctr_t;
+
+/*! @brief Descripts MPU detail error access info. */
+typedef struct _mpu_access_err_info
+{
+    mpu_master_t           master;                    /*!< Access error master                   */
+    mpu_err_attributes_t   attributes;                /*!< Access error attribues                */
+    mpu_err_access_type_t  accessType;                /*!< Access error type                     */
+    mpu_err_access_ctr_t   accessCtr;                 /*!< Access error control                  */
+    uint32_t               addr;                      /*!< Access error address                  */
+    uint8_t                slavePort;                 /*!< Access error slave port               */
+#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
+    uint8_t                processorIdentification;   /*!< Access error processor identification */
+#endif
+}mpu_access_err_info_t;
 
 /*! @brief MPU access rights in supervisor mode for master0~master3. */
 typedef enum _mpu_supervisor_access_rights{
-    kMPUSupervisorReadWriteExecute = 0U, /*!< R W E allowed in supervisor mode*/
-    kMPUSupervisorReadExecute      = 1U, /*!< R E allowed in supervisor mode*/
-    kMPUSupervisorReadWrite        = 2U, /*!< R W allowed in supervisor mode*/
-    kMPUSupervisorEqualToUsermode  = 3U  /*!< access permission equal to user mode*/
-}mpu_supervisor_access_rights;
+    kMPUSupervisorReadWriteExecute = 0U,   /*!< Read write and execute operations are allowed in supervisor mode */
+    kMPUSupervisorReadExecute      = 1U,   /*!< Read and execute operations are allowed in supervisor mode       */
+    kMPUSupervisorReadWrite        = 2U,   /*!< Read write operations are allowed in supervisor mode             */
+    kMPUSupervisorEqualToUsermode  = 3U    /*!< Access permission equal to user mode                             */
+}mpu_supervisor_access_rights_t;
 
 /*! @brief MPU access rights in user mode for master0~master3. */
 typedef enum _mpu_user_access_rights{
-    kMPUUserNoAccessRights   = 0U, /*!< no access allowed in user mode*/
-    kMPUUserExecute          = 1U, /*!< E allowed in user mode*/
-    kMPUUserWrite            = 2U, /*!< W allowed in user mode*/
-    kMPUUserWriteExecute     = 3U, /*!< W E allowed in user mode*/
-    kMPUUserRead             = 4U, /*!< R allowed in user mode*/
-    kMPUUserReadExecute      = 5U, /*!< R E allowed in user mode*/
-    kMPUUserReadWrite        = 6U, /*!< R W allowed in user mode*/
-    kMPUUserReadWriteExecute = 7U  /*!< R W E allowed in user mode*/
-}mpu_user_access_rights;
+    kMPUUserNoAccessRights   = 0U,   /*!< no access allowed in user mode                             */
+    kMPUUserExecute          = 1U,   /*!< execute operation is allowed in user mode                  */
+    kMPUUserWrite            = 2U,   /*!< Write operation is allowed in user mode                    */
+    kMPUUserWriteExecute     = 3U,   /*!< Write and execute operations are allowed in user mode      */
+    kMPUUserRead             = 4U,   /*!< Read is allowed in user mode                               */
+    kMPUUserReadExecute      = 5U,   /*!< Read and execute operations are allowed in user mode       */
+    kMPUUserReadWrite        = 6U,   /*!< Read and write operations are allowed in user mode         */
+    kMPUUserReadWriteExecute = 7U    /*!< Read write and execute operations are allowed in user mode */
+}mpu_user_access_rights_t;
 
+/*! @brief MPU access rights for low master0~master3. */
+typedef struct _mpu_low_masters_access_rights
+{
+    mpu_supervisor_access_rights_t superAccessRights;  	      /*!< master access rights in supervisor mode */
+    mpu_user_access_rights_t       userAccessRights;          /*!< master access rights in user mode       */
 #if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*! @brief MPU process identifier. */
-typedef enum _mpu_process_identifier_value{
-    kMPUIdentifierDisable = 0U, /*!< processor identifier disable*/
-    kMPUIdentifierEnable  = 1U  /*!< processor identifier enable*/
-}mpu_process_identifier_value;
+    bool                           processIdentifierEnable;   /*!< Enables or disables process identifier  */
 #endif
+}mpu_low_masters_access_rights_t;
 
-/*! @brief MPU access control for master4~master7. */
-typedef enum _mpu_access_control{
-    kMPUAccessDisable = 0U, /*!< Read or Write not allowed*/
-    kMPUAccessEnable  = 1U  /*!< Read or Write allowed*/
-}mpu_access_control;
+/*! @brief MPU access rights mode for high master4~master7. */
+typedef struct _mpu_high_masters_access_rights
+{
+    bool kMPUWriteEnable;    /*!< Enables or disables write permission */
+    bool kMPUReadEnable;     /*!< Enables or disables read permission  */
+}mpu_high_masters_access_rights_t;
 
-/*! @brief MPU access type for master4~master7. */
-typedef enum _mpu_access_type{
-    kMPUAccessRead  = 0U, /*!< Access type is read*/
-    kMPUAccessWrite = 1U  /*!< Access type is write*/
-}mpu_access_type;
-
-/*! @brief MPU access region valid. */
-typedef enum _mpu_region_valid{
-    kMPURegionInvalid = 0U, /*!< region invalid*/
-    kMPURegionValid   = 1U  /*!< region valid*/
-}mpu_region_valid;
+/*! 
+ * @brief Data v for MPU region initialize
+ *
+ * This structure is used when calling the MPU_DRV_Init function.
+ * 
+ */
+typedef struct MpuRegionConfig{
+    mpu_region_num_t                 regionNum;         /*!< MPU region number             */
+    uint32_t                         startAddr;         /*!< Memory region start address   */
+    uint32_t                         endAddr;           /*!< Memory region end address     */
+    mpu_low_masters_access_rights_t  accessRights1[4];  /*!< Low masters access permission */
+    mpu_high_masters_access_rights_t accessRights2[4];  /*!< Low masters access permission */
+    bool                             regionEnable;      /*!< Enables or disables region    */
+}mpu_region_config_t;
 
 /*! @brief MPU status return codes.*/
 typedef enum _MPU_status {
-    kStatus_MPU_Success                   = 0x0U, /*!< Succeed. */
-    kStatus_MPU_NotInitlialized           = 0x1U, /*!< MPU is not initialized yet. */
-    kStatus_MPU_NullArgument              = 0x2U, /*!< Argument is NULL.*/
+    kStatus_MPU_Success          = 0x0U,  /*!< MPU Succeed.                */
+    kStatus_MPU_Fail             = 0x1U,  /*!< MPU failed.                 */
+    kStatus_MPU_NotInitlialized  = 0x2U,  /*!< MPU is not initialized yet. */
+    kStatus_MPU_NullArgument     = 0x3U,  /*!< Argument is NULL.           */
  } mpu_status_t;
- 
+
 /*******************************************************************************
  ** Variables
  *******************************************************************************/
@@ -197,1376 +288,162 @@ extern "C" {
  */
 
 /*!
- * @brief Enables the MPU module operation
+ * @brief Enables the MPU module operation.
  *
- * @param baseAddr The MPU peripheral base address
+ * @param base Base address of MPU peripheral instance.
  */
-static inline void MPU_HAL_Enable(uint32_t baseAddr)
+static inline void MPU_HAL_Enable(MPU_Type * base)
 {
-    BW_MPU_CESR_VLD(baseAddr, (uint8_t)true);
+    MPU_BWR_CESR_VLD(base, 1U);
 }
 
 /*!
- * @brief Disables the MPU module operation
+ * @brief Disables the MPU module operation.
  *
- * @param baseAddr The MPU peripheral base address
+ * @param base Base address of MPU peripheral instance.
  */
-static inline void MPU_HAL_Disable(uint32_t baseAddr)
+static inline void MPU_HAL_Disable(MPU_Type * base)
 {
-    BW_MPU_CESR_VLD(baseAddr, (uint8_t)false);
+    MPU_BWR_CESR_VLD(base, 0U);
 }
 
 /*!
  * @brief Checks whether the MPU module is enabled
  *
- * @param baseAddr The MPU peripheral base address
- * @return true MPU module is enabled
- * @return false MPU module is disabled
+ * @param base Base address of MPU peripheral instance.
+ * @return State of the module
+ * @retval true MPU module is enabled.
+ * @retval false MPU module is disabled.
  */
-static inline bool MPU_HAL_IsEnabled(uint32_t baseAddr)
+static inline bool MPU_HAL_IsEnable(MPU_Type * base)
 {
-   return BR_MPU_CESR_VLD(baseAddr);
+   return MPU_BRD_CESR_VLD(base);
 }
 
 /*!
- * @brief Returns the total region number
+ * @brief Gets MPU basic hardware info.
  *
- * @param baseAddr The MPU peripheral base address
- * @return the number of regions
+ * @param base Base address of MPU peripheral instance.
+ * @param infoPtr The pointer to the hardware information structure see #mpu_hardware_info_t.
  */
-static inline uint32_t MPU_HAL_GetNumberOfRegions(uint32_t baseAddr)
-{
-    return (BR_MPU_CESR_NRGD(baseAddr));
-}
+void MPU_HAL_GetHardwareInfo(MPU_Type *base, mpu_hardware_info_t *infoPtr);
 
 /*!
- * @brief Returns MPU slave sports
+ * @brief Gets MPU derail error access info.
  *
- * @param baseAddr The MPU peripheral base address
- * @return the number of slaves
+ * @param base Base address of MPU peripheral instance.
+ * @param errInfoArrayPtr The pointer to array of structure mpu_access_err_info_t.
  */
-static inline uint32_t MPU_HAL_GetNumberOfSlaves(uint32_t baseAddr)
-{
-    return (BR_MPU_CESR_NSP(baseAddr));
-}
+void MPU_HAL_GetDetailErrorAccessInfo(MPU_Type *base, mpu_access_err_info_t *errInfoArrayPtr);
 
 /*!
- * @brief Returns hardware level info
+ * @brief Sets region start and end address.
  *
- * @param baseAddr The MPU peripheral base address
- * @return hardware revision level
- */
-static inline uint32_t MPU_HAL_GetHardwareRevisionLevel(uint32_t baseAddr)
-{
-    return (BR_MPU_CESR_HRL(baseAddr));
-}
-
-/*!
- * @brief Returns hardware level info
- *
- * @param baseAddr The MPU peripheral base address
- * @param regNum Error address register number
- * @return error access address
- */
-static inline uint32_t MPU_HAL_GetErrorAccessAddr(uint32_t baseAddr, mpu_error_addr_reg regNum)
-{
-    assert(regNum < HW_MPU_EARn_COUNT);
-    return (BR_MPU_EARn_EADDR(baseAddr, regNum));
-}
-
-/*!
- * @brief Returns error access slaves sports
- *
- * @param baseAddr The MPU peripheral base address
- * @return error slave sports
-*/
-static inline uint8_t MPU_HAL_GetErrorSlaveSports(uint32_t baseAddr)
-{
-    return (BR_MPU_CESR_SPERR(baseAddr));
-}
-
-/*!
- * @brief Returns error access address
- *
- * @param baseAddr The MPU peripheral base address
- * @param errorDetailRegNum Error detail register number
- * @return error access type
-*/
-static inline mpu_error_access_type MPU_HAL_GetErrorAccessType(uint32_t baseAddr, mpu_error_detail_reg errorDetailRegNum)
-{
-    assert(errorDetailRegNum < HW_MPU_EDRn_COUNT);
-    return (mpu_error_access_type)(BR_MPU_EDRn_ERW(baseAddr, errorDetailRegNum));
-}
-
-/*!
- * @brief Returns error access attributes
- *
- * @param baseAddr The MPU peripheral base address
- * @param errorDetailRegNum Detail error register number
- * @return error access attributes
- */
-static inline mpu_error_attributes MPU_HAL_GetErrorAttributes(uint32_t baseAddr, mpu_error_detail_reg errorDetailRegNum)
-{
-    assert(errorDetailRegNum < HW_MPU_EDRn_COUNT);
-    return (mpu_error_attributes)(BR_MPU_EDRn_EATTR(baseAddr, errorDetailRegNum));
-}
-
-/*!
- * @brief Returns error access master number
- *
- * @param baseAddr The MPU peripheral base address
- * @param errorDetailRegNum Error register number
- * @return error master number
- */
-static inline mpu_master_num MPU_HAL_GetErrorMasterNum(uint32_t baseAddr, mpu_error_detail_reg errorDetailRegNum)
-{
-    assert(errorDetailRegNum < HW_MPU_EDRn_COUNT);
-    return (mpu_master_num)(BR_MPU_EDRn_EMN(baseAddr, errorDetailRegNum));
-}
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Returns error process identifier
- *
- * @param baseAddr The MPU peripheral base address
- * @param errorDetailRegNum Error register number
- * @return error process identifier
- */
-static inline uint32_t MPU_HAL_GetErrorProcessIdentifier(uint32_t baseAddr, mpu_error_detail_reg errorDetailRegNum)
-{
-    assert(errorDetailRegNum < HW_MPU_EDRn_COUNT);
-    return(BR_MPU_EDRn_EPID(baseAddr, errorDetailRegNum));
-}
-#endif
-
-/*!
- * @brief Returns error access control
- *
- * @param baseAddr The MPU peripheral base address
- * @param errorDetailRegNum Error register number
- * @return error access control
- */
-static inline mpu_error_access_control MPU_HAL_GetErrorAccessControl(uint32_t baseAddr, mpu_error_detail_reg errorDetailRegNum)
-{
-    assert(errorDetailRegNum < HW_MPU_EDRn_COUNT);
-    
-    uint32_t i = BR_MPU_EDRn_EACD(baseAddr, errorDetailRegNum);
-    
-    if(0 == i)
-    {
-        return (kMPUNoRegionHitError);
-    }
-    else if(!(i&(i-1)))
-    {
-        return (kMPUNoneOverlappRegionError);
-    }
-    else 
-    {
-        return (kMPUOverlappRegionError);
-    }
-}
-
-/*!
- * @brief Returns the region start address
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return region start address
- */
-static inline uint32_t MPU_HAL_GetRegionStartAddr(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD0_COUNT);
-    return (BR_MPU_RGDn_WORD0_SRTADDR(baseAddr, regionNum)<<BP_MPU_RGDn_WORD0_SRTADDR);
-}
-
-/*!
- * @brief Sets region start address
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param startAddr Region start address
- */
-static inline void MPU_HAL_SetRegionStartAddr(uint32_t baseAddr, mpu_region_num regionNum, uint32_t startAddr)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD0_COUNT);
-    startAddr >>= BP_MPU_RGDn_WORD0_SRTADDR; 
-    BW_MPU_RGDn_WORD0_SRTADDR(baseAddr, regionNum, startAddr);
-}
-
-/*!
- * @brief Returns region end address
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return region end address
- */
-static inline uint32_t MPU_HAL_GetRegionEndAddr(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD1_COUNT);
-    return (BR_MPU_RGDn_WORD1_ENDADDR(baseAddr, regionNum)<<BP_MPU_RGDn_WORD0_SRTADDR);
-}
-
-/*!
- * @brief Sets region end address
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param endAddr Region end address
- */
-static inline void MPU_HAL_SetRegionEndAddr(uint32_t baseAddr, mpu_region_num regionNum, uint32_t endAddr)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD1_COUNT);
-    endAddr >>= BP_MPU_RGDn_WORD0_SRTADDR;
-    BW_MPU_RGDn_WORD1_ENDADDR(baseAddr, regionNum, endAddr);
-}
-
-/*!
- * @brief Returns all masters access permission for a specific region
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return all masters access permission
- */
-static inline uint32_t MPU_HAL_GetAllMastersAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (HW_MPU_RGDn_WORD2_RD(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets all masters access permission for a specific region
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights All masters access rights
- */
-static inline void MPU_HAL_SetAllMastersAccessRights(uint32_t baseAddr, mpu_region_num regionNum, uint32_t accessRights)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    HW_MPU_RGDn_WORD2_WR(baseAddr, regionNum, accessRights);
-}
-
-/*!
- * @brief Gets M0 access permission in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master0 access permission
- */
-static inline mpu_supervisor_access_rights MPU_HAL_GetM0SupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (mpu_supervisor_access_rights)(BR_MPU_RGDn_WORD2_M0SM(baseAddr, regionNum)); 
-}
-
-/*!
- * @brief Gets M0 access permission in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master0 access permission
- */
-static inline mpu_user_access_rights MPU_HAL_GetM0UserAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT); 
-    return (mpu_user_access_rights)(BR_MPU_RGDn_WORD2_M0UM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets M0 access permission in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master0 access permission
- */
-static inline void MPU_HAL_SetM0SupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_supervisor_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);  
-    BW_MPU_RGDn_WORD2_M0SM(baseAddr, regionNum, accessRights);
-}
-
-/*!
- * @brief Sets M0 access permission in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master0 access permission
- */
-static inline void MPU_HAL_SetM0UserAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_user_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT); 
-    BW_MPU_RGDn_WORD2_M0UM(baseAddr, regionNum, accessRights);
-}
-
-# if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Checks whether the M0 process identifier is enabled in region hit evaluation
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return true m0 process identifier is enabled
- * @return false m0 process identifier is disabled
- */
-
-static inline bool MPU_HAL_IsM0ProcessIdentifierEnabled(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (1 == BR_MPU_RGDn_WORD2_M0PE(baseAddr, regionNum));
-}
-#endif
-
-# if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Sets the M0 process identifier value--- 1 enable process identifier in region hit evaluation and 0 disable
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param identifierValue Process identifier value
- */
-static inline void MPU_HAL_SetM0ProcessIdentifierValue(uint32_t baseAddr, mpu_region_num regionNum, mpu_process_identifier_value identifierValue)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M0PE(baseAddr, regionNum, identifierValue);
-}
-#endif
-
-/*!
- * @brief Gets M1 access permission in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master1 access permission
- */
-static inline mpu_supervisor_access_rights MPU_HAL_GetM1SupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (mpu_supervisor_access_rights)(BR_MPU_RGDn_WORD2_M1SM(baseAddr, regionNum)); 
-}
-
-/*!
- * @brief Gets M1 access permission in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master1 access permission
- */
-static inline mpu_user_access_rights MPU_HAL_GetM1UserAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (mpu_user_access_rights)(BR_MPU_RGDn_WORD2_M1UM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets M1 access permission in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master1 access permission
- */
-static inline void MPU_HAL_SetM1SupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_supervisor_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M1SM(baseAddr, regionNum, accessRights);
-}
-
-/*!
- * @brief Sets M1 access permission in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master1 access permission
- */
-static inline void MPU_HAL_SetM1UserAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_user_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M1UM(baseAddr, regionNum, accessRights);
-}
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Checks whether M1 process identifier enabled in region hit evaluation
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return true m1 process identifier is enabled
- * @return false m1 process identifier is disabled
- */
-static inline bool MPU_HAL_IsM1ProcessIdentifierEnabled(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (1 == BR_MPU_RGDn_WORD2_M1PE(baseAddr, regionNum));
-}
-#endif
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Sets the M1 process identifier value--- 1 enable process identifier in region hit evaluation and 0 disable
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param identifierValue Process identifier value
- */
-static inline void MPU_HAL_SetM1ProcessIdentifierValue(uint32_t baseAddr, mpu_region_num regionNum, mpu_process_identifier_value identifierValue)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M1PE(baseAddr, regionNum, identifierValue);
-}
-#endif
-/*!
- * @brief Gets M2 access permission in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master2 access permission
- */
-static inline mpu_supervisor_access_rights MPU_HAL_GetM2SupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (mpu_supervisor_access_rights)(BR_MPU_RGDn_WORD2_M2SM(baseAddr, regionNum)); 
-}
-
-/*!
- * @brief Gets M2 access permission in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master2 access permission
- */
-static inline mpu_user_access_rights MPU_HAL_GetM2UserAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (mpu_user_access_rights)(BR_MPU_RGDn_WORD2_M2UM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets M2 access permission in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master2 access permission
- */
-static inline void MPU_HAL_SetM2SupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_supervisor_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M2SM(baseAddr, regionNum, accessRights);
-}
-
-/*!
- * @brief Sets M2 access permission in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master2 access permission
- */
-static inline void MPU_HAL_SetM2UserAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_user_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M2UM(baseAddr, regionNum, accessRights);
-}
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Checks whether the M2 process identifier enabled in region hit evaluation
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return true m2 process identifier is enabled
- * @return false m2 process identifier is disabled
- */
-
-static inline bool MPU_HAL_IsM2ProcessIdentifierEnabled(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (1 == BR_MPU_RGDn_WORD2_M2PE(baseAddr, regionNum));
-}
-#endif
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Sets the M2 process identifier value--- 1 enable process identifier in region hit evaluation and 0 disable.
- *
- * @param baseAddr The MPU peripheral base address.
+ * @param base Base address of MPU peripheral instance..
  * @param regionNum MPU region number.
- * @param identifierValue Process identifier value.
+ * @param startAddr Region start address.
+ * @param endAddr Region end address.
  */
-static inline void MPU_HAL_SetM2ProcessIdentifierValue(uint32_t baseAddr, mpu_region_num regionNum, mpu_process_identifier_value identifierValue)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M2PE(baseAddr, regionNum, identifierValue);
-}
-#endif
+void MPU_HAL_SetRegionAddr(MPU_Type * base, mpu_region_num_t regionNum, uint32_t startAddr, uint32_t endAddr);
 
 /*!
- * @brief Gets M3 access permission in supervisor mode
+ * @brief Configures low master0~3 access permission for a specific region.
  *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master3 access permission
- */
-static inline mpu_supervisor_access_rights MPU_HAL_GetM3SupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (mpu_supervisor_access_rights)(BR_MPU_RGDn_WORD2_M3SM(baseAddr, regionNum)); 
-}
-
-/*!
- * @brief Gets M3 access permission in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master3 access permission
- */
-static inline mpu_user_access_rights MPU_HAL_GetM3UserAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (mpu_user_access_rights)(BR_MPU_RGDn_WORD2_M3UM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets M3 access permission in supervisor mode.
- *
- * @param baseAddr The MPU peripheral base address.
+ * @param base Base address of MPU peripheral instance.
  * @param regionNum MPU region number.
- * @param accessRights Master3 access permission.
+ * @param masterNum MPU master number.
+ * @param accessRightsPtr The pointer of master access rights see #mpu_low_masters_access_rights_t.
  */
-static inline void MPU_HAL_SetM3SupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_supervisor_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M3SM(baseAddr, regionNum, accessRights);
-}
+void MPU_HAL_SetLowMasterAccessRights(MPU_Type * base, mpu_region_num_t regionNum, mpu_master_t masterNum, const mpu_low_masters_access_rights_t *accessRightsPtr);
 
 /*!
- * @brief Sets M3 access permission in user mode
+ * @brief Sets high master access permission for a specific region.
  *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master3 access permission
- */
-static inline void MPU_HAL_SetM3UserAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_user_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M3UM(baseAddr, regionNum, accessRights);
-}
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Checks whether the M3 process identifier enabled in region hit evaluation
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return true m3 process identifier is enabled
- * @return false m3 process identifier is disabled
- */
-
-static inline bool MPU_HAL_IsM3ProcessIdentifierEnabled(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (1 == BR_MPU_RGDn_WORD2_M3PE(baseAddr, regionNum));
-}
-#endif
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Sets M3 process identifier value--- 1 enable process identifier in region hit evaluation and 0 disable
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param identifierValue Process identifier value
- */
-static inline void MPU_HAL_SetM3ProcessIdentifierValue(uint32_t baseAddr, mpu_region_num regionNum, mpu_process_identifier_value identifierValue)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDn_WORD2_M3PE(baseAddr, regionNum, identifierValue);
-}
-#endif
-
-/*!
- * @brief Gets the M4 access permission.
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessType Access type Read/Write
- * @return read or write permission
- */
-static inline mpu_access_control MPU_HAL_GetM4AccessControl(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        return (mpu_access_control)(BR_MPU_RGDn_WORD2_M4RE(baseAddr, regionNum));
-    }
-    else
-    {
-        return (mpu_access_control)(BR_MPU_RGDn_WORD2_M4WE(baseAddr, regionNum));
-    }
-}
-
-/*!
- * @brief Sets the M4 access permission
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessType Access type Read/Write
- * @param accessControl Access permission
- */
-static inline void MPU_HAL_SetM4AccessControl(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType, mpu_access_control accessControl)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-       BW_MPU_RGDn_WORD2_M4RE(baseAddr, regionNum, accessControl);
-    }
-    else
-    {
-        BW_MPU_RGDn_WORD2_M4WE(baseAddr, regionNum, accessControl);
-    }
-}
-
-/*!
- * @brief Gets the M5 access permission
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessType Access type Read/Write
- * @return read or write permission
- */
-static inline mpu_access_control MPU_HAL_GetM5AccessControl(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        return (mpu_access_control)(BR_MPU_RGDn_WORD2_M5RE(baseAddr, regionNum));
-    }
-    else
-    {
-        return (mpu_access_control)(BR_MPU_RGDn_WORD2_M5WE(baseAddr, regionNum));
-    }
-}
-
-/*!
- * @brief Sets the M5 access permission
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessType Access type Read/Write
- * @param accessControl Access permission
- */
-static inline void MPU_HAL_SetM5AccessControl(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType, mpu_access_control accessControl)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-       BW_MPU_RGDn_WORD2_M5RE(baseAddr, regionNum, accessControl);
-    }
-    else
-    {
-        BW_MPU_RGDn_WORD2_M5WE(baseAddr, regionNum, accessControl);
-    }
-}
-
-/*!
- * @brief Gets the M6 access permission
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessType access type Read/Write
- * @return read or write permission
- */
-static inline mpu_access_control MPU_HAL_GetM6AccessControl(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        return (mpu_access_control)(BR_MPU_RGDn_WORD2_M6RE(baseAddr, regionNum));
-    }
-    else
-    {
-        return (mpu_access_control)(BR_MPU_RGDn_WORD2_M6WE(baseAddr, regionNum));
-    }
-}
-
-/*!
- * @brief Sets the M6 access permission
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessType Access type Read/Write
- * @param accessControl Access permission
- */
-static inline void MPU_HAL_SetM6AccessControl(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType, mpu_access_control accessControl)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-       BW_MPU_RGDn_WORD2_M6RE(baseAddr, regionNum, accessControl);
-    }
-    else
-    {
-        BW_MPU_RGDn_WORD2_M6WE(baseAddr, regionNum, accessControl);
-    }
-}
-
-/*!
- * @brief Gets the M7 access permission
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessType Access type Read/Write
- * @return read or write permission
- */
-static inline mpu_access_control MPU_HAL_GetM7AccessControl(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        return (mpu_access_control)(BR_MPU_RGDn_WORD2_M7RE(baseAddr, regionNum));
-    }
-    else
-    {
-        return (mpu_access_control)(BR_MPU_RGDn_WORD2_M7WE(baseAddr, regionNum));
-    }
-}
-
-/*!
- * @brief Sets the M7 access permission
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessType Access type Read/Write
- * @param accessControl Access permission
- */
-static inline void MPU_HAL_SetM7AccessControl(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType, mpu_access_control accessControl)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-       BW_MPU_RGDn_WORD2_M7RE(baseAddr, regionNum, accessControl);
-    }
-    else
-    {
-        BW_MPU_RGDn_WORD2_M7WE(baseAddr, regionNum, accessControl);
-    }
-}
-
-/*!
- * @brief Checks whether region is valid
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return true region is valid
- * @return false region is invalid
- */
-static inline bool MPU_HAL_IsRegionValid(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD3_COUNT);
-    return (1 == BR_MPU_RGDn_WORD3_VLD(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets  the region valid value
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param validValue Region valid value
- */
-static inline void MPU_HAL_SetRegionValidValue(uint32_t baseAddr, mpu_region_num regionNum, mpu_region_valid validValue)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD3_COUNT);
-    BW_MPU_RGDn_WORD3_VLD(baseAddr, regionNum, validValue);
-}
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Gets the process identifier mask
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return region process identifier mask
- */
-static inline uint8_t MPU_HAL_GetProcessIdentifierMask(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD3_COUNT);
-    return (BR_MPU_RGDn_WORD3_PIDMASK(baseAddr, regionNum));
-}
-#endif
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Sets the process identifier mask
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param processIdentifierMask Process identifier mask value
- */
-static inline void MPU_HAL_SetPIDMASK(uint32_t baseAddr, mpu_region_num regionNum, uint8_t processIdentifierMask)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD3_COUNT);
-    BW_MPU_RGDn_WORD3_PIDMASK(baseAddr, regionNum, processIdentifierMask);
-}
-#endif
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Gets the process identifier
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return process identifier
- */
-static inline uint8_t MPU_HAL_GetProcessIdentifier(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD3_COUNT);
-    return (BR_MPU_RGDn_WORD3_PID(baseAddr, regionNum));
-}
-#endif
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Sets the process identifier
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param processIdentifier Process identifier
- */
-static inline void MPU_HAL_SetProcessIdentifier(uint32_t baseAddr, mpu_region_num regionNum, uint8_t processIdentifier)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD3_COUNT);
-    BW_MPU_RGDn_WORD3_PID(baseAddr, regionNum, processIdentifier);
-}
-#endif
-
-/*!
- * @brief Gets all masters access permission from alternative register
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return all masters access permission
- */
-static inline uint32_t MPU_HAL_GetAllMastersAlternateAcessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    return (HW_MPU_RGDAACn_RD(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets all masters access permission through alternative register
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights All masters access permission
- */
-static inline void MPU_HAL_SetAllMastersAlternateAccessRights(uint32_t baseAddr, mpu_region_num regionNum, uint32_t accessRights)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    HW_MPU_RGDAACn_WR(baseAddr, regionNum, accessRights);
-}
-
-/*!
- * @brief Gets the M0 access rights in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master0 access permission
- */
-static inline mpu_supervisor_access_rights MPU_HAL_GetM0AlternateSupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    return (mpu_supervisor_access_rights)(BR_MPU_RGDAACn_M0SM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Gets the M0 access rights in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master0 access permission
- */
-static inline mpu_user_access_rights MPU_HAL_GetM0AlternateUserAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    return (mpu_user_access_rights)(BR_MPU_RGDAACn_M0UM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets the M0 access rights in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master0 access permission
- */
-static inline void MPU_HAL_SetM0AlternateSupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_supervisor_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    BW_MPU_RGDAACn_M0SM(baseAddr, regionNum, accessRights);
-}
-
-/*!
- * @brief Sets the M0 access rights in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master0 access permission
- */
-static inline void MPU_HAL_SetM0AlternateUserAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_user_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    BW_MPU_RGDAACn_M0UM(baseAddr, regionNum, accessRights);
-}
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Checks whether the M0 process identifier works in region hit evaluation
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return true m0 process identifier is enabled
- * @return false m0 process identifier is disabled
- */
-static inline bool MPU_HAL_IsM0AlternateProcessIdentifierEnabled(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (1 == BR_MPU_RGDAACn_M0PE(baseAddr, regionNum));
-}
-#endif
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief @brief Sets the M0 process identifier value--- 1 enable process identifier in region hit evaluation and 0 disable
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param identifierValue Process identifier value
- */
-static inline void MPU_HAL_SetM0AlternateProcessIdentifierValue(uint32_t baseAddr, mpu_region_num regionNum, mpu_process_identifier_value identifierValue)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDAACn_M0PE(baseAddr, regionNum, identifierValue);
-}
-#endif
-
-/*!
- * @brief Gets M1 access rights in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master1 access permission
- */
-static inline mpu_supervisor_access_rights MPU_HAL_GetM1AlternateSupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    return (mpu_supervisor_access_rights)(BR_MPU_RGDAACn_M1SM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Gets M1 access rights in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return Master1 access permission
- */
-static inline mpu_user_access_rights MPU_HAL_GetM1AlternateUserAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    return (mpu_user_access_rights)(BR_MPU_RGDAACn_M1UM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets M1 access rights in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master1 access permission
- */
-static inline void MPU_HAL_SetM1AlternateSupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_supervisor_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    BW_MPU_RGDAACn_M1SM(baseAddr, regionNum, accessRights);
-}
-
-/*!
- * @brief Sets M1 access rights in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master1 access permission
- */
-static inline void MPU_HAL_SetM1AlternateUserAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_user_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    BW_MPU_RGDAACn_M1UM(baseAddr, regionNum, accessRights);
-}
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Checks whether the M1 process identifier works in region hit evaluation
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return true m1 process identifier is enabled
- * @return false m1 process identifier is disabled
- */
-static inline bool MPU_HAL_IsM1AlternateProcessIdentifierEnabled(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (1 == BR_MPU_RGDAACn_M1PE(baseAddr, regionNum));
-}
-#endif
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief @brief Sets M1 process identifier value--- 1 enable process identifier in region hit evaluation and 0 disable
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param identifierValue process identifier value
- */
-static inline void MPU_HAL_SetM1AlternateProcessIdentifierValue(uint32_t baseAddr, mpu_region_num regionNum, mpu_process_identifier_value identifierValue)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDAACn_M1PE(baseAddr, regionNum, identifierValue);
-}
-#endif
-
-/*!
- * @brief Gets M2 access rights in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return M2 access permission
- */
-static inline mpu_supervisor_access_rights MPU_HAL_GetM2AlternateSupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    return (mpu_supervisor_access_rights)(BR_MPU_RGDAACn_M2SM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Gets the M2 access rights in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return M2 access permission
- */
-static inline mpu_user_access_rights MPU_HAL_GetM2AlternateUserAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    return (mpu_user_access_rights)(BR_MPU_RGDAACn_M2UM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets  M2 access rights in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights M2 access permission
- */
-static inline void MPU_HAL_SetM2AlternateSupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_supervisor_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    BW_MPU_RGDAACn_M2SM(baseAddr, regionNum, accessRights);
-}
-
-/*!
- * @brief Sets M2 access rights in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights M2 access permission
- */
-static inline void MPU_HAL_SetM2AlternateUserAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_user_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    BW_MPU_RGDAACn_M2UM(baseAddr, regionNum, accessRights);
-}
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Checks whether the M2 process identifier works in region hit evaluation
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return true m2 process identifier is enabled
- * @return false m2 process identifier is disabled
- */
-static inline bool MPU_HAL_IsM2AlternateProcessIdentifierEnabled(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (1 == BR_MPU_RGDAACn_M2PE(baseAddr, regionNum));
-}
-#endif
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Sets M2 process identifier value--- 1 enable process identifier in region hit evaluation and 0 disable
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param identifierValue process identifier value
- */
-static inline void MPU_HAL_SetM2AlternateProcessIdentifierValue(uint32_t baseAddr, mpu_region_num regionNum, mpu_process_identifier_value identifierValue)
-{
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDAACn_M2PE(baseAddr, regionNum, identifierValue);
-}
-#endif
-
-/*!
- * @brief Gets  M3 access rights in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return M3 access permission
- */
-static inline mpu_supervisor_access_rights MPU_HAL_GetM3AlternateSupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    return (mpu_supervisor_access_rights)(BR_MPU_RGDAACn_M3SM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Gets M3 access rights in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @return M3 access permission
- */
-static inline mpu_user_access_rights MPU_HAL_GetM3AlternateUserAccessRights(uint32_t baseAddr, mpu_region_num regionNum)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    return (mpu_user_access_rights)(BR_MPU_RGDAACn_M3UM(baseAddr, regionNum));
-}
-
-/*!
- * @brief Sets M3 access rights in supervisor mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master3 access permission
- */
-static inline void MPU_HAL_SetM3AlternateSupervisorAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_supervisor_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    BW_MPU_RGDAACn_M3SM(baseAddr, regionNum, accessRights);
-}
-
-/*!
- * @brief Sets M3 access rights in user mode
- *
- * @param baseAddr The MPU peripheral base address
- * @param regionNum MPU region number
- * @param accessRights Master3 access permission
- */
-static inline void MPU_HAL_SetM3AlternateUserAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_user_access_rights accessRights)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    BW_MPU_RGDAACn_M3UM(baseAddr, regionNum, accessRights);
-}
-
-#if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
-/*!
- * @brief Checks whether the  M3 process identifier works in region hit evaluation.
- *
- * @param baseAddr The MPU peripheral base address.
+ * @param base Base address of MPU peripheral instance.
  * @param regionNum MPU region number.
- * @return true m3 process identifier is enabled.
- * @return false m3 process identifier is disabled.
+ * @param masterNum MPU master number.
+ * @param accessRightsPtr The pointer of master access rights see #mpu_low_masters_access_rights_t.
  */
-static inline bool MPU_HAL_IsM3AlternateProcessIdentifierEnabled(uint32_t baseAddr, mpu_region_num regionNum)
+void MPU_HAL_SetHighMasterAccessRights(MPU_Type * base, mpu_region_num_t regionNum, mpu_master_t masterNum, const mpu_high_masters_access_rights_t *accessRightsPtr);
+
+/*!
+ * @brief Sets the region valid value.
+ * When a region changed not by alternating registers should set the valid again.
+ *
+ * @param base Base address of MPU peripheral instance.
+ * @param regionNum MPU region number.
+ * @param enable Enables or disables region.
+ */
+static inline void MPU_HAL_SetRegionValidCmd(MPU_Type * base, mpu_region_num_t regionNum, bool enable)
 {
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    return (1 == BR_MPU_RGDAACn_M3PE(baseAddr, regionNum));
+    assert(regionNum < FSL_FEATURE_MPU_DESCRIPTOR_COUNT);
+    MPU_BWR_WORD_VLD(base, regionNum, 3U, enable);
 }
-#endif
 
 #if FSL_FEATURE_MPU_HAS_PROCESS_IDENTIFIER
 /*!
- * @brief Sets M3 process identifier value--- 1 enable process identifier in region hit evaluation and 0 disable.
+ * @brief Sets the process identifier mask.
  *
- * @param baseAddr The MPU peripheral base address.
+ * @param base The MPU peripheral base address.
  * @param regionNum MPU region number.
- * @param identifierValue process identifier value.
+ * @param processIdentifierMask Process identifier mask value.
  */
-static inline void MPU_HAL_SetM3AlternateProcessIdentifierValue(uint32_t baseAddr, mpu_region_num regionNum, mpu_process_identifier_value identifierValue)
+static inline void MPU_HAL_SetProcessIdentifierMask(MPU_Type * base, mpu_region_num_t regionNum, uint8_t processIdentifierMask)
 {
-    assert(regionNum < HW_MPU_RGDn_WORD2_COUNT);
-    BW_MPU_RGDAACn_M3PE(baseAddr, regionNum, identifierValue);
+    assert(regionNum < FSL_FEATURE_MPU_DESCRIPTOR_COUNT);
+    MPU_BWR_WORD_PIDMASK(base, regionNum, 3U, processIdentifierMask);
+}
+
+/*!
+ * @brief Sets the process identifier.
+ *
+ * @param base The MPU peripheral base address.
+ * @param regionNum MPU region number.
+ * @param processIdentifier Process identifier.
+ */
+static inline void MPU_HAL_SetProcessIdentifier(MPU_Type * base, mpu_region_num_t regionNum, uint8_t processIdentifier)
+{
+    assert(regionNum < FSL_FEATURE_MPU_DESCRIPTOR_COUNT);
+    MPU_BWR_WORD_PID(base, regionNum, 3U, processIdentifier);
 }
 #endif
 
 /*!
- * @brief Gets M4 access permission from alternate register.
+ * @brief Configures low master0~3 access permission for a specific region.
  *
- * @param baseAddr The MPU peripheral base address.
+ * @param base Base address of MPU peripheral instance.
  * @param regionNum MPU region number.
- * @param accessType Access type Read/Write.
- * @return read or write permission.
+ * @param masterNum MPU master number.
+ * @param accessRightsPtr The pointer of master access rights see #mpu_low_masters_access_rights_t.
  */
-static inline mpu_access_control MPU_HAL_GetM4AlternateAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        return (mpu_access_control)(BR_MPU_RGDAACn_M4RE(baseAddr, regionNum));
-    }
-    else
-    {
-        return (mpu_access_control)(BR_MPU_RGDAACn_M4WE(baseAddr, regionNum));
-    }
-}
+void MPU_HAL_SetLowMasterAccessRightsByAlternateReg(MPU_Type * base, mpu_region_num_t regionNum, mpu_master_t masterNum, const mpu_low_masters_access_rights_t *accessRightsPtr);
 
 /*!
- * @brief Sets M4 access permission through alternate register.
+ * @brief Sets high master access permission for a specific region.
  *
- * @param baseAddr The MPU peripheral base address.
+ * @param base Base address of MPU peripheral instance.
  * @param regionNum MPU region number.
- * @param accessType Access type Read/Write.
- * @param accessControl Access permission.
+ * @param masterNum MPU master number.
+ * @param accessRightsPtr The pointer of master access rights see #mpu_low_masters_access_rights_t.
  */
-static inline void MPU_HAL_SetM4AlternateAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType, mpu_access_control accessControl)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        BW_MPU_RGDAACn_M4RE(baseAddr, regionNum, accessControl);
-    }
-    else
-    {
-        BW_MPU_RGDAACn_M4WE(baseAddr, regionNum, accessControl);
-    }
-}
+void MPU_HAL_SetHighMasterAccessRightsByAlternateReg(MPU_Type * base, mpu_region_num_t regionNum, mpu_master_t masterNum, const mpu_high_masters_access_rights_t *accessRightsPtr);
+
 
 /*!
- * @brief Gets M5 access permission from alternate register.
+ * @brief Configures the MPU region.
  *
- * @param baseAddr The MPU peripheral base address.
- * @param regionNum MPU region number.
- * @param accessType Access type Read/Write.
- * @return read or write permission.
+ * @param base The MPU peripheral base address.
+ * @param regionConfigPtr The pointer to the MPU user configure structure, see #mpu_region_config_t.
+ * 
  */
-static inline mpu_access_control MPU_HAL_GetM5AlternateAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        return (mpu_access_control)(BR_MPU_RGDAACn_M5RE(baseAddr, regionNum));
-    }
-    else
-    {
-        return (mpu_access_control)(BR_MPU_RGDAACn_M5WE(baseAddr, regionNum));
-    }
-}
-
-/*!
- * @brief Sets M5 access permission through alternate register.
- *
- * @param baseAddr The MPU peripheral base address.
- * @param regionNum MPU region number.
- * @param accessType Access type Read/Write.
- * @param accessControl Master5 Access permission.
- */
-static inline void MPU_HAL_SetM5AlternateAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType, mpu_access_control accessControl)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        BW_MPU_RGDAACn_M5RE(baseAddr, regionNum, accessControl);
-    }
-    else
-    {
-        BW_MPU_RGDAACn_M5WE(baseAddr, regionNum, accessControl);
-    }
-}
-
-/*!
- * @brief Gets M6 access permission from alternate register.
- *
- * @param baseAddr The MPU peripheral base address.
- * @param regionNum MPU region number.
- * @param accessType Access type Read/Write.
- * @return read or write permission.
- */
-static inline mpu_access_control MPU_HAL_GetM6AlternateAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        return (mpu_access_control)(BR_MPU_RGDAACn_M6RE(baseAddr, regionNum));
-    }
-    else
-    {
-        return (mpu_access_control)(BR_MPU_RGDAACn_M6WE(baseAddr, regionNum));
-    }
-}
-
-/*!
- * @brief Sets M6 access permission through alternate register.
- *
- * @param baseAddr The MPU peripheral base address.
- * @param regionNum MPU region number.
- * @param accessType Access type Read/Write.
- * @param accessControl Master6 access permission.
- */
-static inline void MPU_HAL_SetM6AlternateAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType, mpu_access_control accessControl)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        BW_MPU_RGDAACn_M6RE(baseAddr, regionNum, accessControl);
-    }
-    else
-    {
-        BW_MPU_RGDAACn_M6WE(baseAddr, regionNum, accessControl);
-    }
-}
-
-/*!
- * @brief Gets M7 access permission from alternate register.
- *
- * @param baseAddr The MPU peripheral base address.
- * @param regionNum MPU region number.
- * @param accessType Access type Read/Write.
- * @return read or write permission.
- */
-static inline mpu_access_control MPU_HAL_GetM7AlternateAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        return (mpu_access_control)(BR_MPU_RGDAACn_M7RE(baseAddr, regionNum));
-    }
-    else
-    {
-        return (mpu_access_control)(BR_MPU_RGDAACn_M7WE(baseAddr, regionNum));
-    }
-}
-
-/*!
- * @brief Sets M7 access permission through alternate register.
- *
- * @param baseAddr The MPU peripheral base address.
- * @param regionNum MPU region number.
- * @param accessType Access type Read/Write.
- * @param accessControl Master7 access permission.
- */
-static inline void MPU_HAL_SetM7AlternateAccessRights(uint32_t baseAddr, mpu_region_num regionNum, mpu_access_type accessType, mpu_access_control accessControl)
-{
-    assert(regionNum < HW_MPU_RGDAACn_COUNT);
-    if(kMPUAccessRead == accessType)
-    {
-        BW_MPU_RGDAACn_M7RE(baseAddr, regionNum, accessControl);
-    }
-    else
-    {
-        BW_MPU_RGDAACn_M7WE(baseAddr, regionNum, accessControl);
-    }
-}
+void MPU_HAL_SetRegionConfig(MPU_Type * base, const mpu_region_config_t *regionConfigPtr);
 
 /*!
  * @brief Initializes the MPU module.
  *
- * @param baseAddr The MPU peripheral base address.
+ * @param base The MPU peripheral base address.
  */
-void MPU_HAL_Init(uint32_t baseAddr);
+void MPU_HAL_Init(MPU_Type * base);
 
 /*@}*/
 
@@ -1576,6 +453,7 @@ void MPU_HAL_Init(uint32_t baseAddr);
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_MPU_HAL_H__*/
 /*******************************************************************************
  * EOF

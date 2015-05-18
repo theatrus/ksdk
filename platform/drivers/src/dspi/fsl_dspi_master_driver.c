@@ -33,6 +33,8 @@
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_DSPI_COUNT
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -41,13 +43,16 @@
  * Variables
  ******************************************************************************/
 /* Pointer to runtime state structure.*/
-extern void * g_dspiStatePtr[HW_SPI_INSTANCE_COUNT];
+extern void * g_dspiStatePtr[SPI_INSTANCE_COUNT];
+
+/* Table of SPI FIFO sizes per instance. */
+extern const uint32_t g_dspiFifoSize[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
 static dspi_status_t DSPI_DRV_MasterStartTransfer(uint32_t instance,
-                                           const dspi_device_t * restrict device);
+                                           const dspi_device_t * device);
 
 static void DSPI_DRV_MasterCompleteTransfer(uint32_t instance);
 
@@ -92,7 +97,7 @@ dspi_status_t DSPI_DRV_MasterInit(uint32_t instance,
     uint32_t dspiSourceClock;
     dspi_status_t errorCode = kStatus_DSPI_Success;
 
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* Clear the run-time state struct for this instance.*/
     memset(dspiState, 0, sizeof(* dspiState));
@@ -113,7 +118,7 @@ dspi_status_t DSPI_DRV_MasterInit(uint32_t instance,
     dspiState->isChipSelectContinuous = userConfig->isChipSelectContinuous; /* continuous PCS*/
 
     /* Initialize the DSPI module registers to default value, which disables the module */
-    DSPI_HAL_Init(baseAddr);
+    DSPI_HAL_Init(base);
 
     /* Init the interrupt sync object.*/
     OSA_SemaCreate(&dspiState->irqSync, 0);
@@ -121,19 +126,19 @@ dspi_status_t DSPI_DRV_MasterInit(uint32_t instance,
     /* Initialize the DSPI module with user config */
 
     /* Set to master mode.*/
-    DSPI_HAL_SetMasterSlaveMode(baseAddr, kDspiMaster);
+    DSPI_HAL_SetMasterSlaveMode(base, kDspiMaster);
 
     /* Configure for continuous SCK operation*/
-    DSPI_HAL_SetContinuousSckCmd(baseAddr, userConfig->isSckContinuous);
+    DSPI_HAL_SetContinuousSckCmd(base, userConfig->isSckContinuous);
 
     /* Configure for peripheral chip select polarity*/
-    DSPI_HAL_SetPcsPolarityMode(baseAddr, userConfig->whichPcs, userConfig->pcsPolarity);
+    DSPI_HAL_SetPcsPolarityMode(base, userConfig->whichPcs, userConfig->pcsPolarity);
 
     /* Enable fifo operation (regardless of FIFO depth) */
-    DSPI_HAL_SetFifoCmd(baseAddr, true, true);
+    DSPI_HAL_SetFifoCmd(base, true, true);
 
     /* Initialize the configurable delays: PCS-to-SCK, prescaler = 0, scaler = 1 */
-    DSPI_HAL_SetDelay(baseAddr, userConfig->whichCtar, 0, 1, kDspiPcsToSck);
+    DSPI_HAL_SetDelay(base, userConfig->whichCtar, 0, 1, kDspiPcsToSck);
 
     /* Save runtime structure pointers to irq handler can point to the correct state structure*/
     g_dspiStatePtr[instance] = dspiState;
@@ -142,10 +147,10 @@ dspi_status_t DSPI_DRV_MasterInit(uint32_t instance,
     INT_SYS_EnableIRQ(g_dspiIrqId[instance]);
 
     /* DSPI system enable */
-    DSPI_HAL_Enable(baseAddr);
+    DSPI_HAL_Enable(base);
 
     /* Start the transfer process in the hardware */
-    DSPI_HAL_StartTransfer(baseAddr);
+    DSPI_HAL_StartTransfer(base);
 
     return errorCode;
 }
@@ -158,17 +163,17 @@ dspi_status_t DSPI_DRV_MasterInit(uint32_t instance,
  * the core.
  *
  *END**************************************************************************/
-void DSPI_DRV_MasterDeinit(uint32_t instance)
+dspi_status_t DSPI_DRV_MasterDeinit(uint32_t instance)
 {
     /* instantiate local variable of type dspi_master_state_t and point to global state */
     dspi_master_state_t * dspiState = (dspi_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* First stop transfers */
-    DSPI_HAL_StopTransfer(baseAddr);
+    DSPI_HAL_StopTransfer(base);
 
     /* Restore the module to defaults then power it down. This also disables the DSPI module.*/
-    DSPI_HAL_Init(baseAddr);
+    DSPI_HAL_Init(base);
 
     /* destroy the interrupt sync object.*/
     OSA_SemaDestroy(&dspiState->irqSync);
@@ -181,6 +186,8 @@ void DSPI_DRV_MasterDeinit(uint32_t instance)
 
     /* Clear state pointer. */
     g_dspiStatePtr[instance] = NULL;
+
+    return kStatus_DSPI_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -218,10 +225,10 @@ dspi_status_t DSPI_DRV_MasterSetDelay(uint32_t instance, dspi_delay_type_t which
 {
     /* instantiate local variable of type dspi_master_state_t and point to global state */
     dspi_master_state_t * dspiState = (dspi_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
     dspi_status_t errorCode = kStatus_DSPI_Success;
 
-    *calculatedDelay = DSPI_HAL_CalculateDelay(baseAddr, dspiState->whichCtar, whichDelay,
+    *calculatedDelay = DSPI_HAL_CalculateDelay(base, dspiState->whichCtar, whichDelay,
                                                dspiState->dspiSourceClock, delayInNanoSec);
 
     /* If the desired delay exceeds the capability of the device, alert the user */
@@ -264,14 +271,14 @@ dspi_status_t DSPI_DRV_MasterConfigureBus(uint32_t instance,
     assert(device);
     /* instantiate local variable of type dspi_master_state_t and point to global state */
     dspi_master_state_t * dspiState = (dspi_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     dspi_status_t errorCode = kStatus_DSPI_Success;
 
     /* Configure the bus to access the provided device.*/
-    *calculatedBaudRate = DSPI_HAL_SetBaudRate(baseAddr, dspiState->whichCtar, device->bitsPerSec,
+    *calculatedBaudRate = DSPI_HAL_SetBaudRate(base, dspiState->whichCtar, device->bitsPerSec,
                       dspiState->dspiSourceClock);
-    errorCode = DSPI_HAL_SetDataFormat(baseAddr, dspiState->whichCtar,
+    errorCode = DSPI_HAL_SetDataFormat(base, dspiState->whichCtar,
                                                &device->dataBusConfig);
     dspiState->bitsPerFrame = device->dataBusConfig.bitsPerFrame; /* update dspiState bits/frame */
 
@@ -288,7 +295,7 @@ dspi_status_t DSPI_DRV_MasterConfigureBus(uint32_t instance,
  *
  *END**************************************************************************/
 dspi_status_t DSPI_DRV_MasterTransferBlocking(uint32_t instance,
-                                              const dspi_device_t * restrict device,
+                                              const dspi_device_t * device,
                                               const uint8_t * sendBuffer,
                                               uint8_t * receiveBuffer,
                                               size_t transferByteCount,
@@ -296,7 +303,7 @@ dspi_status_t DSPI_DRV_MasterTransferBlocking(uint32_t instance,
 {
     /* instantiate local variable of type dspi_master_state_t and point to global state */
     dspi_master_state_t * dspiState = (dspi_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
     dspi_status_t error = kStatus_DSPI_Success;
 
     /* If the transfer count is zero, then return immediately.*/
@@ -337,10 +344,10 @@ dspi_status_t DSPI_DRV_MasterTransferBlocking(uint32_t instance,
 
         /* Disable interrupt requests*/
         /* RX FIFO Drain request: RFDF_RE */
-        DSPI_HAL_SetRxFifoDrainDmaIntMode(baseAddr, kDspiGenerateIntReq, false);
+        DSPI_HAL_SetRxFifoDrainDmaIntMode(base, kDspiGenerateIntReq, false);
 
         /* Disable TX FIFO Fill request */
-        DSPI_HAL_SetTxFifoFillDmaIntMode(baseAddr, kDspiGenerateIntReq, false);
+        DSPI_HAL_SetTxFifoFillDmaIntMode(base, kDspiGenerateIntReq, false);
 
         error = kStatus_DSPI_Timeout;
     }
@@ -359,7 +366,7 @@ dspi_status_t DSPI_DRV_MasterTransferBlocking(uint32_t instance,
  *
  *END**************************************************************************/
 dspi_status_t DSPI_DRV_MasterTransfer(uint32_t instance,
-                                      const dspi_device_t * restrict device,
+                                      const dspi_device_t * device,
                                       const uint8_t * sendBuffer,
                                       uint8_t * receiveBuffer,
                                       size_t transferByteCount)
@@ -405,12 +412,12 @@ dspi_status_t DSPI_DRV_MasterGetTransferStatus(uint32_t instance, uint32_t * fra
 {
     /* instantiate local variable of type dspi_master_state_t and point to global state */
     dspi_master_state_t * dspiState = (dspi_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* Fill in the bytes transferred.*/
     if (framesTransferred)
     {
-        *framesTransferred = DSPI_HAL_GetTransferCount(baseAddr);
+        *framesTransferred = DSPI_HAL_GetTransferCount(base);
     }
 
     return (dspiState->isTransferInProgress ? kStatus_DSPI_Busy : kStatus_DSPI_Success);
@@ -446,11 +453,11 @@ dspi_status_t DSPI_DRV_MasterAbortTransfer(uint32_t instance)
  *  driver functions
  */
 static dspi_status_t DSPI_DRV_MasterStartTransfer(uint32_t instance,
-                                                  const dspi_device_t * restrict device)
+                                                  const dspi_device_t * device)
 {
     /* instantiate local variable of type dspi_master_state_t and point to global state */
     dspi_master_state_t * dspiState = (dspi_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
     uint32_t calculatedBaudRate;
 
     /* Check that we're not busy.*/
@@ -491,24 +498,24 @@ static dspi_status_t DSPI_DRV_MasterStartTransfer(uint32_t instance,
     dspiState->isTransferInProgress = true;
 
     /* Restart the transfer by stop then start again, this will clear out the shift register */
-    DSPI_HAL_StopTransfer(baseAddr);
+    DSPI_HAL_StopTransfer(base);
 
     /* flush the fifos*/
-    DSPI_HAL_SetFlushFifoCmd(baseAddr, true, true);
+    DSPI_HAL_SetFlushFifoCmd(base, true, true);
 
     /* Clear status flags that may have been set from previous transfers */
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxComplete);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiEndOfQueue);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoUnderflow);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoFillRequest);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoOverflow);
-    DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoDrainRequest);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxComplete);
+    DSPI_HAL_ClearStatusFlag(base, kDspiEndOfQueue);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoUnderflow);
+    DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoFillRequest);
+    DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoOverflow);
+    DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoDrainRequest);
 
     /* Clear the transfer count */
-    DSPI_HAL_PresetTransferCount(baseAddr, 0);
+    DSPI_HAL_PresetTransferCount(base, 0);
 
     /* Start the transfer, make sure to do this before filling the FIFO */
-    DSPI_HAL_StartTransfer(baseAddr);
+    DSPI_HAL_StartTransfer(base);
 
     /* Fill up the DSPI FIFO (even if one word deep, data still written to data buffer) */
     DSPI_DRV_MasterFillupTxFifo(instance);
@@ -517,7 +524,7 @@ static dspi_status_t DSPI_DRV_MasterStartTransfer(uint32_t instance,
      * Since SPI is a synchronous interface, we only need to enable the RX interrupt.
      * The IRQ handler will get the status of RX and TX interrupt flags.
      */
-    DSPI_HAL_SetRxFifoDrainDmaIntMode(baseAddr, kDspiGenerateIntReq, true);
+    DSPI_HAL_SetRxFifoDrainDmaIntMode(base, kDspiGenerateIntReq, true);
 
     return kStatus_DSPI_Success;
 }
@@ -534,7 +541,7 @@ static void DSPI_DRV_MasterFillupTxFifo(uint32_t instance)
 {
     /* instantiate local variable of type dspi_master_state_t and point to global state */
     dspi_master_state_t * dspiState = (dspi_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
     dspi_command_config_t command;  /* create an instance of the data command struct*/
     uint32_t cmd; /* Command word to be OR'd with data word */
     uint16_t wordToSend = 0;
@@ -554,7 +561,7 @@ static void DSPI_DRV_MasterFillupTxFifo(uint32_t instance)
     /* "Build" the command word. Only do this once since the commad word members don't
      * change until the last word sent (which is when the end of queue flag gets set).
      */
-    cmd = DSPI_HAL_GetFormattedCommand(baseAddr, &command);
+    cmd = DSPI_HAL_GetFormattedCommand(base, &command);
 
     /* Store the DSPI state struct volatile member variables into temporary
      * non-volatile variables to allow for MISRA compliant calculations
@@ -580,9 +587,9 @@ static void DSPI_DRV_MasterFillupTxFifo(uint32_t instance)
          * remainingSendByteCount must be divided by 2 to convert this difference into a
          * 16-bit (2 byte) value.
          */
-        while((DSPI_HAL_GetStatusFlag(baseAddr, kDspiTxFifoFillRequest) == 1) &&
+        while((DSPI_HAL_GetStatusFlag(base, kDspiTxFifoFillRequest) == 1) &&
               ((remainingReceiveByteCount - remainingSendByteCount)/2 <
-                FSL_FEATURE_DSPI_FIFO_SIZEn(instance)))
+                g_dspiFifoSize[instance]))
         {
             /* On the last word to be sent, set the end of queue flag in the data command struct
              * and ensure that the CONT bit in the PUSHR is also cleared even if it was cleared to
@@ -593,7 +600,7 @@ static void DSPI_DRV_MasterFillupTxFifo(uint32_t instance)
             {
                 command.isEndOfQueue = 1;
                 command.isChipSelectContinuous = 0;
-                cmd = DSPI_HAL_GetFormattedCommand(baseAddr, &command);
+                cmd = DSPI_HAL_GetFormattedCommand(base, &command);
 
                 /* If there is an extra byte to send due to an odd byte count, prepare the final
                  * wordToSend here
@@ -626,10 +633,10 @@ static void DSPI_DRV_MasterFillupTxFifo(uint32_t instance)
                     ++dspiState->sendBuffer; /* increment to next data byte */
                 }
             }
-            DSPI_HAL_WriteCmdDataMastermode(baseAddr, cmd|wordToSend);
+            DSPI_HAL_WriteCmdDataMastermode(base, cmd|wordToSend);
 
             /* Try to clear the TFFF; if the TX FIFO is full this will clear */
-            DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoFillRequest);
+            DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoFillRequest);
 
             dspiState->remainingSendByteCount -= 2; /* decrement remainingSendByteCount by 2 */
 
@@ -655,9 +662,9 @@ static void DSPI_DRV_MasterFillupTxFifo(uint32_t instance)
          * The reason for checking the difference is to ensure we only send as much as the
          * RX FIFO can receive.
          */
-        while((DSPI_HAL_GetStatusFlag(baseAddr, kDspiTxFifoFillRequest) == 1) &&
+        while((DSPI_HAL_GetStatusFlag(base, kDspiTxFifoFillRequest) == 1) &&
               ((remainingReceiveByteCount - remainingSendByteCount) <
-                FSL_FEATURE_DSPI_FIFO_SIZEn(instance)))
+                g_dspiFifoSize[instance]))
         {
             /* On the last word to be sent, set the end of queue flag in the data command struct
              * and ensure that the CONT bit in the PUSHR is also cleared even if it was cleared to
@@ -668,7 +675,7 @@ static void DSPI_DRV_MasterFillupTxFifo(uint32_t instance)
             {
                 command.isEndOfQueue = 1;
                 command.isChipSelectContinuous = 0;
-                cmd = DSPI_HAL_GetFormattedCommand(baseAddr, &command);
+                cmd = DSPI_HAL_GetFormattedCommand(base, &command);
             }
 
             /* If a send buffer was provided, the word comes from there. Otherwise we just send
@@ -679,10 +686,10 @@ static void DSPI_DRV_MasterFillupTxFifo(uint32_t instance)
                 wordToSend = *(dspiState->sendBuffer);
                 ++dspiState->sendBuffer; /* increment to next data word*/
             }
-            DSPI_HAL_WriteCmdDataMastermode(baseAddr, cmd|wordToSend);
+            DSPI_HAL_WriteCmdDataMastermode(base, cmd|wordToSend);
 
             /* Try to clear the TFFF; if the TX FIFO is full this will clear */
-            DSPI_HAL_ClearStatusFlag(baseAddr, kDspiTxFifoFillRequest);
+            DSPI_HAL_ClearStatusFlag(base, kDspiTxFifoFillRequest);
 
             --dspiState->remainingSendByteCount; /* decrement remainingSendByteCount*/
 
@@ -711,17 +718,17 @@ static void DSPI_DRV_MasterCompleteTransfer(uint32_t instance)
 {
     /* instantiate local variable of type dspi_master_state_t and point to global state */
     dspi_master_state_t * dspiState = (dspi_master_state_t *)g_dspiStatePtr[instance];
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* The transfer is complete.*/
     dspiState->isTransferInProgress = false;
 
     /* Disable interrupt requests*/
     /* RX FIFO Drain request: RFDF_RE */
-    DSPI_HAL_SetRxFifoDrainDmaIntMode(baseAddr, kDspiGenerateIntReq, false);
+    DSPI_HAL_SetRxFifoDrainDmaIntMode(base, kDspiGenerateIntReq, false);
 
     /* Disable TX FIFO Fill request */
-    DSPI_HAL_SetTxFifoFillDmaIntMode(baseAddr, kDspiGenerateIntReq, false);
+    DSPI_HAL_SetTxFifoFillDmaIntMode(base, kDspiGenerateIntReq, false);
 
     if (dspiState->isTransferBlocking)
     {
@@ -730,17 +737,20 @@ static void DSPI_DRV_MasterCompleteTransfer(uint32_t instance)
     }
 }
 
-/*!
- * @brief Interrupt handler for DSPI master mode.
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : DSPI_DRV_MasterIRQHandler
+ * Description   : Interrupt handler for DSPI master mode.
  * This handler uses the buffers stored in the dspi_master_state_t structs to transfer data.
  * This is not a public API as it is called whenever an interrupt occurs.
- */
+ *
+ *END**************************************************************************/
 void DSPI_DRV_MasterIRQHandler(uint32_t instance)
 {
     /* instantiate local variable of type dspi_master_state_t and point to global state */
     dspi_master_state_t * dspiState = (dspi_master_state_t *)g_dspiStatePtr[instance];
 
-    uint32_t baseAddr = g_dspiBaseAddr[instance];
+    SPI_Type *base = g_dspiBase[instance];
 
     /* RECEIVE IRQ handler: Check read buffer only if there are remaining bytes to read. */
     if(dspiState->remainingReceiveByteCount)
@@ -751,15 +761,15 @@ void DSPI_DRV_MasterIRQHandler(uint32_t instance)
         /* If bits/frame is greater than one byte */
         if (dspiState->bitsPerFrame > 8)
         {
-            while (DSPI_HAL_GetStatusFlag(baseAddr, kDspiRxFifoDrainRequest))
+            while (DSPI_HAL_GetStatusFlag(base, kDspiRxFifoDrainRequest))
             {
-                wordReceived = DSPI_HAL_ReadData(baseAddr);
+                wordReceived = DSPI_HAL_ReadData(base);
                 /* clear the rx fifo drain request, needed for non-DMA applications as this flag
                  * will remain set even if the rx fifo is empty. By manually clearing this flag, it
                  * either remain clear if no more data is in the fifo, or it will set if there is
                  * more data in the fifo.
                  */
-                DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoDrainRequest);
+                DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoDrainRequest);
 
                 /* Store read bytes into rx buffer only if a buffer pointer was provided */
                 if(dspiState->receiveBuffer)
@@ -790,15 +800,15 @@ void DSPI_DRV_MasterIRQHandler(uint32_t instance)
         /* Optimized for bits/frame less than or equal to one byte. */
         else
         {
-            while (DSPI_HAL_GetStatusFlag(baseAddr, kDspiRxFifoDrainRequest))
+            while (DSPI_HAL_GetStatusFlag(base, kDspiRxFifoDrainRequest))
             {
-                wordReceived = DSPI_HAL_ReadData(baseAddr);
+                wordReceived = DSPI_HAL_ReadData(base);
                 /* clear the rx fifo drain request, needed for non-DMA applications as this flag
                  * will remain set even if the rx fifo is empty. By manually clearing this flag, it
                  * either remain clear if no more data is in the fifo, or it will set if there is
                  * more data in the fifo.
                  */
-                DSPI_HAL_ClearStatusFlag(baseAddr, kDspiRxFifoDrainRequest);
+                DSPI_HAL_ClearStatusFlag(base, kDspiRxFifoDrainRequest);
 
                 /* Store read bytes into rx buffer only if a buffer pointer was provided */
                 if(dspiState->receiveBuffer)
@@ -833,6 +843,7 @@ void DSPI_DRV_MasterIRQHandler(uint32_t instance)
     }
 }
 
+#endif /* FSL_FEATURE_SOC_DSPI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

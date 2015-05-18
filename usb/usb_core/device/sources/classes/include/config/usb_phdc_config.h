@@ -38,7 +38,7 @@
  * Macro's
  *****************************************************************************/
 #define MAX_QOS_BIN_ELEMS                 (4) 
- /* the num of recieve endpoints */ 
+ /* the num of receive endpoints */ 
 #define PHDC_RX_ENDPOINTS                 (1)  
 /* the num of transmit endpoints */ 
 #define PHDC_TX_ENDPOINTS                 (2)  

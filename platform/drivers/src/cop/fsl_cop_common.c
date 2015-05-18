@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -36,7 +36,7 @@
 
 /*! @brief Table of base addresses for COP instances. */
 
-const uint32_t g_copBaseAddr[] = SIM_BASE_ADDRS;
+SIM_Type * const g_copBase[] = SIM_BASE_PTRS;
 
 /*******************************************************************************
  * EOF

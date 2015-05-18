@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "fsl_hwtimer.h"
-#include "fsl_clock_manager.h"
 
 /*******************************************************************************
  * Internal type definition
@@ -58,7 +57,7 @@
  * API function.
  *
  *END**************************************************************************/
-_hwtimer_error_code_t HWTIMER_SYS_Init(hwtimer_t *hwtimer, const hwtimer_devif_t * kDevif, uint32_t id, uint32_t isrPrior, void *data)
+_hwtimer_error_code_t HWTIMER_SYS_Init(hwtimer_t *hwtimer, const hwtimer_devif_t * kDevif, uint32_t id, void *data)
  {
     /* Check input parameters */
     if ((hwtimer == NULL) || (kDevif == NULL))
@@ -79,7 +78,7 @@ _hwtimer_error_code_t HWTIMER_SYS_Init(hwtimer_t *hwtimer, const hwtimer_devif_t
     hwtimer->callbackBlocked = 0U;
 
     /* Call low level driver init function. */
-    return hwtimer->devif->init(hwtimer, id, isrPrior, data);
+    return hwtimer->devif->init(hwtimer, id, data);
  }
 
 /*FUNCTION**********************************************************************
@@ -91,7 +90,7 @@ _hwtimer_error_code_t HWTIMER_SYS_Init(hwtimer_t *hwtimer, const hwtimer_devif_t
  *
  *END**************************************************************************/
 _hwtimer_error_code_t HWTIMER_SYS_Deinit(hwtimer_t *hwtimer)
- {
+{
     _hwtimer_error_code_t result;
 
     /* Check input parameters */
@@ -120,6 +119,7 @@ _hwtimer_error_code_t HWTIMER_SYS_Deinit(hwtimer_t *hwtimer)
     }
 
     hwtimer->devif      = NULL;
+    hwtimer->clockFreq  = 0U;
     hwtimer->ticks      = 0U;
     hwtimer->divider    = 0U;
     hwtimer->modulo     = 0U;
@@ -129,46 +129,6 @@ _hwtimer_error_code_t HWTIMER_SYS_Deinit(hwtimer_t *hwtimer)
     hwtimer->callbackBlocked = 0U;
 
     return kHwtimerSuccess;
- }
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : HWTIMER_SYS_SetFreq
- * Description   : The function configures timer to tick at frequency as close
- * as possible to the requested one.
- *
- *END**************************************************************************/
-_hwtimer_error_code_t HWTIMER_SYS_SetFreq(hwtimer_t *hwtimer, clock_names_t clockName, uint32_t freq)
-{
-    uint32_t clockFreq;
-    uint32_t divider;
-
-    /* Check input parameters */
-    if ((NULL == hwtimer) || (0U == freq))
-    {
-        return kHwtimerInvalidInput;
-    }
-    if (NULL == hwtimer->devif)
-    {
-        return kHwtimerInvalidPointer;
-    }
-
-    /* Store clock_id in structure */
-    hwtimer->clockName = clockName;
-    /* Find out input frequency */
-    if ( kClockManagerSuccess != CLOCK_SYS_GetFreq(clockName, &clockFreq))
-    {
-        return kHwtimerClockManagerError;
-    }
-    divider = clockFreq / freq;
-
-    /* If Required frequency is higher than input clock frequency, we set divider 1 (for setting the highest possible frequency) */
-    if (0U == divider)
-    {
-        divider = 1U;
-    }
-    assert(NULL != hwtimer->devif->setDiv);
-    return hwtimer->devif->setDiv(hwtimer, divider);
 }
 
 /*FUNCTION**********************************************************************
@@ -178,11 +138,8 @@ _hwtimer_error_code_t HWTIMER_SYS_SetFreq(hwtimer_t *hwtimer, clock_names_t cloc
  * desired period specified in microseconds rather than to frequency in Hz.
  *
  *END**************************************************************************/
-_hwtimer_error_code_t HWTIMER_SYS_SetPeriod(hwtimer_t *hwtimer, clock_names_t clockName, uint32_t period)
+_hwtimer_error_code_t HWTIMER_SYS_SetPeriod(hwtimer_t *hwtimer, uint32_t period)
 {
-    uint32_t clockFreq;
-    uint64_t divider;
-
     /* Check input parameters */
     if ((NULL == hwtimer) || (0U == period))
     {
@@ -193,59 +150,8 @@ _hwtimer_error_code_t HWTIMER_SYS_SetPeriod(hwtimer_t *hwtimer, clock_names_t cl
         return kHwtimerInvalidPointer;
     }
 
-    /* Store clock_id in struct. */
-    hwtimer->clockName = clockName;
-    /* Find out input frequency*/
-     if ( kClockManagerSuccess != CLOCK_SYS_GetFreq(clockName, &clockFreq))
-    {
-        return kHwtimerClockManagerError;
-    }
-
-    divider = (((uint64_t)clockFreq * period)) / 1000000U ;
-    /* If required frequency is higher than input clock frequency, we set divider 1 (for setting the highest possible frequency) */
-    if (0U == divider)
-    {
-        divider = 1U;
-    }
-    /* if divider is greater than 32b value we set divider to max 32b value */
-    else if (divider & 0xFFFFFFFF00000000U)
-    {
-        return kHwtimerInvalidInput;
-    }
     assert(NULL != hwtimer->devif->setDiv);
-    return hwtimer->devif->setDiv(hwtimer, (uint32_t)divider);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : HWTIMER_SYS_GetFreq
- * Description   : The function returns current frequency of the timer
- * calculated from the base frequency and actual divider settings of the timer
- * or zero in case of an error.
- *
- *END**************************************************************************/
-uint32_t HWTIMER_SYS_GetFreq(hwtimer_t *hwtimer)
-{
-    uint32_t clockFreq;
-
-    /* Check input parameters */
-    if (NULL == hwtimer)
-    {
-        return 0U;
-    }
-
-    /* Uninitialized hwtimer contains value of 0 for divider */
-    if (0U == hwtimer->divider)
-    {
-        return 0U;
-    }
-    /* Obtain clock source clock frequency.*/
-    if (kClockManagerSuccess != CLOCK_SYS_GetFreq(hwtimer->clockName, &clockFreq))
-    {
-        return 0U;
-    }
-
-    return clockFreq / hwtimer->divider;
+    return hwtimer->devif->setDiv(hwtimer, period);
 }
 
 /*FUNCTION**********************************************************************
@@ -258,7 +164,6 @@ uint32_t HWTIMER_SYS_GetFreq(hwtimer_t *hwtimer)
  *END**************************************************************************/
 uint32_t HWTIMER_SYS_GetPeriod(hwtimer_t *hwtimer)
 {
-    uint32_t clockFreq;
     uint32_t period;
 
     /* Check input parameters */
@@ -268,14 +173,14 @@ uint32_t HWTIMER_SYS_GetPeriod(hwtimer_t *hwtimer)
     }
 
     /* Obtain clock source clock frequency.*/
-    if (kClockManagerSuccess != CLOCK_SYS_GetFreq(hwtimer->clockName, &clockFreq))
+    if (hwtimer->clockFreq == 0U)
     {
         return 0U;
     }
-    assert(0U != clockFreq);
-    assert(hwtimer->divider <= clockFreq);
+
+    assert(hwtimer->divider <= hwtimer->clockFreq);
     /* Divider is always less than clockFreq */
-    period = ((uint64_t)1000000U * hwtimer->divider) / clockFreq;
+    period = ((uint64_t)1000000U * hwtimer->divider) / hwtimer->clockFreq;
 
     return period;
 }
@@ -335,8 +240,8 @@ _hwtimer_error_code_t HWTIMER_SYS_Stop(hwtimer_t *hwtimer)
  *
  * Function Name : HWTIMER_SYS_GetModulo
  * Description   : The function returns period of the timer in sub-ticks. It is
- * typically called after HWTIMER_SYS_SetFreq() or HWTIMER_SYS_SetPeriod() to
- * obtain actual resolution of the timer in the current configuration.
+ * typically called after HWTIMER_SYS_SetPeriod() to obtain actual resolution
+ * of the timer in the current configuration.
  *
  *END**************************************************************************/
 uint32_t HWTIMER_SYS_GetModulo(hwtimer_t *hwtimer)

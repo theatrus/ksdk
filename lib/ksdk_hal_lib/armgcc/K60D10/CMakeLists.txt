@@ -47,14 +47,16 @@ SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MK60DN512VMD10")
 # INCLUDE_DIRECTORIES
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include/device)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MK60D10)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK60D10/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK60D10/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/hal/inc)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include/device)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MK60D10)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK60D10/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MK60D10/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/hal/inc)
 ENDIF()
@@ -125,10 +127,11 @@ ADD_LIBRARY(KsdkHalLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/uart/fsl_uart_hal.c"
     "${ProjDirPath}/../../../../platform/hal/src/wdog/fsl_wdog_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_wdog_hal.h"
-    "${ProjDirPath}/../../../../platform/hal/src/pmc/fsl_pmc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_pmc_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/rcm/fsl_rcm_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_rcm_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/vref/fsl_vref_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_vref_hal.h"
 )
 
 SET_TARGET_PROPERTIES(KsdkHalLib PROPERTIES OUTPUT_NAME "libksdk_hal.a")

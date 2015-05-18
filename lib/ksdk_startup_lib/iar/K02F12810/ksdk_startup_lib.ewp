@@ -29,7 +29,7 @@
         <option>
           <name>Variant</name>
           <version>20</version>
-          <state>39</state>
+          <state>35</state>
         </option>
         <option>
           <name>GEndianMode</name>
@@ -90,7 +90,7 @@
         </option>
         <option>
           <name>GeneralEnableMisra</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>GeneralMisraVerbose</name>
@@ -98,7 +98,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MK02FN64xx10	Freescale MK02FN64xx10</state>
+          <state>MK02FN128xxx10	Freescale MK02FN128xxx10</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -137,12 +137,12 @@
         <option>
           <name>GFPUCoreSlave</name>
           <version>20</version>
-          <state>39</state>
+          <state>35</state>
         </option>
         <option>
           <name>GBECoreSlave</name>
           <version>20</version>
-          <state>39</state>
+          <state>35</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -172,7 +172,7 @@
         <option>
           <name>CCDefines</name>
           
-        <state>DEBUG</state><state>CPU_MK02FN64VLH10</state><state>IAR</state></option>
+        <state>DEBUG</state><state>CPU_MK02FN128VFM10</state><state>FRDM_KL02Z</state><state>FREEDOM</state></option>
         <option>
           <name>CCPreprocFile</name>
           <state>0</state>
@@ -301,7 +301,7 @@
         <option>
           <name>CCIncludePath2</name>
           
-        <state>$PROJ_DIR$/../../../../platform/startup/MK02F12810</state><state>$PROJ_DIR$/../../../../platform/CMSIS/Include</state></option>
+        <state>$PROJ_DIR$/../../../../platform/devices</state><state>$PROJ_DIR$/../../../../platform/devices/MK02F12810/include</state><state>$PROJ_DIR$/../../../../platform/devices/MK02F12810/startup</state><state>$PROJ_DIR$/../../../../platform/CMSIS/Include</state></option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -970,7 +970,7 @@
         <option>
           <name>Variant</name>
           <version>20</version>
-          <state>39</state>
+          <state>35</state>
         </option>
         <option>
           <name>GEndianMode</name>
@@ -1031,7 +1031,7 @@
         </option>
         <option>
           <name>GeneralEnableMisra</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>GeneralMisraVerbose</name>
@@ -1039,7 +1039,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>MK02FN64xx10	Freescale MK02FN64xx10</state>
+          <state>MK02FN128xxx10	Freescale MK02FN128xxx10</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -1078,12 +1078,12 @@
         <option>
           <name>GFPUCoreSlave</name>
           <version>20</version>
-          <state>39</state>
+          <state>35</state>
         </option>
         <option>
           <name>GBECoreSlave</name>
           <version>20</version>
-          <state>39</state>
+          <state>35</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -1113,7 +1113,7 @@
         <option>
           <name>CCDefines</name>
           
-        <state>NDEBUG</state><state>CPU_MK02FN64VLH10</state><state>IAR</state></option>
+        <state>NDEBUG</state><state>CPU_MK02FN128VFM10</state><state>FRDM_KL02Z</state><state>FREEDOM</state></option>
         <option>
           <name>CCPreprocFile</name>
           <state>0</state>
@@ -1242,7 +1242,7 @@
         <option>
           <name>CCIncludePath2</name>
           
-        <state>$PROJ_DIR$/../../../../platform/startup/MK02F12810</state><state>$PROJ_DIR$/../../../../platform/CMSIS/Include</state></option>
+        <state>$PROJ_DIR$/../../../../platform/devices</state><state>$PROJ_DIR$/../../../../platform/devices/MK02F12810/include</state><state>$PROJ_DIR$/../../../../platform/devices/MK02F12810/startup</state><state>$PROJ_DIR$/../../../../platform/CMSIS/Include</state></option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -1883,4 +1883,4 @@
       <data/>
     </settings>
   </configuration>
-<group><name>startup</name><file><name>$PROJ_DIR$/../../../../platform/startup/MK02F12810/iar/startup_MK02F12810.s</name></file><file><name>$PROJ_DIR$/../../../../platform/startup/MK02F12810/system_MK02F12810.c</name></file><file><name>$PROJ_DIR$/../../../../platform/startup/startup.c</name></file><file><name>$PROJ_DIR$/../../../../platform/startup/startup.h</name></file></group></project>
+<group><name>startup</name><file><name>$PROJ_DIR$/../../../../platform/devices/MK02F12810/startup/iar/startup_MK02F12810.s</name></file><file><name>$PROJ_DIR$/../../../../platform/devices/MK02F12810/startup/system_MK02F12810.c</name></file><file><name>$PROJ_DIR$/../../../../platform/devices/startup.c</name></file><file><name>$PROJ_DIR$/../../../../platform/devices/startup.h</name></file></group></project>

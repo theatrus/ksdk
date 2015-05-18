@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<workspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="workingsets.xsd">
+  <projects>
+  <project><name>ksdk_platform_lib_KW24D5</name><path>../../../../../../../lib/ksdk_platform_lib/kds/KW24D5</path><open>true</open><activeconfig>debug</activeconfig><buildreferences config="debug">false</buildreferences><activeconfig>release</activeconfig><buildreferences config="release">false</buildreferences></project><project><name>dspi_non_blocking_example_master_twrkw24d512</name><path>.</path><open>true</open><activeconfig>debug</activeconfig><buildreferences config="debug">false</buildreferences><activeconfig>release</activeconfig><buildreferences config="release">false</buildreferences></project></projects>
+  <workingsets>
+  <workingSet editPageId="org.eclipse.cdt.ui.CElementWorkingSetPage" id="1323268527287_1" label="dspi_non_blocking_example_master" name="dspi_non_blocking_example_master"><item factoryID="org.eclipse.cdt.ui.PersistableCElementFactory" path="/ksdk_platform_lib_KW24D5" type="4"/><item factoryID="org.eclipse.cdt.ui.PersistableCElementFactory" path="/dspi_non_blocking_example_master_twrkw24d512" type="4"/></workingSet></workingsets>
+  <cdtconfigurations>
+  <workingSet name="dspi_non_blocking_example_master"><config name="debug"><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="ksdk_platform_lib_KW24D5" configName="debug"/><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="dspi_non_blocking_example_master_twrkw24d512" configName="debug"/></config><config name="release"><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="ksdk_platform_lib_KW24D5" configName="release"/><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="dspi_non_blocking_example_master_twrkw24d512" configName="release"/></config></workingSet></cdtconfigurations>
+</workspace>

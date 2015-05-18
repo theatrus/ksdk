@@ -39,9 +39,9 @@
 const uint32_t g_cadcBaseAddr[] = ADC_BASE_ADDRS;
 
 /* Table to save ADC IRQ enum numbers defined in CMSIS header file. */
-const IRQn_Type g_cadcErrIrqId[HW_ADC_INSTANCE_COUNT] = { ADC_ERR_IRQn };
-const IRQn_Type g_cadcConvAIrqId[HW_ADC_INSTANCE_COUNT] = { ADCA_IRQn };
-const IRQn_Type g_cadcConvBIrqId[HW_ADC_INSTANCE_COUNT] = { ADCB_IRQn };
+const IRQn_Type g_cadcErrIrqId[ADC_INSTANCE_COUNT] = { ADC_ERR_IRQn };
+const IRQn_Type g_cadcConvAIrqId[ADC_INSTANCE_COUNT] = { ADCA_IRQn };
+const IRQn_Type g_cadcConvBIrqId[ADC_INSTANCE_COUNT] = { ADCB_IRQn };
 
 /*******************************************************************************
  * EOF

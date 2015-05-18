@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 * 
-* Copyright (c) 2014 Freescale Semiconductor;
+* Copyright (c) 2014-2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 * Copyright (c) 1989-2008 ARC International;
@@ -42,16 +42,12 @@
 /******************************************************************************
  * Macro's
  *****************************************************************************/
-#define HID_IMPLEMENT_QUEUING            (0)
 #define MAX_HID_CLASS_EP_NUM             (2)
 
  /* class specific requests */
 
 /* for class specific requests */
 #define MAX_HID_DEVICE                    (0x01)
-#if HID_IMPLEMENT_QUEUING
-#define HID_MAX_QUEUE_ELEMS               (4) 
-#endif
 
 #endif
 

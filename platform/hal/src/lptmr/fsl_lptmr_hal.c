@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,6 +29,7 @@
  */
 
 #include "fsl_lptmr_hal.h"
+#if FSL_FEATURE_SOC_LPTMR_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -41,6 +42,7 @@
 /*******************************************************************************
  * Code
  *******************************************************************************/
+#endif
 
 /*******************************************************************************
  * EOF
@@ -52,17 +54,75 @@
  * Description   : Initialize LPTMR module to reset state.
  *
  *END**************************************************************************/
-void LPTMR_HAL_Init(uint32_t baseAddr)
+void LPTMR_HAL_Init(LPTMR_Type * base)
 {
-    LPTMR_HAL_Disable(baseAddr);
-    LPTMR_HAL_ClearIntFlag(baseAddr);
-    LPTMR_HAL_SetIntCmd(baseAddr, false);
-    LPTMR_HAL_SetPinSelectMode(baseAddr, kLptmrPinSelectInput0);
-    LPTMR_HAL_SetPinPolarityMode(baseAddr, kLptmrPinPolarityActiveHigh);
-    LPTMR_HAL_SetFreeRunningCmd(baseAddr, false);
-    LPTMR_HAL_SetTimerModeMode(baseAddr, kLptmrTimerModeTimeCounter);
-    LPTMR_HAL_SetPrescalerCmd(baseAddr, false);
-    LPTMR_HAL_SetPrescalerValueMode(baseAddr, kLptmrPrescalerDivide2);
-    LPTMR_HAL_SetPrescalerClockSourceMode(baseAddr, 0U);
-    LPTMR_HAL_SetCompareValue(baseAddr, 0x0);
+    lptmr_working_mode_user_config_t working_mode_config;
+    lptmr_prescaler_user_config_t prescaler_config;
+    
+    LPTMR_HAL_Disable(base);
+    LPTMR_HAL_ClearIntFlag(base);
+
+    working_mode_config.timerModeSelect = kLptmrTimerModeTimeCounter;
+    working_mode_config.freeRunningEnable = false;
+    working_mode_config.pinPolarity = kLptmrPinPolarityActiveHigh;
+    working_mode_config.pinSelect = kLptmrPinSelectInput0;
+    LPTMR_HAL_SetTimerWorkingMode(base, working_mode_config);
+    
+    prescaler_config.prescalerValue = kLptmrPrescalerDivide2;
+    prescaler_config.prescalerBypass = true;
+    prescaler_config.prescalerClockSelect = kLptmrPrescalerClock0;
+    LPTMR_HAL_SetPrescalerMode(base, prescaler_config);
+    
+    LPTMR_HAL_SetCompareValue(base, 0U);
+    LPTMR_HAL_SetIntCmd(base, false);
+}
+
+ /*FUNCTION**********************************************************************
+ *
+ * Function Name : LPTMR_HAL_SetTimerWorkingMode
+ * Description   : Config the LPTMR working mode.
+ *
+ *END**************************************************************************/
+void LPTMR_HAL_SetTimerWorkingMode(LPTMR_Type * base,  lptmr_working_mode_user_config_t timerMode)
+{
+    uint32_t csr;
+    
+    csr = LPTMR_RD_CSR(base);
+    csr &= ~(LPTMR_CSR_TCF_MASK | LPTMR_CSR_TMS_MASK | LPTMR_CSR_TFC_MASK 
+             | LPTMR_CSR_TPP_MASK | LPTMR_CSR_TPS_MASK);
+    csr |= LPTMR_CSR_TMS(timerMode.timerModeSelect) 
+        | LPTMR_CSR_TFC(timerMode.freeRunningEnable)
+        | LPTMR_CSR_TPP(timerMode.pinPolarity) 
+        | LPTMR_CSR_TPS(timerMode.pinSelect); 
+    
+    LPTMR_WR_CSR(base, csr);
+}
+
+ /*FUNCTION**********************************************************************
+ *
+ * Function Name : LPTMR_HAL_SetPrescalerMode
+ * Description   : Set the LPTMR prescaler mode.
+ *
+ *END**************************************************************************/
+void LPTMR_HAL_SetPrescalerMode(LPTMR_Type * base,  lptmr_prescaler_user_config_t prescaler_config)
+{
+    uint32_t psr;
+    
+    psr = LPTMR_PSR_PCS(prescaler_config.prescalerClockSelect)
+        | LPTMR_PSR_PBYP(prescaler_config.prescalerBypass)
+        | LPTMR_PSR_PRESCALE(prescaler_config.prescalerValue);
+
+    LPTMR_WR_PSR(base, psr);
+}
+
+ /*FUNCTION**********************************************************************
+ *
+ * Function Name : LPTMR_HAL_GetCounterValue
+ * Description   : Gets the LPTMR counter value..
+ *
+ *END**************************************************************************/
+uint32_t LPTMR_HAL_GetCounterValue(LPTMR_Type * base)
+{
+    LPTMR_BWR_CNR_COUNTER(base, 0);  /* Must first write to the CNR with any value */
+    return (uint32_t)(LPTMR_BRD_CNR_COUNTER(base));
 }

@@ -35,7 +35,7 @@
  * Code
  ******************************************************************************/
 
-#if (HW_FTM_INSTANCE_COUNT > 0)
+#if (FTM_INSTANCE_COUNT > 0)
 /*!
  * @brief Implementation of FTM0 handler named in startup code.
  *
@@ -47,7 +47,7 @@ void FTM0_IRQHandler(void)
 }
 #endif
 
-#if (HW_FTM_INSTANCE_COUNT > 1)
+#if (FTM_INSTANCE_COUNT > 1)
 /*!
  * @brief Implementation of FTM1 handler named in startup code.
  *
@@ -59,7 +59,7 @@ void FTM1_IRQHandler(void)
 }
 #endif
 
-#if (HW_FTM_INSTANCE_COUNT > 2)
+#if (FTM_INSTANCE_COUNT > 2)
 /*!
  * @brief Implementation of FTM2 handler named in startup code.
  *
@@ -71,7 +71,7 @@ void FTM2_IRQHandler(void)
 }
 #endif
 
-#if (HW_FTM_INSTANCE_COUNT > 3)
+#if (FTM_INSTANCE_COUNT > 3)
 /*!
  * @brief Implementation of FTM3 handler named in startup code.
  *

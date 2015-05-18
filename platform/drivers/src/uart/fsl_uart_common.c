@@ -30,19 +30,21 @@
 
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_UART_COUNT
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Pointer to uart runtime state structure.*/
-void * g_uartStatePtr[HW_UART_INSTANCE_COUNT] = { NULL };
+void * g_uartStatePtr[UART_INSTANCE_COUNT] = { NULL };
 
 /* Table of base addresses for uart instances. */
-const uint32_t g_uartBaseAddr[HW_UART_INSTANCE_COUNT] = UART_BASE_ADDRS;
+UART_Type * const g_uartBase[UART_INSTANCE_COUNT] = UART_BASE_PTRS;
 
 /* Table to save UART IRQ numbers defined in CMSIS files. */
-IRQn_Type g_uartRxTxIrqId[HW_UART_INSTANCE_COUNT] = UART_RX_TX_IRQS;
+IRQn_Type g_uartRxTxIrqId[UART_INSTANCE_COUNT] = UART_RX_TX_IRQS;
 
+#endif /* FSL_FEATURE_SOC_UART_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

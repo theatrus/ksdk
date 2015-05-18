@@ -39,6 +39,14 @@
 /******************************************************************************
  * Macro's
  *****************************************************************************/
+/* if Audio class 2.0  supported 
+ * 1 supported
+ * 0 not supported
+ */
+#if USBCFG_DEV_AUDIO
+#define USBCFG_AUDIO_CLASS_2_0            0
+#endif
+
 #define AUDIO_IMPLEMENT_QUEUING           (0)
 #define AUDIO_MAX_QUEUE_ELEMS             (4)
 #define MAX_AUDIO_CLASS_EP_NUM            (0x01)

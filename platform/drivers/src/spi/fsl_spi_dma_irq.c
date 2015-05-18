@@ -46,7 +46,7 @@
  * Code
  ******************************************************************************/
 
-#if (HW_SPI_INSTANCE_COUNT == 1)
+#if (SPI_INSTANCE_COUNT == 1)
 /*!
  * @brief This function is the implementation of SPI0 handler named in startup code.
  *
@@ -54,7 +54,7 @@
  */
 void SPI0_IRQHandler(void)
 {
-    SPI_DRV_DmaIRQHandler(HW_SPI0);
+    SPI_DRV_DmaIRQHandler(SPI0_IDX);
 }
 
 #else
@@ -65,7 +65,7 @@ void SPI0_IRQHandler(void)
  */
 void SPI0_IRQHandler(void)
 {
-   SPI_DRV_DmaIRQHandler(HW_SPI0);
+   SPI_DRV_DmaIRQHandler(SPI0_IDX);
 }
 
 /*!
@@ -75,7 +75,7 @@ void SPI0_IRQHandler(void)
  */
 void SPI1_IRQHandler(void)
 {
-   SPI_DRV_DmaIRQHandler(HW_SPI1);
+   SPI_DRV_DmaIRQHandler(SPI1_IDX);
 }
 #endif
 

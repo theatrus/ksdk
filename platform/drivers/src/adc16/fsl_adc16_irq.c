@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_adc16_driver.h"
+#if FSL_FEATURE_SOC_ADC_COUNT
 
 /******************************************************************************
  * IRQ Handlers
@@ -41,25 +42,26 @@ void ADC0_IRQHandler(void)
     /* Add user-defined ISR for ADC0. */
 }
 
-#if (HW_ADC_INSTANCE_COUNT > 1U)
+#if (ADC_INSTANCE_COUNT > 1U)
 void ADC1_IRQHandler(void)
 {
     /* Add user-defined ISR for ADC1. */
 }
 #endif
 
-#if (HW_ADC_INSTANCE_COUNT > 2U)
+#if (ADC_INSTANCE_COUNT > 2U)
 void ADC2_IRQHandler(void)
 {
     /* Add user-defined ISR for ADC2. */
 }
 #endif
 
-#if (HW_ADC_INSTANCE_COUNT > 3U)
+#if (ADC_INSTANCE_COUNT > 3U)
 void ADC3_IRQHandler(void)
 {
     /* Add user-defined ISR for ADC3. */
 }
+#endif
 #endif
 
 /******************************************************************************

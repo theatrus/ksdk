@@ -27,89 +27,112 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include "fsl_ftm_hal.h"
+
+#if FSL_FEATURE_SOC_FTM_COUNT
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-void FTM_HAL_Init(uint32_t ftmBaseAddr)
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_HAL_Init
+ * Description   : Initializes the FTM.
+ *
+ *END**************************************************************************/
+void FTM_HAL_Init(FTM_Type *ftmBase)
 {
     /* Use FTM mode */
-    FTM_HAL_Enable(ftmBaseAddr, true);
-    FTM_HAL_SetClockPs(ftmBaseAddr, kFtmDividedBy2);
+    FTM_HAL_Enable(ftmBase, true);
+    FTM_HAL_SetClockPs(ftmBase, kFtmDividedBy2);
 }
 
-void FTM_HAL_SetSyncMode(uint32_t ftmBaseAddr, uint32_t syncMethod)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_HAL_SetSyncMode
+ * Description   : Sets the FTM register synchronization method.
+ * This function will set the necessary bits for the synchronization mode that user wishes to use.
+ *
+ *END**************************************************************************/
+void FTM_HAL_SetSyncMode(FTM_Type *ftmBase, uint32_t syncMethod)
 {
-    assert(syncMethod & (BM_FTM_SYNC_TRIG0 | BM_FTM_SYNC_TRIG1 | BM_FTM_SYNC_TRIG2 | BM_FTM_SYNC_SWSYNC));
+    assert(syncMethod & (FTM_SYNC_TRIG0_MASK | FTM_SYNC_TRIG1_MASK | FTM_SYNC_TRIG2_MASK | FTM_SYNC_SWSYNC_MASK));
 
     uint32_t channel = 0;
 
     /* Use the Enhanced PWM synchronization method */
-    FTM_HAL_SetPwmSyncModeCmd(ftmBaseAddr, true);
+    FTM_HAL_SetPwmSyncModeCmd(ftmBase, true);
 
-    FTM_HAL_SetCntinPwmSyncModeCmd(ftmBaseAddr, true);
-    FTM_HAL_SetInvctrlPwmSyncModeCmd(ftmBaseAddr, true);
-    FTM_HAL_SetSwoctrlPwmSyncModeCmd(ftmBaseAddr, true);
-    FTM_HAL_SetOutmaskPwmSyncModeCmd(ftmBaseAddr, true);
+    FTM_HAL_SetCntinPwmSyncModeCmd(ftmBase, true);
+    FTM_HAL_SetInvctrlPwmSyncModeCmd(ftmBase, true);
+    FTM_HAL_SetSwoctrlPwmSyncModeCmd(ftmBase, true);
+    FTM_HAL_SetOutmaskPwmSyncModeCmd(ftmBase, true);
 
     for (channel = 0; channel < (FSL_FEATURE_FTM_CHANNEL_COUNT / 2); channel++)
     {
-        FTM_HAL_SetDualChnPwmSyncCmd(ftmBaseAddr, channel, true);
+        FTM_HAL_SetDualChnPwmSyncCmd(ftmBase, channel, true);
     }
-    if (syncMethod & BM_FTM_SYNC_SWSYNC)
+    if (syncMethod & FTM_SYNC_SWSYNC_MASK)
     {
         /* Enable needed bits for software trigger to update registers with its buffer value */
-        FTM_HAL_SetCounterSoftwareSyncModeCmd(ftmBaseAddr, true);
-        FTM_HAL_SetModCntinCvSoftwareSyncModeCmd(ftmBaseAddr, true);
-        FTM_HAL_SetInvctrlSoftwareSyncModeCmd(ftmBaseAddr, true);
-        FTM_HAL_SetSwoctrlSoftwareSyncModeCmd(ftmBaseAddr, true);
-        FTM_HAL_SetOutmaskSoftwareSyncModeCmd(ftmBaseAddr, true);
+        FTM_HAL_SetCounterSoftwareSyncModeCmd(ftmBase, true);
+        FTM_HAL_SetModCntinCvSoftwareSyncModeCmd(ftmBase, true);
+        FTM_HAL_SetInvctrlSoftwareSyncModeCmd(ftmBase, true);
+        FTM_HAL_SetSwoctrlSoftwareSyncModeCmd(ftmBase, true);
+        FTM_HAL_SetOutmaskSoftwareSyncModeCmd(ftmBase, true);
     }
-    if (syncMethod & (BM_FTM_SYNC_TRIG0 | BM_FTM_SYNC_TRIG1 | BM_FTM_SYNC_TRIG2))
+    if (syncMethod & (FTM_SYNC_TRIG0_MASK | FTM_SYNC_TRIG1_MASK | FTM_SYNC_TRIG2_MASK))
     {
         /* Enable needed bits for hardware trigger to update registers with its buffer value */
-        FTM_HAL_SetCounterHardwareSyncModeCmd(ftmBaseAddr, true);
-        FTM_HAL_SetModCntinCvHardwareSyncModeCmd(ftmBaseAddr, true);
-        FTM_HAL_SetInvctrlHardwareSyncModeCmd(ftmBaseAddr, true);
-        FTM_HAL_SetSwoctrlHardwareSyncModeCmd(ftmBaseAddr, true);
-        FTM_HAL_SetOutmaskHardwareSyncModeCmd(ftmBaseAddr, true);
-        if (syncMethod & BM_FTM_SYNC_TRIG0)
+        FTM_HAL_SetCounterHardwareSyncModeCmd(ftmBase, true);
+        FTM_HAL_SetModCntinCvHardwareSyncModeCmd(ftmBase, true);
+        FTM_HAL_SetInvctrlHardwareSyncModeCmd(ftmBase, true);
+        FTM_HAL_SetSwoctrlHardwareSyncModeCmd(ftmBase, true);
+        FTM_HAL_SetOutmaskHardwareSyncModeCmd(ftmBase, true);
+        if (syncMethod & FTM_SYNC_TRIG0_MASK)
         {
-            BW_FTM_SYNC_TRIG0(ftmBaseAddr, 1);
+            FTM_BWR_SYNC_TRIG0(ftmBase, 1);
         }
 
-        if (syncMethod & BM_FTM_SYNC_TRIG1)
+        if (syncMethod & FTM_SYNC_TRIG1_MASK)
         {
-            BW_FTM_SYNC_TRIG1(ftmBaseAddr, 1);
+            FTM_BWR_SYNC_TRIG1(ftmBase, 1);
         }
-        if (syncMethod & BM_FTM_SYNC_TRIG2)
+        if (syncMethod & FTM_SYNC_TRIG2_MASK)
         {
-            BW_FTM_SYNC_TRIG2(ftmBaseAddr, 1);
+            FTM_BWR_SYNC_TRIG2(ftmBase, 1);
         }
     }
 }
 
-void FTM_HAL_EnablePwmMode(uint32_t ftmBaseAddr, ftm_pwm_param_t *config, uint8_t channel)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_HAL_EnablePwmMode
+ * Description   : Enables the FTM timer when it is PWM output mode
+ *
+ *END**************************************************************************/
+void FTM_HAL_EnablePwmMode(FTM_Type *ftmBase, ftm_pwm_param_t *config, uint8_t channel)
 {
     uint8_t chnlPairnum = FTM_HAL_GetChnPairIndex(channel);
 
-    FTM_HAL_SetDualEdgeCaptureCmd(ftmBaseAddr, chnlPairnum, false);
-    FTM_HAL_SetChnEdgeLevel(ftmBaseAddr, channel, config->edgeMode ? 1 : 2);
+    FTM_HAL_SetDualEdgeCaptureCmd(ftmBase, chnlPairnum, false);
+    FTM_HAL_SetChnEdgeLevel(ftmBase, channel, config->edgeMode ? 1 : 2);
     switch(config->mode)
     {
         case kFtmEdgeAlignedPWM:
-            FTM_HAL_SetDualChnCombineCmd(ftmBaseAddr, chnlPairnum, false);
-            FTM_HAL_SetCpwms(ftmBaseAddr, 0);
-            FTM_HAL_SetChnMSnBAMode(ftmBaseAddr, channel, 2);
+            FTM_HAL_SetDualChnCombineCmd(ftmBase, chnlPairnum, false);
+            FTM_HAL_SetCpwms(ftmBase, 0);
+            FTM_HAL_SetChnMSnBAMode(ftmBase, channel, 2);
             break;
         case kFtmCenterAlignedPWM:
-            FTM_HAL_SetDualChnCombineCmd(ftmBaseAddr, chnlPairnum, false);
-            FTM_HAL_SetCpwms(ftmBaseAddr, 1);
+            FTM_HAL_SetDualChnCombineCmd(ftmBase, chnlPairnum, false);
+            FTM_HAL_SetCpwms(ftmBase, 1);
             break;
         case kFtmCombinedPWM:
-            FTM_HAL_SetCpwms(ftmBaseAddr, 0);
-            FTM_HAL_SetDualChnCombineCmd(ftmBaseAddr, chnlPairnum, true);
+            FTM_HAL_SetCpwms(ftmBase, 0);
+            FTM_HAL_SetDualChnCombineCmd(ftmBase, chnlPairnum, true);
             break;
         default:
             assert(0);
@@ -117,57 +140,75 @@ void FTM_HAL_EnablePwmMode(uint32_t ftmBaseAddr, ftm_pwm_param_t *config, uint8_
     }
 }
 
-void FTM_HAL_DisablePwmMode(uint32_t ftmBaseAddr, ftm_pwm_param_t *config, uint8_t channel)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_HAL_DisablePwmMode
+ * Description   : Disables the PWM output mode.
+ *
+ *END**************************************************************************/
+void FTM_HAL_DisablePwmMode(FTM_Type *ftmBase, ftm_pwm_param_t *config, uint8_t channel)
 {
     uint8_t chnlPairnum = FTM_HAL_GetChnPairIndex(channel);
 
-    FTM_HAL_SetChnCountVal(ftmBaseAddr, channel, 0);
-    FTM_HAL_SetChnEdgeLevel(ftmBaseAddr, channel, 0);
-    FTM_HAL_SetChnMSnBAMode(ftmBaseAddr, channel, 0);
-    FTM_HAL_SetCpwms(ftmBaseAddr, 0);
-    FTM_HAL_SetDualChnCombineCmd(ftmBaseAddr, chnlPairnum, false);
+    FTM_HAL_SetChnCountVal(ftmBase, channel, 0);
+    FTM_HAL_SetChnEdgeLevel(ftmBase, channel, 0);
+    FTM_HAL_SetChnMSnBAMode(ftmBase, channel, 0);
+    FTM_HAL_SetCpwms(ftmBase, 0);
+    FTM_HAL_SetDualChnCombineCmd(ftmBase, chnlPairnum, false);
 }
 
-void FTM_HAL_Reset(uint32_t ftmBaseAddr)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_HAL_Reset
+ * Description   : Resets the FTM registers
+ *
+ *END**************************************************************************/
+void FTM_HAL_Reset(FTM_Type *ftmBase)
 {
-    HW_FTM_SC_WR(ftmBaseAddr, 0);
-    HW_FTM_CNT_WR(ftmBaseAddr, 0);
-    HW_FTM_MOD_WR(ftmBaseAddr, 0);
+    FTM_WR_SC(ftmBase, 0);
+    FTM_WR_CNT(ftmBase, 0);
+    FTM_WR_MOD(ftmBase, 0);
 
-    HW_FTM_CNTIN_WR(ftmBaseAddr, 0);
-    HW_FTM_STATUS_WR(ftmBaseAddr, 0);
-    HW_FTM_MODE_WR(ftmBaseAddr, 0x00000004);
-    HW_FTM_SYNC_WR(ftmBaseAddr, 0);
-    HW_FTM_OUTINIT_WR(ftmBaseAddr, 0);
-    HW_FTM_OUTMASK_WR(ftmBaseAddr, 0);
-    HW_FTM_COMBINE_WR(ftmBaseAddr, 0);
-    HW_FTM_DEADTIME_WR(ftmBaseAddr, 0);
-    HW_FTM_EXTTRIG_WR(ftmBaseAddr, 0);
-    HW_FTM_POL_WR(ftmBaseAddr, 0);
-    HW_FTM_FMS_WR(ftmBaseAddr, 0);
-    HW_FTM_FILTER_WR(ftmBaseAddr, 0);
-    HW_FTM_FLTCTRL_WR(ftmBaseAddr, 0);
-    /*HW_FTM_QDCTRL_WR(instance, 0);*/
-    HW_FTM_CONF_WR(ftmBaseAddr, 0);
-    HW_FTM_FLTPOL_WR(ftmBaseAddr, 0);
-    HW_FTM_SYNCONF_WR(ftmBaseAddr, 0);
-    HW_FTM_INVCTRL_WR(ftmBaseAddr, 0);
-    HW_FTM_SWOCTRL_WR(ftmBaseAddr, 0);
-    HW_FTM_PWMLOAD_WR(ftmBaseAddr, 0);
+    FTM_WR_CNTIN(ftmBase, 0);
+    FTM_WR_STATUS(ftmBase, 0);
+    FTM_WR_MODE(ftmBase, 0x00000004);
+    FTM_WR_SYNC(ftmBase, 0);
+    FTM_WR_OUTINIT(ftmBase, 0);
+    FTM_WR_OUTMASK(ftmBase, 0);
+    FTM_WR_COMBINE(ftmBase, 0);
+    FTM_WR_DEADTIME(ftmBase, 0);
+    FTM_WR_EXTTRIG(ftmBase, 0);
+    FTM_WR_POL(ftmBase, 0);
+    FTM_WR_FMS(ftmBase, 0);
+    FTM_WR_FILTER(ftmBase, 0);
+    FTM_WR_FLTCTRL(ftmBase, 0);
+    /*FTM_WR_QDCTRL(instance, 0);*/
+    FTM_WR_CONF(ftmBase, 0);
+    FTM_WR_FLTPOL(ftmBase, 0);
+    FTM_WR_SYNCONF(ftmBase, 0);
+    FTM_WR_INVCTRL(ftmBase, 0);
+    FTM_WR_SWOCTRL(ftmBase, 0);
+    FTM_WR_PWMLOAD(ftmBase, 0);
 }
 
-void FTM_HAL_SetHardwareSyncTriggerSrc(uint32_t ftmBaseAddr, uint32_t trigger_num, bool enable)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_HAL_SetHardwareSyncTriggerSrc
+ * Description   : Sets the FTM peripheral timer hardware trigger.
+ *
+ *END**************************************************************************/
+void FTM_HAL_SetHardwareSyncTriggerSrc(FTM_Type *ftmBase, uint32_t trigger_num, bool enable)
 {
     switch(trigger_num)
     {
         case 0:
-            BW_FTM_SYNC_TRIG0(ftmBaseAddr, enable ? 1 : 0);
+            FTM_BWR_SYNC_TRIG0(ftmBase, enable ? 1 : 0);
             break;
         case 1:
-            BW_FTM_SYNC_TRIG1(ftmBaseAddr, enable ? 1 : 0);
+            FTM_BWR_SYNC_TRIG1(ftmBase, enable ? 1 : 0);
             break;
         case 2:
-            BW_FTM_SYNC_TRIG2(ftmBaseAddr, enable ? 1 : 0);
+            FTM_BWR_SYNC_TRIG2(ftmBase, enable ? 1 : 0);
             break;
         default:
             assert(0);
@@ -175,33 +216,47 @@ void FTM_HAL_SetHardwareSyncTriggerSrc(uint32_t ftmBaseAddr, uint32_t trigger_nu
     }
 }
 
-void FTM_HAL_SetChnTriggerCmd(uint32_t ftmBaseAddr, uint8_t channel, bool val)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_HAL_SetChnTriggerCmd
+ * Description   : Enables or disables the generation of the FTM peripheral timer channel trigger.
+ * Enables or disables the generation of the FTM peripheral timer channel trigger when the
+ * FTM counter is equal to its initial value. Channels 6 and 7 cannot be used as triggers.
+ *
+ *END**************************************************************************/
+void FTM_HAL_SetChnTriggerCmd(FTM_Type *ftmBase, uint8_t channel, bool val)
 {
-    assert(channel < HW_CHAN6);
+    assert(channel < CHAN6_IDX);
 
     uint8_t bit = val ? 1 : 0;
     uint32_t value = (channel > 1U) ? (uint8_t)(bit << (channel - 2U)) : (uint8_t)(bit << (channel + 4U));
 
-    val ? HW_FTM_EXTTRIG_SET(ftmBaseAddr, value) : HW_FTM_EXTTRIG_CLR(ftmBaseAddr, value);
+    val ? FTM_SET_EXTTRIG(ftmBase, value) : FTM_CLR_EXTTRIG(ftmBase, value);
 }
 
-void FTM_HAL_SetChnInputCaptureFilter(uint32_t ftmBaseAddr, uint8_t channel, uint8_t val)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_HAL_SetChnInputCaptureFilter
+ * Description   : Sets the FTM peripheral timer channel input capture filter value.
+ *
+ *END**************************************************************************/
+void FTM_HAL_SetChnInputCaptureFilter(FTM_Type *ftmBase, uint8_t channel, uint8_t val)
 {
-    assert(channel < HW_CHAN4);
+    assert(channel < CHAN4_IDX);
 
     switch(channel)
     {
-        case HW_CHAN0:
-            BW_FTM_FILTER_CH0FVAL(ftmBaseAddr, val);
+        case CHAN0_IDX:
+            FTM_BWR_FILTER_CH0FVAL(ftmBase, val);
             break;
-        case HW_CHAN1:
-            BW_FTM_FILTER_CH1FVAL(ftmBaseAddr, val);
+        case CHAN1_IDX:
+            FTM_BWR_FILTER_CH1FVAL(ftmBase, val);
             break;
-        case HW_CHAN2:
-            BW_FTM_FILTER_CH2FVAL(ftmBaseAddr, val);
+        case CHAN2_IDX:
+            FTM_BWR_FILTER_CH2FVAL(ftmBase, val);
             break;
-        case HW_CHAN3:
-            BW_FTM_FILTER_CH3FVAL(ftmBaseAddr, val);
+        case CHAN3_IDX:
+            FTM_BWR_FILTER_CH3FVAL(ftmBase, val);
             break;
         default:
             assert(0);
@@ -209,17 +264,24 @@ void FTM_HAL_SetChnInputCaptureFilter(uint32_t ftmBaseAddr, uint8_t channel, uin
     }
 }
 
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : FTM_HAL_GetChnPairIndex
+ * Description   : Combines the channel control.
+ * Returns an index for each channel pair.
+ *
+ *END**************************************************************************/
 uint32_t FTM_HAL_GetChnPairIndex(uint8_t channel)
 {
-    if((channel == HW_CHAN0) || (channel == HW_CHAN1))
+    if((channel == CHAN0_IDX) || (channel == CHAN1_IDX))
     {
         return 0;
     }
-    else if((channel == HW_CHAN2) || (channel == HW_CHAN3))
+    else if((channel == CHAN2_IDX) || (channel == CHAN3_IDX))
     {
         return 1;
     }
-    else if((channel == HW_CHAN4) || (channel == HW_CHAN5))
+    else if((channel == CHAN4_IDX) || (channel == CHAN5_IDX))
     {
         return 2;
     }
@@ -228,6 +290,8 @@ uint32_t FTM_HAL_GetChnPairIndex(uint8_t channel)
         return 3;
     }
 }
+
+#endif /* FSL_FEATURE_SOC_FTM_COUNT */
 
 /*******************************************************************************
  * EOF

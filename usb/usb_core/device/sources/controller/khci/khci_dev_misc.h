@@ -57,16 +57,16 @@
 
 /* Define USB buffer descriptor definitions in case of their lack */
 #ifndef USB_BD_BC
-#   define USB_BD_BC(n)                 ((n & 0x3ff) << 16)
+#   define USB_BD_BC(n)                 (((uint32_t)n & 0x3ff) << 16)
 #   define USB_BD_OWN                   0x80
-#   define USB_BD_DATA01(n)             ((n & 1) << 6)
+#   define USB_BD_DATA01(n)             (((uint32_t)n & 1) << 6)
 #   define USB_BD_DATA0                 USB_BD_DATA01(0)
 #   define USB_BD_DATA1                 USB_BD_DATA01(1)
 #   define USB_BD_KEEP                  0x20
 #   define USB_BD_NINC                  0x10
 #   define USB_BD_DTS                   0x08
 #   define USB_BD_STALL                 0x04
-#   define USB_BD_PID(n)                ((n & 0x0f) << 2)
+#   define USB_BD_PID(n)                (((uint32_t)n & 0x0f) << 2)
 #endif
 
 #ifndef USB_TOKEN_TOKENPID_SETUP
@@ -97,35 +97,36 @@ typedef struct _usb_ep_info_struct
 /* The USB Device State Structure */
 typedef struct _usb_khci_device_state_struct 
 {
-   uint32_t              controller_id;       /* Device controller ID */
-   usb_device_handle     upper_layer_handle;
-   void*                 dev_ptr;             /* Device Controller Register base address */
-   struct xd_struct*     xd_base;
-   struct xd_struct*     xd_head;             /* Head Transaction descriptors */
-   struct xd_struct*     xd_tail;             /* Tail Transaction descriptors */
-   uint32_t              xd_entries;
+    uint32_t              controller_id;       /* Device controller ID */
+    usb_device_handle     upper_layer_handle;
+    void*                 dev_ptr;             /* Device Controller Register base address */
+    struct xd_struct*     xd_base;
+    struct xd_struct*     xd_head;             /* Head Transaction descriptors */
+    struct xd_struct*     xd_tail;             /* Tail Transaction descriptors */
+    uint32_t              xd_entries;
+    os_mutex_handle       mutex;
+    uint32_t              usbRegBase;
 
-   /* These fields are kept only for USB_shutdown() */
-   uint16_t              usb_state;
-   uint16_t              usb_device_status;
-   uint16_t              usb_sof_count;
-   uint16_t              errors;
-   uint16_t              usb_dev_state_b4_suspend;
-   uint16_t              usb_curr_config;
-   uint8_t               dev_vec;             /* Interrupt vector number for USB OTG */
-   uint8_t               speed;               /* Low Speed, High Speed, Full Speed */
-   uint8_t               max_endpoints;       /* Max endpoints supported by this device */
-   uint8_t               device_address;                                     
-   uint8_t *             setup_buff;
-   usb_ep_info_struct_t    ep_info[USBCFG_DEV_MAX_ENDPOINTS];
+    /* These fields are kept only for USB_shutdown() */
+    uint16_t              usb_state;
+    uint16_t              usb_device_status;
+    uint16_t              usb_sof_count;
+    uint16_t              errors;
+    uint16_t              usb_dev_state_b4_suspend;
+    uint16_t              usb_curr_config;
+    uint8_t               dev_vec;             /* Interrupt vector number for USB OTG */
+    uint8_t               speed;               /* Low Speed, High Speed, Full Speed */
+    uint8_t               max_endpoints;       /* Max endpoints supported by this device */
+    uint8_t               device_address;                                     
+    uint8_t *             setup_buff;
+    usb_ep_info_struct_t  ep_info[USBCFG_DEV_MAX_ENDPOINTS];
 #ifdef USBCFG_OTG
-    uint16_t             usb_otg_status;
-    usb_otg_handle       otg_handle; 
-    uint8_t              otg_attr_srp;
-    uint8_t              otg_attr_hnp;
+    uint16_t              usb_otg_status;
+    usb_otg_handle        otg_handle; 
+    uint8_t               otg_attr_srp;
+    uint8_t               otg_attr_hnp;
 #endif
-	os_mutex_handle 	 mutex;
-    uint32_t			 usbRegBase;
+    uint8_t               is_reseting;
 } usb_khci_dev_state_struct_t;
 
 /***************************************

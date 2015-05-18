@@ -31,6 +31,7 @@
 #include "fsl_rnga_driver.h"
 #include "fsl_interrupt_manager.h"
 #include "fsl_clock_manager.h"
+#if FSL_FEATURE_SOC_RNG_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -48,8 +49,8 @@
  *END*************************************************************************/
 rnga_status_t RNGA_DRV_Init(uint32_t instance, const rnga_user_config_t *config)
 {
-    assert(instance < HW_RNG_INSTANCE_COUNT);
-    uint32_t baseAddr = g_rngaBaseAddr[instance];
+    assert(instance < RNG_INSTANCE_COUNT);
+    RNG_Type * base = g_rngaBase[instance];
     bool mEnable;
  
     if (!config)
@@ -63,10 +64,10 @@ rnga_status_t RNGA_DRV_Init(uint32_t instance, const rnga_user_config_t *config)
         CLOCK_SYS_EnableRngaClock(instance);
     }
     /* Reset the registers for RNGA module to reset state. */
-    RNGA_HAL_Init(baseAddr);
-    RNGA_HAL_SetIntMaskCmd(baseAddr, config->isIntMasked);
-    RNGA_HAL_SetHighAssuranceCmd(baseAddr, config->highAssuranceEnable);
-    RNGA_HAL_Enable(baseAddr);
+    RNGA_HAL_Init(base);
+    RNGA_HAL_SetIntMaskCmd(base, config->isIntMasked);
+    RNGA_HAL_SetHighAssuranceCmd(base, config->highAssuranceEnable);
+    RNGA_HAL_Enable(base);
     
     return kStatus_RNGA_Success;
 }
@@ -79,10 +80,10 @@ rnga_status_t RNGA_DRV_Init(uint32_t instance, const rnga_user_config_t *config)
  *END*************************************************************************/
 void RNGA_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_RNG_INSTANCE_COUNT);
-    uint32_t baseAddr = g_rngaBaseAddr[instance];
+    assert(instance < RNG_INSTANCE_COUNT);
+    RNG_Type * base = g_rngaBase[instance];
     
-    RNGA_HAL_Disable(baseAddr);
+    RNGA_HAL_Disable(base);
     CLOCK_SYS_DisableRngaClock(instance);
 }
 
@@ -94,12 +95,13 @@ void RNGA_DRV_Deinit(uint32_t instance)
  *END*************************************************************************/
 void RNGA_DRV_IRQHandler(uint32_t instance)
 {
-    assert(instance < HW_RNG_INSTANCE_COUNT);
-    uint32_t baseAddr = g_rngaBaseAddr[instance];
-    RNGA_HAL_ClearIntFlag(baseAddr, true);
-    RNGA_HAL_GetOutputRegUnderflowCmd(baseAddr);
-    RNGA_HAL_GetLastReadStatusCmd(baseAddr);
+    assert(instance < RNG_INSTANCE_COUNT);
+    RNG_Type * base = g_rngaBase[instance];
+    RNGA_HAL_ClearIntFlag(base, true);
+    RNGA_HAL_GetOutputRegUnderflowCmd(base);
+    RNGA_HAL_GetLastReadStatusCmd(base);
 }
+#endif
 
 /*******************************************************************************
  * EOF

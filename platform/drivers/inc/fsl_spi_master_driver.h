@@ -30,18 +30,19 @@
 #if !defined(__FSL_SPI_MASTER_DRIVER_H__)
 #define __FSL_SPI_MASTER_DRIVER_H__
 
-
 #include "fsl_spi_hal.h"
 #include "fsl_os_abstraction.h"
+
+#if FSL_FEATURE_SOC_SPI_COUNT
 
 /*! @addtogroup SPI_DRV_MasterDriver*/
 /*! @{*/
 
-/*! @brief Table of base addresses for SPI instances. */
-extern const uint32_t g_spiBaseAddr[];
+/*! @brief Table of base pointers for SPI instances. */
+extern SPI_Type * const g_spiBase[SPI_INSTANCE_COUNT];
 
 /*! @brief Table to save SPI IRQ enumeration numbers defined in the CMSIS header file. */
-extern const IRQn_Type g_spiIrqId[HW_SPI_INSTANCE_COUNT];
+extern const IRQn_Type g_spiIrqId[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Definitions
@@ -55,16 +56,17 @@ enum _spi_timeouts
 
 /*!
  * @brief Information about a device on the SPI bus.
+ * @internal gui name="Master configuration" id="spiMasterCfg"
  */
 typedef struct SPIUserConfig {
-    uint32_t bitsPerSec;    /*!< SPI baud rate in bits per sec */
-    spi_clock_polarity_t polarity;
-    spi_clock_phase_t phase;
-    spi_shift_direction_t direction;
+    uint32_t bitsPerSec;    /*!< SPI baud rate in bits per sec @internal gui name="Clock rate" id="MasterBaudRate" */
+    spi_clock_polarity_t polarity; /*!< Active high or low clock polarity @internal gui name="Polarity" id="MasterPolarity" */
+    spi_clock_phase_t phase; /*!< Clock phase setting to change and capture data @internal gui name="Phase" id="MasterPhase" */
+    spi_shift_direction_t direction; /*!< MSB or LSB data shift direction @internal gui name="Direction" id="MasterDirection" */
 
     /* 16-bit support related members */
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-    spi_data_bitcount_mode_t bitCount;  /*!< Number of bits (8 or 16) in a transfer */
+    spi_data_bitcount_mode_t bitCount;  /*!< Number of bits (8 or 16) in a transfer @internal gui name="Bit count" id="MasterBitCount" */
 #endif
 } spi_master_user_config_t;
 
@@ -78,8 +80,8 @@ typedef struct SPIUserConfig {
 typedef struct SPIMasterState {
     uint32_t spiSourceClock;              /*!< Module source clock*/
     volatile bool isTransferInProgress;     /*!< True if there is an active transfer.*/
-    const uint8_t * restrict sendBuffer;    /*!< The buffer being sent.*/
-    uint8_t * restrict receiveBuffer;       /*!< The buffer into which received bytes are placed.*/
+    const uint8_t * sendBuffer;    /*!< The buffer being sent.*/
+    uint8_t * receiveBuffer;       /*!< The buffer into which received bytes are placed.*/
     volatile size_t remainingSendByteCount; /*!< Number of bytes remaining to send.*/
     volatile size_t remainingReceiveByteCount; /*!< Number of bytes remaining to receive.*/
     volatile size_t transferredByteCount;   /*!< Number of bytes transferred so far.*/
@@ -104,7 +106,7 @@ extern "C" {
  *
  * This function uses a CPU interrupt driven method for transferring data.
  * It initializes the run-time state structure to track the ongoing
- * transfers, ungates the clock to the SPI module, resets and initializes the module
+ * transfers, un-gates the clock to the SPI module, resets and initializes the module
  * to default settings, configures the IRQ state structure, enables
  * the module-level interrupt to the core, and enables the SPI module.
  *
@@ -113,8 +115,9 @@ extern "C" {
  *  passes the memory for the run-time state structure and the SPI master driver
  *  populates the members. This run-time state structure keeps track of the
  *  transfer in progress.
+ * @return kStatus_SPI_Success indicating successful initialization
  */
-void SPI_DRV_MasterInit(uint32_t instance, spi_master_state_t * spiState);
+spi_status_t SPI_DRV_MasterInit(uint32_t instance, spi_master_state_t * spiState);
 
 /*!
  * @brief Shuts down an SPI instance.
@@ -123,8 +126,9 @@ void SPI_DRV_MasterInit(uint32_t instance, spi_master_state_t * spiState);
  * the core.
  *
  * @param instance The instance number of the SPI peripheral.
+ * @return kStatus_SPI_Success indicating successful de-initialization
  */
-void SPI_DRV_MasterDeinit(uint32_t instance);
+spi_status_t SPI_DRV_MasterDeinit(uint32_t instance);
 
 /*@}*/
 
@@ -151,7 +155,7 @@ void SPI_DRV_MasterDeinit(uint32_t instance);
  * @param calculatedBaudRate The calculated baud rate passed back to the user to determine
  *  if the calculated baud rate is close enough to meet the needs. The baud rate never exceeds
  *  the desired baud rate unless the baud rate requested is less than the absolute minimum in
- *  which case the minimum baud rate will be returned.
+ *  which case the minimum baud rate is returned.
  */
 void SPI_DRV_MasterConfigureBus(uint32_t instance,
                                 const spi_master_user_config_t * device,
@@ -166,7 +170,7 @@ void SPI_DRV_MasterConfigureBus(uint32_t instance,
  * @brief Performs a blocking SPI master mode transfer.
  *
  * This function simultaneously sends and receives data on the SPI bus, because the SPI is
- * a full-duplex bus, and does return until the transfer is complete.
+ * a full-duplex bus, and does not return until the transfer is complete.
  *
  * @param instance The instance number of the SPI peripheral.
  * @param device Pointer to the device information structure. This structure contains the settings
@@ -186,9 +190,9 @@ void SPI_DRV_MasterConfigureBus(uint32_t instance,
  *         #kStatus_SPI_Timeout The transfer timed out and was aborted.
  */
 spi_status_t SPI_DRV_MasterTransferBlocking(uint32_t instance,
-                                const spi_master_user_config_t * restrict device,
-                                const uint8_t * restrict sendBuffer,
-                                uint8_t * restrict receiveBuffer,
+                                const spi_master_user_config_t * device,
+                                const uint8_t * sendBuffer,
+                                uint8_t * receiveBuffer,
                                 size_t transferByteCount,
                                 uint32_t timeout);
 
@@ -203,7 +207,7 @@ spi_status_t SPI_DRV_MasterTransferBlocking(uint32_t instance,
  * This function returns immediately. The user should check back to
  * find out if the transfer is complete (using the SPI_DRV_MasterGetTransferStatus function).
  * This function simultaneously sends and receives data on the SPI bus, because the SPI is
- * a full-duplex bus, and does return until the transfer is complete.
+ * a full-duplex bus, and does not return until the transfer is complete.
  *
  * @param instance The instance number of the SPI peripheral.
  * @param device Pointer to the device information structure. This structure contains the settings
@@ -220,9 +224,9 @@ spi_status_t SPI_DRV_MasterTransferBlocking(uint32_t instance,
  *         #kStatus_SPI_Timeout The transfer timed out and was aborted.
  */
 spi_status_t SPI_DRV_MasterTransfer(uint32_t instance,
-                                const spi_master_user_config_t * restrict device,
-                                const uint8_t * restrict sendBuffer,
-                                uint8_t * restrict receiveBuffer,
+                                const spi_master_user_config_t * device,
+                                const uint8_t * sendBuffer,
+                                uint8_t * receiveBuffer,
                                 size_t transferByteCount);
 
 /*!
@@ -237,7 +241,7 @@ spi_status_t SPI_DRV_MasterTransfer(uint32_t instance,
  * @param bytesTransferred Pointer to a value that is filled in with the number of bytes that
  *      were sent in the active transfer
  *
- * @retrun kStatus_Success The transfer has completed successfully.
+ * @return kStatus_Success The transfer has completed successfully.
  *         kStatus_SPI_Busy The transfer is still in progress. @a bytesTransferred is filled
  *         with the number of bytes that have been transferred so far.
  */
@@ -247,7 +251,7 @@ spi_status_t SPI_DRV_MasterGetTransferStatus(uint32_t instance,
 /*!
  * @brief Terminates an asynchronous transfer early.
  *
- * During an async transfer, the user has the option to terminate the transfer early if the transfer
+ * During an a-sync transfer, the user has the option to terminate the transfer early if the transfer
  * is still in progress.
  *
  * @param instance The instance number of the SPI peripheral.
@@ -255,6 +259,14 @@ spi_status_t SPI_DRV_MasterGetTransferStatus(uint32_t instance,
  *         kStatus_SPI_NoTransferInProgress No transfer is currently in progress.
  */
 spi_status_t SPI_DRV_MasterAbortTransfer(uint32_t instance);
+
+/*!
+ * @brief Interrupt handler for SPI master mode.
+ * This handler uses the buffers stored in the spi_master_state_t structs to transfer data.
+ *
+ * @param instance The instance number of the SPI peripheral.
+ */
+void SPI_DRV_MasterIRQHandler(uint32_t instance);
 
 /*@}*/
 
@@ -264,6 +276,7 @@ spi_status_t SPI_DRV_MasterAbortTransfer(uint32_t instance);
 
 /*! @}*/
 
+#endif /* FSL_FEATURE_SOC_SPI_COUNT */
 #endif /* __FSL_SPI_MASTER_DRIVER_H__*/
 /*******************************************************************************
  * EOF

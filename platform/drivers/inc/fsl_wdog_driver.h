@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,7 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_wdog_hal.h"
-#include "fsl_sim_hal.h"
+#if FSL_FEATURE_SOC_WDOG_COUNT
 
 /*! 
  * @addtogroup wdog_driver
@@ -45,10 +45,10 @@
  ******************************************************************************/
 
 /* Table of base addresses for WDOG instances. */
-extern const uint32_t g_wdogBaseAddr[];
+extern WDOG_Type * const g_wdogBase[];
 
 /* Table to save WDOG IRQ enumeration numbers defined in the CMSIS header file. */
-extern const IRQn_Type g_wdogIrqId[HW_WDOG_INSTANCE_COUNT];
+extern const IRQn_Type g_wdogIrqId[WDOG_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Definitions
@@ -59,17 +59,8 @@ extern const IRQn_Type g_wdogIrqId[HW_WDOG_INSTANCE_COUNT];
  *
  * This structure is used when initializing the WDOG during the wdog_init function call.
  * It contains all WDOG configurations.
+ * @internal gui name="Common configuration" id="wdogCfg"
  */
-typedef struct WdogUserConfig {
-    clock_wdog_src_t clockSource; /*!< Clock source select */
-    wdog_clock_prescaler_value_t clockPrescalerValue;/*!< Clock prescaler value */
-    bool updateRegisterEnable; /*!< Update write-once register enable */
-    bool workInDebugModeEnable; /*!< Enable watchdog while in debug mode */
-    bool workInWaitModeEnable; /*!< Enable watchdog while in wait mode */
-    bool workInStopModeEnable; /*!< Enable watchdog while in stop mode */
-    uint32_t windowValue; /*!< Window value */
-    uint32_t timeoutValue; /*!< Timeout value */
-} wdog_user_config_t;
 
 /*******************************************************************************
  * API
@@ -83,26 +74,26 @@ extern "C" {
  * @name Watchdog Driver
  * @{
  */
-
+ 
 
 /*!
  * @brief Initializes the Watchdog.
  *
  * This function  initializes the WDOG. When called, the WDOG 
  * runs according to the requirements of the configuration.
- *
+ * 
  * @param userConfigPtr Watchdog user configure data structure, see #wdog_user_config_t.
  *
  */
-void WDOG_DRV_Init(const wdog_user_config_t* userConfigPtr);
+wdog_status_t WDOG_DRV_Init(const wdog_config_t* userConfigPtr);
 
 /*!
  * @brief Shuts down the Watchdog.
  *
- * This function shuts down the WDOG.
+ * This function shuts down the WDOG. 
  *
  */
-void WDOG_DRV_Deinit(void);
+wdog_status_t WDOG_DRV_Deinit(void);
 
 /*!
  * @brief Refreshes the Watchdog.
@@ -114,24 +105,6 @@ void WDOG_DRV_Deinit(void);
  *
  */
 void WDOG_DRV_Refresh(void);
-
-/*!
- * @brief Gets the MCU reset count that is reset by the Watchdog.
- *
- * This function gets the WDOG_RSTCNT value.
- *
- * @return Chip reset count that is reset by the Watchdog.
- */
-uint32_t WDOG_DRV_GetResetCount(void);
-
-/*!
- * @brief Clears the Watchdog reset count.
- *
- * This function sets the WDOG reset count to zero. The WDOG_RSTCNT
- * register clears either on Power-On-Reset or is cleared by this function.
- *
- */
-void WDOG_DRV_ClearResetCount(void);
 
 /*!
  * @brief Gets the Watchdog running status.
@@ -158,6 +131,7 @@ void WDOG_DRV_ResetSystem(void);
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_WDOG_H__*/
 /*******************************************************************************
  * EOF

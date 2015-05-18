@@ -37,6 +37,7 @@
 #include "fsl_dma_hal.h"
 #include "fsl_dmamux_hal.h"
 #include "fsl_os_abstraction.h"
+#if FSL_FEATURE_SOC_DMA_COUNT
 
 /*! 
  * @addtogroup dma_driver
@@ -46,13 +47,13 @@
  * Definitions
  ******************************************************************************/
 /*! @brief Array for eDMA module register base address. */
-extern const uint32_t g_dmaRegBaseAddr[HW_DMA_INSTANCE_COUNT];
+extern DMA_Type * const g_dmaBase[DMA_INSTANCE_COUNT];
 
 /*! @brief Array for DMAMUX module register base address. */
-extern const uint32_t g_dmamuxRegBaseAddr[HW_DMAMUX_INSTANCE_COUNT];
+extern DMAMUX_Type * const g_dmamuxBase[DMAMUX_INSTANCE_COUNT];
 
 /*! @brief Two-dimensional array for EDMA channel interrupt vector number. */
-extern const IRQn_Type g_dmaIrqId[HW_DMA_INSTANCE_COUNT][FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+extern const IRQn_Type g_dmaIrqId[DMA_INSTANCE_COUNT][FSL_FEATURE_DMA_DMAMUX_CHANNELS];
 
 /*!
  * @brief Channel status for the DMA channel.
@@ -265,6 +266,7 @@ void DMA_DRV_IRQhandler(uint32_t channel);
 
 /*! @} */
 
+#endif
 #endif /* __FSL_DMA_DRIVER_H__ */
 /*******************************************************************************
  * EOF

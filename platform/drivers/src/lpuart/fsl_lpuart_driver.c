@@ -33,12 +33,14 @@
 #include "fsl_lpuart_driver.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_LPUART_COUNT
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Pointer to lpuart runtime state structure */
-extern void * g_lpuartStatePtr[HW_LPUART_INSTANCE_COUNT];
+extern void * g_lpuartStatePtr[LPUART_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Private Functions
@@ -80,10 +82,10 @@ lpuart_status_t LPUART_DRV_Init(uint32_t instance, lpuart_state_t * lpuartStateP
                                 const lpuart_user_config_t * lpuartUserConfig)
 {
     assert(lpuartStatePtr && lpuartUserConfig);
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     uint32_t lpuartSourceClock;
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    LPUART_Type * base = g_lpuartBase[instance];
 
     /* Exit if current instance is already initialized. */
     if (g_lpuartStatePtr[instance])
@@ -104,7 +106,7 @@ lpuart_status_t LPUART_DRV_Init(uint32_t instance, lpuart_state_t * lpuartStateP
     CLOCK_SYS_EnableLpuartClock(instance);
 
     /* initialize the LPUART instance */
-    LPUART_HAL_Init(baseAddr);
+    LPUART_HAL_Init(base);
 
     /* Init the interrupt sync object. */
     OSA_SemaCreate(&lpuartStatePtr->txIrqSync, 0);
@@ -114,14 +116,14 @@ lpuart_status_t LPUART_DRV_Init(uint32_t instance, lpuart_state_t * lpuartStateP
     lpuartSourceClock = CLOCK_SYS_GetLpuartFreq(instance);
 
     /* initialize the parameters of the LPUART config structure with desired data */
-    LPUART_HAL_SetBaudRate(baseAddr, lpuartSourceClock, lpuartUserConfig->baudRate);
-    LPUART_HAL_SetBitCountPerChar(baseAddr, lpuartUserConfig->bitCountPerChar);
-    LPUART_HAL_SetParityMode(baseAddr, lpuartUserConfig->parityMode);
-    LPUART_HAL_SetStopBitCount(baseAddr, lpuartUserConfig->stopBitCount);
+    LPUART_HAL_SetBaudRate(base, lpuartSourceClock, lpuartUserConfig->baudRate);
+    LPUART_HAL_SetBitCountPerChar(base, lpuartUserConfig->bitCountPerChar);
+    LPUART_HAL_SetParityMode(base, lpuartUserConfig->parityMode);
+    LPUART_HAL_SetStopBitCount(base, lpuartUserConfig->stopBitCount);
 
     /* finally, enable the LPUART transmitter and receiver */
-    LPUART_HAL_SetTransmitterCmd(baseAddr, true);
-    LPUART_HAL_SetReceiverCmd(baseAddr, true);
+    LPUART_HAL_SetTransmitterCmd(base, true);
+    LPUART_HAL_SetReceiverCmd(base, true);
 
     /* Enable LPUART interrupt. */
     INT_SYS_EnableIRQ(g_lpuartRxTxIrqId[instance]);
@@ -136,22 +138,28 @@ lpuart_status_t LPUART_DRV_Init(uint32_t instance, lpuart_state_t * lpuartStateP
  *                 transmitter/receiver.
  *
  *END**************************************************************************/
-void LPUART_DRV_Deinit(uint32_t instance)
+lpuart_status_t LPUART_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    /* Exit if current instance is already de-initialized or is gated.*/
+    if ((!g_lpuartStatePtr[instance]) || (!CLOCK_SYS_GetLpuartGateCmd(instance)))
+    {
+        return kStatus_LPUART_Fail;
+    }
+
+    LPUART_Type * base = g_lpuartBase[instance];
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
 
     /* Wait until the data is completely shifted out of shift register */
-    while (!LPUART_HAL_IsTxComplete(baseAddr)) {}
+    while (!LPUART_BRD_STAT_TC(base)) {}
 
     /* Disable LPUART interrupt. */
     INT_SYS_DisableIRQ(g_lpuartRxTxIrqId[instance]);
 
     /* disable tx and rx */
-    LPUART_HAL_SetTransmitterCmd(baseAddr, false);
-    LPUART_HAL_SetReceiverCmd(baseAddr, false);
+    LPUART_HAL_SetTransmitterCmd(base, false);
+    LPUART_HAL_SetReceiverCmd(base, false);
 
     /* Destroy TX and RX sema. */
     OSA_SemaDestroy(&lpuartState->txIrqSync);
@@ -162,6 +170,8 @@ void LPUART_DRV_Deinit(uint32_t instance)
 
     /* gate lpuart module clock */
     CLOCK_SYS_DisableLpuartClock(instance);
+
+    return kStatus_LPUART_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -176,8 +186,8 @@ lpuart_rx_callback_t LPUART_DRV_InstallRxCallback(uint32_t instance,
                                                 void * callbackParam,
                                                 bool alwaysEnableRxIrq)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    assert(instance < LPUART_INSTANCE_COUNT);
+    LPUART_Type * base = g_lpuartBase[instance];
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
 
     lpuart_rx_callback_t currentCallback = lpuartState->rxCallback;
@@ -187,7 +197,30 @@ lpuart_rx_callback_t LPUART_DRV_InstallRxCallback(uint32_t instance,
 
     /* Enable/Disable the receive data full interrupt */
     lpuartState->isRxBusy = true;
-    LPUART_HAL_SetRxDataRegFullIntCmd(baseAddr, alwaysEnableRxIrq);
+    LPUART_BWR_CTRL_RIE(base, alwaysEnableRxIrq);
+
+    return currentCallback;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : LPUART_DRV_InstallTxCallback
+ * Description   : Install transmit data callback function, pass in NULL pointer
+ * as callback will uninstall.
+ *
+ *END**************************************************************************/
+lpuart_tx_callback_t LPUART_DRV_InstallTxCallback(uint32_t instance,
+                                                  lpuart_tx_callback_t function,
+                                                  uint8_t * txBuff,
+                                                  void * callbackParam)
+{
+    assert(instance < LPUART_INSTANCE_COUNT);
+    lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
+
+    lpuart_tx_callback_t currentCallback = lpuartState->txCallback;
+    lpuartState->txCallback = function;
+    lpuartState->txCallbackParam = callbackParam;
+    lpuartState->txBuff = txBuff;
 
     return currentCallback;
 }
@@ -205,10 +238,10 @@ lpuart_status_t LPUART_DRV_SendDataBlocking(uint32_t instance,
                                             uint32_t timeout)
 {
     assert(txBuff);
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    LPUART_Type * base = g_lpuartBase[instance];
     lpuart_status_t retVal = kStatus_LPUART_Success;
     osa_status_t syncStatus;
 
@@ -229,7 +262,7 @@ lpuart_status_t LPUART_DRV_SendDataBlocking(uint32_t instance,
         if (syncStatus != kStatus_OSA_Success)
         {
             /* Disable transmission complete interrupt */
-            LPUART_HAL_SetTxDataRegEmptyIntCmd(baseAddr, false);
+            LPUART_BWR_CTRL_TIE(base, 0U);
 
             /* Update the information of the module driver state */
             lpuartState->isTxBusy = false;
@@ -254,7 +287,7 @@ lpuart_status_t LPUART_DRV_SendData(uint32_t instance,
                                     uint32_t txSize)
 {
     assert(txBuff);
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_status_t retVal = kStatus_LPUART_Success;
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
@@ -281,7 +314,7 @@ lpuart_status_t LPUART_DRV_SendData(uint32_t instance,
  *END**************************************************************************/
 lpuart_status_t LPUART_DRV_GetTransmitStatus(uint32_t instance, uint32_t * bytesRemaining)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
     lpuart_status_t retVal = kStatus_LPUART_Success;
@@ -311,7 +344,7 @@ lpuart_status_t LPUART_DRV_GetTransmitStatus(uint32_t instance, uint32_t * bytes
  *END**************************************************************************/
 lpuart_status_t LPUART_DRV_AbortSendingData(uint32_t instance)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
 
@@ -340,10 +373,10 @@ lpuart_status_t LPUART_DRV_ReceiveDataBlocking(uint32_t instance,
                                                uint32_t timeout)
 {
     assert(rxBuff);
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    LPUART_Type * base = g_lpuartBase[instance];
     lpuart_status_t retVal = kStatus_LPUART_Success;
     osa_status_t syncStatus;
 
@@ -363,8 +396,8 @@ lpuart_status_t LPUART_DRV_ReceiveDataBlocking(uint32_t instance,
         if (syncStatus != kStatus_OSA_Success)
         {
             /* Disable receive data full and rx overrun interrupt. */
-            LPUART_HAL_SetRxDataRegFullIntCmd(baseAddr, false);
-            LPUART_HAL_SetIntMode(baseAddr, kLpuartIntRxOverrun, false);
+            LPUART_BWR_CTRL_RIE(base, 0U);
+            LPUART_HAL_SetIntMode(base, kLpuartIntRxOverrun, false);
 
             /* Update the information of the module driver state */
             lpuartState->isRxBusy = false;
@@ -392,7 +425,7 @@ lpuart_status_t LPUART_DRV_ReceiveData(uint32_t instance,
                                        uint32_t rxSize)
 {
     assert(rxBuff);
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_status_t retVal = kStatus_LPUART_Success;
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
@@ -418,7 +451,7 @@ lpuart_status_t LPUART_DRV_ReceiveData(uint32_t instance,
 lpuart_status_t LPUART_DRV_GetReceiveStatus(uint32_t instance,
                                             uint32_t * bytesRemaining)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
     lpuart_status_t retVal = kStatus_LPUART_Success;
@@ -446,7 +479,7 @@ lpuart_status_t LPUART_DRV_GetReceiveStatus(uint32_t instance,
  *END**************************************************************************/
 lpuart_status_t LPUART_DRV_AbortReceivingData(uint32_t instance)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
 
@@ -471,10 +504,10 @@ lpuart_status_t LPUART_DRV_AbortReceivingData(uint32_t instance)
  * occurs.
  *
  *END**************************************************************************/
-void LPUART_DRV_IrqHandler(uint32_t instance)
+void LPUART_DRV_IRQHandler(uint32_t instance)
 {
-    lpuart_state_t * lpuartState = g_lpuartStatePtr[instance];
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
+    LPUART_Type * base = g_lpuartBase[instance];
 
     /* Exit the ISR if no transfer is happening for this instance. */
     if ((!lpuartState->isTxBusy) && (!lpuartState->isRxBusy))
@@ -482,32 +515,11 @@ void LPUART_DRV_IrqHandler(uint32_t instance)
         return;
     }
 
-    /* Handle transmitter data register empty interrupt */
-    if((LPUART_HAL_GetTxDataRegEmptyIntCmd(baseAddr))
-       && (LPUART_HAL_IsTxDataRegEmpty(baseAddr)))
-    {
-        /* check to see if there are any more bytes to send */
-        if (lpuartState->txSize)
-        {
-            /* Transmit the data */
-            LPUART_HAL_Putchar(baseAddr, *(lpuartState->txBuff));
-            ++lpuartState->txBuff;
-            --lpuartState->txSize;
-
-            if (lpuartState->txSize == 0)
-            {
-                /* Complete transfer, will disable tx interrupt */
-                LPUART_DRV_CompleteSendData(instance);
-            }
-        }
-    }
-
     /* Handle receive data full interrupt */
-    if((LPUART_HAL_GetRxDataRegFullIntCmd(baseAddr))
-       && (LPUART_HAL_IsRxDataRegFull(baseAddr)))
+    if((LPUART_BRD_CTRL_RIE(base)) && (LPUART_BRD_STAT_RDRF(base)))
     {
         /* Get data and put in receive buffer  */
-        LPUART_HAL_Getchar(baseAddr, lpuartState->rxBuff);
+        LPUART_HAL_Getchar(base, lpuartState->rxBuff);
 
         /* Invoke callback if there is one */
         if (lpuartState->rxCallback != NULL)
@@ -527,11 +539,42 @@ void LPUART_DRV_IrqHandler(uint32_t instance)
         }
     }
 
+    /* Handle transmitter data register empty interrupt */
+    if((LPUART_BRD_CTRL_TIE(base)) && (LPUART_BRD_STAT_TDRE(base)))
+    {
+        /* check to see if there are any more bytes to send */
+        if (lpuartState->txSize)
+        {
+            /* Transmit the data */
+            LPUART_HAL_Putchar(base, *(lpuartState->txBuff));
+
+            /* Invoke callback if there is one */
+            if (lpuartState->txCallback != NULL)
+            {
+                /* The callback MUST set the txSize to 0 if the
+                 * transmit is ended.*/
+                lpuartState->txCallback(instance, lpuartState);
+            }
+            else
+            {
+                ++lpuartState->txBuff;
+                --lpuartState->txSize;
+            }
+
+            /* Check and see if this was the last byte */
+            if (lpuartState->txSize == 0)
+            {
+                /* Complete transfer, will disable tx interrupt */
+                LPUART_DRV_CompleteSendData(instance);
+            }
+        }
+    }
+
     /* Handle receive overrun interrupt */
-    if (LPUART_HAL_GetStatusFlag(baseAddr, kLpuartRxOverrun))
+    if (LPUART_HAL_GetStatusFlag(base, kLpuartRxOverrun))
     {
         /* Clear the flag, OR the rxDataRegFull will not be set any more */
-        LPUART_HAL_ClearStatusFlag(baseAddr, kLpuartRxOverrun);
+        LPUART_HAL_ClearStatusFlag(base, kLpuartRxOverrun);
     }
 }
 
@@ -547,9 +590,9 @@ static lpuart_status_t LPUART_DRV_StartSendData(uint32_t instance,
                                                 const uint8_t * txBuff,
                                                 uint32_t txSize)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    LPUART_Type * base = g_lpuartBase[instance];
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
 
     /* Check it's not busy transmitting data from a previous function call */
@@ -569,7 +612,7 @@ static lpuart_status_t LPUART_DRV_StartSendData(uint32_t instance,
     lpuartState->isTxBusy = true;
 
     /* enable transmission complete interrupt */
-    LPUART_HAL_SetTxDataRegEmptyIntCmd(baseAddr, true);
+    LPUART_BWR_CTRL_TIE(base, 1U);
 
     return kStatus_LPUART_Success;
 }
@@ -584,13 +627,13 @@ static lpuart_status_t LPUART_DRV_StartSendData(uint32_t instance,
  *END**************************************************************************/
 static void LPUART_DRV_CompleteSendData(uint32_t instance)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    LPUART_Type * base = g_lpuartBase[instance];
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
 
     /* Disable transmission complete interrupt */
-    LPUART_HAL_SetTxDataRegEmptyIntCmd(baseAddr, false);
+    LPUART_BWR_CTRL_TIE(base, 0U);
 
     /* Signal the synchronous completion object. */
     if (lpuartState->isTxBlocking)
@@ -614,10 +657,10 @@ static lpuart_status_t LPUART_DRV_StartReceiveData(uint32_t instance,
                                                    uint8_t * rxBuff,
                                                    uint32_t rxSize)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    LPUART_Type * base = g_lpuartBase[instance];
 
     /* Check it's not busy receiving data from a previous function call */
     if ((lpuartState->isRxBusy) && (!lpuartState->rxCallback))
@@ -637,10 +680,10 @@ static lpuart_status_t LPUART_DRV_StartReceiveData(uint32_t instance,
     lpuartState->rxSize = rxSize;
 
     /* Enable the receive data overrun interrupt */
-    LPUART_HAL_SetIntMode(baseAddr, kLpuartIntRxOverrun, true);
+    LPUART_HAL_SetIntMode(base, kLpuartIntRxOverrun, true);
 
     /* Enable receive data full interrupt */
-    LPUART_HAL_SetRxDataRegFullIntCmd(baseAddr, true);
+    LPUART_BWR_CTRL_RIE(base, 1U);
 
     return kStatus_LPUART_Success;
 }
@@ -655,14 +698,14 @@ static lpuart_status_t LPUART_DRV_StartReceiveData(uint32_t instance,
  *END**************************************************************************/
 static void LPUART_DRV_CompleteReceiveData(uint32_t instance)
 {
-    assert(instance < HW_LPUART_INSTANCE_COUNT);
+    assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
-    uint32_t baseAddr = g_lpuartBaseAddr[instance];
+    LPUART_Type * base = g_lpuartBase[instance];
 
     /* disable receive data full and rx overrun interrupt. */
-    LPUART_HAL_SetRxDataRegFullIntCmd(baseAddr, false);
-    LPUART_HAL_SetIntMode(baseAddr, kLpuartIntRxOverrun, false);
+    LPUART_BWR_CTRL_RIE(base, 0U);
+    LPUART_HAL_SetIntMode(base, kLpuartIntRxOverrun, false);
 
     /* Signal the synchronous completion object. */
     if (lpuartState->isRxBlocking)
@@ -674,6 +717,7 @@ static void LPUART_DRV_CompleteReceiveData(uint32_t instance)
     lpuartState->isRxBusy = false;
 }
 
+#endif /* FSL_FEATURE_SOC_LPUART_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

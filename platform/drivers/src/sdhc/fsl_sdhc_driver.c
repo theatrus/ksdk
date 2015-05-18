@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -38,13 +38,62 @@
 #include "fsl_sdhc_hal.h"
 #include "fsl_sdhc_driver.h"
 #include "fsl_sdhc.h"
-#include "fsl_sdmmc_card.h"
+#if FSL_FEATURE_SOC_SDHC_COUNT
 
-static sdhc_host_t volatile *g_hosts[HW_SDHC_INSTANCE_COUNT] = {0};
+static sdhc_host_t volatile *g_hosts[SDHC_INSTANCE_COUNT] = {0};
 #if ! defined BSP_FSL_SDHC_USING_DYNALLOC
 #define BSP_FSL_SDHC_ADMA_TABLE_MAX_ENTRY       16
-static uint32_t g_AdmaTableAddress[HW_SDHC_INSTANCE_COUNT][BSP_FSL_SDHC_ADMA_TABLE_MAX_ENTRY >> 1];
+static uint32_t g_AdmaTableAddress[SDHC_INSTANCE_COUNT][BSP_FSL_SDHC_ADMA_TABLE_MAX_ENTRY >> 1];
 #endif
+
+#define SDHC_R1_OUT_OF_RANGE         ((uint32_t) 1 << 31)        /*!< R1: out of range status bit */
+#define SDHC_R1_ADDRESS_ERROR        (1 << 30)                 /*!< R1: address error status bit */
+#define SDHC_R1_BLOCK_LEN_ERROR      (1 << 29)                 /*!< R1: block length error status bit */
+#define SDHC_R1_ERASE_SEQ_ERROR      (1 << 28)                 /*!< R1: erase sequence error status bit */
+#define SDHC_R1_ERASE_PARAM          (1 << 27)                 /*!< R1: erase parameter error status bit */
+#define SDHC_R1_WP_VIOLATION         (1 << 26)                 /*!< R1: write protection violation status bit */
+#define SDHC_R1_CARD_IS_LOCKED       (1 << 25)                 /*!< R1: card locked status bit */
+#define SDHC_R1_LOCK_UNLOCK_FAILED   (1 << 24)                 /*!< R1: lock/unlock error status bit */
+#define SDHC_R1_COM_CRC_ERROR        (1 << 23)                 /*!< R1: CRC error status bit */
+#define SDHC_R1_ILLEGAL_COMMAND      (1 << 22)                 /*!< R1: illegal command status bit */
+#define SDHC_R1_CARD_ECC_FAILED      (1 << 21)                 /*!< R1: card ecc error status bit */
+#define SDHC_R1_CC_ERROR             (1 << 20)                 /*!< R1: internal card controller status bit */
+#define SDHC_R1_ERROR                (1 << 19)                 /*!< R1: a general or an unknown error status bit */
+#define SDHC_R1_CID_CSD_OVERWRITE    (1 << 16)                 /*!< R1: cid/csd overwrite status bit */
+#define SDHC_R1_WP_ERASE_SKIP        (1 << 15)                 /*!< R1: write protection erase skip status bit */
+#define SDHC_R1_CARD_ECC_DISABLED    (1 << 14)                 /*!< R1: card ecc disabled status bit */
+#define SDHC_R1_ERASE_RESET          (1 << 13)                 /*!< R1: erase reset status bit */
+#define SDHC_R1_STATUS(x)            ((uint32_t)(x) & 0xFFFFE000U)       /*!< R1: status */
+#define SDHC_R1_READY_FOR_DATA       (1 << 8)                  /*!< R1: ready for data status bit */
+#define SDHC_R1_SWITCH_ERROR         (1 << 7)                  /*!< R1: switch error status bit */
+#define SDHC_R1_APP_CMD              (1 << 5)                  /*!< R1: application command enabled status bit */
+#define SDHC_R1_AKE_SEQ_ERROR        (1 << 3)                  /*!< R1: error in the sequence of the authentication process*/
+#define SDHC_R1_ERROR_BITS(x)  (uint32_t)((x) & \
+                              (SDHC_R1_OUT_OF_RANGE | \
+                               SDHC_R1_ADDRESS_ERROR | \
+                               SDHC_R1_BLOCK_LEN_ERROR | \
+                               SDHC_R1_ERASE_SEQ_ERROR | \
+                               SDHC_R1_ERASE_PARAM | \
+                               SDHC_R1_WP_VIOLATION | \
+                               SDHC_R1_CARD_IS_LOCKED | \
+                               SDHC_R1_LOCK_UNLOCK_FAILED | \
+                               SDHC_R1_COM_CRC_ERROR | \
+                               SDHC_R1_ILLEGAL_COMMAND | \
+                               SDHC_R1_CARD_ECC_FAILED | \
+                               SDHC_R1_CC_ERROR | \
+                               SDHC_R1_ERROR | \
+                               SDHC_R1_CID_CSD_OVERWRITE | \
+                               SDHC_R1_AKE_SEQ_ERROR)) /*!< Check error card status */
+
+#define SDHC_SD_OCR_VDD_27_28        (1 << 15)               /*!< VDD 2.7-2.8 */
+#define SDHC_SD_OCR_VDD_28_29        (1 << 16)               /*!< VDD 2.8-2.9 */
+#define SDHC_SD_OCR_VDD_29_30        (1 << 17)               /*!< VDD 2.9-3.0 */
+#define SDHC_SD_OCR_VDD_30_31        (1 << 18)               /*!< VDD 3.0-3.1 */
+#define SDHC_SD_OCR_VDD_31_32        (1 << 19)               /*!< VDD 3.1-3.2 */
+#define SDHC_SD_OCR_VDD_32_33        (1 << 20)               /*!< VDD 3.2-3.3 */
+#define SDHC_SD_OCR_VDD_33_34        (1 << 21)               /*!< VDD 3.3-3.4 */
+#define SDHC_SD_OCR_VDD_34_35        (1 << 22)               /*!< VDD 3.4-3.5 */
+#define SDHC_SD_OCR_VDD_35_36        (1 << 23)               /*!< VDD 3.5-3.6 */
 
 /*FUNCTION****************************************************************
  *
@@ -54,7 +103,7 @@ static uint32_t g_AdmaTableAddress[HW_SDHC_INSTANCE_COUNT][BSP_FSL_SDHC_ADMA_TAB
  *END*********************************************************************/
 static void SDHC_DRV_SelectClock(uint32_t instance)
 {
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
 
     g_hosts[instance]->maxClock = CLOCK_SYS_GetSdhcFreq(instance);
 }
@@ -67,7 +116,7 @@ static void SDHC_DRV_SelectClock(uint32_t instance)
  *END*********************************************************************/
 static sdhc_status_t SDHC_DRV_SetClock(uint32_t instance, bool enable)
 {
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
 #if defined BSP_FSL_SDHC_CLKMGMT_ENABLED
     CLOCK_SYS_EnableEnetClock(instance);
 #endif
@@ -92,7 +141,7 @@ static sdhc_status_t SDHC_DRV_FillAdma1Table(uint32_t instance, uint32_t *buffer
 #endif
     volatile sdhc_host_t *host;
 
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(buffer);
     assert(length);
 
@@ -204,7 +253,7 @@ static sdhc_status_t SDHC_DRV_FillAdma2Table(uint32_t instance, uint32_t *buffer
 #endif
     volatile sdhc_host_t *host;
 
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(buffer);
     assert(length);
 
@@ -287,7 +336,7 @@ static sdhc_status_t SDHC_DRV_PrepareData(uint32_t instance,
     uint32_t totalSize;
     volatile sdhc_host_t *host;
 
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(req);
     assert(req->data);
     assert(req->data->buffer);
@@ -316,7 +365,6 @@ static sdhc_status_t SDHC_DRV_PrepareData(uint32_t instance,
         return kStatus_SDHC_DataPrepareError;
     }
 
-    SDHC_HAL_SetDmaAddress(g_sdhcBaseAddr[instance], 0);
     /* Check data length alignment */
     if ((host->mode == kSdhcTransModeAdma2))
     {
@@ -339,7 +387,7 @@ static sdhc_status_t SDHC_DRV_PrepareData(uint32_t instance,
     }
 #endif
 
-    SDHC_HAL_SetAdmaAddress(g_sdhcBaseAddr[instance], (uint32_t)host->admaTableAddress);
+    SDHC_HAL_SetAdmaAddress(g_sdhcBase[instance], (uint32_t)host->admaTableAddress);
     return ret;
 }
 
@@ -351,8 +399,8 @@ static sdhc_status_t SDHC_DRV_PrepareData(uint32_t instance,
  *END*********************************************************************/
 static bool SDHC_DRV_IsCardPresent(uint32_t instance)
 {
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
-    return SDHC_HAL_IsCardInserted(g_sdhcBaseAddr[instance]);
+    assert(instance < SDHC_INSTANCE_COUNT);
+    return SDHC_HAL_GetCurState(g_sdhcBase[instance], kSdhcHalIsCardInserted);
 }
 
 /*FUNCTION****************************************************************
@@ -364,42 +412,14 @@ static bool SDHC_DRV_IsCardPresent(uint32_t instance)
  *END*********************************************************************/
 sdhc_status_t SDHC_DRV_ConfigClock(uint32_t instance, uint32_t clock)
 {
-    uint32_t divisor = SDHC_HAL_INITIAL_DVS, freq = SDHC_HAL_INITIAL_CLKFS;
+    sdhc_hal_sdclk_config_t sdClkConf;
     volatile sdhc_host_t *host = g_hosts[instance];
+    assert(instance < SDHC_INSTANCE_COUNT);
 
-    SDHC_HAL_SetIpgClock(g_sdhcBaseAddr[instance], false);
-    SDHC_HAL_SetSysClock(g_sdhcBaseAddr[instance], false);
-    SDHC_HAL_SetPeripheralClock(g_sdhcBaseAddr[instance], false);
-    SDHC_HAL_SetSdClock(g_sdhcBaseAddr[instance], false);
-
-    if (clock > 0)
-    {
-        while((host->maxClock / freq / SDHC_HAL_MAX_DVS > clock) &&
-                (freq < SDHC_HAL_MAX_CLKFS))
-        {
-            SDHC_HAL_NEXT_CLKFS(freq);
-        }
-        while((host->maxClock / freq / divisor > clock) &&
-                (divisor < SDHC_HAL_MAX_DVS))
-        {
-            SDHC_HAL_NEXT_DVS(divisor);
-        }
-
-        clock = host->maxClock / freq / divisor;
-        SDHC_HAL_PREV_CLKFS(freq);
-        SDHC_HAL_PREV_DVS(divisor);
-
-        SDHC_HAL_SetClockDivisor(g_sdhcBaseAddr[instance], divisor);
-        SDHC_HAL_SetClockFrequency(g_sdhcBaseAddr[instance], freq);
-        SDHC_HAL_SetDataTimeout(g_sdhcBaseAddr[instance], 0xE);
-
-        SDHC_HAL_SetIpgClock(g_sdhcBaseAddr[instance], true);
-        SDHC_HAL_SetSysClock(g_sdhcBaseAddr[instance], true);
-        SDHC_HAL_SetPeripheralClock(g_sdhcBaseAddr[instance], true);
-
-        while(!SDHC_HAL_IsSdClockStable(g_sdhcBaseAddr[instance])) {}
-        SDHC_HAL_SetSdClock(g_sdhcBaseAddr[instance], true);
-    }
+    sdClkConf.enable     = true;
+    sdClkConf.maxHostClk = host->maxClock;
+    sdClkConf.destClk    = clock;
+    SDHC_HAL_ConfigSdClock(g_sdhcBase[instance], &sdClkConf);
 
     host->clock = clock;
     return kStatus_SDHC_NoError;
@@ -413,7 +433,7 @@ sdhc_status_t SDHC_DRV_ConfigClock(uint32_t instance, uint32_t clock)
  *END*********************************************************************/
 sdhc_status_t SDHC_DRV_SetBusWidth(uint32_t instance, sdhc_buswidth_t busWidth)
 {
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     sdhc_hal_dtw_t dtw = kSdhcHalDtw1Bit;
     volatile sdhc_host_t *host = g_hosts[instance];
 
@@ -428,7 +448,7 @@ sdhc_status_t SDHC_DRV_SetBusWidth(uint32_t instance, sdhc_buswidth_t busWidth)
         default:
             return kStatus_SDHC_InvalidParameter;
     }
-    SDHC_HAL_SetDataTransferWidth(g_sdhcBaseAddr[instance], dtw);
+    SDHC_HAL_SetDataTransferWidth(g_sdhcBase[instance], dtw);
     host->busWidth = busWidth;
     return kStatus_SDHC_NoError;
 }
@@ -443,7 +463,7 @@ static sdhc_status_t SDHC_DRV_Reset(uint32_t instance, uint32_t mask)
 {
     uint32_t timeout;
     volatile sdhc_host_t *host;
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
 
     timeout = 100;
     host = g_hosts[instance];
@@ -456,53 +476,22 @@ static sdhc_status_t SDHC_DRV_Reset(uint32_t instance, uint32_t mask)
     if (mask & SDHC_RESET_ALL)
     {
         host->clock = 0;
-        SDHC_HAL_Reset(g_sdhcBaseAddr[instance], SDHC_HAL_RST_TYPE_ALL, timeout);
+        SDHC_HAL_Reset(g_sdhcBase[instance], SDHC_HAL_RST_TYPE_ALL, timeout);
     }
     else if (mask == (SDHC_RESET_DATA | SDHC_RESET_CMD))
     {
-        SDHC_HAL_Reset(g_sdhcBaseAddr[instance], (SDHC_HAL_RST_TYPE_DATA
+        SDHC_HAL_Reset(g_sdhcBase[instance], (SDHC_HAL_RST_TYPE_DATA
                                 | SDHC_HAL_RST_TYPE_CMD), timeout);
     }
     else if (mask == SDHC_RESET_CMD)
     {
-        SDHC_HAL_Reset(g_sdhcBaseAddr[instance], SDHC_HAL_RST_TYPE_CMD, timeout);
+        SDHC_HAL_Reset(g_sdhcBase[instance], SDHC_HAL_RST_TYPE_CMD, timeout);
     }
     else if (mask == SDHC_RESET_DATA)
     {
-        SDHC_HAL_Reset(g_sdhcBaseAddr[instance], SDHC_HAL_RST_TYPE_DATA, timeout);
+        SDHC_HAL_Reset(g_sdhcBase[instance], SDHC_HAL_RST_TYPE_DATA, timeout);
     }
     return kStatus_SDHC_NoError;
-}
-
-/*FUNCTION****************************************************************
- *
- * Function Name: SDHC_DRV_GetMaxBlockSize
- * Description: Get max block size supported for the host controller
- *
- *END*********************************************************************/
-static uint32_t SDHC_DRV_GetMaxBlockSize(uint32_t instance)
-{
-    uint32_t mbl, ret = 0;
-
-    mbl = SDHC_HAL_GetMaxBlockLength(g_sdhcBaseAddr[instance]);
-    switch (mbl)
-    {
-        case SDHC_HAL_MAX_BLKLEN_512B:
-            ret = 512;
-            break;
-        case SDHC_HAL_MAX_BLKLEN_1024B:
-            ret = 1024;
-            break;
-        case SDHC_HAL_MAX_BLKLEN_2048B:
-            ret = 2048;
-            break;
-        case SDHC_HAL_MAX_BLKLEN_4096B:
-            ret = 4096;
-            break;
-        default:
-            break;
-    }
-    return ret;
 }
 
 /*FUNCTION****************************************************************
@@ -515,37 +504,38 @@ static sdhc_status_t SDHC_DRV_SendCommand(uint32_t instance,
                                           sdhc_request_t *req)
 {
     uint32_t flags = 0;
+    sdhc_hal_cmd_req_t cmdReq;
     sdhc_status_t ret = kStatus_SDHC_NoError;
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(req);
 
     if (req->data)
     {
         flags |= SDHC_HAL_DATA_PRESENT;
 
-        SDHC_HAL_SetIntState(g_sdhcBaseAddr[instance], false,
+        SDHC_HAL_SetIntState(g_sdhcBase[instance], false,
                 (SDHC_HAL_DMA_ERR_INT | SDHC_HAL_DMA_INT |
                     SDHC_HAL_BUF_READ_READY_INT | SDHC_HAL_BUF_WRITE_READY_INT));
-        SDHC_HAL_SetIntSignal(g_sdhcBaseAddr[instance], false,
+        SDHC_HAL_SetIntSignal(g_sdhcBase[instance], false,
                 (SDHC_HAL_DMA_ERR_INT | SDHC_HAL_DMA_INT |
                     SDHC_HAL_BUF_READ_READY_INT | SDHC_HAL_BUF_WRITE_READY_INT));
 
         if (req->flags & FSL_SDHC_REQ_FLAGS_USE_DMA)
         {
             flags |= SDHC_HAL_ENABLE_DMA;
-            SDHC_HAL_SetIntState(g_sdhcBaseAddr[instance], true,
+            SDHC_HAL_SetIntState(g_sdhcBase[instance], true,
                     (SDHC_HAL_DMA_ERR_INT | SDHC_HAL_DMA_INT));
 #if defined BSP_FSL_SDHC_USING_IRQ
-            SDHC_HAL_SetIntSignal(g_sdhcBaseAddr[instance], true,
+            SDHC_HAL_SetIntSignal(g_sdhcBase[instance], true,
                     (SDHC_HAL_DMA_ERR_INT | SDHC_HAL_DMA_INT));
 #endif
         }
         else
         {
-            SDHC_HAL_SetIntState(g_sdhcBaseAddr[instance], true,
+            SDHC_HAL_SetIntState(g_sdhcBase[instance], true,
                     (SDHC_HAL_BUF_READ_READY_INT | SDHC_HAL_BUF_WRITE_READY_INT));
 #if defined BSP_FSL_SDHC_USING_IRQ
-            SDHC_HAL_SetIntSignal(g_sdhcBaseAddr[instance], true,
+            SDHC_HAL_SetIntSignal(g_sdhcBase[instance], true,
                     (SDHC_HAL_BUF_READ_READY_INT | SDHC_HAL_BUF_WRITE_READY_INT));
 #endif
         }
@@ -578,16 +568,16 @@ static sdhc_status_t SDHC_DRV_SendCommand(uint32_t instance,
         flags |= SDHC_HAL_ENABLE_INDEX_CHECK;
     }
 
-    while(SDHC_HAL_IsCmdInhibit(g_sdhcBaseAddr[instance])) {}
+    while(SDHC_HAL_GetCurState(g_sdhcBase[instance], kSdhcHalIsCmdInhibit)) {}
 
-    if (req->cmdIndex == kStopTransmission)
+    if(req->flags & FSL_SDHC_REQ_FLAGS_STOP_TRANS)
     {
         flags |= SDHC_HAL_CMD_TYPE_ABORT;
     }
     else if ((req->data) ||
             (g_req_resp_flags[req->respType] & FSL_SDHC_REQ_RSPTYPE_BUSY))
     {
-        while(SDHC_HAL_IsDataInhibit(g_sdhcBaseAddr[instance])) {}
+        while(SDHC_HAL_GetCurState(g_sdhcBase[instance], kSdhcHalIsDataInhibit)) {}
     }
 
     if (req->data)
@@ -603,24 +593,26 @@ static sdhc_status_t SDHC_DRV_SendCommand(uint32_t instance,
         }
         if (req->data->blockCount == ((uint32_t) -1))
         {
-            SDHC_HAL_SetBlockSize(g_sdhcBaseAddr[instance], req->data->blockSize);
-            SDHC_HAL_SetBlockCount(g_sdhcBaseAddr[instance], SDHC_HAL_MAX_BLOCK_COUNT);
+            cmdReq.dataBlkSize  = req->data->blockSize;
+            cmdReq.dataBlkCount = SDHC_HAL_MAX_BLOCK_COUNT;
             flags &= ~SDHC_HAL_ENABLE_BLOCK_COUNT;
         }
         else
         {
-            SDHC_HAL_SetBlockSize(g_sdhcBaseAddr[instance], req->data->blockSize);
-            SDHC_HAL_SetBlockCount(g_sdhcBaseAddr[instance], req->data->blockCount);
+            cmdReq.dataBlkSize  = req->data->blockSize;
+            cmdReq.dataBlkCount = req->data->blockCount;
         }
     }
     else
     {
-        SDHC_HAL_SetBlockSize(g_sdhcBaseAddr[instance], 0);
-        SDHC_HAL_SetBlockCount(g_sdhcBaseAddr[instance], 0);
+        cmdReq.dataBlkSize  = 0;
+        cmdReq.dataBlkCount = 0;
     }
 
-    SDHC_HAL_SetCmdArgument(g_sdhcBaseAddr[instance], req->argument);
-    SDHC_HAL_SendCmd(g_sdhcBaseAddr[instance], req->cmdIndex, flags);
+    cmdReq.arg  = req->argument;
+    cmdReq.index = req->cmdIndex;
+    cmdReq.flags = flags;
+    SDHC_HAL_SendCmd(g_sdhcBase[instance], &cmdReq);
     return ret;
 }
 
@@ -686,13 +678,13 @@ static void SDHC_DRV_PioReadBlock(uint32_t instance, sdhc_request_t *req)
 {
     uint32_t blkSz, blkCnt;
     blkCnt = req->data->blockCount;
-    while (SDHC_HAL_IsBuffReadEnabled(g_sdhcBaseAddr[instance]))
+    while (SDHC_HAL_GetCurState(g_sdhcBase[instance], kSdhcHalIsBuffReadEnabled))
     {
         blkSz = req->data->blockSize;
         while (blkSz)
         {
             req->data->buffer[req->data->bytesTransferred >> 2] =
-                SDHC_HAL_GetData(g_sdhcBaseAddr[instance]);
+                SDHC_HAL_GetData(g_sdhcBase[instance]);
             req->data->bytesTransferred += 4;
             blkSz -= 4;
         }
@@ -714,12 +706,12 @@ static void SDHC_DRV_PioWriteBlock(uint32_t instance, sdhc_request_t *req)
 {
     uint32_t blkSz, blkCnt;
     blkCnt = req->data->blockCount;
-    while (SDHC_HAL_IsBuffWriteEnabled(g_sdhcBaseAddr[instance]))
+    while (SDHC_HAL_GetCurState(g_sdhcBase[instance], kSdhcHalIsBuffWriteEnabled))
     {
         blkSz = req->data->blockSize;
         while (blkSz)
         {
-            SDHC_HAL_SetData(g_sdhcBaseAddr[instance],
+            SDHC_HAL_SetData(g_sdhcBase[instance],
                             req->data->buffer[req->data->bytesTransferred >> 2]);
             req->data->bytesTransferred += 4;
 
@@ -752,7 +744,7 @@ static sdhc_status_t SDHC_DRV_WaitInt(uint32_t instance,
     do
     {
         startTime = OSA_TimeGetMsec();
-        *irq = (SDHC_HAL_GetIntFlags(g_sdhcBaseAddr[instance]) & mask);
+        *irq = (SDHC_HAL_GetIntFlags(g_sdhcBase[instance]) & mask);
         if (*irq)
         {
             break;
@@ -786,7 +778,7 @@ static sdhc_status_t SDHC_DRV_TransferDataPio(uint32_t instance,
 {
     uint32_t opMask, mask, i, j, irqFlags, status;
     volatile sdhc_host_t *host;
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(req);
 
     host = g_hosts[instance];
@@ -813,7 +805,7 @@ static sdhc_status_t SDHC_DRV_TransferDataPio(uint32_t instance,
         }
         if (irqFlags & SDHC_HAL_DATA_ERR_INT)
         {
-            SDHC_HAL_ClearIntFlags(g_sdhcBaseAddr[instance], mask);
+            SDHC_HAL_ClearIntFlags(g_sdhcBase[instance], mask);
             host->currentReq = 0;
             SDHC_DRV_SetClock(instance, false);
             SDHC_DRV_SetRequestError(req, irqFlags);
@@ -829,7 +821,7 @@ static sdhc_status_t SDHC_DRV_TransferDataPio(uint32_t instance,
             {
                 SDHC_DRV_PioWriteBlock(instance, req);
             }
-            SDHC_HAL_ClearIntFlags(g_sdhcBaseAddr[instance], opMask);
+            SDHC_HAL_ClearIntFlags(g_sdhcBase[instance], opMask);
         }
     }
 
@@ -846,7 +838,7 @@ static sdhc_status_t SDHC_DRV_TransferDataPio(uint32_t instance,
         }
     } while (!(irqFlags & SDHC_HAL_DATA_COMPLETE_INT));
 
-    SDHC_HAL_ClearIntFlags(g_sdhcBaseAddr[instance], mask);
+    SDHC_HAL_ClearIntFlags(g_sdhcBase[instance], mask);
     return kStatus_SDHC_NoError;
 }
 
@@ -862,7 +854,7 @@ static sdhc_status_t SDHC_DRV_TransferDataDma(uint32_t instance,
 {
     uint32_t mask, irqFlags;
     sdhc_status_t status;
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(req);
     volatile sdhc_host_t *host;
 
@@ -895,7 +887,7 @@ static sdhc_status_t SDHC_DRV_TransferDataDma(uint32_t instance,
         }
     } while (!(irqFlags & SDHC_HAL_DATA_COMPLETE_INT));
 
-    SDHC_HAL_ClearIntFlags(g_sdhcBaseAddr[instance], mask);
+    SDHC_HAL_ClearIntFlags(g_sdhcBase[instance], mask);
     return kStatus_SDHC_NoError;
 }
 
@@ -910,7 +902,7 @@ static sdhc_status_t SDHC_DRV_TransferData(uint32_t instance,
                                            sdhc_request_t *req,
                                            uint32_t timeoutInMs)
 {
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(req);
 
     if (req->flags & FSL_SDHC_REQ_FLAGS_USE_DMA)
@@ -935,11 +927,11 @@ static void SDHC_DRV_ClearSetInt(uint32_t instance,
                                  uint32_t clear,
                                  uint32_t set)
 {
-    SDHC_HAL_SetIntState(g_sdhcBaseAddr[instance], false, clear);
-    SDHC_HAL_SetIntSignal(g_sdhcBaseAddr[instance], false, clear);
+    SDHC_HAL_SetIntState(g_sdhcBase[instance], false, clear);
+    SDHC_HAL_SetIntSignal(g_sdhcBase[instance], false, clear);
 
-    SDHC_HAL_SetIntState(g_sdhcBaseAddr[instance], true, set);
-    SDHC_HAL_SetIntSignal(g_sdhcBaseAddr[instance], true, set);
+    SDHC_HAL_SetIntState(g_sdhcBase[instance], true, set);
+    SDHC_HAL_SetIntSignal(g_sdhcBase[instance], true, set);
 }
 
 /*FUNCTION****************************************************************
@@ -996,7 +988,7 @@ static void SDHC_DRV_CmdIrq(uint32_t instance, uint32_t irq)
 {
     sdhc_request_t *req;
     uint32_t i;
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(irq & SDHC_HAL_CMD_ALL_INT);
     req = g_hosts[instance]->currentReq;
     if (irq & SDHC_HAL_CMD_ERR_INT)
@@ -1007,21 +999,21 @@ static void SDHC_DRV_CmdIrq(uint32_t instance, uint32_t irq)
     {
         if (g_req_resp_flags[req->respType] & FSL_SDHC_REQ_RSPTYPE_PRESENT)
         {
-            req->response[0] = SDHC_HAL_GetResponse(g_sdhcBaseAddr[instance], 0);
+            req->response[0] = SDHC_HAL_GetResponse(g_sdhcBase[instance], 0);
             if (!(g_req_resp_flags[req->respType] &
                         FSL_SDHC_REQ_RSPTYPE_136BITS))
             {
                 if ((req->respType == kSdhcRespTypeR1) ||
                         (req->respType == kSdhcRespTypeR1b))
                 {
-                    req->cardErrStatus = SDMMC_R1_ERROR_BITS(req->response[0]);
+                    req->cardErrStatus = SDHC_R1_ERROR_BITS(req->response[0]);
                 }
             }
             else
             {
-                req->response[1] = SDHC_HAL_GetResponse(g_sdhcBaseAddr[instance], 1);
-                req->response[2] = SDHC_HAL_GetResponse(g_sdhcBaseAddr[instance], 2);
-                req->response[3] = SDHC_HAL_GetResponse(g_sdhcBaseAddr[instance], 3);
+                req->response[1] = SDHC_HAL_GetResponse(g_sdhcBase[instance], 1);
+                req->response[2] = SDHC_HAL_GetResponse(g_sdhcBase[instance], 2);
+                req->response[3] = SDHC_HAL_GetResponse(g_sdhcBase[instance], 3);
                 i = 4;
                 do {
                     req->response[i - 1] <<= 8;
@@ -1107,7 +1099,7 @@ void SDHC_DRV_DoIrq(uint32_t instance)
 {
     volatile uint32_t irq;
     volatile uint32_t cardInt = 0;
-    irq = SDHC_HAL_GetIntFlags(g_sdhcBaseAddr[instance]);
+    irq = SDHC_HAL_GetIntFlags(g_sdhcBase[instance]);
 
     if (!irq)
     {
@@ -1135,7 +1127,7 @@ void SDHC_DRV_DoIrq(uint32_t instance)
         SDHC_DRV_BlockGapIrq(instance);
     }
 
-    SDHC_HAL_ClearIntFlags(g_sdhcBaseAddr[instance], irq);
+    SDHC_HAL_ClearIntFlags(g_sdhcBase[instance], irq);
 
     if (cardInt)
     {
@@ -1144,6 +1136,62 @@ void SDHC_DRV_DoIrq(uint32_t instance)
     return;
 }
 #endif
+
+/*FUNCTION****************************************************************
+ *
+ * Function Name: SDHC_DRV_GetCaps
+ * Description: Get the capability of the host.
+ *
+ *END*********************************************************************/
+static void SDHC_DRV_GetCaps(uint32_t instance, sdhc_host_t *host)
+{
+    uint32_t caps = host->caps;
+    uint32_t capability;
+    sdhc_hal_basic_info_t basicInfo;
+    assert(instance < SDHC_INSTANCE_COUNT);
+    assert(host);
+    host->ocrSupported = 0;
+    SDHC_HAL_GetBasicInfo(g_sdhcBase[instance], &basicInfo);
+    capability = basicInfo.capability;
+    if (capability & SDHC_HAL_SUPPORT_V330_FLAG)
+    {
+        host->ocrSupported |= SDHC_SD_OCR_VDD_32_33 | SDHC_SD_OCR_VDD_33_34;
+    }
+    if (capability & SDHC_HAL_SUPPORT_V300_FLAG)
+    {
+        host->ocrSupported |= SDHC_SD_OCR_VDD_29_30;
+    }
+    if (capability & SDHC_HAL_SUPPORT_HIGHSPEED_FLAG)
+    {
+        caps |= FSL_SDHC_HOST_CAPS_SUPPORT_HIGHSPEED;
+    }
+    if (capability & SDHC_HAL_SUPPORT_DMA_FLAG)
+    {
+        caps |= FSL_SDHC_HOST_CAPS_SUPPORT_DMA;
+    }
+    if (capability & SDHC_HAL_SUPPORT_ADMA_FLAG)
+    {
+        caps |= FSL_SDHC_HOST_CAPS_SUPPORT_ADMA;
+    }
+    if (capability & SDHC_HAL_SUPPORT_SUSPEND_RESUME_FLAG)
+    {
+        caps |= FSL_SDHC_HOST_CAPS_SUPPORT_SRS;
+    }
+    if (capability & SDHC_HAL_SUPPORT_V180_FLAG)
+    {
+        caps |= FSL_SDHC_HOST_CAPS_SUPPORT_V180;
+    }
+    if(capability & SDHC_HAL_SUPPORT_EXDMA_FLAG)
+    {
+        caps |= FSL_SDHC_HOST_CAPS_SUPPORT_EXDMA;
+    }
+    /* eSDHC on all kinetis boards will support 4 bit data bus. */
+    caps |= FSL_SDHC_HOST_CAPS_SUPPORT_4BITS;
+    host->caps = caps;
+    host->maxBlockSize = basicInfo.maxBlkLen;
+    host->maxBlockCount = SDHC_HAL_MAX_BLOCK_COUNT;
+}
+
 
 /*FUNCTION****************************************************************
  *
@@ -1156,8 +1204,9 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
                             const sdhc_user_config_t *config)
 {
     uint32_t irqEnabled;
-
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    sdhc_hal_config_t sdhcConfig;
+    sdhc_hal_sdclk_config_t sdClkConfig;
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(host);
     assert(config);
 
@@ -1167,6 +1216,7 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
     }
 
     memset(host, 0, sizeof(sdhc_host_t));
+    memset(&sdhcConfig, 0, sizeof(sdhc_hal_config_t));
     g_hosts[instance] = host;
     host->instance = instance;
 
@@ -1200,48 +1250,22 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
 
     SDHC_DRV_SetClock(instance, true);
 
-    SDHC_HAL_Init(g_sdhcBaseAddr[instance]);
+    SDHC_HAL_Init(g_sdhcBase[instance]);
     SDHC_DRV_Reset(instance, SDHC_RESET_ALL);
-    SDHC_HAL_SetExternalDmaRequest(g_sdhcBaseAddr[instance], false);
 
-    host->maxBlockSize = SDHC_DRV_GetMaxBlockSize(instance);
-    if (!host->maxBlockSize)
+    SDHC_DRV_GetCaps(instance, host);
+    if(!host->maxBlockSize)
     {
         CLOCK_SYS_DisableSdhcClock(instance);
         return kStatus_SDHC_Failed;
     }
+    if(host->caps&FSL_SDHC_HOST_CAPS_SUPPORT_EXDMA)
+    {
+        /* Disable external dma */
+        sdhcConfig.enFlags &= (~SDHC_HAL_EN_EXT_DMA_REQ_FLAG);
+    }
     host->maxBlockCount = SDHC_HAL_MAX_BLOCK_COUNT;
-
-    host->ocrSupported = 0;
-    if (SDHC_HAL_DoesHostSupportV330(g_sdhcBaseAddr[instance]))
-    {
-        host->ocrSupported |= SD_OCR_VDD_32_33 | SD_OCR_VDD_33_34;
-    }
-    if (SDHC_HAL_DoesHostSupportV300(g_sdhcBaseAddr[instance]))
-    {
-        host->ocrSupported |= SD_OCR_VDD_29_30;
-    }
-    if (SDHC_HAL_DoesHostSupportHighspeed(g_sdhcBaseAddr[instance]))
-    {
-        host->caps |= FSL_SDHC_HOST_CAPS_SUPPORT_HIGHSPEED;
-    }
-    if (SDHC_HAL_DoesHostSupportDma(g_sdhcBaseAddr[instance]))
-    {
-        host->caps |= FSL_SDHC_HOST_CAPS_SUPPORT_DMA;
-    }
-    if (SDHC_HAL_DoesHostSupportAdma(g_sdhcBaseAddr[instance]))
-    {
-        host->caps |= FSL_SDHC_HOST_CAPS_SUPPORT_ADMA;
-    }
-    if (SDHC_HAL_DoesHostSupportSuspendResume(g_sdhcBaseAddr[instance]))
-    {
-        host->caps |= FSL_SDHC_HOST_CAPS_SUPPORT_SRS;
-    }
-    if (SDHC_HAL_DoesHostSupportV180(g_sdhcBaseAddr[instance]))
-    {
-        host->caps |= FSL_SDHC_HOST_CAPS_SUPPORT_V180;
-    }
-
+   
     if (((config->transMode == kSdhcTransModeSdma)
                 && (!(host->caps & FSL_SDHC_HOST_CAPS_SUPPORT_DMA)))
             || (((config->transMode == kSdhcTransModeAdma1) ||
@@ -1255,8 +1279,8 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
     host->mode = config->transMode;
 
     /* enable irqs */
-    SDHC_HAL_SetIntState(g_sdhcBaseAddr[instance], false, SDHC_INT_ALL_MASK);
-    SDHC_HAL_SetIntSignal(g_sdhcBaseAddr[instance], false, SDHC_INT_ALL_MASK);
+    SDHC_HAL_SetIntState(g_sdhcBase[instance], false, SDHC_INT_ALL_MASK);
+    SDHC_HAL_SetIntSignal(g_sdhcBase[instance], false, SDHC_INT_ALL_MASK);
     irqEnabled = SDHC_HAL_CMD_INDEX_ERR_INT | SDHC_HAL_CMD_CRC_ERR_INT |
                  SDHC_HAL_CMD_END_BIT_ERR_INT | SDHC_HAL_CMD_TIMEOUT_ERR_INT |
                  SDHC_HAL_DATA_TIMEOUT_ERR_INT | SDHC_HAL_DATA_CRC_ERR_INT |
@@ -1274,7 +1298,7 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
     if ((host->cdType == kSdhcCardDetectDat3) ||
             (host->cdType == kSdhcCardDetectPollDat3))
     {
-        SDHC_HAL_SetD3cd(g_sdhcBaseAddr[instance], true);
+        sdhcConfig.enFlags |= SDHC_HAL_EN_D3CD_FLAG;
         if (kStatus_SDHC_NoMedium == SDHC_DRV_DetectCard(instance))
         {
             irqEnabled &= ~SDHC_HAL_CARD_REMOVAL_INT;
@@ -1287,7 +1311,7 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
 
     if (host->mode == kSdhcTransModeAdma2)
     {
-        SDHC_HAL_SetDmaMode(g_sdhcBaseAddr[instance], kSdhcHalDmaAdma2);
+        sdhcConfig.dmaMode = kSdhcHalDmaAdma2;
 #if ! defined BSP_FSL_SDHC_USING_DYNALLOC
         host->admaTableAddress = g_AdmaTableAddress[instance];
 #endif
@@ -1295,7 +1319,7 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
 #if defined BSP_FSL_SDHC_ENABLE_ADMA1
     else if (host->mode == kSdhcTransModeAdma1)
     {
-        SDHC_HAL_SetDmaMode(g_sdhcBaseAddr[instance], kSdhcHalDmaAdma1);
+        sdhcConfig.dmaMode = kSdhcHalDmaAdma1;
 #if ! defined BSP_FSL_SDHC_USING_DYNALLOC
         host->admaTableAddress = g_AdmaTableAddress[instance];
 #endif
@@ -1303,10 +1327,10 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
 #endif
     else
     {
-        SDHC_HAL_SetDmaMode(g_sdhcBaseAddr[instance], kSdhcHalDmaSimple);
+        sdhcConfig.dmaMode = kSdhcHalDmaSimple;
     }
 
-    SDHC_HAL_SetIntState(g_sdhcBaseAddr[instance], true, irqEnabled);
+    SDHC_HAL_SetIntState(g_sdhcBase[instance], true, irqEnabled);
     if ((host->cdType == kSdhcCardDetectPollDat3) ||
          (host->cdType == kSdhcCardDetectPollCd))
     {
@@ -1314,7 +1338,7 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
                 SDHC_HAL_CARD_INSERTION_INT);
     }
 #if defined BSP_FSL_SDHC_USING_IRQ
-    SDHC_HAL_SetIntSignal(g_sdhcBaseAddr[instance], true, irqEnabled);
+    SDHC_HAL_SetIntSignal(g_sdhcBase[instance], true, irqEnabled);
 #endif
 
 #if defined BSP_FSL_SDHC_USING_BIG_ENDIAN
@@ -1323,14 +1347,17 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
     host->endian = kSdhcHalEndianLittle;
 #endif
 
-    SDHC_HAL_SetEndian(g_sdhcBaseAddr[instance], host->endian);
+    sdhcConfig.endianMode = host->endian;
 
-    SDHC_HAL_SetWriteWatermarkLevel(g_sdhcBaseAddr[instance], 0x80);
-    SDHC_HAL_SetReadWatermarkLevel(g_sdhcBaseAddr[instance], 0x80);
-
+    sdhcConfig.writeWatermarkLevel = 0x80;
+    sdhcConfig.readWatermarkLevel  = 0x80;
+    SDHC_HAL_Config(g_sdhcBase[instance], &sdhcConfig);
+    
     SDHC_DRV_SetBusWidth(instance, kSdhcBusWidth1Bit);
-    SDHC_DRV_ConfigClock(instance, config->clock);
-
+    sdClkConfig.enable     = true;
+    sdClkConfig.maxHostClk = host->maxClock;
+    sdClkConfig.destClk    = config->clock;
+    SDHC_HAL_ConfigSdClock(g_sdhcBase[instance], &sdClkConfig);
 #if defined BSP_FSL_SDHC_USING_IRQ
     if (config->cardIntCallback)
     {
@@ -1351,11 +1378,12 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance,
  * Description: Deinitialize host controller
  *
  *END*********************************************************************/
-void SDHC_DRV_Shutdown(uint32_t instance)
+sdhc_status_t SDHC_DRV_Shutdown(uint32_t instance)
 {
+    sdhc_hal_sdclk_config_t sdClkConf;
     if (g_hosts[instance] == 0)
     {
-        return;
+        return kStatus_SDHC_Failed;
     }
 
 #if defined BSP_FSL_SDHC_USING_IRQ
@@ -1370,10 +1398,12 @@ void SDHC_DRV_Shutdown(uint32_t instance)
         g_hosts[instance]->admaTableMaxEntries = 0;
     }
 #endif
-    SDHC_HAL_SetSdClock(g_sdhcBaseAddr[instance], false);
+    sdClkConf.enable = false;
+    SDHC_HAL_ConfigSdClock(g_sdhcBase[instance], &sdClkConf);
     SDHC_DRV_SetClock(instance, false);
     CLOCK_SYS_DisableSdhcClock(instance);
     g_hosts[instance] = 0;
+    return kStatus_SDHC_NoError;
 }
 
 /*FUNCTION****************************************************************
@@ -1385,7 +1415,7 @@ void SDHC_DRV_Shutdown(uint32_t instance)
  *END*********************************************************************/
 sdhc_status_t SDHC_DRV_DetectCard(uint32_t instance)
 {
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     volatile sdhc_host_t *host = g_hosts[instance];
     if (host->cdType == kSdhcCardDetectGpio)
     {
@@ -1400,7 +1430,7 @@ sdhc_status_t SDHC_DRV_DetectCard(uint32_t instance)
         return kStatus_SDHC_NoMedium;
     }
     host->flags |= FSL_SDHC_HOST_FLAGS_CARD_PRESENTED;
-    SDHC_HAL_InitCard(g_sdhcBaseAddr[instance], 100);
+    SDHC_HAL_InitCard(g_sdhcBase[instance], 100);
     SDHC_DRV_SetClock(instance, false);
     return kStatus_SDHC_NoError;
 }
@@ -1419,9 +1449,12 @@ sdhc_status_t SDHC_DRV_IssueRequestBlocking(uint32_t instance,
     sdhc_status_t ret;
     volatile sdhc_host_t *host;
 
-    assert(instance < HW_SDHC_INSTANCE_COUNT);
+    assert(instance < SDHC_INSTANCE_COUNT);
     assert(req);
 
+    /* Wait until last time sdhc send operation complete */
+    while(!SDHC_HAL_GetCurState(g_sdhcBase[instance], kSdhcHalGetDataLine0Level)){}
+    
     host = g_hosts[instance];
     ret = kStatus_SDHC_NoError;
     req->error = 0;
@@ -1529,30 +1562,30 @@ sdhc_status_t SDHC_DRV_IssueRequestBlocking(uint32_t instance,
 
     if (irqFlags != SDHC_HAL_CMD_COMPLETE_INT)
     {
-        SDHC_HAL_ClearIntFlags(g_sdhcBaseAddr[instance], mask);
+        SDHC_HAL_ClearIntFlags(g_sdhcBase[instance], mask);
         host->currentReq = 0;
         SDHC_DRV_SetClock(instance, false);
         SDHC_DRV_SetRequestError(req, irqFlags);
         return kStatus_SDHC_Failed;
     }
 
-    SDHC_HAL_ClearIntFlags(g_sdhcBaseAddr[instance], SDHC_HAL_CMD_COMPLETE_INT);
+    SDHC_HAL_ClearIntFlags(g_sdhcBase[instance], SDHC_HAL_CMD_COMPLETE_INT);
     if (g_req_resp_flags[req->respType] & FSL_SDHC_REQ_RSPTYPE_PRESENT)
     {
-        req->response[0] = SDHC_HAL_GetResponse(g_sdhcBaseAddr[instance], 0);
+        req->response[0] = SDHC_HAL_GetResponse(g_sdhcBase[instance], 0);
         if (!(g_req_resp_flags[req->respType] & FSL_SDHC_REQ_RSPTYPE_136BITS))
         {
             if ((req->respType == kSdhcRespTypeR1) ||
                     (req->respType == kSdhcRespTypeR1b))
             {
-                req->cardErrStatus = SDMMC_R1_ERROR_BITS(req->response[0]);
+                req->cardErrStatus = SDHC_R1_ERROR_BITS(req->response[0]);
             }
         }
         else
         {
-            req->response[1] = SDHC_HAL_GetResponse(g_sdhcBaseAddr[instance], 1);
-            req->response[2] = SDHC_HAL_GetResponse(g_sdhcBaseAddr[instance], 2);
-            req->response[3] = SDHC_HAL_GetResponse(g_sdhcBaseAddr[instance], 3);
+            req->response[1] = SDHC_HAL_GetResponse(g_sdhcBase[instance], 1);
+            req->response[2] = SDHC_HAL_GetResponse(g_sdhcBase[instance], 2);
+            req->response[3] = SDHC_HAL_GetResponse(g_sdhcBase[instance], 3);
             i = 4;
             do {
                 req->response[i - 1] <<= 8;
@@ -1585,6 +1618,7 @@ sdhc_status_t SDHC_DRV_IssueRequestBlocking(uint32_t instance,
     SDHC_DRV_SetClock(instance, false);
     return ret;
 }
+#endif
 
 /*************************************************************************************************
  * EOF

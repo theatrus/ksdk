@@ -32,6 +32,7 @@
 
 #include "fsl_flexcan_hal.h"
 #include "fsl_os_abstraction.h"
+#if FSL_FEATURE_SOC_FLEXCAN_COUNT
 
 /*!
  * @addtogroup flexcan_driver
@@ -42,7 +43,7 @@
  * Definitions
  ******************************************************************************/
 /*! @brief Table of base addresses for FlexCAN instances. */
-extern const uint32_t g_flexcanBaseAddr[];
+extern CAN_Type * const g_flexcanBase[];
 
 /*! @brief Table to save RX Warning IRQ numbers for FlexCAN instances. */
 extern const IRQn_Type g_flexcanRxWarningIrqId[];
@@ -65,24 +66,32 @@ extern const IRQn_Type g_flexcanOredMessageBufferIrqId[];
  *      future releases.
  */
 typedef struct FlexCANState {
-    flexcan_mb_t *fifo_message;           /*!< The FlexCAN receive FIFO data*/
+    flexcan_msgbuff_t *fifo_message;           /*!< The FlexCAN receive FIFO data*/
+    flexcan_msgbuff_t *mb_message;		      /*!< The FlexCAN receive MB data*/
     volatile uint32_t rx_mb_idx;          /*!< Index of the message buffer for receiving*/
     volatile uint32_t tx_mb_idx;          /*!< Index of the message buffer for transmitting*/
     semaphore_t txIrqSync;                /*!< Used to wait for ISR to complete its TX business.*/
     semaphore_t rxIrqSync;                /*!< Used to wait for ISR to complete its RX business.*/
+    volatile bool isTxBusy;        /*!< True if there is an active transmit. */
+    volatile bool isRxBusy;        /*!< True if there is an active receive. */
+    volatile bool isTxBlocking;    /*!< True if transmit is blocking transaction. */
+    volatile bool isRxBlocking;    /*!< True if receive is blocking transaction. */
 } flexcan_state_t;
 
 /*! @brief FlexCAN data info from user*/
 typedef struct FlexCANDataInfo {
-    flexcan_mb_id_type_t msg_id_type;            /*!< Type of message ID (standard or extended)*/
+    flexcan_msgbuff_id_type_t msg_id_type;            /*!< Type of message ID (standard or extended)*/
     uint32_t data_length;                        /*!< Length of Data in Bytes*/
 } flexcan_data_info_t;
 
-/*! @brief FlexCAN configuration*/
+/*! @brief FlexCAN configuration
+ * @internal gui name="Common configuration" id="flexcanCfg"
+ */
 typedef struct FLEXCANUserConfig {
-    uint32_t max_num_mb;                            /*!< The maximum number of Message Buffers*/
-    flexcan_rx_fifo_id_filter_num_t num_id_filters; /*!< The number of Rx FIFO ID filters needed*/
-    bool is_rx_fifo_needed;                         /*!< 1 if needed; 0 if not*/
+    uint32_t max_num_mb;                            /*!< The maximum number of Message Buffers @internal gui name="Maximum number of message buffers" id="max_num_mb" */
+    flexcan_rx_fifo_id_filter_num_t num_id_filters; /*!< The number of RX FIFO ID filters needed @internal gui name="Number of RX FIFO ID filters" id="num_id_filters" */
+    bool is_rx_fifo_needed;                         /*!< 1 if needed; 0 if not. This controls whether the Rx FIFO feature is enabled or not. @internal gui name="Use rx fifo" id="is_rx_fifo_needed" */
+    flexcan_operation_modes_t flexcanMode;          /*!< User configurable FlexCAN operation modes. @internal gui name="Flexcan Operation Mode" id="flexcanMode"*/
 } flexcan_user_config_t;
 
 /*******************************************************************************
@@ -131,7 +140,7 @@ flexcan_status_t FLEXCAN_DRV_GetBitrate(uint8_t instance, flexcan_time_segment_t
  * @param   instance     A FlexCAN instance number
  * @param   type         The FlexCAN RX mask type
  */
-void FLEXCAN_DRV_SetMaskType(uint8_t instance, flexcan_rx_mask_type_t type);
+void FLEXCAN_DRV_SetRxMaskType(uint8_t instance, flexcan_rx_mask_type_t type);
 
 /*!
  * @brief Sets the FlexCAN RX FIFO global standard or extended mask.
@@ -143,7 +152,7 @@ void FLEXCAN_DRV_SetMaskType(uint8_t instance, flexcan_rx_mask_type_t type);
  */
 flexcan_status_t FLEXCAN_DRV_SetRxFifoGlobalMask(
     uint8_t instance,
-    flexcan_mb_id_type_t id_type,
+    flexcan_msgbuff_id_type_t id_type,
     uint32_t mask);
 
 /*!
@@ -156,7 +165,7 @@ flexcan_status_t FLEXCAN_DRV_SetRxFifoGlobalMask(
  */
 flexcan_status_t FLEXCAN_DRV_SetRxMbGlobalMask(
     uint8_t instance,
-    flexcan_mb_id_type_t id_type,
+    flexcan_msgbuff_id_type_t id_type,
     uint32_t mask);
 
 /*!
@@ -171,7 +180,7 @@ flexcan_status_t FLEXCAN_DRV_SetRxMbGlobalMask(
  */
 flexcan_status_t FLEXCAN_DRV_SetRxIndividualMask(
     uint8_t instance,
-    flexcan_mb_id_type_t id_type,
+    flexcan_msgbuff_id_type_t id_type,
     uint32_t mb_idx,
     uint32_t mask);
 
@@ -187,16 +196,14 @@ flexcan_status_t FLEXCAN_DRV_SetRxIndividualMask(
  *
  * This function initializes
  * @param   instance                   A FlexCAN instance number
- * @param   data                       The FlexCAN platform data
- * @param   enable_err_interrupts      1 if enabled, 0 if not
  * @param   state                      Pointer to the FlexCAN driver state structure.
+ * @param   data                       The FlexCAN platform data
  * @return  0 if successful; non-zero failed
  */
 flexcan_status_t FLEXCAN_DRV_Init(
-   uint8_t instance,
-   const flexcan_user_config_t *data,
-   bool enable_err_interrupts,
-   flexcan_state_t *state);
+	   uint32_t instance,
+	   flexcan_state_t *state,
+	   const flexcan_user_config_t *data);
 
 /*!
  * @brief Shuts down a FlexCAN instance.
@@ -236,7 +243,25 @@ flexcan_status_t FLEXCAN_DRV_ConfigTxMb(
  * @param   tx_info    Data info
  * @param   msg_id     ID of the message to transmit
  * @param   mb_data    Bytes of the FlexCAN message
- * @param   timeout_ms A timeout for the transfer in microseconds.
+ * @param   timeout_ms A timeout for the transfer in milliseconds.
+ * @return  0 if successful; non-zero failed
+ */
+flexcan_status_t FLEXCAN_DRV_SendBlocking(
+    uint8_t instance,
+    uint32_t mb_idx,
+    flexcan_data_info_t *tx_info,
+    uint32_t msg_id,
+    uint8_t *mb_data,
+    uint32_t timeout_ms);
+
+/*!
+ * @brief Sends FlexCAN messages.
+ *
+ * @param   instance   A FlexCAN instance number
+ * @param   mb_idx     Index of the message buffer
+ * @param   tx_info    Data info
+ * @param   msg_id     ID of the message to transmit
+ * @param   mb_data    Bytes of the FlexCAN message.
  * @return  0 if successful; non-zero failed
  */
 flexcan_status_t FLEXCAN_DRV_Send(
@@ -244,8 +269,8 @@ flexcan_status_t FLEXCAN_DRV_Send(
     uint32_t mb_idx,
     flexcan_data_info_t *tx_info,
     uint32_t msg_id,
-    uint8_t *mb_data,
-    uint32_t timeout_ms);
+    uint8_t *mb_data);
+
 
 /*@}*/
 
@@ -273,7 +298,7 @@ flexcan_status_t FLEXCAN_DRV_ConfigRxMb(
  * @brief FlexCAN RX FIFO field configuration
  *
  * @param   instance           A FlexCAN instance number
- * @param   id_format          The format of the Rx FIFO ID Filter Table Elements
+ * @param   id_format          The format of the RX FIFO ID Filter Table Elements
  * @param   id_filter_table    The ID filter table elements which contain RTR bit, IDE bit,
  *                             and RX message ID
  * @return  0 if successful; non-zero failed.
@@ -284,32 +309,56 @@ flexcan_status_t FLEXCAN_DRV_ConfigRxFifo(
     flexcan_id_table_t *id_filter_table);
 
 /*!
- * @brief FlexCAN is waiting to receive data from the Message buffer.
+ * @brief FlexCAN is waiting to receive data from the message buffer.
  *
  * @param   instance   A FlexCAN instance number
  * @param   mb_idx     Index of the message buffer
  * @param   data       The FlexCAN receive message buffer data.
- * @param   timeout_ms A timeout for the transfer in microseconds.
+ * @param   timeout_ms A timeout for the transfer in milliseconds.
+ * @return  0 if successful; non-zero failed
+ */
+flexcan_status_t FLEXCAN_DRV_RxMessageBufferBlocking(
+    uint8_t instance,
+    uint32_t mb_idx,
+    flexcan_msgbuff_t *data,
+    uint32_t timeout_ms);
+
+/*!
+ * @brief FlexCAN is waiting to receive data from the message buffer.
+ *
+ * @param   instance   A FlexCAN instance number
+ * @param   mb_idx     Index of the message buffer
+ * @param   data       The FlexCAN receive message buffer data.
  * @return  0 if successful; non-zero failed
  */
 flexcan_status_t FLEXCAN_DRV_RxMessageBuffer(
     uint8_t instance,
     uint32_t mb_idx,
-    flexcan_mb_t *data,
-    uint32_t timeout_ms);
+    flexcan_msgbuff_t *data);
 
 /*!
- * @brief FlexCAN is waiting to receive data from the Message FIFO.
+ * @brief FlexCAN is waiting to receive data from the message FIFO.
  *
  * @param   instance    A FlexCAN instance number
  * @param   data        The FlexCAN receive message buffer data.
- * @param   timeout_ms  A timeout for the transfer in microseconds.
+ * @param   timeout_ms  A timeout for the transfer in milliseconds.
+ * @return  0 if successful; non-zero failed
+ */
+flexcan_status_t FLEXCAN_DRV_RxFifoBlocking(
+    uint8_t instance,
+    flexcan_msgbuff_t *data,
+    uint32_t timeout_ms);
+
+/*!
+ * @brief FlexCAN is waiting to receive data from the message FIFO.
+ *
+ * @param   instance    A FlexCAN instance number
+ * @param   data        The FlexCAN receive message buffer data.
  * @return  0 if successful; non-zero failed
  */
 flexcan_status_t FLEXCAN_DRV_RxFifo(
     uint8_t instance,
-    flexcan_mb_t *data,
-    uint32_t timeout_ms);
+    flexcan_msgbuff_t *data);
 
 /*@}*/
 
@@ -320,12 +369,41 @@ flexcan_status_t FLEXCAN_DRV_RxFifo(
  */
 void FLEXCAN_DRV_IRQHandler(uint8_t instance);
 
+/*!
+ * @brief Returns whether the previous FLEXCAN transmit has finished.
+ *
+ * When performing an async transmit, call this function to ascertain the state of the
+ * current transmission: in progress (or busy) or complete (success).
+ *
+ * @param instance The FLEXCAN module base address.
+ * @return The transmit status.
+ * @retval kStatus_FLEXCAN_Success The transmit has completed successfully.
+ * @retval kStatus_FLEXCAN_TxBusy The transmit is still in progress.
+ */
+flexcan_status_t FLEXCAN_DRV_GetTransmitStatus(uint32_t instance);
+
+/*!
+ * @brief Returns whether the previous FLEXCAN receive is complete.
+ *
+ * When performing an async receive, call this function to find out the state of the
+ * current receive progress: in progress (or busy) or complete (success).
+ *
+ * @param instance The FLEXCAN module base address.
+ * @param bytesRemaining A pointer to a value that is filled in with the number of bytes which
+ *                       still need to be received in the active transfer.
+ * @return The receive status.
+ * @retval kStatus_FLEXCAN_Success The receive has completed successfully.
+ * @retval kStatus_FLEXCAN_RxBusy The receive is still in progress.
+ */
+flexcan_status_t FLEXCAN_DRV_GetReceiveStatus(uint32_t instance);
+
 #ifdef __cplusplus
 }
 #endif
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_FLEXCAN_DRIVER_H__*/
 
 /*******************************************************************************

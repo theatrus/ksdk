@@ -260,7 +260,7 @@ struct usb_endpoint_descriptor
    #define  ISOCH_NOSYNC      (0x00)   /* No synchronization */
    #define  ISOCH_ASYNC       (0x04)   /* Asynchronous */
    #define  ISOCH_ADAPT       (0x08)   /* Adaptive */
-   #define  ISOCH_SYNCH       (0x0C)   /* Synchrounous */
+   #define  ISOCH_SYNCH       (0x0C)   /* Synchronous */
    #define  ISOCH_DATA        (0x00)   /* Data endpoint */
    #define  ISOCH_FEEDBACK    (0x10)   /* Feedback endpoint */
    #define  ISOCH_IMPLICIT    (0x20)   /* Implicit feedback */
@@ -268,11 +268,12 @@ struct usb_endpoint_descriptor
    uint8_t   wMaxPacketSize[2];   /* Bits 10:0 = max. packet size */
    /* For high-speed interrupt or isochronous only, additional
    **   transaction opportunities per microframe follow.*/
-   #define  PACKET_SIZE_MASK     (0x7FF)  /* packet size bits */
+   #define  PACKET_SIZE_MASK  (0x7FFu)  /* packet size bits */
    #define  NO_ADDITONAL      (0x0000)   /* 1 / microframe */
    #define  ONE_ADDITIONAL    (0x0800)   /* 2 / microframe */
    #define  TWO_ADDITIONAL    (0x1000)   /* 3 / microframe */
    #define  ADDITIONAL_MASK   (ONE_ADDITIONAL | TWO_ADDITIONAL)
+   #define  ADDITIONAL_POWER  (11)   
    uint8_t   iInterval;        /* Polling interval in (micro) frames */
 } PACKED_STRUCT_END;
 typedef struct usb_endpoint_descriptor endpoint_descriptor_t;  
@@ -331,7 +332,7 @@ typedef union descriptor_union
 } descriptor_union_t;
 
 #define USB_uint_16_low(x)          ((x) & 0xFF)
-#define USB_uint_16_high(x)         (((x) >> 8) & 0xFF)
+#define USB_uint_16_high(x)         ((uint8_t)((x) >> 8) & 0xFF)
 
 
 /* Prototypes */

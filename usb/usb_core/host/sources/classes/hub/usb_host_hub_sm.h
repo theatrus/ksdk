@@ -1,51 +1,58 @@
 /**HEADER********************************************************************
-* 
-* Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
-* All Rights Reserved
-*
-*************************************************************************** 
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: usb_host_hub_sm.h$
-* $Version : 
-* $Date    : 
-*
-* Comments:
-*
-*   This file defines structures used by the implementation of hub SM on host.
-*
-*END************************************************************************/
+ * 
+ * Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ *************************************************************************** 
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: usb_host_hub_sm.h$
+ * $Version : 
+ * $Date    : 
+ *
+ * Comments:
+ *
+ *   This file defines structures used by the implementation of hub SM on host.
+ *
+ *END************************************************************************/
 #ifndef __usb_host_hub_sm_h__
 #define __usb_host_hub_sm_h__
 
 /*
-** Following structs contain all states and pointers
-** used by the application to control/operate devices.
-*/
+ ** Following structs contain all states and pointers
+ ** used by the application to control/operate devices.
+ */
 #define MAX_HUB_PORT_NUMBER         (7)
 
-#define HUB_PORT_ATTACHED           (0x01) /* flag informs that application started attach process */
-#define HUB_PORT_REMOVABLE          (0x02) /* flag informs that application started attach process */
-#define HUB_PORT_BEGINRESET         (0x04)
+#define HUB_PORT_RESET_TIMES        (2)
+
+#define HUB_PORT_ATTACHED           (0x01u) /* flag informs that application started attach process */
+#define HUB_PORT_REMOVABLE          (0x02u) /* flag informs that application started attach process */
+#define HUB_PORT_BEGINRESET         (0x04u)
 
 typedef struct hub_device_port_struct
 {
     /* status read from GetPortStatus transfer */
-    uint32_t                          status;
-    uint8_t                           app_status;
+    void* hub_handle;
+    uint32_t status;
+    uint8_t port_no;
+    uint8_t port_sm_state;
+    uint8_t app_status;
+    uint8_t port_reset;
+    uint8_t in_handle;
 } hub_port_struct_t;
 
 typedef enum
@@ -77,6 +84,27 @@ typedef enum
     HUB_NONE
 } hub_state_t;
 
+typedef enum
+{
+    HUB_PORT_IDLE,
+    HUB_PORT_WAIT_C_PORT_CONNECTION,
+    HUB_PORT_GET_C_PORT_CONNECTION,
+    HUB_PORT_GET_AGAIN_C_PORT_CONNECTION,
+    HUB_PORT_CHECK_PORT_CONNECTION,
+    HUB_PORT_DEAL_C_PORT_CONNECTION,
+    HUB_PORT_WAIT_C_PORT_ENABLE,
+    HUB_PORT_GET_C_PORT_ENABLE,
+    HUB_PORT_DEAL_C_PORT_ENABLE,
+    HUB_PORT_WAIT_C_PORT_OVER_CURRENT,
+    HUB_PORT_GET_C_PORT_OVER_CURRENT,
+    HUB_PORT_DEAL_C_PORT_OVER_CURRENT,
+    HUB_PORT_SEND_PORT_RESET,
+    HUB_PORT_WAIT_C_PORT_RESET,
+    HUB_PORT_GET_C_PORT_RESET,
+    HUB_PORT_CHECK_C_PORT_RESET,
+    HUB_PORT_DEAL_C_PORT_RESET,
+    HUB_PORT_NONE
+} hub_port_state_t;
 
 typedef struct hub_device_struct
 {
@@ -84,24 +112,26 @@ typedef struct hub_device_struct
     usb_host_handle                  host_handle; 
     usb_device_instance_handle       dev_handle;
     usb_interface_descriptor_handle  intf_handle;
-    class_handle                     class_handle; /* class-specific info */
+    usb_class_handle                 class_handle; /* class-specific info */
     hub_state_t                      state;  /* attach/detach state */
     /* below the hub specific data */
     os_event_handle                  hub_event; 
     int32_t                           port_iterator;
     hub_port_struct_t*               hub_ports;
+    hub_port_struct_t*               hub_port_handle;
     void*                            device_list_ptr;
     uint8_t*                         hub_descriptor_buffer;
     uint8_t*                         port_status_buffer;
     uint8_t*                         bit_map_buffer;
+    uint16_t                         total_think_time;
     uint8_t                          hub_level;
-    uint8_t                            hub_port_nr;
+    uint8_t                          hub_port_nr;
     uint8_t                          to_be_deleted;
     uint8_t                          in_control;
     uint8_t                          in_recv;
     uint8_t                          opened_interface;
-	uint8_t                          speed;
-	uint8_t                          hs_hub_no;
+    uint8_t                          speed;
+    uint8_t                          hs_hub_no;
     uint8_t                          hs_port_no;
 } hub_device_struct_t;
 
@@ -111,10 +141,11 @@ typedef struct hub_device_struct
 /* List of Function Prototypes */
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void usb_host_hub_device_event(usb_device_instance_handle, usb_interface_descriptor_handle, uint32_t);
+    usb_status usb_host_hub_device_event(usb_device_instance_handle dev_handle, usb_interface_descriptor_handle intf_handle, uint32_t event_code);
 
 #ifdef __cplusplus
 }

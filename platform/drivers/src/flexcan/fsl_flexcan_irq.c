@@ -29,11 +29,12 @@
  */
 
 #include "fsl_flexcan_driver.h"
+#if FSL_FEATURE_SOC_FLEXCAN_COUNT
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
-#if (HW_CAN_INSTANCE_COUNT > 0U)
+#if (CAN_INSTANCE_COUNT > 0U)
 /* Implementation of CAN0 handler named in startup code. */
 void CAN0_ORed_Message_buffer_IRQHandler(void)
 {
@@ -59,7 +60,7 @@ void CAN0_Wake_Up_IRQHandler(void)
 }
 #endif
 
-#if (HW_CAN_INSTANCE_COUNT > 1U)
+#if (CAN_INSTANCE_COUNT > 1U)
 /* Implementation of CAN1 handler named in startup code. */
 void CAN1_ORed_Message_buffer_IRQHandler(void)
 {
@@ -83,6 +84,7 @@ void CAN1_Wake_Up_IRQHandler(void)
 {
     FLEXCAN_DRV_IRQHandler(1);
 }
+#endif
 #endif
 
 /*******************************************************************************

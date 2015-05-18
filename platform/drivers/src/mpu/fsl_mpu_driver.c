@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -33,6 +33,7 @@
 #include "fsl_mpu_driver.h"
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
+#if FSL_FEATURE_SOC_MPU_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -48,79 +49,27 @@
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : MPU_DRV_SetRegionValid
- * Description   : set a region  valid.
- * This function is used to set a region valid.
- *
- *END**************************************************************************/
-mpu_status_t MPU_DRV_SetRegionValid(uint32_t instance, mpu_region_num regionNum)
-{
-    assert(instance < HW_MPU_INSTANCE_COUNT);
-    
-    uint32_t baseAddr = g_mpuBaseAddr[instance];
-
-    MPU_HAL_SetRegionValidValue(baseAddr, regionNum, kMPURegionValid);
-    
-    return kStatus_MPU_Success;
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : MPU_DRV_RegionInit
- * Description   : MPU region init.
- * This function is used to initialize a MPU region.
- * Note: when writing to a region's word0~word3 will caused the region invalid
- * so the region must be set valid by manual.
- *END**************************************************************************/
-mpu_status_t MPU_DRV_RegionInit(uint32_t instance, mpu_region_config_t *regionConfigPtr)
-{
-    assert(instance < HW_MPU_INSTANCE_COUNT);
-    
-    uint32_t baseAddr = g_mpuBaseAddr[instance];
-    
-    uint32_t *accessControl = (uint32_t*)&(regionConfigPtr->accessRights);
-
-    MPU_HAL_SetRegionStartAddr(baseAddr, regionConfigPtr->regionNum, regionConfigPtr->startAddr);
-    
-    MPU_HAL_SetRegionEndAddr(baseAddr, regionConfigPtr->regionNum, regionConfigPtr->endAddr);
-    
-    MPU_HAL_SetAllMastersAlternateAccessRights(baseAddr, regionConfigPtr->regionNum, *accessControl);
-    
-    MPU_HAL_SetRegionValidValue(baseAddr, regionConfigPtr->regionNum, kMPURegionValid);
-    
-    return kStatus_MPU_Success;
-}
-
-/*FUNCTION**********************************************************************
- *
  * Function Name : MPU_DRV_Init
  * Description   : MPU module init.
  * This function is used to initialize MPU regions.
  *
  *END**************************************************************************/
-mpu_status_t MPU_DRV_Init(uint32_t instance, mpu_user_config_t *userConfigPtr)
+mpu_status_t MPU_DRV_Init(uint32_t instance, const mpu_user_config_t *userConfigPtr)
 {
-    assert(instance < HW_MPU_INSTANCE_COUNT);
-    
-    uint32_t baseAddr = g_mpuBaseAddr[instance];
-    
-    CLOCK_SYS_EnableMpuClock(instance);
-    
+    assert(instance < MPU_INSTANCE_COUNT);
+    MPU_Type * base = g_mpuBase[instance];
     if(!userConfigPtr)
     {
         return kStatus_MPU_NullArgument;
     }
-        
-    MPU_HAL_Init(baseAddr);
-    
+    CLOCK_SYS_EnableMpuClock(instance); 
+    MPU_HAL_Init(base);
     while(userConfigPtr)
     {
-        MPU_DRV_RegionInit(instance, &(userConfigPtr->regionConfig));
+        MPU_DRV_SetRegionConfig(instance, &(userConfigPtr->regionConfig));
         userConfigPtr = userConfigPtr->next;
     }
-    
-    MPU_HAL_Enable(baseAddr);
-    
+    MPU_HAL_Enable(base);
     return kStatus_MPU_Success;
 }
 
@@ -131,74 +80,120 @@ mpu_status_t MPU_DRV_Init(uint32_t instance, mpu_user_config_t *userConfigPtr)
  * This function is used to deinit MPU module---disable MPU and disable each region.
  *
  *END**************************************************************************/
-mpu_status_t MPU_DRV_Deinit(uint32_t instance)
+void MPU_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_MPU_INSTANCE_COUNT);
-    
-    uint32_t baseAddr = g_mpuBaseAddr[instance];
-    
-    MPU_HAL_Init(baseAddr);
-    
+    assert(instance < MPU_INSTANCE_COUNT);
+    MPU_Type * base = g_mpuBase[instance];
+    MPU_HAL_Init(base);
     CLOCK_SYS_DisableMpuClock(instance);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : MPU_DRV_SetRegionConfig
+ * Description   : MPU region init.
+ * This function is used to initialize a MPU region.
+ * Note: when writing to a region's word0~word3 will caused the region invalid
+ * so the region must be set valid by manual.
+ *END**************************************************************************/
+mpu_status_t MPU_DRV_SetRegionConfig(uint32_t instance, const mpu_region_config_t *regionConfigPtr)
+{
+    assert(instance < MPU_INSTANCE_COUNT);
+    MPU_Type * base = g_mpuBase[instance];
+    
+    MPU_HAL_SetRegionConfig(base, regionConfigPtr);
     
     return kStatus_MPU_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : MPU_DRV_GetRegionAccessPermission
- * Description   : Get region access permission.
- * This function is used to get a MPU region access permission of all masters.
+ * Function Name : MPU_DRV_SetLowMasterAccessRights
+ * Description   : Set low master access permission.
+ * This function is used to set low master access permission.
  *
  *END**************************************************************************/
-mpu_access_rights_t MPU_DRV_GetRegionAccessPermission(uint32_t instance, mpu_region_num regionNum)
+mpu_status_t MPU_DRV_SetLowMasterAccessRights(uint32_t instance, mpu_region_num_t regionNum, mpu_master_t masterNum, const mpu_low_masters_access_rights_t *accessRightsPtr)
 {
-    assert(instance < HW_MPU_INSTANCE_COUNT);
+    assert(instance < MPU_INSTANCE_COUNT);
+    MPU_Type * base = g_mpuBase[instance];
+    if(!accessRightsPtr)
+    {
+	return kStatus_MPU_NullArgument;
+    }
+    MPU_HAL_SetLowMasterAccessRightsByAlternateReg(base, regionNum, masterNum, accessRightsPtr);
     
-    uint32_t baseAddr = g_mpuBaseAddr[instance];
-    
-    uint32_t permissions = MPU_HAL_GetAllMastersAccessRights(baseAddr, regionNum);
-    
-    mpu_access_rights_t *accessRights = (mpu_access_rights_t*)(&permissions);
-
-    return (*accessRights);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : MPU_DRV_SetRegionAccessPermission
- * Description   : Set region access permission.
- * This function is used to Set a MPU region access permission for all masters.
- *
- *END**************************************************************************/
-mpu_status_t MPU_DRV_SetRegionAccessPermission(uint32_t instance, mpu_region_num regionNum, mpu_access_rights_t accessRights)
-{
-    assert(instance < HW_MPU_INSTANCE_COUNT);
-    
-    uint32_t baseAddr = g_mpuBaseAddr[instance];
-    
-    uint32_t *accessControl = (uint32_t*)(&(accessRights));
-    
-    MPU_HAL_SetAllMastersAlternateAccessRights(baseAddr, regionNum, *accessControl);
-
     return kStatus_MPU_Success;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : MPU_DRV_IsRegionValid
- * Description   : check if a region is valid.
- * This function is used to check if a region is valid.
+ * Function Name : MPU_DRV_SetHighMasterAccessRights
+ * Description   : Set high master access permission.
+ * This function is used to set high master access permission.
  *
  *END**************************************************************************/
-bool MPU_DRV_IsRegionValid(uint32_t instance, mpu_region_num regionNum)
+mpu_status_t MPU_DRV_SetHighMasterAccessRights(uint32_t instance, mpu_region_num_t regionNum, mpu_master_t masterNum, const mpu_high_masters_access_rights_t *accessRightsPtr)
 {
-    assert(instance < HW_MPU_INSTANCE_COUNT);
+    assert(instance < MPU_INSTANCE_COUNT);
+    MPU_Type * base = g_mpuBase[instance];
+    if(!accessRightsPtr)
+    {
+	return kStatus_MPU_NullArgument;
+    }
+    MPU_HAL_SetHighMasterAccessRightsByAlternateReg(base, regionNum, masterNum, accessRightsPtr);
     
-    uint32_t baseAddr = g_mpuBaseAddr[instance];
-    
-    return MPU_HAL_IsRegionValid(baseAddr, regionNum);
+    return kStatus_MPU_Success;
 }
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : MPU_DRV_SetRegionAddr
+ * Description   : Set region start address.
+ * This function is used to set region start address.
+ *
+ *END**************************************************************************/
+void MPU_DRV_SetRegionAddr(uint32_t instance, mpu_region_num_t regionNum, uint32_t startAddr, uint32_t endAddr)
+{
+    assert(instance < MPU_INSTANCE_COUNT);
+    MPU_Type * base = g_mpuBase[instance];
+    MPU_HAL_SetRegionAddr(base, regionNum, startAddr, endAddr);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : MPU_DRV_SetRegionValidCmd
+ * Description   : set a region valid or invalid.
+ * This function is used to set a region valid or invalid.
+ *
+ *END**************************************************************************/
+void MPU_DRV_SetRegionValidCmd(uint32_t instance, mpu_region_num_t regionNum, bool enable)
+{
+    assert(instance < MPU_INSTANCE_COUNT);
+    MPU_Type * base = g_mpuBase[instance];
+    MPU_HAL_SetRegionValidCmd(base, regionNum, enable);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : MPU_DRV_GetDetailErrorAccessInfo
+ * Description   : Gets error access detail information.
+ * Attention: It is possible for two masters access error in same cycle, so a array pointer is needed.
+ *
+ *END**************************************************************************/
+mpu_status_t MPU_DRV_GetDetailErrorAccessInfo(uint32_t instance,  mpu_access_err_info_t *errInfoArrayPtr)
+{
+    assert(instance < MPU_INSTANCE_COUNT);
+    MPU_Type * base = g_mpuBase[instance];    
+    if(!errInfoArrayPtr)
+    {
+        return kStatus_MPU_NullArgument;
+    }
+    MPU_HAL_GetDetailErrorAccessInfo(base, errInfoArrayPtr);
+    
+    return kStatus_MPU_Success;
+}
+#endif
 
 /*******************************************************************************
  * EOF

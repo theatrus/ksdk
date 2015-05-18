@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+* Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification,
@@ -28,6 +28,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "fsl_edma_hal.h"
+#if FSL_FEATURE_SOC_EDMA_COUNT
 
 /*******************************************************************************
  * Code
@@ -39,26 +40,26 @@
  * Description   : Initializes eDMA module to known state.
  *
  *END**************************************************************************/
-void EDMA_HAL_Init(uint32_t baseAddr)
+void EDMA_HAL_Init(DMA_Type * base)
 {
     uint32_t i;
 
     /* Clear the bit of CR register */
-    BW_DMA_CR_CLM(baseAddr, 0U);
-    BW_DMA_CR_CX(baseAddr, 0U);
-    BW_DMA_CR_ECX(baseAddr, 0U);
-    BW_DMA_CR_EDBG(baseAddr, 0U);
-    BW_DMA_CR_EMLM(baseAddr, 0U);
-    BW_DMA_CR_ERCA(baseAddr, 0U);
+    DMA_BWR_CR_CLM(base, 0U);
+    DMA_BWR_CR_CX(base, 0U);
+    DMA_BWR_CR_ECX(base, 0U);
+    DMA_BWR_CR_EDBG(base, 0U);
+    DMA_BWR_CR_EMLM(base, 0U);
+    DMA_BWR_CR_ERCA(base, 0U);
     /* If group count more than 1, need to set group priority. */
 #if (FSL_FEATURE_EDMA_CHANNEL_GROUP_COUNT > 1)
-    EDMA_HAL_SetGroupArbitrationMode(baseAddr,kEDMAGroupArbitrationFixedPriority);
-    EDMA_HAL_SetGroupPriority(baseAddr,kEDMAGroup0PriorityHighGroup1PriorityLow);
+    EDMA_HAL_SetGroupArbitrationMode(base,kEDMAGroupArbitrationFixedPriority);
+    EDMA_HAL_SetGroupPriority(base,kEDMAGroup0PriorityHighGroup1PriorityLow);
 #endif
 
     for (i = 0; i < FSL_FEATURE_EDMA_MODULE_CHANNEL; i++)
     {
-        EDMA_HAL_HTCDClearReg(baseAddr, i);
+        EDMA_HAL_HTCDClearReg(base, i);
     }
 }
 
@@ -68,10 +69,10 @@ void EDMA_HAL_Init(uint32_t baseAddr)
  * Description   : Cancels the remaining data transfer.
  *
  *END**************************************************************************/
-void EDMA_HAL_CancelTransfer(uint32_t baseAddr)
+void EDMA_HAL_CancelTransfer(DMA_Type * base)
 {
-    BW_DMA_CR_CX(baseAddr, 1U);
-    while (BR_DMA_CR_CX(baseAddr))
+    DMA_BWR_CR_CX(base, 1U);
+    while (DMA_BRD_CR_CX(base))
     {}
 }
 
@@ -81,10 +82,10 @@ void EDMA_HAL_CancelTransfer(uint32_t baseAddr)
  * Description   : Cancels the remaining data transfer and treat it as error.
  *
  *END**************************************************************************/
-void EDMA_HAL_ErrorCancelTransfer(uint32_t baseAddr)
+void EDMA_HAL_ErrorCancelTransfer(DMA_Type * base)
 {
-    BW_DMA_CR_ECX(baseAddr, 1U);
-    while (BR_DMA_CR_ECX(baseAddr))
+    DMA_BWR_CR_ECX(base, 1U);
+    while (DMA_BRD_CR_ECX(base))
     {}
 }
 
@@ -95,18 +96,18 @@ void EDMA_HAL_ErrorCancelTransfer(uint32_t baseAddr)
  * Description   : Configures the priority for group 0 and group 1.
  *
  *END**************************************************************************/
-void EDMA_HAL_SetGroupPriority(uint32_t baseAddr, edma_group_priority_t groupPriority)
+void EDMA_HAL_SetGroupPriority(DMA_Type * base, edma_group_priority_t groupPriority)
 {
 
     if (groupPriority == kEDMAGroup0PriorityLowGroup1PriorityHigh)
     {
-        BW_DMA_CR_GRP0PRI(baseAddr, 0U);
-        BW_DMA_CR_GRP1PRI(baseAddr, 1U);
+        DMA_BWR_CR_GRP0PRI(base, 0U);
+        DMA_BWR_CR_GRP1PRI(base, 1U);
     }
     else
     {
-        BW_DMA_CR_GRP0PRI(baseAddr, 1U);
-        BW_DMA_CR_GRP1PRI(baseAddr, 0U);
+        DMA_BWR_CR_GRP0PRI(base, 1U);
+        DMA_BWR_CR_GRP1PRI(base, 0U);
     }
 
 }
@@ -117,46 +118,66 @@ void EDMA_HAL_SetGroupPriority(uint32_t baseAddr, edma_group_priority_t groupPri
  * Description   : Enable/Disable error interrupt for channels.
  *
  *END**************************************************************************/
-void EDMA_HAL_SetErrorIntCmd(uint32_t baseAddr, bool enable, edma_channel_indicator_t channel)
+void EDMA_HAL_SetErrorIntCmd(DMA_Type * base, bool enable, edma_channel_indicator_t channel)
 {
 
     if (enable)
     {
-        HW_DMA_SEEI_WR(baseAddr, channel);
+        DMA_WR_SEEI(base, channel);
     }
     else
     {
-        HW_DMA_CEEI_WR(baseAddr, channel);
+        DMA_WR_CEEI(base, channel);
     }
 }
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : EDMA_HAL_GetErrorStatus
+ * Description   : Get EDMA error status.
+ *
+ *END**************************************************************************/
+edma_error_status_all_t EDMA_HAL_GetErrorStatus(DMA_Type * base)
+{
+    uint32_t val = DMA_RD_ES(base);
+    edma_error_status_all_t status;
+    status.destinationBusError = (bool)(val & DMA_ES_DBE_MASK);
+    status.sourceBusError = (bool)((val & DMA_ES_SBE_MASK) >> DMA_ES_SBE_SHIFT);
+    status.scatterOrGatherConfigurationError = (bool)
+        ((val & DMA_ES_SGE_MASK) >> DMA_ES_SGE_SHIFT);
+    status.nbyteOrCiterConfigurationError = (bool)
+        ((val & DMA_ES_NCE_MASK) >> DMA_ES_NCE_SHIFT);
+    status.destinationOffsetError = (bool)((val & DMA_ES_DOE_MASK) >> DMA_ES_DOE_SHIFT);
+    status.destinationAddressError = (bool)((val & DMA_ES_DAE_MASK) >> DMA_ES_DAE_SHIFT);
+    status.sourceOffsetError = (bool)((val & DMA_ES_SOE_MASK) >> DMA_ES_SOE_SHIFT);
+    status.sourceAddressError = (bool)((val & DMA_ES_SAE_MASK) >> DMA_ES_SAE_SHIFT);
+    status.errorChannel = (uint8_t)((val & DMA_ES_ERRCHN_MASK) >> DMA_ES_ERRCHN_SHIFT);
+    status.channelPriorityError = (bool)((val & DMA_ES_CPE_MASK) >> DMA_ES_CPE_SHIFT);
+#if FSL_FEATURE_EDMA_CHANNEL_GROUP_COUNT > 1
+    status.groupPriorityError = (bool)((val & DMA_ES_GPE_MASK) >> DMA_ES_GPE_SHIFT);
+#endif
+    status.transferCancelledError = (bool)((val & DMA_ES_ECX_MASK) >> DMA_ES_ECX_SHIFT);
+    status.orOfAllError = (bool)((val & DMA_ES_VLD_MASK) >> DMA_ES_VLD_SHIFT);
+    return status;
+}
+
 /*FUNCTION**********************************************************************
  *
  * Function Name : EDMA_HAL_SetDmaRequestCmd
  * Description   : Enable/Disable dma request for channel or all channels.
  *
  *END**************************************************************************/
-void EDMA_HAL_SetDmaRequestCmd(uint32_t baseAddr, edma_channel_indicator_t channel,bool enable)
+void EDMA_HAL_SetDmaRequestCmd(DMA_Type * base, edma_channel_indicator_t channel,bool enable)
 {
 
     if (enable)
     {
-        HW_DMA_SERQ_WR(baseAddr, channel);
+        DMA_WR_SERQ(base, channel);
     }
     else
     {
-        HW_DMA_CERQ_WR(baseAddr, channel);
+        DMA_WR_CERQ(base, channel);
     }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : EDMA_HAL_GetErrorIntCmd
- * Description   : Gets eDMA channel error interrupt enable status.
- *
- *END**************************************************************************/
-bool EDMA_HAL_GetErrorIntCmd(uint32_t baseAddr, uint32_t channel)
-{
-    return (bool)((HW_DMA_EEI_RD(baseAddr) >> channel) & 1U);
 }
 
 /*FUNCTION**********************************************************************
@@ -165,19 +186,19 @@ bool EDMA_HAL_GetErrorIntCmd(uint32_t baseAddr, uint32_t channel)
  * Description   : Set registers to 0 for hardware TCD of eDMA channel.
  *
  *END**************************************************************************/
-void EDMA_HAL_HTCDClearReg(uint32_t baseAddr,uint32_t channel)
+void EDMA_HAL_HTCDClearReg(DMA_Type * base,uint32_t channel)
 {
-    HW_DMA_TCDn_SADDR_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_SOFF_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_ATTR_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_NBYTES_MLNO_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_SLAST_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_DADDR_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_DOFF_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_CITER_ELINKNO_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_DLASTSGA_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_CSR_WR(baseAddr, channel, 0U);
-    HW_DMA_TCDn_BITER_ELINKNO_WR(baseAddr, channel, 0U);
+    DMA_WR_SADDR(base, channel, 0U);
+    DMA_WR_SOFF(base, channel, 0U);
+    DMA_WR_ATTR(base, channel, 0U);
+    DMA_WR_NBYTES_MLNO(base, channel, 0U);
+    DMA_WR_SLAST(base, channel, 0U);
+    DMA_WR_DADDR(base, channel, 0U);
+    DMA_WR_DOFF(base, channel, 0U);
+    DMA_WR_CITER_ELINKNO(base, channel, 0U);
+    DMA_WR_DLAST_SGA(base, channel, 0U);
+    DMA_WR_CSR(base, channel, 0U);
+    DMA_WR_BITER_ELINKNO(base, channel, 0U);
 }
 
 /*FUNCTION**********************************************************************
@@ -187,15 +208,15 @@ void EDMA_HAL_HTCDClearReg(uint32_t baseAddr,uint32_t channel)
  *
  *END**************************************************************************/
 void EDMA_HAL_HTCDSetAttribute(
-                uint32_t baseAddr, uint32_t channel,
+                DMA_Type * base, uint32_t channel,
                 edma_modulo_t srcModulo, edma_modulo_t destModulo,
                 edma_transfer_size_t srcTransferSize, edma_transfer_size_t destTransferSize)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
-    HW_DMA_TCDn_ATTR_WR(baseAddr, channel,
-            BF_DMA_TCDn_ATTR_SMOD(srcModulo) | BF_DMA_TCDn_ATTR_DMOD(destModulo) |
-            BF_DMA_TCDn_ATTR_SSIZE(srcTransferSize) | BF_DMA_TCDn_ATTR_DSIZE(destTransferSize));
+    DMA_WR_ATTR(base, channel,
+            DMA_ATTR_SMOD(srcModulo) | DMA_ATTR_DMOD(destModulo) |
+            DMA_ATTR_SSIZE(srcTransferSize) | DMA_ATTR_DSIZE(destTransferSize));
 
 }
 /*FUNCTION**********************************************************************
@@ -204,26 +225,26 @@ void EDMA_HAL_HTCDSetAttribute(
  * Description   : Configures the nbytes for eDMA channel.
  *
  *END**************************************************************************/
-void EDMA_HAL_HTCDSetNbytes(uint32_t baseAddr, uint32_t channel, uint32_t nbytes)
+void EDMA_HAL_HTCDSetNbytes(DMA_Type * base, uint32_t channel, uint32_t nbytes)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
-    if (BR_DMA_CR_EMLM(baseAddr))
+    if (DMA_BRD_CR_EMLM(base))
     {
-        if (!(BR_DMA_TCDn_NBYTES_MLOFFNO_SMLOE(baseAddr, channel) ||
-                                 BR_DMA_TCDn_NBYTES_MLOFFNO_DMLOE(baseAddr, channel)))
+        if (!(DMA_BRD_NBYTES_MLOFFNO_SMLOE(base, channel) ||
+                                 DMA_BRD_NBYTES_MLOFFNO_DMLOE(base, channel)))
         {
-            BW_DMA_TCDn_NBYTES_MLOFFNO_NBYTES(baseAddr, channel, nbytes);
+            DMA_BWR_NBYTES_MLOFFNO_NBYTES(base, channel, nbytes);
         }
         else
         {
-            BW_DMA_TCDn_NBYTES_MLOFFYES_NBYTES(baseAddr, channel, nbytes);
+            DMA_BWR_NBYTES_MLOFFYES_NBYTES(base, channel, nbytes);
         }
 
     }
     else
     {
-        BW_DMA_TCDn_NBYTES_MLNO_NBYTES(baseAddr, channel, nbytes);
+        DMA_WR_NBYTES_MLNO(base, channel, nbytes);
     }
 }
 
@@ -233,25 +254,25 @@ void EDMA_HAL_HTCDSetNbytes(uint32_t baseAddr, uint32_t channel, uint32_t nbytes
  * Description   : Get nbytes configuration data.
  *
  *END**************************************************************************/
-uint32_t EDMA_HAL_HTCDGetNbytes(uint32_t baseAddr, uint32_t channel)
+uint32_t EDMA_HAL_HTCDGetNbytes(DMA_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
-    if (BR_DMA_CR_EMLM(baseAddr))
+    if (DMA_BRD_CR_EMLM(base))
     {
-        if (BR_DMA_TCDn_NBYTES_MLOFFYES_SMLOE(baseAddr, channel) ||
-                BR_DMA_TCDn_NBYTES_MLOFFYES_DMLOE(baseAddr, channel))
+        if (DMA_BRD_NBYTES_MLOFFYES_SMLOE(base, channel) ||
+                DMA_BRD_NBYTES_MLOFFYES_DMLOE(base, channel))
         {
-            return BR_DMA_TCDn_NBYTES_MLOFFYES_NBYTES(baseAddr, channel);
+            return DMA_BRD_NBYTES_MLOFFYES_NBYTES(base, channel);
         }
         else
         {
-            return BR_DMA_TCDn_NBYTES_MLOFFNO_NBYTES(baseAddr, channel);
+            return DMA_BRD_NBYTES_MLOFFNO_NBYTES(base, channel);
         }
     }
     else
     {
-        return BR_DMA_TCDn_NBYTES_MLNO_NBYTES(baseAddr, channel);
+        return DMA_RD_NBYTES_MLNO(base, channel);
     }
 }
 
@@ -262,30 +283,30 @@ uint32_t EDMA_HAL_HTCDGetNbytes(uint32_t baseAddr, uint32_t channel)
  *
  *END**************************************************************************/
 void EDMA_HAL_HTCDSetMinorLoopOffset(
-                uint32_t baseAddr, uint32_t channel, edma_minorloop_offset_config_t *config)
+                DMA_Type * base, uint32_t channel, edma_minorloop_offset_config_t *config)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
     if ((config->enableSrcMinorloop == true) || (config->enableDestMinorloop == true))
     {
-        BW_DMA_CR_EMLM(baseAddr, true);
-        BW_DMA_TCDn_NBYTES_MLOFFYES_SMLOE(baseAddr, channel, config->enableSrcMinorloop);
-        BW_DMA_TCDn_NBYTES_MLOFFYES_DMLOE(baseAddr, channel, config->enableDestMinorloop);
-        BW_DMA_TCDn_NBYTES_MLOFFYES_MLOFF(baseAddr, channel, config->offset);
+        DMA_BWR_CR_EMLM(base, true);
+        DMA_BWR_NBYTES_MLOFFYES_SMLOE(base, channel, config->enableSrcMinorloop);
+        DMA_BWR_NBYTES_MLOFFYES_DMLOE(base, channel, config->enableDestMinorloop);
+        DMA_BWR_NBYTES_MLOFFYES_MLOFF(base, channel, config->offset);
     }
 }
 /*FUNCTION**********************************************************************
  *
  * Function Name : EDMA_HAL_HTCDSetScatterGatherLink
- * Description   : Configures the memory address for the next transfer TCD 
+ * Description   : Configures the memory address for the next transfer TCD
  * for the hardware TCD.
  *
  *END**************************************************************************/
 void EDMA_HAL_HTCDSetScatterGatherLink(
-                uint32_t baseAddr, uint32_t channel, edma_software_tcd_t *stcd)
+                DMA_Type * base, uint32_t channel, edma_software_tcd_t *stcd)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
-    BW_DMA_TCDn_CSR_ESG(baseAddr, channel, true);
-    BW_DMA_TCDn_DLASTSGA_DLASTSGA(baseAddr, channel, (uint32_t)stcd);
+    DMA_BWR_CSR_ESG(base, channel, true);
+    DMA_WR_DLAST_SGA (base, channel, (uint32_t)stcd);
 }
 
 /*FUNCTION**********************************************************************
@@ -295,44 +316,44 @@ void EDMA_HAL_HTCDSetScatterGatherLink(
  *
  *END**************************************************************************/
 void EDMA_HAL_HTCDSetChannelMinorLink(
-                uint32_t baseAddr, uint32_t channel, uint32_t linkChannel, bool enable)
+                DMA_Type * base, uint32_t channel, uint32_t linkChannel, bool enable)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
     if (enable)
     {
-        BW_DMA_TCDn_BITER_ELINKYES_ELINK(baseAddr, channel, enable);
-        BW_DMA_TCDn_BITER_ELINKYES_LINKCH(baseAddr, channel, linkChannel);
-        BW_DMA_TCDn_CITER_ELINKYES_ELINK(baseAddr, channel, enable);
-        BW_DMA_TCDn_CITER_ELINKYES_LINKCH(baseAddr, channel, linkChannel);
+        DMA_BWR_BITER_ELINKYES_ELINK(base, channel, enable);
+        DMA_BWR_BITER_ELINKYES_LINKCH(base, channel, linkChannel);
+        DMA_BWR_CITER_ELINKYES_ELINK(base, channel, enable);
+        DMA_BWR_CITER_ELINKYES_LINKCH(base, channel, linkChannel);
     }
     else
     {
-        BW_DMA_TCDn_BITER_ELINKNO_ELINK(baseAddr, channel, enable);
-        BW_DMA_TCDn_CITER_ELINKNO_ELINK(baseAddr, channel, enable);
+        DMA_BWR_BITER_ELINKNO_ELINK(base, channel, enable);
+        DMA_BWR_CITER_ELINKNO_ELINK(base, channel, enable);
     }
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : EDMA_HAL_HTCD_HTCDSetMajorCount
- * Description   : Sets the major iteration count according to minor loop 
+ * Description   : Sets the major iteration count according to minor loop
  * channel link setting.
  *
  *END**************************************************************************/
-void EDMA_HAL_HTCDSetMajorCount(uint32_t baseAddr, uint32_t channel, uint32_t count)
+void EDMA_HAL_HTCDSetMajorCount(DMA_Type * base, uint32_t channel, uint32_t count)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
-    if (BR_DMA_TCDn_BITER_ELINKNO_ELINK(baseAddr, channel))
+    if (DMA_BRD_BITER_ELINKNO_ELINK(base, channel))
     {
-        BW_DMA_TCDn_BITER_ELINKYES_BITER(baseAddr, channel, count);
-        BW_DMA_TCDn_CITER_ELINKYES_CITER(baseAddr, channel, count);
+        DMA_BWR_BITER_ELINKYES_BITER(base, channel, count);
+        DMA_BWR_CITER_ELINKYES_CITER(base, channel, count);
     }
     else
     {
-        BW_DMA_TCDn_BITER_ELINKNO_BITER(baseAddr, channel, count);
-        BW_DMA_TCDn_CITER_ELINKNO_CITER(baseAddr, channel, count);
+        DMA_BWR_BITER_ELINKNO_BITER(base, channel, count);
+        DMA_BWR_CITER_ELINKNO_CITER(base, channel, count);
     }
 }
 
@@ -343,64 +364,64 @@ void EDMA_HAL_HTCDSetMajorCount(uint32_t baseAddr, uint32_t channel, uint32_t co
  * channel link setting.
  *
  *END**************************************************************************/
-uint32_t EDMA_HAL_HTCDGetBeginMajorCount(uint32_t baseAddr, uint32_t channel)
+uint32_t EDMA_HAL_HTCDGetBeginMajorCount(DMA_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
-    if (BR_DMA_TCDn_BITER_ELINKNO_ELINK(baseAddr, channel))
+    if (DMA_BRD_BITER_ELINKNO_ELINK(base, channel))
     {
-        return BR_DMA_TCDn_BITER_ELINKYES_BITER(baseAddr, channel);
+        return DMA_BRD_BITER_ELINKYES_BITER(base, channel);
     }
     else
     {
-        return BR_DMA_TCDn_BITER_ELINKNO_BITER(baseAddr, channel);
-    }    
+        return DMA_BRD_BITER_ELINKNO_BITER(base, channel);
+    }
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : EDMA_HAL_HTCDGetCurrentMajorCount
- * Description   : Gets the current major iteration count according to minor 
+ * Description   : Gets the current major iteration count according to minor
  * loop channel link setting.
  *
  *END**************************************************************************/
-uint32_t EDMA_HAL_HTCDGetCurrentMajorCount(uint32_t baseAddr, uint32_t channel)
+uint32_t EDMA_HAL_HTCDGetCurrentMajorCount(DMA_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
-    if (BR_DMA_TCDn_BITER_ELINKNO_ELINK(baseAddr, channel))
+    if (DMA_BRD_BITER_ELINKNO_ELINK(base, channel))
     {
-        return BR_DMA_TCDn_CITER_ELINKYES_CITER(baseAddr, channel);
+        return DMA_BRD_CITER_ELINKYES_CITER(base, channel);
     }
     else
     {
-        return BR_DMA_TCDn_CITER_ELINKNO_CITER(baseAddr, channel);
-    }    
+        return DMA_BRD_CITER_ELINKNO_CITER(base, channel);
+    }
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : EDMA_HAL_HTCDGetUnfinishedBytes
- * Description   : Get the bytes number of bytes haven't been transferred for 
+ * Description   : Get the bytes number of bytes haven't been transferred for
  * this hardware TCD.
  *
  *END**************************************************************************/
-uint32_t EDMA_HAL_HTCDGetUnfinishedBytes(uint32_t baseAddr, uint32_t channel)
+uint32_t EDMA_HAL_HTCDGetUnfinishedBytes(DMA_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
     uint32_t nbytes;
 
-    nbytes = EDMA_HAL_HTCDGetNbytes(baseAddr, channel);
+    nbytes = EDMA_HAL_HTCDGetNbytes(base, channel);
 
-    if (BR_DMA_TCDn_BITER_ELINKNO_ELINK(baseAddr, channel))
+    if (DMA_BRD_BITER_ELINKNO_ELINK(base, channel))
     {
-        return (BR_DMA_TCDn_CITER_ELINKYES_CITER(baseAddr, channel) * nbytes);
+        return (DMA_BRD_CITER_ELINKYES_CITER(base, channel) * nbytes);
 
     }
     else
     {
-        return (BR_DMA_TCDn_CITER_ELINKNO_CITER(baseAddr, channel) * nbytes);
+        return (DMA_BRD_CITER_ELINKNO_CITER(base, channel) * nbytes);
 
     }
 }
@@ -412,15 +433,15 @@ uint32_t EDMA_HAL_HTCDGetUnfinishedBytes(uint32_t baseAddr, uint32_t channel)
  * hardware TCD.
  *
  *END**************************************************************************/
-uint32_t EDMA_HAL_HTCDGetFinishedBytes(uint32_t baseAddr, uint32_t channel)
+uint32_t EDMA_HAL_HTCDGetFinishedBytes(DMA_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
     uint32_t nbytes, begin_majorcount, current_majorcount;
 
-    nbytes = EDMA_HAL_HTCDGetNbytes(baseAddr, channel);
-    begin_majorcount = EDMA_HAL_HTCDGetBeginMajorCount(baseAddr,channel);
-    current_majorcount = EDMA_HAL_HTCDGetCurrentMajorCount(baseAddr,channel);
+    nbytes = EDMA_HAL_HTCDGetNbytes(base, channel);
+    begin_majorcount = EDMA_HAL_HTCDGetBeginMajorCount(base,channel);
+    current_majorcount = EDMA_HAL_HTCDGetCurrentMajorCount(base,channel);
 
     return ((begin_majorcount - current_majorcount) * nbytes);
 }
@@ -448,26 +469,26 @@ void EDMA_HAL_STCDSetAttribute(
  * Description   : Configures the nbytes for software TCD
  *
  *END**************************************************************************/
-void EDMA_HAL_STCDSetNbytes(uint32_t baseAddr, edma_software_tcd_t *stcd, uint32_t nbytes)
+void EDMA_HAL_STCDSetNbytes(DMA_Type * base, edma_software_tcd_t *stcd, uint32_t nbytes)
 {
     assert(stcd);
 
-    if (BR_DMA_CR_EMLM(baseAddr))
+    if (DMA_BRD_CR_EMLM(base))
     {
-        if (stcd->NBYTES.MLOFFNO | (DMA_NBYTES_MLOFFNO_SMLOE_MASK | DMA_NBYTES_MLOFFNO_DMLOE_MASK))
+        if (stcd->NBYTES | (DMA_NBYTES_MLOFFNO_SMLOE_MASK | DMA_NBYTES_MLOFFNO_DMLOE_MASK))
         {
-            stcd->NBYTES.MLOFFYES = (stcd->NBYTES.MLOFFYES & ~DMA_NBYTES_MLOFFYES_NBYTES_MASK) |
+            stcd->NBYTES = (stcd->NBYTES & ~DMA_NBYTES_MLOFFYES_NBYTES_MASK) |
                             DMA_NBYTES_MLOFFYES_NBYTES(nbytes);
         }
         else
         {
-            stcd->NBYTES.MLOFFNO = (stcd->NBYTES.MLOFFNO & ~DMA_NBYTES_MLOFFNO_NBYTES_MASK) |
+            stcd->NBYTES = (stcd->NBYTES & ~DMA_NBYTES_MLOFFNO_NBYTES_MASK) |
                              DMA_NBYTES_MLOFFNO_NBYTES(nbytes);
         }
     }
     else
     {
-        stcd->NBYTES.MLNO = (stcd->NBYTES.MLNO & ~DMA_NBYTES_MLNO_NBYTES_MASK) |
+        stcd->NBYTES = (stcd->NBYTES & ~DMA_NBYTES_MLNO_NBYTES_MASK) |
                          DMA_NBYTES_MLNO_NBYTES(nbytes);
     }
 
@@ -480,18 +501,18 @@ void EDMA_HAL_STCDSetNbytes(uint32_t baseAddr, edma_software_tcd_t *stcd, uint32
  *
  *END**************************************************************************/
 void EDMA_HAL_STCDSetMinorLoopOffset(
-                uint32_t baseAddr, edma_software_tcd_t *stcd, edma_minorloop_offset_config_t *config)
+                DMA_Type * base, edma_software_tcd_t *stcd, edma_minorloop_offset_config_t *config)
 {
     assert(stcd);
-    stcd->NBYTES.MLOFFYES = (stcd->NBYTES.MLOFFYES &
+    stcd->NBYTES = (stcd->NBYTES &
             ~(DMA_NBYTES_MLOFFYES_SMLOE_MASK | DMA_NBYTES_MLOFFYES_DMLOE_MASK)) |
             (((uint32_t)config->enableSrcMinorloop << DMA_NBYTES_MLOFFYES_SMLOE_SHIFT) |
             ((uint32_t)config->enableDestMinorloop << DMA_NBYTES_MLOFFYES_DMLOE_SHIFT));
 
     if ((config->enableSrcMinorloop == true) || (config->enableDestMinorloop == true))
     {
-        BW_DMA_CR_EMLM(baseAddr, true);
-        stcd->NBYTES.MLOFFYES = (stcd->NBYTES.MLOFFYES & ~DMA_NBYTES_MLOFFYES_MLOFF_MASK) |
+        DMA_BWR_CR_EMLM(base, true);
+        stcd->NBYTES = (stcd->NBYTES & ~DMA_NBYTES_MLOFFYES_MLOFF_MASK) |
                                     DMA_NBYTES_MLOFFYES_MLOFF(config->offset);
     }
 }
@@ -524,20 +545,20 @@ void EDMA_HAL_STCDSetChannelMinorLink(
 
     if (enable)
     {
-        stcd->BITER.ELINKYES = (stcd->BITER.ELINKYES & ~DMA_BITER_ELINKYES_ELINK_MASK) |
+        stcd->BITER = (stcd->BITER & ~DMA_BITER_ELINKYES_ELINK_MASK) |
                             ((uint32_t)enable << DMA_BITER_ELINKYES_ELINK_SHIFT);
-        stcd->BITER.ELINKYES = (stcd->BITER.ELINKYES & ~DMA_BITER_ELINKYES_LINKCH_MASK) |
+        stcd->BITER = (stcd->BITER & ~DMA_BITER_ELINKYES_LINKCH_MASK) |
                             DMA_BITER_ELINKYES_LINKCH(linkChannel);
-        stcd->CITER.ELINKYES = (stcd->CITER.ELINKYES & ~DMA_CITER_ELINKYES_ELINK_MASK) |
+        stcd->CITER = (stcd->CITER & ~DMA_CITER_ELINKYES_ELINK_MASK) |
                             ((uint32_t)enable << DMA_CITER_ELINKYES_ELINK_SHIFT);
-        stcd->CITER.ELINKYES = (stcd->CITER.ELINKYES & ~DMA_CITER_ELINKYES_LINKCH_MASK) |
+        stcd->CITER = (stcd->CITER & ~DMA_CITER_ELINKYES_LINKCH_MASK) |
                             DMA_CITER_ELINKYES_LINKCH(linkChannel);
     }
     else
     {
-        stcd->BITER.ELINKNO = (stcd->BITER.ELINKNO & ~DMA_BITER_ELINKNO_ELINK_MASK) |
+        stcd->BITER = (stcd->BITER & ~DMA_BITER_ELINKNO_ELINK_MASK) |
                             ((uint32_t)enable << DMA_BITER_ELINKNO_ELINK_SHIFT);
-        stcd->CITER.ELINKNO = (stcd->CITER.ELINKNO & ~DMA_CITER_ELINKNO_ELINK_MASK) |
+        stcd->CITER = (stcd->CITER & ~DMA_CITER_ELINKNO_ELINK_MASK) |
                             ((uint32_t)enable << DMA_CITER_ELINKNO_ELINK_SHIFT);
     }
 }
@@ -551,18 +572,18 @@ void EDMA_HAL_STCDSetMajorCount(edma_software_tcd_t *stcd, uint32_t count)
 {
     assert(stcd);
 
-    if (stcd->BITER.ELINKNO & DMA_BITER_ELINKNO_ELINK_MASK)
+    if (stcd->BITER & DMA_BITER_ELINKNO_ELINK_MASK)
     {
-        stcd->BITER.ELINKYES = (stcd->BITER.ELINKYES & ~DMA_BITER_ELINKYES_BITER_MASK) |
+        stcd->BITER = (stcd->BITER & ~DMA_BITER_ELINKYES_BITER_MASK) |
                             DMA_BITER_ELINKYES_BITER(count);
-        stcd->CITER.ELINKYES = (stcd->CITER.ELINKYES & ~DMA_CITER_ELINKYES_CITER_MASK) |
+        stcd->CITER = (stcd->CITER & ~DMA_CITER_ELINKYES_CITER_MASK) |
                             DMA_CITER_ELINKYES_CITER(count);
     }
     else
     {
-        stcd->BITER.ELINKNO = (stcd->BITER.ELINKNO & ~DMA_BITER_ELINKNO_BITER_MASK) |
+        stcd->BITER = (stcd->BITER & ~DMA_BITER_ELINKNO_BITER_MASK) |
                             DMA_BITER_ELINKNO_BITER(count);
-        stcd->CITER.ELINKNO = (stcd->CITER.ELINKNO & ~DMA_CITER_ELINKNO_CITER_MASK) |
+        stcd->CITER = (stcd->CITER & ~DMA_CITER_ELINKNO_CITER_MASK) |
                             DMA_CITER_ELINKNO_CITER(count);
     }
 }
@@ -573,22 +594,22 @@ void EDMA_HAL_STCDSetMajorCount(edma_software_tcd_t *stcd, uint32_t count)
  * Description   : Copy the configuration data from the software TCD to hardware TCD.
  *
  *END**************************************************************************/
-void EDMA_HAL_PushSTCDToHTCD(uint32_t baseAddr, uint32_t channel, edma_software_tcd_t *stcd)
+void EDMA_HAL_PushSTCDToHTCD(DMA_Type * base, uint32_t channel, edma_software_tcd_t *stcd)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
     assert(stcd);
 
-    HW_DMA_TCDn_SADDR_WR(baseAddr, channel, stcd->SADDR);
-    HW_DMA_TCDn_SOFF_WR(baseAddr, channel, stcd->SOFF);
-    HW_DMA_TCDn_ATTR_WR(baseAddr, channel, stcd->ATTR);
-    HW_DMA_TCDn_NBYTES_MLNO_WR(baseAddr, channel, stcd->NBYTES.MLNO);
-    HW_DMA_TCDn_SLAST_WR(baseAddr, channel, stcd->SLAST);
-    HW_DMA_TCDn_DADDR_WR(baseAddr, channel, stcd->DADDR);
-    HW_DMA_TCDn_DOFF_WR(baseAddr, channel, stcd->DOFF);
-    HW_DMA_TCDn_CITER_ELINKYES_WR(baseAddr, channel, stcd->CITER.ELINKYES);
-    HW_DMA_TCDn_DLASTSGA_WR(baseAddr, channel, stcd->DLAST_SGA);
-    HW_DMA_TCDn_CSR_WR(baseAddr, channel, stcd->CSR);
-    HW_DMA_TCDn_BITER_ELINKYES_WR(baseAddr, channel, stcd->BITER.ELINKYES);
+    DMA_WR_SADDR(base, channel, stcd->SADDR);
+    DMA_WR_SOFF(base, channel, stcd->SOFF);
+    DMA_WR_ATTR(base, channel, stcd->ATTR);
+    DMA_WR_NBYTES_MLNO(base, channel, stcd->NBYTES);
+    DMA_WR_SLAST(base, channel, stcd->SLAST);
+    DMA_WR_DADDR(base, channel, stcd->DADDR);
+    DMA_WR_DOFF(base, channel, stcd->DOFF);
+    DMA_WR_CITER_ELINKYES(base, channel, stcd->CITER);
+    DMA_WR_DLAST_SGA(base, channel, stcd->DLAST_SGA);
+    DMA_WR_CSR(base, channel, stcd->CSR);
+    DMA_WR_BITER_ELINKYES(base, channel, stcd->BITER);
 }
 
 /*FUNCTION**********************************************************************
@@ -598,7 +619,7 @@ void EDMA_HAL_PushSTCDToHTCD(uint32_t baseAddr, uint32_t channel, edma_software_
  *
  *END**************************************************************************/
 edma_status_t EDMA_HAL_STCDSetBasicTransfer(
-            uint32_t baseAddr, edma_software_tcd_t *stcd, edma_transfer_config_t *config,
+            DMA_Type * base, edma_software_tcd_t *stcd, edma_transfer_config_t *config,
             bool enableInt, bool disableDmaRequest)
 {
     assert(stcd);
@@ -614,7 +635,7 @@ edma_status_t EDMA_HAL_STCDSetBasicTransfer(
 
     EDMA_HAL_STCDSetSrcLastAdjust(stcd, config->srcLastAddrAdjust);
     EDMA_HAL_STCDSetDestLastAdjust(stcd, config->destLastAddrAdjust);
-    EDMA_HAL_STCDSetNbytes(baseAddr, stcd, config->minorLoopCount);
+    EDMA_HAL_STCDSetNbytes(base, stcd, config->minorLoopCount);
     EDMA_HAL_STCDSetMajorCount(stcd, config->majorLoopCount);
 
     EDMA_HAL_STCDSetIntCmd(stcd, enableInt);
@@ -629,19 +650,20 @@ edma_status_t EDMA_HAL_STCDSetBasicTransfer(
  * Description   : Enables/Disables an asynchronous request in stop mode.
  *
  *END**************************************************************************/
-void EDMA_HAL_SetAsyncRequestInStopModeCmd(uint32_t baseAddr, uint32_t channel, bool enable)
+void EDMA_HAL_SetAsyncRequestInStopModeCmd(DMA_Type * base, uint32_t channel, bool enable)
 {
     assert(channel < FSL_FEATURE_EDMA_MODULE_CHANNEL);
 
-    if(enable) 
+    if(enable)
     {
-        HW_DMA_EARS_SET(baseAddr, 1U << channel);
+        DMA_SET_EARS(base, 1U << channel);
     }
     else
     {
-        HW_DMA_EARS_CLR(baseAddr, 1U << channel);
+        DMA_CLR_EARS(base, 1U << channel);
     }
 }
+#endif
 #endif
 /*******************************************************************************
  * EOF

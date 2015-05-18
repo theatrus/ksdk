@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 * 
-* Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
+* Copyright (c) 2008, 2013 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 * Copyright (c) 1989-2008 ARC International;
@@ -59,27 +59,12 @@ usb_status USB_HID_Requests(usb_setup_struct_t * setup_packet, uint8_t * *data, 
  /******************************************************************************
  * Types
  *****************************************************************************/
-#if HID_IMPLEMENT_QUEUING     
-/* structure to hold a request in the endpoint queue */
-typedef struct _hid_queue_struct 
-{
-    usb_device_handle                        handle;
-    uint8_t*                                 app_buff; /* buffer to send */
-    uint32_t                                 size; /* size of the transfer */
-    uint8_t                                  channel; 
-}hid_queue_struct_t;
-#endif
 
 /* USB class hid endpoint data */
 typedef struct _hid_endpoint_struct
 {
     uint8_t                                  endpoint; /* endpoint num */
     uint8_t                                  type;     /* type of endpoint (interrupt, bulk or isochronous) */ 
-#if HID_IMPLEMENT_QUEUING
-    uint8_t                                  bin_consumer;/* the num of queued elements */
-    uint8_t                                  bin_producer;/* the num of de-queued elements */
-    hid_queue_struct_t                       queue[HID_MAX_QUEUE_ELEMS]; /* queue data */  
-#endif
 }hid_endpoint_struct_t;
 
 /* contains the endpoint data for non control endpoints */
@@ -88,7 +73,7 @@ typedef struct _hid_endpoint_data_struct
     hid_endpoint_struct_t                    ep[MAX_HID_CLASS_EP_NUM];
 }hid_endpoint_data_struct_t;
 
-/* Strucutre holding HID class state information*/
+/* Structure holding HID class state information*/
 typedef struct hid_device_struct
 {
     usb_device_handle                            handle;

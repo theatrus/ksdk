@@ -30,13 +30,14 @@
  */
 
 #include "fsl_rnga_hal.h"
+#if FSL_FEATURE_SOC_RNG_COUNT
 /*!
  * @brief Get random data.
  *
  * This function is used to get a random data from RNGA
  *
  */
-rnga_status_t RNGA_HAL_GetRandomData(uint32_t baseAddr, uint32_t *data)
+rnga_status_t RNGA_HAL_GetRandomData(RNG_Type * base, uint32_t *data)
 {
     volatile rnga_output_reg_level_t oregLevel;
     uint16_t count = 0;
@@ -44,13 +45,17 @@ rnga_status_t RNGA_HAL_GetRandomData(uint32_t baseAddr, uint32_t *data)
     oregLevel = kRNGAOutputRegLevelNowords;
     while (oregLevel == kRNGAOutputRegLevelNowords)
     {
-        oregLevel = RNGA_HAL_GetOutputRegLevel(baseAddr);
+        oregLevel = RNGA_HAL_GetOutputRegLevel(base);
         count++;
         if (count == MAX_COUNT)
         {
             return kStatus_RNGA_Timeout;
         }
     }
-    *data = RNGA_HAL_ReadRandomData(baseAddr);
+    *data = RNGA_HAL_ReadRandomData(base);
     return kStatus_RNGA_Success;
 }
+#endif
+/*******************************************************************************
+ * EOF
+ *******************************************************************************/

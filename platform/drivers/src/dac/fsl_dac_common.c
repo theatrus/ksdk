@@ -35,10 +35,10 @@
  ******************************************************************************/
 
 /* Table of base addresses for DAC instances. */
-const uint32_t g_dacBaseAddr[] = DAC_BASE_ADDRS;
+DAC_Type * const g_dacBase[] = DAC_BASE_PTRS;
 
 /* Table to save DAC IRQ enum numbers defined in CMSIS header file. */
-const IRQn_Type g_dacIrqId[HW_DAC_INSTANCE_COUNT] = DAC_IRQS;
+const IRQn_Type g_dacIrqId[DAC_INSTANCE_COUNT] = DAC_IRQS;
 
 /*******************************************************************************
  * EOF

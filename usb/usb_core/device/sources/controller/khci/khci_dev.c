@@ -1,39 +1,39 @@
 /**HEADER**********************************************************************
-*
-* Copyright (c) 2009, 2013 - 2014 Freescale Semiconductor;
-* All Rights Reserved
-*
-*******************************************************************************
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: khci_dev.c$
-* $Version : 
-* $Date    : 
-*
-* Comments:
-*
-*   This file contains the main usbfs USB Device Controller interface
-*   functions.
-*
-*END************************************************************************/
+ *
+ * Copyright (c) 2009, 2013 - 2015 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ *******************************************************************************
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: khci_dev.c$
+ * $Version :
+ * $Date    :
+ *
+ * Comments:
+ *
+ *   This file contains the main usbfs USB Device Controller interface
+ *   functions.
+ *
+ *END************************************************************************/
 
 /******************************************************************************
  *               BUFFER DISCRIPTOR TABLE (BDT) DISCRIPTION                    *
  ******************************************************************************/
- /**
+/**
  * The USB-FS implements a Buffer Descriptor Table (BDT) in system memory. The
  * BDT resides on a 512 byte boundary in system memory and is pointed to by the
  * BDT Page Registers. Every endpoint direction requires two eight-byte Buffer
@@ -85,12 +85,11 @@
  *   |                                                                                                      |
  *    -------------------------------------------------------------------------------------------------------
  *
- * This Buffer Discriptor table is represented by the variable "BDT_BASE"
+ * This Buffer Descriptor table is represented by the variable "BDT_BASE"
  * defined in file usbfs_dev_main.h. Macros such as "BD_ADDR_RX" and
  * "BD_ADDR_TX" is used to manipulate the address field and Macros such as
  * BD_CTRL_RX and BD_CTRL_TX is used to manipulate the control fields.
  */
-
 
 /******************************************************************************
  * Includes
@@ -106,84 +105,87 @@
 #include "usb_otg_main.h"
 #include "usb_otg_private.h"
 #endif
-#define MAX_KHCI_DEV_NUM 1
 
 /****************************************************************************
  * Global Variables
  ****************************************************************************/
 static uint8_t *bdt;
+
+#if (FSL_FEATURE_USB_KHCI_USB_RAM == 0)
 #if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
 #if defined( __ICCARM__ )
     #pragma data_alignment=512
-    __no_init usb_device_khci_data_t g_khci_data;
+    __no_init uint8_t g_khci_bdt_buffer[512];
 #elif defined (__CC_ARM) || defined(__GNUC__)
-    __attribute__((aligned(512))) usb_device_khci_data_t g_khci_data;
+    __attribute__((aligned(512))) uint8_t g_khci_bdt_buffer[512];
 #else
     #error Unsupported compiler, please use IAR, Keil or arm gcc compiler and rebuild the project.
 #endif
+#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
+    uint8_t*                g_khci_bdt_ptr = NULL;
+#endif
+#endif
 
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+    static usb_device_khci_data_t g_khci_data;
 #elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
     usb_device_khci_data_t* g_khci_data_ptr = NULL;
 #endif
 
-
-
 static bool g_zero_pkt_send = FALSE;
 
-static usb_khci_dev_state_struct_t g_khci_dev[MAX_KHCI_DEV_NUM];
+static usb_khci_dev_state_struct_t g_khci_dev[USBCFG_DEV_KHCI_NUM];
 
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
 static uint8_t *_usb_khci_dev_swap_buf_ptr = NULL;
 #endif
 
-
-extern usb_status _usb_device_call_service(uint8_t,usb_event_struct_t*);
+extern usb_status _usb_device_call_service(uint8_t type, usb_event_struct_t* event);
 extern uint32_t soc_get_usb_base_address(uint8_t controller_id);
 
 #ifdef USBCFG_OTG
-extern usb_otg_handle *  g_usb_otg_handle;
+extern usb_otg_handle * g_usb_otg_handle;
 #endif
-extern uint8_t soc_get_usb_vector_number(uint8_t);
-
+extern uint8_t soc_get_usb_vector_number(uint8_t controller_id);
 #if USBCFG_DEV_DETACH_ENABLE
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : usb_dci_khci_detach
-*  Returned Value : void
-*  Comments       :
-*        this function is called if device known it's detached.
-*
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : usb_dci_khci_detach
+ *  Returned Value : void
+ *  Comments       :
+ *        this function is called if device known it's detached.
+ *
+ *END*-----------------------------------------------------------------*/
 void usb_dci_khci_detach(void)
 {
     usb_event_struct_t event;
     usb_khci_dev_state_struct_t* state_ptr;
     state_ptr = (usb_khci_dev_state_struct_t*)(&g_khci_dev[0]);
-    
-    /* Initialize the event strucutre to be passed to the upper layer*/
+
+    /* Initialize the event structure to be passed to the upper layer*/
     event.handle = (usb_device_handle)state_ptr->upper_layer_handle;
     event.ep_num = 0;
     event.setup = 0;
     event.direction = 0;
- 
+
     /* propagate control to upper layers for processing */
     _usb_device_call_service(USB_SERVICE_DETACH, &event);
 }
 #endif
 
 /*FUNCTION*-------------------------------------------------------------
-*
-*  Function Name  : usb_dci_khci_free_xd
-*  Returned Value : void
-*  Comments       :
-*        Enqueues a XD onto the free XD ring.
-*
-*END*-----------------------------------------------------------------*/
+ *
+ *  Function Name  : usb_dci_khci_free_xd
+ *  Returned Value : void
+ *  Comments       :
+ *        Enqueues a XD onto the free XD ring.
+ *
+ *END*-----------------------------------------------------------------*/
 void usb_dci_khci_free_xd
 (
-    usb_device_handle  handle,
+    usb_device_handle handle,
     /* [IN] the dTD to enqueue */
-    xd_struct_t*       xd_ptr
+    xd_struct_t* xd_ptr
 )
 { /* Body */
     usb_khci_dev_state_struct_t* usb_dev_ptr = (usb_khci_dev_state_struct_t*)handle;
@@ -208,12 +210,12 @@ void usb_dci_khci_free_xd
     }
     usb_dev_ptr->xd_tail = xd_ptr;
     xd_ptr->next = NULL;
-    usb_dev_ptr->xd_entries ++;
+    usb_dev_ptr->xd_entries++;
 
     OS_Unlock();
 } /* Endbody */
 
- /*FUNCTION*-------------------------------------------------------------
+/*FUNCTION*-------------------------------------------------------------
  *
  *  Function Name  : usb_dci_khci_get_xd
  *  Returned Value : void
@@ -225,15 +227,15 @@ usb_status usb_dci_khci_get_xd
 (
     usb_device_handle handle,
     /* [IN] the dTD to enqueue */
-    xd_struct_t**      xd_ptr_ptr
+    xd_struct_t** xd_ptr_ptr
 )
-{   /* Body */
-    usb_khci_dev_state_struct_t*   usb_dev_ptr = handle;
-    
+{ /* Body */
+    usb_khci_dev_state_struct_t* usb_dev_ptr = (usb_khci_dev_state_struct_t*)handle;
+
     /* This function can be called from any context, and it needs mutual
-       exclusion with itself.*/
+     exclusion with itself.*/
     OS_Lock();
-    
+
     /* Get a transfer descriptor for the specified endpoint 
      ** and direction 
      */
@@ -259,12 +261,12 @@ usb_status usb_dci_khci_get_xd
 } /* Endbody */
 
 /**************************************************************************//*!
-*
-* @name        : usb_dci_khci_init_xd
-* @brief       : initialize the xd.
-* @param handle: Handle to USB Device to be filled
-* @return   USB_OK on successful.
-******************************************************************************/
+ *
+ * @name        : usb_dci_khci_init_xd
+ * @brief       : initialize the xd.
+ * @param handle: Handle to USB Device to be filled
+ * @return   USB_OK on successful.
+ ******************************************************************************/
 usb_status usb_dci_khci_init_xd
 (
     /* [IN] the USB device handle */
@@ -272,23 +274,25 @@ usb_status usb_dci_khci_init_xd
 )
 {
     usb_khci_dev_state_struct_t* usb_dev_ptr = (usb_khci_dev_state_struct_t*)handle;
-    xd_struct_t*                 xd_ptr;
-    uint32_t                     j;
+    xd_struct_t* xd_ptr;
+    uint32_t j;
 
 #if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
-    usb_dev_ptr->setup_buff = (uint8_t *) g_khci_data.setup_packet;   
-    usb_dev_ptr->xd_head = usb_dev_ptr->xd_base = (xd_struct_t*) g_khci_data.xd_base;
+    usb_dev_ptr->setup_buff = (uint8_t *)(&g_khci_data.setup_packet);
+    usb_dev_ptr->xd_head = usb_dev_ptr->xd_base = (xd_struct_t*)(&g_khci_data.xd_base);
 #elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    usb_dev_ptr->setup_buff = (uint8_t *) g_khci_data_ptr->setup_packet;   
+    usb_dev_ptr->setup_buff = (uint8_t *) g_khci_data_ptr->setup_packet;
     usb_dev_ptr->xd_head = usb_dev_ptr->xd_base = (xd_struct_t*) g_khci_data_ptr->xd_base;
 #endif
-
+#if FSL_FEATURE_USB_KHCI_USB_RAM
+    usb_dev_ptr->setup_buff = (uint8_t *)(usb_hal_khci_get_usbram_add(usb_dev_ptr->usbRegBase) + 480);
+#endif
     usb_dev_ptr->xd_entries = USBCFG_DEV_MAX_XDS;
 
-    /* Enqueue all the XDs */   
-    xd_ptr = (xd_struct_t*) usb_dev_ptr->xd_base;
+    /* Enqueue all the XDs */
+    xd_ptr = (xd_struct_t*)usb_dev_ptr->xd_base;
 
-    for (j = 0; j < USBCFG_DEV_MAX_XDS - 1; j++) 
+    for (j = 0; j < USBCFG_DEV_MAX_XDS - 1; j++)
     {
         xd_ptr->next = xd_ptr + 1;
         //usb_dci_khci_free_xd(usb_dev_ptr, xd_ptr);
@@ -298,16 +302,14 @@ usb_status usb_dci_khci_init_xd
     usb_dev_ptr->xd_tail = xd_ptr;
 
     return USB_OK;
-}  
-
+}
 
 /*****************************************************************************
  * Local Functions
  *****************************************************************************/
- /*****************************************************************************
+/*****************************************************************************
  * Local Functions
  *****************************************************************************/
-
 
 /******************************************************************************
  *
@@ -325,20 +327,20 @@ static void _usb_khci_next_setup_token_prep
 )
 {
     xd_struct_t* xd_ptr_temp;
-    usb_dci_khci_get_xd (state_ptr, &xd_ptr_temp);
+    usb_dci_khci_get_xd(state_ptr, &xd_ptr_temp);
     /* prepare XD queue for RECV CONTROL ENDPOINT*/
     if (state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_buf_odd == 0x0)
     {
         //BD_ADDR_RX(USB_CONTROL_ENDPOINT, state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_buf_odd) =
         //    USB_LONG_LE_TO_HOST((uint32_t)state_ptr->setup_buff);
-        usb_hal_khci_bdt_set_address( (uint32_t)bdt, USB_CONTROL_ENDPOINT, USB_RECV, 0, (uint32_t)state_ptr->setup_buff);
+        usb_hal_khci_bdt_set_address((uint32_t )bdt, USB_CONTROL_ENDPOINT, USB_RECV, 0, (uint32_t )state_ptr->setup_buff);
         xd_ptr_temp->wstartaddress = state_ptr->setup_buff;
     }
     else
     {
         //BD_ADDR_RX(USB_CONTROL_ENDPOINT, state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_buf_odd) =
         //    USB_LONG_LE_TO_HOST((uint32_t)state_ptr->setup_buff+ SETUP_PACKET_LENGTH);
-        usb_hal_khci_bdt_set_address( (uint32_t)bdt, USB_CONTROL_ENDPOINT, USB_RECV, 1, (uint32_t)(state_ptr->setup_buff+SETUP_PACKET_LENGTH));
+        usb_hal_khci_bdt_set_address((uint32_t )bdt, USB_CONTROL_ENDPOINT, USB_RECV, 1, (uint32_t)(state_ptr->setup_buff+SETUP_PACKET_LENGTH));
         xd_ptr_temp->wstartaddress = state_ptr->setup_buff + SETUP_PACKET_LENGTH;
     }
     xd_ptr_temp->ep_num = USB_CONTROL_ENDPOINT;
@@ -352,11 +354,10 @@ static void _usb_khci_next_setup_token_prep
     state_ptr->ep_info[USB_CONTROL_ENDPOINT].recv_xd = xd_ptr_temp;
     /* toggle send buffer */
     //state_ptr->ep_info[USB_CONTROL_ENDPOINT].tx_buf_odd ^= 1;
-    
     /* configure data pid for setup token and give control to SEI*/
     state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_data0 = 0;
-    usb_hal_khci_bdt_set_control( (uint32_t)bdt, USB_CONTROL_ENDPOINT, USB_RECV, state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_buf_odd,
-                                 USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(SETUP_PACKET_LENGTH)| USB_BD_OWN | USB_BD_DTS | USB_BD_DATA01(state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_data0))));
+    usb_hal_khci_bdt_set_control((uint32_t )bdt, USB_CONTROL_ENDPOINT, USB_RECV, state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_buf_odd,
+        USB_LONG_LE_TO_HOST((uint32_t)((uint32_t)USB_BD_BC(SETUP_PACKET_LENGTH)| (uint32_t)USB_BD_OWN | (uint32_t)USB_BD_DTS | (uint32_t)USB_BD_DATA01(state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_data0))));
     //BD_CTRL_RX(USB_CONTROL_ENDPOINT, state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_buf_odd) =
     //USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(SETUP_PACKET_LENGTH)|
     //    USB_BD_OWN | USB_BD_DTS | USB_BD_DATA01(state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_data0)));
@@ -376,47 +377,47 @@ static void _usb_khci_next_setup_token_prep
  * @param buf_ptr:        buffer to receive in
  * @param buf_num_bytes:  number of bytes to read
  *
- * @return USB_OK         When Successfull
+ * @return USB_OK         When Successfully
  *****************************************************************************/
 static usb_status _usb_khci_ep_read
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_khci_dev_state_struct_t* state_ptr,
-     /*[IN]*/
+    /*[IN]*/
     uint8_t ep_num,
-     /*[OUT]*/
+    /*[OUT]*/
     uint8_t * buf_ptr,
-     /*[IN]*/
+    /*[IN]*/
     uint32_t buf_num_bytes
 )
-{   
+{
     OS_Lock();
-    
+
     /* USB data is directly transferred to App Buffer to Avoid one level of
      * memcpy. (i.e from Endpoint buffer to App buffer). So a hack here
      * is been provided. This hack stores the current endpoint buffer
-     * address to a variable and programes the buffer address in the BDT
+     * address to a variable and programs the buffer address in the BDT
      * as APP buffer. Later when TOKEN_DNE interrupt is received for this Token
      * this buffer address saved is restored. Please note that at present
      * App should not release the buffer passed till he gets a notification from
      * interrupt handler.
      */
-    
-    usb_hal_khci_bdt_set_address( (uint32_t)bdt, ep_num, USB_RECV, state_ptr->ep_info[ep_num].rx_buf_odd, (uint32_t)buf_ptr);
+
+    usb_hal_khci_bdt_set_address((uint32_t )bdt, ep_num, USB_RECV, state_ptr->ep_info[ep_num].rx_buf_odd, (uint32_t )buf_ptr);
     //BD_ADDR_RX(ep_num, state_ptr->ep_info[ep_num].rx_buf_odd) =
     //    USB_LONG_LE_TO_HOST((uint32_t)buf_ptr);
 
     /* Program number of bytes to be received and give
      * the Control to the SEI
      */
-    usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep_num, USB_RECV, state_ptr->ep_info[ep_num].rx_buf_odd,
-                                 USB_LONG_LE_TO_HOST(USB_BD_BC(buf_num_bytes) | USB_BD_OWN | USB_BD_DTS | USB_BD_DATA01(state_ptr->ep_info[ep_num].rx_data0)));
+    usb_hal_khci_bdt_set_control((uint32_t )bdt, ep_num, USB_RECV, state_ptr->ep_info[ep_num].rx_buf_odd,
+        USB_LONG_LE_TO_HOST(USB_BD_BC(buf_num_bytes) | USB_BD_OWN | USB_BD_DTS | USB_BD_DATA01(state_ptr->ep_info[ep_num].rx_data0)));
     //BD_CTRL_RX(ep_num, state_ptr->ep_info[ep_num].rx_buf_odd) =
     //    USB_LONG_LE_TO_HOST(USB_BD_BC(buf_num_bytes) |
     //        USB_BD_OWN | USB_BD_DTS | USB_BD_DATA01(state_ptr->ep_info[ep_num].rx_data0));
-    
+
     OS_Unlock();
-    
+
     usb_hal_khci_clr_token_busy(state_ptr->usbRegBase);
     return USB_OK;
 }
@@ -431,59 +432,59 @@ static usb_status _usb_khci_ep_read
  * @param ep_num:         endpoint number
  * @param buf_ptr:        buffer to send from
  * @param buf_num_bytes:  number of bytes to write
- * @param bytes_written_ptr: buffer that will  contian Number of bytes written
+ * @param bytes_written_ptr: buffer that will  contain Number of bytes written
  *                           to device.
  *
- * @return USB_OK         When Successfull
+ * @return USB_OK         When Successfully
  *****************************************************************************/
 static usb_status _usb_khci_ep_write
 (
     /*[IN]*/
-    usb_khci_dev_state_struct_t* state_ptr, 
+    usb_khci_dev_state_struct_t* state_ptr,
     /*[IN]*/
     uint8_t ep_num,
     /*[IN]*/
     uint8_t * buf_ptr,
     /*[IN]*/
     uint32_t buf_num_bytes,
-     /*[OUT]*/
-    uint32_t* bytes_written_ptr 
+    /*[OUT]*/
+    uint32_t* bytes_written_ptr
 )
 {
     uint16_t max_packet_size;
-  
+
     /* If the number of bytes to be sent is greater than the
      * maximum data that can be sent on the USB bus, then split the
      * transaction, into multiple transaction.
      */
     max_packet_size = state_ptr->ep_info[ep_num].max_packet_size;
-    
+
     if (buf_num_bytes > max_packet_size)
     {
         buf_num_bytes = max_packet_size;
     }
-    
+
     *bytes_written_ptr = buf_num_bytes;
-    
+
     /* Program the endpoint buffer address in BDT
      * from where DMA will pick the Data to be sent over USB bus.
      */
     //BD_ADDR_TX(ep_num, state_ptr->ep_info[ep_num].tx_buf_odd) =
     //    USB_LONG_LE_TO_HOST((uint32_t)buf_ptr);
-    usb_hal_khci_bdt_set_address( (uint32_t)bdt, ep_num, USB_SEND, state_ptr->ep_info[ep_num].tx_buf_odd, (uint32_t)buf_ptr);
+    usb_hal_khci_bdt_set_address((uint32_t )bdt, ep_num, USB_SEND, state_ptr->ep_info[ep_num].tx_buf_odd, (uint32_t )buf_ptr);
     /* Program the number of bytes to be sent in BDT and Give
-     * the onership to SEI
+     * the ownership to SEI
      */
     //BD_CTRL_TX(ep_num, state_ptr->ep_info[ep_num].tx_buf_odd) =
     //    USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(buf_num_bytes) |
     //        USB_BD_OWN | USB_BD_DTS | USB_BD_DATA01(state_ptr->ep_info[ep_num].tx_data0)));
-    usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep_num, USB_SEND, state_ptr->ep_info[ep_num].tx_buf_odd,
-                                 USB_LONG_LE_TO_HOST(USB_BD_BC(buf_num_bytes) | USB_BD_OWN | USB_BD_DTS | USB_BD_DATA01(state_ptr->ep_info[ep_num].tx_data0)));
-    
+    usb_hal_khci_bdt_set_control((uint32_t )bdt, ep_num, USB_SEND, state_ptr->ep_info[ep_num].tx_buf_odd,
+        USB_LONG_LE_TO_HOST(USB_BD_BC(buf_num_bytes) | USB_BD_OWN | USB_BD_DTS | USB_BD_DATA01(state_ptr->ep_info[ep_num].tx_data0)));
+
     usb_hal_khci_clr_token_busy(state_ptr->usbRegBase);
     return USB_OK;
 }
-    
+
 /**************************************************************************//*!
  *
  * @name  _usb_khci_reset_ep_state
@@ -492,37 +493,37 @@ static usb_status _usb_khci_ep_write
  *        Initialization
  *
  * @param state_ptr: Device info Structure.
- * @return USB_OK         When Successfull
+ * @return USB_OK         When Successfully
  *****************************************************************************/
 static usb_status _usb_khci_reset_ep_state
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_khci_dev_state_struct_t* state_ptr
 )
 {
     //volatile USB_MemMapPtr usb_ptr;
-    uint32_t  ep;
+    uint32_t ep;
 
-    uint8_t   interrupt_enable;
-    
-    /* Clear all the error Status registor */
+    uint8_t interrupt_enable;
+
+    /* Clear all the error Status register */
     usb_hal_khci_clr_all_error_interrupts(state_ptr->usbRegBase);
-    
+
     /*Reset all ODD and Even BDTs to Zero */
     usb_hal_khci_set_oddrst(state_ptr->usbRegBase);
-    
+
     /* Initialize the address as zero in the Address register of USB IP*/
     usb_hal_khci_set_device_addr(state_ptr->usbRegBase, 0);
-    
+
     for (ep = 0; ep < USBCFG_DEV_MAX_ENDPOINTS; ep++)
     {
         /* Clearing all buffer descriptors for both ODD and even
          * for Both Receive and Transmit direction
          */
-        usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep, USB_RECV, 0, 0);
-        usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep, USB_RECV, 1, 0);
-        usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep, USB_SEND, 0, 0);
-        usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep, USB_SEND, 1, 0);
+        usb_hal_khci_bdt_set_control((uint32_t )bdt, ep, USB_RECV, 0, 0);
+        usb_hal_khci_bdt_set_control((uint32_t )bdt, ep, USB_RECV, 1, 0);
+        usb_hal_khci_bdt_set_control((uint32_t )bdt, ep, USB_SEND, 0, 0);
+        usb_hal_khci_bdt_set_control((uint32_t )bdt, ep, USB_SEND, 1, 0);
         //BD_CTRL_RX(ep, EVEN_BUFF) = 0;
         //BD_CTRL_RX(ep, ODD_BUFF) = 0;
 
@@ -539,18 +540,18 @@ static usb_status _usb_khci_reset_ep_state
         }
 #endif
         /* Initialize All End Point Control Registers with default value of 0*/
-        usb_hal_khci_endpoint_shut_down(state_ptr->usbRegBase,ep);
+        usb_hal_khci_endpoint_shut_down(state_ptr->usbRegBase, ep);
     }
-    
+
     g_zero_pkt_send = FALSE;
 
     /* Clear Reset Interrupt */
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_USBRST);
-    
+
     usb_hal_khci_clr_oddrst(state_ptr->usbRegBase);
-    
+
     /* initializing device address to default  address
-     * value for USB in Device strucutre.
+     * value for USB in Device structure.
      */
     state_ptr->device_address = 0;
 
@@ -558,7 +559,7 @@ static usb_status _usb_khci_reset_ep_state
     state_ptr->usb_state = USB_STATE_DEFAULT;
 
     /* Set Default device status */
-    state_ptr->usb_device_status = 
+    state_ptr->usb_device_status =
     (USBCFG_DEV_SELF_POWER << (USB_GET_STATUS_ATTRIBUTES_SELF_POWERED_SHIFT)) |
     (USBCFG_DEV_REMOTE_WAKEUP << (USB_GET_STATUS_ATTRIBUTES_REMOTE_WAKEUP_SHIFT));
 
@@ -576,7 +577,7 @@ static usb_status _usb_khci_reset_ep_state
     interrupt_enable |= INTR_ERROR;
 #endif
     usb_hal_khci_enable_interrupts(state_ptr->usbRegBase, interrupt_enable);
-    /* SEI if, has suspended packet trasmission resume packet transmission by
+    /* SEI if, has suspended packet transmission resume packet transmission by
      * clearing TXD_SUSPEND in CTL register.
      */
     usb_hal_khci_clr_token_busy(state_ptr->usbRegBase);
@@ -592,7 +593,7 @@ static usb_status _usb_khci_reset_ep_state
  * @brief : Service TOKEN DONE Interrupt when there is transmission of packet.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function OS_install_isr
+ *                   same structure which was passed in function OS_install_isr
  *                   During ISR installation.
  * @param ep_num:    endpoint number
  * @param buffer_ptr:Holds Data that is send to Host.
@@ -601,16 +602,16 @@ static usb_status _usb_khci_reset_ep_state
  *****************************************************************************/
 static usb_status _usb_khci_process_transmit_request
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_khci_dev_state_struct_t* state_ptr, 
     /*[IN]*/
     uint8_t ep_num,
-     /*[OUT]*/
+    /*[OUT]*/
     uint8_t** buffer_ptr
 )
 {
     xd_struct_t* xd_ptr = state_ptr->ep_info[ep_num].send_xd;
-    
+
     //USB_XD_QUEUE_GET_HEAD(&state_ptr->ep_info[ep_num].xd_queue_send,&xd_ptr);
 
     //*buffer_ptr = (uint8_t *) USB_LONG_LE_TO_HOST(BD_ADDR_TX(ep_num,
@@ -630,7 +631,7 @@ static usb_status _usb_khci_process_transmit_request
  * @brief : Service TOKEN DONE Interrupt when there is receive packet scenario.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function
+ *                   same structure which was passed in function
  *                   OS_install_isr during ISR installation.
  * @param ep_num:    endpoint number
  * @param stat:      status of last transaction.
@@ -641,22 +642,22 @@ static usb_status _usb_khci_process_transmit_request
  *****************************************************************************/
 static usb_status _usb_khci_process_receive_request
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_khci_dev_state_struct_t* state_ptr, 
     /*[IN]*/
     uint8_t ep_num, 
     /*[IN]*/
     uint8_t stat, 
-     /*[OUT]*/
+    /*[OUT]*/
     uint8_t** buffer_ptr
 )
 {
     xd_struct_t* xd_ptr = state_ptr->ep_info[ep_num].recv_xd;
-    
+
     //*buffer_ptr = (uint8_t *) USB_LONG_LE_TO_HOST(BD_ADDR_RX(ep_num,
     //    state_ptr->ep_info[ep_num].rx_buf_odd));
     //*buffer_ptr = (uint8_t *)USB_LONG_LE_TO_HOST(usb_hal_khci_bdt_get_address(usb_dev_ptr->usbRegBase, (uint32_t)bdt, ep_num, USB_RECV, state_ptr->ep_info[ep_num].rx_buf_odd));
-    
+
     usb_dci_khci_recv(state_ptr, xd_ptr);
     return USB_OK;
 }
@@ -670,14 +671,14 @@ static usb_status _usb_khci_process_receive_request
  * @brief : Service Error Interrupt.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function OS_install_isr
+ *                   same structure which was passed in function OS_install_isr
  *                   During ISR installation.
  *
  * @return NONE
  *****************************************************************************/
 static void _usb_khci_service_err_intr
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_khci_dev_state_struct_t* state_ptr 
 )
 {
@@ -689,36 +690,36 @@ static void _usb_khci_service_err_intr
 
     /* Clear the Error Interrupt */
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_ERROR);
-    
-    /* Get the Endpoint number on which the transaction occured.
+
+    /* Get the Endpoint number on which the transaction occurred.
      * This is (7 - 5) [3:0] bit in STAT register.
      */
     ep_num = usb_hal_khci_get_transfer_done_ep_number(state_ptr->usbRegBase);
-    
+
     /* Read the ERRSTAT register to determine the source of the error
-     * It is Andded with ERREN register to find out which of the
+     * It is Added with ERREN register to find out which of the
      * Error was enabled and report only the enabled error to the App layer
      */
     device_error = (uint8_t)(usb_hal_khci_get_error_interrupt_status(state_ptr->usbRegBase) &
-                             usb_hal_khci_get_error_interrupt_enable_status(state_ptr->usbRegBase));
-    
-    #ifdef _DEBUG
-        USB_PRINTF("USB Err: 0x%x\n", device_error);
-    #endif   
-    
-    /* Initialize the event strucutre to be passed to the upper layer*/
+    usb_hal_khci_get_error_interrupt_enable_status(state_ptr->usbRegBase));
+
+#if _DEBUG
+    USB_PRINTF("USB Err: 0x%x\n", device_error);
+#endif
+
+    /* Initialize the event structure to be passed to the upper layer*/
     event.handle = (usb_device_handle)state_ptr->upper_layer_handle;
     event.ep_num = ep_num;
     event.setup = FALSE;
     event.direction = (bool)(stat >> 3 & 1);
     event.buffer_ptr = (uint8_t*)device_error;
     event.len = ZERO_LENGTH;
-    
+
     /* Invoke Service Call */
     (void)_usb_device_call_service(USB_SERVICE_ERROR,&event);
-    
+
     /*clear all errors*/
-    usb_hal_khci_clr_all_error_interrupts(state_ptr->usbRegBase); 
+    usb_hal_khci_clr_all_error_interrupts(state_ptr->usbRegBase);
 }
 #endif
 
@@ -729,30 +730,31 @@ static void _usb_khci_service_err_intr
  * @brief : Service reset Interrupt.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function OS_install_isr
+ *                   same structure which was passed in function OS_install_isr
  *                   During ISR installation.
  *
  * @return NONE
  *****************************************************************************/
 static void _usb_khci_service_reset_intr
 (
-     /*[IN]*/
-    usb_khci_dev_state_struct_t* state_ptr 
+    /*[IN]*/
+    usb_khci_dev_state_struct_t* state_ptr
 )
 {
     uint8_t ep_num;
     //volatile USB_MemMapPtr usb_ptr;
     usb_event_struct_t event;
-    
+
+    state_ptr->is_reseting = 1;
     /* Clear Reset Interrupt */
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_USBRST);
-    
-    /* Get the Endpoint number on which the transaction occured.
+
+    /* Get the Endpoint number on which the transaction occurred.
      * This is (7 - 5) [3:0] bit in STAT register.
      */
     ep_num = usb_hal_khci_get_transfer_done_ep_number(state_ptr->usbRegBase);
 
-    /* Initialize the event strucutre to be passed to the upper layer*/
+    /* Initialize the event structure to be passed to the upper layer*/
     event.handle = (usb_device_handle)state_ptr->upper_layer_handle;
     event.ep_num = ep_num;
     event.setup = FALSE;
@@ -763,7 +765,7 @@ static void _usb_khci_service_reset_intr
      * Remember Upper layer i.e class driver invokes
      * usb_dci_khci_init_endpoint() as part of reset callback
      */
-    (void)_usb_device_call_service(USB_SERVICE_BUS_RESET,&event);
+    (void)_usb_device_call_service(USB_SERVICE_BUS_RESET, &event);
 }
 
 /**************************************************************************//*!
@@ -773,18 +775,18 @@ static void _usb_khci_service_reset_intr
  * @brief : Service Error Interrupt.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. It is the same
- *                   stracutre which was passed in function OS_install_isr
+ *                   structure which was passed in function OS_install_isr
  *                   During ISR installation.
  *
  * @return NONE
  *****************************************************************************/
 static void _usb_khci_service_tk_dne_intr
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_khci_dev_state_struct_t* state_ptr
 )
 {
-    uint8_t ep_num,stat,dir,buf_odd,setup,token_pid;
+    uint8_t ep_num, stat, dir, buf_odd, setup, token_pid;
     uint32_t len = 0;
     //usb_status error;
     uint32_t buf_num_bytes;
@@ -797,15 +799,13 @@ static void _usb_khci_service_tk_dne_intr
 #endif
     usb_event_struct_t event;
 
-      /* Get the status of previous transaction*/
+    /* Get the status of previous transaction*/
     stat = usb_hal_khci_get_transfer_status(state_ptr->usbRegBase);
 
-
-    /* Get the Endpoint number on which the transaction occured.
+    /* Get the Endpoint number on which the transaction occurred.
      * This is (7 - 5) [3:0] bit in STAT register.
      */
     ep_num = usb_hal_khci_get_transfer_done_ep_number(state_ptr->usbRegBase);
-    
 
     /* Get the Direction of transaction. (i.e the transaction was a receive
      * operation or transaction was a Transmit operation).It is Bit [3] in STAT
@@ -816,18 +816,17 @@ static void _usb_khci_service_tk_dne_intr
     /* Get the last buffer transaction was in ODD buffer or Even Buffer*/
     buf_odd = usb_hal_khci_get_transfer_done_odd(state_ptr->usbRegBase);
 
-
     /* Clear TOKEN  Done Interrupt. This clearing of TOKEN_DONE
-     * should happen after STAT register is read. This is becouse
+     * should happen after STAT register is read. This is because
      * STAT register has four byte fifo and if TOKEN_DONE is cleared
      * in INT_STAT then the content of STAT register is updated with
      * the next value in the STAT fifo.
      */
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_TOKDNE);
 
-    control = usb_hal_khci_bdt_get_control( (uint32_t)bdt, ep_num, dir, buf_odd);
-    
-    /* Get length of Data transmited or recevied in the last transaction. */
+    control = usb_hal_khci_bdt_get_control((uint32_t )bdt, ep_num, dir, buf_odd);
+
+    /* Get length of Data transmitted or received in the last transaction. */
     len = (USB_HOST_TO_LE_LONG(control) >> 16) & 0x3ff;
 
     /* Get PID for this token */
@@ -837,7 +836,7 @@ static void _usb_khci_service_tk_dne_intr
     setup = (token_pid == USB_SETUP_TOKEN) ? TRUE : FALSE;
 
     //USB_PRINTF("23tk_dne ep %d dir %d len %d buff_odd %d\n", ep_num, dir, len, buf_odd);
-    if(dir)
+    if (dir)
     {
         /* direction is USB_SEND*/
         /* Get head of the send queue */
@@ -845,28 +844,28 @@ static void _usb_khci_service_tk_dne_intr
         //USB_PRINTF("get send xd_ptr 0x%x\n", xd_ptr);
         /* updating the WSOFAR field */
         xd_ptr = state_ptr->ep_info[ep_num].send_xd;
-        if(xd_ptr == NULL)
+        if (xd_ptr == NULL)
         {
             return;
         }
         xd_ptr->wsofar += len;
 
         buf_num_bytes = (uint32_t)(xd_ptr->wtotallength - xd_ptr->wsofar);
-        
+
         /* dequeue if all bytes have been send or the last send transaction was
-           of length less then the max packet size length configured for
-           corresponding endpoint */
+         of length less then the max packet size length configured for
+         corresponding endpoint */
         state_ptr->ep_info[ep_num].tx_buf_odd ^= 1;
         state_ptr->ep_info[ep_num].tx_data0 ^= 1;
         if ((buf_num_bytes == 0) || (state_ptr->ep_info[ep_num].max_packet_size > len))
         {
             event.len = xd_ptr->wsofar;
             /* buffer address is updated for upper layer */
-            event.buffer_ptr = xd_ptr->wstartaddress; 
-            state_ptr->ep_info[ep_num].send_xd = NULL;  
+            event.buffer_ptr = xd_ptr->wstartaddress;
+            state_ptr->ep_info[ep_num].send_xd = NULL;
             usb_dci_khci_free_xd(state_ptr, xd_ptr);
-            if ((len == state_ptr->ep_info[ep_num].max_packet_size) && 
-                (ep_num == USB_CONTROL_ENDPOINT))
+            if ((len == state_ptr->ep_info[ep_num].max_packet_size) &&
+            (ep_num == USB_CONTROL_ENDPOINT))
             {
                 g_zero_pkt_send = TRUE;
                 usb_device_send_data((usb_device_handle)state_ptr->upper_layer_handle, ep_num, NULL, 0);
@@ -877,28 +876,37 @@ static void _usb_khci_service_tk_dne_intr
         {
             usb_dci_khci_send(state_ptr, xd_ptr);
             //_usb_khci_process_transmit_request(state_ptr, ep_num, &buffer_ptr);
-            return;/*if above call returned USB_STATUS_TRANSFER_PENDING */ 
+            return;/*if above call returned USB_STATUS_TRANSFER_PENDING */
         }
     }
     else
     {
-        
-        if((ep_num == USB_CONTROL_ENDPOINT) && (!len))
+
+        if ((ep_num == USB_CONTROL_ENDPOINT) && (!len))
         {
-                goto callservice; // call up layer service function
+            /* Initialize the event structure to be passed to the upper layer*/
+            event.handle = (usb_device_handle)state_ptr->upper_layer_handle;
+            event.ep_num = ep_num;
+            event.setup = setup;
+            event.direction = (bool)(stat >> 3 & 1U);
+
+            /* propagate control to upper layers for processing */
+            _usb_device_call_service(ep_num, &event);
+            usb_hal_khci_clr_token_busy(state_ptr->usbRegBase);
+            return;
         }
         /* direction is USB_RECV*/
-        if(g_zero_pkt_send == TRUE)
+        if (g_zero_pkt_send == TRUE)
         {
             g_zero_pkt_send = FALSE;
         }
-        //USB_PRINTF("before ep %d : xd_head_ptr 0x%x xd_tail_ptr 0x%x\n", ep_num, 
-        //        state_ptr->EP_INFO[ep_num].xd_queue_recv.xd_head_ptr,
-        //        state_ptr->EP_INFO[ep_num].xd_queue_recv.xd_tail_ptr);
+        //USB_PRINTF("before ep %d : xd_head_ptr 0x%x xd_tail_ptr 0x%x\n", ep_num,
+        //          state_ptr->EP_INFO[ep_num].xd_queue_recv.xd_head_ptr,
+        //          state_ptr->EP_INFO[ep_num].xd_queue_recv.xd_tail_ptr);
         /* Get head of the send queue */
         //USB_XD_QUEUE_GET_HEAD(&state_ptr->ep_info[ep_num].xd_queue_recv, &xd_ptr);
         xd_ptr = state_ptr->ep_info[ep_num].recv_xd;
-        if(xd_ptr == NULL)
+        if (xd_ptr == NULL)
         {
             return;
         }
@@ -915,7 +923,7 @@ static void _usb_khci_service_tk_dne_intr
         }
 #endif
         xd_ptr->wsofar += len;/* updating the WSOFAR field */
-        
+
         buf_num_bytes = (uint32_t)(xd_ptr->wtotallength - xd_ptr->wsofar);
 
         if ((ep_num == USB_CONTROL_ENDPOINT) && (token_pid == USB_SETUP_TOKEN))
@@ -937,45 +945,44 @@ static void _usb_khci_service_tk_dne_intr
 
         //USB_PRINTF("max packet size %d\n",state_ptr->EP_INFO[ep_num].max_packet_size);
         /* dequeue if all bytes have been received or the last send transaction
-           was of length less then the max packet size length configured for
-           corresponding endpoint */
-        if ((!xd_ptr->wtotallength)||(buf_num_bytes == 0)||
-           (state_ptr->ep_info[ep_num].max_packet_size > len))
+         was of length less then the max packet size length configured for
+         corresponding endpoint */
+        if ((!xd_ptr->wtotallength) || (buf_num_bytes == 0) ||
+        (state_ptr->ep_info[ep_num].max_packet_size > len))
         {
             event.len = xd_ptr->wsofar;
             /* buffer address is updated for upper layer */
             event.buffer_ptr = xd_ptr->wstartaddress;
-            state_ptr->ep_info[ep_num].recv_xd = NULL;  
+            state_ptr->ep_info[ep_num].recv_xd = NULL;
             usb_dci_khci_free_xd(state_ptr, xd_ptr);
         }
         else
         {
             usb_dci_khci_recv(state_ptr, xd_ptr);
             //_usb_khci_process_receive_request(state_ptr,ep_num, stat, &buffer_ptr);
-            return;/*if above call returned USB_STATUS_TRANSFER_PENDING */  
+            return;/*if above call returned USB_STATUS_TRANSFER_PENDING */
         }
     }
 
     /* prepare for next setup token if needed*/
-    if ((ep_num == USB_CONTROL_ENDPOINT) && (!len) && (g_zero_pkt_send ==FALSE))
+    if ((ep_num == USB_CONTROL_ENDPOINT) && (!len) && (g_zero_pkt_send == FALSE))
     {
         _usb_khci_next_setup_token_prep(state_ptr);
     }
-callservice:    
-    /* Initialize the event strucutre to be passed to the upper layer*/
+    /* Initialize the event structure to be passed to the upper layer*/
     event.handle = (usb_device_handle)state_ptr->upper_layer_handle;
     event.ep_num = ep_num;
     event.setup = setup;
-    event.direction = (bool)(stat >> 3 & 1);
- 
+    event.direction = (bool)(stat >> 3 & 1U);
+
     /* propagate control to upper layers for processing */
-    _usb_device_call_service(ep_num,&event);
+    _usb_device_call_service(ep_num, &event);
 
     //USB_PRINTF("_usb_khci_service_tk_dne_intr 3-- :%d \n",ep_num);
-    
+
     usb_hal_khci_clr_token_busy(state_ptr->usbRegBase);
-    
- }
+
+}
 
 #if USBCFG_DEV_ADVANCED_SUSPEND_RESUME
 /**************************************************************************//*!
@@ -985,14 +992,14 @@ callservice:
  * @brief : Service Sleep Interrupt.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function OS_install_isr
+ *                   same structure which was passed in function OS_install_isr
  *                   During ISR installation.
  *
  * @return NONE
  *****************************************************************************/
 static void _usb_khci_service_sleep_intr
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_khci_dev_state_struct_t* state_ptr
 )
 {
@@ -1000,15 +1007,15 @@ static void _usb_khci_service_sleep_intr
     usb_event_struct_t event;
 
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_RESUME);
-    
+
     /* clear suspend interrupt */
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_SLEEP);
 
     state_ptr->usb_dev_state_b4_suspend = state_ptr->usb_state;
 
     state_ptr->usb_state = USB_STATE_SUSPEND;
-    
-    /* Initialize the event strucutre to be passed to the upper layer*/
+
+    /* Initialize the event structure to be passed to the upper layer*/
     event.handle = (usb_device_handle)state_ptr->upper_layer_handle;
     event.ep_num = (uint8_t)USB_UNINITIALIZED_VAL_32;
     event.setup = 0;
@@ -1018,9 +1025,9 @@ static void _usb_khci_service_sleep_intr
 
     /* Notify Device Layer of SLEEP Event */
     /* this callback need only handle and type -
-       all other arguments are redundant */
+     all other arguments are redundant */
     (void)_usb_device_call_service(USB_SERVICE_SUSPEND, &event);
-    
+
     /* Enable RESUME Interrupt */
     usb_hal_khci_enable_interrupts(state_ptr->usbRegBase, (INTR_RESUME));
 }
@@ -1032,37 +1039,37 @@ static void _usb_khci_service_sleep_intr
  * @brief : Service resume Interrupt.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function OS_install_isr
+ *                   same structure which was passed in function OS_install_isr
  *                   During ISR installation.
  *
  * @return NONE
  *****************************************************************************/
 static void _usb_khci_service_resume_intr
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_khci_dev_state_struct_t* state_ptr
 )
 {
-    usb_event_struct_t event;  
+    usb_event_struct_t event;
 
     /* clear resume interrupt status bit */
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_RESUME);
 
     state_ptr->usb_state = state_ptr->usb_dev_state_b4_suspend;
 
-    /* Initialize the event strucutre to be passed to the upper layer*/
+    /* Initialize the event structure to be passed to the upper layer*/
     event.handle = (usb_device_handle)state_ptr->upper_layer_handle;
     event.ep_num = (uint8_t)USB_UNINITIALIZED_VAL_32;
     event.setup = 0;
     event.direction = 0;
     event.buffer_ptr = (uint8_t*)NULL;
     event.len = ZERO_LENGTH;
-    
+
     /* Notify Device Layer of RESUME Event */
     /* this callback need only handle and type -
-       all other arguments are redundant */
+     all other arguments are redundant */
     (void)_usb_device_call_service(USB_SERVICE_RESUME,&event);
-    
+
     /* Disable RESUME Interrupt */
     usb_hal_khci_disable_interrupts(state_ptr->usbRegBase, INTR_RESUME);
 }
@@ -1074,26 +1081,25 @@ static void _usb_khci_service_resume_intr
  * @brief : Service SOF Interrupt.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function OS_install_isr
+ *                   same structure which was passed in function OS_install_isr
  *                   During ISR installation.
  *
  * @return NONE
  *****************************************************************************/
 static void _usb_khci_service_sof_token_intr
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_khci_dev_state_struct_t* state_ptr
 )
 {
     /* Clear SOF Interrupt */
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_SOFTOK);
-    
+
     state_ptr->usb_sof_count = usb_hal_khci_get_frame_number(state_ptr->usbRegBase);
-    
+
     /* address of Lower byte of Frame number.
      */
     //buffer_ptr = (uint8_t *)&(state_ptr->USB_SOF_COUNT);
-        
     /* clear resume interrupt status bit */
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_RESUME);
 }
@@ -1106,15 +1112,15 @@ static void _usb_khci_service_sof_token_intr
  * @brief : Service attach Interrupt.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function OS_install_isr
+ *                   same structure which was passed in function OS_install_isr
  *                   During ISR installation.
  *
  * @return NONE
  *****************************************************************************/
 static void _usb_khci_service_attach_intr
 (
-     /*[IN]*/
-    usb_khci_dev_state_struct_t* state_ptr 
+/*[IN]*/
+usb_khci_dev_state_struct_t* state_ptr
 )
 {
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_ATTACH);
@@ -1128,33 +1134,33 @@ static void _usb_khci_service_attach_intr
  * @brief : Service stall Interrupt.
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function OS_install_isr
+ *                   same structure which was passed in function OS_install_isr
  *                   During ISR installation.
  *
  * @return NONE
  *****************************************************************************/
 static void _usb_khci_service_stall_intr
 (
-     /*[IN]*/
-    usb_khci_dev_state_struct_t* state_ptr 
+    /*[IN]*/
+    usb_khci_dev_state_struct_t* state_ptr
 )
 {
 
-	uint8_t ep;
+    uint8_t ep;
 
-	for (ep = 0; ep < USBCFG_DEV_MAX_ENDPOINTS; ep++)
-	{
-		if (state_ptr->ep_info[ep].endpoint_status == USB_STATUS_STALLED)
-		{
-			usb_hal_khci_endpoint_clr_stall(state_ptr->usbRegBase, ep);
-			usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep, USB_SEND, state_ptr->ep_info[ep].tx_buf_odd,
-							 USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
-			usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep, USB_RECV, state_ptr->ep_info[ep].rx_buf_odd,
-							 USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
-		}
-	}
-     
-	/* Clear Stall Interrupt */
+    for (ep = 0; ep < USBCFG_DEV_MAX_ENDPOINTS; ep++)
+    {
+        if (state_ptr->ep_info[ep].endpoint_status == USB_STATUS_STALLED)
+        {
+            usb_hal_khci_endpoint_clr_stall(state_ptr->usbRegBase, ep);
+            usb_hal_khci_bdt_set_control((uint32_t )bdt, ep, USB_SEND, state_ptr->ep_info[ep].tx_buf_odd,
+                USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
+            usb_hal_khci_bdt_set_control((uint32_t )bdt, ep, USB_RECV, state_ptr->ep_info[ep].rx_buf_odd,
+                USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
+        }
+    }
+
+    /* Clear Stall Interrupt */
     usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_STALL);
 
     /* check if the stall interrupt received was for CONTROL ENDPOINT */
@@ -1163,7 +1169,7 @@ static void _usb_khci_service_stall_intr
         state_ptr->ep_info[USB_CONTROL_ENDPOINT].endpoint_status = USB_STATUS_IDLE;
         _usb_khci_next_setup_token_prep(state_ptr);
     }
-    
+
 }
 
 /**************************************************************************//*!
@@ -1173,7 +1179,7 @@ static void _usb_khci_service_stall_intr
  * @brief : Service all the interrupts in the kirin usb hardware
  *
  * @param state_ptr: Device Structure Pointer Passed to ISR. The is the
- *                   same stracutre which was passed in function OS_install_isr
+ *                   same structure which was passed in function OS_install_isr
  *                   During ISR installation.
  *
  * @return NONE
@@ -1184,10 +1190,10 @@ void _usb_dev_khci_isr
     usb_khci_dev_state_struct_t* state_ptr
 )
 {
-        state_ptr = (usb_khci_dev_state_struct_t*)(&g_khci_dev[0]);
+    state_ptr = (usb_khci_dev_state_struct_t*)(&g_khci_dev[0]);
 #else
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
-static void _usb_khci_isr()
+static void _usb_khci_isr(void)
 {
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)(&g_khci_dev[0]);
 #else
@@ -1198,7 +1204,14 @@ static void _usb_khci_isr(usb_khci_dev_state_struct_t* state_ptr)
 #endif
     /* Get the USB IP base address in the controller */
     //error = (uint8_t)usb_hal_get_interrupt_status(state_ptr->usbRegBase);
-
+#if FSL_FEATURE_USB_KHCI_KEEP_ALIVE_ENABLED && USBCFG_DEV_KEEP_ALIVE_MODE
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+    if(usb_hal_khci_get_keepalive_wake_int_sts(state_ptr->usbRegBase))
+    {
+        usb_hal_khci_clr_keepalive_wake_int_sts(state_ptr->usbRegBase);
+    }
+#endif
+#endif
     /* This interrupt comes when any of the error conditions within
      * the ERRSTAT register occur. The ColdFire core must
      * then read the ERRSTAT register to determine the source of the error.
@@ -1224,7 +1237,7 @@ static void _usb_khci_isr(usb_khci_dev_state_struct_t* state_ptr)
      * This informs the Microprocessor that it should write 0x00 into the address
      * register and enable endpoint 0. USB_RST bit is set after a USB reset has been
      * detected for 2.5 microseconds. It is not asserted again until the USB reset
-     * condition has been removed and then reasserted.
+     * condition has been removed and then re-asserted.
      */
     if (usb_hal_khci_is_interrupt_issued(state_ptr->usbRegBase, INTR_USBRST))
     {
@@ -1248,7 +1261,7 @@ static void _usb_khci_isr(usb_khci_dev_state_struct_t* state_ptr)
         _usb_khci_service_resume_intr(state_ptr);
     }
 #endif
-    /* Thisinterrupt comes when the USB Module receives a Start Of Frame
+    /* This interrupt comes when the USB Module receives a Start Of Frame
      * (SOF) token.
      */
     if (usb_hal_khci_is_interrupt_issued(state_ptr->usbRegBase, INTR_SOFTOK))
@@ -1276,88 +1289,96 @@ static void _usb_khci_isr(usb_khci_dev_state_struct_t* state_ptr)
 
     return;
 }
-
 /*****************************************************************************
  * Global Functions
  *****************************************************************************/
 /**************************************************************************//*!
-*
-* @name        : usb_dci_khci_preinit
-* @brief       : Allocates space for the USB device controller.
-* @param handle: Handle to USB Device to be filled
-* @return   USB_OK on successful.
-******************************************************************************/
+ *
+ * @name        : usb_dci_khci_preinit
+ * @brief       : Allocates space for the USB device controller.
+ * @param handle: Handle to USB Device to be filled
+ * @return   USB_OK on successful.
+ ******************************************************************************/
 usb_status usb_dci_khci_preinit
 (
     /* [IN] the USB device handle */
     usb_device_handle upper_layer_handle,
 
     usb_device_handle * handle_ptr
-)
+    )
 {
-    usb_khci_dev_state_struct_t* usb_dev_ptr = (usb_khci_dev_state_struct_t*) (&g_khci_dev[0]);
+    usb_khci_dev_state_struct_t* usb_dev_ptr = (usb_khci_dev_state_struct_t*)(&g_khci_dev[0]);
 
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    if(NULL == g_khci_data_ptr)
+    if (NULL == g_khci_data_ptr)
     {
-        g_khci_data_ptr = OS_Mem_alloc_uncached_align(sizeof(usb_device_khci_data_t), 512);
+        g_khci_data_ptr = OS_Mem_alloc_uncached(sizeof(usb_device_khci_data_t));
+    }
+
+#if (FSL_FEATURE_USB_KHCI_USB_RAM == 0)
+    if (NULL == g_khci_bdt_ptr)
+    {
+        g_khci_bdt_ptr = OS_Mem_alloc_uncached_align(512, 512);
     }
 #endif
 
+#endif
+
     usb_dci_khci_init_xd((usb_device_handle)usb_dev_ptr);
-    
+
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
-    
+
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     _usb_khci_dev_swap_buf_ptr = g_khci_data.swap_buf;
 #elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
     _usb_khci_dev_swap_buf_ptr = g_khci_data_ptr->swap_buf;
 #endif
-    
+
 #endif
-	usb_dev_ptr->mutex = OS_Mutex_create();
-    *handle_ptr = (usb_device_handle) usb_dev_ptr;
+    usb_dev_ptr->mutex = OS_Mutex_create();
+    *handle_ptr = (usb_device_handle)usb_dev_ptr;
     usb_dev_ptr->upper_layer_handle = upper_layer_handle;
 
     return USB_OK;
-}   
+}
 
 /**************************************************************************//*!
-*
-* @name        : usb_dci_khci_init
-* @brief       : Initializes the USB device controller.
-* @param handle: USB device handle.
-* @param init_param: initialization parameters specific for device
-* @return   USB_OK on successful.
-******************************************************************************/
+ *
+ * @name        : usb_dci_khci_init
+ * @brief       : Initializes the USB device controller.
+ * @param handle: USB device handle.
+ * @param init_param: initialization parameters specific for device
+ * @return   USB_OK on successful.
+ ******************************************************************************/
 usb_status usb_dci_khci_init
 (
-    uint8_t     controller_id,
+    uint8_t controller_id,
     /* [IN] the USB device handle */
-    
-    usb_device_handle         handle
-)
+
+    usb_device_handle handle
+    )
 {
 #ifdef USBCFG_OTG
-    usb_otg_state_struct_t *   usb_otg_struct_ptr = (usb_otg_state_struct_t *)g_usb_otg_handle;
-    usb_otg_status_t *         otg_status_ptr     = &usb_otg_struct_ptr->otg_status;
+    usb_otg_state_struct_t * usb_otg_struct_ptr = (usb_otg_state_struct_t *)g_usb_otg_handle;
+    usb_otg_status_t * otg_status_ptr = &usb_otg_struct_ptr->otg_status;
 #endif
     usb_khci_dev_state_struct_t* usb_dev_ptr = (usb_khci_dev_state_struct_t*)handle;
     //volatile USB_MemMapPtr             usb_ptr;
 
     usb_dev_ptr->dev_vec = soc_get_usb_vector_number(controller_id);
-    
+
+    usb_dev_ptr->is_reseting = 0;
+
     usb_dev_ptr->usbRegBase = soc_get_usb_base_address(controller_id);
     /* Get the maximum number of endpoints supported by this USB controller */
     usb_dev_ptr->max_endpoints = KHCI_MAX_ENDPOINT;
+    usb_dev_ptr->speed = USB_SPEED_FULL;
 
     /* Clear all interrupts and bring it to finite
      * state before device starts functioning.
      */
     usb_hal_khci_clr_all_interrupts(usb_dev_ptr->usbRegBase);
     usb_hal_khci_disable_dp_pull_up(usb_dev_ptr->usbRegBase);
-
-
 
 #ifndef USBCFG_OTG 
     /* Install the ISR
@@ -1366,37 +1387,40 @@ usb_status usb_dci_khci_init
      */
 #if (OS_ADAPTER_ACTIVE_OS != OS_ADAPTER_SDK)
     if (!(OS_install_isr(usb_dev_ptr->dev_vec, (void (*)(void *))_usb_khci_isr, usb_dev_ptr)))
-        return USBERR_INSTALL_ISR;
+    return USBERR_INSTALL_ISR;
 #else
-    OS_install_isr(usb_dev_ptr->dev_vec, (void (*)(void))_usb_khci_isr, usb_dev_ptr);
+    OS_install_isr(usb_dev_ptr->dev_vec, (void (*)(void) )_usb_khci_isr, usb_dev_ptr);
 #endif
 #endif
 
-    
+#if FSL_FEATURE_USB_KHCI_USB_RAM
+    bdt = (uint8_t *)usb_hal_khci_get_usbram_add(usb_dev_ptr->usbRegBase);
+#else
+
 #if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
-    bdt = (uint8_t *)g_khci_data.bdt;
+    bdt = g_khci_bdt_buffer;
 #elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    bdt = (uint8_t *)g_khci_data_ptr->bdt;
+    bdt = g_khci_bdt_ptr;
 #endif
-    
+
+#endif
+
     /* Initialize BDT Page register 1,2,3. The Buffer
-         * Descriptor Table Page Register 1 2,3 contains an
-         * 8-bit value used to compute the address where
-         * the current Buffer Descriptor Table (BDT)
-         * resides in system memory.
-         */    
-    usb_hal_khci_set_buffer_descriptor_table_addr(usb_dev_ptr->usbRegBase,(uint32_t)bdt);
-    
-     /* Initialize the end point state*/
-    _usb_khci_reset_ep_state(usb_dev_ptr); 
-          
-    
+     * Descriptor Table Page Register 1 2,3 contains an
+     * 8-bit value used to compute the address where
+     * the current Buffer Descriptor Table (BDT)
+     * resides in system memory.
+     */
+    usb_hal_khci_set_buffer_descriptor_table_addr(usb_dev_ptr->usbRegBase, (uint32_t)bdt);
+
+    /* Initialize the end point state*/
+    _usb_khci_reset_ep_state(usb_dev_ptr);
+
     //USB_PRINTF("11usb_dci_khci_init ++");
     /* Enable Sleep,Token Done,Error,USB Reset,Stall,
      * Resume and SOF Interrupt.
      */
     //usb_hal_khci_enable_interrupts(usb_dev_ptr->usbRegBase,(INTR_USBRST | INTR_ERROR | INTR_SOFTOK | INTR_TOKDNE | INTR_SLEEP | INTR_STALL));
-    
 #ifdef USBCFG_OTG
     usb_dev_ptr->otg_handle = g_usb_otg_handle;
     otg_status_ptr->active_stack = USB_ACTIVE_STACK_DEVICE;
@@ -1408,29 +1432,29 @@ usb_status usb_dci_khci_init
 }
 
 /**************************************************************************//*!
-*
-* @name        : usb_dci_khci_init
-* @brief       : Initializes the USB device controller.
-* @param handle: USB device handle.
-* @param init_param: initialization parameters specific for device
-* @return   USB_OK on successful.
-******************************************************************************/
+ *
+ * @name        : usb_dci_khci_init
+ * @brief       : Initializes the USB device controller.
+ * @param handle: USB device handle.
+ * @param init_param: initialization parameters specific for device
+ * @return   USB_OK on successful.
+ ******************************************************************************/
 usb_status usb_dci_khci_postinit
 (
-    uint8_t     controller_id,
+    uint8_t controller_id,
     /* [IN] the USB device handle */
-    
-    usb_device_handle         handle
-)
+
+    usb_device_handle handle
+    )
 {
     /* Enable D+ pull up register
      * Note, that this D+ external resistor is not applicable for some devices
      */
-    usb_khci_dev_state_struct_t* usb_dev_ptr = (usb_khci_dev_state_struct_t*)(&g_khci_dev[0]);;
+    usb_khci_dev_state_struct_t* usb_dev_ptr = (usb_khci_dev_state_struct_t*)(&g_khci_dev[controller_id - USB_CONTROLLER_KHCI_0]);
     //usb_khci_dev_state_struct_t* state_ptr = *usb_dev_ptr;
-    
+
     usb_hal_khci_enable_dp_pull_up(usb_dev_ptr->usbRegBase);
-     /* Enable USB module*/
+    /* Enable USB module*/
     usb_hal_khci_enable_sof(usb_dev_ptr->usbRegBase);
 
     /* Remove suspend state */
@@ -1439,20 +1463,20 @@ usb_status usb_dci_khci_postinit
 }
 
 /**************************************************************************//*!
-* @name        : usb_dci_khci_init_endpoint
-*
-* @brief       : Initialize the Endpoint
-* @param handle: Handle to USB Device.
-* @param xd_ptr: Transaction Discriptor.
-* @return      :  USB_OK or error code
-******************************************************************************/
+ * @name        : usb_dci_khci_init_endpoint
+ *
+ * @brief       : Initialize the Endpoint
+ * @param handle: Handle to USB Device.
+ * @param xd_ptr: Transaction Descriptor.
+ * @return      :  USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_init_endpoint
 (
-     /*[IN]*/
-    usb_device_handle handle, 
     /*[IN]*/
-    xd_struct_t*       xd_ptr
-)
+    usb_device_handle handle,
+    /*[IN]*/
+    xd_struct_t* xd_ptr
+    )
 {
     //usb_status error = USB_OK;
     uint16_t max_pkt_size = 0;
@@ -1466,8 +1490,8 @@ usb_status usb_dci_khci_init_endpoint
         return USBERR_ERROR;
     }
 
-    if((xd_ptr->ep_type > USB_INTERRUPT_PIPE) || 
-        (xd_ptr->bdirection > USB_SEND))
+    if((xd_ptr->ep_type > USB_INTERRUPT_PIPE) ||
+    (xd_ptr->bdirection > USB_SEND))
     {
         return USBERR_EP_INIT_FAILED;
     }
@@ -1476,17 +1500,16 @@ usb_status usb_dci_khci_init_endpoint
 
     /* mark this endpoint as initialized */
     state_ptr->ep_info[xd_ptr->ep_num].ep_init_flag[xd_ptr->bdirection] = TRUE;
-        
+
     /*before initializing cancel all transfers on EP as there may be calls
-      for endpoint initialization more than once. This will free any allocated
-      queue*/
+     for endpoint initialization more than once. This will free any allocated
+     queue*/
 
     /*
      * Since this is endpoint initialization section there will
      * not be any pending transfers on this endpoint
      */
 
-        
     /* The end point buffer size will be set as required by app.
      * but if the size crosses MAX_EP_BUFFER_SIZE size then truncate the
      * max packet size.
@@ -1501,7 +1524,7 @@ usb_status usb_dci_khci_init_endpoint
         max_pkt_size = (uint16_t)((xd_ptr->wmaxpacketsize > MAX_FS_NON_ISO_EP_BUFFER_SIZE)?
         MAX_FS_NON_ISO_EP_BUFFER_SIZE:xd_ptr->wmaxpacketsize);
     }
-    
+
     /* Initialize the End Point Information Structure which is part of device
      * structure. It is done so that it can be used at later point of time
      * like ISR handler, any other function call.
@@ -1521,24 +1544,23 @@ usb_status usb_dci_khci_init_endpoint
         state_ptr->ep_info[xd_ptr->ep_num].tx_data0 = 0;
         state_ptr->ep_info[xd_ptr->ep_num].send_xd = NULL;
     }
-    
+
     usb_hal_khci_endpoint_enable_handshake(state_ptr->usbRegBase, xd_ptr->ep_num, ((xd_ptr->ep_type != USB_ISOCHRONOUS_PIPE) ? 1 : 0));
     usb_hal_khci_endpoint_set_direction(state_ptr->usbRegBase, xd_ptr->ep_num, (xd_ptr->bdirection ? 1 : 0));
-    if ((USB_RECV == xd_ptr->bdirection) && (xd_ptr->ep_num == USB_CONTROL_ENDPOINT) )
+    if ((USB_RECV == xd_ptr->bdirection) && (xd_ptr->ep_num == USB_CONTROL_ENDPOINT))
     {
         _usb_khci_next_setup_token_prep(state_ptr);
     }
 #if 0
     /* Write the initialized control values to end point control register*/
     //usb_hal_set_endpoint_ephshk(state_ptr->usbRegBase, xd_ptr->ep_num, (xd_ptr->ep_type != USB_ISOCHRONOUS_PIPE ? 1 : 0));
-    
-    /*Configure this endpoint for receive or Send direction as reuired by APP*/
+    /*Configure this endpoint for receive or Send direction as required by APP*/
     //usb_hal_set_endpoint_direction(state_ptr->usbRegBase, xd_ptr->ep_num, (xd_ptr->bdirection ? 1: 0));
-    
     /* Set the BDT and buffer data pointer for Receive Direction*/
     if ((USB_RECV == xd_ptr->bdirection) && (xd_ptr->ep_num == USB_CONTROL_ENDPOINT) )
     {
-        const uint8_t control[2] = { 
+        const uint8_t control[2] =
+        {
             USB_BD_DATA01(0) | USB_BD_DTS | USB_BD_OWN,
             USB_BD_DATA01(1) | USB_BD_DTS
         };
@@ -1575,29 +1597,28 @@ usb_status usb_dci_khci_init_endpoint
     {
         /* Initialize the DATA PID to DATA0*/
         //state_ptr->EP_INFO[xd_ptr->EP_NUM].tx_data0 = 0;
-
     }
 #endif
     return USB_OK;
 }
 
 /**************************************************************************//*!
-* @name  : usb_dci_khci_deinit_endpoint
-*
-* @brief       : De-Initialize the Endpoint
-* @param handle: Handle to USB Device.
-* @param ep_num: End Point Number.
-* @param direction: USB_SEND or USB_RECV.
-* @return      :  USB_OK or error code
-******************************************************************************/
+ * @name  : usb_dci_khci_deinit_endpoint
+ *
+ * @brief       : De-Initialize the Endpoint
+ * @param handle: Handle to USB Device.
+ * @param ep_num: End Point Number.
+ * @param direction: USB_SEND or USB_RECV.
+ * @return      :  USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_deinit_endpoint
 (
-     /*[IN]*/
-    usb_device_handle handle, 
+    /*[IN]*/
+    usb_device_handle handle,
     /*[IN]*/
     uint8_t ep_num,
     /*[IN]*/
-    uint8_t direction 
+    uint8_t direction
 )
 {
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
@@ -1605,47 +1626,47 @@ usb_status usb_dci_khci_deinit_endpoint
 
     /*before de-initializing cancel all transfers on EP */
     usb_dci_khci_cancel(handle, ep_num, direction);
-    
-    /*Disable the trasmit or receive endpoint*/
+
+    /*Disable the transmit or receive endpoint*/
     usb_hal_khci_endpoint_shut_down(state_ptr->usbRegBase, ep_num);
-  
-    /* uninitialise the strucrure for this endpoint */
-    usb_hal_khci_bdt_set_address( (uint32_t)bdt, ep_num, direction, EVEN_BUFF, USB_LONG_LE_TO_HOST_CONST((uint32_t)USB_UNINITIALIZED_VAL_32));
-    usb_hal_khci_bdt_set_address( (uint32_t)bdt, ep_num, direction, ODD_BUFF, USB_LONG_LE_TO_HOST_CONST((uint32_t)USB_UNINITIALIZED_VAL_32));
+
+    /* un-initialize the structure for this endpoint */
+    usb_hal_khci_bdt_set_address((uint32_t )bdt, ep_num, direction, EVEN_BUFF, USB_LONG_LE_TO_HOST_CONST((uint32_t)USB_UNINITIALIZED_VAL_32));
+    usb_hal_khci_bdt_set_address((uint32_t )bdt, ep_num, direction, ODD_BUFF, USB_LONG_LE_TO_HOST_CONST((uint32_t)USB_UNINITIALIZED_VAL_32));
     //BD_ADDR(ep_num,direction,EVEN_BUFF) =
     //    USB_LONG_LE_TO_HOST_CONST((uint32_t)USB_UNINITIALIZED_VAL_32);
     //BD_ADDR(ep_num,direction,ODD_BUFF) =
     //    USB_LONG_LE_TO_HOST_CONST((uint32_t)USB_UNINITIALIZED_VAL_32);
-    
-    state_ptr->ep_info[ep_num].max_packet_size =    
-        (uint16_t)USB_UNINITIALIZED_VAL_32;
+
+    state_ptr->ep_info[ep_num].max_packet_size =
+    (uint16_t)USB_UNINITIALIZED_VAL_32;
 
     /* mark this endpoint as de-initialized */
     state_ptr->ep_info[ep_num].ep_init_flag[direction] = FALSE;
-        
+
     return USB_OK;
 }
 
 /**************************************************************************//*!
-* @name  usb_dci_khci_send
-* @brief       : Sends data. Non-blocking.
-* @param handle: Handle to USB Device.
-* @param xd_ptr: Transaction Discriptor.
-* @return      :  USB_OK or error code
-******************************************************************************/
+ * @name  usb_dci_khci_send
+ * @brief       : Sends data. Non-blocking.
+ * @param handle: Handle to USB Device.
+ * @param xd_ptr: Transaction Descriptor.
+ * @return      :  USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_send
 (
-     /*[IN]*/
-    usb_device_handle handle, 
     /*[IN]*/
-    xd_struct_t*       xd_ptr 
-)
+    usb_device_handle handle,
+    /*[IN]*/
+    xd_struct_t* xd_ptr
+    )
 {
     usb_status error = USBERR_TX_FAILED;/* initializing to failed value */
     uint32_t buf_num_bytes = (uint32_t)(xd_ptr->wtotallength - xd_ptr->wsofar);
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
 
-    /* Allocate XD stucutre from Free List maintained by Device strucutre,
+    /* Allocate XD structure from Free List maintained by Device structure,
      * if it is not any split transaction.
      */
     if (xd_ptr->wsofar == 0)
@@ -1655,9 +1676,8 @@ usb_status usb_dci_khci_send
         //USB_PRINTF("after send ep %d enqueue: xd_head_ptr 0x%x xd_tail_ptr 0x%x\n", xd_ptr->EP_NUM, 
         //        state_ptr->EP_INFO[xd_ptr->EP_NUM].xd_queue_send.xd_head_ptr,
         //        state_ptr->EP_INFO[xd_ptr->EP_NUM].xd_queue_send.xd_tail_ptr);
-        
-    }
 
+    }
 
 #if 0
     /* Upper layer wants to send Zero Packet data
@@ -1668,13 +1688,13 @@ usb_status usb_dci_khci_send
     if (buf_num_bytes == 0)
     {
         error = _usb_khci_ep_write(state_ptr, xd_ptr->ep_num,
-            xd_ptr->wstartaddress, buf_num_bytes, (uint32_t*)&buf_num_bytes);
-        
+        xd_ptr->wstartaddress, buf_num_bytes, (uint32_t*)&buf_num_bytes);
+
         if (error != USB_OK)
         {
             /* If write returns error release the XD pointer
-                     * from Endpoint send queue and return it to Free list of XD pointers.
-                     */
+             * from Endpoint send queue and return it to Free list of XD pointers.
+             */
             xd_ptr->bstatus = USB_STATUS_IDLE;
             //USB_XD_QUEUE_DEQUEUE (&state_ptr->ep_info[xd_ptr->ep_num].xd_queue_send, &xd_ptr);
             //if (xd_ptr != NULL)
@@ -1683,11 +1703,14 @@ usb_status usb_dci_khci_send
         return error;
     }
 #endif
-    /* If not Zero Size packet send the data from here*/
-    error = _usb_khci_ep_write(state_ptr, xd_ptr->ep_num,
-        (uint8_t *)xd_ptr->wstartaddress + xd_ptr->wsofar, buf_num_bytes,
-        (uint32_t*)&buf_num_bytes);
-    
+    if (state_ptr->is_reseting == 0)
+    {
+        /* If not Zero Size packet send the data from here*/
+        error = _usb_khci_ep_write(state_ptr, xd_ptr->ep_num,
+            (uint8_t *)xd_ptr->wstartaddress + xd_ptr->wsofar, buf_num_bytes,
+            (uint32_t*)&buf_num_bytes);
+    }
+
     if (error != USB_OK)
     {
         /* If write returns error release the XD pointer
@@ -1698,23 +1721,23 @@ usb_status usb_dci_khci_send
         //USB_XD_QUEUE_DEQUEUE (&state_ptr->ep_info[xd_ptr->ep_num].xd_queue_send, &xd_ptr);
         //if (xd_ptr != NULL)
         usb_dci_khci_free_xd(state_ptr, xd_ptr);
-    }   
+    }
     return error;
 }
 
 /**************************************************************************//*!
-* @name        : usb_dci_khci_recv
-* @brief       : Receives data. Non-blocking.
-* @param handle: Handle to USB Device.
-* @param xd_ptr: Transaction Discriptor.
-* @return      : USB_OK or error code
-******************************************************************************/
+ * @name        : usb_dci_khci_recv
+ * @brief       : Receives data. Non-blocking.
+ * @param handle: Handle to USB Device.
+ * @param xd_ptr: Transaction Descriptor.
+ * @return      : USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_recv
 (
-     /*[IN]*/
-    usb_device_handle handle, 
     /*[IN]*/
-    xd_struct_t*       xd_ptr 
+    usb_device_handle handle,
+    /*[IN]*/
+    xd_struct_t* xd_ptr
 )
 {
     usb_status error = USBERR_RX_FAILED;/* initializing to failed value */
@@ -1723,8 +1746,8 @@ usb_status usb_dci_khci_recv
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
 
     buf_num_bytes = xd_ptr->wtotallength - xd_ptr->wsofar;
-    
-    /* Allocate XD stucutre from Free List maintained by Device strucutre,
+
+    /* Allocate XD structure from Free List maintained by Device structure,
      * if it is not any split transaction.
      */
 
@@ -1742,8 +1765,8 @@ usb_status usb_dci_khci_recv
     {
         buf_num_bytes = state_ptr->ep_info[xd_ptr->ep_num].max_packet_size;
     }
-    
-    /* Send the receiv command to the device.*/
+
+    /* Send the receive command to the device.*/
     buf_ptr = (uint8_t *)((uint32_t)xd_ptr->wstartaddress + (uint32_t)xd_ptr->wsofar);
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
     if ((_usb_khci_dev_swap_buf_ptr) && ((buf_num_bytes & USB_DMA_ALIGN_MASK) || ((uint32_t)buf_ptr & USB_DMA_ALIGN_MASK)))
@@ -1752,8 +1775,11 @@ usb_status usb_dci_khci_recv
         buf_ptr = (uint8_t*)USB_DMA_ALIGN((int32_t)_usb_khci_dev_swap_buf_ptr);
     }
 #endif
-    error = _usb_khci_ep_read(handle, xd_ptr->ep_num, buf_ptr, buf_num_bytes);
-    
+    if (state_ptr->is_reseting == 0)
+    {
+        error = _usb_khci_ep_read((usb_khci_dev_state_struct_t*)handle, xd_ptr->ep_num, buf_ptr, buf_num_bytes);
+    }
+
     if (error != USB_OK)
     {
         //USB_XD_QUEUE_DEQUEUE(&state_ptr->ep_info[xd_ptr->ep_num].xd_queue_recv, &xd_ptr);
@@ -1761,89 +1787,89 @@ usb_status usb_dci_khci_recv
         state_ptr->ep_info[xd_ptr->ep_num].recv_xd = NULL;
         usb_dci_khci_free_xd(state_ptr, xd_ptr);
     }
-    
-    if(buf_num_bytes ==0 && (xd_ptr->ep_num== USB_CONTROL_ENDPOINT))
+
+    if ((buf_num_bytes == 0) && (xd_ptr->ep_num == USB_CONTROL_ENDPOINT))
     {
-        usb_dci_khci_free_xd(state_ptr, xd_ptr); 
+        usb_dci_khci_free_xd(state_ptr, xd_ptr);
 
         state_ptr->ep_info[USB_CONTROL_ENDPOINT].rx_buf_odd ^= 1;
-        _usb_khci_next_setup_token_prep(state_ptr);  
+        _usb_khci_next_setup_token_prep(state_ptr);
         // prime the next setup transaction here
     }
     return error;
 }
 
 /**************************************************************************//*!*
-* @name  : usb_dci_khci_stall_endpoint
-* @brief      : Stalls the specified endpoint
-* @param handle: Handle to USB Device.
-* @param ep_num: End Point Number.
-* @param direction: USB_SEND or USB_RECV.
-* @return      :  USB_OK or error code
-******************************************************************************/
+ * @name  : usb_dci_khci_stall_endpoint
+ * @brief      : Stalls the specified endpoint
+ * @param handle: Handle to USB Device.
+ * @param ep_num: End Point Number.
+ * @param direction: USB_SEND or USB_RECV.
+ * @return      :  USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_stall_endpoint
 (
-     /*[IN]*/
-    usb_device_handle handle, 
     /*[IN]*/
-    uint8_t ep_num, 
+    usb_device_handle handle,
+    /*[IN]*/
+    uint8_t ep_num,
     /*[IN]*/
     uint8_t direction
 )
 {
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
     //USB_MemMapPtr usb_ptr;
- 
+
     /* set  the stall flag in device structure to be true */
     state_ptr->ep_info[ep_num].stall_flag = TRUE;
     state_ptr->ep_info[ep_num].endpoint_status = USB_STATUS_STALLED;
-    
+
     /* retiring pending IRPs on stall detection */
-    usb_dci_khci_cancel(handle,ep_num,direction);
-    
+    usb_dci_khci_cancel(handle, ep_num, direction);
+
     /* If Stall is for Send packet update Send BDT */
     if (direction)
     {
         /* USB_SEND */
-        usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep_num, USB_SEND, state_ptr->ep_info[ep_num].tx_buf_odd,
-                                 USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_OWN | USB_BD_STALL | USB_BD_DTS)));
+        usb_hal_khci_bdt_set_control((uint32_t )bdt, ep_num, USB_SEND, state_ptr->ep_info[ep_num].tx_buf_odd,
+            USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_OWN | USB_BD_STALL | USB_BD_DTS)));
         //BD_CTRL_TX(ep_num, state_ptr->ep_info[ep_num].tx_buf_odd) =
         //    USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_OWN | USB_BD_STALL | USB_BD_DTS));
     }
     else
     {
         /* USB_RECV */
-        usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep_num, USB_RECV, state_ptr->ep_info[ep_num].rx_buf_odd,
-                                 USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_OWN | USB_BD_STALL | USB_BD_DTS)));
-        /* If Stall is for Receive transaction, Update Recevice BDT*/
+        usb_hal_khci_bdt_set_control((uint32_t )bdt, ep_num, USB_RECV, state_ptr->ep_info[ep_num].rx_buf_odd,
+            USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_OWN | USB_BD_STALL | USB_BD_DTS)));
+        /* If Stall is for Receive transaction, Update Receive BDT*/
         //BD_CTRL_RX(ep_num, state_ptr->ep_info[ep_num].rx_buf_odd) =
         //    USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size) | USB_BD_OWN | USB_BD_STALL | USB_BD_DTS));
     }
-    
+
     /* Continue Further processing as the IP stops on receiving
      * Setup Token.
      */
     usb_hal_khci_clr_token_busy(state_ptr->usbRegBase);
-    
+
     return USB_OK;
 }
 
 /**************************************************************************//*!*
-* @name  : usb_dci_khci_unstall_endpoint
-* @brief       : Unstall the Endpoint in specific direction
-* @param handle: Handle to USB Device.
-* @param ep_num: End Point Number.
-* @param direction: USB_SEND or USB_RECV.
-* @return      :  USB_OK or error code
-******************************************************************************/
+ * @name  : usb_dci_khci_unstall_endpoint
+ * @brief       : Unstall the Endpoint in specific direction
+ * @param handle: Handle to USB Device.
+ * @param ep_num: End Point Number.
+ * @param direction: USB_SEND or USB_RECV.
+ * @return      :  USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_unstall_endpoint
 (
-     /*[IN]*/
-    usb_device_handle handle, 
     /*[IN]*/
-    uint8_t ep_num, 
+    usb_device_handle handle,
     /*[IN]*/
-    uint8_t direction 
+    uint8_t ep_num,
+    /*[IN]*/
+    uint8_t direction
 )
 {
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
@@ -1852,7 +1878,7 @@ usb_status usb_dci_khci_unstall_endpoint
     /* clear  the stall flag in device structure */
     state_ptr->ep_info[ep_num].stall_flag = FALSE;
     state_ptr->ep_info[ep_num].endpoint_status = USB_STATUS_IDLE;
-    
+
     usb_hal_khci_endpoint_clr_stall(state_ptr->usbRegBase, ep_num);
 
     if (direction)
@@ -1863,8 +1889,8 @@ usb_status usb_dci_khci_unstall_endpoint
         /*BD_CTRL_TX(ep_num, state_ptr->ep_info[ep_num].tx_buf_odd) =
             USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size) |
             USB_BD_DTS | USB_BD_DATA01(0)));*/
-        usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep_num, USB_SEND, state_ptr->ep_info[ep_num].tx_buf_odd,
-                                 USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
+        usb_hal_khci_bdt_set_control((uint32_t )bdt, ep_num, USB_SEND, state_ptr->ep_info[ep_num].tx_buf_odd,
+            USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
     }
     else
     {/* USB_RECV */
@@ -1879,8 +1905,8 @@ usb_status usb_dci_khci_unstall_endpoint
         }
         else
         {
-            usb_hal_khci_bdt_set_control( (uint32_t)bdt, ep_num, USB_RECV, state_ptr->ep_info[ep_num].rx_buf_odd,
-                                 USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
+            usb_hal_khci_bdt_set_control((uint32_t )bdt, ep_num, USB_RECV, state_ptr->ep_info[ep_num].rx_buf_odd,
+                USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
         }
     }
 
@@ -1889,25 +1915,25 @@ usb_status usb_dci_khci_unstall_endpoint
 }
 
 /**************************************************************************//*!*
-* @name  : usb_dci_khci_cancel
-* @brief : Cancels all pending transfers on an endpoint.
-* @param handle: Handle to USB Device.
-* @param ep_num: End Point Number.
-* @param direction: USB_SEND or USB_RECV.
-* @return      :  USB_OK or error code
-******************************************************************************/
+ * @name  : usb_dci_khci_cancel
+ * @brief : Cancels all pending transfers on an endpoint.
+ * @param handle: Handle to USB Device.
+ * @param ep_num: End Point Number.
+ * @param direction: USB_SEND or USB_RECV.
+ * @return      :  USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_cancel
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_device_handle handle,
     /*[IN]*/
-    uint8_t ep_num, 
+    uint8_t ep_num,
     /*[IN]*/
-    uint8_t direction 
+    uint8_t direction
 )
 {
     usb_event_struct_t event;
-    xd_struct_t*     xd_ptr = NULL;
+    xd_struct_t* xd_ptr = NULL;
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
 
     if (direction == USB_RECV)
@@ -1929,7 +1955,7 @@ usb_status usb_dci_khci_cancel
         event.ep_num = ep_num;
         event.setup = FALSE;
         event.direction = direction;
-        _usb_device_call_service(ep_num,&event);
+        _usb_device_call_service(ep_num, &event);
     }
 #if 0
     if (direction)
@@ -1939,13 +1965,13 @@ usb_status usb_dci_khci_cancel
     else
     {
         tempQueue = &state_ptr->ep_info[ep_num].xd_queue_recv;
-    }    
+    }
 
-    /* Empty the queue and add the XD release stucture to the Free list*/
+    /* Empty the queue and add the XD release structure to the Free list*/
     do
     {
         USB_XD_QUEUE_DEQUEUE(tempQueue, &xd_temp_ptr);
-        
+
         if (xd_temp_ptr)
         {
             xd_temp_ptr->bstatus = USB_STATUS_IDLE;
@@ -1957,7 +1983,7 @@ usb_status usb_dci_khci_cancel
             event.direction = direction;
             _usb_khci_free_XD(state_ptr, xd_temp_ptr);
             _usb_device_call_service(ep_num,&event);
-        }  
+        }
     }
     while (xd_temp_ptr);
 #endif
@@ -1965,16 +1991,16 @@ usb_status usb_dci_khci_cancel
 }
 
 /**************************************************************************//*!*
-* @name  : usb_dci_khci_set_addr
-* @brief       : Set device address.
-* @param handle : Device handle.
-* @param addr :   Address to be set into Device Address register.
-* @return     :   Returns USB_OK or error code.
-******************************************************************************/
+ * @name  : usb_dci_khci_set_addr
+ * @brief       : Set device address.
+ * @param handle : Device handle.
+ * @param addr :   Address to be set into Device Address register.
+ * @return     :   Returns USB_OK or error code.
+ ******************************************************************************/
 usb_status usb_dci_khci_set_addr
 (
-     /*[IN]*/
-    usb_device_handle handle, 
+    /*[IN]*/
+    usb_device_handle handle,
     /*[IN]*/
     uint8_t addr
 )
@@ -1983,62 +2009,70 @@ usb_status usb_dci_khci_set_addr
     //volatile USB_MemMapPtr usb_ptr;
 
     /* Update USB address in Device registers. This 7-bit value
-      * defines the USB address that the USB Module decodes
-      * in device mode
-      */
+     * defines the USB address that the USB Module decodes
+     * in device mode
+     */
     usb_hal_khci_set_device_addr(state_ptr->usbRegBase, addr);
-      
-      /* Update the USB device address in Device Info Strucutre for
-      * Future Referances.
-      */
+
+    /* Update the USB device address in Device Info structure for
+     * Future References.
+     */
     state_ptr->device_address = addr;
-      /* Set the Device Start as Address Asigned State.*/
+    /* Set the Device Start as Address Assigned State.*/
     state_ptr->usb_state = USB_STATE_ADDRESS;
-    
+
     return USB_OK;
 }
 
 /**************************************************************************//*!*
-* @name : usb_dci_khci_shutdown
-* @brief      : Shuts down the usbfs Device Controller
-*                   Note: There is no function in MQX to uninstall ISR.
-*                         Hence ISR is not Uninstalled here.However, installing
-*                         ISR twice will not have any negative impact.
-* @param handle : Device handle.
-* @return     :   Returns USB_OK or error code.
-******************************************************************************/
+ * @name : usb_dci_khci_shutdown
+ * @brief      : Shuts down the usbfs Device Controller
+ *                   Note: There is no function in MQX to uninstall ISR.
+ *                         Hence ISR is not Uninstalled here.However, installing
+ *                         ISR twice will not have any negative impact.
+ * @param handle : Device handle.
+ * @return     :   Returns USB_OK or error code.
+ ******************************************************************************/
 usb_status usb_dci_khci_shutdown
 (
-     /*[IN]*/
-    usb_device_handle handle 
-)
+    /*[IN]*/
+    usb_device_handle handle
+    )
 {
 #ifdef USBCFG_OTG
-    usb_otg_state_struct_t *   usb_otg_struct_ptr = (usb_otg_state_struct_t *)g_usb_otg_handle;
-    usb_otg_status_t *  otg_status_ptr = &usb_otg_struct_ptr->otg_status;
+    usb_otg_state_struct_t * usb_otg_struct_ptr = (usb_otg_state_struct_t *)g_usb_otg_handle;
+    usb_otg_status_t * otg_status_ptr = &usb_otg_struct_ptr->otg_status;
 #endif    
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
 
     /* Reset the Control Register */
     //usb_hal_khci_reset_controller(handle->usbRegBase);/* disables the USB MODULE */
+    usb_hal_khci_disable_interrupts(state_ptr->usbRegBase, 0xFF);
+    usb_hal_khci_set_device_addr(state_ptr->usbRegBase, 0);
 
-    usb_hal_khci_disable_interrupts(state_ptr->usbRegBase,0xFF);
-    usb_hal_khci_set_device_addr(state_ptr->usbRegBase,0);
-
-    usb_hal_khci_clear_control_register(state_ptr->usbRegBase) ; 
+    usb_hal_khci_clear_control_register(state_ptr->usbRegBase);
 
     usb_hal_khci_enable_pull_down(state_ptr->usbRegBase);
     usb_hal_khci_set_suspend(state_ptr->usbRegBase);
 
     state_ptr->usb_state = USB_STATE_UNKNOWN;
     OS_Mutex_destroy(state_ptr->mutex);
-    
+
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
     if (NULL != g_khci_data_ptr)
     {
         OS_Mem_free(g_khci_data_ptr);
         g_khci_data_ptr = NULL;
     }
+
+#if (FSL_FEATURE_USB_KHCI_USB_RAM == 0)
+    if (NULL != g_khci_bdt_ptr)
+    {
+        OS_Mem_free(g_khci_bdt_ptr);
+        g_khci_bdt_ptr = NULL;
+    }
+#endif
+
 #endif
 #ifdef USBCFG_OTG
     otg_status_ptr->active_stack = USB_ACTIVE_STACK_NONE;
@@ -2049,42 +2083,40 @@ usb_status usb_dci_khci_shutdown
 
 #if USBCFG_DEV_ADVANCED_SUSPEND_RESUME
 /**************************************************************************//*!*
-* @name  : usb_dci_khci_assert_resume
-* @brief : Resume signalling for remote wakeup
-* @param handle: Handle to USB Device.
-* @return      :  USB_OK or error code
-******************************************************************************/
+ * @name  : usb_dci_khci_assert_resume
+ * @brief : Resume signaling for remote wakeup
+ * @param handle: Handle to USB Device.
+ * @return      :  USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_assert_resume
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_device_handle handle 
 )
 {
     uint16_t delay_count;
     //volatile USB_MemMapPtr usb_ptr;
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
-   
+
     /* clear resume FLAG*/
     usb_hal_khci_clr_interrupt(handle->usbRegBase, INTR_RESUME);
 
     /* Disable RESUME Interrupt */
 //    usb_ptr->INTEN &= ~USB_INTEN_RESUME_EN_MASK; //already done in RESUME interrupt
-
     /* continue processing */
     usb_hal_khci_clr_token_busy(handle->usbRegBase);
 
     /* Start RESUME signaling and make SUSPEND bit 0*/
     usb_hal_khci_start_resume(handle->usbRegBase);
 
-
     /* Set RESUME line for 1-15 ms*/
     delay_count = ASSERT_RESUME_DELAY_COUNT;
     do
     {
         delay_count--;
-    } while (delay_count);
+    }while (delay_count);
 
-    /* Stop RESUME signalling */
+    /* Stop RESUME signaling */
     usb_hal_khci_stop_resume(handle->usbRegBase);
 
     return USB_OK;
@@ -2092,59 +2124,59 @@ usb_status usb_dci_khci_assert_resume
 #endif
 
 /**************************************************************************//*!*
-* @name : usb_dci_khci_get_endpoint_status
-* @brief : Get Endpoint Transfer Status
-* @param handle: Handle to USB Device.
-* @param component: End Point Number.
-* @param endp_status: Variable containig endpint status..
-* @return      :  USB_OK or error code
-******************************************************************************/
+ * @name : usb_dci_khci_get_endpoint_status
+ * @brief : Get Endpoint Transfer Status
+ * @param handle: Handle to USB Device.
+ * @param component: End Point Number.
+ * @param endp_status: Variable containing endpint status..
+ * @return      :  USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_get_endpoint_status
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_device_handle handle,
-     /*[IN]*/
+    /*[IN]*/
     uint8_t component,
     /*[OUT]*/
     uint16_t* endp_status
 )
 {
-    usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;       
+    usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
 
     *endp_status = state_ptr->ep_info[component & USB_STATUS_ENDPOINT_NUMBER_MASK].endpoint_status;
     return USB_OK;
 }
 
 /**************************************************************************//*!*
-* @name  : usb_dci_khci_set_endpoint_status
-* @brief   : Set Endpoint Transfer Status
-* @param handle: Handle to USB Device.
-* @param component: End Point Number.
-* @param setting: Variable containing new settings..
-* @return      :  USB_OK or error code
-******************************************************************************/
+ * @name  : usb_dci_khci_set_endpoint_status
+ * @brief   : Set Endpoint Transfer Status
+ * @param handle: Handle to USB Device.
+ * @param component: End Point Number.
+ * @param setting: Variable containing new settings..
+ * @return      :  USB_OK or error code
+ ******************************************************************************/
 usb_status usb_dci_khci_set_endpoint_status
 (
-     /*[IN]*/
+    /*[IN]*/
     usb_device_handle handle,
-     /*[IN]*/
+    /*[IN]*/
     uint8_t component,
-     /*[IN]*/
+    /*[IN]*/
     uint16_t setting
 )
 {
-    usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*) handle;
+    usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
     usb_status error = USBERR_ERROR;/* initializing */
     uint8_t ep_num = (uint8_t)(component & USB_STATUS_ENDPOINT_NUMBER_MASK);
     /* direction is in most significant bit */
-    uint8_t direction = (uint8_t)((component>>COMPONENT_PREPARE_SHIFT) & 0x01);
-    
+    uint8_t direction = (uint8_t)((component >> COMPONENT_PREPARE_SHIFT) & 1U);
+
     state_ptr->ep_info[ep_num].endpoint_status = setting;
-    
+
     /* check if the setting was to halt endpoint or unhalt it*/
     if (setting == USB_STATUS_STALLED)
-    {   /* stall the endpoint */
-        error = usb_dci_khci_stall_endpoint(handle,ep_num,direction);
+    { /* stall the endpoint */
+        error = usb_dci_khci_stall_endpoint(handle, ep_num, direction);
     }
     else if ((setting == USB_STATUS_IDLE) && (state_ptr->ep_info[ep_num].stall_flag))
     {
@@ -2155,151 +2187,153 @@ usb_status usb_dci_khci_set_endpoint_status
            directly from STALL_SERVICE for CONTROL ENDPOINT. Therefore, this
            method of unstall was employed to make the structure generic)*/
         direction = state_ptr->ep_info[ep_num].direction;
-        error = usb_dci_khci_unstall_endpoint(handle,ep_num,direction);
+        error = usb_dci_khci_unstall_endpoint(handle, ep_num, direction);
     }
 
     return error;
 }
 
-
 /*FUNCTION*----------------------------------------------------------------
-* 
-* Function Name  : usb_dci_khci_set_status
-* Returned Value : USB_OK or error code
-* Comments       :
-*     Provides API to set internal state
-* 
-*END*--------------------------------------------------------------------*/
+ *
+ * Function Name  : usb_dci_khci_set_status
+ * Returned Value : USB_OK or error code
+ * Comments       :
+ *     Provides API to set internal state
+ *
+ *END*--------------------------------------------------------------------*/
 usb_status usb_dci_khci_set_status
-   (
-      /* [IN] Handle to the usb device */
-      usb_device_handle   handle,
-      
-      /* [IN] What to set the error of */
-      uint8_t               component,
-      
-      /* [IN] What to set the error to */
-      uint16_t              setting
-   )
-{ 
+(
+    /* [IN] Handle to the usb device */
+    usb_device_handle handle,
+
+    /* [IN] What to set the error of */
+    uint8_t component,
+
+    /* [IN] What to set the error to */
+    uint16_t setting
+)
+{
     usb_khci_dev_state_struct_t* usb_dev_ptr;
     uint8_t error = USB_OK;
-  
+
     usb_dev_ptr = (usb_khci_dev_state_struct_t*)handle;
     OS_Mutex_lock(usb_dev_ptr->mutex);
-    
-    switch (component) 
+
+    switch(component)
     {
-        case USB_STATUS_DEVICE_STATE:
-            usb_dev_ptr->usb_state = setting;
-            break;
-        case USB_STATUS_DEVICE:
-            usb_dev_ptr->usb_device_status = setting;
-            break;
-        case USB_STATUS_INTERFACE:
-            break;
-        case USB_STATUS_CURRENT_CONFIG:
-            usb_dev_ptr->usb_curr_config = setting;
-            break;
-        case USB_STATUS_SOF_COUNT:
-            usb_dev_ptr->usb_sof_count = setting;
-            break;
+    case USB_STATUS_DEVICE_STATE:
+        usb_dev_ptr->usb_state = setting;
+        break;
+    case USB_STATUS_DEVICE:
+        usb_dev_ptr->usb_device_status = setting;
+        break;
+    case USB_STATUS_INTERFACE:
+        break;
+    case USB_STATUS_CURRENT_CONFIG:
+        usb_dev_ptr->usb_curr_config = setting;
+        break;
+    case USB_STATUS_SOF_COUNT:
+        usb_dev_ptr->usb_sof_count = setting;
+        break;
 #ifdef USBCFG_OTG
         case USB_STATUS_OTG:
-            usb_dev_ptr->usb_otg_status = setting;
-            break;
-#endif  
-        default:
-            
+        usb_dev_ptr->usb_otg_status = setting;
         break;
-   }/* Endswitch */
+#endif  
+    default:
 
-   OS_Mutex_unlock(usb_dev_ptr->mutex);
-   return error;   
+        break;
+    }/* Endswitch */
+
+    OS_Mutex_unlock(usb_dev_ptr->mutex);
+    return error;
 } /* EndBody */
 
 /*FUNCTION*----------------------------------------------------------------
-* 
-* Function Name  : usb_dci_khci_get_status
-* Returned Value : USB_OK or error code
-* Comments       :
-*     Provides API to access the USB internal state.
-* 
-*END*--------------------------------------------------------------------*/
+ *
+ * Function Name  : usb_dci_khci_get_status
+ * Returned Value : USB_OK or error code
+ * Comments       :
+ *     Provides API to access the USB internal state.
+ *
+ *END*--------------------------------------------------------------------*/
 usb_status usb_dci_khci_get_status
 (
     /* [IN] Handle to the USB device */
-    usb_device_handle   handle,
+    usb_device_handle handle,
 
     /* [IN] What to get the error of */
-    uint8_t              component,
+    uint8_t component,
 
     /* [OUT] The requested error */
-    uint16_t*            error
+    uint16_t* error
 )
 {
     usb_khci_dev_state_struct_t* usb_dev_ptr;
 
     usb_dev_ptr = (usb_khci_dev_state_struct_t*)handle;
-   
+
     OS_Mutex_lock(usb_dev_ptr->mutex);
-    switch (component) 
+    switch(component)
     {
-        case USB_STATUS_DEVICE_STATE:
-            *error = usb_dev_ptr->usb_state;
-            break;
+    case USB_STATUS_DEVICE_STATE:
+        *error = usb_dev_ptr->usb_state;
+        break;
 
-        case USB_STATUS_DEVICE:
-            *error = usb_dev_ptr->usb_device_status;
-            break;
+    case USB_STATUS_DEVICE:
+        *error = usb_dev_ptr->usb_device_status;
+        break;
 
-        case USB_STATUS_INTERFACE:
-            break;
+    case USB_STATUS_INTERFACE:
+        break;
 
-        case USB_STATUS_ADDRESS:
-            *error = usb_dev_ptr->device_address;
-            break;
+    case USB_STATUS_ADDRESS:
+        *error = usb_dev_ptr->device_address;
+        break;
 
-        case USB_STATUS_CURRENT_CONFIG:
-            *error = usb_dev_ptr->usb_curr_config;
-            break;
-        case USB_STATUS_SOF_COUNT:
-            *error = usb_dev_ptr->usb_sof_count;
-            break;
+    case USB_STATUS_CURRENT_CONFIG:
+        *error = usb_dev_ptr->usb_curr_config;
+        break;
+    case USB_STATUS_SOF_COUNT:
+        *error = usb_dev_ptr->usb_sof_count;
+        break;
+    case USB_STATUS_SPEED:
+        *error = usb_dev_ptr->speed;
+        break;
 #ifdef USBCFG_OTG
         case USB_STATUS_OTG:
-            *error = usb_dev_ptr->usb_otg_status;
-            break;
+        *error = usb_dev_ptr->usb_otg_status;
+        break;
 #endif 
-        default:    
-            break;
-   } /* Endswitch */
-   OS_Mutex_unlock(usb_dev_ptr->mutex);
-   return USB_OK;   
+    default:
+        break;
+    } /* Endswitch */
+    OS_Mutex_unlock(usb_dev_ptr->mutex);
+    return USB_OK;
 }
 
 usb_status usb_dci_khci_reset
 (
     /* [IN] Handle to the USB device */
-    usb_device_handle   handle
+    usb_device_handle handle
 )
 {
     usb_khci_dev_state_struct_t* usb_dev_ptr;
-    uint8_t                      cnt=0;
-        
+    uint8_t cnt = 0;
+
     usb_dev_ptr = (usb_khci_dev_state_struct_t*)handle;
-    
+
     /* De-Init All the End Point.  */
     for (cnt = 0; cnt < USBCFG_DEV_MAX_ENDPOINTS; cnt++)
     {
-        usb_dci_khci_deinit_endpoint(usb_dev_ptr,cnt,USB_RECV);
-        usb_dci_khci_deinit_endpoint(usb_dev_ptr,cnt,USB_SEND);
+        usb_dci_khci_deinit_endpoint(usb_dev_ptr, cnt, USB_RECV);
+        usb_dci_khci_deinit_endpoint(usb_dev_ptr, cnt, USB_SEND);
     }
 
     /* Re-Initialize All the end point */
     _usb_khci_reset_ep_state((usb_khci_dev_state_struct_t*)usb_dev_ptr);
     usb_dci_khci_init_xd((usb_device_handle)usb_dev_ptr);
-
+    usb_dev_ptr->is_reseting = 0;
     return USB_OK;
 }
 #endif

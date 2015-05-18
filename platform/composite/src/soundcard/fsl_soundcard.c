@@ -83,8 +83,8 @@ audio_ctrl_operation_t g_sai_ops =
     SAI_DRV_RxGetWatermark,
     SAI_DRV_TxGetFifoAddr,
     SAI_DRV_RxGetFifoAddr,
-    SAI_DRV_SendData,
-    SAI_DRV_ReceiveData
+    SAI_DRV_SendDataInt,
+    SAI_DRV_ReceiveDataInt
 };
 
 /* Instance of codec operation for sgtl5000. */
@@ -272,7 +272,7 @@ snd_status_t SND_TxConfigDataFormat(sound_card_t *card, ctrl_data_format_t *form
     {
         sample_size = 4;
     }
-    uint32_t * desAddr = ctrl->ops->Ctrl_TxGetFifoAddr(ctrl->instance, ctrl->fifo_channel);
+    uint32_t desAddr = ctrl->ops->Ctrl_TxGetFifoAddr(ctrl->instance, ctrl->fifo_channel);
     EDMA_DRV_ConfigLoopTransfer(
             &ctrl->dma_channel, ctrl->stcd, kEDMAMemoryToPeripheral,
             (uint32_t)buffer->buff, (uint32_t)desAddr, sample_size,
@@ -306,7 +306,7 @@ snd_status_t SND_RxConfigDataFormat(sound_card_t *card, ctrl_data_format_t *form
     {
         sample_size = 4;
     }
-    uint32_t * desAddr = ctrl->ops->Ctrl_RxGetFifoAddr(ctrl->instance,ctrl->fifo_channel);
+    uint32_t desAddr = ctrl->ops->Ctrl_RxGetFifoAddr(ctrl->instance,ctrl->fifo_channel);
     EDMA_DRV_ConfigLoopTransfer(
             &ctrl->dma_channel, ctrl->stcd, kEDMAPeripheralToMemory,
              (uint32_t)desAddr, (uint32_t)buffer->buff, sample_size,
@@ -426,10 +426,13 @@ void SND_TxCallback(void *param)
         buffer->buffer_error ++;
         buffer->first_io = true;
     }
+    else
+    {
 #if !USEDMA
     audio_controller_t * ctrl = &card->controller;
     ctrl->ops->Ctrl_SendData(ctrl->instance, buffer->output_curbuff, buffer->size);
 #endif
+    }
     /* post the sync */
     OSA_SemaPost(&buffer->sem);
 }
@@ -467,10 +470,13 @@ void SND_RxCallback(void *param)
         buffer->buffer_error ++;
         buffer->first_io = true;
     }
+    else
+     {
 #if !USEDMA
     audio_controller_t *ctrl = &card->controller;
     ctrl->ops->Ctrl_ReceiveData(ctrl->instance, buffer->input_curbuff, buffer->size);
 #endif
+    }
     OSA_SemaPost(&buffer->sem);
 }
 

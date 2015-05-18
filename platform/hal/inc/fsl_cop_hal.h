@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -30,12 +30,11 @@
 #ifndef __FSL_COP_HAL_H__
 #define __FSL_COP_HAL_H__
 
-#include "fsl_device_registers.h"
-#include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include "fsl_device_registers.h"
 
 /*! 
  * @addtogroup cop_hal
@@ -46,57 +45,56 @@
  * Definitions
  *******************************************************************************/
 
-#define COPWATCHDOG_DISABLE_VALUE            0U
-#define SERVICE_COPWDOG_FIRST_VALUE          0x55U
-#define SERVICE_COPWDOG_SECOND_VALUE         0xaaU
-#define RESET_COPWDOG_VALUE                  0U
-
 /*! @brief COP clock source selection.*/
 typedef enum _cop_clock_source {
-    kCopLpoClock,                            /*!< LPO clock,1K HZ.*/
+    kCopLpoClock,                            /*!< LPO clock,1K HZ. @internal gui name="LPO" */
 #if FSL_FEATURE_COP_HAS_MORE_CLKSRC
-    kCopMcgIrClock,                          /*!< MCG IRC Clock   */
-    kCopOscErClock,                          /*!< OSCER Clock     */
+    kCopMcgIrClock,                          /*!< MCG IRC Clock. @internal gui name="MCGIRCLK"*/
+    kCopOscErClock,                          /*!< OSCER Clock. @internal gui name="OSCERCLK"*/
 #endif
-    kCopBusClock                             /*!< BUS clock       */
+    kCopBusClock                             /*!< BUS clock. @internal gui name="Bus clock"*/
 }cop_clock_source_t;
 
 /*! @brief Define the value of the COP timeout cycles */
 typedef enum _cop_timeout_cycles {
-    kCopTimeout_short_2to5_or_long_2to13  = 1U,   /*!< 2 to 5 clock cycles when clock source is LPO or in short timeout mode otherwise 2 to 13 clock cycles */
-    kCopTimeout_short_2to8_or_long_2to16  = 2U,   /*!< 2 to 8 clock cycles when clock source is LPO or in short timeout mode otherwise 2 to 16 clock cycles */
-    kCopTimeout_short_2to10_or_long_2to18 = 3U    /*!< 2 to 10 clock cycles when clock source is LPO or in short timeout mode otherwise 2 to 18 clock cycles */
+    kCopTimeout_short_2to5_or_long_2to13  = 1U,   /*!< 2 to 5 clock cycles when clock source is LPO or in short timeout mode otherwise 2 to 13 clock cycles @internal gui name="2^5 or 2^13 clock" */
+    kCopTimeout_short_2to8_or_long_2to16  = 2U,   /*!< 2 to 8 clock cycles when clock source is LPO or in short timeout mode otherwise 2 to 16 clock cycles @internal gui name="2^8 or 2^16 clock" */
+    kCopTimeout_short_2to10_or_long_2to18 = 3U    /*!< 2 to 10 clock cycles when clock source is LPO or in short timeout mode otherwise 2 to 18 clock cycles @internal gui name="2^10 or 2^18 clock" */
 }cop_timeout_cycles_t;
 
 #if FSL_FEATURE_COP_HAS_LONGTIME_MODE
 /*! @breif Define the COP's timeout mode */
 typedef enum _cop_timeout_mode{
-    kCopShortTimeoutMode = 0U,      /*!< COP selects long timeout  */   
-    kCopLongTimeoutMode  = 1U       /*!< COP selects short timeout */
+    kCopShortTimeoutMode = 0U,      /*!< COP selects long timeout  @internal gui name="Short timeout" */
+    kCopLongTimeoutMode  = 1U       /*!< COP selects short timeout @internal gui name="Long timeout" */
 }cop_timeout_mode_t;
 #endif
 
-/*! @brief Define COP common configure */
-typedef union _cop_common_config{
-  uint32_t U;
-  struct CommonConfig{
-    uint32_t copWindowEnable    : 1;       /*!< Set COP watchdog run mode---Window mode or Normal mode >*/
+/*! 
+ * @brief Data structure to initialize the COP.
+ *
+ * This structure is used to initialize the COP during the cop_init function call.
+ * It contains all COP configurations.
+ * @internal gui name="COP configuration" id="copCfg"
+ */
+typedef struct CopConfig{
+    bool copWindowModeEnable;                   /*!< Set COP watchdog run mode---Window mode or Normal mode @internal gui name="Windowed mode" id="WindowedMode" */
 #if FSL_FEATURE_COP_HAS_LONGTIME_MODE
-    uint32_t copTimeoutMode     : 1;       /*!< Set COP watchdog timeout mode---Long timeout or Short tomeout >*/
-#else
-    uint32_t copClockSelect     : 1;       /*!< Set COP watchdog clock source >*/
+    cop_timeout_mode_t copTimeoutMode;          /*!< Set COP watchdog timeout mode---Long timeout or Short timeout @internal gui name="Timeout mode" id="TimeoutMode" */
+    bool copStopModeEnable;                     /*!< Set COP enable or disable in STOP mode @internal gui name="Stop mode" id="StopMode" */ 
+    bool copDebugModeEnable;                    /*!< Set COP enable or disable in DEBUG mode @internal gui name="Debug mode" id="DebugMode" >*/
 #endif
-    uint32_t copTimeout         : 2;       /*!< Set COP watchdog timeout value >*/
-#if FSL_FEATURE_COP_HAS_LONGTIME_MODE    
-    uint32_t copStopModeEnable  : 1;       /*!< Set COP enable or disable in STOP mode >*/ 
-    uint32_t copDebugModeEnable : 1;       /*!< Set COP enable or disable in DEBUG mode >*/
-    uint32_t copClockSource     : 2;       /*!< Set COP watchdog clock source >*/
-#else 
-    uint32_t reserved0          : 4;
-#endif
-    uint32_t reserved1          : 24;
-  }commonConfig;
-}cop_common_config_t;
+    cop_clock_source_t copClockSource;          /*!< Set COP watchdog clock source @internal gui name="Clock source" id="ClockSource" */
+    cop_timeout_cycles_t copTimeout;            /*!< Set COP watchdog timeout value @internal gui name="Timeout value" id="TimeoutValue" */
+}cop_config_t;
+
+/*! @brief cop status return codes.*/
+typedef enum _cop_status {
+    kStatus_COP_Success         = 0x0U, /*!< COP operation Succeed      */
+    kStatus_COP_Fail            = 0x01, /*!< COP operation Failed       */
+    kStatus_COP_NotInitlialized = 0x2U, /*!< COP is not initialized yet */
+    kStatus_COP_NullArgument    = 0x3U, /*!< Argument is NULL           */
+}cop_status_t;
 
 /*******************************************************************************
  * API
@@ -113,161 +111,87 @@ extern "C" {
   
   
 /*!
- * @brief config the COP watchdog.
+ * @brief Configures the COP Watchdog.
  *
- * The COP Control register is write once after reset.
+ * The COP control register is write once after reset.
  *
- * @param baseAddr The COP peripheral base address
- * @param copConfiguration configure COP control register
+ * @param base The COP peripheral base address
+ * @param configPtr configure COP control register
  */
-static inline void COP_HAL_SetCommonConfiguration(uint32_t baseAddr, cop_common_config_t copConfiguration)
-{
-    HW_SIM_COPC_WR(baseAddr, copConfiguration.U);
-}
-  
+void COP_HAL_SetConfig(SIM_Type * base, const cop_config_t *configPtr);
+
 /*!
- * @brief disable the COP watchdog.
+ * @brief Enables the COP Watchdog.
  *
- * This function is used to disable the COP watchdog and 
- * should be called after reset if your application does not need COP watchdog.
+ * After reset the COP is enabled.
  *
- * @param baseAddr The COP peripheral base address
  */
-static inline void COP_HAL_Disable(uint32_t baseAddr)
+static inline void COP_HAL_Enable(void)
 {
-    BW_SIM_COPC_COPT(baseAddr, COPWATCHDOG_DISABLE_VALUE);
+
+}
+
+/*!
+ * @brief Disables the COP Watchdog.
+ *
+ * This function disables the COP Watchdog and 
+ * should be called after reset if your application does not need the COP Watchdog.
+ *
+ * @param base The COP peripheral base address
+ */
+static inline void COP_HAL_Disable(SIM_Type * base)
+{
+    SIM_BWR_COPC_COPT(base, 0U);
 }
 
 /*!
  * @brief Determines whether the COP is enabled.
  *
- * This function is used to check whether the COP is running.
+ * This function checks whether the COP is running.
  *
- * @param baseAddr The COP peripheral base address
+ * @param base The COP peripheral base address
+ * @return State of the module
  * @retval true COP is enabled
  * @retval false COP is disabled
  */
-static inline bool COP_HAL_IsEnabled(uint32_t baseAddr)
+static inline bool COP_HAL_IsEnable(SIM_Type * base)
 {
-    return ((bool)BR_SIM_COPC_COPT(baseAddr));
+    return ((bool)SIM_BRD_COPC_COPT(base));
 }
 
 /*!
- * @brief Gets the COP clock source.
+ * @brief Servicing the COP Watchdog.
  *
- * This function is used to get the COP clock source.
- *
- * @param baseAddr The COP peripheral base address
- * @retval clockSource COP clock source, see cop_clock_source_t
- */
-static inline cop_clock_source_t COP_HAL_GetClockSource(uint32_t baseAddr)
-{
-#if FSL_FEATURE_COP_HAS_LONGTIME_MODE    
-   return ((cop_clock_source_t)BR_SIM_COPC_COPCLKSEL(baseAddr));
-#else
-   return ((cop_clock_source_t)BR_SIM_COPC_COPCLKS(baseAddr));
-#endif
-}
-
-/*!
- * @brief Returns timeout of COP watchdog .
- *
- * @param baseAddr The COP peripheral base address
- * @return COP timeout cycles
- */
-static inline cop_timeout_cycles_t COP_HAL_GetTimeoutCycles(uint32_t baseAddr)
-{
-    return ((cop_timeout_cycles_t)BR_SIM_COPC_COPT(baseAddr));
-}
-
-/*!
- * @brief get the COP watchdog run mode---window mode or normal window.
- *
- * @param baseAddr The COP peripheral base address
- * @retval 0 COP watchdog run in normal mode
- * @retval 1 COP watchdog run in window mode
- */
-static inline bool COP_HAL_GetWindowModeCmd(uint32_t baseAddr)
-{
-    return ((bool)BR_SIM_COPC_COPW(baseAddr));
-}
-
-#if FSL_FEATURE_COP_HAS_LONGTIME_MODE
-/*!
- * @brief Get the COP watchdog timeout mode.
- *
- * @param baseAddr The COP peripheral base address
- * @retval true COP watchdog in long timeout mode
- * @retval false COP watchdog in  short timeout mode
- */
-static inline cop_timeout_mode_t COP_HAL_GetTimeoutMode(uint32_t baseAddr)
-{
-    return ((cop_timeout_mode_t)BR_SIM_COPC_COPCLKS(baseAddr));
-}
-#endif
-
-
-#if FSL_FEATURE_COP_HAS_DEBUG_ENABLE
-/*!
- * @brief Get the COP watchdog running state in DEBUG mode.
- *
- * @param baseAddr The COP peripheral base address
- * @retval true COP watchdog enabled in debug mode
- * @retval false COP watchdog disabled in debug mode
- */
-static inline bool COP_HAL_GetEnabledInDebugModeCmd(uint32_t baseAddr)
-{
-    return(BR_SIM_COPC_COPDBGEN(baseAddr));
-}
-#endif
-
-#if FSL_FEATURE_COP_HAS_STOP_ENABLE
-/*!
- * @brief Get the COP watchdog running state in STOP mode.
- *
- * @param baseAddr The COP peripheral base address
- * @retval true COP watchdog enabled in stop mode
- * @retval false COP watchdog disabled in stop mode
- */
-static inline bool COP_HAL_GetEnabledInStopModeCmd(uint32_t baseAddr)
-{
-    return (BR_SIM_COPC_COPSTPEN(baseAddr));
-}
-#endif
-
-/*!
- * @brief Servicing COP watchdog.
- *
- * This function reset COP timeout by write 0x55 then 0xAA, 
- * write any other value will generate a system reset.
+ * This function resets the COP timeout by writing 0x55 then 0xAA. 
+ * Writing any other value generates a system reset.
  * The writing operations should be atomic.
- * @param baseAddr The COP peripheral base address
+ * @param base The COP peripheral base address
  */
-static inline void COP_HAL_Refresh(uint32_t baseAddr)
+static inline void COP_HAL_Refresh(SIM_Type * base)
 {
-    HW_SIM_SRVCOP_WR(baseAddr, SERVICE_COPWDOG_FIRST_VALUE);
-    HW_SIM_SRVCOP_WR(baseAddr, SERVICE_COPWDOG_SECOND_VALUE);
+    SIM_WR_SRVCOP(base, 0x55U);
+    SIM_WR_SRVCOP(base, 0xaaU);
 }
 
 /*!
- * @brief Reset system.
+ * @brief Resets the system.
  *
- * This function reset system
- * @param baseAddr The COP peripheral base address
+ * This function resets the system.
+ * @param base The COP peripheral base address
  */
-static inline void COP_HAL_ResetSystem(uint32_t baseAddr)
+static inline void COP_HAL_ResetSystem(SIM_Type * base)
 {
-    HW_SIM_SRVCOP_WR(baseAddr, RESET_COPWDOG_VALUE);
+    SIM_WR_SRVCOP(base, 0U);
 }
 
 /*!
- * @brief Restores the COP module to reset value.
+ * @brief Restores the COP module to the reset value.
  *
- * This function restores the COP module to reset value.
+ * This function restores the COP module to the reset value.
  *
- * @param baseAddr The COP peripheral base address
+ * @param base The COP peripheral base address
  */
-void COP_HAL_Init(uint32_t baseAddr);
+void COP_HAL_Init(SIM_Type * base);
 
 /*@}*/
 

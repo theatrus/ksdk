@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_wdog_driver.h"
+#if FSL_FEATURE_SOC_WDOG_COUNT
 
 /******************************************************************************
  * Code
@@ -40,6 +41,7 @@ void WDOG_EWM_IRQHandler(void)
 {
 }
 
+#endif
 
 /******************************************************************************
  * EOF

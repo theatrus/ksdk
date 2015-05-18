@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,6 +29,7 @@
  */
 
 #include "fsl_ewm_hal.h"
+#if FSL_FEATURE_SOC_EWM_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -41,31 +42,49 @@
 /*******************************************************************************
  * Code
  ******************************************************************************/
- 
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : EWM_HAL_SetConfig
+ * Description   : Initialize EWM peripheral to workable state.
+ *
+ *END**************************************************************************/
+void EWM_HAL_SetConfig(EWM_Type * base, const ewm_config_t *ewmConfigPtr)
+{
+	uint32_t value = 0;
+	assert(ewmConfigPtr);
+	value = EWM_CTRL_EWMEN(ewmConfigPtr->ewmEnable) | EWM_CTRL_ASSIN(ewmConfigPtr->ewmInAssertLogic) | 
+		EWM_CTRL_INEN(ewmConfigPtr->ewmInEnable) | EWM_CTRL_INTEN(ewmConfigPtr->intEnable);
+#if FSL_FEATURE_EWM_HAS_PRESCALER
+        EWM_WR_CLKPRESCALER(base, ewmConfigPtr->ewmPrescalerValue);
+#endif
+        EWM_WR_CMPL(base, ewmConfigPtr->ewmCmpLowValue);
+        EWM_WR_CMPH(base, ewmConfigPtr->ewmCmpHighValue);
+	EWM_WR_CTRL(base, value);
+}
+
 /*FUNCTION**********************************************************************
  *
  * Function Name : EWM_HAL_Init
- * Description   : Initialize EWM peripheral to reset state.
+ * Description   : Initialize EWM peripheral to workable state.
  *
  *END**************************************************************************/
-void EWM_HAL_Init(uint32_t baseAddr)
+void EWM_HAL_Init(EWM_Type * base)
 {
-    ewm_common_config_t ewmCommonConfig;
-    
-    ewmCommonConfig.commonConfig.ewmEnable          = (uint8_t)false;
-    ewmCommonConfig.commonConfig.ewmInAssertState   = (uint8_t)kEWMLogicZeroAssert;
-    ewmCommonConfig.commonConfig.ewmInputEnable     = (uint8_t)false;
-    ewmCommonConfig.commonConfig.ewmIntEnable       = (uint8_t)false;
-    ewmCommonConfig.commonConfig.reserved           = (uint8_t)0;
+    ewm_config_t ewmCommonConfig;
+    ewmCommonConfig.ewmEnable         = true;
+    ewmCommonConfig.ewmInEnable       = true;
+    ewmCommonConfig.ewmInAssertLogic  = true;
+    ewmCommonConfig.intEnable         = true;
 #if FSL_FEATURE_EWM_HAS_PRESCALER
-    EWM_HAL_SetPrescalerValue(baseAddr, (uint8_t)0);
+    ewmCommonConfig.ewmPrescalerValue = 0;
 #endif
-    EWM_HAL_SetCmpHighRegValue(baseAddr, (uint8_t)0x00); /*!< this value should be set prior to enable ewm to avoid rumaway code changes this register */
-    EWM_HAL_SetCmpHighRegValue(baseAddr, (uint8_t)0xff); /*!< this value should be set prior to enable ewm to avoid rumaway code changes this register */
-    
-    EWM_HAL_SetCommonConfig(baseAddr, ewmCommonConfig);
+    ewmCommonConfig.ewmCmpLowValue    = 0x00;
+    ewmCommonConfig.ewmCmpHighValue   = 0xfe;
+    EWM_HAL_SetConfig(base, &ewmCommonConfig);
 }
 
+#endif
 /*******************************************************************************
  * EOF
  *******************************************************************************/

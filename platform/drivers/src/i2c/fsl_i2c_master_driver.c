@@ -35,6 +35,8 @@
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
 
+#if FSL_FEATURE_SOC_I2C_COUNT
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -85,9 +87,9 @@ static i2c_status_t I2C_DRV_MasterReceive(uint32_t instance,
 i2c_status_t I2C_DRV_MasterInit(uint32_t instance, i2c_master_state_t * master)
 {
     assert(master);
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    I2C_Type * base = g_i2cBase[instance];
 
     /* Exit if current instance is already initialized */
     if (g_i2cStatePtr[instance])
@@ -105,7 +107,7 @@ i2c_status_t I2C_DRV_MasterInit(uint32_t instance, i2c_master_state_t * master)
     CLOCK_SYS_EnableI2cClock(instance);
 
     /* Initialize peripheral to known state.*/
-    I2C_HAL_Init(baseAddr);
+    I2C_HAL_Init(base);
 
     /* Save runtime structure pointer */
     g_i2cStatePtr[instance] = master;
@@ -117,7 +119,7 @@ i2c_status_t I2C_DRV_MasterInit(uint32_t instance, i2c_master_state_t * master)
     master->i2cIdle = true;
 
     /* Enable module.*/
-    I2C_HAL_Enable(baseAddr);
+    I2C_HAL_Enable(base);
 
     return kStatus_I2C_Success;
 }
@@ -130,15 +132,21 @@ i2c_status_t I2C_DRV_MasterInit(uint32_t instance, i2c_master_state_t * master)
  * and disable I2C interrupt.
  *
  *END**************************************************************************/
-void I2C_DRV_MasterDeinit(uint32_t instance)
+i2c_status_t I2C_DRV_MasterDeinit(uint32_t instance)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    /* Exit if current instance is already de-initialized or is gated.*/
+    if ((!g_i2cStatePtr[instance]) || (!CLOCK_SYS_GetI2cGateCmd(instance)))
+    {
+        return kStatus_I2C_Fail;
+    }
+
+    I2C_Type * base = g_i2cBase[instance];
     i2c_master_state_t * master = (i2c_master_state_t *)g_i2cStatePtr[instance];
 
     /* Disable module.*/
-    I2C_HAL_Disable(baseAddr);
+    I2C_HAL_Disable(base);
 
     /* Disable clock for I2C.*/
     CLOCK_SYS_DisableI2cClock(instance);
@@ -151,6 +159,8 @@ void I2C_DRV_MasterDeinit(uint32_t instance)
 
     /* Cleared state pointer. */
     g_i2cStatePtr[instance] = NULL;
+
+    return kStatus_I2C_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -163,9 +173,9 @@ void I2C_DRV_MasterDeinit(uint32_t instance)
 void I2C_DRV_MasterSetBaudRate(uint32_t instance, const i2c_device_t * device)
 {
     assert(device);
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    I2C_Type * base = g_i2cBase[instance];
     uint32_t i2cClockFreq;
 
     /* Get current runtime structure. */
@@ -176,7 +186,7 @@ void I2C_DRV_MasterSetBaudRate(uint32_t instance, const i2c_device_t * device)
     {
         /* Get the current bus clock.*/
         i2cClockFreq = CLOCK_SYS_GetI2cFreq(instance);
-        I2C_HAL_SetBaudRate(baseAddr, i2cClockFreq, device->baudRate_kbps, NULL);
+        I2C_HAL_SetBaudRate(base, i2cClockFreq, device->baudRate_kbps, NULL);
 
         /* Record baud rate change */
         master->lastBaudRate_kbps = device->baudRate_kbps;
@@ -345,22 +355,22 @@ i2c_status_t I2C_DRV_MasterGetReceiveStatus(uint32_t instance,
  *END**************************************************************************/
 void I2C_DRV_MasterIRQHandler(uint32_t instance)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    I2C_Type * base = g_i2cBase[instance];
 
     /* Clear the interrupt flag*/
-    I2C_HAL_ClearInt(baseAddr);
+    I2C_HAL_ClearInt(base);
 
     /* Get current runtime structure */
     i2c_master_state_t * master = (i2c_master_state_t *)g_i2cStatePtr[instance];
 
     /* Get current master transfer direction */
-    i2c_direction_t direction = I2C_HAL_GetDirMode(baseAddr);
+    i2c_direction_t direction = I2C_HAL_GetDirMode(base);
 
     /* Exit immediately if there is no transfer in progress OR not in master mode */
-    if ((!I2C_HAL_GetStatusFlag(baseAddr, kI2CBusBusy)) ||
-        (!I2C_HAL_IsMaster(baseAddr)))
+    if ((!I2C_HAL_GetStatusFlag(base, kI2CBusBusy)) ||
+        (!I2C_HAL_IsMaster(base)))
     {
         return;
     }
@@ -369,7 +379,7 @@ void I2C_DRV_MasterIRQHandler(uint32_t instance)
     if (direction == kI2CSend)
     {
         /* Check whether we got an ACK or NAK from the former byte we sent */
-        if (I2C_HAL_GetStatusFlag(baseAddr, kI2CReceivedNak))
+        if (I2C_HAL_GetStatusFlag(base, kI2CReceivedNak))
         {
             /* Record that we got a NAK */
             master->status = kStatus_I2C_ReceivedNak;
@@ -380,12 +390,12 @@ void I2C_DRV_MasterIRQHandler(uint32_t instance)
         else
         {
             /* Continue send if still have data. TxSize/txBuff index need
-             * increment first because one byte is already sent in order 
+             * increment first because one byte is already sent in order
              * to trigger interrupt */
             if (--master->txSize > 0)
             {
                /* Transmit next byte and update buffer index */
-                I2C_HAL_WriteByte(baseAddr, *(++master->txBuff));
+                I2C_HAL_WriteByte(base, *(++master->txBuff));
             }
             else
             {
@@ -404,15 +414,15 @@ void I2C_DRV_MasterIRQHandler(uint32_t instance)
                 break;
             case 0x1U:
                 /* For the byte before last, we need to set NAK */
-                I2C_HAL_SendNak(baseAddr);
+                I2C_HAL_SendNak(base);
                 break;
             default :
-                I2C_HAL_SendAck(baseAddr);
+                I2C_HAL_SendAck(base);
                 break;
         }
 
         /* Read recently received byte into buffer and update buffer index */
-        *(master->rxBuff++) = I2C_HAL_ReadByte(baseAddr);
+        *(master->rxBuff++) = I2C_HAL_ReadByte(base);
     }
 }
 
@@ -426,7 +436,7 @@ void I2C_DRV_MasterIRQHandler(uint32_t instance)
  *END**************************************************************************/
 static i2c_status_t I2C_DRV_MasterWait(uint32_t instance, uint32_t timeout_ms)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
     i2c_master_state_t * master = (i2c_master_state_t *)g_i2cStatePtr[instance];
     osa_status_t syncStatus;
@@ -455,9 +465,9 @@ static i2c_status_t I2C_DRV_MasterWait(uint32_t instance, uint32_t timeout_ms)
  *END**************************************************************************/
 static void I2C_DRV_CompleteTransfer(uint32_t instance)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    I2C_Type * base = g_i2cBase[instance];
     i2c_master_state_t * master = (i2c_master_state_t *)g_i2cStatePtr[instance];
 
     if ((!master->isRequesting)
@@ -465,10 +475,10 @@ static void I2C_DRV_CompleteTransfer(uint32_t instance)
      || (master->status == kStatus_I2C_Timeout))
     {
         /* Disable interrupt. */
-        I2C_HAL_SetIntCmd(baseAddr, false);
+        I2C_HAL_SetIntCmd(base, false);
 
         /* Generate stop signal. */
-        I2C_HAL_SendStop(baseAddr);
+        I2C_HAL_SendStop(base);
 
         /* Indicate I2C bus is idle. */
         master->i2cIdle = true;
@@ -495,9 +505,9 @@ static i2c_status_t I2C_DRV_SendAddress(uint32_t instance,
                                         i2c_direction_t direction,
                                         uint32_t timeout_ms)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    I2C_Type * base = g_i2cBase[instance];
     /* Get current runtime structure. */
     i2c_master_state_t * master = (i2c_master_state_t *)g_i2cStatePtr[instance];
 
@@ -552,7 +562,7 @@ static i2c_status_t I2C_DRV_SendAddress(uint32_t instance,
     master->txSize = addrSize;
 
     /* Send first byte in address buffer to trigger interrupt.*/
-    I2C_HAL_WriteByte(baseAddr, addrBuff[0]);
+    I2C_HAL_WriteByte(base, addrBuff[0]);
 
     /* Wait for the transfer to finish.*/
     I2C_DRV_MasterWait(instance, timeout_ms);
@@ -564,7 +574,7 @@ static i2c_status_t I2C_DRV_SendAddress(uint32_t instance,
         master->txSize = cmdSize;
 
         /* Send first byte in address buffer to trigger interrupt.*/
-        I2C_HAL_WriteByte(baseAddr, *cmdBuff);
+        I2C_HAL_WriteByte(base, *cmdBuff);
 
         /* Wait for the transfer to finish.*/
         I2C_DRV_MasterWait(instance, timeout_ms);
@@ -573,7 +583,7 @@ static i2c_status_t I2C_DRV_SendAddress(uint32_t instance,
     /*--------------- Send Address Again ------------------*/
     /* Send slave address again if receiving data from 10-bit address slave,
        OR conducting a cmd receive */
-    if ((master->status == kStatus_I2C_Success) && (direction == kI2CReceive) 
+    if ((master->status == kStatus_I2C_Success) && (direction == kI2CReceive)
           && (is10bitAddr || cmdBuff))
     {
         /* Need to send slave address again. */
@@ -581,10 +591,10 @@ static i2c_status_t I2C_DRV_SendAddress(uint32_t instance,
         master->txBuff = NULL;
 
         /* Need to generate a repeat start before changing to receive. */
-        I2C_HAL_SendStart(baseAddr);
+        I2C_HAL_SendStart(base);
 
         /* Send address byte 1 again. */
-        I2C_HAL_WriteByte(baseAddr, (uint8_t)(addrByte1 | 1U));
+        I2C_HAL_WriteByte(base, (uint8_t)(addrByte1 | 1U));
 
         /* Wait for the transfer to finish.*/
         I2C_DRV_MasterWait(instance, timeout_ms);
@@ -613,10 +623,10 @@ static i2c_status_t I2C_DRV_MasterSend(uint32_t instance,
                                        uint32_t timeout_ms,
                                        bool isBlocking)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
     assert(txBuff);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    I2C_Type * base = g_i2cBase[instance];
     i2c_master_state_t * master = (i2c_master_state_t *)g_i2cStatePtr[instance];
 
     /* Return if current instance is used */
@@ -642,14 +652,14 @@ static i2c_status_t I2C_DRV_MasterSend(uint32_t instance,
     I2C_DRV_MasterSetBaudRate(instance, device);
 
     /* Set direction to send for sending of address and data. */
-    I2C_HAL_SetDirMode(baseAddr, kI2CSend);
+    I2C_HAL_SetDirMode(base, kI2CSend);
 
     /* Enable i2c interrupt.*/
-    I2C_HAL_ClearInt(baseAddr);
-    I2C_HAL_SetIntCmd(baseAddr, true);
+    I2C_HAL_ClearInt(base);
+    I2C_HAL_SetIntCmd(base, true);
 
     /* Generate start signal. */
-    I2C_HAL_SendStart(baseAddr);
+    I2C_HAL_SendStart(base);
 
     /* Send out slave address. */
     I2C_DRV_SendAddress(instance, device, cmdBuff, cmdSize, kI2CSend, timeout_ms);
@@ -662,7 +672,7 @@ static i2c_status_t I2C_DRV_MasterSend(uint32_t instance,
         master->txSize = txSize;
 
         /* Send first byte in transmit buffer to trigger interrupt.*/
-        I2C_HAL_WriteByte(baseAddr, master->txBuff[0]);
+        I2C_HAL_WriteByte(base, master->txBuff[0]);
 
         if (isBlocking)
         {
@@ -673,12 +683,12 @@ static i2c_status_t I2C_DRV_MasterSend(uint32_t instance,
     else if (master->status == kStatus_I2C_Timeout)
     {
         /* Disable interrupt. */
-        I2C_HAL_SetIntCmd(baseAddr, false);
+        I2C_HAL_SetIntCmd(base, false);
 
-        if (I2C_HAL_GetStatusFlag(baseAddr, kI2CBusBusy))
+        if (I2C_HAL_GetStatusFlag(base, kI2CBusBusy))
         {
             /* Generate stop signal. */
-            I2C_HAL_SendStop(baseAddr);
+            I2C_HAL_SendStop(base);
         }
 
         /* Indicate I2C bus is idle. */
@@ -705,10 +715,10 @@ static i2c_status_t I2C_DRV_MasterReceive(uint32_t instance,
                                           uint32_t timeout_ms,
                                           bool isBlocking)
 {
-    assert(instance < HW_I2C_INSTANCE_COUNT);
+    assert(instance < I2C_INSTANCE_COUNT);
     assert(rxBuff);
 
-    uint32_t baseAddr = g_i2cBaseAddr[instance];
+    I2C_Type * base = g_i2cBase[instance];
     i2c_master_state_t * master = (i2c_master_state_t *)g_i2cStatePtr[instance];
 
     /* Return if current instance is used */
@@ -734,14 +744,14 @@ static i2c_status_t I2C_DRV_MasterReceive(uint32_t instance,
     I2C_DRV_MasterSetBaudRate(instance, device);
 
     /* Set direction to send for sending of address. */
-    I2C_HAL_SetDirMode(baseAddr, kI2CSend);
+    I2C_HAL_SetDirMode(base, kI2CSend);
 
     /* Enable i2c interrupt.*/
-    I2C_HAL_ClearInt(baseAddr);
-    I2C_HAL_SetIntCmd(baseAddr, true);
+    I2C_HAL_ClearInt(base);
+    I2C_HAL_SetIntCmd(base, true);
 
     /* Generate start signal. */
-    I2C_HAL_SendStart(baseAddr);
+    I2C_HAL_SendStart(base);
 
     /* Send out slave address. */
     I2C_DRV_SendAddress(instance, device, cmdBuff, cmdSize, kI2CReceive, timeout_ms);
@@ -750,20 +760,20 @@ static i2c_status_t I2C_DRV_MasterReceive(uint32_t instance,
     if (master->status == kStatus_I2C_Success)
     {
         /* Change direction to receive. */
-        I2C_HAL_SetDirMode(baseAddr, kI2CReceive);
+        I2C_HAL_SetDirMode(base, kI2CReceive);
 
         /* Send NAK if only one byte to read. */
         if (rxSize == 0x1U)
         {
-            I2C_HAL_SendNak(baseAddr);
+            I2C_HAL_SendNak(base);
         }
         else
         {
-            I2C_HAL_SendAck(baseAddr);
+            I2C_HAL_SendAck(base);
         }
 
         /* Dummy read to trigger receive of next byte in interrupt. */
-        I2C_HAL_ReadByte(baseAddr);
+        I2C_HAL_ReadByte(base);
 
         if (isBlocking)
         {
@@ -774,12 +784,12 @@ static i2c_status_t I2C_DRV_MasterReceive(uint32_t instance,
     else if (master->status == kStatus_I2C_Timeout)
     {
         /* Disable interrupt. */
-        I2C_HAL_SetIntCmd(baseAddr, false);
+        I2C_HAL_SetIntCmd(base, false);
 
-        if (I2C_HAL_GetStatusFlag(baseAddr, kI2CBusBusy))
+        if (I2C_HAL_GetStatusFlag(base, kI2CBusBusy))
         {
             /* Generate stop signal. */
-            I2C_HAL_SendStop(baseAddr);
+            I2C_HAL_SendStop(base);
         }
 
         /* Indicate I2C bus is idle. */
@@ -789,6 +799,7 @@ static i2c_status_t I2C_DRV_MasterReceive(uint32_t instance,
     return master->status;
 }
 
+#endif /* FSL_FEATURE_SOC_I2C_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

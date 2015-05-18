@@ -35,11 +35,11 @@
  ******************************************************************************/
 
 /* Table of base addresses for SAI instances. */
-const uint32_t g_saiBaseAddr[] = I2S_BASE_ADDRS;
+I2S_Type * const g_saiBase[I2S_INSTANCE_COUNT] = I2S_BASE_PTRS;
 
 /* Table to save sai IRQ enum numbers defined in CMSIS header file. */
-const IRQn_Type g_saiTxIrqId[HW_I2S_INSTANCE_COUNT] = I2S_TX_IRQS;
-const IRQn_Type g_saiRxIrqId[HW_I2S_INSTANCE_COUNT] = I2S_RX_IRQS;
+const IRQn_Type g_saiTxIrqId[I2S_INSTANCE_COUNT] = I2S_TX_IRQS;
+const IRQn_Type g_saiRxIrqId[I2S_INSTANCE_COUNT] = I2S_RX_IRQS;
 
 /*******************************************************************************
  * EOF

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -31,11 +31,20 @@
 #include "fsl_sai_driver.h"
 #include "fsl_interrupt_manager.h"
 #include "fsl_clock_manager.h"
+#if FSL_FEATURE_SOC_I2S_COUNT
 
 /*******************************************************************************
- *Definitation
+ *Definition
  ******************************************************************************/
-sai_state_t * volatile sai_state_ids[HW_I2S_INSTANCE_COUNT][2];
+sai_state_t * volatile sai_state_ids[I2S_INSTANCE_COUNT][2];
+
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+/* EDMA callback function */
+void SAI_DRV_EdmaCallback(void *param, edma_chn_status_t status);
+#else
+void SAI_DRV_DmaCallback(void *param, dma_channel_status_t status);
+#endif
+
 
 /*******************************************************************************
  * Code
@@ -49,7 +58,7 @@ sai_state_t * volatile sai_state_ids[HW_I2S_INSTANCE_COUNT][2];
  *END**************************************************************************/
 sai_status_t SAI_DRV_TxInit(uint32_t instance, sai_user_config_t * config, sai_state_t *state)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     /* Open clock gate for sai instance */
     CLOCK_SYS_EnableSaiClock(instance);
     /*Check if the device is busy */
@@ -73,13 +82,15 @@ sai_status_t SAI_DRV_TxInit(uint32_t instance, sai_user_config_t * config, sai_s
     SAI_HAL_TxSetWatermark(reg_base, config->watermark);
 #endif
 
-    /* Fill the state strucutre */
+    /* Fill the state structure */
     sai_state_ids[instance][0]->sync_mode = config->sync_mode;
     sai_state_ids[instance][0]->fifo_channel = config->channel;
+    sai_state_ids[instance][0]->dma_source = config->dma_source;
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
     sai_state_ids[instance][0]->watermark = config->watermark;
 #endif
     sai_state_ids[instance][0]->master_slave = config->slave_master;
+    OSA_SemaCreate(&state->sem, 0);
     INT_SYS_EnableIRQ(g_saiTxIrqId[instance]);
  
     return kStatus_SAI_Success;
@@ -93,7 +104,7 @@ sai_status_t SAI_DRV_TxInit(uint32_t instance, sai_user_config_t * config, sai_s
  *END**************************************************************************/
 sai_status_t SAI_DRV_RxInit(uint32_t instance, sai_user_config_t * config, sai_state_t *state)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     /* Open clock gate for sai instance */
     CLOCK_SYS_EnableSaiClock(instance);
     /*Check if the device is busy */
@@ -116,13 +127,15 @@ sai_status_t SAI_DRV_RxInit(uint32_t instance, sai_user_config_t * config, sai_s
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
     SAI_HAL_RxSetWatermark(reg_base, config->watermark);
 #endif
-    /* Fill the state strucutre */
+    /* Fill the state structure */
     sai_state_ids[instance][1]->sync_mode = config->sync_mode;
     sai_state_ids[instance][1]->fifo_channel = config->channel;
+    sai_state_ids[instance][1]->dma_source = config->dma_source;
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
     sai_state_ids[instance][1]->watermark = config->watermark;
 #endif
     sai_state_ids[instance][1]->master_slave = config->slave_master;
+    OSA_SemaCreate(&state->sem, 0);
     INT_SYS_EnableIRQ(g_saiRxIrqId[instance]);
  
     return kStatus_SAI_Success;
@@ -138,7 +151,6 @@ void SAI_DRV_TxGetDefaultSetting(sai_user_config_t * config)
 {
     config->bclk_source = kSaiBclkSourceMclkDiv;
     config->channel = 0;
-    config->mclk_divide_enable = true;
     config->mclk_source = kSaiMclkSourceSysclk;
     config->protocol = kSaiBusI2SType;
     config->slave_master = kSaiMaster;
@@ -158,7 +170,6 @@ void SAI_DRV_RxGetDefaultSetting(sai_user_config_t * config)
 {
     config->bclk_source = kSaiBclkSourceMclkDiv;
     config->channel = 0;
-    config->mclk_divide_enable = true;
     config->mclk_source = kSaiMclkSourceSysclk;
     config->protocol = kSaiBusI2SType;
     config->slave_master = kSaiMaster;
@@ -176,13 +187,24 @@ void SAI_DRV_RxGetDefaultSetting(sai_user_config_t * config)
  *END**************************************************************************/
 sai_status_t SAI_DRV_TxDeinit(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     SAI_DRV_TxSetDmaCmd(instance, false);
     SAI_DRV_TxSetIntCmd(instance, false);
     SAI_HAL_TxDisable(reg_base);
     SAI_HAL_TxSetReset(reg_base, kSaiResetTypeSoftware);
     SAI_HAL_TxClearStateFlag(reg_base, kSaiStateFlagSoftReset);
-
+    /* Release dma channel */
+    if (sai_state_ids[instance][0]->use_dma)
+    {
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+        EDMA_DRV_StopChannel(&sai_state_ids[instance][0]->edma_chn);
+        EDMA_DRV_ReleaseChannel(&sai_state_ids[instance][0]->edma_chn);
+#else
+        DMA_DRV_FreeChannel(&sai_state_ids[instance][0]->chn);
+#endif
+    }
+    /* Destory sem */
+    OSA_SemaDestroy(&sai_state_ids[instance][0]->sem);
     sai_state_ids[instance][0] = NULL;
     /* Check if need to close the clock gate */
     if  ((sai_state_ids[instance][0] == NULL) && (sai_state_ids[instance][1] == NULL))
@@ -200,12 +222,23 @@ sai_status_t SAI_DRV_TxDeinit(uint32_t instance)
  *END**************************************************************************/
 sai_status_t SAI_DRV_RxDeinit(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     SAI_DRV_RxSetDmaCmd(instance, false);
     SAI_DRV_RxSetIntCmd(instance, false);
     SAI_HAL_RxDisable(reg_base);
     SAI_HAL_RxSetReset(reg_base, kSaiResetTypeSoftware);
     SAI_HAL_RxClearStateFlag(reg_base, kSaiStateFlagSoftReset);
+    /* Release dma channel */
+    if (sai_state_ids[instance][1]->use_dma)
+    {
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+        EDMA_DRV_ReleaseChannel(&sai_state_ids[instance][1]->edma_chn);
+#else
+        DMA_DRV_FreeChannel(&sai_state_ids[instance][1]->chn);
+#endif
+    }
+    /* Destory sem */
+    OSA_SemaDestroy(&sai_state_ids[instance][1]->sem);
 
     sai_state_ids[instance][1] = NULL;
     /* Check if need to close the clock gate */
@@ -225,7 +258,7 @@ sai_status_t SAI_DRV_RxDeinit(uint32_t instance)
  *END**************************************************************************/
 void SAI_DRV_TxSetWatermark(uint32_t instance,uint32_t watermark)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     SAI_HAL_TxSetWatermark(reg_base,watermark);
     sai_state_ids[instance][0]->watermark = watermark;
 }
@@ -238,7 +271,7 @@ void SAI_DRV_TxSetWatermark(uint32_t instance,uint32_t watermark)
  *END**************************************************************************/
 void SAI_DRV_RxSetWatermark(uint32_t instance,uint32_t watermark)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     SAI_HAL_RxSetWatermark(reg_base,watermark);
     sai_state_ids[instance][1]->watermark = watermark;
 }
@@ -252,7 +285,7 @@ void SAI_DRV_RxSetWatermark(uint32_t instance,uint32_t watermark)
  *END**************************************************************************/
 sai_status_t SAI_DRV_TxConfigDataFormat(uint32_t instance, sai_data_format_t *format)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     memcpy(&sai_state_ids[instance][0]->format, format, sizeof(sai_data_format_t));
     if(sai_state_ids[instance][0]->master_slave == kSaiMaster)
     {
@@ -269,29 +302,18 @@ sai_status_t SAI_DRV_TxConfigDataFormat(uint32_t instance, sai_data_format_t *fo
 #if FSL_FEATURE_SAI_HAS_MCLKDIV_REGISTER
         uint32_t frequency = 0;
         /* Get the clock source frequency */
-        frequency = CLOCK_SYS_GetSaiFreq(instance, kClockSaiSrcSysClk);
+        uint32_t mclk_sel = SAI_HAL_GetMclkSrc(reg_base);
+        frequency = CLOCK_SYS_GetSaiFreq(instance, (clock_sai_src_t)mclk_sel);
         /* Configure master clock */
         SAI_HAL_SetMclkDiv(reg_base, format->mclk, frequency);
 #endif
         /* Master clock and bit clock setting */
         SAI_HAL_TxSetBclkDiv(reg_base, divider);
     }
-    SAI_HAL_TxSetFrameSyncWidth(reg_base, format->bits);
-    /* Frmae size and word size setting */
-    SAI_HAL_TxSetFirstWordSize(reg_base, format->bits);
-    SAI_HAL_TxSetWordSize(reg_base, format->bits);
-    SAI_HAL_TxSetWordStartIndex(reg_base, 1);
-    SAI_HAL_TxSetFirstBitShifted(reg_base, format->bits);
-    /* The chennl number configuration */
-    if (format->mono_streo == kSaiMono)
-    {
-        SAI_HAL_TxSetWordMask(reg_base, 2u);
-    }
-    else
-    {
-        SAI_HAL_TxSetWordMask(reg_base, 0u);
-    }
-  
+    SAI_HAL_TxSetWordWidth(reg_base, sai_state_ids[instance][0]->protocol, format->bits);
+    /* The channel number configuration */
+    SAI_HAL_TxSetMonoStereo(reg_base, format->mono_stereo);
+
     return kStatus_SAI_Success;
 }
 
@@ -303,7 +325,7 @@ sai_status_t SAI_DRV_TxConfigDataFormat(uint32_t instance, sai_data_format_t *fo
  *END**************************************************************************/
 sai_status_t SAI_DRV_RxConfigDataFormat(uint32_t instance, sai_data_format_t *format)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
 
     memcpy(&sai_state_ids[instance][1]->format, format, sizeof(sai_data_format_t));
     if(sai_state_ids[instance][1]->master_slave == kSaiMaster)
@@ -321,29 +343,17 @@ sai_status_t SAI_DRV_RxConfigDataFormat(uint32_t instance, sai_data_format_t *fo
 #if FSL_FEATURE_SAI_HAS_MCLKDIV_REGISTER
         uint32_t frequency = 0;
         /* Get the clock source frequency */
-        frequency = CLOCK_SYS_GetSystemClockFreq();
+        uint32_t mclk_sel = SAI_HAL_GetMclkSrc(reg_base);
+        frequency = CLOCK_SYS_GetSaiFreq(instance, (clock_sai_src_t)mclk_sel);
         /* Configure master clock */
         SAI_HAL_SetMclkDiv(reg_base, format->mclk, frequency);
 #endif
         /* Master clock and bit clock setting */
         SAI_HAL_RxSetBclkDiv(reg_base, divider);
     }
-    SAI_HAL_RxSetFrameSyncWidth(reg_base, format->bits);
-    /* Frmae size and word size setting */
-    SAI_HAL_RxSetFirstWordSize(reg_base, format->bits);
-    SAI_HAL_RxSetWordSize(reg_base, format->bits);
-    SAI_HAL_RxSetWordStartIndex(reg_base, 1);
-    SAI_HAL_RxSetFirstBitShifted(reg_base, format->bits);
-    /* The chennl number configuration */
-    if (format->mono_streo == kSaiMono)
-    {
-        SAI_HAL_RxSetWordMask(reg_base, 2u);
-    }
-    else
-    {
-        SAI_HAL_RxSetWordMask(reg_base, 0u);
-    }
-  
+    SAI_HAL_RxSetWordWidth(reg_base, sai_state_ids[instance][1]->protocol, format->bits);
+    /* The channel number configuration */
+    SAI_HAL_RxSetMonoStereo(reg_base, format->mono_stereo);
     return kStatus_SAI_Success;
 }
 
@@ -355,7 +365,7 @@ sai_status_t SAI_DRV_RxConfigDataFormat(uint32_t instance, sai_data_format_t *fo
  *END**************************************************************************/
 void SAI_DRV_TxStartModule(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     /* If the sync mode is synchronous, it will need Rx enable bit clock */
     if(sai_state_ids[instance][0]->sync_mode == kSaiModeSync)
     {
@@ -376,7 +386,7 @@ void SAI_DRV_TxStartModule(uint32_t instance)
  *END**************************************************************************/
 void SAI_DRV_RxStartModule(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     /* If the sync mode is synchronous, it will need Tx enable bit clock */
     if(sai_state_ids[instance][1]->sync_mode == kSaiModeSync)
     {
@@ -397,7 +407,7 @@ void SAI_DRV_RxStartModule(uint32_t instance)
  *END**************************************************************************/
 void SAI_DRV_TxIRQHandler(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     uint8_t data_size = 0;
     uint8_t i = 0;
     sai_data_format_t format = sai_state_ids[instance][0]->format;
@@ -419,8 +429,8 @@ void SAI_DRV_TxIRQHandler(uint32_t instance)
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
     uint8_t j = 0;
     /* Interrupt used to transfer data. */
-    if((SAI_HAL_TxGetStateFlag(reg_base, kSaiStateFlagFIFORequest))
-        && (SAI_HAL_TxGetIntCmd(reg_base, kSaiIntrequestFIFORequest)))
+    if((SAI_HAL_TxGetStateFlag(reg_base, kSaiStateFlagFIFORequest)) &&
+        (!sai_state_ids[instance][0]->use_dma))
     {
         uint32_t watermark = sai_state_ids[instance][0]->watermark;
         uint8_t space = FSL_FEATURE_SAI_FIFO_COUNT - watermark;
@@ -460,8 +470,8 @@ void SAI_DRV_TxIRQHandler(uint32_t instance)
         }
     }
 #else
-    if((SAI_HAL_TxGetStateFlag(reg_base, kSaiStateFlagFIFOWarning))
-        && (SAI_HAL_TxGetIntCmd(reg_base, kSaiIntrequestFIFOWarning)))
+    if((SAI_HAL_TxGetStateFlag(reg_base, kSaiStateFlagFIFOWarning)) &&
+        (!sai_state_ids[instance][0]->use_dma))
     {
         for(i = 0; i < data_size; i ++)
         {
@@ -477,6 +487,7 @@ void SAI_DRV_TxIRQHandler(uint32_t instance)
             void * callback_param = sai_state_ids[instance][0]->callback_param;
             sai_state_ids[instance][0]->count = 0;
             sai_state_ids[instance][0]->len = 0;
+            OSA_SemaPost(&sai_state_ids[instance][0]->sem);
             if (sai_state_ids[instance][0]->callback)
             {
                 (sai_state_ids[instance][0]->callback)(callback_param);
@@ -485,7 +496,7 @@ void SAI_DRV_TxIRQHandler(uint32_t instance)
             {
                 SAI_HAL_TxSetIntCmd(reg_base, kSaiIntrequestFIFOWarning, false);
             }
-        }        
+        }
     }
 #endif
 }
@@ -498,7 +509,7 @@ void SAI_DRV_TxIRQHandler(uint32_t instance)
  *END**************************************************************************/
 void SAI_DRV_RxIRQHandler(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     uint8_t i = 0;
     uint8_t data_size = 0;
     uint32_t data = 0;
@@ -520,8 +531,8 @@ void SAI_DRV_RxIRQHandler(uint32_t instance)
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
     uint8_t j = 0;
     /* Interrupt used to transfer data. */
-    if((SAI_HAL_RxGetStateFlag(reg_base, kSaiStateFlagFIFORequest))
-        && (SAI_HAL_RxGetIntCmd(reg_base, kSaiIntrequestFIFORequest)))
+    if((SAI_HAL_RxGetStateFlag(reg_base, kSaiStateFlagFIFORequest)) &&
+        (!sai_state_ids[instance][1]->use_dma))
     {
         uint8_t space = sai_state_ids[instance][1]->watermark;
         /*Judge if the data need to transmit is less than space */
@@ -558,8 +569,8 @@ void SAI_DRV_RxIRQHandler(uint32_t instance)
         }
     }
 #else
-    if((SAI_HAL_RxGetStateFlag(reg_base, kSaiStateFlagFIFOWarning))
-        && (SAI_HAL_RxGetIntCmd(reg_base, kSaiIntrequestFIFOWarning)))
+    if((SAI_HAL_RxGetStateFlag(reg_base, kSaiStateFlagFIFOWarning)) &&
+        (!sai_state_ids[instance][1]->use_dma))
     {
         data = SAI_HAL_ReceiveData(reg_base, sai_state_ids[instance][1]->fifo_channel);
         for(i = 0; i < data_size; i ++)
@@ -574,6 +585,7 @@ void SAI_DRV_RxIRQHandler(uint32_t instance)
             void *callback_param = sai_state_ids[instance][1]->callback_param;
             sai_state_ids[instance][1]->count = 0;
             sai_state_ids[instance][1]->len = 0;
+            OSA_SemaPost(&sai_state_ids[instance][1]->sem);
             if (sai_state_ids[instance][1]->callback)
             {
                 (sai_state_ids[instance][1]->callback)(callback_param);
@@ -624,14 +636,20 @@ void *callback_param
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : SAI_DRV_SendData
+ * Function Name : SAI_DRV_SendDataInt
  * Description   : The function would tell sai driver to start send a period of
  * data to sai tx fifo.
  *END**************************************************************************/
-uint32_t SAI_DRV_SendData(uint32_t instance, uint8_t *addr, uint32_t len)
+uint32_t SAI_DRV_SendDataInt(uint32_t instance, uint8_t *addr, uint32_t len)
 {
+    I2S_Type * base = g_saiBase[instance];
     sai_state_ids[instance][0]->len = len;
     sai_state_ids[instance][0]->address= addr;
+#if FSL_FEATURE_SAI_FIFO_COUNT > 1
+    SAI_HAL_TxSetIntCmd(base, kSaiIntrequestFIFOError | kSaiIntrequestFIFORequest, true);
+#else
+    SAI_HAL_TxSetIntCmd(base, kSaiIntrequestFIFOError | kSaiIntrequestFIFOWarning, true);
+#endif
     SAI_DRV_TxStartModule(instance);
     return len;
 }
@@ -642,68 +660,207 @@ uint32_t SAI_DRV_SendData(uint32_t instance, uint8_t *addr, uint32_t len)
  * Description   : The function would tell sai driver to start receive a period of
  * data from sai rx fifo.
  *END**************************************************************************/
-uint32_t SAI_DRV_ReceiveData(uint32_t instance, uint8_t *addr, uint32_t len)
+uint32_t SAI_DRV_ReceiveDataInt(uint32_t instance, uint8_t *addr, uint32_t len)
 {
+    I2S_Type * base = g_saiBase[instance];
     sai_state_ids[instance][1]->len = len;
     sai_state_ids[instance][1]->address= addr;
+#if FSL_FEATURE_SAI_FIFO_COUNT > 1
+    SAI_HAL_RxSetIntCmd(base, kSaiIntrequestFIFOError | kSaiIntrequestFIFORequest, true);
+#else
+    SAI_HAL_RxSetIntCmd(base, kSaiIntrequestFIFOError | kSaiIntrequestFIFOWarning, true);
+#endif
     SAI_DRV_RxStartModule(instance);
     return len;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : SAI_DRV_SendDataBlocking.
+ * Function Name : SAI_DRV_SendDatadma
  * Description   : The function would tell sai driver to start send a period of
- * data to sai tx fifo i n polling way.
+ * data to sai tx fifo. This function will configure and start dma.
  *END**************************************************************************/
-uint32_t SAI_DRV_SendDataBlocking(uint32_t instance, uint8_t * addr,uint32_t len)
+uint32_t SAI_DRV_SendDataDma(uint32_t instance, uint8_t *addr, uint32_t len)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
-    uint32_t i, j = 0;
-    uint32_t data = 0;
-    sai_data_format_t *format = &sai_state_ids[instance][0]->format;
-    uint32_t channel = sai_state_ids[instance][0]->fifo_channel;
-    /* Open FIFO error interrupt */
-    SAI_HAL_TxSetIntCmd(reg_base, kSaiIntrequestFIFOError,true);
-    for(i = 0; i < len/(format->bits/8); i++)
+    I2S_Type * base = g_saiBase[instance];
+    uint32_t bytes = sai_state_ids[instance][0]->format.bits/8;
+    uint32_t destAddr = SAI_HAL_TxGetFifoAddr(base,sai_state_ids[instance][0]->fifo_channel);
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+    edma_chn_state_t *edma_chn = &sai_state_ids[instance][0]->edma_chn;
+    edma_software_tcd_t *tcd = sai_state_ids[instance][0]->tcd;
+    uint32_t bytesOnEachRequest = 0;
+#if FSL_FEATURE_SAI_FIFO_COUNT > 1
+        bytesOnEachRequest = bytes * sai_state_ids[instance][0]->watermark;
+#else
+        bytesOnEachRequest = bytes;
+#endif /* FSL_FEATURE_SAI_FIFO_COUNT > 1 */
+#else
+    dma_channel_t *chn = &sai_state_ids[instance][0]->chn;
+#endif /* FSL_FEATURE_EDMA_MODULE_CHANNEL  */
+    if (!sai_state_ids[instance][0]->use_dma)
     {
-        for(j = 0; j < format->bits/8; j ++)
+        uint32_t ret;
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+        ret = EDMA_DRV_RequestChannel(kEDMAAnyChannel,
+            (dma_request_source_t)sai_state_ids[instance][0]->dma_source, edma_chn);
+        if (ret == kEDMAInvalidChannel)
         {
-            data |= ((uint32_t)(*addr) << (j * 8u));
-            addr ++;
+            return kStatus_SAI_Fail;
         }
-        SAI_HAL_SendDataBlocking(reg_base,channel,data);
-        data = 0;
+        EDMA_DRV_InstallCallback(edma_chn, SAI_DRV_EdmaCallback, 
+            sai_state_ids[instance][0]);
+#else
+        ret = DMA_DRV_RequestChannel(kDmaAnyChannel, 
+            (dma_request_source_t)sai_state_ids[instance][0]->dma_source, chn);
+        if (ret == kDmaInvalidChannel)
+        {
+            return kStatus_SAI_Fail;
+        }
+        DMA_DRV_RegisterCallback(chn, SAI_DRV_DmaCallback,
+            sai_state_ids[instance][0]);
+#endif
+        sai_state_ids[instance][0]->use_dma = true;
     }
+    if (bytes == 3)
+    {
+        bytes = 4;
+    }
+    sai_state_ids[instance][0]->len = len;
+    sai_state_ids[instance][0]->address = addr;
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+     /* Configure Edma */
+    EDMA_DRV_ConfigLoopTransfer(edma_chn, tcd,kEDMAMemoryToPeripheral, 
+        (uint32_t)addr, destAddr, bytes, bytesOnEachRequest, len, 1);
+    EDMA_DRV_StartChannel(&sai_state_ids[instance][0]->edma_chn);   
+#else
+    /* Configure Dma */
+    DMA_DRV_ConfigTransfer(chn, kDmaMemoryToPeripheral,
+        bytes, (uint32_t)addr, destAddr, len);
+    DMA_DRV_StartChannel(&sai_state_ids[instance][0]->chn);
+#endif
+    /* Enable DMA request */
+    SAI_HAL_TxSetIntCmd(base, kSaiIntrequestFIFOError, true);
+#if FSL_FEATURE_SAI_FIFO_COUNT > 1
+    SAI_HAL_TxSetIntCmd(base, kSaiDmaReqFIFORequest, true);
+#else
+    SAI_HAL_TxSetIntCmd(base, kSaiDmaReqFIFOWarning, true);
+#endif
+    SAI_DRV_TxStartModule(instance);
     return len;
 }
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : SAI_DRV_ReceiveDataBlocking
+ * Function Name : SAI_DRV_ReceiveDataDma
  * Description   : The function would tell sai driver to start receive a period of
- * data from sai rx fifo in polling way.
+ * data from sai rx fifo. This function would also start dma.
  *END**************************************************************************/
-uint32_t SAI_DRV_ReceiveDataBlocking(uint32_t instance,uint8_t * addr,uint32_t len)
+uint32_t SAI_DRV_ReceiveDataDma(uint32_t instance, uint8_t *addr, uint32_t len)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
-    uint32_t i = 0, j = 0;
-    uint32_t data = 0;
-    sai_data_format_t *format = &sai_state_ids[instance][1]->format;
-    uint32_t channel = sai_state_ids[instance][1]->fifo_channel;
-    SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError,true);
-    for(i = 0; i < len/(format->bits/8); i ++)
+    I2S_Type * base = g_saiBase[instance];
+    uint32_t bytes = sai_state_ids[instance][1]->format.bits/8;
+    uint32_t srcAddr = SAI_HAL_RxGetFifoAddr(base,sai_state_ids[instance][1]->fifo_channel);
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+    edma_chn_state_t *edma_chn = &sai_state_ids[instance][1]->edma_chn;
+    edma_software_tcd_t *tcd = sai_state_ids[instance][1]->tcd;
+    uint32_t bytesOnEachRequest = 0;
+#if FSL_FEATURE_SAI_FIFO_COUNT > 1
+            bytesOnEachRequest = bytes * sai_state_ids[instance][1]->watermark;
+#else
+            bytesOnEachRequest = bytes;
+#endif /* FSL_FEATURE_SAI_FIFO_COUNT > 1 */
+#else
+    dma_channel_t *chn = &sai_state_ids[instance][1]->chn;
+#endif /* FSL_FEATURE_EDMA_MODULE_CHANNEL */
+    if (!sai_state_ids[instance][1]->use_dma)
     {
-        data = SAI_HAL_ReceiveDataBlocking(reg_base,channel);
-        for(j = 0; j < format->bits/8; j++)
+        uint32_t ret;
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+        ret = EDMA_DRV_RequestChannel(kEDMAAnyChannel,
+            (dma_request_source_t)sai_state_ids[instance][1]->dma_source, edma_chn);
+        if (ret == kEDMAInvalidChannel)
         {
-            *addr = (data >> (j * 8)) & 0xFF;
-            addr ++;
+            return kStatus_SAI_Fail;
         }
+        EDMA_DRV_InstallCallback(edma_chn, SAI_DRV_EdmaCallback, 
+            sai_state_ids[instance][1]);
+#else
+        ret = DMA_DRV_RequestChannel(kDmaAnyChannel, 
+            (dma_request_source_t)sai_state_ids[instance][1]->dma_source, chn);
+        if (ret == kDmaInvalidChannel)
+        {
+            return kStatus_SAI_Fail;
+        }
+        DMA_DRV_RegisterCallback(chn, SAI_DRV_DmaCallback,
+            sai_state_ids[instance][1]);
+#endif
+        sai_state_ids[instance][1]->use_dma = true;
     }
+    if (bytes == 3)
+    {
+        bytes = 4;
+    }
+    sai_state_ids[instance][1]->len = len;
+    sai_state_ids[instance][1]->address = addr;
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+    /* Configure Edma */
+    EDMA_DRV_ConfigLoopTransfer(edma_chn, tcd, kEDMAPeripheralToMemory,
+        srcAddr, (uint32_t)addr, bytes, bytesOnEachRequest, len, 1);
+    EDMA_DRV_StartChannel(&sai_state_ids[instance][1]->edma_chn);
+#else
+    /* Configure Dma */
+    DMA_DRV_ConfigTransfer(chn, kDmaPeripheralToMemory,
+        bytes, srcAddr, (uint32_t)addr, len);
+    DMA_DRV_StartChannel(&sai_state_ids[instance][1]->chn);
+#endif
+    /* Enable DMA request */
+    SAI_HAL_RxSetIntCmd(base, kSaiIntrequestFIFOError, true);
+#if FSL_FEATURE_SAI_FIFO_COUNT > 1
+    SAI_HAL_RxSetIntCmd(base, kSaiDmaReqFIFORequest, true);
+#else
+    SAI_HAL_RxSetIntCmd(base, kSaiDmaReqFIFOWarning, true);
+#endif
+    SAI_DRV_RxStartModule(instance);
     return len;
 }
 
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SAI_DRV_EdmaCallback
+ * Description   : Callback function registered to edma, it will be called at 
+ * the end of an edma transfer, users can register callback in this function.
+ *END**************************************************************************/
+void SAI_DRV_EdmaCallback(void *param, edma_chn_status_t status)
+{
+    sai_state_t *state = (sai_state_t *)param;
+    OSA_SemaPost(&state->sem);
+    if (state->callback)
+    {
+        (state->callback)(state->callback_param);
+    }
+}
+#else
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SAI_DRV_DmaCallback
+ * Description   : Callback function registered to edma, it will be called at 
+ * the end of a dma transfer, users can register callback in this function.
+ *END**************************************************************************/
+void SAI_DRV_DmaCallback(void *param, dma_channel_status_t status)
+{
+    sai_state_t *state = (sai_state_t *)param;
+    OSA_SemaPost(&state->sem);
+    if (state->callback)
+    {
+        (state->callback)(state->callback_param);
+    }
+}
+#endif
+
+#endif
+
 /*******************************************************************************
- *EOF
+ * EOF
+
  ******************************************************************************/

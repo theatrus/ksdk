@@ -37,6 +37,8 @@
 #include "fsl_uart_hal.h"
 #include "fsl_edma_driver.h"
 
+#if FSL_FEATURE_SOC_EDMA_COUNT && FSL_FEATURE_SOC_UART_COUNT
+
 /*!
  * @addtogroup uart_driver
  * @{
@@ -47,7 +49,7 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for UART instances. */
-extern const uint32_t g_uartBaseAddr[HW_UART_INSTANCE_COUNT];
+extern UART_Type * const g_uartBase[UART_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Definitions
@@ -99,7 +101,7 @@ extern "C" {
  * @brief Initializes an UART instance to work with EDMA.
  *
  * This function initializes the run-time state structure to keep track of the on-going
- * transfers, ungates the clock to the UART module, initializes the module
+ * transfers, un-gates the clock to the UART module, initializes the module
  * to user-defined settings and default settings, configures the IRQ state structure and enables
  * the module-level interrupt to the core, and enables the UART module transmitter and receiver.
  * This example shows how to set up the uart_edma_state_t and the
@@ -133,8 +135,9 @@ uart_status_t UART_DRV_EdmaInit(uint32_t instance, uart_edma_state_t * uartEdmaS
  * This function disables the UART-EDMA trigger and disables the transmitter and receiver.
  *
  * @param instance The UART instance number.
+ * @return An error code or kStatus_UART_Success.
  */
-void UART_DRV_EdmaDeinit(uint32_t instance);
+uart_status_t UART_DRV_EdmaDeinit(uint32_t instance);
 
 /*!
  * @brief Sends (transmits) data out through the UART-EDMA module using a blocking method.
@@ -236,6 +239,7 @@ uart_status_t UART_DRV_EdmaAbortReceivingData(uint32_t instance);
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_UART_EDMA_DRIVER_H__ */
 /*******************************************************************************
  * EOF

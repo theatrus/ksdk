@@ -31,9 +31,10 @@
 #include <assert.h>
 #include <string.h>
 #include "fsl_spi_slave_driver.h"
-#include "fsl_spi_shared_function.h"
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
+
+#if FSL_FEATURE_SOC_SPI_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -50,6 +51,11 @@ typedef enum _spi_event_flags {
 /*******************************************************************************
  * Variables
  ******************************************************************************/
+/* Pointer to runtime state structure.*/
+extern void * g_spiStatePtr[SPI_INSTANCE_COUNT];
+
+/* Table of SPI FIFO sizes per instance. */
+extern const uint32_t g_spiFifoSize[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Code
@@ -84,19 +90,20 @@ static void SPI_DRV_SlaveCompleteTransfer(uint32_t instance);
 static void SPI_DRV_SlaveFillupTxFifo(uint32_t instance);
 #endif
 
-/*!
- * @brief SPI Slave Generic IRQ handler.
+/*FUNCTION**********************************************************************
  *
- * @param instance Instance number of the SPI module.
- */
+ * Function Name : SPI_DRV_SlaveIRQHandler
+ * Description   : SPI Slave Generic IRQ handler.
+ *
+ *END**************************************************************************/
 void SPI_DRV_SlaveIRQHandler(uint32_t instance)
 {
     spi_slave_state_t * spiState = (spi_slave_state_t *)g_spiStatePtr[instance];
 
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    SPI_Type *base = g_spiBase[instance];
     int32_t minRemainingSend = 0;
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-    spi_data_bitcount_mode_t bitCount = SPI_HAL_Get8or16BitMode(baseAddr);
+    spi_data_bitcount_mode_t bitCount = SPI_HAL_Get8or16BitMode(base);
 #endif
 
     /* Exit the ISR if no transfer is happening for this instance.*/
@@ -104,7 +111,7 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
     {
         return;
     }
-    /* Calcuclate the minimum remaining send count value, if remainingSendByteCount less
+    /* Calculate the minimum remaining send count value, if remainingSendByteCount less
      * than this value, disable the transmit interrupt
      */
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
@@ -137,16 +144,16 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
         byteToSendLow = spiState->dummyPattern & 0xFF;
         byteToSendHigh = (spiState->dummyPattern & 0xFF00) >> 8;
 
-        /* If module instance has a FIFO, fill up any empty slots in the FIFO */
-        if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+        /* If module instance has a FIFO (and is enabled), fill up any empty slots in the FIFO */
+        if ((g_spiFifoSize[instance] != 0) && (SPI_HAL_GetFifoCmd(base)))
         {
             /* Fill of the TX FIFO with ongoing data */
             SPI_DRV_SlaveFillupTxFifo(instance);
         }
-        /* For instances without a FIFO */
+        /* For instances without a FIFO or if disabled */
         else
         {
-            if (SPI_HAL_IsTxBuffEmptyPending(baseAddr))
+            if (SPI_HAL_IsTxBuffEmptyPending(base))
             {
                 if (bitCount == kSpi16BitMode)
                 {
@@ -157,8 +164,8 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
                         byteToSendHigh = *(spiState->sendBuffer);
                         ++spiState->sendBuffer;
                     }
-                    SPI_HAL_WriteDataLow(baseAddr, byteToSendLow);
-                    SPI_HAL_WriteDataHigh(baseAddr, byteToSendHigh);
+                    SPI_HAL_WriteDataLow(base, byteToSendLow);
+                    SPI_HAL_WriteDataHigh(base, byteToSendHigh);
 
                     spiState->remainingSendByteCount -= 2;  /* decrement by 2 */
                     spiState->transferredByteCount += 2;  /* increment by 2 */
@@ -170,7 +177,7 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
                         byteToSendLow = *(spiState->sendBuffer);
                         ++spiState->sendBuffer;
                     }
-                    SPI_HAL_WriteDataLow(baseAddr, byteToSendLow);
+                    SPI_HAL_WriteDataLow(base, byteToSendLow);
 
                     --spiState->remainingSendByteCount;
                     ++spiState->transferredByteCount;
@@ -178,7 +185,7 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
             }
         }
 #else /* For SPI modules that do not support 16-bit transfers */
-        if (SPI_HAL_IsTxBuffEmptyPending(baseAddr))
+        if (SPI_HAL_IsTxBuffEmptyPending(base))
         {
             uint8_t byteToSend = spiState->dummyPattern;
             if ((spiState->sendBuffer) && (spiState->remainingSendByteCount > 0))
@@ -186,7 +193,7 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
                 byteToSend = *(spiState->sendBuffer);
                 ++spiState->sendBuffer;
             }
-            SPI_HAL_WriteData(baseAddr, byteToSend);
+            SPI_HAL_WriteData(base, byteToSend);
 
             --spiState->remainingSendByteCount;
             ++spiState->transferredByteCount;
@@ -201,18 +208,18 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
          * and SPI transmit interrupt must be disabled.
          */
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-        if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+        if ((g_spiFifoSize[instance] != 0) && (SPI_HAL_GetFifoCmd(base)))
         {
             /* Clear the TX near empty interrupt */
-            SPI_HAL_ClearFifoIntUsingBitWrite(baseAddr, kSpiTxFifoEmptyClearInt);
+            SPI_HAL_ClearFifoIntUsingBitWrite(base, kSpiTxFifoEmptyClearInt);
             /* Disable TX near empty interrupt */
-            SPI_HAL_SetFifoIntCmd(baseAddr, kSpiTxFifoNearEmptyInt, false);
+            SPI_HAL_SetFifoIntCmd(base, kSpiTxFifoNearEmptyInt, false);
         }
         else
 #endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
         {
             /* Disable Tx buffer empty interrupt */
-            SPI_HAL_SetTransmitIntCmd(baseAddr, false);
+            SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, false);
         }
     }
 #endif
@@ -226,13 +233,13 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
         uint8_t byteReceivedLow, byteReceivedHigh;
 
-        /* If the SPI module contains a FIFO, drain the FIFO until it is empty
+        /* If the SPI module contains a FIFO (and if enabled), drain the FIFO until it is empty
          * or until the remainingSendByteCount reaches 0.
          */
-        if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+        if ((g_spiFifoSize[instance] != 0) && (SPI_HAL_GetFifoCmd(base)))
         {
             /* Clear the RX near full interrupt */
-            SPI_HAL_ClearFifoIntUsingBitWrite(baseAddr, kSpiRxNearFullClearInt);
+            SPI_HAL_ClearFifoIntUsingBitWrite(base, kSpiRxNearFullClearInt);
 
             /* Architectural note: When developing the RX FIFO drain code, it was found that to
              * achieve more efficient run-time performance, it was better to first check the
@@ -242,11 +249,11 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
             if (bitCount == kSpi16BitMode)
             {
                 /* Do this while the RX FIFO is not empty */
-                while (SPI_HAL_GetFifoStatusFlag(baseAddr, kSpiRxFifoEmpty) == 0)
+                while (SPI_HAL_GetFifoStatusFlag(base, kSpiRxFifoEmpty) == 0)
                 {
                     /* Read the bytes from the RX FIFO */
-                    byteReceivedLow = SPI_HAL_ReadDataLow(baseAddr);
-                    byteReceivedHigh = SPI_HAL_ReadDataHigh(baseAddr);
+                    byteReceivedLow = SPI_HAL_ReadDataLow(base);
+                    byteReceivedHigh = SPI_HAL_ReadDataHigh(base);
 
                     /* Store read bytes into rx buffer, only if rx buffer was provided */
                     if (spiState->receiveBuffer)
@@ -276,10 +283,10 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
             /* Optimized for bit count = 8 */
             else
             {
-                while (SPI_HAL_GetFifoStatusFlag(baseAddr, kSpiRxFifoEmpty) == 0)
+                while (SPI_HAL_GetFifoStatusFlag(base, kSpiRxFifoEmpty) == 0)
                 {
                     /* Read the bytes from the RX FIFO */
-                    byteReceivedLow = SPI_HAL_ReadDataLow(baseAddr);
+                    byteReceivedLow = SPI_HAL_ReadDataLow(base);
 
                     /* Store read bytes into rx buffer, only if rx buffer was provided */
                     if (spiState->receiveBuffer)
@@ -302,21 +309,21 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
              * the TX FIFO empty interrupt. Once the TX FIFO is empty, we are ensured
              * that the transmission is complete and can then drain the RX FIFO.
              */
-            if (spiState->remainingReceiveByteCount < FSL_FEATURE_SPI_FIFO_SIZEn(instance))
+            if (spiState->remainingReceiveByteCount < g_spiFifoSize[instance])
             {
-                SPI_HAL_SetTransmitIntCmd(baseAddr, true); /* TX FIFO empty interrupt */
+                SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, true); /* TX FIFO empty interrupt */
             }
         }
         /* For SPI modules that do not have a FIFO, but have 16-bit transfer capability */
         else
         {
-            if (SPI_HAL_IsReadBuffFullPending(baseAddr))
+            if (SPI_HAL_IsReadBuffFullPending(base))
             {
                 if (bitCount == kSpi16BitMode)
                 {
                     /* Read the bytes from the RX FIFO */
-                    byteReceivedLow = SPI_HAL_ReadDataLow(baseAddr);
-                    byteReceivedHigh = SPI_HAL_ReadDataHigh(baseAddr);
+                    byteReceivedLow = SPI_HAL_ReadDataLow(base);
+                    byteReceivedHigh = SPI_HAL_ReadDataHigh(base);
 
                     /* Store read bytes into rx buffer, only if rx buffer was provided */
                     if (spiState->receiveBuffer)
@@ -340,7 +347,7 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
                 else /* For 8-bit transfers */
                 {
                     /* Read the bytes from the RX FIFO */
-                    byteReceivedLow = SPI_HAL_ReadDataLow(baseAddr);
+                    byteReceivedLow = SPI_HAL_ReadDataLow(base);
 
                     /* Store read bytes into rx buffer, only if rx buffer was provided */
                     if (spiState->receiveBuffer)
@@ -355,10 +362,10 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
 #else
         uint8_t byteReceived;
         /* For SPI modules without 16-bit transfer capability or FIFO support */
-        if (SPI_HAL_IsReadBuffFullPending(baseAddr))
+        if (SPI_HAL_IsReadBuffFullPending(base))
         {
             /* Read the bytes from the RX FIFO */
-            byteReceived = SPI_HAL_ReadData(baseAddr);
+            byteReceived = SPI_HAL_ReadData(base);
 
             /* Store read bytes into rx buffer, only if rx buffer was provided */
             if (spiState->receiveBuffer)
@@ -393,10 +400,10 @@ void SPI_DRV_SlaveIRQHandler(uint32_t instance)
 spi_status_t SPI_DRV_SlaveInit(uint32_t instance, spi_slave_state_t * spiState,
                        const spi_slave_user_config_t * slaveConfig)
 {
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    SPI_Type *base = g_spiBase[instance];
 
     assert(slaveConfig);
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
     assert(spiState);
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
@@ -423,31 +430,31 @@ spi_status_t SPI_DRV_SlaveInit(uint32_t instance, spi_slave_state_t * spiState,
     CLOCK_SYS_EnableSpiClock(instance);
 
     /* Reset the SPI module to its default settings including disabling SPI */
-    SPI_HAL_Init(baseAddr);
+    SPI_HAL_Init(base);
 
     /* Initialize the event structure */
     OSA_EventCreate(&spiState->event, kEventAutoClear);
 
     /* Set SPI to slave mode */
-    SPI_HAL_SetMasterSlave(baseAddr, kSpiSlave);
+    SPI_HAL_SetMasterSlave(base, kSpiSlave);
 
     /* Configure the slave clock polarity, phase and data direction */
-    SPI_HAL_SetDataFormat(baseAddr, slaveConfig->polarity, slaveConfig->phase,
+    SPI_HAL_SetDataFormat(base, slaveConfig->polarity, slaveConfig->phase,
                           slaveConfig->direction);
 
     /* Set the SPI pin mode to normal mode */
-    SPI_HAL_SetPinMode(baseAddr, kSpiPinMode_Normal);
+    SPI_HAL_SetPinMode(base, kSpiPinMode_Normal);
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
     /* Set the bit/frame mode */
-    SPI_HAL_Set8or16BitMode(baseAddr, slaveConfig->bitCount);
+    SPI_HAL_Set8or16BitMode(base, slaveConfig->bitCount);
 #endif
 
 #if FSL_FEATURE_SPI_FIFO_SIZE
-    if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+    if (g_spiFifoSize[instance] != 0)
     {
         /* If SPI module contains a FIFO, enable it and set watermarks to half full/empty */
-        SPI_HAL_SetFifoMode(baseAddr, true, kSpiTxFifoOneHalfEmpty, kSpiRxFifoOneHalfFull);
+        SPI_HAL_SetFifoMode(base, true, kSpiTxFifoOneHalfEmpty, kSpiRxFifoOneHalfFull);
     }
 #endif
 
@@ -458,7 +465,7 @@ spi_status_t SPI_DRV_SlaveInit(uint32_t instance, spi_slave_state_t * spiState,
     INT_SYS_EnableIRQ(g_spiIrqId[instance]);
 
     /* SPI system enable now */
-    SPI_HAL_Enable(baseAddr);
+    SPI_HAL_Enable(base);
 
     return kStatus_SPI_Success;
 }
@@ -470,37 +477,37 @@ spi_status_t SPI_DRV_SlaveInit(uint32_t instance, spi_slave_state_t * spiState,
  * Clears the control register and turns off the clock to the module.
  *
  *END**************************************************************************/
-void SPI_DRV_SlaveDeinit(uint32_t instance)
+spi_status_t SPI_DRV_SlaveDeinit(uint32_t instance)
 {
     spi_slave_state_t * spiState = (spi_slave_state_t *)g_spiStatePtr[instance];
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    SPI_Type *base = g_spiBase[instance];
 
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     if (spiState == NULL)
     {
-        return;
+        return kStatus_SPI_NonInit;
     }
 
     /* Disable SPI interrupt */
     INT_SYS_DisableIRQ(g_spiIrqId[instance]);
 
     /* Reset the SPI module to its default settings including disabling SPI and its interrupts */
-    SPI_HAL_Init(baseAddr);
+    SPI_HAL_Init(base);
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-    if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+    if (g_spiFifoSize[instance] != 0)
     {
         /* Disable the FIFO feature */
-        SPI_HAL_SetFifoIntCmd(baseAddr, kSpiRxFifoNearFullInt, false);
+        SPI_HAL_SetFifoIntCmd(base, kSpiRxFifoNearFullInt, false);
     }
 
     /* Disable transmit interrupt */
-    SPI_HAL_SetTransmitIntCmd(baseAddr, false);
+    SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, false);
 #endif
 
     /* SPI system disable */
-    SPI_HAL_Disable(baseAddr);
+    SPI_HAL_Disable(base);
 
     /* Disable clock for SPI */
     CLOCK_SYS_DisableSpiClock(instance);
@@ -510,6 +517,8 @@ void SPI_DRV_SlaveDeinit(uint32_t instance)
 
     /* Clear state pointer. */
     g_spiStatePtr[instance] = NULL;
+
+    return kStatus_SPI_Success;
 }
 
 /*FUNCTION**********************************************************************
@@ -528,7 +537,7 @@ spi_status_t SPI_DRV_SlaveTransfer(uint32_t instance,
     spi_status_t errorStatus = kStatus_SPI_Success;
 
     /* Validate the parameter */
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     if ((!sendBuffer) && (!receiveBuffer))
     {
@@ -575,10 +584,10 @@ spi_status_t SPI_DRV_SlaveTransfer(uint32_t instance,
 static void SPI_DRV_SlaveFillupTxFifo(uint32_t instance)
 {
     spi_slave_state_t * spiState = (spi_slave_state_t *)g_spiStatePtr[instance];
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    SPI_Type *base = g_spiBase[instance];
     uint8_t byteToSendLow = 0;
     uint8_t byteToSendHigh = 0;
-    spi_data_bitcount_mode_t bitCount = SPI_HAL_Get8or16BitMode(baseAddr);  /* the bit/frame */
+    spi_data_bitcount_mode_t bitCount = SPI_HAL_Get8or16BitMode(base);  /* the bit/frame */
 
     /* Set the default sending value to dummy pattern value */
     byteToSendLow = spiState->dummyPattern & 0xFF;
@@ -594,7 +603,7 @@ static void SPI_DRV_SlaveFillupTxFifo(uint32_t instance)
     if (bitCount == kSpi16BitMode)
     {
         /* Fill the fifo until it is full or until the send word count is 0 */
-        while(SPI_HAL_GetFifoStatusFlag(baseAddr, kSpiTxFifoFull)== 0)
+        while(SPI_HAL_GetFifoStatusFlag(base, kSpiTxFifoFull)== 0)
         {
             if ((spiState->sendBuffer) && (spiState->remainingSendByteCount > 0))
             {
@@ -603,8 +612,8 @@ static void SPI_DRV_SlaveFillupTxFifo(uint32_t instance)
                 byteToSendHigh = *(spiState->sendBuffer);
                 ++spiState->sendBuffer;
             }
-            SPI_HAL_WriteDataLow(baseAddr, byteToSendLow);
-            SPI_HAL_WriteDataHigh(baseAddr, byteToSendHigh);
+            SPI_HAL_WriteDataLow(base, byteToSendLow);
+            SPI_HAL_WriteDataHigh(base, byteToSendHigh);
 
             spiState->remainingSendByteCount -= 2;      /* decrement by 2 */
             spiState->transferredByteCount += 2;        /* increment by 2 */
@@ -620,14 +629,14 @@ static void SPI_DRV_SlaveFillupTxFifo(uint32_t instance)
     else
     {
         /* Fill the fifo until it is full or until the send word count is 0 */
-        while(SPI_HAL_GetFifoStatusFlag(baseAddr, kSpiTxFifoFull)== 0)
+        while(SPI_HAL_GetFifoStatusFlag(base, kSpiTxFifoFull)== 0)
         {
             if ((spiState->sendBuffer) && (spiState->remainingSendByteCount > 0))
             {
                 byteToSendLow = *(spiState->sendBuffer);
                 ++spiState->sendBuffer;
             }
-            SPI_HAL_WriteDataLow(baseAddr, byteToSendLow);
+            SPI_HAL_WriteDataLow(base, byteToSendLow);
 
             --spiState->remainingSendByteCount;
             ++spiState->transferredByteCount;
@@ -651,12 +660,12 @@ static void SPI_DRV_SlaveFillupTxFifo(uint32_t instance)
 static spi_status_t SPI_DRV_SlaveStartTransfer(uint32_t instance)
 {
     spi_slave_state_t * spiState = (spi_slave_state_t *)g_spiStatePtr[instance];
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    SPI_Type *base = g_spiBase[instance];
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
     spi_data_bitcount_mode_t bitCount;
 
-    bitCount = SPI_HAL_Get8or16BitMode(baseAddr);
+    bitCount = SPI_HAL_Get8or16BitMode(base);
 #endif
 
     /* Save information about the transfer for use by the ISR. */
@@ -664,23 +673,23 @@ static spi_status_t SPI_DRV_SlaveStartTransfer(uint32_t instance)
     spiState->transferredByteCount = 0;
 
     /* SPI system disable */
-    SPI_HAL_Disable(baseAddr);
+    SPI_HAL_Disable(base);
     /* SPI system enable now */
-    SPI_HAL_Enable(baseAddr);
+    SPI_HAL_Enable(base);
 
     /* Make sure TX data register (or FIFO) is empty. If not, return appropriate
      * error status. This also causes a read of the status
      * register which is required before writing to the data register below.
      */
-    if (SPI_HAL_IsTxBuffEmptyPending(baseAddr) != 1)
+    if (SPI_HAL_IsTxBuffEmptyPending(base) != 1)
     {
         return kStatus_SPI_TxBufferNotEmpty;
     }
 
-    /* If the SPI module/instance contains a FIFO, proceed with FIFO usage, else bypass */
+    /* If SPI module/instance contains a FIFO (and enabled), proceed with FIFO usage, else bypass */
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
 #if FSL_FEATURE_SPI_FIFO_SIZE
-    if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+    if ((g_spiFifoSize[instance] != 0) && (SPI_HAL_GetFifoCmd(base)))
     {
         /* First fill the FIFO with data */
         SPI_DRV_SlaveFillupTxFifo(instance);
@@ -692,17 +701,17 @@ static spi_status_t SPI_DRV_SlaveStartTransfer(uint32_t instance)
          * handler, another check will be made to see if the remaining RX byte count
          * is less than the RX FIFO watermark.
          */
-        if (spiState->remainingReceiveByteCount < FSL_FEATURE_SPI_FIFO_SIZEn(instance))
+        if (spiState->remainingReceiveByteCount < g_spiFifoSize[instance])
         {
-            SPI_HAL_SetTransmitIntCmd(baseAddr, true); /* TX FIFO empty interrupt */
+            SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, true); /* TX FIFO empty interrupt */
         }
         else
         {
             /* Enable both receive and transmit interrupts to make the slave can keep up with the
              * master.
              */
-            SPI_HAL_SetFifoIntCmd(baseAddr, kSpiRxFifoNearFullInt, true);
-            SPI_HAL_SetFifoIntCmd(baseAddr, kSpiTxFifoNearEmptyInt, true);
+            SPI_HAL_SetFifoIntCmd(base, kSpiRxFifoNearFullInt, true);
+            SPI_HAL_SetFifoIntCmd(base, kSpiTxFifoNearEmptyInt, true);
         }
     }
     else
@@ -723,8 +732,8 @@ static spi_status_t SPI_DRV_SlaveStartTransfer(uint32_t instance)
                 byteToSendHigh = *(spiState->sendBuffer);
                 ++spiState->sendBuffer;
             }
-            SPI_HAL_WriteDataLow(baseAddr, byteToSendLow);
-            SPI_HAL_WriteDataHigh(baseAddr, byteToSendHigh);
+            SPI_HAL_WriteDataLow(base, byteToSendLow);
+            SPI_HAL_WriteDataHigh(base, byteToSendHigh);
 
             spiState->remainingSendByteCount -= 2;      /* decrement by 2 */
             spiState->transferredByteCount += 2;        /* increment by 2 */
@@ -736,7 +745,7 @@ static spi_status_t SPI_DRV_SlaveStartTransfer(uint32_t instance)
                 byteToSend = *(spiState->sendBuffer);
                 ++spiState->sendBuffer;
             }
-            SPI_HAL_WriteDataLow(baseAddr, byteToSend);
+            SPI_HAL_WriteDataLow(base, byteToSend);
 
             --spiState->remainingSendByteCount;
             ++spiState->transferredByteCount;
@@ -745,8 +754,8 @@ static spi_status_t SPI_DRV_SlaveStartTransfer(uint32_t instance)
         /* Enable both receive and transmit interrupts to make the slave can keep up with the
          * master.
          */
-        SPI_HAL_SetReceiveAndFaultIntCmd(baseAddr, true);
-        SPI_HAL_SetTransmitIntCmd(baseAddr, true);
+        SPI_HAL_SetIntMode(base, kSpiRxFullAndModfInt, true);
+        SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, true);
     }
 #else
     /* For modules that do not support 16-bit transfers or FIFO
@@ -760,7 +769,7 @@ static spi_status_t SPI_DRV_SlaveStartTransfer(uint32_t instance)
         byteToSend = *(spiState->sendBuffer);
         ++spiState->sendBuffer;
     }
-    SPI_HAL_WriteData(baseAddr, byteToSend);
+    SPI_HAL_WriteData(base, byteToSend);
 
     --spiState->remainingSendByteCount;
     ++spiState->transferredByteCount;
@@ -768,8 +777,8 @@ static spi_status_t SPI_DRV_SlaveStartTransfer(uint32_t instance)
     /* Enable both receive and transmit interrupts to make the slave can keep up with the
      * master.
      */
-    SPI_HAL_SetReceiveAndFaultIntCmd(baseAddr, true);
-    SPI_HAL_SetTransmitIntCmd(baseAddr, true);
+    SPI_HAL_SetIntMode(base, kSpiRxFullAndModfInt, true);
+    SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, true);
 
 #endif
 
@@ -785,7 +794,7 @@ static spi_status_t SPI_DRV_SlaveStartTransfer(uint32_t instance)
 static void SPI_DRV_SlaveCompleteTransfer(uint32_t instance)
 {
     spi_slave_state_t * spiState = (spi_slave_state_t *)g_spiStatePtr[instance];
-    uint32_t baseAddr = g_spiBaseAddr[instance];
+    SPI_Type *base = g_spiBase[instance];
 
     /* The transfer is complete, update state */
     spiState->isTransferInProgress = false;
@@ -797,15 +806,15 @@ static void SPI_DRV_SlaveCompleteTransfer(uint32_t instance)
     spiState->remainingReceiveByteCount = 0;
 
     /* Disable interrupts */
-    SPI_HAL_SetReceiveAndFaultIntCmd(baseAddr, false);
-    SPI_HAL_SetTransmitIntCmd(baseAddr, false);
+    SPI_HAL_SetIntMode(base, kSpiRxFullAndModfInt, false);
+    SPI_HAL_SetIntMode(base, kSpiTxEmptyInt, false);
 
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-    if (FSL_FEATURE_SPI_FIFO_SIZEn(instance) != 0)
+    if (g_spiFifoSize[instance] != 0)
     {
         /* Now disable the SPI FIFO interrupts */
-        SPI_HAL_SetFifoIntCmd(baseAddr, kSpiTxFifoNearEmptyInt, false);
-        SPI_HAL_SetFifoIntCmd(baseAddr, kSpiRxFifoNearFullInt, false);
+        SPI_HAL_SetFifoIntCmd(base, kSpiTxFifoNearEmptyInt, false);
+        SPI_HAL_SetFifoIntCmd(base, kSpiRxFifoNearFullInt, false);
     }
 #endif
 
@@ -827,7 +836,7 @@ spi_status_t SPI_DRV_SlaveAbortTransfer(uint32_t instance)
     spi_slave_state_t * spiState = (spi_slave_state_t *)g_spiStatePtr[instance];
 
     /* Check instance is valid or not */
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     /* Check driver is initialized */
     if (!spiState)
@@ -888,7 +897,7 @@ spi_status_t SPI_DRV_SlaveTransferBlocking(uint32_t instance,
     event_flags_t setFlags = 0;
 
     /* Validate the parameter */
-    assert(instance < HW_SPI_INSTANCE_COUNT);
+    assert(instance < SPI_INSTANCE_COUNT);
 
     if ((!sendBuffer) && (!receiveBuffer))
     {
@@ -942,6 +951,8 @@ spi_status_t SPI_DRV_SlaveTransferBlocking(uint32_t instance,
 
     return errorStatus;
 }
+
+#endif /* FSL_FEATURE_SOC_SPI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

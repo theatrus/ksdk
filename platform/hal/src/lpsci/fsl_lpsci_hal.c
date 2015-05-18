@@ -27,8 +27,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include "fsl_lpsci_hal.h"
 
+#if FSL_FEATURE_SOC_LPSCI_COUNT
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -41,27 +43,27 @@
  * Description   : This function initializes the module to a known state.
  *
  *END**************************************************************************/
-void LPSCI_HAL_Init(uint32_t baseAddr)
+void LPSCI_HAL_Init(UART0_Type * base)
 {
-    HW_UART0_BDH_WR(baseAddr, 0U);
-    HW_UART0_BDL_WR(baseAddr, 4U);
-    HW_UART0_C1_WR(baseAddr, 0U);
-    HW_UART0_C2_WR(baseAddr, 0U);
-    HW_UART0_S2_WR(baseAddr, 0U);
-    HW_UART0_C3_WR(baseAddr, 0U);
+    UART0_WR_BDH(base, 0U);
+    UART0_WR_BDL(base, 4U);
+    UART0_WR_C1(base, 0U);
+    UART0_WR_C2(base, 0U);
+    UART0_WR_S2(base, 0U);
+    UART0_WR_C3(base, 0U);
 #if FSL_FEATURE_LPSCI_HAS_ADDRESS_MATCHING
-    HW_UART0_MA1_WR(baseAddr, 0U);
-    HW_UART0_MA2_WR(baseAddr, 0U);
+    UART0_WR_MA1(base, 0U);
+    UART0_WR_MA2(base, 0U);
 #endif
-    HW_UART0_C4_WR(baseAddr, 0U);
+    UART0_WR_C4(base, 0U);
 #if FSL_FEATURE_LPSCI_HAS_DMA_ENABLE
-    HW_UART0_C5_WR(baseAddr, 0U);
+    UART0_WR_C5(base, 0U);
 #endif
 #if FSL_FEATURE_LPSCI_HAS_MODEM_SUPPORT
-    HW_UART0_MODEM_WR(baseAddr, 0U);
+    UART0_WR_MODEM(base, 0U);
 #endif
 #if FSL_FEATURE_LPSCI_HAS_IR_SUPPORT
-    HW_UART0_IR_WR(baseAddr, 0U);
+    UART0_WR_IR(base, 0U);
 #endif
 }
 
@@ -74,7 +76,7 @@ void LPSCI_HAL_Init(uint32_t baseAddr)
  * function can calculate the baud rate divisors to their appropriate values.
  *
  *END**************************************************************************/
-lpsci_status_t LPSCI_HAL_SetBaudRate(uint32_t baseAddr,
+lpsci_status_t LPSCI_HAL_SetBaudRate(UART0_Type * base,
                                      uint32_t sourceClockInHz,
                                      uint32_t baudRate)
 {
@@ -135,15 +137,15 @@ lpsci_status_t LPSCI_HAL_SetBaudRate(uint32_t baseAddr,
         /* If so, then "BOTHEDGE" sampling must be turned on*/
         if ((osr > 3) && (osr < 8))
         {
-            HW_UART0_C5_SET(baseAddr, BM_UART0_C5_BOTHEDGE);
+            UART0_SET_C5(base, UART0_C5_BOTHEDGE_MASK);
         }
 
         /* program the osr value (bit value is one less than actual value)*/
-        BW_UART0_C4_OSR(baseAddr, osr-1);
+        UART0_BWR_C4_OSR(base, osr-1);
 
         /* program the sbr (divider) value obtained above*/
-        BW_UART0_BDH_SBR(baseAddr, (uint8_t)(sbr >> 8));
-        BW_UART0_BDL_SBR(baseAddr, (uint8_t)sbr);
+        UART0_BWR_BDH_SBR(base, (uint8_t)(sbr >> 8));
+        UART0_WR_BDL(base, (uint8_t)sbr);
     }
     else
     {
@@ -164,14 +166,14 @@ lpsci_status_t LPSCI_HAL_SetBaudRate(uint32_t baseAddr,
  * known to them.
  *
  *END**************************************************************************/
-void LPSCI_HAL_SetBaudRateDivisor(uint32_t baseAddr, uint16_t baudRateDivisor)
+void LPSCI_HAL_SetBaudRateDivisor(UART0_Type * base, uint16_t baudRateDivisor)
 {
     /* check to see if baudRateDivisor is out of range of register bits */
     assert( (baudRateDivisor < 0x1FFF) && (baudRateDivisor > 1) );
 
     /* program the sbr (baudRateDivisor) value to the BDH and BDL registers*/
-    BW_UART0_BDH_SBR(baseAddr, (uint8_t)(baudRateDivisor >> 8));
-    BW_UART0_BDL_SBR(baseAddr, (uint8_t)baudRateDivisor);
+    UART0_BWR_BDH_SBR(base, (uint8_t)(baudRateDivisor >> 8));
+    UART0_WR_BDL(base, (uint8_t)baudRateDivisor);
 }
 
 /*FUNCTION**********************************************************************
@@ -182,10 +184,10 @@ void LPSCI_HAL_SetBaudRateDivisor(uint32_t baseAddr, uint16_t baudRateDivisor)
  * controller to disable it or enable it for even parity or for odd parity.
  *
  *END**************************************************************************/
-void LPSCI_HAL_SetParityMode(uint32_t baseAddr, lpsci_parity_mode_t parityMode)
+void LPSCI_HAL_SetParityMode(UART0_Type * base, lpsci_parity_mode_t parityMode)
 {
-    BW_UART0_C1_PE(baseAddr, parityMode >> 1U);
-    BW_UART0_C1_PT(baseAddr, parityMode & 1U);
+    UART0_BWR_C1_PE(base, parityMode >> 1U);
+    UART0_BWR_C1_PT(base, parityMode & 1U);
 }
 
 /*******************************************************************************
@@ -199,16 +201,16 @@ void LPSCI_HAL_SetParityMode(uint32_t baseAddr, lpsci_parity_mode_t parityMode)
  * the LPSCI data register.
  *
  *END**************************************************************************/
-void LPSCI_HAL_Putchar9(uint32_t baseAddr, uint16_t data)
+void LPSCI_HAL_Putchar9(UART0_Type * base, uint16_t data)
 {
     uint8_t ninthDataBit;
 
     ninthDataBit = (data >> 8U) & 0x1U;
 
     /* Write to the ninth data bit (bit position T8) */
-    BW_UART0_C3_R9T8(baseAddr, ninthDataBit);
+    UART0_BWR_C3_R9T8(base, ninthDataBit);
 
-    HW_UART0_D_WR(baseAddr, (uint8_t)data);
+    UART0_WR_D(base, (uint8_t)data);
 }
 /*FUNCTION**********************************************************************
  *
@@ -217,7 +219,7 @@ void LPSCI_HAL_Putchar9(uint32_t baseAddr, uint16_t data)
  * the LPSCI data register.
  *
  *END**************************************************************************/
-void LPSCI_HAL_Putchar10(uint32_t baseAddr, uint16_t data)
+void LPSCI_HAL_Putchar10(UART0_Type * base, uint16_t data)
 {
     uint8_t ninthDataBit, tenthDataBit;
 
@@ -225,12 +227,12 @@ void LPSCI_HAL_Putchar10(uint32_t baseAddr, uint16_t data)
     tenthDataBit = (data >> 9U) & 0x1U;
 
     /* Write to the tenth data bit (bit position T9) */
-    BW_UART0_C3_R8T9(baseAddr, tenthDataBit);
+    UART0_BWR_C3_R8T9(base, tenthDataBit);
 
     /* Write to the ninth data bit (bit position T8) */
-    BW_UART0_C3_R9T8(baseAddr, ninthDataBit);
+    UART0_BWR_C3_R9T8(base, ninthDataBit);
 
-    HW_UART0_D_WR(baseAddr, (uint8_t)data);
+    UART0_WR_D(base, (uint8_t)data);
 }
 
 /*FUNCTION**********************************************************************
@@ -240,10 +242,10 @@ void LPSCI_HAL_Putchar10(uint32_t baseAddr, uint16_t data)
  * data register.
  *
  *END**************************************************************************/
-void LPSCI_HAL_Getchar9(uint32_t baseAddr, uint16_t *readData)
+void LPSCI_HAL_Getchar9(UART0_Type * base, uint16_t *readData)
 {
-    *readData = (uint16_t)BR_UART0_C3_R8T9(baseAddr) << 8;
-    *readData |= HW_UART0_D_RD(baseAddr);
+    *readData = (uint16_t)UART0_BRD_C3_R8T9(base) << 8;
+    *readData |= UART0_RD_D(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -253,11 +255,11 @@ void LPSCI_HAL_Getchar9(uint32_t baseAddr, uint16_t *readData)
  * data register.
  *
  *END**************************************************************************/
-void LPSCI_HAL_Getchar10(uint32_t baseAddr, uint16_t *readData)
+void LPSCI_HAL_Getchar10(UART0_Type * base, uint16_t *readData)
 {
-    *readData = (uint16_t)((uint32_t)(BR_UART0_C3_R9T8(baseAddr)) << 9U);
-    *readData |= (uint16_t)((uint32_t)(BR_UART0_C3_R8T9(baseAddr)) << 8U);
-    *readData |= HW_UART0_D_RD(baseAddr);
+    *readData = (uint16_t)((uint32_t)(UART0_BRD_C3_R9T8(base)) << 9U);
+    *readData |= (uint16_t)((uint32_t)(UART0_BRD_C3_R8T9(base)) << 8U);
+    *readData |= UART0_RD_D(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -267,16 +269,16 @@ void LPSCI_HAL_Getchar10(uint32_t baseAddr, uint16_t *readData)
  * This function only supports 8-bit transaction.
  *
  *END**************************************************************************/
-void LPSCI_HAL_SendDataPolling(uint32_t baseAddr,
+void LPSCI_HAL_SendDataPolling(UART0_Type * base,
                                const uint8_t *txBuff,
                                uint32_t txSize)
 {
     while (txSize--)
     {
-        while (!LPSCI_HAL_IsTxDataRegEmpty(baseAddr))
+        while (!UART0_BRD_S1_TDRE(base))
         {}
 
-        LPSCI_HAL_Putchar(baseAddr, *txBuff++);
+        LPSCI_HAL_Putchar(base, *txBuff++);
     }
 }
 
@@ -287,7 +289,7 @@ void LPSCI_HAL_SendDataPolling(uint32_t baseAddr,
  * This function only supports 8-bit transaction.
  *
  *END**************************************************************************/
-lpsci_status_t LPSCI_HAL_ReceiveDataPolling(uint32_t baseAddr,
+lpsci_status_t LPSCI_HAL_ReceiveDataPolling(UART0_Type * base,
                                             uint8_t *rxBuff,
                                             uint32_t rxSize)
 {
@@ -295,15 +297,15 @@ lpsci_status_t LPSCI_HAL_ReceiveDataPolling(uint32_t baseAddr,
 
     while (rxSize--)
     {
-        while (!LPSCI_HAL_IsRxDataRegFull(baseAddr))
+        while (!UART0_BRD_S1_RDRF(base))
         {}
 
-        LPSCI_HAL_Getchar(baseAddr, rxBuff++);
+        LPSCI_HAL_Getchar(base, rxBuff++);
 
         /* Clear the Overrun flag since it will block receiving */
-        if(BR_UART0_S1_OR(baseAddr))
+        if(UART0_BRD_S1_OR(base))
         {
-            BW_UART0_S1_OR(baseAddr, 1U);
+            UART0_BWR_S1_OR(base, 1U);
             retVal = kStatus_LPSCI_RxOverRun;
         }
     }
@@ -321,7 +323,7 @@ lpsci_status_t LPSCI_HAL_ReceiveDataPolling(uint32_t baseAddr,
  * various interrupt sources.
  *
  *END**************************************************************************/
-void LPSCI_HAL_SetIntMode(uint32_t baseAddr, lpsci_interrupt_t interrupt, bool enable)
+void LPSCI_HAL_SetIntMode(UART0_Type * base, lpsci_interrupt_t interrupt, bool enable)
 {
     uint8_t reg = (uint32_t)interrupt >> LPSCI_SHIFT;
     uint32_t temp = 1U << (uint8_t)interrupt;
@@ -329,13 +331,13 @@ void LPSCI_HAL_SetIntMode(uint32_t baseAddr, lpsci_interrupt_t interrupt, bool e
     switch ( reg )
     {
         case 0 :
-            enable ? HW_UART0_BDH_SET(baseAddr, temp) : HW_UART0_BDH_CLR(baseAddr, temp);
+            enable ? UART0_SET_BDH(base, temp) : UART0_CLR_BDH(base, temp);
             break;
         case 1 :
-            enable ? HW_UART0_C2_SET(baseAddr, temp) : HW_UART0_C2_CLR(baseAddr, temp);
+            enable ? UART0_SET_C2(base, temp) : UART0_CLR_C2(base, temp);
             break;
         case 2 :
-            enable ? HW_UART0_C3_SET(baseAddr, temp) : HW_UART0_C3_CLR(baseAddr, temp);
+            enable ? UART0_SET_C3(base, temp) : UART0_CLR_C3(base, temp);
             break;
         default :
             break;
@@ -348,7 +350,7 @@ void LPSCI_HAL_SetIntMode(uint32_t baseAddr, lpsci_interrupt_t interrupt, bool e
  * Description   : Return whether the LPSCI module interrupts is enabled/disabled.
  *
  *END**************************************************************************/
-bool LPSCI_HAL_GetIntMode(uint32_t baseAddr, lpsci_interrupt_t interrupt)
+bool LPSCI_HAL_GetIntMode(UART0_Type * base, lpsci_interrupt_t interrupt)
 {
     uint8_t reg = (uint32_t)interrupt >> LPSCI_SHIFT;
     uint8_t temp = 0;
@@ -356,13 +358,13 @@ bool LPSCI_HAL_GetIntMode(uint32_t baseAddr, lpsci_interrupt_t interrupt)
     switch ( reg )
     {
         case 0 :
-            temp = HW_UART0_BDH_RD(baseAddr) >> (uint8_t)(interrupt) & 1U;
+            temp = UART0_RD_BDH(base) >> (uint8_t)(interrupt) & 1U;
             break;
         case 1 :
-            temp = HW_UART0_C2_RD(baseAddr) >> (uint8_t)(interrupt) & 1U;
+            temp = UART0_RD_C2(base) >> (uint8_t)(interrupt) & 1U;
             break;
         case 2 :
-            temp = HW_UART0_C3_RD(baseAddr) >> (uint8_t)(interrupt) & 1U;
+            temp = UART0_RD_C3(base) >> (uint8_t)(interrupt) & 1U;
             break;
         default :
             break;
@@ -379,9 +381,9 @@ bool LPSCI_HAL_GetIntMode(uint32_t baseAddr, lpsci_interrupt_t interrupt)
  * flag to generate a DMA request.
  *
  *END**************************************************************************/
-void LPSCI_HAL_SetTxDmaCmd(uint32_t baseAddr, bool enable)
+void LPSCI_HAL_SetTxDmaCmd(UART0_Type * base, bool enable)
 {
-    BW_UART0_C5_TDMAE(baseAddr, enable);
+    UART0_BWR_C5_TDMAE(base, enable);
 }
 
 /*FUNCTION**********************************************************************
@@ -392,9 +394,9 @@ void LPSCI_HAL_SetTxDmaCmd(uint32_t baseAddr, bool enable)
  * flag to generate a DMA request.
  *
  *END**************************************************************************/
-void LPSCI_HAL_SetRxDmaCmd(uint32_t baseAddr, bool enable)
+void LPSCI_HAL_SetRxDmaCmd(UART0_Type * base, bool enable)
 {
-    BW_UART0_C5_RDMAE(baseAddr, enable);
+    UART0_BWR_C5_RDMAE(base, enable);
 }
 #endif
 
@@ -407,7 +409,7 @@ void LPSCI_HAL_SetRxDmaCmd(uint32_t baseAddr, bool enable)
  * Description   : Get LPSCI status flag states.
  *
  *END**************************************************************************/
-bool LPSCI_HAL_GetStatusFlag(uint32_t baseAddr, lpsci_status_flag_t statusFlag)
+bool LPSCI_HAL_GetStatusFlag(UART0_Type * base, lpsci_status_flag_t statusFlag)
 {
     uint8_t reg = (uint32_t)statusFlag >> LPSCI_SHIFT;
     uint8_t temp = 0;
@@ -415,14 +417,14 @@ bool LPSCI_HAL_GetStatusFlag(uint32_t baseAddr, lpsci_status_flag_t statusFlag)
     switch ( reg )
     {
         case 0 :
-            temp = HW_UART0_S1_RD(baseAddr) >> (uint8_t)(statusFlag) & 1U;
+            temp = UART0_RD_S1(base) >> (uint8_t)(statusFlag) & 1U;
             break;
         case 1 :
-            temp = HW_UART0_S2_RD(baseAddr) >> (uint8_t)(statusFlag) & 1U;
+            temp = UART0_RD_S2(base) >> (uint8_t)(statusFlag) & 1U;
             break;
 #if FSL_FEATURE_LPSCI_HAS_EXTENDED_DATA_REGISTER_FLAGS
         case 2 :
-            temp = HW_UART0_ED_RD(baseAddr) >> (uint8_t)(statusFlag) & 1U;
+            temp = UART0_RD_ED(base) >> (uint8_t)(statusFlag) & 1U;
             break;
 #endif
         default :
@@ -440,7 +442,7 @@ bool LPSCI_HAL_GetStatusFlag(uint32_t baseAddr, lpsci_status_flag_t statusFlag)
  * status bits.
  *
  *END**************************************************************************/
-lpsci_status_t LPSCI_HAL_ClearStatusFlag(uint32_t baseAddr,
+lpsci_status_t LPSCI_HAL_ClearStatusFlag(UART0_Type * base,
                                          lpsci_status_flag_t statusFlag)
 {
     lpsci_status_t returnCode = kStatus_LPSCI_Success;
@@ -461,20 +463,31 @@ lpsci_status_t LPSCI_HAL_ClearStatusFlag(uint32_t baseAddr,
             break;
 
         case kLpsciIdleLineDetect:
+            UART0_WR_S1(base, UART0_S1_IDLE_MASK);
+            break;
+
         case kLpsciRxOverrun:
+            UART0_WR_S1(base, UART0_S1_OR_MASK);
+            break;
+
         case kLpsciNoiseDetect:
+            UART0_WR_S1(base, UART0_S1_NF_MASK);
+            break;
+
         case kLpsciFrameErr:
+            UART0_WR_S1(base, UART0_S1_FE_MASK);
+            break;
+
         case kLpsciParityErr:
-            HW_UART0_S1_RD(baseAddr);
-            HW_UART0_D_RD(baseAddr);
+            UART0_WR_S1(base, UART0_S1_PF_MASK);
             break;
 
         case kLpsciLineBreakDetect:
-            BW_UART0_S2_LBKDIF(baseAddr, 0x1U);
+            UART0_WR_S2(base, UART0_S2_LBKDIF_MASK);
             break;
 
         case kLpsciRxActiveEdgeDetect:
-            BW_UART0_S2_RXEDGIF(baseAddr, 0x1U);
+            UART0_WR_S2(base, UART0_S2_RXEDGIF_MASK);
             break;
 
         default:
@@ -499,14 +512,14 @@ lpsci_status_t LPSCI_HAL_ClearStatusFlag(uint32_t baseAddr,
  * if receiver is set to wake on idle and if receiver is already in idle state.
  *
  *END**************************************************************************/
-lpsci_status_t LPSCI_HAL_PutReceiverInStandbyMode(uint32_t baseAddr)
+lpsci_status_t LPSCI_HAL_PutReceiverInStandbyMode(UART0_Type * base)
 {
     lpsci_wakeup_method_t rxWakeMethod;
     bool lpsci_current_rx_state;
 
     /* see if wake is set for idle or */
-    rxWakeMethod = LPSCI_HAL_GetReceiverWakeupMethod(baseAddr);
-    lpsci_current_rx_state = LPSCI_HAL_GetStatusFlag(baseAddr, kLpsciRxActive);
+    rxWakeMethod = LPSCI_HAL_GetReceiverWakeupMethod(base);
+    lpsci_current_rx_state = LPSCI_HAL_GetStatusFlag(base, kLpsciRxActive);
 
     /* if both rxWakeMethod is set for idle and current rx state is idle,
      * don't put in standy*/
@@ -517,7 +530,7 @@ lpsci_status_t LPSCI_HAL_PutReceiverInStandbyMode(uint32_t baseAddr)
     else
     {
         /* set the RWU bit to place receiver into standby mode*/
-        HW_UART0_C2_SET(baseAddr, BM_UART0_C2_RWU);
+        UART0_SET_C2(base, UART0_C2_RWU_MASK);
         return kStatus_LPSCI_Success;
     }
 }
@@ -532,7 +545,7 @@ lpsci_status_t LPSCI_HAL_PutReceiverInStandbyMode(uint32_t baseAddr)
  * The user will pass in a stucture of type lpsci_idle_line_config_t.
  *
  *END**************************************************************************/
-void LPSCI_HAL_ConfigIdleLineDetect(uint32_t baseAddr,
+void LPSCI_HAL_ConfigIdleLineDetect(UART0_Type * base,
                                     uint8_t idleLine,
                                     uint8_t rxWakeIdleDetect)
 {
@@ -540,8 +553,8 @@ void LPSCI_HAL_ConfigIdleLineDetect(uint32_t baseAddr,
      * configure the ILT to bit count after start bit or stop bit
      * configure RWUID to set or not set IDLE status bit upon detection of
      * an idle character when recevier in standby */
-    BW_UART0_C1_ILT(baseAddr, idleLine);
-    BW_UART0_S2_RWUID(baseAddr, rxWakeIdleDetect);
+    UART0_BWR_C1_ILT(base, idleLine);
+    UART0_BWR_S2_RWUID(base, rxWakeIdleDetect);
 }
 
 #if FSL_FEATURE_LPSCI_HAS_ADDRESS_MATCHING
@@ -555,20 +568,20 @@ void LPSCI_HAL_ConfigIdleLineDetect(uint32_t baseAddr,
  * it's own enable and programmable match address value.
  *
  *END**************************************************************************/
-void LPSCI_HAL_SetMatchAddress(uint32_t baseAddr,
+void LPSCI_HAL_SetMatchAddress(UART0_Type * base,
                                bool matchAddrMode1,
                                bool matchAddrMode2,
                                uint8_t matchAddrValue1,
                                uint8_t matchAddrValue2)
 {
     /* Match Address Mode Enable 1 */
-    BW_UART0_C4_MAEN1(baseAddr, matchAddrMode1);
+    UART0_BWR_C4_MAEN1(base, matchAddrMode1);
     /* Match Address Mode Enable 2 */
-    BW_UART0_C4_MAEN2(baseAddr, matchAddrMode2);
+    UART0_BWR_C4_MAEN2(base, matchAddrMode2);
     /* match address register 1 */
-    HW_UART0_MA1_WR(baseAddr, matchAddrValue1);
+    UART0_WR_MA1(base, matchAddrValue1);
     /* match address register 2 */
-    HW_UART0_MA2_WR(baseAddr, matchAddrValue2);
+    UART0_WR_MA2(base, matchAddrValue2);
 }
 #endif
 
@@ -581,17 +594,18 @@ void LPSCI_HAL_SetMatchAddress(uint32_t baseAddr,
  * operation and to configure the IR pulse width.
  *
  *END**************************************************************************/
-void LPSCI_HAL_SetInfraredOperation(uint32_t baseAddr,
+void LPSCI_HAL_SetInfraredOperation(UART0_Type * base,
                                     bool enable,
                                     lpsci_ir_tx_pulsewidth_t pulseWidth)
 {
     /* enable or disable infrared */
-    BW_UART0_IR_IREN(baseAddr, enable);
+    UART0_BWR_IR_IREN(base, enable);
     /* configure the narrow pulse width of the IR pulse */
-    BW_UART0_IR_TNP(baseAddr, pulseWidth);
+    UART0_BWR_IR_TNP(base, pulseWidth);
 }
 #endif  /* FSL_FEATURE_LPSCI_HAS_IR_SUPPORT */
 
+#endif /* FSL_FEATURE_SOC_LPSCI_COUNT */
 /*******************************************************************************
  * EOF
  ******************************************************************************/

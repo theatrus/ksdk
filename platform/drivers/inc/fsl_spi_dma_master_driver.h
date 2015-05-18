@@ -30,19 +30,20 @@
 #if !defined(__FSL_SPI_MASTER_DMA_DRIVER_H__)
 #define __FSL_SPI_DMA_MASTER_DRIVER_H__
 
-
 #include "fsl_spi_hal.h"
 #include "fsl_os_abstraction.h"
 #include "fsl_dma_driver.h"
 
+#if FSL_FEATURE_SOC_SPI_COUNT
+
 /*! @addtogroup SPI_DRV_MasterDriver*/
 /*! @{*/
 
-/*! @brief Table of base addresses for SPI instances. */
-extern const uint32_t g_spiBaseAddr[];
+/*! @brief Table of base pointers for SPI instances. */
+extern SPI_Type * const g_spiBase[SPI_INSTANCE_COUNT];
 
-/*! @brief Table to save SPI IRQ enum numbers defined in CMSIS header file. */
-extern const IRQn_Type g_spiIrqId[HW_SPI_INSTANCE_COUNT];
+/*! @brief Table to save SPI IRQ enumeration numbers defined in CMSIS header file. */
+extern const IRQn_Type g_spiIrqId[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Definitions
@@ -79,8 +80,8 @@ typedef struct SpiDmaUserConfig {
 typedef struct SpiDmaMasterState {
     uint32_t spiSourceClock;              /*!< Module source clock*/
     volatile bool isTransferInProgress;     /*!< True if there is an active transfer.*/
-    const uint8_t * restrict sendBuffer;    /*!< The buffer being sent.*/
-    uint8_t * restrict receiveBuffer;       /*!< The buffer into which received bytes are placed.*/
+    const uint8_t * sendBuffer;    /*!< The buffer being sent.*/
+    uint8_t * receiveBuffer;       /*!< The buffer into which received bytes are placed.*/
     volatile size_t remainingSendByteCount; /*!< Number of bytes remaining to send.*/
     volatile size_t remainingReceiveByteCount; /*!< Number of bytes remaining to receive.*/
     volatile size_t transferredByteCount;   /*!< Number of bytes transferred so far.*/
@@ -107,9 +108,9 @@ extern "C" {
  *
  * @brief Initializes a SPI instance for master mode operation to work with DMA.
  *
- * This function uses a dma driven method for transferring data.
- * this function initializes the run-time state structure to track the ongoing
- * transfers, ungates the clock to the SPI module, resets the SPI module, initializes the module
+ * This function uses a DMA-driven method for transferring data.
+ * This function initializes the run-time state structure to track the ongoing
+ * transfers, un-gates the clock to the SPI module, resets the SPI module, initializes the module
  * to user defined settings and default settings, configures the IRQ state structure, enables
  * the module-level interrupt to the core, and enables the SPI module.
  *
@@ -121,8 +122,9 @@ extern "C" {
  *  must pass the memory for this run-time state structure and the SPI master driver
  *  fills out the members. This run-time state structure keeps track of the
  *  transfer in progress.
+ * @return kStatus_SPI_Success indicating successful initialization
  */
-void SPI_DRV_DmaMasterInit(uint32_t instance, spi_dma_master_state_t * spiDmaState);
+spi_status_t SPI_DRV_DmaMasterInit(uint32_t instance, spi_dma_master_state_t * spiDmaState);
 
 /*!
  * @brief Shuts down a SPI instance with DMA support.
@@ -131,8 +133,9 @@ void SPI_DRV_DmaMasterInit(uint32_t instance, spi_dma_master_state_t * spiDmaSta
  * the core, and releases any used DMA channels.
  *
  * @param instance The instance number of the SPI peripheral.
+ * @return kStatus_SPI_Success indicating successful de-initialization
  */
-void SPI_DRV_DmaMasterDeinit(uint32_t instance);
+spi_status_t SPI_DRV_DmaMasterDeinit(uint32_t instance);
 
 /*@}*/
 
@@ -193,9 +196,9 @@ void SPI_DRV_DmaMasterConfigureBus(uint32_t instance,
  *         #kStatus_SPI_Timeout The transfer timed out and was aborted.
  */
 spi_status_t SPI_DRV_DmaMasterTransferBlocking(uint32_t instance,
-                                               const spi_dma_master_user_config_t * restrict device,
-                                               const uint8_t * restrict sendBuffer,
-                                               uint8_t * restrict receiveBuffer,
+                                               const spi_dma_master_user_config_t * device,
+                                               const uint8_t * sendBuffer,
+                                               uint8_t * receiveBuffer,
                                                size_t transferByteCount,
                                                uint32_t timeout);
 
@@ -227,9 +230,9 @@ spi_status_t SPI_DRV_DmaMasterTransferBlocking(uint32_t instance,
  *         #kStatus_SPI_Timeout The transfer timed out and was aborted.
  */
 spi_status_t SPI_DRV_DmaMasterTransfer(uint32_t instance,
-                                       const spi_dma_master_user_config_t * restrict device,
-                                       const uint8_t * restrict sendBuffer,
-                                       uint8_t * restrict receiveBuffer,
+                                       const spi_dma_master_user_config_t * device,
+                                       const uint8_t * sendBuffer,
+                                       uint8_t * receiveBuffer,
                                        size_t transferByteCount);
 
 /*!
@@ -254,7 +257,7 @@ spi_status_t SPI_DRV_DmaMasterGetTransferStatus(uint32_t instance,
 /*!
  * @brief Terminates an asynchronous transfer early with DMA support.
  *
- * During an async transfer, the user has the option to terminate the transfer early if the transfer
+ * During an a-sync transfer, the user has the option to terminate the transfer early if the transfer
  * is still in progress.
  *
  * @param instance The instance number of the SPI peripheral.
@@ -262,6 +265,14 @@ spi_status_t SPI_DRV_DmaMasterGetTransferStatus(uint32_t instance,
  *         kStatus_SPI_NoTransferInProgress No transfer is currently in progress.
  */
 spi_status_t SPI_DRV_DmaMasterAbortTransfer(uint32_t instance);
+
+/*!
+ * @brief Interrupt handler for SPI master mode.
+ * This handler is used when the extraByte flag is set to retrieve the received last byte.
+ *
+ * @param instance The instance number of the SPI peripheral.
+ */
+void SPI_DRV_DmaMasterIRQHandler(uint32_t instance);
 
 /*@}*/
 
@@ -271,6 +282,7 @@ spi_status_t SPI_DRV_DmaMasterAbortTransfer(uint32_t instance);
 
 /*! @}*/
 
+#endif /* FSL_FEATURE_SOC_SPI_COUNT */
 #endif /* __FSL_SPI_MASTER_DMA_DRIVER_H__*/
 /*******************************************************************************
  * EOF

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -32,20 +32,68 @@
 #include "fsl_os_abstraction.h"
 #include "fsl_interrupt_manager.h"
 #include "fsl_clock_manager.h"
+
+#if (FSL_OSA_BM_TIMER_CONFIG == FSL_OSA_BM_TIMER_LPTMER)
 #include "fsl_lptmr_hal.h"
 
 /* Only one lptmr and always use it. */
 #define BM_LPTMR_INSTANCE 0
-#define BM_LPTMR_BASE LPTMR0_BASE
+#define BM_LPTMR_BASE LPTMR0
+#endif
+
+/* Weak function. */
+#if defined(__GNUC__)
+#define __WEAK_FUNC __attribute__((weak))
+#elif defined(__ICCARM__)
+#define __WEAK_FUNC __weak
+#elif defined( __CC_ARM )
+#define __WEAK_FUNC __weak
+#endif
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : time_diff
+ * Function Name : OSA_TimeInit
+ * Description   : This function initializes the timer used in BM OSA, the
+ * functions such as OSA_TimeDelay, OSA_TimeGetMsec, and the timeout are all
+ * based on this timer.
+ *
+ *END**************************************************************************/
+__WEAK_FUNC void OSA_TimeInit(void)
+{
+#if (FSL_OSA_BM_TIMER_CONFIG == FSL_OSA_BM_TIMER_LPTMER)
+    lptmr_prescaler_user_config_t prescaler_config;
+    lptmr_working_mode_user_config_t lptmr_config;
+
+    /*
+     * Setup LP Timer for timeout and delay.
+     * Use 1kHz LPO as clock source, disable prescaler, freerun mode.
+     */
+    CLOCK_SYS_EnableLptmrClock(BM_LPTMR_INSTANCE);
+
+    LPTMR_HAL_Disable(BM_LPTMR_BASE);
+
+    prescaler_config.prescalerBypass = true;
+    prescaler_config.prescalerClockSelect = (lptmr_prescaler_clock_select_t)kClockLptmrSrcLpoClk;
+    LPTMR_HAL_SetPrescalerMode(BM_LPTMR_BASE, prescaler_config);
+
+    lptmr_config.freeRunningEnable = true;
+    lptmr_config.timerModeSelect = kLptmrTimerModeTimeCounter;
+    LPTMR_HAL_SetTimerWorkingMode(BM_LPTMR_BASE, lptmr_config);
+
+    LPTMR_HAL_SetIntCmd(BM_LPTMR_BASE,false);
+
+    LPTMR_HAL_Enable(BM_LPTMR_BASE);
+#endif
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : OSA_TimeDiff
  * Description   : This function gets the difference between two time stamp,
  * time overflow is considered.
  *
  *END**************************************************************************/
-static uint32_t time_diff(uint32_t time_start, uint32_t time_end)
+__WEAK_FUNC uint32_t OSA_TimeDiff(uint32_t time_start, uint32_t time_end)
 {
     if (time_end >= time_start)
     {
@@ -114,11 +162,12 @@ osa_status_t OSA_SemaWait(semaphore_t *pSem, uint32_t timeout)
             /* If timeout is 0 and semaphore is not available, return kStatus_OSA_Timeout. */
             return kStatus_OSA_Timeout;
         }
+#if (FSL_OSA_BM_TIMER_CONFIG != FSL_OSA_BM_TIMER_NONE)
         else if (pSem->isWaiting)
         {
             /* Check for timeout */
             currentTime = OSA_TimeGetMsec();
-            if (pSem->timeout < time_diff(pSem->time_start, currentTime))
+            if (pSem->timeout < OSA_TimeDiff(pSem->time_start, currentTime))
             {
                 INT_SYS_DisableIRQGlobal();
                 pSem->isWaiting = false;
@@ -135,6 +184,7 @@ osa_status_t OSA_SemaWait(semaphore_t *pSem, uint32_t timeout)
             pSem->time_start = OSA_TimeGetMsec();
             pSem->timeout = timeout;
         }
+#endif
     }
 
     return kStatus_OSA_Idle;
@@ -236,11 +286,12 @@ osa_status_t OSA_MutexLock(mutex_t *pMutex, uint32_t timeout)
             /* If timeout is 0 and mutex is not available, return kStatus_OSA_Timeout. */
             return kStatus_OSA_Timeout;
         }
+#if (FSL_OSA_BM_TIMER_CONFIG != FSL_OSA_BM_TIMER_NONE)
         else if (pMutex->isWaiting)
         {
             /* Check for timeout */
             currentTime = OSA_TimeGetMsec();
-            if (pMutex->timeout < time_diff(pMutex->time_start, currentTime))
+            if (pMutex->timeout < OSA_TimeDiff(pMutex->time_start, currentTime))
             {
                 INT_SYS_DisableIRQGlobal();
                 pMutex->isWaiting = false;
@@ -257,6 +308,7 @@ osa_status_t OSA_MutexLock(mutex_t *pMutex, uint32_t timeout)
             pMutex->time_start = OSA_TimeGetMsec();
             pMutex->timeout = timeout;
         }
+#endif
     }
 
     return kStatus_OSA_Idle;
@@ -365,11 +417,12 @@ osa_status_t OSA_EventWait(event_t       *pEvent,
             /* If timeout is 0 and wait condition is not met, return kStatus_OSA_Timeout. */
             return kStatus_OSA_Timeout;
         }
+#if (FSL_OSA_BM_TIMER_CONFIG != FSL_OSA_BM_TIMER_NONE)
         else if (pEvent->isWaiting)
         {
             /* Check for timeout */
             currentTime = OSA_TimeGetMsec();
-            if (pEvent->timeout < time_diff(pEvent->time_start, currentTime))
+            if (pEvent->timeout < OSA_TimeDiff(pEvent->time_start, currentTime))
             {
                 INT_SYS_DisableIRQGlobal();
                 pEvent->isWaiting = false;
@@ -386,6 +439,7 @@ osa_status_t OSA_EventWait(event_t       *pEvent,
             pEvent->time_start = OSA_TimeGetMsec();
             pEvent->timeout = timeout;
         }
+#endif
     }
 
     return retVal;
@@ -756,7 +810,7 @@ osa_status_t OSA_MsgQGet(msg_queue_handler_t handler,
             handler->head = 0;
         }
 
-        /* If queue was empty, clear the empty flag and signal that it is not empty anymore */
+        /* If queue is empty, clear the semaphore. */
         if(handler->head == handler->tail)
         {
             handler->isEmpty = true;
@@ -842,7 +896,7 @@ void OSA_TimeDelay(uint32_t delay)
 
     do {
         currTime = OSA_TimeGetMsec(); /* Get current time stamp */
-    } while (delay >= time_diff(timeStart, currTime));
+    } while (delay >= OSA_TimeDiff(timeStart, currTime));
 }
 
 /*FUNCTION**********************************************************************
@@ -851,23 +905,33 @@ void OSA_TimeDelay(uint32_t delay)
  * Description   : This function gets current time in milliseconds.
  *
  *END**************************************************************************/
-uint32_t OSA_TimeGetMsec(void)
+__WEAK_FUNC uint32_t OSA_TimeGetMsec(void)
 {
+#if (FSL_OSA_BM_TIMER_CONFIG == FSL_OSA_BM_TIMER_NONE)
+    return 0U;
+#elif (FSL_OSA_BM_TIMER_CONFIG == FSL_OSA_BM_TIMER_LPTMER)
     return LPTMR_HAL_GetCounterValue(BM_LPTMR_BASE);
+#else
+    return 0U;
+#endif
 }
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : interrupt_handler_register
  * Description   : This function is used to install interrupt handler.
- * For bare metal, this function is empty.
  *
  *END**************************************************************************/
-osa_status_t OSA_InstallIntHandler (int32_t IRQNumber,
-                                                        void (*handler)(void))
+osa_int_handler_t OSA_InstallIntHandler(int32_t IRQNumber,
+                                        osa_int_handler_t handler)
 {
-    INT_SYS_InstallHandler((IRQn_Type)IRQNumber, handler);
-    return kStatus_OSA_Success;
+#if defined ( __IAR_SYSTEMS_ICC__ )
+_Pragma ("diag_suppress = Pm138")
+#endif
+    return (osa_int_handler_t)INT_SYS_InstallHandler((IRQn_Type)IRQNumber, handler);
+#if defined ( __IAR_SYSTEMS_ICC__ )
+_Pragma ("diag_remark = PM138")
+#endif
 }
 
 /*FUNCTION**********************************************************************
@@ -920,26 +984,9 @@ osa_status_t OSA_Init(void)
     task_init();
 #endif
 
-    /*
-     * Setup LP Timer for timeout and delay.
-     * Use 1kHz LPO as clock source, disable prescaler, freerun mode.
-     */
-
-    CLOCK_SYS_EnableLptimerClock(BM_LPTMR_INSTANCE);
-
-    LPTMR_HAL_Disable(BM_LPTMR_BASE);
-
-    LPTMR_HAL_SetTimerModeMode(BM_LPTMR_BASE, kLptmrTimerModeTimeCounter);
-
-    LPTMR_HAL_SetFreeRunningCmd(BM_LPTMR_BASE, true);
-
-    LPTMR_HAL_SetPrescalerCmd(BM_LPTMR_BASE, false);
-
-    LPTMR_HAL_SetPrescalerClockSourceMode(BM_LPTMR_BASE, kClockLptmrSrcLpoClk);
-
-    LPTMR_HAL_SetIntCmd(BM_LPTMR_BASE,false);
-
-    LPTMR_HAL_Enable(BM_LPTMR_BASE);
+#if (FSL_OSA_BM_TIMER_CONFIG != FSL_OSA_BM_TIMER_NONE)
+    OSA_TimeInit();
+#endif
 
     return kStatus_OSA_Success;
 }

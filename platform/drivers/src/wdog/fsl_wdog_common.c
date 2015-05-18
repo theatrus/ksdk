@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,7 +35,7 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for WDOG instances. */
-const uint32_t g_wdogBaseAddr[] = WDOG_BASE_ADDRS;
+WDOG_Type * const g_wdogBase[] = WDOG_BASE_PTRS;
 
 /*! @brief Table to save WDOG IRQ enum numbers defined in CMSIS header file. */
 const IRQn_Type g_wdogIrqId[] = WDOG_IRQS;

@@ -33,16 +33,18 @@
 #include "fsl_dspi_hal.h"
 #include "fsl_os_abstraction.h"
 
+#if FSL_FEATURE_SOC_DSPI_COUNT
+
 /*!
  * @addtogroup dspi_master_driver
  * @{
  */
 
-/*! @brief Table of base addresses for DSPI instances. */
-extern const uint32_t g_dspiBaseAddr[];
+/*! @brief Table of base pointers for SPI instances. */
+extern SPI_Type * const g_dspiBase[SPI_INSTANCE_COUNT];
 
 /*! @brief Table to save DSPI IRQ enumeration numbers defined in the CMSIS header file. */
-extern const IRQn_Type g_dspiIrqId[HW_SPI_INSTANCE_COUNT];
+extern const IRQn_Type g_dspiIrqId[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Definitions
@@ -76,8 +78,8 @@ typedef struct DspiMasterState {
                                        between transfers*/
     uint32_t dspiSourceClock;              /*!< Module source clock*/
     volatile bool isTransferInProgress;             /*!< True if there is an active transfer.*/
-    const uint8_t * restrict sendBuffer;  /*!< The buffer from which transmitted bytes are taken.*/
-    uint8_t * restrict receiveBuffer;     /*!< The buffer into which received bytes are placed.*/
+    const uint8_t * sendBuffer;  /*!< The buffer from which transmitted bytes are taken.*/
+    uint8_t * receiveBuffer;     /*!< The buffer into which received bytes are placed.*/
     volatile size_t remainingSendByteCount;         /*!< Number of bytes remaining to send.*/
     volatile size_t remainingReceiveByteCount;      /*!< Number of bytes remaining to receive.*/
     volatile bool isTransferBlocking;    /*!< True if transfer is a blocking transaction. */
@@ -90,14 +92,15 @@ typedef struct DspiMasterState {
  *
  * Use an instance of this structure with the DSPI_DRV_MasterInit() function. This allows the user to configure
  * the most common settings of the DSPI peripheral with a single function call.
+ * @internal gui name="Master configuration" id="dspiMasterCfg"
  */
 typedef struct DspiMasterUserConfig {
-    dspi_ctar_selection_t whichCtar; /*!< Desired Clock and Transfer Attributes Register(CTAR)*/
-    bool isSckContinuous;                  /*!< Disable or Enable continuous SCK operation*/
+    dspi_ctar_selection_t whichCtar; /*!< Desired Clock and Transfer Attributes Register(CTAR) @internal gui name="CTAR selection" id="MasterCtar" */
+    bool isSckContinuous;                  /*!< Disable or Enable continuous SCK operation @internal gui name="Continuous SCK" id="MasterContSck" */
     bool isChipSelectContinuous;  /*!< Option to enable the continuous assertion of chip select
-                                       between transfers */
-    dspi_which_pcs_config_t whichPcs;        /*!< Desired Peripheral Chip Select (pcs) */
-    dspi_pcs_polarity_config_t pcsPolarity;  /*!< Peripheral Chip Select (pcs) polarity setting.*/
+                                       between transfers @internal gui name="Continuous chip select" id="MasterContCs" */
+    dspi_which_pcs_config_t whichPcs;        /*!< Desired Peripheral Chip Select (pcs) @internal gui name="Chip select" id="MasterCs" */
+    dspi_pcs_polarity_config_t pcsPolarity;  /*!< Peripheral Chip Select (pcs) polarity setting. @internal gui name="Chip select polarity" id="MasterPolarity" */
 } dspi_master_user_config_t;
 
 /*******************************************************************************
@@ -118,7 +121,7 @@ extern "C" {
  *
  * This function uses a CPU interrupt driven method for transferring data.
  * This function initializes the run-time state structure to track the ongoing
- * transfers, ungates the clock to the DSPI module, resets the DSPI module, initializes the module
+ * transfers, un-gates the clock to the DSPI module, resets the DSPI module, initializes the module
  * to user defined settings and default settings, configures the IRQ state structure, enables
  * the module-level interrupt to the core, and enables the DSPI module.
  * The CTAR parameter is special in that it allows the user to have different SPI devices
@@ -163,8 +166,9 @@ dspi_status_t DSPI_DRV_MasterInit(uint32_t instance,
  * the core.
  *
  * @param instance The instance number of the DSPI peripheral.
+ * @return kStatus_DSPI_Success indicating successful de-initialization
  */
-void DSPI_DRV_MasterDeinit(uint32_t instance);
+dspi_status_t DSPI_DRV_MasterDeinit(uint32_t instance);
 
 
 /*!
@@ -198,9 +202,9 @@ void DSPI_DRV_MasterDeinit(uint32_t instance);
  *
  * @param instance The instance number of the DSPI peripheral.
  * @param whichDelay The desired delay to configure, must be of type dspi_delay_type_t
- * @param delayInNanoSec The desired delay value in nano-seconds.
+ * @param delayInNanoSec The desired delay value in nanoseconds.
  * @param calculatedDelay The calculated delay that best matches the desired
- *        delay (in nano-seconds).
+ *        delay (in nanoseconds).
  * @return Either kStatus_DSPI_Success or kStatus_DSPI_OutOfRange if the desired delay exceeds
  *         the capability of the device.
  */
@@ -284,7 +288,7 @@ dspi_status_t DSPI_DRV_MasterConfigureBus(uint32_t instance,
  *         kStatus_DSPI_Timeout The transfer timed out and was aborted.
  */
 dspi_status_t DSPI_DRV_MasterTransferBlocking(uint32_t instance,
-                                              const dspi_device_t * restrict device,
+                                              const dspi_device_t * device,
                                               const uint8_t * sendBuffer,
                                               uint8_t * receiveBuffer,
                                               size_t transferByteCount,
@@ -299,9 +303,9 @@ dspi_status_t DSPI_DRV_MasterTransferBlocking(uint32_t instance,
 /*!
  * @brief Performs a non-blocking SPI master mode transfer.
  *
- * This function  returns immediately. The user must check back to
- * check whether the transfer is complete (using the DSPI_DRV_MasterGetTransferStatus function). This
- * function simultaneously sends and receives data on the SPI bus, as SPI is naturally
+ * This function  returns immediately. The user needs to
+ * check whether the transfer is complete using the DSPI_DRV_MasterGetTransferStatus function. This
+ * function simultaneously sends and receives data on the SPI bus because the SPI is naturally
  * a full-duplex bus.
  *
  * @param instance The instance number of the DSPI peripheral.
@@ -319,7 +323,7 @@ dspi_status_t DSPI_DRV_MasterTransferBlocking(uint32_t instance,
  *         kStatus_DSPI_Busy Cannot perform transfer because a transfer is already in progress.
  */
 dspi_status_t DSPI_DRV_MasterTransfer(uint32_t instance,
-                                      const dspi_device_t * restrict device,
+                                      const dspi_device_t * device,
                                       const uint8_t * sendBuffer,
                                       uint8_t * receiveBuffer,
                                       size_t transferByteCount);
@@ -356,6 +360,14 @@ dspi_status_t DSPI_DRV_MasterGetTransferStatus(uint32_t instance, uint32_t * fra
  */
 dspi_status_t DSPI_DRV_MasterAbortTransfer(uint32_t instance);
 
+/*!
+ * @brief Interrupt handler for DSPI master mode.
+ * This handler uses the buffers stored in the dspi_master_state_t structs to transfer data.
+ *
+ * @param instance The instance number of the DSPI peripheral.
+ */
+void DSPI_DRV_MasterIRQHandler(uint32_t instance);
+
 /* @}*/
 
 #if defined(__cplusplus)
@@ -364,6 +376,7 @@ dspi_status_t DSPI_DRV_MasterAbortTransfer(uint32_t instance);
 
 /*! @}*/
 
+#endif /* FSL_FEATURE_SOC_DSPI_COUNT */
 #endif /* __FSL_DSPI_MASTER_DRIVER_H__*/
 /*******************************************************************************
  * EOF

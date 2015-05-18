@@ -29,6 +29,7 @@
  */
  
 #include "fsl_edma_driver.h"
+#if FSL_FEATURE_SOC_DMA_COUNT
 
 /*******************************************************************************
  * Variables
@@ -262,11 +263,14 @@ void DMA15_DMA31_IRQHandler(void)
 }
 #endif
 
+#if FSL_FEATURE_EDMA_HAS_ERROR_IRQ
 /*! @brief EDMA ERROR IRQ handler with the same name in the startup code*/
 void DMA_Error_IRQHandler(void)
 {
     EDMA_DRV_ErrorIRQHandler(0);
 }
+#endif
+#endif
 
 /*******************************************************************************
  * EOF

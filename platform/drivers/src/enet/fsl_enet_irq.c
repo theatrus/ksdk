@@ -30,6 +30,7 @@
  
 #include "fsl_enet_driver.h"
 #include "fsl_clock_manager.h"
+#if FSL_FEATURE_SOC_ENET_COUNT
 /*******************************************************************************
  * Variables
  ******************************************************************************/
@@ -54,6 +55,7 @@ void ENET_1588_Timer_IRQHandler(void)
 {
      ENET_DRV_TsIRQHandler(ENET_INSTANCE);
 }
+#endif
 #endif
 /*******************************************************************************
  * EOF

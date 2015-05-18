@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include "fsl_device_registers.h"
 #include "fsl_tsi_hal.h"
+#if FSL_FEATURE_SOC_TSI_COUNT
 
 // Just for right generation of documentation
 #if defined(__DOXYGEN__)
@@ -82,38 +83,22 @@ typedef enum _tsi_low_power_interval {
  * These constants define the tsi Reference oscillator charge current select in a TSI instance.
  */
 typedef enum _tsi_reference_osc_charge_current {
-    kTsiRefOscChargeCurrent_1uA = 0,        /*!< Reference oscillator charge current is 1uA */
-    kTsiRefOscChargeCurrent_2uA = 1,        /*!< Reference oscillator charge current is 2uA */
-    kTsiRefOscChargeCurrent_3uA = 2,        /*!< Reference oscillator charge current is 3uA */
-    kTsiRefOscChargeCurrent_4uA = 3,        /*!< Reference oscillator charge current is 4uA */
-    kTsiRefOscChargeCurrent_5uA = 4,        /*!< Reference oscillator charge current is 5uA */
-    kTsiRefOscChargeCurrent_6uA = 5,        /*!< Reference oscillator charge current is 6uA */
-    kTsiRefOscChargeCurrent_7uA = 6,        /*!< Reference oscillator charge current is 7uA */
-    kTsiRefOscChargeCurrent_8uA = 7,        /*!< Reference oscillator charge current is 8uA */
-    kTsiRefOscChargeCurrent_9uA = 8,        /*!< Reference oscillator charge current is 9uA */
-    kTsiRefOscChargeCurrent_10uA = 9,       /*!< Reference oscillator charge current is 10uA */
-    kTsiRefOscChargeCurrent_11uA = 10,      /*!< Reference oscillator charge current is 11uA */
-    kTsiRefOscChargeCurrent_12uA = 11,      /*!< Reference oscillator charge current is 12uA */
-    kTsiRefOscChargeCurrent_13uA = 12,      /*!< Reference oscillator charge current is 13uA */
-    kTsiRefOscChargeCurrent_14uA = 13,      /*!< Reference oscillator charge current is 14uA */
-    kTsiRefOscChargeCurrent_15uA = 14,      /*!< Reference oscillator charge current is 15uA */
-    kTsiRefOscChargeCurrent_16uA = 15,      /*!< Reference oscillator charge current is 16uA */
-    kTsiRefOscChargeCurrent_17uA = 16,      /*!< Reference oscillator charge current is 17uA */
-    kTsiRefOscChargeCurrent_18uA = 17,      /*!< Reference oscillator charge current is 18uA */
-    kTsiRefOscChargeCurrent_19uA = 18,      /*!< Reference oscillator charge current is 19uA */
-    kTsiRefOscChargeCurrent_20uA = 19,      /*!< Reference oscillator charge current is 20uA */
-    kTsiRefOscChargeCurrent_21uA = 20,      /*!< Reference oscillator charge current is 21uA */
-    kTsiRefOscChargeCurrent_22uA = 21,      /*!< Reference oscillator charge current is 22uA */
-    kTsiRefOscChargeCurrent_23uA = 22,      /*!< Reference oscillator charge current is 23uA */
-    kTsiRefOscChargeCurrent_24uA = 23,      /*!< Reference oscillator charge current is 24uA */
-    kTsiRefOscChargeCurrent_25uA = 24,      /*!< Reference oscillator charge current is 25uA */
-    kTsiRefOscChargeCurrent_26uA = 25,      /*!< Reference oscillator charge current is 26uA */
-    kTsiRefOscChargeCurrent_27uA = 26,      /*!< Reference oscillator charge current is 27uA */
-    kTsiRefOscChargeCurrent_28uA = 27,      /*!< Reference oscillator charge current is 28uA */
-    kTsiRefOscChargeCurrent_29uA = 28,      /*!< Reference oscillator charge current is 29uA */
-    kTsiRefOscChargeCurrent_30uA = 29,      /*!< Reference oscillator charge current is 30uA */
-    kTsiRefOscChargeCurrent_31uA = 30,      /*!< Reference oscillator charge current is 31uA */
-    kTsiRefOscChargeCurrent_32uA = 31,      /*!< Reference oscillator charge current is 32uA */
+    kTsiRefOscChargeCurrent_2uA = 0,        /*!< Reference oscillator charge current is 2uA */
+    kTsiRefOscChargeCurrent_4uA = 1,        /*!< Reference oscillator charge current is 4uA */
+    kTsiRefOscChargeCurrent_6uA = 2,        /*!< Reference oscillator charge current is 6uA */
+    kTsiRefOscChargeCurrent_8uA = 3,        /*!< Reference oscillator charge current is 8uA */
+    kTsiRefOscChargeCurrent_10uA = 4,       /*!< Reference oscillator charge current is 10uA */
+    kTsiRefOscChargeCurrent_12uA = 5,       /*!< Reference oscillator charge current is 12uA */
+    kTsiRefOscChargeCurrent_14uA = 6,       /*!< Reference oscillator charge current is 14uA */
+    kTsiRefOscChargeCurrent_16uA = 7,       /*!< Reference oscillator charge current is 16uA */
+    kTsiRefOscChargeCurrent_18uA = 8,       /*!< Reference oscillator charge current is 18uA */
+    kTsiRefOscChargeCurrent_20uA = 9,       /*!< Reference oscillator charge current is 20uA */
+    kTsiRefOscChargeCurrent_22uA = 10,      /*!< Reference oscillator charge current is 22uA */
+    kTsiRefOscChargeCurrent_24uA = 11,      /*!< Reference oscillator charge current is 24uA */
+    kTsiRefOscChargeCurrent_26uA = 12,      /*!< Reference oscillator charge current is 26uA */
+    kTsiRefOscChargeCurrent_28uA = 13,      /*!< Reference oscillator charge current is 28uA */
+    kTsiRefOscChargeCurrent_30uA = 14,      /*!< Reference oscillator charge current is 30uA */
+    kTsiRefOscChargeCurrent_32uA = 15,      /*!< Reference oscillator charge current is 32uA */
 } tsi_reference_osc_charge_current_t;
 
 /*!
@@ -133,38 +118,22 @@ typedef struct _tsi_reference_osc_charge_current_limits
  * These constants define the tsi External oscillator charge current select in a TSI instance.
  */
 typedef enum _tsi_external_osc_charge_current {
-    kTsiExtOscChargeCurrent_1uA = 0,        /*!< External oscillator charge current is 1uA */
-    kTsiExtOscChargeCurrent_2uA = 1,        /*!< External oscillator charge current is 2uA */
-    kTsiExtOscChargeCurrent_3uA = 2,        /*!< External oscillator charge current is 3uA */
-    kTsiExtOscChargeCurrent_4uA = 3,        /*!< External oscillator charge current is 4uA */
-    kTsiExtOscChargeCurrent_5uA = 4,        /*!< External oscillator charge current is 5uA */
-    kTsiExtOscChargeCurrent_6uA = 5,        /*!< External oscillator charge current is 6uA */
-    kTsiExtOscChargeCurrent_7uA = 6,        /*!< External oscillator charge current is 7uA */
-    kTsiExtOscChargeCurrent_8uA = 7,        /*!< External oscillator charge current is 8uA */
-    kTsiExtOscChargeCurrent_9uA = 8,        /*!< External oscillator charge current is 9uA */
-    kTsiExtOscChargeCurrent_10uA = 9,       /*!< External oscillator charge current is 10uA */
-    kTsiExtOscChargeCurrent_11uA = 10,      /*!< External oscillator charge current is 11uA */
-    kTsiExtOscChargeCurrent_12uA = 11,      /*!< External oscillator charge current is 12uA */
-    kTsiExtOscChargeCurrent_13uA = 12,      /*!< External oscillator charge current is 13uA */
-    kTsiExtOscChargeCurrent_14uA = 13,      /*!< External oscillator charge current is 14uA */
-    kTsiExtOscChargeCurrent_15uA = 14,      /*!< External oscillator charge current is 15uA */
-    kTsiExtOscChargeCurrent_16uA = 15,      /*!< External oscillator charge current is 16uA */
-    kTsiExtOscChargeCurrent_17uA = 16,      /*!< External oscillator charge current is 17uA */
-    kTsiExtOscChargeCurrent_18uA = 17,      /*!< External oscillator charge current is 18uA */
-    kTsiExtOscChargeCurrent_19uA = 18,      /*!< External oscillator charge current is 19uA */
-    kTsiExtOscChargeCurrent_20uA = 19,      /*!< External oscillator charge current is 20uA */
-    kTsiExtOscChargeCurrent_21uA = 20,      /*!< External oscillator charge current is 21uA */
-    kTsiExtOscChargeCurrent_22uA = 21,      /*!< External oscillator charge current is 22uA */
-    kTsiExtOscChargeCurrent_23uA = 22,      /*!< External oscillator charge current is 23uA */
-    kTsiExtOscChargeCurrent_24uA = 23,      /*!< External oscillator charge current is 24uA */
-    kTsiExtOscChargeCurrent_25uA = 24,      /*!< External oscillator charge current is 25uA */
-    kTsiExtOscChargeCurrent_26uA = 25,      /*!< External oscillator charge current is 26uA */
-    kTsiExtOscChargeCurrent_27uA = 26,      /*!< External oscillator charge current is 27uA */
-    kTsiExtOscChargeCurrent_28uA = 27,      /*!< External oscillator charge current is 28uA */
-    kTsiExtOscChargeCurrent_29uA = 28,      /*!< External oscillator charge current is 29uA */
-    kTsiExtOscChargeCurrent_30uA = 29,      /*!< External oscillator charge current is 30uA */
-    kTsiExtOscChargeCurrent_31uA = 30,      /*!< External oscillator charge current is 31uA */
-    kTsiExtOscChargeCurrent_32uA = 31,      /*!< External oscillator charge current is 32uA */
+    kTsiExtOscChargeCurrent_2uA = 0,        /*!< External oscillator charge current is 2uA */
+    kTsiExtOscChargeCurrent_4uA = 1,        /*!< External oscillator charge current is 4uA */
+    kTsiExtOscChargeCurrent_6uA = 2,        /*!< External oscillator charge current is 6uA */
+    kTsiExtOscChargeCurrent_8uA = 3,        /*!< External oscillator charge current is 8uA */
+    kTsiExtOscChargeCurrent_10uA = 4,       /*!< External oscillator charge current is 10uA */
+    kTsiExtOscChargeCurrent_12uA = 5,       /*!< External oscillator charge current is 12uA */
+    kTsiExtOscChargeCurrent_14uA = 6,       /*!< External oscillator charge current is 14uA */
+    kTsiExtOscChargeCurrent_16uA = 7,       /*!< External oscillator charge current is 16uA */
+    kTsiExtOscChargeCurrent_18uA = 8,       /*!< External oscillator charge current is 18uA */
+    kTsiExtOscChargeCurrent_20uA = 9,       /*!< External oscillator charge current is 20uA */
+    kTsiExtOscChargeCurrent_22uA = 10,      /*!< External oscillator charge current is 22uA */
+    kTsiExtOscChargeCurrent_24uA = 11,      /*!< External oscillator charge current is 24uA */
+    kTsiExtOscChargeCurrent_26uA = 12,      /*!< External oscillator charge current is 26uA */
+    kTsiExtOscChargeCurrent_28uA = 13,      /*!< External oscillator charge current is 28uA */
+    kTsiExtOscChargeCurrent_30uA = 14,      /*!< External oscillator charge current is 30uA */
+    kTsiExtOscChargeCurrent_32uA = 15,      /*!< External oscillator charge current is 32uA */
 } tsi_external_osc_charge_current_t;
 
 /*!
@@ -322,216 +291,339 @@ extern "C" {
 #endif
 
 /*!
-* @brief Enable periodical (hardware) trigger scan.
+* @brief Enable Touch Sensing Input Module.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_EnablePeriodicalScan(uint32_t baseAddr)
+static inline void TSI_HAL_EnableModule(TSI_Type * base)
 {
-    BW_TSI_GENCS_STM(baseAddr, 1);
+    TSI_BWR_GENCS_TSIEN(base, 1);
+}
+
+/*!
+* @brief Disable Touch Sensing Input Module.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_DisableModule(TSI_Type * base)
+{
+    TSI_BWR_GENCS_TSIEN(base, 0);
+}
+
+/*!
+* @brief    Enable TSI module in stop mode.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_EnableStop(TSI_Type * base)
+{
+    TSI_BWR_GENCS_STPE(base, 1);
+}
+
+/*!
+* @brief Disable TSI module in stop mode.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_DisableStop(TSI_Type * base)
+{
+    TSI_BWR_GENCS_STPE(base, 0);
+}
+
+/*!
+* @brief Enable out of range interrupt.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_EnableOutOfRangeInterrupt(TSI_Type * base)
+{
+    TSI_BWR_GENCS_ESOR(base, 0);
+}
+
+/*!
+* @brief Enable end of scan interrupt.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_EnableEndOfScanInterrupt(TSI_Type * base)
+{
+    TSI_BWR_GENCS_ESOR(base, 1);
+}
+  
+/*!
+* @brief Enable periodical (hardware) trigger scan.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_EnablePeriodicalScan(TSI_Type * base)
+{
+    TSI_BWR_GENCS_STM(base, 1);
+}
+  
+/*!
+* @brief Enable software trigger scan.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_EnableSoftwareTriggerScan(TSI_Type * base)
+{
+    TSI_BWR_GENCS_STM(base, 0);
 }
 
 /*!
 * @brief Enable error interrupt.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_EnableErrorInterrupt(uint32_t baseAddr)
+static inline void TSI_HAL_EnableErrorInterrupt(TSI_Type * base)
 {
-    BW_TSI_GENCS_ERIE(baseAddr, 1);
+    TSI_BWR_GENCS_ERIE(base, 1);
 }
 
 /*!
 * @brief Disable error interrupt.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_DisableErrorInterrupt(uint32_t baseAddr)
+static inline void TSI_HAL_DisableErrorInterrupt(TSI_Type * base)
 {
-    BW_TSI_GENCS_ERIE(baseAddr, 0);
+    TSI_BWR_GENCS_ERIE(base, 0);
+}
+
+/*!
+* @brief Clear out of range flag.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_ClearOutOfRangeFlag(TSI_Type * base)
+{
+    TSI_BWR_GENCS_OUTRGF(base, 1);
+}
+
+/*!
+* @brief Clear end of scan flag.
+*
+* @param    base TSI module base address.
+* @return   None.
+*/
+static inline void TSI_HAL_ClearEndOfScanFlag(TSI_Type * base)
+{
+    TSI_BWR_GENCS_EOSF(base, 1);
 }
 
 /*!
 * @brief Enable TSI module interrupt.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_EnableInterrupt(uint32_t baseAddr)
+static inline void TSI_HAL_EnableInterrupt(TSI_Type * base)
 {
-    BW_TSI_GENCS_TSIIE(baseAddr, 1);
+    TSI_BWR_GENCS_TSIIE(base, 1);
 }
 
 /*!
 * @brief Disable TSI interrupt.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_DisableInterrupt(uint32_t baseAddr)
+static inline void TSI_HAL_DisableInterrupt(TSI_Type * base)
 {
-    BW_TSI_GENCS_TSIIE(baseAddr, 0);
+    TSI_BWR_GENCS_TSIIE(base, 0);
 }
 
 /*!
 * @brief Get interrupt enable flag.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   State of enable interrupt flag.
 */
-static inline uint32_t TSI_HAL_IsInterruptEnabled(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_IsInterruptEnabled(TSI_Type * base)
 {
-    return BR_TSI_GENCS_TSIIE(baseAddr);
+    return TSI_BRD_GENCS_TSIIE(base);
 }
 
 /*!
 * @brief Start measurement (trigger the new measurement).
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_StartSoftwareTrigger(uint32_t baseAddr)
+static inline void TSI_HAL_StartSoftwareTrigger(TSI_Type * base)
 {
-    HW_TSI_GENCS_SET(baseAddr, BF_TSI_GENCS_SWTS(1));
+    TSI_SET_GENCS(base, TSI_GENCS_SWTS(1));
 }
 
 /*!
 * @brief Get overrun flag.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   State of over run flag.
 */
-static inline uint32_t TSI_HAL_IsOverrun(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_IsOverrun(TSI_Type * base)
 {
-    return (uint32_t)BR_TSI_GENCS_OVRF(baseAddr);
+    return (uint32_t)TSI_BRD_GENCS_OVRF(base);
 }
 
 /*!
 * @brief Clear over run flag
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_ClearOverrunFlag(uint32_t baseAddr)
+static inline void TSI_HAL_ClearOverrunFlag(TSI_Type * base)
 {
-    BW_TSI_GENCS_OVRF(baseAddr, 1);
+    TSI_BWR_GENCS_OVRF(base, 1);
 }
 
 /*!
 * @brief Get external electrode error flag.
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   Stae of external electrode error flag
 */
-static inline uint32_t TSI_HAL_GetExternalElectrodeErrorFlag(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetExternalElectrodeErrorFlag(TSI_Type * base)
 {
-    return (uint32_t)BR_TSI_GENCS_EXTERF(baseAddr);
+    return (uint32_t)TSI_BRD_GENCS_EXTERF(base);
 }
 
 /*!
 * @brief Clear external electrode error flag
 *
-* @param    baseAddr TSI module base address.
+* @param    base TSI module base address.
 * @return   None.
 */
-static inline void TSI_HAL_ClearExternalElectrodeErrorFlag(uint32_t baseAddr)
+static inline void TSI_HAL_ClearExternalElectrodeErrorFlag(TSI_Type * base)
 {
-    BW_TSI_GENCS_EXTERF(baseAddr, 1);
+    TSI_BWR_GENCS_EXTERF(base, 1);
+}
+
+/*!
+* @brief Set prescaler.
+*
+* @param    base    TSI module base address.
+* @param    prescaler   Prescaler value.
+* @return   None.
+*/
+static inline void TSI_HAL_SetPrescaler(TSI_Type * base, tsi_electrode_osc_prescaler_t prescaler)
+{
+    TSI_BWR_GENCS_PS(base, prescaler);
+}
+
+/*!
+* @brief Set number of scans (NSCN).
+*
+* @param    base    TSI module base address.
+* @param    number      Number of scans.
+* @return   None.
+*/
+static inline void TSI_HAL_SetNumberOfScans(TSI_Type * base, tsi_n_consecutive_scans_t number)
+{
+    TSI_BWR_GENCS_NSCN(base, number);
 }
 
 /*!
 * @brief Set low power scan interval.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    interval    Interval for low power scan.
 * @return   None.
 */
-static inline void TSI_HAL_SetLowPowerScanInterval(uint32_t baseAddr, tsi_low_power_interval_t interval)
+static inline void TSI_HAL_SetLowPowerScanInterval(TSI_Type * base, tsi_low_power_interval_t interval)
 {
-    BW_TSI_GENCS_LPSCNITV(baseAddr, interval);
+    TSI_BWR_GENCS_LPSCNITV(base, interval);
 }
 
 /*!
 * @brief Get low power scan interval.
 *
-* @param   baseAddr    TSI module base address.
+* @param   base    TSI module base address.
 * @return  Interval for low power scan.
 */
-static inline tsi_low_power_interval_t TSI_HAL_GetLowPowerScanInterval(uint32_t baseAddr)
+static inline tsi_low_power_interval_t TSI_HAL_GetLowPowerScanInterval(TSI_Type * base)
 {
-    return (tsi_low_power_interval_t)BR_TSI_GENCS_LPSCNITV(baseAddr);
+    return (tsi_low_power_interval_t)TSI_BRD_GENCS_LPSCNITV(base);
 }
 
 /*!
 * @brief Set low power clock.
 *
-* @param   baseAddr TSI module base address.
+* @param   base TSI module base address.
 * @param clock Low power clock selection.
 */
-static inline void TSI_HAL_SetLowPowerClock(uint32_t baseAddr, uint32_t clock)
+static inline void TSI_HAL_SetLowPowerClock(TSI_Type * base, uint32_t clock)
 {
-    BW_TSI_GENCS_LPCLKS(baseAddr, clock);
+    TSI_BWR_GENCS_LPCLKS(base, clock);
 }
 
 /*!
 * @brief Get low power clock.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Low power clock selection.
 */
-static inline uint32_t TSI_HAL_GetLowPowerClock(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetLowPowerClock(TSI_Type * base)
 {
-    return BR_TSI_GENCS_LPCLKS(baseAddr);
+    return TSI_BRD_GENCS_LPCLKS(base);
 }
 
 /*!
 * @brief Set the reference oscilator charge current.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    current     The charge current.
 * @return   None.
 */
-static inline void TSI_HAL_SetReferenceChargeCurrent(uint32_t baseAddr, tsi_reference_osc_charge_current_t current)
+static inline void TSI_HAL_SetReferenceChargeCurrent(TSI_Type * base, tsi_reference_osc_charge_current_t current)
 {
-    BW_TSI_SCANC_REFCHRG(baseAddr, current);
+    TSI_BWR_SCANC_REFCHRG(base, current);
 }
 
 /*!
 * @brief Get the reference oscilator charge current.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   The charge current.
 */
-static inline tsi_reference_osc_charge_current_t TSI_HAL_GetReferenceChargeCurrent(uint32_t baseAddr)
+static inline tsi_reference_osc_charge_current_t TSI_HAL_GetReferenceChargeCurrent(TSI_Type * base)
 {
-    return (tsi_reference_osc_charge_current_t)BR_TSI_SCANC_REFCHRG(baseAddr);
+    return (tsi_reference_osc_charge_current_t)TSI_BRD_SCANC_REFCHRG(base);
 }
 
 #if (FSL_FEATURE_TSI_VERSION == 1)
 /*!
 * @brief Set internal capacitance trim.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    trim        Trim value.
 * @return   None.
 */
-static inline void TSI_HAL_SetInternalCapacitanceTrim(uint32_t baseAddr, tsi_internal_cap_trim_t trim)
+static inline void TSI_HAL_SetInternalCapacitanceTrim(TSI_Type * base, tsi_internal_cap_trim_t trim)
 {
-    BW_TSI_SCANC_CAPTRM(baseAddr, trim);
+    TSI_BWR_SCANC_CAPTRM(base, trim);
 }
 
 /*!
 * @brief Get internal capacitance trim.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Trim value.
 */
-static inline tsi_internal_cap_trim_t TSI_HAL_GetInternalCapacitanceTrim(uint32_t baseAddr)
+static inline tsi_internal_cap_trim_t TSI_HAL_GetInternalCapacitanceTrim(TSI_Type * base)
 {
-    return (tsi_internal_cap_trim_t)BR_TSI_SCANC_CAPTRM(baseAddr);
+    return (tsi_internal_cap_trim_t)TSI_BRD_SCANC_CAPTRM(base);
 }
 
 #endif
@@ -539,48 +631,48 @@ static inline tsi_internal_cap_trim_t TSI_HAL_GetInternalCapacitanceTrim(uint32_
 /*!
 * @brief Set electrode charge current.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    current     Electrode current.
 * @return   None.
 */
-static inline void TSI_HAL_SetElectrodeChargeCurrent(uint32_t baseAddr, tsi_external_osc_charge_current_t current)
+static inline void TSI_HAL_SetElectrodeChargeCurrent(TSI_Type * base, tsi_external_osc_charge_current_t current)
 {
-    BW_TSI_SCANC_EXTCHRG(baseAddr, current);
+    TSI_BWR_SCANC_EXTCHRG(base, current);
 }
 
 /*!
 * @brief Get electrode charge current.
 *
-* @param   baseAddr    TSI module base address.
+* @param   base    TSI module base address.
 * @return  Charge current.
 */
-static inline tsi_external_osc_charge_current_t TSI_HAL_GetElectrodeChargeCurrent(uint32_t baseAddr)
+static inline tsi_external_osc_charge_current_t TSI_HAL_GetElectrodeChargeCurrent(TSI_Type * base)
 {
-    return (tsi_external_osc_charge_current_t)BR_TSI_SCANC_EXTCHRG(baseAddr);
+    return (tsi_external_osc_charge_current_t)TSI_BRD_SCANC_EXTCHRG(base);
 }
 
 #if (FSL_FEATURE_TSI_VERSION == 1)
 /*!
 * @brief Set delta voltage.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    voltage     delta voltage.
 * @return   None.
 */
-static inline void TSI_HAL_SetDeltaVoltage(uint32_t baseAddr, uint32_t voltage)
+static inline void TSI_HAL_SetDeltaVoltage(TSI_Type * base, uint32_t voltage)
 {
-    BW_TSI_SCANC_DELVOL(baseAddr, voltage);
+    TSI_BWR_SCANC_DELVOL(base, voltage);
 }
 
 /*!
 * @brief Get delta voltage.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Delta voltage.
 */
-static inline uint32_t TSI_HAL_GetDeltaVoltage(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetDeltaVoltage(TSI_Type * base)
 {
-    return BR_TSI_SCANC_DELVOL(baseAddr);
+    return TSI_BRD_SCANC_DELVOL(base);
 }
 
 #endif
@@ -588,245 +680,245 @@ static inline uint32_t TSI_HAL_GetDeltaVoltage(uint32_t baseAddr)
 /*!
 * @brief Set scan modulo value.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    modulo      Scan modulo value.
 * @return   None.
 */
-static inline void TSI_HAL_SetScanModulo(uint32_t baseAddr, uint32_t modulo)
+static inline void TSI_HAL_SetScanModulo(TSI_Type * base, uint32_t modulo)
 {
-    BW_TSI_SCANC_SMOD(baseAddr, modulo);
+    TSI_BWR_SCANC_SMOD(base, modulo);
 }
 
 /*!
 * @brief Get scan modulo value.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Scan modulo value.
 */
-static inline uint32_t TSI_HAL_GetScanModulo(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetScanModulo(TSI_Type * base)
 {
-    return BR_TSI_SCANC_SMOD(baseAddr);
+    return TSI_BRD_SCANC_SMOD(base);
 }
 
 #if (FSL_FEATURE_TSI_VERSION == 1)
 /*!
 * @brief Set active mode clock divider.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    divider     A value for divider.
 * @return   None.
 */
-static inline void TSI_HAL_SetActiveModeClockDivider(uint32_t baseAddr, uint32_t divider)
+static inline void TSI_HAL_SetActiveModeClockDivider(TSI_Type * base, uint32_t divider)
 {
-    BW_TSI_SCANC_AMCLKDIV(baseAddr, divider);
+    TSI_BWR_SCANC_AMCLKDIV(base, divider);
 }
 
 /*!
 * @brief Get active mode clock divider.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   A value for divider.
 */
-static inline uint32_t TSI_HAL_GetActiveModeClockDivider(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetActiveModeClockDivider(TSI_Type * base)
 {
-    return BR_TSI_SCANC_AMCLKDIV(baseAddr);
+    return TSI_BRD_SCANC_AMCLKDIV(base);
 }
 #endif
 
 /*!
 * @brief Set active mode source.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    source      Active mode clock source (LPOSCCLK, MCGIRCLK, OSCERCLK).
 * @return   None.
 */
-static inline void TSI_HAL_SetActiveModeSource(uint32_t baseAddr, uint32_t source)
+static inline void TSI_HAL_SetActiveModeSource(TSI_Type * base, uint32_t source)
 {
-    BW_TSI_SCANC_AMCLKS(baseAddr, source);
+    TSI_BWR_SCANC_AMCLKS(base, source);
 }
 
 /*!
 * @brief Get active mode source.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Source value.
 */
-static inline uint32_t TSI_HAL_GetActiveModeSource(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetActiveModeSource(TSI_Type * base)
 {
-    return BR_TSI_SCANC_AMCLKS(baseAddr);
+    return TSI_BRD_SCANC_AMCLKS(base);
 }
 
 /*!
 * @brief Set active mode prescaler.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    prescaler   Prescaler's value.
 * @return   None.
 */
-static inline void TSI_HAL_SetActiveModePrescaler(uint32_t baseAddr, tsi_active_mode_prescaler_t prescaler)
+static inline void TSI_HAL_SetActiveModePrescaler(TSI_Type * base, tsi_active_mode_prescaler_t prescaler)
 {
-    BW_TSI_SCANC_AMPSC(baseAddr, prescaler);
+    TSI_BWR_SCANC_AMPSC(base, prescaler);
 }
 
 /*!
 * @brief Get active mode prescaler.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Prescaler's value.
 */
-static inline uint32_t TSI_HAL_GetActiveModePrescaler(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetActiveModePrescaler(TSI_Type * base)
 {
-    return BR_TSI_SCANC_AMPSC(baseAddr);
+    return TSI_BRD_SCANC_AMPSC(base);
 }
 
 /*!
 * @brief Set low power channel. Only one channel can wake up MCU.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    channel     Channel number.
 * @return   None.
 */
-static inline void TSI_HAL_SetLowPowerChannel(uint32_t baseAddr, uint32_t channel)
+static inline void TSI_HAL_SetLowPowerChannel(TSI_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_TSI_CHANNEL_COUNT);  
-    BW_TSI_PEN_LPSP(baseAddr, channel);
+    TSI_BWR_PEN_LPSP(base, channel);
 }
 
 /*!
  * @brief Get low power channel. Only one channel can wake up MCU.
  *
- * @param   baseAddr TSI module base address.
+ * @param   base TSI module base address.
  * @return Channel number.
  */
-static inline uint32_t TSI_HAL_GetLowPowerChannel(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetLowPowerChannel(TSI_Type * base)
 {
-    return BR_TSI_PEN_LPSP(baseAddr);
+    return TSI_BRD_PEN_LPSP(base);
 }
 
 /*!
 * @brief Enable channel.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    channel     Channel to be enabled.
 * @return   None.
 */
-static inline void TSI_HAL_EnableChannel(uint32_t baseAddr, uint32_t channel)
+static inline void TSI_HAL_EnableChannel(TSI_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_TSI_CHANNEL_COUNT);  
-    HW_TSI_PEN_SET(baseAddr, (1U << channel));
+    TSI_SET_PEN(base, (1U << channel));
 }
 
 /*!
 * @brief Enable channels. The function enables channels by mask. It can set all
 *          at once.
 *
-* @param    baseAddr        TSI module base address.
+* @param    base        TSI module base address.
 * @param    channelsMask    Channels mask to be enabled.
 * @return   None.
 */
-static inline void TSI_HAL_EnableChannels(uint32_t baseAddr, uint32_t channelsMask)
+static inline void TSI_HAL_EnableChannels(TSI_Type * base, uint32_t channelsMask)
 {
-    HW_TSI_PEN_SET(baseAddr, (uint16_t)channelsMask);
+    TSI_SET_PEN(base, (uint16_t)channelsMask);
 }
 
 /*!
 * @brief Disable channel.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    channel     Channel to be disabled.
 * @return   None.
 */
-static inline void TSI_HAL_DisableChannel(uint32_t baseAddr, uint32_t channel)
+static inline void TSI_HAL_DisableChannel(TSI_Type * base, uint32_t channel)
 {
-    HW_TSI_PEN_CLR(baseAddr, (1U << channel));
+    TSI_CLR_PEN(base, (1U << channel));
 }
 
 /*!
 * @brief Disable channels. The function disables channels by mask. It can set all
 *          at once.
 *
-* @param    baseAddr        TSI module base address.
+* @param    base        TSI module base address.
 * @param    channelsMask    Channels mask to be disabled.
 * @return   None.
 */
-static inline void TSI_HAL_DisableChannels(uint32_t baseAddr, uint32_t channelsMask)
+static inline void TSI_HAL_DisableChannels(TSI_Type * base, uint32_t channelsMask)
 {
-    HW_TSI_PEN_CLR(baseAddr, channelsMask);
+    TSI_CLR_PEN(base, channelsMask);
 }
 
 /*!
  * @brief Returns if channel is enabled.
  *
- * @param   baseAddr    TSI module base address.
+ * @param   base    TSI module base address.
  * @param   channel     Channel to be checked.
  *
  * @return True - if channel is enabled, false - otherwise.
  */
-static inline uint32_t TSI_HAL_GetEnabledChannel(uint32_t baseAddr, uint32_t channel)
+static inline uint32_t TSI_HAL_GetEnabledChannel(TSI_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_TSI_CHANNEL_COUNT);  
-    return (HW_TSI_PEN_RD(baseAddr) & (1U << channel));
+    return (TSI_RD_PEN(base) & (1U << channel));
 }
 
 /*!
 * @brief Returns mask of enabled channels.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Channels mask that are enabled.
 */
-static inline uint32_t TSI_HAL_GetEnabledChannels(uint32_t baseAddr)
+static inline uint32_t TSI_HAL_GetEnabledChannels(TSI_Type * base)
 {
-    return (uint32_t)HW_TSI_PEN_RD(baseAddr);
+    return (uint32_t)TSI_RD_PEN(base);
 }
 
 /*!
 * @brief Set the Wake up channel counter.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @return   Wake up counter value.
 */
-static inline uint16_t TSI_HAL_GetWakeUpChannelCounter(uint32_t baseAddr)
+static inline uint16_t TSI_HAL_GetWakeUpChannelCounter(TSI_Type * base)
 {
-  return BR_TSI_WUCNTR_WUCNT(baseAddr);
+  return TSI_BRD_WUCNTR_WUCNT(base);
 }
 
 /*!
 * @brief Get tsi counter on actual channel.
 *
-* @param    baseAddr    TSI module base address.
+* @param    base    TSI module base address.
 * @param    channel     Index of TSI channel.
 *
 * @return   The counter value.
 */
-static inline uint32_t TSI_HAL_GetCounter(uint32_t baseAddr, uint32_t channel)
+static inline uint32_t TSI_HAL_GetCounter(TSI_Type * base, uint32_t channel)
 {
     assert(channel < FSL_FEATURE_TSI_CHANNEL_COUNT);  
-    uint16_t *counter =  (uint16_t *)(HW_TSI_CNTR1_ADDR(baseAddr) + (channel * 2U));
+    uint16_t *counter =  (uint16_t *)((uint32_t)(&(TSI_CNTR1_REG(base))) + (channel * 2U));
     return (uint32_t)(*counter);
 }
 
 /*!
 * @brief Set low threshold.
 *
-* @param    baseAddr        TSI module base address.
+* @param    base        TSI module base address.
 * @param    low_threshold   Low counter threshold.
 * @return   None.
 */
-static inline void TSI_HAL_SetLowThreshold(uint32_t baseAddr, uint32_t low_threshold)
+static inline void TSI_HAL_SetLowThreshold(TSI_Type * base, uint32_t low_threshold)
 {
-    BW_TSI_THRESHOLD_LTHH(baseAddr, low_threshold);
+    TSI_BWR_THRESHOLD_LTHH(base, low_threshold);
 }
 
 /*!
 * @brief Set high threshold.
 *
-* @param    baseAddr        TSI module base address.
+* @param    base        TSI module base address.
 * @param    high_threshold  High counter threshold.
 * @return   None.
 */
-static inline void TSI_HAL_SetHighThreshold(uint32_t baseAddr, uint32_t high_threshold)
+static inline void TSI_HAL_SetHighThreshold(TSI_Type * base, uint32_t high_threshold)
 {
-    BW_TSI_THRESHOLD_HTHH(baseAddr, high_threshold);
+    TSI_BWR_THRESHOLD_HTHH(base, high_threshold);
 }
 
 #ifdef __cplusplus
@@ -836,6 +928,7 @@ static inline void TSI_HAL_SetHighThreshold(uint32_t baseAddr, uint32_t high_thr
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_TSI_V2_HAL_SPECIFIC_H__*/
 /*******************************************************************************
  * EOF

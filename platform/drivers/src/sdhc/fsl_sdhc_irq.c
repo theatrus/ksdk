@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,11 +28,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "fsl_sdhc_driver.h"
+#if FSL_FEATURE_SOC_SDHC_COUNT
 
+#if (FSL_RTOS_MQX)
+void MQX_SDHC_IRQHandler(void)
+{
+#if defined BSP_FSL_SDHC_USING_IRQ
+    SDHC_DRV_DoIrq(0);
+#endif
+}
+#else
 void SDHC_IRQHandler(void)
 {
 #if defined BSP_FSL_SDHC_USING_IRQ
     SDHC_DRV_DoIrq(0);
 #endif
 }
-
+#endif
+#endif

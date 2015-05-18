@@ -1,32 +1,32 @@
 /**HEADER********************************************************************
-* 
-* Copyright (c) 2010, 2013 Freescale Semiconductor;
-* All Rights Reserved
-*
-*************************************************************************** 
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: usb_otg_sm.h$
-* $Version : 
-* $Date    : 
-*
-* Comments : This is the header file for the OTG State machine
-*
-*         
-*****************************************************************************/
+ * 
+ * Copyright (c) 2010, 2013 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ *************************************************************************** 
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: usb_otg_sm.h$
+ * $Version : 
+ * $Date    : 
+ *
+ * Comments : This is the header file for the OTG State machine
+ *
+ *         
+ *****************************************************************************/
 #ifndef USB_OTG_SM_H_
 #define USB_OTG_SM_H_
 
@@ -81,16 +81,16 @@
 /* Public types */
 
 /* Public functions */
-extern void         _usb_otg_sm(usb_otg_handle otg_handle);
-extern void         _usb_otg_sm_a(usb_otg_handle otg_handle);
-extern void         _usb_otg_sm_b(usb_otg_handle otg_handle);
-extern void         _usb_otg_id_chg_a(usb_otg_handle otg_handle);
-extern void         _usb_otg_id_chg_b(usb_otg_handle otg_handle);
-extern usb_status   _usb_otg_load_host(usb_otg_handle otg_handle);
-extern usb_status   _usb_otg_load_device(usb_otg_handle otg_handle);
-extern void         _usb_otg_unload_host(usb_otg_handle otg_handle);
-extern void         _usb_otg_unload_device(usb_otg_handle otg_handle);
-extern void         _usb_otg_unload_active(usb_otg_handle otg_handle);
-extern uint32_t     _usb_otg_hnp_poll_req (usb_otg_handle handle) ;
+extern void _usb_otg_sm(usb_otg_handle otg_handle);
+extern void _usb_otg_sm_a(usb_otg_handle otg_handle);
+extern void _usb_otg_sm_b(usb_otg_handle otg_handle);
+extern void _usb_otg_id_chg_a(usb_otg_handle otg_handle);
+extern void _usb_otg_id_chg_b(usb_otg_handle otg_handle);
+extern usb_status _usb_otg_load_host(usb_otg_handle otg_handle);
+extern usb_status _usb_otg_load_device(usb_otg_handle otg_handle);
+extern void _usb_otg_unload_host(usb_otg_handle otg_handle);
+extern void _usb_otg_unload_device(usb_otg_handle otg_handle);
+extern void _usb_otg_unload_active(usb_otg_handle otg_handle);
+extern uint32_t _usb_otg_hnp_poll_req(usb_otg_handle handle);
 
 #endif /* USB_OTG_SM_H_ */

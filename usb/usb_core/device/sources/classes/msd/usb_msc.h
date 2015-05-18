@@ -1,36 +1,36 @@
 /**HEADER********************************************************************
-* 
-* Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
-* All Rights Reserved
-*
-* Copyright (c) 1989-2008 ARC International;
-* All Rights Reserved
-*
-*************************************************************************** 
-*
-* THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
-* IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
-* THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************
-*
-* $FileName: usb_msc.h$
-* $Version : 
-* $Date    : 
-*
-* Comments:
-*
-* @brief The file contains USB stack MSC class layer api header function.
-*
-*****************************************************************************/
+ * 
+ * Copyright (c) 2008, 2013 - 2015 Freescale Semiconductor;
+ * All Rights Reserved
+ *
+ * Copyright (c) 1989-2008 ARC International;
+ * All Rights Reserved
+ *
+ *************************************************************************** 
+ *
+ * THIS SOFTWARE IS PROVIDED BY FREESCALE "AS IS" AND ANY EXPRESSED OR 
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  
+ * IN NO EVENT SHALL FREESCALE OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ **************************************************************************
+ *
+ * $FileName: usb_msc.h$
+ * $Version : 
+ * $Date    : 
+ *
+ * Comments:
+ *
+ * @brief The file contains USB stack MSC class layer api header function.
+ *
+ *****************************************************************************/
 
 #ifndef _USB_MSC_H
 #define _USB_MSC_H 1
@@ -39,7 +39,7 @@
  * Includes
  *****************************************************************************/
 #include "usb_device_stack_interface.h"
-    
+
 #include "usb_class.h"
 
 #include "usb_class_msc.h"
@@ -60,7 +60,7 @@
 #define PUT_REQUESTS                          (0xFD)
 #define GET_REQUESTS                          (0xFC)
 
-/* Events to the Application */ /* 0 to 4 are reserved for class events */
+/* Events to the Application *//* 0 to 4 are reserved for class events */
 
 /* other macros */
 #define  USB_DCBWSIGNATURE       USB_LONG_BE_TO_HOST_CONST(0x55534243)
@@ -94,33 +94,33 @@
 #define SEND_DIAGNOSTIC_COMMAND            (0x1D)
 #define VERIFY_COMMAND                     (0x2F)
 #define START_STOP_UNIT_COMMAND            (0x1B)
- 
+
 /*****************************************************************************
  * Local Functions
  *****************************************************************************/
-void USB_Service_Bulk_In(usb_event_struct_t* event,void* arg);
-void USB_Service_Bulk_Out(usb_event_struct_t* event,void* arg);
-void USB_Class_MSC_Event(uint8_t event, void* val,void* arg);
+void USB_Service_Bulk_In(usb_event_struct_t* event, void* arg);
+void USB_Service_Bulk_Out(usb_event_struct_t* event, void* arg);
+void USB_Class_MSC_Event(uint8_t event, void* val, void* arg);
 usb_status USB_MSC_Requests(usb_setup_struct_t * setup_packet, uint8_t * *data, uint32_t *size, void* arg);
 
 /******************************************************************************
  * Types
  *****************************************************************************/
 typedef enum
- {
+{
     USB_MSD_EP_COUNT = 1,
     USB_MSD_INTERFACE_COUNT,
     USB_MSD_CLASS_INFO,
- }USB_MSD_DESC_INFO_T;
- 
+} USB_MSD_DESC_INFO_T;
+
 typedef enum
- {
+{
     STALL_IN_CBW = 1,
     STALL_IN_DATA_PHASE,
     STALL_IN_CSW,
- }STALL_TYPES_T;
+} STALL_TYPES_T;
 
-typedef struct _usb_msc_cbw   /* Command Block Wrapper -- 31 bytes */
+typedef struct _usb_msc_cbw /* Command Block Wrapper -- 31 bytes */
 {
     uint32_t             signature;        /*0-3  : dCBWSignature*/
     uint32_t             tag;              /*4-7  : dCBWTag*/
@@ -131,7 +131,7 @@ typedef struct _usb_msc_cbw   /* Command Block Wrapper -- 31 bytes */
     uint8_t              command_block[16];/*15-30 : CBWCB*/
 }cbw_t;
 
-typedef struct _usb_msc_csw   /* Command Status Wrapper -- 13 bytes */
+typedef struct _usb_msc_csw /* Command Status Wrapper -- 13 bytes */
 {
     uint32_t             signature; /*0-3  : dCSWSignature*/
     uint32_t             tag;       /*4-7 : dCSWTag*/
@@ -141,9 +141,9 @@ typedef struct _usb_msc_csw   /* Command Status Wrapper -- 13 bytes */
 
 typedef struct _lba_info_struct
 {
-    uint32_t             starting_lba;/* LBA to start transfering with */
+    uint32_t             starting_lba;/* LBA to start transferring with */
     uint32_t             lba_transfer_num;/* number of LBAs to transfer */    
-}lba_info_struct_t;
+} lba_info_struct_t;
 
 typedef struct _msc_thirteen_case_check
 {
@@ -157,34 +157,20 @@ typedef struct _msc_thirteen_case_check
     bool                 lba_txrx_select;
     uint8_t              host_expected_direction;
     uint8_t              device_expected_direction;
-}msc_thirteen_case_struct_t;
-
-#if IMPLEMENT_QUEUING
-typedef struct _usb_class_msc_queue 
-{
-    usb_device_handle       handle;
-    uint8_t                 channel;       
-    msc_app_data_struct_t   app_data;  
-}usb_class_msc_queue_t;
-#endif
+} msc_thirteen_case_struct_t;
 
 /* USB class msc endpoint data */
 typedef struct _msc_endpoint_struct
 {
-    uint8_t                 endpoint; /* endpoint num */                    
-    uint8_t                 type;     /* type of endpoint (interrupt, bulk or isochronous) */ 
-#if IMPLEMENT_QUEUING
-    uint8_t                 bin_consumer;/* the num of queued elements */
-    uint8_t                 bin_producer;/* the num of de-queued elements */
-    usb_class_msc_queue_t   queue[MSD_MAX_QUEUE_ELEMS]; /* queue data */  
-#endif
-}msc_endpoint_struct_t;
+    uint8_t endpoint; /* endpoint num */
+    uint8_t type; /* type of endpoint (interrupt, bulk or isochronous) */
+} msc_endpoint_struct_t;
 
 typedef struct _msc_endpoint_data_struct
 {
-    uint8_t                   count;
-    msc_endpoint_struct_t     ep[MAX_MSC_CLASS_EP_NUM];
-}msc_endpoint_data_struct_t;
+    uint8_t count;
+    msc_endpoint_struct_t ep[MAX_MSC_CLASS_EP_NUM];
+} msc_endpoint_data_struct_t;
 
 /* MSD Device Structure */
 typedef struct _msc_variable_struct
@@ -204,7 +190,7 @@ typedef struct _msc_variable_struct
       */
     void*                                       scsi_object_ptr;
     msc_endpoint_data_struct_t                  msc_endpoint_data;
-    /* macro configuired by user*/
+    /* macro configured by user*/
     /* global structure for command status wrapper */
     csw_t *                                     csw_ptr;
     /* global structure for command block wrapper */
@@ -260,11 +246,11 @@ typedef struct _msc_variable_struct
  *****************************************************************************/
 extern usb_status USB_Class_MSC_Send_Data
 (
-    msd_handle_t            msc_handle,
-    uint8_t                 ep_num,
-    uint8_t *               buff_ptr,      /* [IN] buffer to send */      
-    uint32_t                size           /* [IN] length of the transfer */
-);
+    msd_handle_t msc_handle,
+    uint8_t ep_num,
+    uint8_t * app_buff, /* [IN] buffer to send */
+    uint32_t size /* [IN] length of the transfer */
+    );
 
 /**************************************************************************//*!
  *
@@ -277,7 +263,7 @@ extern usb_status USB_Class_MSC_Send_Data
  * @param lba_info_ptr    :   buffer to send
  *
  * @return status       
- *         USB_OK           : When Successfull 
+ *         USB_OK           : When Successfully
  *         Others           : Errors
  *****************************************************************************/
 extern usb_status USB_MSC_LBA_Transfer
@@ -285,54 +271,54 @@ extern usb_status USB_MSC_LBA_Transfer
     msc_device_struct_t * msc_obj_ptr,
     bool direction,
     lba_info_struct_t * lba_info_ptr
-);
+    );
 
 #define USB_MSC_Bulk_Send_Data(a,b,c)  USB_Class_MSC_Send_Data(a,msc_obj_ptr->bulk_in_endpoint,b,c)
 #define USB_MSC_Bulk_Recv_Data(a,b,c)  usb_device_recv_data(a,msc_obj_ptr->bulk_out_endpoint,b,c)
 
 /* Sub Class Functions */
 
- /**************************************************************************//*!
+/**************************************************************************//*!
  *
  * @name  USB_MSC_SCSI_Init
  *
- * @brief The funtion initializes the SCSI parameters and callbacks
+ * @brief The function initializes the SCSI parameters and callbacks
  *
  * @param msc_obj_ptr         MSD class object pointer.
  * @param cb:                 event callback
  * @param storage_disk        Ramdisk Memory pointer.
  * @param lb                  logical block
- * @param lab_len             lenght of each logical blocks
+ * @param lab_len             length of each logical blocks
  *
  * @return status
- *         USB_OK           : When Successfull
+ *         USB_OK           : When Successfully
  *         Others           : Errors
  *
  *****************************************************************************/
 extern usb_status USB_MSC_SCSI_Init
 (
-     msc_device_struct_t *  msc_obj_ptr,
-     usb_class_specific_callback_struct_t* cb,
-     device_lba_info_struct_t* device_info_ptr,
-     uint32_t implementing_disk_drive
-);
+    msc_device_struct_t * msc_obj_ptr,
+    usb_class_specific_callback_struct_t* cb,
+    device_lba_info_struct_t* device_info_ptr,
+    uint32_t implementing_disk_drive
+    );
 
 /**************************************************************************//*!
  *
  * @name  USB_MSC_SCSI_Deinit
  *
- * @brief The funtion deinitializes the SCSI parameters and callbacks
+ * @brief The function de-initializes the SCSI parameters and callbacks
  *
  * @param msc_obj_ptr         MSD class object pointer.
  * @return status
- *         USB_OK           : When Successfull
+ *         USB_OK           : When Successfully
  *         Others           : Errors
  *
  *****************************************************************************/
 extern usb_status USB_MSC_SCSI_Deinit
 (
-     msc_device_struct_t *  msc_obj_ptr 
-);
+    msc_device_struct_t * msc_obj_ptr
+    );
 
 /**************************************************************************//*!
  *
@@ -350,10 +336,10 @@ extern usb_status USB_MSC_SCSI_Deinit
  *
  *****************************************************************************/
 
-extern usb_status msc_inquiry_command (msc_device_struct_t * msc_obj_ptr,
-                                   cbw_t * cbw_ptr, 
-                                   uint32_t* csw_residue_ptr, 
-                                   uint8_t* csw_status_ptr);
+extern usb_status msc_inquiry_command(msc_device_struct_t * msc_obj_ptr,
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_read_command
@@ -368,11 +354,11 @@ extern usb_status msc_inquiry_command (msc_device_struct_t * msc_obj_ptr,
  * @return error
  *
  *****************************************************************************/
-extern usb_status msc_read_command (msc_device_struct_t * msc_obj_ptr,
-                                cbw_t * cbw_ptr, 
-                                uint32_t* csw_residue_ptr, 
-                                uint8_t* csw_status_ptr); 
- /**************************************************************************//*!
+extern usb_status msc_read_command(msc_device_struct_t * msc_obj_ptr,
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
+/**************************************************************************//*!
  *
  * @name  msc_request_sense_command
  *
@@ -387,9 +373,9 @@ extern usb_status msc_read_command (msc_device_struct_t * msc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status msc_request_sense_command(msc_device_struct_t * msc_obj_ptr,
-                                        cbw_t * cbw_ptr, 
-                                        uint32_t* csw_residue_ptr, 
-                                        uint8_t* csw_status_ptr); 
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_test_unit_ready_command
@@ -405,9 +391,9 @@ extern usb_status msc_request_sense_command(msc_device_struct_t * msc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status msc_test_unit_ready_command(msc_device_struct_t * msc_obj_ptr,
-                                          cbw_t * cbw_ptr, 
-                                          uint32_t* csw_residue_ptr, 
-                                          uint8_t* csw_status_ptr); 
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_verify_command
@@ -423,9 +409,9 @@ extern usb_status msc_test_unit_ready_command(msc_device_struct_t * msc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status msc_verify_command(msc_device_struct_t * msc_obj_ptr,
-                                 cbw_t * cbw_ptr,
-                                 uint32_t* csw_residue_ptr,
-                                 uint8_t* csw_status_ptr);                                         
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_mode_sense_command
@@ -442,9 +428,9 @@ extern usb_status msc_verify_command(msc_device_struct_t * msc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status msc_mode_sense_command(msc_device_struct_t * msc_obj_ptr,
-                                     cbw_t * cbw_ptr, 
-                                     uint32_t* csw_residue_ptr, 
-                                     uint8_t* csw_status_ptr);
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_mode_select_command
@@ -461,9 +447,9 @@ extern usb_status msc_mode_sense_command(msc_device_struct_t * msc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status msc_mode_select_command(msc_device_struct_t * msc_obj_ptr,
-                                      cbw_t * cbw_ptr, 
-                                      uint32_t* csw_residue_ptr, 
-                                      uint8_t* csw_status_ptr);                                     
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_read_capacity_command
@@ -480,9 +466,9 @@ extern usb_status msc_mode_select_command(msc_device_struct_t * msc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status msc_read_capacity_command(msc_device_struct_t * msc_obj_ptr,
-                                        cbw_t * cbw_ptr, 
-                                        uint32_t* csw_residue_ptr, 
-                                        uint8_t* csw_status_ptr); 
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_format_unit_command
@@ -499,9 +485,9 @@ extern usb_status msc_read_capacity_command(msc_device_struct_t * msc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status msc_format_unit_command(msc_device_struct_t * msc_obj_ptr,
-                                      cbw_t * cbw_ptr, 
-                                      uint32_t* csw_residue_ptr, 
-                                      uint8_t* csw_status_ptr); 
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_write_command
@@ -517,10 +503,10 @@ extern usb_status msc_format_unit_command(msc_device_struct_t * msc_obj_ptr,
  * @return error
  *
  *****************************************************************************/
-extern usb_status msc_write_command (msc_device_struct_t * msc_obj_ptr,
-                                 cbw_t * cbw_ptr, 
-                                 uint32_t* csw_residue_ptr, 
-                                 uint8_t* csw_status_ptr); 
+extern usb_status msc_write_command(msc_device_struct_t * msc_obj_ptr,
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_start_stop_unit_command
@@ -541,8 +527,8 @@ extern usb_status msc_start_stop_unit_command
     cbw_t * cbw_ptr,
     uint32_t* csw_residue_ptr,
     uint8_t* csw_status_ptr
-);
-                                 
+    );
+
 /**************************************************************************//*!
  *
  * @name  msc_prevent_allow_medium_removal
@@ -559,9 +545,9 @@ extern usb_status msc_start_stop_unit_command
  *
  *****************************************************************************/
 extern usb_status msc_prevent_allow_medium_removal(msc_device_struct_t * msc_obj_ptr,
-                                               cbw_t * cbw_ptr, 
-                                               uint32_t* csw_residue_ptr, 
-                                               uint8_t* csw_status_ptr); 
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 /**************************************************************************//*!
  *
  * @name  msc_read_format_capacity_command
@@ -578,10 +564,10 @@ extern usb_status msc_prevent_allow_medium_removal(msc_device_struct_t * msc_obj
  *
  *****************************************************************************/
 extern usb_status msc_read_format_capacity_command(msc_device_struct_t * msc_obj_ptr,
-                                               cbw_t * cbw_ptr, 
-                                               uint32_t* csw_residue_ptr, 
-                                               uint8_t* csw_status_ptr);  
-                                               
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
+
 /**************************************************************************//*!
  *
  * @name  msc_send_diagnostic_command
@@ -597,10 +583,10 @@ extern usb_status msc_read_format_capacity_command(msc_device_struct_t * msc_obj
  *
  *****************************************************************************/
 extern usb_status msc_send_diagnostic_command(msc_device_struct_t * msc_obj_ptr,
-                                          cbw_t * cbw_ptr, 
-                                          uint32_t* csw_residue_ptr, 
-                                          uint8_t* csw_status_ptr);     
-                                                                                  
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
+
 /**************************************************************************//*!
  *
  * @name  msc_unsupported_command
@@ -616,9 +602,9 @@ extern usb_status msc_send_diagnostic_command(msc_device_struct_t * msc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status msc_unsupported_command(msc_device_struct_t * msc_obj_ptr,
-                                      cbw_t * cbw_ptr, 
-                                      uint32_t* csw_residue_ptr, 
-                                      uint8_t* csw_status_ptr);
+    cbw_t * cbw_ptr,
+    uint32_t* csw_residue_ptr,
+    uint8_t* csw_status_ptr);
 
 /* EOF */
 #endif

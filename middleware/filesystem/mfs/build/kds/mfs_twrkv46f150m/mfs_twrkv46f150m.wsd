@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<workspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="workingsets.xsd">
+  <projects>
+  <project><name>mfs_twrkv46f150m</name><path/><open>true</open><activeconfig>debug</activeconfig><buildreferences config="debug">false</buildreferences><activeconfig>release</activeconfig><buildreferences config="release">false</buildreferences></project></projects>
+  <workingsets>
+  <workingSet editPageId="org.eclipse.cdt.ui.CElementWorkingSetPage" id="1323268527287_1" label="mfs_twrkv46f150m" name="mfs_twrkv46f150m"><item factoryID="org.eclipse.cdt.ui.PersistableCElementFactory" path="/mfs_twrkv46f150m" type="4"/></workingSet></workingsets>
+  <cdtconfigurations>
+  <workingSet name="mfs_twrkv46f150m"><config name="debug"><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="mfs_twrkv46f150m" configName="debug"/></config><config name="release"><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="mfs_twrkv46f150m" configName="release"/></config></workingSet></cdtconfigurations>
+</workspace>

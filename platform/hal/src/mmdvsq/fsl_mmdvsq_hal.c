@@ -31,6 +31,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_mmdvsq_hal.h"
+#if FSL_FEATURE_SOC_MMDVSQ_COUNT
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -47,14 +48,14 @@
  * whether divide by zero.  
  *
  *END**************************************************************************/
-uint32_t MMDVSQ_HAL_DivUR(uint32_t baseAddr, uint32_t dividend, uint32_t divisor)
+uint32_t MMDVSQ_HAL_DivUR(MMDVSQ_Type * base, uint32_t dividend, uint32_t divisor)
 {
-    MMDVSQ_HAL_SetDivideFastStart(baseAddr, true);     /* set fast start mode */ 
-    MMDVSQ_HAL_SetUnsignedCalculation(baseAddr, true);  /* set [USGN] bit  */ 
-    MMDVSQ_HAL_SetRemainderCalculation(baseAddr, true); /* set [REM] bit  */
-    MMDVSQ_HAL_SetDividend(baseAddr, dividend);    /* set dividend value */ 
-    MMDVSQ_HAL_SetDivisor(baseAddr, divisor);      /* set divisor value and start divide fast mode operation*/     
-    return MMDVSQ_HAL_GetResult(baseAddr);        /* retrun divide result */           
+    MMDVSQ_HAL_SetDivideFastStart(base, true);     /* set fast start mode */ 
+    MMDVSQ_HAL_SetUnsignedCalculation(base, true);  /* set [USGN] bit  */ 
+    MMDVSQ_HAL_SetRemainderCalculation(base, true); /* set [REM] bit  */
+    MMDVSQ_HAL_SetDividend(base, dividend);    /* set dividend value */ 
+    MMDVSQ_HAL_SetDivisor(base, divisor);      /* set divisor value and start divide fast mode operation*/     
+    return MMDVSQ_HAL_GetResult(base);        /* return divide result */           
 }                                        
                    
 /*FUNCTION**********************************************************************
@@ -65,14 +66,14 @@ uint32_t MMDVSQ_HAL_DivUR(uint32_t baseAddr, uint32_t dividend, uint32_t divisor
  * whether divide by zero.  
  *
  *END**************************************************************************/
-uint32_t MMDVSQ_HAL_DivUQ(uint32_t baseAddr, uint32_t dividend, uint32_t divisor)
+uint32_t MMDVSQ_HAL_DivUQ(MMDVSQ_Type * base, uint32_t dividend, uint32_t divisor)
 {
-    MMDVSQ_HAL_SetDivideFastStart(baseAddr, true);     /* set fast start mode */ 
-    MMDVSQ_HAL_SetUnsignedCalculation(baseAddr, true);  /* set [USGN] bit  */ 
-    MMDVSQ_HAL_SetRemainderCalculation(baseAddr, false);/* set [REM] bit  */
-    MMDVSQ_HAL_SetDividend(baseAddr, dividend);    /* set dividend value */ 
-    MMDVSQ_HAL_SetDivisor(baseAddr, divisor);      /* set divisor value and start divide fast mode operation*/     
-    return MMDVSQ_HAL_GetResult(baseAddr);        /* retrun divide result */           
+    MMDVSQ_HAL_SetDivideFastStart(base, true);     /* set fast start mode */ 
+    MMDVSQ_HAL_SetUnsignedCalculation(base, true);  /* set [USGN] bit  */ 
+    MMDVSQ_HAL_SetRemainderCalculation(base, false);/* set [REM] bit  */
+    MMDVSQ_HAL_SetDividend(base, dividend);    /* set dividend value */ 
+    MMDVSQ_HAL_SetDivisor(base, divisor);      /* set divisor value and start divide fast mode operation*/     
+    return MMDVSQ_HAL_GetResult(base);        /* return divide result */           
 } 
 
 /*FUNCTION**********************************************************************
@@ -83,14 +84,14 @@ uint32_t MMDVSQ_HAL_DivUQ(uint32_t baseAddr, uint32_t dividend, uint32_t divisor
  * whether divide by zero.  
  *
  *END**************************************************************************/
-uint32_t MMDVSQ_HAL_DivSR(uint32_t baseAddr, uint32_t dividend, uint32_t divisor)
+uint32_t MMDVSQ_HAL_DivSR(MMDVSQ_Type * base, uint32_t dividend, uint32_t divisor)
 {
-    MMDVSQ_HAL_SetDivideFastStart(baseAddr, true);     /* set fast start mode */ 
-    MMDVSQ_HAL_SetUnsignedCalculation(baseAddr, false); /* set [USGN] bit  */ 
-    MMDVSQ_HAL_SetRemainderCalculation(baseAddr, true); /* set [REM] bit  */
-    MMDVSQ_HAL_SetDividend(baseAddr, dividend);    /* set dividend value */ 
-    MMDVSQ_HAL_SetDivisor(baseAddr, divisor);      /* set divisor value and start divide fast mode operation*/     
-    return MMDVSQ_HAL_GetResult(baseAddr);        /* retrun divide result */           
+    MMDVSQ_HAL_SetDivideFastStart(base, true);     /* set fast start mode */ 
+    MMDVSQ_HAL_SetUnsignedCalculation(base, false); /* set [USGN] bit  */ 
+    MMDVSQ_HAL_SetRemainderCalculation(base, true); /* set [REM] bit  */
+    MMDVSQ_HAL_SetDividend(base, dividend);    /* set dividend value */ 
+    MMDVSQ_HAL_SetDivisor(base, divisor);      /* set divisor value and start divide fast mode operation*/     
+    return MMDVSQ_HAL_GetResult(base);        /* return divide result */           
 }
 
 /*FUNCTION**********************************************************************
@@ -101,14 +102,14 @@ uint32_t MMDVSQ_HAL_DivSR(uint32_t baseAddr, uint32_t dividend, uint32_t divisor
  * whether divide by zero.  
  *
  *END**************************************************************************/
-uint32_t MMDVSQ_HAL_DivSQ(uint32_t baseAddr, uint32_t dividend, uint32_t divisor)
+uint32_t MMDVSQ_HAL_DivSQ(MMDVSQ_Type * base, uint32_t dividend, uint32_t divisor)
 {
-    MMDVSQ_HAL_SetDivideFastStart(baseAddr, true);     /* set fast start mode */ 
-    MMDVSQ_HAL_SetUnsignedCalculation(baseAddr, false); /* set [USGN] bit  */ 
-    MMDVSQ_HAL_SetRemainderCalculation(baseAddr, false); /* set [REM] bit  */
-    MMDVSQ_HAL_SetDividend(baseAddr, dividend);    /* set dividend value */ 
-    MMDVSQ_HAL_SetDivisor(baseAddr, divisor);      /* set divisor value and start divide fast mode operation*/     
-    return MMDVSQ_HAL_GetResult(baseAddr);        /* retrun divide result */           
+    MMDVSQ_HAL_SetDivideFastStart(base, true);     /* set fast start mode */ 
+    MMDVSQ_HAL_SetUnsignedCalculation(base, false); /* set [USGN] bit  */ 
+    MMDVSQ_HAL_SetRemainderCalculation(base, false); /* set [REM] bit  */
+    MMDVSQ_HAL_SetDividend(base, dividend);    /* set dividend value */ 
+    MMDVSQ_HAL_SetDivisor(base, divisor);      /* set divisor value and start divide fast mode operation*/     
+    return MMDVSQ_HAL_GetResult(base);        /* return divide result */           
 }
 
 /*FUNCTION**********************************************************************
@@ -118,11 +119,12 @@ uint32_t MMDVSQ_HAL_DivSQ(uint32_t baseAddr, uint32_t dividend, uint32_t divisor
  * This function will return the square root result. 
  *
  *END**************************************************************************/                   
-uint16_t MMDVSQ_HAL_Sqrt(uint32_t baseAddr, uint32_t radicand)
+uint16_t MMDVSQ_HAL_Sqrt(MMDVSQ_Type * base, uint32_t radicand)
 {
-    MMDVSQ_HAL_SetRadicand(baseAddr, radicand);        
-    return MMDVSQ_HAL_GetResult(baseAddr);  /* return square root calcluation result */
+    MMDVSQ_HAL_SetRadicand(base, radicand);        
+    return MMDVSQ_HAL_GetResult(base);  /* return square root calcluation result */
 }
+#endif
 
 /*******************************************************************************
  * EOF

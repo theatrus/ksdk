@@ -37,12 +37,12 @@ SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-format  -fno-strict-ali
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
 
 # C MACRO
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DDEBUG")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D_DEBUG=1")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MK24FN256VDC12")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_FREE_RTOS")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR_K24F120M")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTOWER")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DNDEBUG")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D_DEBUG=0")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MK24FN256VDC12")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_FREE_RTOS")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTWR_K24F120M")
@@ -71,16 +71,19 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/classes/phdc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller/khci)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller/ehci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../hal)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup/MK24F25612)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device/MK24F25612)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../include/twrk24f120m)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/FreeRTOS/port/gcc)
@@ -102,16 +105,19 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/classes/phdc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller/khci)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../sources/controller/ehci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../hal)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup/MK24F25612)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include/device/MK24F25612)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MK24F25612)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../include/twrk24f120m)
 ENDIF()
 
@@ -156,11 +162,11 @@ ADD_LIBRARY(KsdkUsbDeviceFreertosLib STATIC
     "${ProjDirPath}/../../../sources/classes/msd/usb_msc_scsi.h"
     "${ProjDirPath}/../../../sources/classes/phdc/usb_phdc.c"
     "${ProjDirPath}/../../../sources/classes/phdc/usb_phdc.h"
-    "${ProjDirPath}/../../../sources/controller/khci_interface.c"
     "${ProjDirPath}/../../../sources/controller/usb_dev.c"
     "${ProjDirPath}/../../../sources/controller/usb_dev.h"
     "${ProjDirPath}/../../../sources/controller/usb_framework.c"
     "${ProjDirPath}/../../../sources/controller/usb_framework.h"
+    "${ProjDirPath}/../../../sources/controller/khci/device_khci_interface.c"
     "${ProjDirPath}/../../../sources/controller/khci/khci_dev.c"
     "${ProjDirPath}/../../../sources/controller/khci/khci_dev.h"
     "${ProjDirPath}/../../../sources/controller/khci/khci_dev_misc.h"

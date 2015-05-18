@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_pdb_hal.h"
+#if FSL_FEATURE_SOC_PDB_COUNT
 
 /*!
  * @addtogroup pdb_driver
@@ -43,118 +44,40 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
 /*!
- * @brief Defines the structure to configure the PDB counter.
- *
- * This structure keeps the configuration for the PDB basic counter.
- * The PDB counter is the core part of the PDB module. When
- * initialized, the PDB module can act as a simple counter.
- */
-typedef struct PdbUserConfig
-{
-    pdb_load_mode_t loadMode;
-        /*!< Selects the mode to load timing registers after set load operation. */
-    bool seqErrIntEnable; /*!< Switch to enable the PDB sequence error interrupt. */
-    bool dmaEnable; /*!< Switch to enable DMA support for PDB instead of interrupt. */
-    pdb_clk_prescaler_div_mode_t clkPrescalerDivMode;
-        /*!< Select the prescaler that counting uses the peripheral clock 
-              * divided by multiplication factor. */
-    pdb_trigger_src_mode_t triggerSrcMode; /*!< Select the input source of trigger.*/
-    bool intEnable; /*!< Switch to enable the PDB interrupt for counter reaches to the modulus. */
-    pdb_mult_factor_mode_t multFactorMode; /*!< Select the multiplication factor for prescalar. */
-    bool continuousModeEnable; /*!< Switch to enable the continuous mode. */
-    uint32_t pdbModulusValue; /*!< Set the value for PDB counter's modulus. */
-    uint32_t delayValue; /*!< Set the value for PDB counter to cause PDB interrupt. */
-} pdb_user_config_t;
-
-/*!
- * @brief Defines the structure to configure the ADC pre-trigger in the PDB module.
- *
- * This structure keeps the configuration for ADC pre-trigger in
- * PDB module.
+ * @brief Defines the type of structure for configuring ADC's pre_trigger.
+ * @internal gui name="ADC pre-trigger configuration" id="pdbAdcTrgCfg"
  */
 typedef struct PdbAdcPreTriggerConfig
 {
-    bool backToBackModeEnable; /*!< Switch to enable the back-to-back mode. */
-    bool preTriggerOutEnable; /*!< Switch to enable trigger out the pre-channel. */
-    uint32_t delayValue; /*!< Set the value for ADC pre-trigger's delay value. */
-} pdb_adc_pre_trigger_config_t;
-
-/*!
- * @brief Defines the structure to configuring the DAC trigger in the PDB module.
- *
- * This structure keeps the configuration for DAC trigger in the PDB module.
- */
-typedef struct PdbDacTriggerConfig
-{
-    bool extTriggerInputEnable;
-        /*!< Switch to enable the external trigger for DAC interval counter. */
-    uint32_t intervalValue; 
-        /*! Set the interval value for DAC interval trigger that will cause to trigger DAC. */
-} pdb_dac_trigger_config_t;
-
-/*!
- * @brief Defines the structure to configure the pulse-out trigger in the PDB module.
- *
- * This structure keeps the configuration for the pulse-out trigger in the
- * PDB module.
- */
-typedef struct PdbPulseOutTriggerConfig
-{
-    uint32_t pulseOutHighValue; 
-        /*!< Set the value for that pulse out goes high when the PDB counter reaches to this value. */
-    uint32_t pulseOutLowValue; 
-        /*!< Set the value for that pulse out goes low when the PDB counter reaches to this value. */
-} pdb_pulse_out_trigger_config_t;
+    uint32_t adcPreTriggerIdx; /*!< Setting pre_trigger's index. */
+    bool preTriggerEnable; /*!< Enable the pre_trigger. */
+    bool preTriggerOutputEnable; /*!< Enable the pre_trigger output. @internal gui name="Trigger output" id="AdcTriggerOutput" */
+    bool preTriggerBackToBackEnable; /*!< Enable the back to back mode for ADC pre_trigger. @internal gui name="Back-To-Back mode" id="AdcBackToBackMode" */
+} pdb_adc_pretrigger_config_t;
 
 /*!
  * @brief Defines the type of flag for PDB pre-trigger events.
+ * @internal gui name="DAC trigger configuration" id="pdbDacTrgCfg"
  */
-typedef enum _pdb_adc_pre_trigger_flag
+typedef struct PdbDacIntervalConfig
 {
-    kPdbAdcPreChnFlag = 0U, /*!< ADC pre-trigger flag when the counter reaches to pre-trigger's delay value. */
-    kPdbAdcPreChnErrFlag = 1U /*!< ADC pre-trigger sequence error flag. */
-} pdb_adc_pre_trigger_flag_t;
+    bool intervalTriggerEnable; /*!< Enable the DAC interval trigger. */
+    bool extTriggerInputEnable; /*!< Enable DAC external trigger input . @internal gui name="External trigger" id="DacExternalTrigger" */
+} pdb_dac_interval_config_t;
 
 /*! @brief Table of base addresses for PDB instances. */
-extern const uint32_t g_pdbBaseAddr[];
+extern PDB_Type * const g_pdbBase[];
 
-/*! @brief Table to save PDB IRQ enum numbers defined in CMSIS header file. */
-extern const IRQn_Type g_pdbIrqId[HW_PDB_INSTANCE_COUNT];
+/*! @brief Table to save PDB IRQ enumeration numbers defined in CMSIS header file. */
+extern const IRQn_Type g_pdbIrqId[PDB_INSTANCE_COUNT];
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
 /*!
- * @brief Populates the initial user configuration for software trigger mode.
- *
- * This function populates the initial user configuration.
- * It is set as one-time, software trigger mode. The PDB modulus and delay
- * value are all set to maximum. The PDB interrupt is enabled and
- * causes the PDB interrupt when the counter hits the delay value. Then, the PDB
- * module is initialized an a normal timer if no other setting is changed.
- * The settings are:
- *
- * .loadMode = kPdbLoadImmediately;
- * .seqErrIntEnable = false;
- * .dmaEnable = false;
- * .clkPrescalerDivMode = kPdbClkPreDivBy128;
- * .triggerSrcMode = kPdbSoftTrigger;
- * .intEnable = true;
- * .multFactorMode = kPdbMultFactorAs40;
- * .continuousModeEnable = false;
- * .pdbModulusValue = 0xFFFFU;
- * .delayValue = 0xFFFFU;
- *
- * @param userConfigPtr Pointer to the user configuration structure. See the "pdb_user_config_t".
- * @return Execution status.
- */
-pdb_status_t PDB_DRV_StructInitUserConfigForSoftTrigger(pdb_user_config_t *userConfigPtr);
-
-/*!
- * @brief Initializes the PDB counter and trigger input.
+ * @brief Initializes the PDB counter and triggers input.
  *
  * This function initializes the PDB counter and triggers the input.
  * It resets PDB registers and enables the PDB clock. Therefore, it should be 
@@ -165,7 +88,7 @@ pdb_status_t PDB_DRV_StructInitUserConfigForSoftTrigger(pdb_user_config_t *userC
  * @param userConfigPtr Pointer to the user configuration structure. See the "pdb_user_config_t".
  * @return Execution status.
  */
-pdb_status_t PDB_DRV_Init(uint32_t instance, pdb_user_config_t *userConfigPtr);
+pdb_status_t PDB_DRV_Init(uint32_t instance, const pdb_timer_config_t *userConfigPtr);
 
 /*!
  * @brief De-initializes the PDB module.
@@ -174,8 +97,9 @@ pdb_status_t PDB_DRV_Init(uint32_t instance, pdb_user_config_t *userConfigPtr);
  * Calling this function shuts down the PDB module and reduces the power consumption.
  *
  * @param instance PDB instance ID.
+ * @return Execution status.
  */
-void PDB_DRV_Deinit(uint32_t instance);
+pdb_status_t PDB_DRV_Deinit(uint32_t instance);
 
 /*!
  * @brief Triggers the PDB with a software trigger.
@@ -196,7 +120,7 @@ void PDB_DRV_SoftTriggerCmd(uint32_t instance);
  * @param instance PDB instance ID.
  * @return Current PDB counter value.
  */
-uint32_t PDB_DRV_GetCurrentCounter(uint32_t instance);
+uint32_t PDB_DRV_GetTimerValue(uint32_t instance);
 
 /*!
  * @brief Gets the PDB interrupt flag.
@@ -206,7 +130,7 @@ uint32_t PDB_DRV_GetCurrentCounter(uint32_t instance);
  * @param instance PDB instance ID.
  * @return Assertion of indicated event.
  */
-bool PDB_DRV_GetPdbCounterIntFlag(uint32_t instance);
+bool PDB_DRV_GetTimerIntFlag(uint32_t instance);
 
 /*!
  * @brief Clears the interrupt flag.
@@ -215,127 +139,173 @@ bool PDB_DRV_GetPdbCounterIntFlag(uint32_t instance);
  *
  * @param instance PDB instance ID.
  */
-void PDB_DRV_ClearPdbCounterIntFlag(uint32_t instance);
-
+void PDB_DRV_ClearTimerIntFlag(uint32_t instance);
+   
 /*!
- * @brief Enables the ADC pre-trigger with its configuration.
+ * @brief Executes the command of loading values.
  *
- * This function enables the ADC pre-trigger with its configuration.
- * The setting value takes effect according to the load-mode configured
- * during the PDB initialization, although the load operation was done inside
- * the function. This is an additional function based on the PDB counter.
+ * This function executes the command of loading values.
  *
  * @param instance PDB instance ID.
- * @param adcChn ADC trigger channel, related to the ADC instance.
- * @param preChn ADC pre-trigger channel, related to the ADC channel group instance.
- * @param adcPreTriggerConfigPtr Pointer to structure of configuration, see to "pdb_adc_pre_trigger_config_t".
+ * @param value Setting value.
+ */
+void PDB_DRV_LoadValuesCmd(uint32_t instance);
+
+/*!
+ * @brief Sets the value of timer modulus.
+ *
+ * This function sets the value of timer modulus.
+ *
+ * @param instance PDB instance ID.
+ * @param value Setting value.
+ */
+void PDB_DRV_SetTimerModulusValue(uint32_t instance, uint32_t value);
+
+/*!
+ * @brief Sets the value for the timer interrupt.
+ *
+ * This function sets the value for the timer interrupt.
+ *
+ * @param instance PDB instance ID.
+ * @param value Setting value.
+ */
+void PDB_DRV_SetValueForTimerInterrupt(uint32_t instance, uint32_t value);
+
+/*!
+ * @brief Configures the ADC pre_trigger in the PDB module.
+ *
+ * This function configures the ADC pre_trigger in the PDB module.
+ *
+ * @param instance PDB instance ID.
+ * @param chn ADC channel.
+ * @param configPtr Pointer to the user configuration structure. See the "pdb_adc_pretrigger_config_t".
  * @return Execution status.
  */
-pdb_status_t PDB_DRV_EnableAdcPreTrigger(uint32_t instance, uint32_t adcChn, uint32_t preChn,
-    pdb_adc_pre_trigger_config_t *adcPreTriggerConfigPtr);
+pdb_status_t PDB_DRV_ConfigAdcPreTrigger(uint32_t instance, uint32_t chn, const pdb_adc_pretrigger_config_t *configPtr);
 
 /*!
- * @brief Disables the ADC pre-trigger.
+ * @brief Gets the ADC pre_trigger flag in the PDB module.
  *
- * This function disables the ADC pre-trigger. The PDB works the same way as
- * when the pre-trigger was not enabled.
+ * This function gets the ADC pre_trigger flags in the PDB module.
  *
  * @param instance PDB instance ID.
- * @param adcChn ADC trigger channel, related to the ADC instance.
- * @param preChn ADC pre-trigger channel, related to the ADC channel group instance.
+ * @param chn ADC channel.
+ * @param preChnMask ADC pre_trigger channels mask.
+ * @return Assertion of indicated flag.
+ */    
+uint32_t PDB_DRV_GetAdcPreTriggerFlags(uint32_t instance, uint32_t chn, uint32_t preChnMask);
+
+/*!
+ * @brief Clears the ADC pre_trigger flag in the PDB module.
+ *
+ * This function clears the ADC pre_trigger flags in the PDB module.
+ *
+ * @param instance PDB instance ID.
+ * @param chn ADC channel.
+ * @param preChnMask ADC pre_trigger channels mask.
+ */    
+void PDB_DRV_ClearAdcPreTriggerFlags(uint32_t instance, uint32_t chn, uint32_t preChnMask);
+
+/*!
+ * @brief Gets the ADC pre_trigger flag in the PDB module.
+ *
+ * This function gets the ADC pre_trigger flags in the PDB module.
+ *
+ * @param instance PDB instance ID.
+ * @param chn ADC channel.
+ * @param preChnMask ADC pre_trigger channels mask.
+ * @return Assertion of indicated flag.
+ */  
+uint32_t PDB_DRV_GetAdcPreTriggerSeqErrFlags(uint32_t instance, uint32_t chn, uint32_t preChnMask);
+
+/*!
+ * @brief Clears the ADC pre_trigger flag in the PDB module.
+ *
+ * This function clears the ADC pre_trigger sequence error flags in the PDB module.
+ *
+ * @param instance PDB instance ID.
+ * @param chn ADC channel.
+ * @param preChnMask ADC pre_trigger channels mask.
+ */ 
+void PDB_DRV_ClearAdcPreTriggerSeqErrFlags(uint32_t instance, uint32_t chn, uint32_t preChnMask);
+
+/*!
+ * @brief Sets the ADC pre_trigger delay value in the PDB module.
+ *
+ * This function sets Set the ADC pre_trigger delay value in the PDB module.
+ *
+ * @param instance PDB instance ID.
+ * @param chn ADC channel.
+ * @param preChn ADC pre_channel.
+ * @param value Setting value.
  */
-void PDB_DRV_DisableAdcPreTrigger(uint32_t instance, uint32_t adcChn, uint32_t preChn);
+void PDB_DRV_SetAdcPreTriggerDelayValue(uint32_t instance, uint32_t chn, uint32_t preChn, uint32_t value);
 
 /*!
- * @brief Gets the ADC pre-trigger flag.
+ * @brief Configures the DAC interval in the PDB module.
  *
- * This function gets the pre-trigger flag for the PDB module. It is
- * asserted if a related event occurs.
- *
- * @param instance PDB instance ID.
- * @param adcChn ADC trigger channel, related to the ADC instance.
- * @param preChn ADC pre-trigger channel, related to the ADC channel group instance.
- * @param flag Indicated flag for event.
- * @return Assertion of indicated event.
- */
-bool PDB_DRV_GetAdcPreTriggerFlag(uint32_t instance, uint32_t adcChn, uint32_t preChn,
-    pdb_adc_pre_trigger_flag_t flag);
-
-/*!
- * @brief Clears the ADC pre-trigger flag.
- *
- * This function clears the ADC pre-trigger flag  for the PDB module.
+ * This function configures the DAC interval in the PDB module.
  *
  * @param instance PDB instance ID.
- * @param adcChn ADC trigger channel, related to the ADC instance.
- * @param preChn ADC pre-trigger channel, related to the ADC channel group instance.
- * @param flag Indicated flag for event.
- */
-void PDB_DRV_ClearAdcPreTriggerFlag(uint32_t instance, uint32_t adcChn, uint32_t preChn,
-    pdb_adc_pre_trigger_flag_t flag);
-
-/*!
- * @brief Enables the DAC trigger with its configuration.
- *
- * This function enables the DAC trigger with its configuration.
- * The setting value takes effect according to the load mode configured
- * during PDB initialization, although the load operation is done inside
- * the function. This is an additional function based on the PDB counter.
- *
- * @param instance PDB instance ID.
- * @param dacChn DAC trigger channel, related to the DAC instance.
- * @param dacTriggerConfigPtr Pointer to structure of configuration, see to "pdb_dac_trigger_config_t".
+ * @param dacChn DAC channel.
+ * @param configPtr Pointer to the user configuration structure. See the "pdb_dac_interval_config_t".
  * @return Execution status.
  */
-pdb_status_t PDB_DRV_EnableDacTrigger(uint32_t instance, uint32_t dacChn,
-    pdb_dac_trigger_config_t *dacTriggerConfigPtr);
+pdb_status_t PDB_DRV_ConfigDacInterval(uint32_t instance, uint32_t dacChn, const pdb_dac_interval_config_t *configPtr);
 
 /*!
- * @brief Disables the DAC trigger.
+ * @brief Sets the DAC interval value in the PDB module.
  *
- * This function disables the DAC trigger. The PDB works the same as
- * when the DAC trigger was not enabled.
+ * This function sets the DAC interval value in the PDB module.
  *
  * @param instance PDB instance ID.
- * @param dacChn DAC trigger channel, related to the DAC instance.
+ * @param dacChn DAC channel.
+ * @param value Setting value.
  */
-void PDB_DRV_DisableDacTrigger(uint32_t instance, uint32_t dacChn);
+void PDB_DRV_SetDacIntervalValue(uint32_t instance, uint32_t dacChn, uint32_t value);
 
 /*!
- * @brief Enables the pulse-out trigger with its configuration.
+ * @brief Switches on/off the CMP pulse out in the PDB module.
  *
- * This function enables the pulse-out trigger with its configuration.
- * The setting value takes effect according to the load mode configured
- * during the PDB initialization, although the load operation is done inside
- * the function. This is an additional function based on the PDB counter.
+ * This function switches the CMP pulse on/off in the PDB module.
  *
  * @param instance PDB instance ID.
- * @param pulseChn Pulse out trigger channel.
- * @param pulseOutTriggerConfigPtr Pointer to structure of configuration, see to "pdb_pulse_out_trigger_config_t".
- * @return Execution status.
+ * @param pulseChnMask Pulse channel mask.
+ * @param enable Switcher to assert the feature.
  */
-pdb_status_t PDB_DRV_EnablePulseOutTrigger(uint32_t instance, uint32_t pulseChn,
-    pdb_pulse_out_trigger_config_t *pulseOutTriggerConfigPtr);
+void PDB_DRV_SetCmpPulseOutEnable(uint32_t instance, uint32_t pulseChnMask, bool enable);
 
 /*!
- * @brief Disables the pulse-out trigger.
+ * @brief Sets the CMP pulse out delay value for high in the PDB module.
  *
- * This function disables the pulse-out trigger. The PDB works the same as
- * when the pulse out-trigger was not been enabled.
+ * This function sets the CMP pulse out delay value for high in the PDB module.
  *
  * @param instance PDB instance ID.
- * @param pulseChn Pulse out trigger channel.
+ * @param pulseChn Pulse channel.
+ * @param value Setting value.
  */
-void PDB_DRV_DisablePulseOutTrigger(uint32_t instance, uint32_t pulseChn);
+void PDB_DRV_SetCmpPulseOutDelayForHigh(uint32_t instance, uint32_t pulseChn, uint32_t value);
+
+/*!
+ * @brief Sets the CMP pulse out delay value for low in the PDB module.
+ *
+ * This function sets the CMP pulse out delay value for low in the PDB module.
+ *
+ * @param instance PDB instance ID.
+ * @param pulseChn Pulse channel.
+ * @param value Setting value.
+ */
+void PDB_DRV_SetCmpPulseOutDelayForLow(uint32_t instance, uint32_t pulseChn, uint32_t value);
 
 #if defined(__cplusplus)
-extern }
+}
 #endif
 
 /*!
  *@}
  */
 
+#endif
 #endif /* __FSL_PDB_DRIVER_H__ */
 /*******************************************************************************
  * EOF

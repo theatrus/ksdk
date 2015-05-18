@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 *
-* Copyright (c) 2011 - 2014 Freescale Semiconductor;
+* Copyright (c) 2011 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 ***************************************************************************
@@ -37,6 +37,12 @@
 #define USBCFG_HOST_KHCI                             (1)
 
 #define USBCFG_HOST_EHCI                             (0)
+
+/*
+** Maximum number of USB instance.
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_HOST_NUM                              (1)
 
 /*
 ** Maximum number of pipes.
@@ -115,6 +121,13 @@
 */
 #define  USBCFG_HOST_PHDC                             (1)
 
+
+/*
+** If the VIDEO class device supported
+** MGCT: <option type="number"/>
+*/
+#define  USBCFG_HOST_VIDEO                            (0)
+
 /*
 ** If the HUBclass device supported
 ** MGCT: <option type="number"/>
@@ -179,13 +192,15 @@
     #define USBCFG_HOST_PORT_NATIVE                     (1)
 #endif
 
+/* set MACRO to 1 to enable USB COMPLIANCE test
+*/
+#define USBCFG_HOST_COMPLIANCE_TEST                 (0)
+
 /* If the buffer provided by APP is cacheable
 * 1 cacheable, buffer cache maintenance is needed
 * 0 uncacheable, buffer cache maintenance is not needed
 */
-#define    USBCFG_BUFF_PROPERTY_CACHEABLE       0
-
-#define _DEBUG                               0
+#define    USBCFG_HOST_BUFF_PROPERTY_CACHEABLE       0
 
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_ewm_hal.h"
+#if FSL_FEATURE_SOC_EWM_COUNT
 
 /*! 
  * @addtogroup ewm_driver
@@ -45,30 +46,10 @@
  *******************************************************************************/
 
 /*! @brief Table of base addresses for EWM instances. */
-extern const uint32_t g_ewmBaseAddr[];
+extern EWM_Type * const g_ewmBase[];
 
 /*! @brief Table to save EWM IRQ enumeration numbers defined in the CMSIS header file. */
-extern const IRQn_Type g_ewmIrqId[HW_EWM_INSTANCE_COUNT];
-
-/*! 
- * @brief Data structure for EWM initialize
- *
- * This structure is used when initializing the EWM while the ewm_init function is
- * called. It contains all EWM configurations.
- */
-typedef struct ewmUserConfig {
-    bool ewmEnable;                                /*!< Enable EWM module */
-    ewm_in_assertion_state_t ewmInAssertionState;  /*!< Set EWM_in signal assertion state */
-    bool ewmInputEnable;                           /*!< Enable EWM_in input enable */
-    bool ewmIntEnable;                             /*!< Enable EWM interrupt enable */
-
-    uint8_t ewmCmpLowValue;                       /*!< Set EWM compare low register value */
-    uint8_t ewmCmpHighValue;                      /*!< Set EWM compare high register value, the maximum value should be 0xfe----*/ 
-                                                  /* ---- otherwise the counter will never expire*/
-#if FSL_FEATURE_EWM_HAS_PRESCALER
-    uint8_t ewmPrescalerValue;                    /*!< Set EWM prescaler value */
-#endif
-}ewm_user_config_t;
+extern const IRQn_Type g_ewmIrqId[EWM_INSTANCE_COUNT];
 
 /*******************************************************************************
  * API
@@ -91,9 +72,10 @@ extern "C" {
  * runs according to the configuration.
  *
  * @param instance EWM instance ID
- * @param userConfigPtr EWM user configure data structure, see #EWM_user_config_t
+ * @param ConfigPtr EWM user configure data structure, see #EWM_user_config_t
+ * @return Execution status.
  */
-ewm_status_t EWM_DRV_Init(uint32_t instance, const ewm_user_config_t* userConfigPtr);
+ewm_status_t EWM_DRV_Init(uint32_t instance, const ewm_config_t* ConfigPtr);
 
 /*!
  * @brief Closes the clock for EWM.
@@ -102,7 +84,7 @@ ewm_status_t EWM_DRV_Init(uint32_t instance, const ewm_user_config_t* userConfig
  *
  * @param instance EWM instance ID
  */
-ewm_status_t EWM_DRV_Deinit(uint32_t instance);
+void EWM_DRV_Deinit(uint32_t instance);
 
 /*!
  * @brief Refreshes the EWM.
@@ -120,16 +102,9 @@ void EWM_DRV_Refresh(uint32_t instance);
  * This function gets the EWM running status.
  *
  * @param instance EWM instance ID
- * @return ewm running status. False means not running. True means running
+ * @return EWM running status. False means not running. True means running
  */
 bool EWM_DRV_IsRunning(uint32_t instance);
-
-/*!
- * @brief Returns the EWM interrupt status.
- *
- * @param instance EWM instance ID.
- */
-bool EWM_DRV_GetIntCmd(uint32_t instance);
 
 /*!
  * @brief Enables/disables the EWM interrupt.
@@ -147,6 +122,7 @@ void EWM_DRV_SetIntCmd(uint32_t instance, bool enable);
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_EWM_H__*/
 /*******************************************************************************
  * EOF

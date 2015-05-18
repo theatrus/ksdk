@@ -41,7 +41,7 @@
  * Code
  ******************************************************************************/
 
-#if (HW_SPI_INSTANCE_COUNT == 1)
+#if (SPI_INSTANCE_COUNT == 1)
 /*!
  * @brief This function is the implementation of SPI0 handler named in startup code.
  *
@@ -49,10 +49,10 @@
  */
 void SPI0_IRQHandler(void)
 {
-    DSPI_DRV_EdmaIRQHandler(HW_SPI0);
+    DSPI_DRV_EdmaIRQHandler(SPI0_IDX);
 }
 
-#elif (HW_SPI_INSTANCE_COUNT == 2)
+#elif (SPI_INSTANCE_COUNT == 2)
 /*!
  * @brief This function is the implementation of SPI0 handler named in startup code.
  *
@@ -60,7 +60,7 @@ void SPI0_IRQHandler(void)
  */
 void SPI0_IRQHandler(void)
 {
-    DSPI_DRV_EdmaIRQHandler(HW_SPI0);
+    DSPI_DRV_EdmaIRQHandler(SPI0_IDX);
 }
 
 /*!
@@ -70,7 +70,7 @@ void SPI0_IRQHandler(void)
  */
 void SPI1_IRQHandler(void)
 {
-    DSPI_DRV_EdmaIRQHandler(HW_SPI1);
+    DSPI_DRV_EdmaIRQHandler(SPI1_IDX);
 }
 
 #else
@@ -81,7 +81,7 @@ void SPI1_IRQHandler(void)
  */
 void SPI0_IRQHandler(void)
 {
-    DSPI_DRV_EdmaIRQHandler(HW_SPI0);
+    DSPI_DRV_EdmaIRQHandler(SPI0_IDX);
 }
 
 /*!
@@ -91,7 +91,7 @@ void SPI0_IRQHandler(void)
  */
 void SPI1_IRQHandler(void)
 {
-    DSPI_DRV_EdmaIRQHandler(HW_SPI1);
+    DSPI_DRV_EdmaIRQHandler(SPI1_IDX);
 }
 
 /*!
@@ -101,7 +101,7 @@ void SPI1_IRQHandler(void)
  */
 void SPI2_IRQHandler(void)
 {
-    DSPI_DRV_EdmaIRQHandler(HW_SPI2);
+    DSPI_DRV_EdmaIRQHandler(SPI2_IDX);
 }
 
 #endif

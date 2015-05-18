@@ -90,7 +90,7 @@
         </option>
         <option>
           <name>GeneralEnableMisra</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>GeneralMisraVerbose</name>
@@ -172,7 +172,7 @@
         <option>
           <name>CCDefines</name>
           
-        <state>DEBUG</state><state>CPU_MK22FN512VLH12</state><state>IAR</state></option>
+        <state>DEBUG</state><state>CPU_MK22FN512VLH12</state></option>
         <option>
           <name>CCPreprocFile</name>
           <state>0</state>
@@ -301,7 +301,7 @@
         <option>
           <name>CCIncludePath2</name>
           
-        <state>$PROJ_DIR$/../../../../platform/startup/MK22F51212</state><state>$PROJ_DIR$/../../../../platform/CMSIS/Include</state></option>
+        <state>$PROJ_DIR$/../../../../platform/devices</state><state>$PROJ_DIR$/../../../../platform/devices/MK22F51212/include</state><state>$PROJ_DIR$/../../../../platform/devices/MK22F51212/startup</state><state>$PROJ_DIR$/../../../../platform/CMSIS/Include</state></option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -1031,7 +1031,7 @@
         </option>
         <option>
           <name>GeneralEnableMisra</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>GeneralMisraVerbose</name>
@@ -1113,7 +1113,7 @@
         <option>
           <name>CCDefines</name>
           
-        <state>NDEBUG</state><state>CPU_MK22FN512VLH12</state><state>IAR</state></option>
+        <state>NDEBUG</state><state>CPU_MK22FN512VLH12</state></option>
         <option>
           <name>CCPreprocFile</name>
           <state>0</state>
@@ -1242,7 +1242,7 @@
         <option>
           <name>CCIncludePath2</name>
           
-        <state>$PROJ_DIR$/../../../../platform/startup/MK22F51212</state><state>$PROJ_DIR$/../../../../platform/CMSIS/Include</state></option>
+        <state>$PROJ_DIR$/../../../../platform/devices</state><state>$PROJ_DIR$/../../../../platform/devices/MK22F51212/include</state><state>$PROJ_DIR$/../../../../platform/devices/MK22F51212/startup</state><state>$PROJ_DIR$/../../../../platform/CMSIS/Include</state></option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -1883,4 +1883,4 @@
       <data/>
     </settings>
   </configuration>
-<group><name>startup</name><file><name>$PROJ_DIR$/../../../../platform/startup/MK22F51212/iar/startup_MK22F51212.s</name></file><file><name>$PROJ_DIR$/../../../../platform/startup/MK22F51212/system_MK22F51212.c</name></file><file><name>$PROJ_DIR$/../../../../platform/startup/startup.c</name></file><file><name>$PROJ_DIR$/../../../../platform/startup/startup.h</name></file></group></project>
+<group><name>startup</name><file><name>$PROJ_DIR$/../../../../platform/devices/MK22F51212/startup/iar/startup_MK22F51212.s</name></file><file><name>$PROJ_DIR$/../../../../platform/devices/MK22F51212/startup/system_MK22F51212.c</name></file><file><name>$PROJ_DIR$/../../../../platform/devices/startup.c</name></file><file><name>$PROJ_DIR$/../../../../platform/devices/startup.h</name></file></group></project>

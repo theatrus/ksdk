@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include "fsl_os_abstraction.h"
 #include "fsl_sdhc_hal.h"
+#if FSL_FEATURE_SOC_SDHC_COUNT
 
 /*! @addtogroup sdhc_pd_data_types */
 /*! @{ */
@@ -59,8 +60,8 @@
 #define BSP_FSL_SDHC_ENABLE_AUTOCMD12
 #define BSP_FSL_SDHC_ENABLE_ADMA1
 
-extern const uint32_t g_sdhcBaseAddr[];
-extern const IRQn_Type g_sdhcIrqId[HW_SDHC_INSTANCE_COUNT];
+extern SDHC_Type * const g_sdhcBase[];
+extern const IRQn_Type g_sdhcIrqId[SDHC_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Definitions
@@ -200,15 +201,16 @@ typedef enum _sdhc_resp_type {
  * @brief SDHC Initialization Configuration Structure
  *
  * Defines the configuration data structure to initialize the SDHC.
+ * @internal gui name="Basic Configuration" id="sdhcCfg"
  */
 typedef struct SdhcUserConfig
 {
-    uint32_t clock;                                 /*!< Clock rate */
-    sdhc_transfer_mode_t transMode;                 /*!< SDHC transfer mode */
-    sdhc_cd_type_t cdType;                          /*!< Card detection type */
-    void (*cardDetectCallback)(bool inserted);      /*!< Callback function for card detect occurs */
-    void (*cardIntCallback)(void);                  /*!< Callback function for card interrupt occurs */
-    void (*blockGapCallback)(void);                 /*!< Callback function for block gap occurs */
+    uint32_t clock;                                 /*!< Clock rate @internal gui name="Bus clock" id="BusClock" */
+    sdhc_transfer_mode_t transMode;                 /*!< SDHC transfer mode @internal gui name="Transfer mode" id="transferMode" */
+    sdhc_cd_type_t cdType;                          /*!< Card detection type @internal gui name="Card detection type" id="cardDetection" */
+    void (*cardDetectCallback)(bool inserted);      /*!< Callback function for card detect occurs @internal gui name="Card detect callback function" id="CardDetectCallback" type="callback" */
+    void (*cardIntCallback)(void);                  /*!< Callback function for card interrupt occurs @internal gui name="Card interrupt callback function" id="CardInterruptCallback" type="callback" */
+    void (*blockGapCallback)(void);                 /*!< Callback function for block gap occurs @internal gui name="Card block gap callback function" id="CardBlockGapCallback" type="callback" */
 } sdhc_user_config_t;
 
 /*!
@@ -233,7 +235,8 @@ typedef struct SdhcHostDevice
 #define FSL_SDHC_HOST_CAPS_SUPPORT_4BITS     (1 << 2)    /*!< Host support 4-bit bus width */
 #define FSL_SDHC_HOST_CAPS_SUPPORT_DMA       (1 << 3)    /*!< Host support DMA mode */
 #define FSL_SDHC_HOST_CAPS_SUPPORT_ADMA      (1 << 4)    /*!< Host support ADMA mode */
-#define FSL_SDHC_HOST_CAPS_SUPPORT_SRS       (1 << 5)    /*!< Host support suspend resume mode*/
+#define FSL_SDHC_HOST_CAPS_SUPPORT_EXDMA     (1 << 5)    /*!< Host support ExDMA mode */
+#define FSL_SDHC_HOST_CAPS_SUPPORT_SRS       (1 << 6)    /*!< Host support suspend resume mode*/
     uint32_t ocrSupported;                          /*!< Supported OCR */
     uint32_t clock;                                 /*!< Current clock frequency */
     sdhc_power_mode_t powerMode;                    /*!< Current power mode */
@@ -279,6 +282,7 @@ typedef struct SdhcRequest
     uint32_t flags;                                 /*!< Flags */
 #define FSL_SDHC_REQ_FLAGS_DATA_READ      (1 << 0)  /*!< Request will read data */
 #define FSL_SDHC_REQ_FLAGS_USE_DMA        (1 << 1)  /*!< Request will use DMA for data transferring */
+#define FSL_SDHC_REQ_FLAGS_STOP_TRANS     (1 << 2)  /*!< Request to stop transmition */ 
     sdhc_resp_type_t respType;                      /*!< Response type */
     volatile uint32_t error;                                 /*!< Command error code */
 #define FSL_SDHC_REQ_ERR_HOST_BUSY        (1 << 0)  /*!< Host is busy */
@@ -302,16 +306,6 @@ typedef struct SdhcRequest
     struct SdhcData *data;                          /*!< Data associated with request */
 } sdhc_request_t;
 
-#if defined(FSL_SDHC_USING_BIG_ENDIAN)
-#define swap_be32(x) (x)
-#define swap_be16(x) (x)
-#else
-#define swap_be32(x) ((uint32_t)((((uint32_t)(x) & (uint32_t)(0xFF)) << 24)) | \
-                                 (((uint32_t)(x) & (uint32_t)(0xFF00)) << 8) | \
-                                 (((uint32_t)(x) & (uint32_t)(0xFF0000)) >> 8) | \
-                                 (((uint32_t)(x) & (uint32_t)(0xFF000000U)) >> 24))
-#endif
-
 /*! @} */
 
 /*! @addtogroup sdhc_pd */
@@ -328,7 +322,7 @@ extern "C" {
 /*@{ */
 
 /*!
- * @brief Initializes the Host controller by a specific instance index.
+ * @brief Initializes the Host controller with a specific instance index.
  *
  * This function initializes the SDHC module according to the given
  * initialization configuration structure including the clock frequency,
@@ -345,8 +339,9 @@ sdhc_status_t SDHC_DRV_Init(uint32_t instance, sdhc_host_t *host, const sdhc_use
  * @brief Destroys the host controller.
  *
  * @param instance the instance index of host controller
+ * @return kStatus_SDHC_NoError if success
  */
-void SDHC_DRV_Shutdown(uint32_t instance);
+sdhc_status_t SDHC_DRV_Shutdown(uint32_t instance);
 
 /*!
  * @brief Checks whether the card is present on a specified host controller.
@@ -408,6 +403,7 @@ void SDHC_DRV_DoIrq(uint32_t instance);
 }
 #endif
 /*! @} */
+#endif
 #endif /* __FSL_SDHC_H__ */
 
 /*************************************************************************************************

@@ -30,9 +30,9 @@
 #include <stdint.h>
 #include "fsl_device_registers.h"
 
-const uint32_t g_dmaRegBaseAddr[HW_DMA_INSTANCE_COUNT] = DMA_BASE_ADDRS;
-const uint32_t g_dmamuxRegBaseAddr[HW_DMAMUX_INSTANCE_COUNT] = DMAMUX_BASE_ADDRS;
-const IRQn_Type g_dmaIrqId[HW_DMA_INSTANCE_COUNT][FSL_FEATURE_DMA_DMAMUX_CHANNELS] =
+DMA_Type * const g_dmaBase[DMA_INSTANCE_COUNT] = DMA_BASE_PTRS;
+DMAMUX_Type * const g_dmamuxBase[DMAMUX_INSTANCE_COUNT] = DMAMUX_BASE_PTRS;
+const IRQn_Type g_dmaIrqId[DMA_INSTANCE_COUNT][FSL_FEATURE_DMA_DMAMUX_CHANNELS] =
 {
     {DMA0_IRQn, DMA1_IRQn, DMA2_IRQn, DMA3_IRQn}
 };

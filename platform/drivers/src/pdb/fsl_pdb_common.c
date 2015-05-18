@@ -35,10 +35,10 @@
  ******************************************************************************/
 
 /* Table of base addresses for PDB instances. */
-const uint32_t g_pdbBaseAddr[] = PDB_BASE_ADDRS;
+PDB_Type * const g_pdbBase[] = PDB_BASE_PTRS;
 
 /* Table to save PDB IRQ enum numbers defined in CMSIS header file. */
-const IRQn_Type g_pdbIrqId[HW_PDB_INSTANCE_COUNT] = PDB_IRQS;
+const IRQn_Type g_pdbIrqId[PDB_INSTANCE_COUNT] = PDB_IRQS;
 
 /*******************************************************************************
  * EOF

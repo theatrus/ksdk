@@ -46,7 +46,7 @@
 /******************************************************************************
  * Macro's
  *****************************************************************************/
-#define MAX_STRD_REQ                    (13)  /* Max value of stadard request */
+#define MAX_STRD_REQ                    (13)  /* Max value of standard request */
 /* size of data to be returned for various Get Desc calls */
 #define DEVICE_STATUS_SIZE              (2)
 #define INTERFACE_STATUS_SIZE           (1)
@@ -94,7 +94,7 @@ typedef uint8_t (_CODE_PTR_ USB_FW_REQ_FUNC)(usb_class_fw_object_struct_t* usb_f
  *
  * @name  USB_Framework_Periodic_Task
  *
- * @brief The funtion is called to respond to any control request
+ * @brief The function is called to respond to any control request
  *
  * @param None
  *
@@ -108,12 +108,12 @@ extern void USB_Framework_Periodic_Task(void);
  *
  * @name  USB_Framework_Reset
  *
- * @brief The funtion resets the framework 
+ * @brief The function resets the framework
  *
  * @param handle: handle to Identify the controller
  *
  * @return status       
- *         USB_OK           : When Successfull 
+ *         USB_OK           : When Successfully
  *         Others           : Errors
  *
  *****************************************************************************/
@@ -126,15 +126,15 @@ extern uint8_t USB_Framework_Reset
  *
  * @name  USB_Framework_GetDesc
  *
- * @brief  This function is called in to get the discriptor as specified in cmd.
+ * @brief  This function is called in to get the descriptor as specified in cmd.
  *
  * @param handle:           USB framework handle. Received from
  *                          USB_Framework_Init      
- * @param cmd:              command for USB discriptor to get.
+ * @param cmd:              command for USB descriptor to get.
  * @param in_data:          input to the Application functions.
- * @param in_buff           buffer which will contian the discriptors.
+ * @param in_buff           buffer which will contain the descriptors.
  * @return status:       
- *                        USB_OK : When Successfull       
+ *                        USB_OK : When Successfully
  *                        Others : When Error
  *
  *****************************************************************************/
@@ -148,15 +148,15 @@ uint8_t * * in_buff/*[OUT]*/
  *
  * @name  USB_Framework_SetDesc
  *
- * @brief  This function is called in to get the discriptor as specified in cmd.
+ * @brief  This function is called in to get the descriptor as specified in cmd.
  *
  * @param handle:           USB framework handle. Received from
  *                          USB_Framework_Init      
- * @param cmd:              command for USB discriptor to get.
+ * @param cmd:              command for USB descriptor to get.
  * @param in_data:          input to the Application functions.
- * @param outBuf           buffer which will contian the discriptors.
+ * @param outBuf           buffer which will contain the descriptors.
  * @return status:       
- *                        USB_OK : When Successfull       
+ *                        USB_OK : When Successfully
  *                        Others : When Error
  *
  *****************************************************************************/
@@ -169,15 +169,15 @@ uint8_t * * outBuf/*[IN]*/
  *
  * @name  USB_Framework_Remote_wakeup
  *
- * @brief  This function is called in to get the discriptor as specified in cmd.
+ * @brief  This function is called in to get the descriptor as specified in cmd.
  *
  * @param handle:           USB framework handle. Received from
  *                          USB_Framework_Init      
- * @param cmd:              command for USB discriptor to get.
+ * @param cmd:              command for USB descriptor to get.
  * @param in_data:          input to the Application functions.
- * @param in_buff           buffer which will contian the discriptors.
+ * @param in_buff           buffer which will contain the descriptors.
  * @return status:       
- *                        USB_OK : When Successfull       
+ *                        USB_OK : When Successfully
  *                        Others : When Error
  *
  *****************************************************************************/

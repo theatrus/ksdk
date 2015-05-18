@@ -29,11 +29,16 @@
  */
 #include "fsl_device_registers.h"
 
-/* Pointer to runtime state structure.*/
-void * g_dspiStatePtr[HW_SPI_INSTANCE_COUNT] = { NULL };
+#if FSL_FEATURE_SOC_DSPI_COUNT
 
-/*! @brief Table of base addresses for SPI instances. */
-const uint32_t g_dspiBaseAddr[] = SPI_BASE_ADDRS;
+/* Pointer to runtime state structure.*/
+void * g_dspiStatePtr[SPI_INSTANCE_COUNT] = { NULL };
+
+/*! @brief Table of base pointers for SPI instances. */
+SPI_Type * const g_dspiBase[SPI_INSTANCE_COUNT] = SPI_BASE_PTRS;
+
+/*! @brief Table of SPI FIFO sizes per instance. */
+const uint32_t g_dspiFifoSize[SPI_INSTANCE_COUNT] = FSL_FEATURE_DSPI_FIFO_SIZEx;
 
 /*!
  * @brief Table to save DSPI IRQ enum numbers defined in CMSIS files.
@@ -43,6 +48,7 @@ const uint32_t g_dspiBaseAddr[] = SPI_BASE_ADDRS;
  */
 const IRQn_Type g_dspiIrqId[] = SPI_IRQS;
 
+#endif /* FSL_FEATURE_SOC_DSPI_COUNT */
 /*******************************************************************************
 * EOF
 ******************************************************************************/

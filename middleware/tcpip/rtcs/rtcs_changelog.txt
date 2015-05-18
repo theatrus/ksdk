@@ -1,0 +1,107 @@
+RTCS ChangeLog
+--------------
+
+Legend:
+-------
+* : fixed
+! : changed
++ : added
+- : removed
+
+Format of messages:
+------------------
+<Component_name> - <Description>.
+
+RTCS Component names:
+----------------
+CORE - RTCS API and miscellaneous functions
+DOC - Documentation
+ARP - Address Resolution Protocol
+TCP - TCP code
+UDP - UDP code
+FTPSRV - FTP server
+HTTPSRV - HTTP server
+WEBSOCKET - WebSocket protocol
+TFTPSRV - TFTP server
+TFTPCLN - TFTP client
+TELNETSRV - Telnet server
+TELNETCLN - Telnet client
+MODEM - GPRS Modem library code
+EXAMPLES - RTCS examples
+SOCKET - Socket layer
+LLMNRSRV - Link-Local Multicast Name Resolution Server.
+
+RTCS v4.2.0:
+------------
+* CORE - getaddrinfo() failure address family is other than AF_UNSPEC.
+* FTPSRV - Wrong reply code in case directory cannot be created.
+* FTPSRV - Changing current directory to non-existent one.
+* HTTPSRV - Wrong access of data in session buffer while searching for SSI.
+* HTTPSRV - SSI with parameter are not invoked.
+* EXAMPLES - Fixed out of bounds array access in WebSocket example.
+* TCP - Memory leak due to lack of FINWAIT_2 timeout.
+* TCP - Corruption of TCP segments received from loopback interface.
+* ARP - Fix ARP cache against DoS Attack 
+
++ DOC - This changeLog file.
++ DOC - readme.txt for HTTPSRV example.
++ DOC - readme.txt for SSL.
++ CORE - Basic CyaSSL support.
++ CORE - DHCPv6 client application.
++ TELNETCLN - IPv6 support.
++ TELNETSRV - Welcome/Goodbye string can be now disabled.
++ TFTPCLN - IPv6 support.
++ TFTPSRV - IPv6 support.
++ TFTPSRV - Support for root directory.
++ WEBSOCKET - Implementation of WebSocket server as a part of HTTPSRV.
++ WEBSOCKET - Fully tested by AutoBahn test suite - pass all tests.
++ HTTPSRV - Transmission encoding implementation.
++ HTTPSRV - Support for all response codes mentioned in RFC2616.
++ HTTPSRV - Compile time configuration parameter for disabling WebSocket functionality.
++ HTTPSRV - Support of SSL connections.
++ HTTPSRV - Validity checks in basic authentication code.
++ HTTPSRV - Asserts for debugging.
++ EXAMPLES - GPRS modem example application for TWR-K60N512.
++ EXAMPLES - Example for secure HTTP server.
++ EXAMPLES - Examples for WebSocket server: chat client+server and simple echo as a part of HTTPSRV example.
++ MODEM - New modem library code.
++ SOCKET - Error check of user input parameters for setsockopt()/getsockopt().
++ SOCKET - read-only socket option SO_RCVNUM. 
++ SOCKET - MSG_DONTWAIT flag for stream socket send()/recv().
++ SOCKET - MSG_WAITALL flag for stream socket recv().
++ SOCKET - stream socket listen() backlog parameter and RTCSCFG_SOMAXCONN configuration parameter.
++ SOCKET - SO_LINGER socket option.
++ SOCKET - closesocket() function. 
++ SOCKET - shutdownsocket() function.
++ SOCKET - SO_KEEPALIVE socket option.
++ SOCKET - add 3rd rtcs_fd_set argument to select().
++ SOCKET - add RTCS specific SO_EXCEPTION that can be used to unblock a select() call through exceptfds.
++ TCP - TCP_KEEPCNT, TCP_KEEPINTVL and TCP_KEEPIDLE options for TCP protocol.
++ LLMNRSRV  - First version of the Link-Local Multicast Name Resolution (LLMNR) Server. 
++ UDP - socket can buffer incoming datagrams up to RBSIZE (socket option OPT_RBSIZE) (default value is RTCSCFG_UDP_RX_BUFFER_SIZE).
++ ARP - RTCSCFG_ARP_CACHE_SIZE
++ IP6 - RTCS6_if_is_disabled()
+
+! TELNETCLN - Telnet client API.
+! TFTPCLN - TFTP client API.
+! TFTPSRV - Server API.
+! DOC - Chapters about HTTP server, FTP server, Telnet client, TFTP server and TFTP client.
+! EXAMPLES - Example for HTTP server.
+! HTTPSRV - POST request on anything different than CGI scripts are disabled.
+! HTTPSRV - Request line length is limited by session buffer size.
+! TCP - TCP_SENDTIMEOUT_MIN limit for OPT_CONNECT_TIMEOUT has been removed.
+! TCP - MSS option for indirect routes is computed as MTU minus fixed size IP header minus fixed size TCP header.
+! SOCKET - select() in poll mode returns RTCS_ERROR for: reset requests and shutdown of listening sockets requests.
+! TCP - removed zero window after FIN is received.
+! TCP - FIN can be sent out repeatedly only by FIN retransmission process.
+! UDP - default OPT_SEND_NOWAIT option at SOL_UDP level is set to TRUE. This results to default behavior to be non-blocking.
+
+- CORE - Obsolete code for binary files (COFF, SREC).
+- SOCKET - compile-time options RTCSCFG_CHECK_ADDRSIZE, RTCSCFG_CHECK_ERRORS, 
+           RTCSCFG_CHECK_MEMORY_ALLOCATION_ERRORS, RTCSCFG_CHECK_VALIDITY.
+           These checks are now mandatory part of user API (socket layer).
+- UDP - RTCSCFG_UDP_MAX_QUEUE_SIZE and _UDP_max_queue_size global variable. Replaced by UDP socket receive buffer of RBSIZE.
+- ARP - ARPCACHE_SIZE, ARPALLOC_SIZE.
+	   
+RTCS v4.1.1:
+------------

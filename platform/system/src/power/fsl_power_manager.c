@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2014-2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -132,9 +132,9 @@ static power_manager_error_code_t POWER_SYS_CheckClocks(power_manager_modes_t mo
  * doesn't support any optional power options described in the power_manager_user_config_t)
  *
  *END**************************************************************************/
-power_manager_error_code_t POWER_SYS_Init(power_manager_user_config_t const * (* powerConfigsPtr)[],
+power_manager_error_code_t POWER_SYS_Init(power_manager_user_config_t const ** powerConfigsPtr,
                                           uint8_t configsNumber,
-                                          power_manager_callback_user_config_t const * (* callbacksPtr)[],
+                                          power_manager_callback_user_config_t ** callbacksPtr,
                                           uint8_t callbacksNumber)
 {
     /* Check input parameter - at least one power mode configuration is required */
@@ -144,24 +144,22 @@ power_manager_error_code_t POWER_SYS_Init(power_manager_user_config_t const * (*
     }
     /* Initialize internal state structure lock */
     POWER_SYS_LOCK_INIT();
-    POWER_SYS_LOCK();
     /* Initialize internal state structure */
     memset(&gPowerManagerState, 0, sizeof(power_manager_state_t));
     /* Store references to user-defined power mode configurations */
-    gPowerManagerState.configs = (power_manager_user_config_t *(*)[])powerConfigsPtr;
+    gPowerManagerState.configs = powerConfigsPtr;
     gPowerManagerState.configsNumber = configsNumber;
     /* Store references to user-defined callback configurations and increment call-back handle counter */
     if (callbacksPtr != NULL)
     {
-        gPowerManagerState.staticCallbacks = (power_manager_callback_user_config_t *(*)[])callbacksPtr;
+        gPowerManagerState.staticCallbacks = callbacksPtr;
         gPowerManagerState.staticCallbacksNumber = callbacksNumber;
         /* Default value of handle of last call-back that returned error */
         gPowerManagerState.errorCallbackIndex = callbacksNumber;
     }
-    POWER_SYS_UNLOCK();
     /* Enables clock gate for LLWU */
-#if defined(K60D10_SERIES)
-    SIM_HAL_EnableClock(SIM_BASE,kSimClockGateLlwu0);
+#if FSL_FEATURE_SIM_HAS_SCGC_LLWU
+    SIM_HAL_EnableClock(SIM,kSimClockGateLlwu0);
 #endif
     return kPowerManagerSuccess;
 }
@@ -215,7 +213,7 @@ power_manager_error_code_t POWER_SYS_Deinit(void)
  *END**************************************************************************/
 power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manager_policy_t policy)
 {
-    power_manager_user_config_t * configPtr; /* Local pointer to the requested user-defined power mode configuration */
+    power_manager_user_config_t const * configPtr; /* Local pointer to the requested user-defined power mode configuration */
     power_manager_modes_t mode;         /* Local variable with requested power mode */
     smc_power_mode_config_t halModeConfig; /* SMC HAL layer configuration structure */
     uint8_t currentStaticCallback = 0U;      /* Index to array of statically registered call-backs */
@@ -236,7 +234,7 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
     }
 
     /* Initialization of local variables from the Power manager state structure */
-    configPtr = (*gPowerManagerState.configs)[powerModeIndex];
+    configPtr = gPowerManagerState.configs[powerModeIndex];
     mode = configPtr->mode;
     notifyStruct.policy = policy;
     notifyStruct.targetPowerConfigIndex = powerModeIndex;
@@ -245,7 +243,7 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
     /* Check that requested power mode is not protected */
     if ((mode == kPowerManagerVlpr) || (mode == kPowerManagerVlpw) || (mode == kPowerManagerVlps))
     {
-        if (SMC_HAL_GetProtectionMode(SMC_BASE, kAllowVlp) == 0U)
+        if (!SMC_HAL_GetProtection(SMC, kAllowPowerModeVlp))
         {
             POWER_SYS_UNLOCK();
             return kPowerManagerError;
@@ -258,7 +256,7 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
     else if ((mode >= kPowerManagerLls) && (mode < kPowerManagerVlls1))
 #endif      
     {
-        if (SMC_HAL_GetProtectionMode(SMC_BASE, kAllowLls) == 0U)
+        if (!SMC_HAL_GetProtection(SMC, kAllowPowerModeLls))
         {
             POWER_SYS_UNLOCK();
             return kPowerManagerError;
@@ -271,7 +269,7 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
     else if (mode >= kPowerManagerVlls1)
 #endif      
     {
-        if (SMC_HAL_GetProtectionMode(SMC_BASE, kAllowVlls) == 0U)
+        if (!SMC_HAL_GetProtection(SMC, kAllowPowerModeVlls))
         {
             POWER_SYS_UNLOCK();
             return kPowerManagerError;
@@ -282,7 +280,7 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
         /* From all statically registered call-backs... */
         for (currentStaticCallback = 0U; currentStaticCallback < gPowerManagerState.staticCallbacksNumber; currentStaticCallback++)
         {   
-            callbackConfig = ((*gPowerManagerState.staticCallbacks)[currentStaticCallback]);
+            callbackConfig = (gPowerManagerState.staticCallbacks[currentStaticCallback]);
             /* Check pointer to static callback configuration */
             if ( callbackConfig != NULL ){
                 /* ...notify only those which asked to be called before the power mode change */
@@ -314,7 +312,6 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
     if ( ((policy == kPowerManagerPolicyForcible) || (returnCode == kPowerManagerSuccess)) && (clockCheckRetCode == kPowerManagerSuccess))
     {
 #if  FSL_FEATURE_SMC_HAS_LPWUI
-        halModeConfig.lpwuiOption = configPtr->lowPowerWakeUpOnInterruptOption;
         halModeConfig.lpwuiOptionValue = configPtr->lowPowerWakeUpOnInterruptValue;
 #endif
                 
@@ -323,17 +320,6 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
 #if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
         /* High speed run mode */
         case kPowerManagerHsrun:
-            /* High speed run mode can be entered only from Run mode */
-            if (SMC_HAL_GetStat(SMC_BASE) != kStatRun)
-            {
-                SMC_HAL_SetRunMode(SMC_BASE, kSmcRun);
-                returnCode = POWER_SYS_WaitForRunStatus();
-                
-                if(returnCode != kPowerManagerSuccess)
-                {
-                    return returnCode;
-                }
-            }
             halModeConfig.powerModeName = kPowerModeHsrun;
             break;
 #endif
@@ -347,32 +333,10 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
             break;
         /* Wait mode */
         case kPowerManagerWait:
-            /* Wait mode can be entered only from Run mode */
-            if (SMC_HAL_GetStat(SMC_BASE) != kStatRun)
-            {
-                SMC_HAL_SetRunMode(SMC_BASE, kSmcRun);
-                returnCode = POWER_SYS_WaitForRunStatus();
-                
-                if(returnCode != kPowerManagerSuccess)
-                {
-                    return returnCode;
-                }
-            }
             halModeConfig.powerModeName = kPowerModeWait;
             break;
         /* Very low power wait mode */
         case kPowerManagerVlpw:
-            /* Very low power wait mode can be netered only from Very low power run mode */
-            if (SMC_HAL_GetStat(SMC_BASE) != kStatVlpr)
-            {
-                SMC_HAL_SetRunMode(SMC_BASE, kSmcVlpr);
-                returnCode = POWER_SYS_WaitForVlprStatus();
-                
-                if(returnCode != kPowerManagerSuccess)
-                {
-                    return returnCode;
-                }
-            }
             halModeConfig.powerModeName = kPowerModeVlpw;
             break;
 #if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE            
@@ -398,7 +362,6 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
             halModeConfig.stopSubMode = kSmcStopSub0;
 #if FSL_FEATURE_SMC_HAS_PORPO
             /* Optionally setup the power-on-reset detect circuit in VLLS0 */
-            halModeConfig.porOption = configPtr->powerOnResetDetectionOption;
             halModeConfig.porOptionValue = configPtr->powerOnResetDetectionValue;
 #endif
             break;
@@ -413,7 +376,6 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
             halModeConfig.stopSubMode = kSmcStopSub2;
 #if FSL_FEATURE_SMC_HAS_RAM2_POWER_OPTION
             /* Optionally setup the RAM2 partition retention in VLLS2 */
-            halModeConfig.ram2Option = configPtr->RAM2PartitionOption;
             halModeConfig.ram2OptionValue = configPtr->RAM2PartitionValue;
 #endif
             break;
@@ -426,12 +388,10 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
         /* Partial stop modes */
         case kPowerManagerPstop1:
             halModeConfig.powerModeName = kPowerModeStop;
-            halModeConfig.pstopOption = true;
             halModeConfig.pstopOptionValue = kSmcPstopStop1;
             break;
         case kPowerManagerPstop2:
             halModeConfig.powerModeName = kPowerModeStop;
-            halModeConfig.pstopOption = true;
             halModeConfig.pstopOptionValue = kSmcPstopStop2;
             break;
 #endif
@@ -439,20 +399,8 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
         case kPowerManagerStop:
             halModeConfig.powerModeName = kPowerModeStop;
 #if FSL_FEATURE_SMC_HAS_PSTOPO
-            halModeConfig.pstopOption = true;
             halModeConfig.pstopOptionValue = kSmcPstopStop;
 #endif
-            /* Stop mode can be entered only from Run mode */
-            if (SMC_HAL_GetStat(SMC_BASE) != kStatRun)
-            {
-                SMC_HAL_SetRunMode(SMC_BASE, kSmcRun);
-                returnCode = POWER_SYS_WaitForRunStatus();
-                
-                if(returnCode != kPowerManagerSuccess)
-                {
-                    return returnCode;
-                }
-            }
             break;
         /* Very low power stop mode */
         case kPowerManagerVlps:
@@ -474,13 +422,12 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
 #endif
         {
             /* Optionally setup the LPO operation in LLSx/VLLSx */
-            halModeConfig.lpoOption = configPtr->lowPowerOscillatorOption;
             halModeConfig.lpoOptionValue = configPtr->lowPowerOscillatorValue;
         }
 #endif
 
         /* Configure ARM core what to do after interrupt invoked in (deep) sleep state */
-        if ((configPtr->sleepOnExitOption) && (mode >= kPowerManagerWait))
+        if (mode >= kPowerManagerWait)
         {
             if (configPtr->sleepOnExitValue)
             {
@@ -495,7 +442,7 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
         }
 
         /* Switch the mode */
-        if (SMC_HAL_SetMode(SMC_BASE, &halModeConfig) != kSmcHalSuccess)
+        if (SMC_HAL_SetMode(SMC, &halModeConfig) != kSmcHalSuccess)
         {
             returnCode = kPowerManagerErrorSwitch;
         }
@@ -529,7 +476,7 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
         /* From all statically registered call-backs... */
         for (currentStaticCallback = 0U; currentStaticCallback < gPowerManagerState.staticCallbacksNumber; currentStaticCallback++)
         {   
-            callbackConfig = ((*gPowerManagerState.staticCallbacks)[currentStaticCallback]);
+            callbackConfig = (gPowerManagerState.staticCallbacks[currentStaticCallback]);
             /* Check pointer to static callback configuration */
             if ( callbackConfig != NULL ){
                 /* ...notify only those which asked to be called after the power mode change */
@@ -562,7 +509,7 @@ power_manager_error_code_t POWER_SYS_SetMode(uint8_t powerModeIndex, power_manag
         notifyStruct.notifyType = kPowerManagerNotifyRecover;
         while(currentStaticCallback--)
         {   
-            callbackConfig = ((*gPowerManagerState.staticCallbacks)[currentStaticCallback]);
+            callbackConfig = (gPowerManagerState.staticCallbacks[currentStaticCallback]);
             /* Check pointer to static callback configuration */
             if ( callbackConfig != NULL ){
                 if (((uint32_t)callbackConfig->callbackType) & kPowerManagerCallbackBefore)
@@ -619,11 +566,11 @@ power_manager_error_code_t POWER_SYS_GetLastMode(uint8_t *powerModeIndexPtr)
  * the return code of this function has kPowerManagerError value.
  *
  *END**************************************************************************/
-power_manager_error_code_t POWER_SYS_GetLastModeConfig(power_manager_user_config_t ** powerModePtr)
+power_manager_error_code_t POWER_SYS_GetLastModeConfig(power_manager_user_config_t const ** powerModePtr)
 {
     POWER_SYS_LOCK();
     /* Pass reference to user-defined configuration structure of currently running power mode */
-    *powerModePtr = (*gPowerManagerState.configs)[gPowerManagerState.currentConfig];
+    *powerModePtr = gPowerManagerState.configs[gPowerManagerState.currentConfig];
     /* Return whether all call-backs executed without error */
     if (gPowerManagerState.errorCallbackIndex == gPowerManagerState.staticCallbacksNumber)
     {
@@ -646,7 +593,7 @@ power_manager_error_code_t POWER_SYS_GetLastModeConfig(power_manager_user_config
 power_manager_modes_t POWER_SYS_GetCurrentMode(void)
 {
     power_manager_modes_t retVal;
-    switch (SMC_HAL_GetStat(SMC_BASE))
+    switch (SMC_HAL_GetStat(SMC))
     {
 #if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
         /* High speed run mode */
@@ -701,7 +648,7 @@ power_manager_callback_user_config_t* POWER_SYS_GetErrorCallback(void)
     }
     else
     {
-        return (*gPowerManagerState.staticCallbacks)[gPowerManagerState.errorCallbackIndex];
+        return gPowerManagerState.staticCallbacks[gPowerManagerState.errorCallbackIndex];
     }
 }
 
@@ -714,7 +661,7 @@ power_manager_callback_user_config_t* POWER_SYS_GetErrorCallback(void)
 bool POWER_SYS_GetVeryLowPowerModeStatus(void)
 {
     /* Get current power mode and return true if it is very low power mode */
-    uint8_t status = SMC_HAL_GetStat(SMC_BASE);
+    uint8_t status = SMC_HAL_GetStat(SMC);
     if (status == kStatVlpr)
     {
         return true;
@@ -733,7 +680,7 @@ bool POWER_SYS_GetVeryLowPowerModeStatus(void)
  *END**************************************************************************/
 bool POWER_SYS_GetLowLeakageWakeupResetStatus(void)
 {
-    return RCM_HAL_GetSrcStatusCmd(RCM_BASE, kRcmWakeup);
+    return RCM_HAL_GetSrcStatus(RCM, kRcmWakeup);
 }
 /*FUNCTION**********************************************************************
  *
@@ -743,7 +690,7 @@ bool POWER_SYS_GetLowLeakageWakeupResetStatus(void)
  *END**************************************************************************/
 bool POWER_SYS_GetAckIsolation(void)
 {
-    return PMC_HAL_GetAckIsolation(PMC_BASE)?true:false;
+    return PMC_HAL_GetAckIsolation(PMC)?true:false;
 }
 /*FUNCTION**********************************************************************
  *
@@ -753,12 +700,13 @@ bool POWER_SYS_GetAckIsolation(void)
  *END**************************************************************************/
 void POWER_SYS_ClearAckIsolation(void)
 {
-    if( PMC_HAL_GetAckIsolation(PMC_BASE) )
+    if( PMC_HAL_GetAckIsolation(PMC) )
     {
-        PMC_HAL_SetClearAckIsolation(PMC_BASE);
+        PMC_HAL_ClearAckIsolation(PMC);
     }
 }
 
+#if FSL_FEATURE_SOC_LLWU_COUNT
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE
 /*FUNCTION**********************************************************************
  *
@@ -771,21 +719,8 @@ void POWER_SYS_SetWakeupModule(power_wakeup_module_t module,bool enable)
     /* Checks module range which is defined by enumeration type */
     assert( module < kPowerManagerWakeupMax);
     /* Set module */
-    LLWU_HAL_SetInternalModuleCmd(LLWU_BASE, (llwu_wakeup_module_t)module, enable);
+    LLWU_HAL_SetInternalModuleCmd(LLWU, (llwu_wakeup_module_t)module, enable);
     
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : POWER_SYS_GetWakeupModule
- * Description   : This function allows to get wake up module settings from low leakage wake up unit (LLWU).
- *
- *END**************************************************************************/
-bool POWER_SYS_GetWakeupModule(power_wakeup_module_t module)
-{
-    /* Checks module range which is defined by enumeration type */
-    assert( module < kPowerManagerWakeupMax);
-    return LLWU_HAL_GetInternalModuleCmd(LLWU_BASE, (llwu_wakeup_module_t)module);
 }
 
 /*FUNCTION**********************************************************************
@@ -798,7 +733,7 @@ bool POWER_SYS_GetWakeupModuleFlag(power_wakeup_module_t module)
 {
     /* Checks module range which is defined by enumeration type */
     assert( module < kPowerManagerWakeupMax);
-    return LLWU_HAL_GetInternalModuleWakeupFlag(LLWU_BASE, (llwu_wakeup_module_t)module);
+    return LLWU_HAL_GetInternalModuleWakeupFlag(LLWU, (llwu_wakeup_module_t)module);
 }
 #endif
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN
@@ -815,7 +750,7 @@ void POWER_SYS_SetWakeupPin(power_wakeup_pin_t pin, llwu_external_pin_modes_t pi
     uint32_t gpioPin =  POWER_EXTRACT_GPIO_PINNAME(pin);
       
     assert( (uint32_t)llwuPin < FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN);
-    LLWU_HAL_SetExternalInputPinMode(LLWU_BASE,pinMode, llwuPin);
+    LLWU_HAL_SetExternalInputPinMode(LLWU,pinMode, llwuPin);
     
     /* Configures gpio pin if config is passed */
     if( (gpioPin != POWER_GPIO_RESERVED) && (config != NULL) )
@@ -824,36 +759,11 @@ void POWER_SYS_SetWakeupPin(power_wakeup_pin_t pin, llwu_external_pin_modes_t pi
         gpio_input_pin_user_config_t pinConfig;
         
         pinConfig.pinName = gpioPin;
-#if FSL_FEATURE_GPIO_HAS_INTERRUPT_VECTOR
-        pinConfig.config.interrupt = config->interrupt;
-#endif
-#if FSL_FEATURE_PORT_HAS_DIGITAL_FILTER
-        pinConfig.config.isDigitalFilterEnabled = config->isDigitalFilterEnabled;
-#endif
-#if FSL_FEATURE_PORT_HAS_PASSIVE_FILTER
-        pinConfig.config.isPassiveFilterEnabled = config->isPassiveFilterEnabled;
-#endif
-#if FSL_FEATURE_PORT_HAS_PULL_SELECTION 
-        pinConfig.config.isPullEnable = config->isPullEnable;
-        pinConfig.config.pullSelect = config->pullSelect;
-#endif        
+        pinConfig.config  = *config;
         GPIO_DRV_InputPinInit(&pinConfig);
     }
 }
 
-/*FUNCTION**********************************************************************
- *
- * Function Name : POWER_SYS_GetWakeupPin
- * Description   : This function allows to get wake up pin settings in low leakage wake up unit (LLWU).
- *
- *END**************************************************************************/
-llwu_external_pin_modes_t POWER_SYS_GetWakeupPin(power_wakeup_pin_t pin)
-{
-    llwu_wakeup_pin_t llwuPin = POWER_EXTRACT_LLWU_PIN(pin);
-    
-    assert( (uint32_t)llwuPin < FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN);
-    return LLWU_HAL_GetExternalInputPinMode(LLWU_BASE, llwuPin);
-}
 /*FUNCTION**********************************************************************
  *
  * Function Name : POWER_SYS_GetWakeupPinFlag
@@ -865,7 +775,7 @@ bool POWER_SYS_GetWakeupPinFlag(power_wakeup_pin_t pin)
     llwu_wakeup_pin_t llwuPin = POWER_EXTRACT_LLWU_PIN(pin);
     
     assert( (uint32_t)llwuPin < FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN);
-    return LLWU_HAL_GetExternalPinWakeupFlag(LLWU_BASE, llwuPin);
+    return LLWU_HAL_GetExternalPinWakeupFlag(LLWU, llwuPin);
 }
 /*FUNCTION**********************************************************************
  *
@@ -878,8 +788,9 @@ void POWER_SYS_ClearWakeupPinFlag(power_wakeup_pin_t pin)
     llwu_wakeup_pin_t llwuPin = POWER_EXTRACT_LLWU_PIN(pin);
     
     assert( (uint32_t)llwuPin < FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN);
-    LLWU_HAL_ClearExternalPinWakeupFlag(LLWU_BASE, llwuPin);
+    LLWU_HAL_ClearExternalPinWakeupFlag(LLWU, llwuPin);
 }
+#endif
 #endif
 /*FUNCTION**********************************************************************
  * Function Name : POWER_SYS_WaitForRunStatus
@@ -889,7 +800,7 @@ static power_manager_error_code_t POWER_SYS_WaitForRunStatus(void)
 {
     uint32_t i;
     
-    for (i=0; !PMC_HAL_GetRegulatorStatus(PMC_BASE); i++)
+    for (i=0; !PMC_HAL_GetRegulatorStatus(PMC); i++)
     {
         if(i > POWER_SET_MODE_TIMEOUT)
         {
@@ -897,7 +808,7 @@ static power_manager_error_code_t POWER_SYS_WaitForRunStatus(void)
         }
     }
     
-    for (i=0; SMC_HAL_GetStat(SMC_BASE) != kStatRun; i++)
+    for (i=0; SMC_HAL_GetStat(SMC) != kStatRun; i++)
     {
         if(i > POWER_SET_MODE_TIMEOUT)
         {
@@ -916,7 +827,7 @@ static power_manager_error_code_t POWER_SYS_WaitForVlprStatus(void)
 {
     uint32_t i;
     
-    for (i=0; SMC_HAL_GetStat(SMC_BASE) != kStatVlpr; i++)
+    for (i=0; SMC_HAL_GetStat(SMC) != kStatVlpr; i++)
     {
         if(i > POWER_SET_MODE_TIMEOUT)
         {
@@ -934,9 +845,9 @@ static power_manager_error_code_t POWER_SYS_WaitForVlprStatus(void)
 static power_manager_error_code_t POWER_SYS_CheckClocks(power_manager_modes_t mode)
 {   
 #if POWER_VLPR_MCG_LITE  
-    mcglite_mode_t mcgMode = CLOCK_HAL_GetMode(MCG_BASE);
+    mcglite_mode_t mcgMode = CLOCK_HAL_GetMode(MCG);
 #else
-    mcg_modes_t mcgMode = CLOCK_HAL_GetMcgMode(MCG_BASE);
+    mcg_modes_t mcgMode = CLOCK_HAL_GetMcgMode(MCG);
    
     /* Check clock monitors */
     switch(mode)
@@ -951,19 +862,19 @@ static power_manager_error_code_t POWER_SYS_CheckClocks(power_manager_modes_t mo
     default:
         /* For other modes clock monitors should be disabled */
 #if FSL_FEATURE_MCG_HAS_EXTERNAL_CLOCK_MONITOR
-        if( CLOCK_HAL_GetClkMonitor0Cmd(MCG_BASE) )
+        if( CLOCK_HAL_IsOsc0MonitorEnabled(MCG) )
         {
             return kPowerManagerErrorClock;
         }    
 #endif        
 #if FSL_FEATURE_MCG_HAS_RTC_32K
-        if( CLOCK_HAL_GetClkMonitor1Cmd(MCG_BASE) )
+        if( CLOCK_HAL_IsRtcOscMonitorEnabled(MCG) )
         {
             return kPowerManagerErrorClock;
         }    
 #endif
 #if FSL_FEATURE_MCG_USE_PLLREFSEL        
-        if( CLOCK_HAL_GetClkMonitor2Cmd(MCG_BASE) )
+        if( CLOCK_HAL_IsOsc1MonitorEnabled(MCG) )
         {
             return kPowerManagerErrorClock;
         }
@@ -999,7 +910,7 @@ static power_manager_error_code_t POWER_SYS_CheckClocks(power_manager_modes_t mo
     {
     case kMcgModeBLPI:
         /* fast IRC must be selected */
-        if(CLOCK_HAL_GetInternalRefClkSelMode(MCG_BASE) != kMcgInternalRefClkSelFast)
+        if(CLOCK_HAL_GetInternalRefClkMode(MCG) != kMcgIrcFast)
         {
             return kPowerManagerErrorClock;
         }

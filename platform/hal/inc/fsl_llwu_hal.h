@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_LLWU_COUNT
 
 /*! @addtogroup llwu_hal*/
 /*! @{*/
@@ -46,18 +47,18 @@
 
 /*! @brief External input pin control modes */
 typedef enum _llwu_external_pin_modes {
-    kLlwuExternalPinDisabled,          /* pin disabled as wakeup input */
-    kLlwuExternalPinRisingEdge,        /* pin enabled with rising edge detection */
-    kLlwuExternalPinFallingEdge,       /* pin enabled with falling edge detection */
-    kLlwuExternalPinChangeDetect       /* pin enabled with any change detection */
+    kLlwuExternalPinDisabled,          /*!< Pin disabled as wakeup input */
+    kLlwuExternalPinRisingEdge,        /*!< Pin enabled with rising edge detection */
+    kLlwuExternalPinFallingEdge,       /*!< Pin enabled with falling edge detection */
+    kLlwuExternalPinChangeDetect       /*!< Pin enabled with any change detection */
 } llwu_external_pin_modes_t;
 
 /*! @brief Digital filter control modes */
 typedef enum _llwu_filter_modes {
-    kLlwuFilterDisabled,            /* filter disabled  */
-    kLlwuFilterPosEdgeDetect,       /* filter positive edge detection */
-    kLlwuFilterNegEdgeDetect,       /* filter negative edge detection */
-    kLlwuFilterAnyEdgeDetect        /* filter any edge detection */
+    kLlwuFilterDisabled,            /*!< Filter disabled  */
+    kLlwuFilterPosEdgeDetect,       /*!< Filter positive edge detection */
+    kLlwuFilterNegEdgeDetect,       /*!< Filter negative edge detection */
+    kLlwuFilterAnyEdgeDetect        /*!< Filter any edge detection */
 } llwu_filter_modes_t;
 
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN
@@ -194,19 +195,29 @@ typedef enum _llwu_wakeup_module {
 
 /*! @brief External input pin filter control structure */
 typedef struct _llwu_external_pin_filter_mode {
-    llwu_filter_modes_t         filterMode;         /* filter mode */
-    llwu_wakeup_pin_t           pinNumber;          /* pin number */
+    llwu_filter_modes_t         filterMode;         /*!< Filter mode */
+    llwu_wakeup_pin_t           pinNumber;          /*!< Pin number */
 } llwu_external_pin_filter_mode_t;
 
-/*! @brief Reset enable control structure */
-typedef struct _llwu_reset_enable_mode {
-    bool                        lowLeakageMode;     /* reset for Low-leakage mode */
-    bool                        digitalFilterMode;  /* reset for digital filter mode */
-} llwu_reset_enable_mode_t;
+/*! @brief Reset pin control structure */
+typedef struct _llwu_reset_pin_mode {
+    bool enable;  /*!< RESET pin is enabled as low-leakage mode exit source. */
+    bool filter;  /*!< Digital filter on RESET pin.                          */
+} llwu_reset_pin_mode_t;
 
 /*******************************************************************************
  * API
  ******************************************************************************/
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+/*!
+ * @name Low-Leakage Wakeup Unit Control APIs
+ * @{
+ */
+
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN
 /*!
  * @brief Sets the external input pin source mode.
@@ -214,26 +225,14 @@ typedef struct _llwu_reset_enable_mode {
  * This function sets the external input pin source mode that is used
  * as a wake up source. 
  *
- * @param baseAddr      Register base address of LLWU
+ * @param base      Register base address of LLWU
  * @param pinMode       pin configuration mode defined in llwu_external_pin_modes_t
  * @param pinNumber     pin number specified
  */
-void LLWU_HAL_SetExternalInputPinMode(uint32_t baseAddr,
+void LLWU_HAL_SetExternalInputPinMode(LLWU_Type * base,
                                       llwu_external_pin_modes_t pinMode,
                                       llwu_wakeup_pin_t pinNumber);
 
-/*!
- * @brief Gets the external input pin source mode.
- *
- * This function gets the external input pin source mode that is used
- * as wake up source. 
- *
- * @param baseAddr      Register base address of LLWU
- * @param pinNumber     pin number specified
- * @return pinMode      pin mode defined in llwu_external_pin_modes_t
- */
-llwu_external_pin_modes_t LLWU_HAL_GetExternalInputPinMode(uint32_t baseAddr,
-                                                           llwu_wakeup_pin_t pinNumber);
 #endif
 
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE
@@ -243,59 +242,49 @@ llwu_external_pin_modes_t LLWU_HAL_GetExternalInputPinMode(uint32_t baseAddr,
  * This function enables/disables the internal module source mode that is used
  * as a wake up source. 
  *
- * @param baseAddr      Register base address of LLWU
+ * @param base      Register base address of LLWU
  * @param moduleNumber  module number specified
  * @param enable        enable or disable setting
  */
-void LLWU_HAL_SetInternalModuleCmd(uint32_t baseAddr, llwu_wakeup_module_t moduleNumber, bool enable);
-
-/*!
- * @brief Gets the internal module source enable setting.
- *
- * This function gets the internal module source enable setting that is used
- * as a wake up source. 
- *
- * @param baseAddr      Register base address of LLWU
- * @param moduleNumber     module number specified
- * @return enable        enable or disable setting
- */
-bool LLWU_HAL_GetInternalModuleCmd(uint32_t baseAddr, llwu_wakeup_module_t moduleNumber);
+void LLWU_HAL_SetInternalModuleCmd(LLWU_Type * base, llwu_wakeup_module_t moduleNumber, bool enable);
 #endif
 
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN
 /*!
  * @brief Gets the external wakeup source flag.
  *
- * This function gets the external wakeup source flag for a specific pin.
+ * This function checks the external pin flag to detect whether the MCU is
+ * woke up by the specific pin.
  *
- * @param baseAddr      Register base address of LLWU
+ * @param base      Register base address of LLWU
  * @param pinNumber     pin number specified
- * @return flag         true if wakeup source flag set
+ * @return true if the specific pin is wake up source.
  */
-bool LLWU_HAL_GetExternalPinWakeupFlag(uint32_t baseAddr, llwu_wakeup_pin_t pinNumber);
+bool LLWU_HAL_GetExternalPinWakeupFlag(LLWU_Type * base, llwu_wakeup_pin_t pinNumber);
 
 /*!
  * @brief Clears the external wakeup source flag.
  *
  * This function clears the external wakeup source flag for a specific pin.
  *
- * @param baseAddr      Register base address of LLWU
+ * @param base      Register base address of LLWU
  * @param pinNumber     pin number specified
  */
-void LLWU_HAL_ClearExternalPinWakeupFlag(uint32_t baseAddr, llwu_wakeup_pin_t pinNumber);
+void LLWU_HAL_ClearExternalPinWakeupFlag(LLWU_Type * base, llwu_wakeup_pin_t pinNumber);
 #endif
 
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE
 /*!
  * @brief Gets the internal module wakeup source flag.
  *
- * This function gets the internal module wakeup source flag for a specific module.
+ * This function checks the internal module wake up flag to detect whether the MCU is
+ * woke up by the specific internal module.
  *
- * @param baseAddr      Register base address of LLWU
+ * @param base      Register base address of LLWU
  * @param moduleNumber  module number specified
- * @return flag         true if wakeup flag set
+ * @return true if the specific module is wake up source.
  */
-bool LLWU_HAL_GetInternalModuleWakeupFlag(uint32_t baseAddr, llwu_wakeup_module_t moduleNumber);
+bool LLWU_HAL_GetInternalModuleWakeupFlag(LLWU_Type * base, llwu_wakeup_module_t moduleNumber);
 #endif
 
 #if FSL_FEATURE_LLWU_HAS_EXTERNAL_PIN
@@ -304,84 +293,58 @@ bool LLWU_HAL_GetInternalModuleWakeupFlag(uint32_t baseAddr, llwu_wakeup_module_
  *
  * This function sets the pin filter configuration.
  *
- * @param baseAddr      Register base address of LLWU
+ * @param base      Register base address of LLWU
  * @param filterNumber  filter number specified
  * @param pinFilterMode filter mode configuration
  */
-void LLWU_HAL_SetPinFilterMode(uint32_t baseAddr, uint32_t filterNumber, 
+void LLWU_HAL_SetPinFilterMode(LLWU_Type * base, uint32_t filterNumber, 
                                llwu_external_pin_filter_mode_t pinFilterMode);
-/*!
- * @brief Gets the pin filter configuration.
- *
- * This function gets the pin filter configuration.
- *
- * @param baseAddr      Register base address of LLWU
- * @param filterNumber  filter number specified
- * @param pinFilterMode filter mode configuration
- */
-void LLWU_HAL_GetPinFilterMode(uint32_t baseAddr, uint32_t filterNumber, 
-                               llwu_external_pin_filter_mode_t *pinFilterMode);
 
 /*!
  * @brief Gets the filter detect flag.
  *
- * This function will get the filter detect flag.
+ * This function checks the filter detect flag to detect whether the external
+ * pin selected by the specific filter is the wake up source.
  *
- * @param baseAddr      Register base address of LLWU
+ * @param base      Register base address of LLWU
  * @param filterNumber  filter number specified
- * @return flag         true if the filter was a wakeup source
+ * @return true if the the pin is wakeup source
  */
-bool LLWU_HAL_GetFilterDetectFlag(uint32_t baseAddr, uint32_t filterNumber);
+bool LLWU_HAL_GetFilterDetectFlag(LLWU_Type * base, uint32_t filterNumber);
 
 /*!
  * @brief Clears the filter detect flag.
  *
  * This function will clear the filter detect flag.
  *
- * @param baseAddr      Register base address of LLWU
+ * @param base      Register base address of LLWU
  * @param filterNumber  filter number specified
  */
-void LLWU_HAL_ClearFilterDetectFlag(uint32_t baseAddr, uint32_t filterNumber);
+void LLWU_HAL_ClearFilterDetectFlag(LLWU_Type * base, uint32_t filterNumber);
 #endif
 
 #if FSL_FEATURE_LLWU_HAS_RESET_ENABLE
 /*!
- * @brief Sets the reset enable mode.
+ * @brief Sets the RESET pin mode.
  *
- * This function will set the reset enable mode.
+ * This function sets how the RESET pin is used as low leakage mode exit source.
  *
- * @param baseAddr      Register base address of LLWU
- * @param resetEnableMode  reset enable mode defined in llwu_reset_enable_mode_t
+ * @param base         Register base address of LLWU
+ * @param resetPinMode RESET pin mode defined in llwu_reset_pin_mode_t
  */
-void LLWU_HAL_SetResetEnableMode(uint32_t baseAddr, llwu_reset_enable_mode_t resetEnableMode);
+void LLWU_HAL_SetResetPinMode(LLWU_Type * base, llwu_reset_pin_mode_t resetPinMode);
 
-/*!
- * @brief Gets the reset enable mode.
- *
- * This function gets the reset enable mode.
- *
- * @param baseAddr      Register base address of LLWU
- * @param resetEnableMode  reset enable mode defined in llwu_reset_enable_mode_t
- */
-void LLWU_HAL_GetResetEnableMode(uint32_t baseAddr, llwu_reset_enable_mode_t *resetEnableMode);
 #endif
-
-#if defined(__cplusplus)
-extern "C" {
-#endif /* __cplusplus*/
-
-/*! @name Low-Leakage Wakeup Unit Control APIs*/
-/*@{*/
-
 
 /*@}*/
 
 #if defined(__cplusplus)
 }
-#endif /* __cplusplus*/
+#endif
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_LLWU_HAL_H__*/
 /*******************************************************************************
  * EOF

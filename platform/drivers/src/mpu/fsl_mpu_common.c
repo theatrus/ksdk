@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,10 +35,10 @@
  ******************************************************************************/
 
 /*! @brief Table of base addresses for MPU instances. */
-const uint32_t g_mpuBaseAddr[] = MPU_BASE_ADDRS;
+MPU_Type * const g_mpuBase[] = MPU_BASE_PTRS;
 
 /*! @brief Table to save MPU IRQ enum numbers for core access. */
-const IRQn_Type g_mpuIrqId[HW_MPU_INSTANCE_COUNT] = {BusFault_IRQn};
+const IRQn_Type g_mpuIrqId[MPU_INSTANCE_COUNT] = {BusFault_IRQn};
 
 /*******************************************************************************
  * EOF

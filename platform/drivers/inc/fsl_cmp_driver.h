@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_cmp_hal.h"
+#if FSL_FEATURE_SOC_CMP_COUNT
 
 /*!
  * @addtogroup cmp_driver
@@ -43,102 +44,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
-/*!
- * @brief Defines a structure for configuring the comparator in the CMP module.
- *
- * This structure holds the configuration for the comparator
- * inside the CMP module. With the configuration, the CMP can be set as a
- * basic comparator without additional features. 
- */
-typedef struct CmpUserConfig
-{
-    cmp_hystersis_mode_t hystersisMode; /*!< Set the hysteresis level. */
-    bool pinoutEnable; /*!< Enable outputting the CMPO to pin. */
-    bool pinoutUnfilteredEnable; /*!< Enable outputting unfiltered result to CMPO. */
-    bool invertEnable; /*!< Enable inverting the comparator's result. */
-    bool highSpeedEnable; /*!< Enable working in speed mode. */
-#if FSL_FEATURE_CMP_HAS_DMA
-    bool dmaEnable; /*!< Enable using DMA. */
-#endif /* FSL_FEATURE_CMP_HAS_DMA */
-    bool risingIntEnable; /*!< Enable using CMPO rising interrupt. */
-    bool fallingIntEnable; /*!< Enable using CMPO falling interrupt. */
-    cmp_chn_mux_mode_t plusChnMux; /*!< Set the Plus side input to comparator. */
-    cmp_chn_mux_mode_t minusChnMux; /*!< Set the Minus side input to comparator. */
-#if FSL_FEATURE_CMP_HAS_TRIGGER_MODE
-    bool triggerEnable; /*!< Enable triggering mode.  */
-#endif /* FSL_FEATURE_CMP_HAS_TRIGGER_MODE */
-#if FSL_FEATURE_CMP_HAS_PASS_THROUGH_MODE
-    bool passThroughEnable;  /*!< Enable using pass through mode. */
-#endif /* FSL_FEATURE_CMP_HAS_PASS_THROUGH_MODE */
-    
-} cmp_user_config_t;
-
-/*!
-* @brief Definition selections of sample and filter mode in the CMP module.
-*
-* Comparator sample/filter is available in several modes. Use the enumeration
-* to identify the comparator's status:
-*
-* kCmpContinuousMode - Continuous Mode:
-        Both window control and filter blocks are completely bypassed. The
-        comparator output is updated continuously. 
-* kCmpSampleWithNoFilteredMode - Sample, Non-Filtered Mode:
-        Window control is completely bypassed. The comparator output  is
-        sampled whenever a rising-edge is detected on the filter block clock
-        input. The filter clock prescaler can be configured as a
-        divider from the bus clock.
-* kCmpSampleWithFilteredMode - Sample, Filtered Mode:
-        Similar to "Sample, Non-Filtered Mode", but the filter is active in
-        this mode. The filter counter value also becomes
-        configurable.
-* kCmpWindowedMode - Windowed Mode:
-        In Windowed Mode, only output of analog comparator is passed when
-        the WINDOW signal is high. The last latched value is held when the WINDOW
-        signal is low.
-* kCmpWindowedFilteredMode - Window/Filtered Mode:
-        This is a complex mode because it uses both window and filtering
-        features. It also has the highest latency of all modes. This can be 
-        approximated to up to 1 bus clock synchronization in the window function
-        + ( ( filter counter * filter prescaler ) + 1) bus clock for the
-        filter function.
-*/
-typedef enum _cmp_sample_filter_mode
-{
-    kCmpContinuousMode = 0U, /*!< Continuous Mode */
-    kCmpSampleWithNoFilteredMode = 1U, /*!< Sample, Non-Filtered Mode */
-    kCmpSampleWithFilteredMode = 2U, /*!< Sample, Filtered Mode */
-    kCmpWindowedMode = 3U, /*!< Window Mode */
-    kCmpWindowedFilteredMode = 4U /*!< Window/Filtered Mode */
-} cmp_sample_filter_mode_t;
-
-/*!
-* @brief Defines a structure to configure the Window/Filter in CMP module.
-*
-* This structure holds the configuration for the Window/Filter inside
-* the CMP module. With the configuration, the CMP module can operate in 
-* advanced mode.
-*/
-typedef struct CmpSampleFilterConfig
-{
-    cmp_sample_filter_mode_t workMode; /*!< Sample/Filter's work mode. */
-    bool useExtSampleOrWindow; /*!< Switcher to use external WINDOW/SAMPLE signal. */
-    uint8_t filterClkDiv; /*!< Filter's prescaler which divides from the bus clock.  */
-    cmp_filter_counter_mode_t filterCount; /*!< Sample count for filter. See "cmp_filter_counter_mode_t". */
-} cmp_sample_filter_config_t;
-
-/*!
- * @brief Defines a structure to configure the internal DAC in CMP module.
- *
- * This structure holds the configuration for DAC
- * inside the CMP module. With the configuration, the internal DAC
- * provides a reference voltage level and is chosen as the CMP input.
- */
-typedef struct CmpDacConfig
-{
-    cmp_dac_ref_volt_src_mode_t refVoltSrcMode; /*!< Select the reference voltage source for internal DAC. */
-    uint8_t dacValue; /*!< Set the value for internal DAC. */
-} cmp_dac_config_t;
 
 /*!
  * @brief Defines type of flags for the CMP event.
@@ -163,10 +68,10 @@ typedef struct CmpState
 } cmp_state_t;
 
 /*! @brief Table of base addresses for CMP instances. */
-extern const uint32_t g_cmpBaseAddr[];
+extern CMP_Type * const g_cmpBase[];
 
 /*! @brief Table to save CMP IRQ enumeration numbers defined in CMSIS header file. */
-extern const IRQn_Type g_cmpIrqId[HW_CMP_INSTANCE_COUNT];
+extern const IRQn_Type g_cmpIrqId[CMP_INSTANCE_COUNT];
 
 #if defined(__cplusplus)
 extern "C" {
@@ -175,7 +80,6 @@ extern "C" {
 /*******************************************************************************
  * APIs
  ******************************************************************************/
-
 /*!
  * @brief Populates the initial user configuration with default settings. 
  *
@@ -200,23 +104,23 @@ extern "C" {
  * @param minusInput Minus Input mux selection. See  "cmp_chn_mux_mode_t".
  * @return Execution status.
  */
-cmp_status_t CMP_DRV_StructInitUserConfigDefault(cmp_user_config_t *userConfigPtr,
+cmp_status_t CMP_DRV_StructInitUserConfigDefault(cmp_comparator_config_t *userConfigPtr,
     cmp_chn_mux_mode_t plusInput, cmp_chn_mux_mode_t minusInput);
 
 /*!
  * @brief Initializes the CMP module. 
  *
- * This function initializes the CMP module, enables the clock and
+ * This function initializes the CMP module, enables the clock, and
  * sets the interrupt switcher. The CMP module is
  * configured as a basic comparator.
  *
  * @param instance CMP instance ID.
- * @param userConfigPtr Pointer to structure of configuration. See  "cmp_user_config_t".
  * @param userStatePtr Pointer to structure of context. See  "cmp_state_t".
+ * @param userConfigPtr Pointer to structure of configuration. See  "cmp_user_config_t".
  * @return Execution status.
  */
-cmp_status_t CMP_DRV_Init(uint32_t instance, cmp_user_config_t *userConfigPtr,
-    cmp_state_t *userStatePtr);
+cmp_status_t CMP_DRV_Init(uint32_t instance, cmp_state_t *userStatePtr,
+    const cmp_comparator_config_t *userConfigPtr);
 
 /*!
  * @brief De-initializes the CMP module. 
@@ -226,8 +130,9 @@ cmp_status_t CMP_DRV_Init(uint32_t instance, cmp_user_config_t *userConfigPtr,
  * longer used in the application. It also reduces power consumption.
  *
  * @param instance CMP instance ID.
+ * @return Execution status.
  */
-void CMP_DRV_Deinit(uint32_t instance);
+cmp_status_t CMP_DRV_Deinit(uint32_t instance);
 
 /*!
  * @brief Starts the CMP module. 
@@ -261,17 +166,7 @@ void CMP_DRV_Stop(uint32_t instance);
  * @param dacConfigPtr Pointer to structure of configuration. See "cmp_dac_config_t".
  * @return Execution status.
  */
-cmp_status_t CMP_DRV_EnableDac(uint32_t instance, cmp_dac_config_t *dacConfigPtr);
-
-/*!
- * @brief Disables the internal DAC in the CMP module. 
- *
- * This function disables the internal DAC in the CMP module. It should be
- * called if the internal DAC is no longer used by the application.
- *
- * @param instance CMP instance ID.
- */
-void CMP_DRV_DisableDac(uint32_t instance);
+cmp_status_t CMP_DRV_ConfigDacChn(uint32_t instance, const cmp_dac_config_t *dacConfigPtr);
 
 /*!
  * @brief Configures the Sample\Filter feature in the CMP module. 
@@ -286,7 +181,7 @@ void CMP_DRV_DisableDac(uint32_t instance);
  *        See "cmp_sample_filter_config_t".
  * @return Execution status.
  */
-cmp_status_t CMP_DRV_ConfigSampleFilter(uint32_t instance, cmp_sample_filter_config_t *configPtr);
+cmp_status_t CMP_DRV_ConfigSampleFilter(uint32_t instance, const cmp_sample_filter_config_t *configPtr);
 
 /*!
  * @brief Gets the output of the CMP module. 
@@ -300,7 +195,7 @@ cmp_status_t CMP_DRV_ConfigSampleFilter(uint32_t instance, cmp_sample_filter_con
  * @param instance CMP instance ID.
  * @return Output logic's assertion. When not inverted, plus side > minus side, it is true.
  */
-bool CMP_DRV_GetOutput(uint32_t instance);
+bool CMP_DRV_GetOutputLogic(uint32_t instance);
 
 /*!
  * @brief Gets the state of the CMP module. 
@@ -325,13 +220,14 @@ bool CMP_DRV_GetFlag(uint32_t instance, cmp_flag_t flag);
 void CMP_DRV_ClearFlag(uint32_t instance, cmp_flag_t flag);
 
 #if defined(__cplusplus)
-extern }
+}
 #endif
 
 /*!
  *@}
  */
 
+#endif
 #endif /* __FSL_CMP_DRIVER_H__ */
 /******************************************************************************
  * EOF

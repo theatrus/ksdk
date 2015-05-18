@@ -55,7 +55,7 @@
  *****************************************************************************/
 
 
-/* Strucutre holding HID class state information*/
+/* Structure holding HID class state information*/
 typedef struct composite_device_struct
 {
     usb_device_handle             handle;

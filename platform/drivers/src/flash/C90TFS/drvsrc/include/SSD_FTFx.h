@@ -39,8 +39,8 @@
 *****************************************************************************/
 
 /************************** CHANGES *************************************
-1.1.GA      09.25.2014      FPT Team      First version of SDK C90TFS flash driver
-                                          inherited from BM C90TFS flash driver v1.02
+1.1.GA      09.25.2014      FPT Team      First version of SDK C90TFS Flash driver
+                                          inherited from BM C90TFS Flash driver v1.02
                                           (08.04.2014, FPT Team)
 *************************************************************************/
 #ifndef _SSD_FTFx_INTERNAL_H_
@@ -203,11 +203,11 @@
 
 /*@}*/
 
-/*------------------- Setting flash interrupt macro --------------------*/
+/*------------------- Setting Flash interrupt macro --------------------*/
 /*!
-* @brief  Set the Flash interrupt enable bits in the FCNFG register
+* @brief  Sets the Flash interrupt enable bits in the FCNFG register.
 *
-* @param ftfxRegBase:   Specify register base address of flash module
+* @param ftfxRegBase:   Specifies register base address of the Flash module
 * @param value:         The bit map value ( 0: disabled, 1 enabled) .
 *                       The numbering is marked from 0 to 7 where bit 0
 *                       is the least significant bit. Bit 7 is corresponding
@@ -217,9 +217,9 @@
 #define SET_FLASH_INT_BITS(ftfxRegBase, value)  REG_WRITE((ftfxRegBase) + FTFx_SSD_FCNFG_OFFSET,\
                                                 ((value)&(FTFx_SSD_FCNFG_CCIE | FTFx_SSD_FCNFG_RDCOLLIE)))
 /*!
-* @brief  Return the Flash interrupt enable bits in the FCNFG register
+* @brief  Returns the Flash interrupt enable bits in the FCNFG register.
 *
-* @param ftfxRegBase:   Specify register base address of flash module
+* @param ftfxRegBase:   Specifies register base address of the Flash module.
 */
 #define GET_FLASH_INT_BITS(ftfxRegBase)         REG_READ((ftfxRegBase) + FTFx_SSD_FCNFG_OFFSET) &\
                                                 (FTFx_SSD_FCNFG_CCIE | FTFx_SSD_FCNFG_RDCOLLIE)
@@ -231,21 +231,20 @@
 
 /*---------------- Function Prototypes for Flash SSD --------------------*/
 /*!
- * @brief Relocate a function to RAM address.
+ * @brief Relocates a function to RAM address.
  *
- * This function provides users a facility to relocate a function from one location
- * to another location in RAM.
+ * This function provides a facility to relocate a function in RAM.
  *
- * @param dest:    Destination address where you want to place the function .
+ * @param dest:    Destination address where you want to place the function.
  * @param size:    Size of the function
  * @param src:     Address of the function will be relocated
  * @return Relocated address of the function .
  */
 extern uint32_t RelocateFunction(uint32_t dest, uint32_t size, uint32_t src);
 /*!
- * @brief Flash initialization.
+ * @brief Initializes Flash.
  *
- * This API will initialize  flash  module by clearing status error
+ * This API  initializes  Flash  module by clearing status error
  * bit and reporting the memory configuration via SSD configuration structure.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
@@ -256,21 +255,21 @@ extern uint32_t FlashInit(PFLASH_SSD_CONFIG pSSDConfig);
 /*!
  * @brief Flash command sequence.
  *
- * This API is used to perform command write sequence on the flash.
- * It is internal function, called by driver APIs only
+ * This API is used to perform command write sequence on  Flash.
+ * It is internal function, called by driver APIs only.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @return Successful completion (FTFx_OK)
- * @return Failed in flash command execution (FTFx_ERR_ACCERR, FTFx_ERR_PVIOL,
+ * @return Failed in Flash command execution (FTFx_ERR_ACCERR, FTFx_ERR_PVIOL,
  * FTFx_ERR_MGSTAT0)
  */
 extern uint32_t FlashCommandSequence(PFLASH_SSD_CONFIG pSSDConfig);
 /*!
  * @brief P-Flash get protection.
  *
- * This  API  retrieves  current  P-Flash  protection  status.  Considering
+ * This  API  retrieves  the current  P-Flash  protection  status.  Considering
  * the  time  consumption  for getting protection is very  low and even can
- * be  ignored,  it is not necessary to utilize the Callback function to
+ * be  ignored. It is not necessary to utilize the Callback function to
  * support the time-critical events.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
@@ -293,7 +292,7 @@ extern uint32_t PFlashGetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
  *
  * This API sets the P-Flash protection to the intended protection status.
  * Setting P-Flash protection status is subject to a protection transition
- * restriction. If there is any setting violation, it will return
+ * restriction. If there is a setting violation, it  returns
  * an error code and the current protection status won’t be changed.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
@@ -303,7 +302,7 @@ extern uint32_t PFlashGetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
  *                       significant bit is corresponding to the lowest
  *                       address area of P-Flash. The most significant bit
  *                       is corresponding to the highest address area of P-
- *                       Flash and so on. There are two possible cases as below:
+ *                       Flash, and so on. There are two possible cases as shown below:
  *                       -  0: this area is protected.
  *                       -  1: this area is unprotected.
  * @return Successful completion (FTFx_OK )
@@ -332,14 +331,14 @@ extern uint32_t FlashGetSecurityState(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash security bypass.
  *
- * This API will unsecure the device by comparing the user's provided back
+ * This API un-secures the device by comparing the user's provided back
  * door key with the ones in  the Flash Configuration Field.  If  they are
- * matched  each other,  then  security will be  released. Otherwise, an
- * error code will be returned.
+ * matched,  the  security is  released. Otherwise, an
+ * error code is returned.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param keyBuffer:     Point to the user buffer containing the back door key.
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR)
  */
@@ -350,11 +349,11 @@ extern uint32_t FlashSecurityBypass(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash erase all Blocks.
  *
- * This API will  erase all Flash memory,  initialize  the FlexRAM, verify
- * all memory contents, and then release MCU security
+ * This API  erases all Flash memory,  initializes  the FlexRAM, verifies
+ * all memory contents, and then releases the MCU security.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_PVIOL, FTFx_ERR_MGSTAT0, FTFx_ERR_ACCERR)
  */
@@ -364,16 +363,16 @@ extern uint32_t FlashEraseAllBlock(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash verify all Blocks.
  *
- * This function will check to see if the P-Flash and/or D-Flash, EEPROM
+ * This function checks to see if the P-Flash and/or D-Flash, EEPROM
  * backup area, and D-Flash IFR have been erased to the specified read
- * margin level, if applicable, and will release security if the readout passes
+ * margin level, if applicable, and releases security if the readout passes.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param marginLevel:   Read Margin Choice as follows:
  *                       marginLevel = 0x0: use the Normal read level
  *                       marginLevel = 0x1: use the User read
  *                       marginLevel = 0x2: use the Factory read
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_MGSTAT0, FTFx_ERR_ACCERR)
  */
@@ -383,15 +382,15 @@ extern uint32_t FlashVerifyAllBlock(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash erase sector.
  *
- * This API will erase one or more sectors in P-Flash or  D-Flash memory.
- * This  API  always  returns  FTFx_OK  if  size  provided  by  user  is
+ * This API erases one or more sectors in P-Flash or  D-Flash memory.
+ * This  API  always  returns  FTFx_OK  if  size  provided  by  the user  is
  * zero  regardless  of  the  input validation.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param dest:          Address in the first sector to be erased.
  * @param size:          Size to be erased in bytes. It is used to determine
  *                       number of sectors to be erased.
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_MGSTAT0, FTFx_ERR_ACCERR, FTFx_ERR_PVIOL,FTFx_ERR_SIZE)
  */
@@ -402,8 +401,8 @@ extern uint32_t FlashEraseSector(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash verify sector.
  *
- * This API will check  to see  if a section of P-Flash or D-Flash memory
- * is erased  to  the specified read margin level
+ * This API  checks  if a section of the P-Flash or the D-Flash memory
+ * is erased  to  the specified read margin level.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param dest:          Start address for the intended verify operation.
@@ -414,7 +413,7 @@ extern uint32_t FlashEraseSector(PFLASH_SSD_CONFIG pSSDConfig, \
  *                       marginLevel = 0x0: use Normal read level
  *                       marginLevel = 0x1: use the User read
  *                       marginLevel = 0x2: use the Factory read
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_MGSTAT0, FTFx_ERR_ACCERR)
  */
@@ -426,9 +425,9 @@ extern uint32_t FlashVerifySection(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash erase suspend.
  *
- * This API is used to suspend a current operation of flash erase sector command.
- * This function must be located in RAM memory or different flash blocks which are
- * targeted for writing to avoid RWW error
+ * This API is used to suspend a current operation of Flash erase sector command.
+ * This function must be located in RAM memory or different Flash blocks which are
+ * targeted for writing to avoid the RWW error.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @return Successful completion (FTFx_OK)
@@ -437,9 +436,9 @@ extern uint32_t FlashEraseSuspend(PFLASH_SSD_CONFIG pSSDConfig);
 /*!
  * @brief Flash erase resume.
  *
- * This API is used to resume a previous suspended operation of flash erase sector command
- * This function must be located in RAM memory or different flash blocks which are targeted
- * for writing to avoid RWW error
+ * This API is used to resume a previous suspended operation of Flash erase sector command
+ * This function must be located in RAM memory or different Flash blocks which are targeted
+ * for writing to avoid RWW error.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @return Successful completion (FTFx_OK)
@@ -449,13 +448,13 @@ extern uint32_t FlashEraseResume(PFLASH_SSD_CONFIG pSSDConfig);
  * @brief Flash read once.
  *
  * This API is used to read out a reserved 64 byte field located in the P-Flash IFR via given number
- * of record. Refer to corresponding reference manual to get correct value of this number.
+ * of record. See the corresponding reference manual to get the correct value of this number.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param recordIndex:   The record index will be read. It can be from 0x0
  *                       to 0x7 or from 0x0 to 0xF according to specific derivative.
  * @param pDataArray:    Pointer to the array to return the data read by the read once command.
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR)
  */
@@ -467,7 +466,7 @@ extern uint32_t FlashReadOnce(PFLASH_SSD_CONFIG pSSDConfig, \
  * @brief Flash program once.
  *
  * This API  is  used  to  program  to  a  reserved  64  byte  field  located  in  the
- * P-Flash  IFR  via  given number of record. Refer to corresponding reference manual
+ * P-Flash  IFR  via  given number of record. See the corresponding reference manual
  * to get correct value of this number.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
@@ -475,7 +474,7 @@ extern uint32_t FlashReadOnce(PFLASH_SSD_CONFIG pSSDConfig, \
  *                       to 0x7 or from 0x0 to 0xF according to specific derivative.
  * @param pDataArray:    Pointer to the array from which data will be
  *                       taken for program once command.
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR,FTFx_ERR_MGSTAT0)
  */
@@ -486,7 +485,7 @@ extern uint32_t FlashProgramOnce(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash read resource.
  *
- * This API is used to read data from special purpose memory in flash memory module
+ * This API is used to read data from special purpose memory in Flash memory module
  * including P-Flash IFR, swap IFR, D-Flash IFR space and version ID.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
@@ -495,7 +494,7 @@ extern uint32_t FlashProgramOnce(PFLASH_SSD_CONFIG pSSDConfig, \
  * @param resourceSelectCode:    Read resource select code:
  *                               0 : Flash IFR
  *                               1: Version ID
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR)
  */
@@ -509,7 +508,7 @@ extern uint32_t FlashReadResource(PFLASH_SSD_CONFIG pSSDConfig, \
  *
  * This  API  is  used  to  program  4  consecutive  bytes  (for  program  long
  * word  command)  and  8 consecutive bytes (for program phrase command) on
- * P-flash or D-Flash block. This  API  always  returns  FTFx_OK  if  size
+ * P-Flash or D-Flash block. This  API  always  returns  FTFx_OK  if  size
  * provided  by  user  is  zero  regardless  of  the  input validation
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
@@ -517,7 +516,7 @@ extern uint32_t FlashReadResource(PFLASH_SSD_CONFIG pSSDConfig, \
  * @param size:          Size in byte to be programmed
  * @param pData:         Pointer of source address from which data has to
  *                       be taken for program operation.
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR, FTFx_ERR_PVIOL, FTFx_ERR_SIZE, FTFx_ERR_MGSTAT0)
  */
@@ -543,7 +542,7 @@ extern uint32_t FlashProgram(PFLASH_SSD_CONFIG pSSDConfig, \
  * @param marginLevel:   Read margin choice as follows:
  *                       marginLevel = 0x1: read at User margin 1/0 level.
  *                       marginLevel = 0x2: read at Factory margin 1/0 level.
- * @param pFlashCommandSequence :     Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR, FTFx_ERR_MGSTAT0)
  */
@@ -556,11 +555,11 @@ extern uint32_t FlashProgramCheck(PFLASH_SSD_CONFIG pSSDConfig, \
                                 pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
 /*!
- * @brief Calculate check sum
+ * @brief Calculates check sum.
  *
- * This API will perform 32 bit sum of each byte data over specified flash
- * memory range without carry, which provides rapid method for checking data integrity.
- * The  callback  time  period  of  this  API  is  determined  via  FLASH_CALLBACK_CS  macro  in
+ * This API  performs 32 bit sum of each byte data over a specified Flash
+ * memory range without carry which provides rapid method for checking data integrity.
+ * The  callback  time  period  of  this  API  is  determined  via  FLASH_CALLBACK_CS  macro  in the
  * SSD_FTFx_Common.h  which is used as a counter value for the CallBack() function calling in
  * this API. This value can be changed as per  the user  requirement. User can change  this value  to
  * obtain the maximum permissible callback time period.
@@ -569,7 +568,7 @@ extern uint32_t FlashProgramCheck(PFLASH_SSD_CONFIG pSSDConfig, \
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param dest:          Start address of the Flash range to be summed
- * @param size:          Size in byte of the flash range to be summed
+ * @param size:          Size in byte of the Flash range to be summed
  * @param pSum:          To return the sum value
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_RANGE)
@@ -598,7 +597,7 @@ extern uint32_t FlashCheckSum(PFLASH_SSD_CONFIG pSSDConfig, \
  * @param dest:          Start address for the intended program operation.
  * @param number:          Number of alignment unit to be programmed. Refer to associate
  *                       reference manual to get correct value of this alignment constrain.
- * @param pFlashCommandSequence :  Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :  Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR, FTFx_ERR_PVIOL, FTFx_ERR_MGSTAT0, FTFx_ERR_RAMRDY)
  */
@@ -612,13 +611,13 @@ extern uint32_t FlashProgramSection(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash erase block
  *
- * This API will erase all addresses in an individual P-Flash or D-Flash block.
+ * This API  erases all addresses in an individual P-Flash or D-Flash block.
  * For  the derivatives  including multiply  logical P-Flash or D-Flash blocks,
- * this API  just  erases a single block in a single call.
+ * this API   erases a single block in a single call.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param dest:          Start address for the intended erase operation.
- * @param pFlashCommandSequence :  Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :  Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR, FTFx_ERR_PVIOL, FTFx_ERR_MGSTAT0)
  */
@@ -628,10 +627,10 @@ extern uint32_t FlashEraseBlock(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash verify block
  *
- * This API will check to see  if an entire P-Flash or D-Flash block has been
+ * This API  checks to see  if an entire P-Flash or D-Flash block has been
  * erased to the specified margin level
  * For  the derivatives  including multiply  logical P-Flash or D-Flash blocks,
- * this API  just  erases a single block in a single call.
+ * this API   erases a single block in a single call.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param dest:          Start address for the intended verify operation.
@@ -639,7 +638,7 @@ extern uint32_t FlashEraseBlock(PFLASH_SSD_CONFIG pSSDConfig, \
  *                       marginLevel = 0x0: use Normal read level
  *                       marginLevel = 0x1: use the User read
  *                       marginLevel = 0x2: use the Factory read
- * @param pFlashCommandSequence :  Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence :  Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR, FTFx_ERR_MGSTAT0)
  */
@@ -680,7 +679,7 @@ extern uint32_t EERAMGetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
  *
  * This API sets protection to the intended protection status for EEPROM us
  * area of FlexRam. This is subject to a protection transition restriction.
- * If there is any setting violation, it will return failed information and
+ * If there is a setting violation, it returns failed information and
  * the current protection status won’t be changed.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
@@ -708,14 +707,14 @@ extern uint32_t EERAMSetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
  * RAM. Otherwise, the FlexRam is typically used to store EEPROM data and user
  * can use this API to change its functionality according to his application requirement.
  * For example, after partitioning to have EEPROM backup, FlexRAM  is used  for EEPROM
- * use accordingly. And this API will be used to set FlexRAM is available for
+ * use accordingly. And this API is used to set FlexRAM is available for
  * traditional RAM for FlashProgramSection() use.
  *
  * @param pSSDConfig:               The SSD configuration structure pointer.
  * @param EEEEnable:                FlexRam function control code. It can be:
  *                                  -  0xFF: make FlexRam available for RAM.
  *                                  -  0x00: make FlexRam available for EEPROM.
- * @param pFlashCommandSequence:    Pointer to the flash command sequence function.
+ * @param pFlashCommandSequence:    Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR)
  */
@@ -724,18 +723,18 @@ extern uint32_t SetEEEEnable(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief EEPROM Emulator Write
  *
- * This API is used to write data to FlexRAM section which is  artitioned
- * as EEPROM use for EEPROM operation. Once data has been written to EEPROM
+ * This API is used to write data to FlexRAM section which is  partitioned
+ * as EEPROM use for EEPROM operation. After data has been written to EEPROM
  * use section of FlexRAM, the EEPROM file system will create new data record
  * in EEPROM back-up area of FlexNVM in round-robin fashion.
  * There  is no alignment constraint for destination and size parameters
  * provided by user. However, according to user’s input provided, this
  * API will set priority to write to FlexRAM with following rules:
- * 32-bit writing will be  invoked if destination is 32 bit aligned and size
+ * 32-bit writing is invoked if destination is 32 bit aligned and size
  * is not  less than 32 bits.
- * 16-bit writing will be  invoked if destination is 16 bit aligned and size
+ * 16-bit writing is  invoked if destination is 16 bit aligned and size
  * is not  less than 16 bits.
- * 8-bit writing will be invoked if destination is 8 bit aligned and size is not less than 8 bits.
+ * 8-bit writing is invoked if destination is 8 bit aligned and size is not less than 8 bits.
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param dest:          Start address for the intended write operation.
@@ -752,16 +751,16 @@ extern uint32_t EEEWrite(PFLASH_SSD_CONFIG pSSDConfig, \
 /*!
  * @brief Flash D/E-Flash Partition.
  *
- * This API prepares the FlexNVM block for use as D-Flash, EEPROM backup or a combination
- * of both and initializes the FlexRAM
+ * This API prepares the FlexNVM block for use as D-Flash, EEPROM backup, or a combination
+ * of both and initializes the FlexRAM.
  *
  * The single partition choice should be used through entire life time of a given
- * application to guarantee the flash endurance and data retention of flash module.
+ * application to guarantee the Flash endurance and data retention of Flash module.
  *
  * @param   pSSDConfig                The SSD configuration structure pointer
  * @param   EEEDataSizeCode           EEPROM Data Size Code
  * @param   DEPartitionCode           FlexNVM Partition Code
- * @param   pFlashCommandSequence     Pointer to the flash command sequence function.
+ * @param   pFlashCommandSequence     Pointer to the Flash command sequence function.
  *
  * @return  Successful completion(FTFx_OK)
  * @return  Error value(FTFx_ERR_ACCERR, FTFx_ERR_MGSTAT0)
@@ -776,7 +775,7 @@ extern uint32_t DEFlashPartition(PFLASH_SSD_CONFIG pSSDConfig, \
  *
  * This API retrieves current P-Flash protection status. Considering the time consumption
  * for getting protection is very low and even can be ignored, it is not necessary to utilize
- * the Callback function to support the time-critical events
+ * the Callback function to support the time-critical events.
  *
  * @param   pSSDConfig                The SSD configuration structure pointer
  * @param   protectStatus             To return the current value of the D-Flash Protection
@@ -798,8 +797,8 @@ extern uint32_t DFlashGetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
  * @brief D-Flash set protection.
  *
  * This API sets the D-Flash protection to the intended protection status. Setting D-Flash
- * protection status is subject to a protection transition restriction. If there is any setting
- * violation, it will return failed information and the current protection status won’t be changed.
+ * protection status is subject to a protection transition restriction. If there is a setting
+ * violation, it returns failed information and the current protection status won’t be changed.
  *
  * @param   pSSDConfig                The SSD configuration structure pointer
  * @param   protectStatus             The expected protect status user wants to set to D-Flash Protection
@@ -820,21 +819,21 @@ extern uint32_t DFlashSetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
 
 #ifdef SWAP_M
 /*!
- * @brief  swap between the two half of total logical P-Flash memory blocks within the memory map
+ * @brief  Swaps between the two halves of the total logical P-Flash memory blocks in the memory map.
  *
  * The swap API provides to user with an ability to interfere in a swap progress by letting the
- * user code knows about the swap state in each phase of the process. This is done via pSwapCallBack()
- * parameter. If user wants to stop at each intermediate swap state, just needs to set return value of
- * this callback function to FALSE. If user wants to complete swap process within a single call, just
- * needs to set return value of this function to TRUE.
+ * user code know about the swap state in each phase of the process. This is done via pSwapCallBack()
+ * parameter. To stop at each intermediate swap state,  set the return value of
+ * this callback function to FALSE. To complete swap process within a single call, 
+ * set the return value of this function to TRUE.
  *
- * It is very important that user needs to erase the non-active swap indicator in somewhere of his
- * application code or in within this swap call back function when swap system is in UPDATE state.
+ * Erase the non-active swap indicator  somewhere in the
+ * application code or  in the swap call back function when swap system is in UPDATE state.
  *
- * In addition, if user does not want to use the swap call back parameter, just pass NULL_SWAP_CALLBACK
- * as a null pointer. In a such situation, the PFlashSwap() will operate as in case setting return
- * value of pSwapCallBack to TRUE and user does not need to care about erasing the non-active swap
- * indicator when swap system is in UPDATE state.
+ * In addition, if user does not want to use the swap call back parameter,  pass the NULL_SWAP_CALLBACK
+ * as a null pointer. In this situation, the PFlashSwap()  behaves in the same way as  setting the return
+ * value of pSwapCallBack to TRUE and the user does not need to erase the non-active swap
+ * indicator when the swap system is in UPDATE state.
  *
  * Below is an example to show how to implement a swap callback:
  * @code
@@ -863,18 +862,18 @@ extern uint32_t DFlashSetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
  *        return TRUE; // Return FALSE to stop at intermediate swap state
  *}
  * @endcode
- * The swap indicator provided by user must be within the lower half of P-Flash block but not in
- * flash configuration area. If P-Flash block has two logical blocks, then swap indicator must be
- * in P-Flash block 0. If P-Flash block has four logical blocks, then swap indicator can be in block
- * 0 or block 1. Of course, it must not be in flash configuration field.
- * User must use the same swap indicator for all swap control code except report swap status once
- * swap system has been initialized. To refresh swap system to un-initialization state, just needs
- * to use FlashEraseAllBlock() to clean up swap environment.
+ * The swap indicator provided by the user must be within the lower half of P-Flash block but not in the
+ * Flash configuration area. If P-Flash block has two logical blocks, the swap indicator must be
+ * in P-Flash block 0. If the P-Flash block has four logical blocks, the swap indicator can be in block
+ * 0 or block 1. It must not be in the Flash configuration field.
+ * The user must use the same swap indicator for all swap control code except report swap status once
+ * swap system has been initialized. To refresh swap system to un-initialization state,  
+ * use the FlashEraseAllBlock() to clean up the swap environment.
  *
  * @param   pSSDConfig                The SSD configuration structure pointer
  * @param   addr                      Address of swap indicator.
  * @param   pSwapCallback             Callback to do specific task while the swapping is being performed
- * @param   pFlashCommandSequence     Pointer to the flash command sequence function.
+ * @param   pFlashCommandSequence     Pointer to the Flash command sequence function.
  *
  * @return  Successful completion(FTFx_OK)
  * @return  Error value(FTFx_ERR_ACCERR,FTFx_ERR_MGSTAT0)
@@ -884,7 +883,7 @@ extern uint32_t PFlashSwap(PFLASH_SSD_CONFIG pSSDConfig, \
                   PFLASH_SWAP_CALLBACK pSwapCallback, \
                   pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 /*!
- * @brief  implements swap control command corresponding with swap control code provided via swapcmd parameter
+ * @brief  Implements swap control command corresponding with the swap control code provided via the swapcmd parameter.
  *
  * @param   pSSDConfig                The SSD configuration structure pointer
  * @param   addr                      Address of swap indicator.
@@ -899,15 +898,15 @@ extern uint32_t PFlashSwap(PFLASH_SSD_CONFIG pSSDConfig, \
  *                                      0x02 - Update
  *                                      0x03 - Update-Erased
  *                                      0x04 - Complete
- * @param   pCurrentSwapBlockStatus   Current Swap Block Status indicates which program flash block
- *                                    is currently located at relative flash address 0x0_0000
- *                                      0x00 - Program flash block 0
- *                                      0x01 - Program flash block 1
- * @param   pNextSwapBlockStatus      Next Swap Block Status indicates which program flash block
- *                                    will be located at relative flash address 0x0_0000 after the next reset.
- *                                      0x00 - Program flash block 0
- *                                      0x01 - Program flash block 1
- * @param   pFlashCommandSequence     Pointer to the flash command sequence function.
+ * @param   pCurrentSwapBlockStatus   Current Swap Block Status indicates which program Flash block
+ *                                    is currently located at relative Flash address 0x0_0000
+ *                                      0x00 - Program Flash block 0
+ *                                      0x01 - Program Flash block 1
+ * @param   pNextSwapBlockStatus      Next Swap Block Status indicates which program Flash block
+ *                                    is located at relative Flash address 0x0_0000 after the next reset.
+ *                                      0x00 - Program Flash block 0
+ *                                      0x01 - Program Flash block 1
+ * @param   pFlashCommandSequence     Pointer to the Flash command sequence function.
  *
  * @return  Successful completion(FTFx_OK)
  * @return  Error value(FTFx_ERR_ACCERR,FTFx_ERR_MGSTAT0)

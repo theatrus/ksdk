@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 *
-* Copyright (c) 2011 - 2014 Freescale Semiconductor;
+* Copyright (c) 2011 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 ***************************************************************************
@@ -37,6 +37,12 @@
 #define USBCFG_HOST_KHCI                             (1)
 
 #define USBCFG_HOST_EHCI                             (0)
+
+/*
+** Maximum number of USB instance.
+** MGCT: <option type="number"/>
+*/
+#define USBCFG_HOST_NUM                              (1)
 
 /*
 ** Maximum number of pipes.
@@ -115,6 +121,13 @@
 */
 #define  USBCFG_HOST_PHDC                             (1)
 
+
+/*
+** If the VIDEO class device supported
+** MGCT: <option type="number"/>
+*/
+#define  USBCFG_HOST_VIDEO                            (0)
+
 /*
 ** If the HUBclass device supported
 ** MGCT: <option type="number"/>
@@ -157,7 +170,7 @@
     */
     #define USBCFG_HOST_KHCI_MAX_INT_TR                  (10)
     
-	/* 
+    /* 
     ** Allow workaround for bug in the peripheral when unaligned buffer @4B address is used
     ** MGCT: <category name="USB DMA alignment fix">
     */
@@ -171,12 +184,12 @@
     #define USBCFG_HOST_KHCI_SWAP_BUF_MAX                    (1024)
     /** MGCT: </category> */
 #endif    
-	/* 
+    /* 
     ** Choose Micro USB AB on TWR-K22F120M as host port. J26 and J27(2-3) should be shunt.
     ** Otherwise the host port on SER board would be selected.
     ** MGCT: <category name="USB DMA alignment fix">
     */
-    #define USBCFG_HOST_PORT_NATIVE 					 (1)
+    #define USBCFG_HOST_PORT_NATIVE                      (1)
 #endif
 
 #ifdef USBCFG_HOST_EHCI
@@ -222,13 +235,15 @@
 
 #endif // USBCFG_EHCI
 
+/* set MACRO to 1 to enable USB COMPLIANCE test
+*/
+#define USBCFG_HOST_COMPLIANCE_TEST                 (0)
+
 /* If the buffer provided by APP is cacheable
 * 1 cacheable, buffer cache maintenance is needed
 * 0 uncacheable, buffer cache maintenance is not needed
 */
-#define	USBCFG_BUFF_PROPERTY_CACHEABLE       0
-
-#define _DEBUG                               0
+#define    USBCFG_HOST_BUFF_PROPERTY_CACHEABLE          (0)
 
 
 #endif

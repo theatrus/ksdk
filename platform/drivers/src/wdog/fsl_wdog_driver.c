@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -31,6 +31,7 @@
 #include "fsl_wdog_driver.h"
 #include "fsl_interrupt_manager.h"
 #include "fsl_clock_manager.h"
+#if FSL_FEATURE_SOC_WDOG_COUNT
 
 /*******************************************************************************
  * Variables
@@ -53,10 +54,9 @@ static uint32_t wdogWctInstructionCount;
  *END*********************************************************************/
 static void WDOG_DRV_Unlock(void)
 {
+    WDOG_Type *base = g_wdogBase[0];
     INT_SYS_DisableIRQGlobal();
-
-    WDOG_HAL_Unlock(g_wdogBaseAddr[0]);
-
+    WDOG_HAL_Unlock(base);
     INT_SYS_EnableIRQGlobal();
 }
 
@@ -87,48 +87,21 @@ static void WDOG_DRV_WaitWctClose(void)
  * will run immediately according to the configure.
  *
  *END*********************************************************************/
-void WDOG_DRV_Init(const wdog_user_config_t* userConfigPtr)
+wdog_status_t WDOG_DRV_Init(const wdog_config_t* userConfigPtr)
 {
-    assert(userConfigPtr);
-
-    wdog_common_config wdogCommonConfig;
     uint32_t coreClockHz, busClockHz;
-
-    coreClockHz = CLOCK_SYS_GetCoreClockFreq();
-    busClockHz  = CLOCK_SYS_GetBusClockFreq();
-
+    if(!userConfigPtr)
+    {
+        return kStatus_WDOG_NullArgument;
+    }
+    WDOG_Type *base         = g_wdogBase[0];
+    coreClockHz             = CLOCK_SYS_GetCoreClockFreq();
+    busClockHz              = CLOCK_SYS_GetBusClockFreq();
     wdogWctInstructionCount = ((coreClockHz/busClockHz) << 8); /* WCT is 256 bus clock */
-
-    wdogCommonConfig.U = 0x0U;
-    wdogCommonConfig.commonConfig.workInWaitModeEnable = (uint8_t)userConfigPtr->workInWaitModeEnable;
-    wdogCommonConfig.commonConfig.workInDebugModeEnable = (uint8_t)userConfigPtr->workInDebugModeEnable;
-    wdogCommonConfig.commonConfig.workInStopModeEnable = (uint8_t)userConfigPtr->workInStopModeEnable;
-    wdogCommonConfig.commonConfig.clockSource = (uint8_t)userConfigPtr->clockSource;
-    wdogCommonConfig.commonConfig.interruptEnable = (uint8_t)false;
-    wdogCommonConfig.commonConfig.windowModeEnable = (uint8_t)(0 != userConfigPtr->windowValue);
-    wdogCommonConfig.commonConfig.updateRegisterEnable = (uint8_t)userConfigPtr->updateRegisterEnable; 
-    wdogCommonConfig.commonConfig.wdogEnable = (uint8_t)(true);
-
     WDOG_DRV_Unlock();
-    WDOG_HAL_SetTimeoutValue(g_wdogBaseAddr[0], userConfigPtr->timeoutValue);
+    WDOG_HAL_SetConfig(base, userConfigPtr);
     WDOG_DRV_WaitWctClose();
-
-    WDOG_DRV_Unlock();
-    WDOG_HAL_SetWindowValue(g_wdogBaseAddr[0], userConfigPtr->windowValue);
-    WDOG_DRV_WaitWctClose();
-
-    WDOG_DRV_Unlock();
-    WDOG_HAL_SetClockPrescalerValueMode(g_wdogBaseAddr[0], userConfigPtr->clockPrescalerValue);
-    WDOG_DRV_WaitWctClose();
-
-    WDOG_DRV_Unlock();
-    WDOG_HAL_ClearIntFlag(g_wdogBaseAddr[0]);
-    WDOG_DRV_WaitWctClose();
-
-    WDOG_DRV_Unlock();
-    WDOG_HAL_SetCommonConfig(g_wdogBaseAddr[0], wdogCommonConfig);
-    WDOG_DRV_WaitWctClose();
-
+    return kStatus_WDOG_Success;
 }
 
 /*FUNCTION****************************************************************
@@ -138,11 +111,13 @@ void WDOG_DRV_Init(const wdog_user_config_t* userConfigPtr)
  * This function is used to shutdown the WDOG.
  *
  *END*********************************************************************/
-void WDOG_DRV_Deinit(void)
+wdog_status_t WDOG_DRV_Deinit(void)
 {
+    WDOG_Type *base = g_wdogBase[0];
     WDOG_DRV_Unlock();
-    WDOG_HAL_Disable(g_wdogBaseAddr[0]);
+    WDOG_HAL_Disable(base);
     WDOG_DRV_WaitWctClose();
+    return kStatus_WDOG_Success;
 }
 
 /*FUNCTION****************************************************************
@@ -154,7 +129,8 @@ void WDOG_DRV_Deinit(void)
  *END*********************************************************************/
 bool WDOG_DRV_IsRunning(void)
 {
-    return WDOG_HAL_IsEnabled(g_wdogBaseAddr[0]);
+    WDOG_Type *base = g_wdogBase[0];
+    return WDOG_HAL_IsEnable(base);
 }
 
 /*FUNCTION****************************************************************
@@ -167,10 +143,9 @@ bool WDOG_DRV_IsRunning(void)
   *END*********************************************************************/
 void WDOG_DRV_Refresh(void)
 {
+    WDOG_Type *base = g_wdogBase[0];
     INT_SYS_DisableIRQGlobal();
-
-    WDOG_HAL_Refresh(g_wdogBaseAddr[0]);
-
+    WDOG_HAL_Refresh(base);
     INT_SYS_EnableIRQGlobal();
 }
 
@@ -183,33 +158,10 @@ void WDOG_DRV_Refresh(void)
  *END*********************************************************************/
 void WDOG_DRV_ResetSystem(void)
 {
-    WDOG_HAL_ResetSystem(g_wdogBaseAddr[0]);
+    WDOG_Type *base = g_wdogBase[0];
+    WDOG_HAL_ResetSystem(base);
 }
-
-/*FUNCTION****************************************************************
- *
- * Function Name : WDOG_DRV_ClearResetCount
- * Description   : Clear watchdog reset count
- * This function is used to set the WDOG reset count to zero, the WDOG_RSTCNT
- * register will only clear on Power On Reset or clear by this function.
- *
- *END*********************************************************************/
-void WDOG_DRV_ClearResetCount(void)
-{
-    WDOG_HAL_ClearResetCount(g_wdogBaseAddr[0]);
-}
-
-/*FUNCTION****************************************************************
- *
- * Function Name : WDOG_DRV_GetResetCount
- * Description   : Get chip reset count that reset by watchdog
- * This function is used to get the WDOG_RSTCNT value.
- *
- *END*********************************************************************/
-uint32_t WDOG_DRV_GetResetCount(void)
-{
-    return WDOG_HAL_GetResetCount(g_wdogBaseAddr[0]);
-}
+#endif
 
 /*******************************************************************************
  * EOF

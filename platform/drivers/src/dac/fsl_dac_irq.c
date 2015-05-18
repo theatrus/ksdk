@@ -30,6 +30,8 @@
 
 #include "fsl_dac_driver.h"
 
+#if FSL_FEATURE_SOC_DAC_COUNT
+
 /******************************************************************************
  * IRQ Handlers
  *****************************************************************************/
@@ -39,7 +41,7 @@ void DAC0_IRQHandler(void)
     /* Add user-defined ISR for DAC0. */
 }
 
-#if (HW_DAC_INSTANCE_COUNT > 1U)
+#if (DAC_INSTANCE_COUNT > 1U)
 void DAC1_IRQHandler(void)
 {
     /* Add user-defined ISR for DAC1. */
@@ -49,3 +51,5 @@ void DAC1_IRQHandler(void)
 /*******************************************************************************
  * EOF
  ******************************************************************************/
+
+#endif

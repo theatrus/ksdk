@@ -35,7 +35,6 @@
 #include "fsl_device_registers.h"
 #include "fsl_mcglite_hal.h"
 #include "fsl_sim_hal.h"
-#include "fsl_osc_hal.h"
 #include "fsl_clock_manager.h"
 
 /*
@@ -52,60 +51,6 @@
 ******************************************************************************/
 uint32_t g_tpmClkFreq[TPM_EXT_CLK_COUNT];          /* TPM_CLK          */
 
-/* Default pre-defined clock configurations. */
-clock_manager_user_config_t g_defaultClockConfigurations[CLOCK_CONFIG_NUM] =
-{
-    /* Configuration for enter VLPR mode. Core clock = 2MHz. */
-    {
-        .mcgliteConfig =
-        {
-            .mcglite_mode       = kMcgliteModeLirc8M,   // Work in LIRC_8M mode.
-            .irclkEnable        = true,  // MCGIRCLK enable.
-            .irclkEnableInStop  = false, // MCGIRCLK disable in STOP mode.
-            .ircs               = kMcgliteLircSel2M, // Select LIRC_2M.
-            .fcrdiv             = kMcgliteLircDivBy1,    // FCRDIV is 0.
-            .lircDiv2           = kMcgliteLircDivBy1,    // LIRC_DIV2 is 0.
-            .hircEnable         = false, // HIRC disable.
-        },
-        .simConfig =
-        {
-            .er32kSrc  = kClockEr32kSrcOsc0,   // ERCLK32K selection, use OSC.
-            .outdiv1   = 0U,
-            .outdiv4   = 1U,
-        },
-        .oscerConfig =
-        {
-            .Enable       = false, // OSCERCLK disable.
-            .EnableInStop = false, // OSCERCLK disable in STOP mode.
-        }
-    },
-
-    /* Configuration for enter RUN mode. Core clock = 48MHz. */
-    {
-        .mcgliteConfig =
-        {
-            .mcglite_mode        = kMcgliteModeHirc48M,   // Work in HIRC mode.
-            .irclkEnable        = false, // MCGIRCLK disable.
-            .irclkEnableInStop  = false, // MCGIRCLK disable in STOP mode.
-            .ircs               = kMcgliteLircSel2M, // Select LIRC_2M.
-            .fcrdiv             = kMcgliteLircDivBy1,    // FCRDIV is 0.
-            .lircDiv2           = kMcgliteLircDivBy1,    // LIRC_DIV2 is 0.
-            .hircEnable         = true,  // HIRC disable.
-        },
-        .simConfig =
-        {
-            .er32kSrc  = kClockEr32kSrcOsc0,  // ERCLK32K selection, use OSC.
-            .outdiv1   = 0U,
-            .outdiv4   = 1U,
-        },
-        .oscerConfig =
-        {
-            .Enable       = false, // OSCERCLK disable.
-            .EnableInStop = false, // OSCERCLK disable in STOP mode.
-        }
-    },
-};
-
 /*******************************************************************************
 * Code
 ******************************************************************************/
@@ -119,29 +64,13 @@ clock_manager_user_config_t g_defaultClockConfigurations[CLOCK_CONFIG_NUM] =
  *END**************************************************************************/
 static void CLOCK_SYS_SetSimConfigration(sim_config_t const *simConfig)
 {
-    CLOCK_HAL_SetOutDiv(SIM_BASE,
+    CLOCK_HAL_SetOutDiv(SIM,
                         simConfig->outdiv1,
                         0U,
                         0U,
                         simConfig->outdiv4);
 
-    CLOCK_HAL_SetExternalRefClock32kSrc(SIM_BASE, simConfig->er32kSrc);
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : CLOCK_SYS_SetOscerConfigration
- * Description   : This funtion sets the OSCERCLK for clock transition.
- *
- *END**************************************************************************/
-static void CLOCK_SYS_SetOscerConfigration(uint32_t instance,
-                                           oscer_config_t const *oscerConfig)
-{
-    OSC_HAL_SetExternalRefClkCmd(g_oscBaseAddr[instance],
-                                 oscerConfig->Enable);
-
-    OSC_HAL_SetExternalRefClkInStopModeCmd(g_oscBaseAddr[instance],
-                                           oscerConfig->EnableInStop);
+    CLOCK_HAL_SetExternalRefClock32kSrc(SIM, simConfig->er32kSrc);
 }
 
 /*FUNCTION**********************************************************************
@@ -157,7 +86,7 @@ clock_manager_error_code_t CLOCK_SYS_SetConfiguration(clock_manager_user_config_
     assert(NULL != config);
 
     /* Set outdiv for safe output clock frequency. */
-    CLOCK_HAL_SetOutDiv(SIM_BASE, 1U, 0U, 0U, 7U);
+    CLOCK_HAL_SetOutDiv(SIM, 1U, 0U, 0U, 7U);
 
     /* Set MCG mode. */
     CLOCK_SYS_SetMcgliteMode(&config->mcgliteConfig);
@@ -167,6 +96,7 @@ clock_manager_error_code_t CLOCK_SYS_SetConfiguration(clock_manager_user_config_
 
     /* Set OSCERCLK setting. */
     CLOCK_SYS_SetOscerConfigration(0, &config->oscerConfig);
+    SystemCoreClock = CLOCK_SYS_GetCoreClockFreq();
 
     return kClockManagerSuccess;
 }
@@ -175,7 +105,7 @@ clock_manager_error_code_t CLOCK_SYS_GetFreq(clock_names_t clockName,
                                              uint32_t *frequency)
 {
     clock_manager_error_code_t returnCode = kClockManagerSuccess;
-    
+
     switch (clockName)
     {
     case kCoreClock:
@@ -204,20 +134,23 @@ clock_manager_error_code_t CLOCK_SYS_GetFreq(clock_names_t clockName,
         *frequency = CLOCK_SYS_GetRtcOutFreq();
         break;
     case kMcgOutClock:
-        *frequency = CLOCK_HAL_GetOutClk(MCG_BASE);
+        *frequency = CLOCK_HAL_GetOutClk(MCG);
         break;
     case kMcgIrClock:
-        *frequency = CLOCK_HAL_GetInternalRefClk(MCG_BASE);
+        *frequency = CLOCK_HAL_GetInternalRefClk(MCG);
         break;
     case kLpoClock:
         *frequency = CLOCK_SYS_GetLpoClockFreq();
         break;
+        case kSystickClock:
+            *frequency = CLOCK_SYS_GetSystickFreq();
+            break;
     default:
         *frequency = 0U;
         returnCode = kClockManagerNoSuchClockName;
         break;
     }
-    
+
     return returnCode;
 }
 
@@ -230,7 +163,7 @@ clock_manager_error_code_t CLOCK_SYS_GetFreq(clock_names_t clockName,
 *END**************************************************************************/
 uint32_t CLOCK_SYS_GetCoreClockFreq(void)
 {
-    return CLOCK_HAL_GetOutClk(MCG_BASE) / (CLOCK_HAL_GetOutDiv1(SIM_BASE) + 1);
+    return CLOCK_HAL_GetOutClk(MCG) / (CLOCK_HAL_GetOutDiv1(SIM) + 1);
 }
 
 /*FUNCTION**********************************************************************
@@ -242,7 +175,7 @@ uint32_t CLOCK_SYS_GetCoreClockFreq(void)
 *END**************************************************************************/
 uint32_t CLOCK_SYS_GetSystemClockFreq(void)
 {
-    return CLOCK_HAL_GetOutClk(MCG_BASE) / (CLOCK_HAL_GetOutDiv1(SIM_BASE) + 1);
+    return CLOCK_HAL_GetOutClk(MCG) / (CLOCK_HAL_GetOutDiv1(SIM) + 1);
 }
 
 /*FUNCTION**********************************************************************
@@ -254,7 +187,7 @@ uint32_t CLOCK_SYS_GetSystemClockFreq(void)
 *END**************************************************************************/
 uint32_t CLOCK_SYS_GetBusClockFreq(void)
 {
-    return CLOCK_HAL_GetOutClk(MCG_BASE) / (CLOCK_HAL_GetOutDiv4(SIM_BASE) + 1);
+    return CLOCK_SYS_GetSystemClockFreq() / (CLOCK_HAL_GetOutDiv4(SIM) + 1);
 }
 
 /*FUNCTION**********************************************************************
@@ -266,7 +199,7 @@ uint32_t CLOCK_SYS_GetBusClockFreq(void)
 *END**************************************************************************/
 uint32_t CLOCK_SYS_GetFlashClockFreq(void)
 {
-    return CLOCK_HAL_GetOutClk(MCG_BASE) / (CLOCK_HAL_GetOutDiv4(SIM_BASE) + 1);
+    return CLOCK_SYS_GetSystemClockFreq() / (CLOCK_HAL_GetOutDiv4(SIM) + 1);
 }
 
 /*FUNCTION**********************************************************************
@@ -311,9 +244,9 @@ uint32_t CLOCK_SYS_GetExternalRefClock32kFreq(void)
 {
     clock_er32k_src_t src;
     uint32_t freq;
-    
-    src = CLOCK_HAL_GetExternalRefClock32kSrc(SIM_BASE);
-    
+
+    src = CLOCK_HAL_GetExternalRefClock32kSrc(SIM);
+
     switch (src)
     {
     case kClockEr32kSrcOsc0:      /* OSC 32k clock  */
@@ -329,7 +262,7 @@ uint32_t CLOCK_SYS_GetExternalRefClock32kFreq(void)
         freq = 0U;
         break;
     }
-    
+
     return freq;
 }
 
@@ -342,7 +275,7 @@ uint32_t CLOCK_SYS_GetExternalRefClock32kFreq(void)
 *END**************************************************************************/
 uint32_t CLOCK_SYS_GetOsc0ExternalRefClockFreq(void)
 {
-    if (OSC_HAL_GetExternalRefClkCmd(g_oscBaseAddr[0]))
+    if (OSC_HAL_GetExternalRefClkCmd(g_oscBase[0]))
     {
         return g_xtal0ClkFreq;
     }
@@ -361,12 +294,12 @@ uint32_t CLOCK_SYS_GetOsc0ExternalRefClockFreq(void)
 *END**************************************************************************/
 uint32_t CLOCK_SYS_GetTpmFreq(uint32_t instance)
 {
-    
+
     clock_tpm_src_t src;
     uint32_t freq;
-    
-    src = CLOCK_HAL_GetTpmSrc(SIM_BASE, instance);
-    
+
+    src = CLOCK_HAL_GetTpmSrc(SIM, instance);
+
     switch (src)
     {
     case kClockTpmSrcIrc48M:	  /* IRC48M */
@@ -376,32 +309,32 @@ uint32_t CLOCK_SYS_GetTpmFreq(uint32_t instance)
 	freq = CLOCK_SYS_GetOsc0ExternalRefClockFreq();
 	break;
     case kClockTpmSrcMcgIrClk: 		/* MCGIR clock */
-	freq = CLOCK_HAL_GetInternalRefClk(MCG_BASE);
+	freq = CLOCK_HAL_GetInternalRefClk(MCG);
 	break;
     default:
 	freq = 0U;
 	break;
     }
-    
+
     return freq;
-    
+
 }
 
 /*FUNCTION**********************************************************************
 *
 * Function Name : CLOCK_SYS_GetLpuartFreq
-* Description	 : Gets the clock frequency for LPUART module. 
+* Description	 : Gets the clock frequency for LPUART module.
 * This function gets the clock frequency for LPUART moudle.
 *
 *END**************************************************************************/
 uint32_t CLOCK_SYS_GetLpuartFreq(uint32_t instance)
 {
-    
+
     clock_lpuart_src_t src;
     uint32_t freq;
-    
-    src = CLOCK_HAL_GetLpuartSrc(SIM_BASE, instance);
-    
+
+    src = CLOCK_HAL_GetLpuartSrc(SIM, instance);
+
     switch (src)
     {
     case kClockLpuartSrcIrc48M:	  /* IRC48M */
@@ -411,15 +344,15 @@ uint32_t CLOCK_SYS_GetLpuartFreq(uint32_t instance)
 	freq = CLOCK_SYS_GetOsc0ExternalRefClockFreq();
 	break;
     case kClockLpuartSrcMcgIrClk:		/* MCGIR clock */
-	freq = CLOCK_HAL_GetInternalRefClk(MCG_BASE);
+	freq = CLOCK_HAL_GetInternalRefClk(MCG);
 	break;
     default:
 	freq = 0U;
 	break;
     }
-    
+
     return freq;
-    
+
 }
 
 /*FUNCTION**********************************************************************
@@ -436,7 +369,7 @@ uint32_t CLOCK_SYS_GetLptmrFreq(uint32_t instance, clock_lptmr_src_t lptmrSrc)
     switch (lptmrSrc)
     {
         case kClockLptmrSrcMcgIrClk:        /* MCG out clock  */
-            freq = CLOCK_HAL_GetInternalRefClk(MCG_BASE);
+            freq = CLOCK_HAL_GetInternalRefClk(MCG);
             break;
         case kClockLptmrSrcLpoClk:             /* LPO clock     */
             freq = CLOCK_SYS_GetLpoClockFreq();
@@ -463,8 +396,8 @@ uint32_t CLOCK_SYS_GetLptmrFreq(uint32_t instance, clock_lptmr_src_t lptmrSrc)
 *END**************************************************************************/
 uint32_t CLOCK_SYS_GetTpmExternalFreq(uint32_t instance)
 {
-    sim_tpm_clk_sel_t sel = SIM_HAL_GetTpmExternalClkPinSelMode(SIM_BASE, instance);
-    
+    sim_tpm_clk_sel_t sel = SIM_HAL_GetTpmExternalClkPinSelMode(SIM, instance);
+
     if (kSimTpmClkSel0 == sel)
     {
         return g_tpmClkFreq[0];
@@ -477,7 +410,7 @@ uint32_t CLOCK_SYS_GetTpmExternalFreq(uint32_t instance)
 
 
 /* PORT instance table. */
-static sim_clock_gate_name_t portGateTable[] =
+static const sim_clock_gate_name_t portGateTable[] =
 {
     kSimClockGatePortA,
     kSimClockGatePortB,
@@ -493,8 +426,8 @@ static sim_clock_gate_name_t portGateTable[] =
 void CLOCK_SYS_EnablePortClock(uint32_t instance)
 {
     assert(instance < sizeof(portGateTable)/sizeof(portGateTable[0]));
-    
-    SIM_HAL_EnableClock(SIM_BASE, portGateTable[instance]);
+
+    SIM_HAL_EnableClock(SIM, portGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -507,8 +440,8 @@ void CLOCK_SYS_EnablePortClock(uint32_t instance)
 void CLOCK_SYS_DisablePortClock(uint32_t instance)
 {
     assert(instance < sizeof(portGateTable)/sizeof(portGateTable[0]));
-    
-    SIM_HAL_DisableClock(SIM_BASE, portGateTable[instance]);
+
+    SIM_HAL_DisableClock(SIM, portGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -521,12 +454,12 @@ void CLOCK_SYS_DisablePortClock(uint32_t instance)
 bool CLOCK_SYS_GetPortGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(portGateTable)/sizeof(portGateTable[0]));
-    
-    return SIM_HAL_GetGateCmd(SIM_BASE, portGateTable[instance]);
+
+    return SIM_HAL_GetGateCmd(SIM, portGateTable[instance]);
 }
 
 /* ADC instance table. */
-static sim_clock_gate_name_t adcGateTable[] =
+static const sim_clock_gate_name_t adcGateTable[] =
 {
     kSimClockGateAdc0,
 };
@@ -541,8 +474,8 @@ static sim_clock_gate_name_t adcGateTable[] =
 void CLOCK_SYS_EnableAdcClock(uint32_t instance)
 {
     assert(instance < sizeof(adcGateTable)/sizeof(adcGateTable[0]));
-    
-    SIM_HAL_EnableClock(SIM_BASE, adcGateTable[instance]);
+
+    SIM_HAL_EnableClock(SIM, adcGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -555,8 +488,8 @@ void CLOCK_SYS_EnableAdcClock(uint32_t instance)
 void CLOCK_SYS_DisableAdcClock(uint32_t instance)
 {
     assert(instance < sizeof(adcGateTable)/sizeof(adcGateTable[0]));
-    
-    SIM_HAL_DisableClock(SIM_BASE, adcGateTable[instance]);
+
+    SIM_HAL_DisableClock(SIM, adcGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -569,12 +502,12 @@ void CLOCK_SYS_DisableAdcClock(uint32_t instance)
 bool CLOCK_SYS_GetAdcGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(adcGateTable)/sizeof(adcGateTable[0]));
-    
-    return SIM_HAL_GetGateCmd(SIM_BASE, adcGateTable[instance]);
+
+    return SIM_HAL_GetGateCmd(SIM, adcGateTable[instance]);
 }
 
 /* SPI instance table. */
-static sim_clock_gate_name_t spiGateTable[] =
+static const sim_clock_gate_name_t spiGateTable[] =
 {
     kSimClockGateSpi0,
 };
@@ -589,8 +522,8 @@ static sim_clock_gate_name_t spiGateTable[] =
 void CLOCK_SYS_EnableSpiClock(uint32_t instance)
 {
     assert(instance < sizeof(spiGateTable)/sizeof(spiGateTable[0]));
-    
-    SIM_HAL_EnableClock(SIM_BASE, spiGateTable[instance]);
+
+    SIM_HAL_EnableClock(SIM, spiGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -603,8 +536,8 @@ void CLOCK_SYS_EnableSpiClock(uint32_t instance)
 void CLOCK_SYS_DisableSpiClock(uint32_t instance)
 {
     assert(instance < sizeof(spiGateTable)/sizeof(spiGateTable[0]));
-    
-    SIM_HAL_DisableClock(SIM_BASE, spiGateTable[instance]);
+
+    SIM_HAL_DisableClock(SIM, spiGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -617,8 +550,8 @@ void CLOCK_SYS_DisableSpiClock(uint32_t instance)
 bool CLOCK_SYS_GetSpiGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(spiGateTable)/sizeof(spiGateTable[0]));
-    
-    return SIM_HAL_GetGateCmd(SIM_BASE, spiGateTable[instance]);
+
+    return SIM_HAL_GetGateCmd(SIM, spiGateTable[instance]);
 }
 
 /* I2C instance table. */
@@ -637,8 +570,8 @@ static sim_clock_gate_name_t i2cGateTable[] =
 void CLOCK_SYS_EnableI2cClock(uint32_t instance)
 {
     assert(instance < sizeof(i2cGateTable)/sizeof(i2cGateTable[0]));
-    
-    SIM_HAL_EnableClock(SIM_BASE, i2cGateTable[instance]);
+
+    SIM_HAL_EnableClock(SIM, i2cGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -651,8 +584,8 @@ void CLOCK_SYS_EnableI2cClock(uint32_t instance)
 void CLOCK_SYS_DisableI2cClock(uint32_t instance)
 {
     assert(instance < sizeof(i2cGateTable)/sizeof(i2cGateTable[0]));
-    
-    SIM_HAL_DisableClock(SIM_BASE, i2cGateTable[instance]);
+
+    SIM_HAL_DisableClock(SIM, i2cGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -665,14 +598,14 @@ void CLOCK_SYS_DisableI2cClock(uint32_t instance)
 bool CLOCK_SYS_GetI2cGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(i2cGateTable)/sizeof(i2cGateTable[0]));
-    
-    return SIM_HAL_GetGateCmd(SIM_BASE, i2cGateTable[instance]);
+
+    return SIM_HAL_GetGateCmd(SIM, i2cGateTable[instance]);
 }
 
 /* Lpuart instance table. */
-static sim_clock_gate_name_t lpuartGateTable[] =
+static const sim_clock_gate_name_t lpuartGateTable[] =
 {
-    kSimClockGateLpUart0
+    kSimClockGateLpuart0
 };
 
 /*FUNCTION**********************************************************************
@@ -685,8 +618,8 @@ static sim_clock_gate_name_t lpuartGateTable[] =
 void CLOCK_SYS_EnableLpuartClock(uint32_t instance)
 {
     assert(instance < sizeof(lpuartGateTable)/sizeof(lpuartGateTable[0]));
-    
-    SIM_HAL_EnableClock(SIM_BASE, lpuartGateTable[instance]);
+
+    SIM_HAL_EnableClock(SIM, lpuartGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -699,8 +632,8 @@ void CLOCK_SYS_EnableLpuartClock(uint32_t instance)
 void CLOCK_SYS_DisableLpuartClock(uint32_t instance)
 {
     assert(instance < sizeof(lpuartGateTable)/sizeof(lpuartGateTable[0]));
-    
-    SIM_HAL_DisableClock(SIM_BASE, lpuartGateTable[instance]);
+
+    SIM_HAL_DisableClock(SIM, lpuartGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -713,12 +646,12 @@ void CLOCK_SYS_DisableLpuartClock(uint32_t instance)
 bool CLOCK_SYS_GetLpuartGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(lpuartGateTable)/sizeof(lpuartGateTable[0]));
-    
-    return SIM_HAL_GetGateCmd(SIM_BASE, lpuartGateTable[instance]);
+
+    return SIM_HAL_GetGateCmd(SIM, lpuartGateTable[instance]);
 }
 
 /* TPM instance table. */
-static sim_clock_gate_name_t tpmGateTable[] =
+static const sim_clock_gate_name_t tpmGateTable[] =
 {
     kSimClockGateTpm0,
     kSimClockGateTpm1,
@@ -734,8 +667,8 @@ static sim_clock_gate_name_t tpmGateTable[] =
 void CLOCK_SYS_EnableTpmClock(uint32_t instance)
 {
     assert(instance < sizeof(tpmGateTable)/sizeof(tpmGateTable[0]));
-    
-    SIM_HAL_EnableClock(SIM_BASE, tpmGateTable[instance]);
+
+    SIM_HAL_EnableClock(SIM, tpmGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -748,8 +681,8 @@ void CLOCK_SYS_EnableTpmClock(uint32_t instance)
 void CLOCK_SYS_DisableTpmClock(uint32_t instance)
 {
     assert(instance < sizeof(tpmGateTable)/sizeof(tpmGateTable[0]));
-    
-    SIM_HAL_DisableClock(SIM_BASE, tpmGateTable[instance]);
+
+    SIM_HAL_DisableClock(SIM, tpmGateTable[instance]);
 }
 
 /*FUNCTION**********************************************************************
@@ -762,8 +695,8 @@ void CLOCK_SYS_DisableTpmClock(uint32_t instance)
 bool CLOCK_SYS_GetTpmGateCmd(uint32_t instance)
 {
     assert(instance < sizeof(tpmGateTable)/sizeof(tpmGateTable[0]));
-    
-    return SIM_HAL_GetGateCmd(SIM_BASE, tpmGateTable[instance]);
+
+    return SIM_HAL_GetGateCmd(SIM, tpmGateTable[instance]);
 }
 
 /*******************************************************************************

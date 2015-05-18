@@ -29,6 +29,7 @@
  */
 
 #include "fsl_tsi_driver.h"
+#if FSL_FEATURE_SOC_TSI_COUNT
 
 /*******************************************************************************
  * Variables
@@ -51,6 +52,7 @@ void TSI0_IRQHandler(void)
 {
     TSI_DRV_IRQHandler(0);
 }
+#endif
 
 /*******************************************************************************
  * EOF

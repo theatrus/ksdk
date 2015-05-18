@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -33,6 +33,14 @@
 #define __FSL_SAI_DRIVER_H__
 
 #include "fsl_sai_hal.h"
+#include "fsl_os_abstraction.h"
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+#include "fsl_edma_driver.h"
+#else
+#include "fsl_dma_driver.h"
+#endif
+
+#if FSL_FEATURE_SOC_I2S_COUNT
 
 /*!
  * @addtogroup sai_driver
@@ -43,9 +51,9 @@
 
 /*! @brief SAI callback function */
 typedef void (*sai_callback_t)(void *parameter);
-extern const uint32_t g_saiBaseAddr[];
-extern const IRQn_Type g_saiTxIrqId[HW_I2S_INSTANCE_COUNT];
-extern const IRQn_Type g_saiRxIrqId[HW_I2S_INSTANCE_COUNT];
+extern I2S_Type * const g_saiBase[I2S_INSTANCE_COUNT];
+extern const IRQn_Type g_saiTxIrqId[I2S_INSTANCE_COUNT];
+extern const IRQn_Type g_saiRxIrqId[I2S_INSTANCE_COUNT];
 
 /*! @brief Status structure for SAI */
 typedef enum _sai_status
@@ -55,19 +63,15 @@ typedef enum _sai_status
     kStatus_SAI_DeviceBusy = 2U
 } sai_status_t;
 
-typedef enum _sai_mono_streo
-{
-    kSaiMono = 0x0,
-    kSaiStreo = 0x1
-} sai_mono_streo_t;
-
-/*! @brief Defines the PCM data format */
+/*! @brief Defines the PCM data format
+ *  @internal gui name="Audio data configuration" id="saiDataCfg"
+ */
 typedef struct SaiAudioDataFormat
 {
-    uint32_t sample_rate;/*!< Sample rate of the PCM file */
-    uint32_t mclk;/*!< Master clock frequency */
-    uint8_t  bits;/*!< How many bits in a word */
-    sai_mono_streo_t  mono_streo;/*!< How many word in a frame */
+    uint32_t sample_rate;/*!< Sample rate of the PCM file. @internal gui name="Sample rate" id="SampleRate" */
+    uint32_t mclk;/*!< Master clock frequency. @internal gui name="Master clock frequency" id="CfgMclk" */
+    uint8_t  bits;/*!< How many bits in a word. @internal gui name="Bits" id="Bits" */
+    sai_mono_stereo_t  mono_stereo;/*!< How many word in a frame. @internal gui name="Mode" id="Words" */
 } sai_data_format_t;
 
 /*! @brief SAI internal state 
@@ -88,21 +92,33 @@ typedef struct sai_state
     uint32_t watermark;
 #endif
     sai_master_slave_t master_slave;
+    sai_protocol_t protocol;
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+    edma_chn_state_t edma_chn;
+    edma_software_tcd_t tcd[2];
+#else
+    dma_channel_t chn;
+#endif
+    semaphore_t sem;
+    bool use_dma;
+    uint32_t dma_source;
 } sai_state_t;
 
-/*! @brief The description structure for the SAI TX/RX module. */
+/*! @brief The description structure for the SAI TX/RX module.
+ *  @internal gui name="Basic configuration" id="saiCfg"
+ */
 typedef struct SaiUserConfig
 {
-    sai_mclk_source_t   mclk_source;/*!< Master clock source. */
-    bool                mclk_divide_enable;/*!< Enable the divide of master clock to generate bit clock. */
-    sai_sync_mode_t     sync_mode;/*!< Synchronous or asynchronous. */
-    sai_protocol_t           protocol;/*!< I2S left, I2S right or I2S type. */
-    sai_master_slave_t  slave_master;/*!< Master or slave. */
-    sai_bclk_source_t   bclk_source;/*!< Bit clock from master clock or other modules. */
-    uint8_t             channel;/*!< Which FIFO is used to transfer. */
-#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
-    uint32_t    watermark;
+    sai_mclk_source_t   mclk_source;/*!< Master clock source. @internal gui name="MCLK source" id="CfgMclkSource" */
+    uint8_t             channel;/*!< Which FIFO is used to transfer. @internal gui name="Channel" id="Channel" */
+    sai_sync_mode_t     sync_mode;/*!< Synchronous or asynchronous. @internal gui name="Mode" id="Mode" */
+    sai_protocol_t           protocol;/*!< I2S left, I2S right or I2S type. @internal gui name="Protocol" id="BusType" */
+    sai_master_slave_t  slave_master;/*!< Master or slave. @internal gui name="Master / Slave mode" id="MasterSlave" */
+    sai_bclk_source_t   bclk_source;/*!< Bit clock from master clock or other modules. @internal gui name="Bit clock source" id="BclkSource" */
+#if FSL_FEATURE_SAI_FIFO_COUNT > 1
+    uint32_t    watermark;/*!< When to send interrupt or dma request. @internal gui name="Watermark" id="Watermark" */
 #endif
+    uint32_t    dma_source; /*!< Dma request source. @internal gui name="DMA request value" id="DmaRequest" */
 }  sai_user_config_t;
 
 /*******************************************************************************
@@ -119,7 +135,7 @@ extern "C" {
  * structure. This function also initializes the basic SAI settings including
  * board-relevant settings.
  * Notice: This function does not initialize an entire SAI instance. It
- * only initializes the Tx according to the value in the handler.
+ * only initializes the transmit according to the value in the handler.
  * @param instance SAI module instance.
  * @param config The configuration structure of SAI.
  * @param state Pointer of SAI run state structure.
@@ -128,13 +144,13 @@ extern "C" {
 sai_status_t SAI_DRV_TxInit(uint32_t instance, sai_user_config_t * config, sai_state_t *state);
 
 /*!
- * @brief Initializes the SAI Rx module.
+ * @brief Initializes the SAI receive module.
  *
  * This  function  initializes the SAI registers according to the configuration
  * structure. This function also initializes the basic SAI settings including
  * board-relevant settings.
  * Note that this function does not initialize an entire SAI instance. This function
- * only initializes the Tx according to the value in the handler.
+ * only initializes the transmit according to the value in the handler.
  * @param instance SAI module instance.
  * @param config The configuration structure of SAI.
  * @param state Pointer of SAI run state structure.
@@ -151,7 +167,7 @@ sai_status_t SAI_DRV_RxInit(uint32_t instance, sai_user_config_t * config, sai_s
 * - Channel is channel0
 * - SAI as master 
 * - MCLK from system core clock
-* - Tx is in an asynchronous mode
+* - Transmit is in an asynchronous mode
 * @param config Pointer of user configure structure.
 */
 void SAI_DRV_TxGetDefaultSetting(sai_user_config_t *config);
@@ -159,39 +175,39 @@ void SAI_DRV_TxGetDefaultSetting(sai_user_config_t *config);
 /*! @brief Gets the default setting of the user configuration.
 * 
 * The default settings for SAI are:
-* - Audio protocol is I2S format
-* - Watermark is 4
-* - Use SAI0
-* - Data channel is channel0
-* - SAI as master
-* - MCLK from system core clock
-* - Rx is in synchronous way
+* Audio protocol is I2S format
+* Watermark is 4
+* Use SAI0
+* Data channel is channel0
+* SAI as master
+* MCLK from system core clock
+* Receive is in synchronous way
 * @param config Pointer of user configure structure.
 */
 void SAI_DRV_RxGetDefaultSetting(sai_user_config_t *config);
 
 /*!
- * @brief De-initializes the SAI Tx module.
+ * @brief De-initializes the SAI transmit module.
  *
- * This function  closes the SAI Tx device. It does not close the entire SAI instance, however.
- * It only closes the clock gate while both Tx and Rx are closed in the same instance.
+ * This function  closes the SAI transmit device. It does not close the entire SAI instance.
+ * It only closes the clock gate while both transmit and receive are closed in the same instance.
  * @param instance SAI module instance.
  * @return Return kStatus_SAI_Success while the process success and kStatus_SAI_Fail if failed.
  */
 sai_status_t SAI_DRV_TxDeinit(uint32_t instance);
 
 /*!
- * @brief De-initializes the SAI Rx module.
+ * @brief De-initializes the SAI receive module.
  *
- * This function closes the SAI Rx device. It does not close the entire SAI instance, however.
- * It only closes the clock gate while both Tx and Rx are closed in the same instance.
+ * This function closes the SAI receive device. It does not close the entire SAI instance.
+ * It only closes the clock gate while both transmit and receive are closed in the same instance.
  * @param instance SAI module instance.
  * @return Return kStatus_SAI_Success while the process success and kStatus_SAI_Fail if failed.
  */
 sai_status_t SAI_DRV_RxDeinit(uint32_t instance);
 
 /*!
- * @brief Configures audio data format of Tx.
+ * @brief Configures audio data format of the transmit.
  *
  * The function  configures  an audio sample rate, data bits, and a channel number.
  * @param instance SAI module instance.
@@ -201,7 +217,7 @@ sai_status_t SAI_DRV_RxDeinit(uint32_t instance);
 sai_status_t SAI_DRV_TxConfigDataFormat(uint32_t instance,sai_data_format_t *format);
 
 /*!
- * @brief Configures audio data format of Rx.
+ * @brief Configures audio data format of the receive.
  *
  * The function  configures  an audio sample rate, data bits, and a channel number.
  * @param instance SAI module instance of the SAI module.
@@ -211,7 +227,7 @@ sai_status_t SAI_DRV_TxConfigDataFormat(uint32_t instance,sai_data_format_t *for
 sai_status_t SAI_DRV_RxConfigDataFormat(uint32_t instance,sai_data_format_t *format);
 
 /*!
- * @brief Starts the Tx transfer.
+ * @brief Starts the transmit transfer.
  *
  * The function  enables the interrupt/DMA request source and the transmit channel.
  * @param instance SAI module instance.
@@ -219,7 +235,7 @@ sai_status_t SAI_DRV_RxConfigDataFormat(uint32_t instance,sai_data_format_t *for
 void SAI_DRV_TxStartModule(uint32_t instance);
 
 /*!
- * @brief Starts the Rx receive process.
+ * @brief Starts the receive process.
  *
  * The function  enables the interrupt/DMA request source and the transmit channel.
  * @param instance SAI module instance of the SAI module.
@@ -234,7 +250,7 @@ void SAI_DRV_RxStartModule(uint32_t instance);
  */
 static inline void SAI_DRV_TxStopModule(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
     SAI_HAL_TxSetIntCmd(reg_base,kSaiIntrequestFIFORequest,false);
     SAI_HAL_TxSetDmaCmd(reg_base,kSaiDmaReqFIFORequest, false);
@@ -252,7 +268,7 @@ static inline void SAI_DRV_TxStopModule(uint32_t instance)
  */
 static inline void SAI_DRV_RxStopModule(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
     SAI_HAL_RxSetIntCmd(reg_base,kSaiIntrequestFIFORequest,false);
     SAI_HAL_RxSetDmaCmd(reg_base,kSaiDmaReqFIFORequest, false);
@@ -263,13 +279,13 @@ static inline void SAI_DRV_RxStopModule(uint32_t instance)
 }
 
 
-/*! @brief Enables or disables the Tx interrupt source.
+/*! @brief Enables or disables the transmit interrupt source.
 * @param instance SAI module instance.
 * @param enable True means enable interrupt source, false means disable interrupt source.
 */
 static inline void SAI_DRV_TxSetIntCmd(uint32_t instance, bool enable)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
     SAI_HAL_TxSetIntCmd(reg_base,kSaiIntrequestFIFORequest,enable);
 #else
@@ -278,13 +294,13 @@ static inline void SAI_DRV_TxSetIntCmd(uint32_t instance, bool enable)
     SAI_HAL_TxSetIntCmd(reg_base, kSaiIntrequestFIFOError, enable);
 }
 
-/*! @brief Enables or disables the Rx interrupt source.
+/*! @brief Enables or disables the receive interrupt source.
 * @param instance SAI module instance.
 * @param enable True means enable interrupt source, false means disable interrupt source.
 */
 static inline void SAI_DRV_RxSetIntCmd(uint32_t instance, bool enable)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
     SAI_HAL_RxSetIntCmd(reg_base,kSaiIntrequestFIFORequest,enable);
 #else
@@ -293,39 +309,39 @@ static inline void SAI_DRV_RxSetIntCmd(uint32_t instance, bool enable)
     SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError,enable);
 }
 
-/*! @brief Enables or disables the Tx DMA source.
+/*! @brief Enables or disables the transmit DMA source.
 * @param instance SAI module instance.
 * @param enable True means enable DMA source, false means disable DMA source.
 */
 static inline void SAI_DRV_TxSetDmaCmd(uint32_t instance,  bool enable)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     SAI_HAL_TxSetDmaCmd(reg_base, kSaiDmaReqFIFORequest,enable);
     SAI_HAL_TxSetIntCmd(reg_base, kSaiIntrequestFIFOError,enable);
 }
 
-/*! @brief Enables or disables the Rx interrupt source.
+/*! @brief Enables or disables the receive interrupt source.
 * @param instance SAI module instance.
 * @param enable True means enable DMA source, false means disable DMA source.
 */
 static inline void SAI_DRV_RxSetDmaCmd(uint32_t instance, bool enable)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     SAI_HAL_RxSetDmaCmd(reg_base, kSaiDmaReqFIFORequest,enable);
     SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError,enable);    
 }
 
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
-/*! @brief Sets the Tx watermark.
+/*! @brief Sets the transmit watermark.
 *
-* While the data number in FIFO is less or equal to the watermark an interrupt is generated.
+* While the data number in FIFO is less or equal to the watermark, an interrupt is generated.
 * request or the DMA request.
 * @param instance SAI module instance.
 * @param watermark Watermark number needs to set.
 */
 void SAI_DRV_TxSetWatermark(uint32_t instance,uint32_t watermark);
 
-/*! @brief Sets the Rx watermark.
+/*! @brief Sets the receive watermark.
 *
 * While the data number in FIFO is greater than or equal to the watermark, an interrupt is generated.
 * request or the DMA request.
@@ -334,7 +350,7 @@ void SAI_DRV_TxSetWatermark(uint32_t instance,uint32_t watermark);
 */
 void SAI_DRV_RxSetWatermark(uint32_t instance,uint32_t watermark);
 
-/*! @brief Gets the Tx watermark.
+/*! @brief Gets the transmit watermark.
 *
 * The watermark should be changed according to a different audio sample rate.
 * @param instance SAI module instance.
@@ -342,11 +358,11 @@ void SAI_DRV_RxSetWatermark(uint32_t instance,uint32_t watermark);
 */
 static inline uint32_t SAI_DRV_TxGetWatermark(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     return SAI_HAL_TxGetWatermark(reg_base);
 }
 
-/*! @brief Gets the Rx watermark.
+/*! @brief Gets the receive watermark.
 *
 * The watermark should be changed according to a different audio sample rate.
 * @param instance SAI module instance.
@@ -354,95 +370,97 @@ static inline uint32_t SAI_DRV_TxGetWatermark(uint32_t instance)
 */
 static inline uint32_t SAI_DRV_RxGetWatermark(uint32_t instance)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     return SAI_HAL_RxGetWatermark(reg_base);
 }
 #endif
 
 /*!
- * @brief Gets the Tx FIFO address of the data channel.
+ * @brief Gets the transmit FIFO address of the data channel.
  *
- * This function is mainly used for the DMA settings, which the DMA
+ * This function is mainly used for the DMA settings which the DMA
  * configuration needs for the SAI source/destination address.
  * @param instance SAI module instance of the SAI module.
- * @param fifo_channel FIFO channel of SAI Tx.
+ * @param fifo_channel FIFO channel of SAI transmit.
  * @return Returns the address of the data channel FIFO.
  */
-static inline uint32_t* SAI_DRV_TxGetFifoAddr(uint32_t instance, uint32_t fifo_channel)
+static inline uint32_t SAI_DRV_TxGetFifoAddr(uint32_t instance, uint32_t fifo_channel)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     return SAI_HAL_TxGetFifoAddr(reg_base, fifo_channel);
 }
 
 /*!
- * @brief Gets the Rx FIFO address of the data channel.
+ * @brief Gets the receive FIFO address of the data channel.
  *
- * This function is mainly used for the DMA settings, which the DMA
+ * This function is mainly used for the DMA settings which the DMA
  * configuration needs for the SAI source/destination address.
  * @param instance SAI module instance of the SAI module.
- * @param fifo_channel FIFO channel of SAI Rx.
+ * @param fifo_channel FIFO channel of SAI receive.
  * @return Returns the address of the data channel FIFO.
  */
-static inline uint32_t* SAI_DRV_RxGetFifoAddr(uint32_t instance, uint32_t fifo_channel)
+static inline uint32_t SAI_DRV_RxGetFifoAddr(uint32_t instance, uint32_t fifo_channel)
 {
-    uint32_t reg_base = g_saiBaseAddr[instance];
+    I2S_Type * reg_base = g_saiBase[instance];
     return SAI_HAL_RxGetFifoAddr(reg_base, fifo_channel);
 }
 
 /*!
- * @brief Sends data of a certain length.
+ * @brief Sends data using interrupts.
  *
- * This function  sends the data to the Tx FIFO. This function  
+ * This function  sends data to the transmit FIFO. This function  
  * starts the transfer, and, while finishing the transfer, calls the callback
- * function registered by users.
+ * function registered by users. This function is an un-blocking function.
  * @param instance SAI module instance of the SAI module.
  * @param addr Address of the data which needs to be transferred.
  * @param len The number of bytes which need to be sent.
  * @return Returns the length which was sent.
  */
-uint32_t SAI_DRV_SendData(uint32_t instance, uint8_t *addr, uint32_t len);
+uint32_t SAI_DRV_SendDataInt(uint32_t instance, uint8_t *addr, uint32_t len);
 
 /*!
- * @brief Receives data a certain length.
+ * @brief Receives data a certain length using interrupt way.
  *
- * This function  receives the data from the RX FIFO. This function  
+ * This function  receives the data from the receive FIFO. This function  
  * starts the transfer, and, while finishing the transfer,  calls the callback
- * function registered by the user.
+ * function registered by the user. This function is an un-blocking function.
  * @param instance SAI module instance.
  * @param addr Address of the data which needs to be transferred.
  * @param len  The number of bytes to receive.
  * @return Returns the length received.
  */
-uint32_t SAI_DRV_ReceiveData(uint32_t instance, uint8_t *addr, uint32_t len);
+uint32_t SAI_DRV_ReceiveDataInt(uint32_t instance, uint8_t *addr, uint32_t len);
 
 /*!
- * @brief Sends data of a certain length in a blocking way.
+ * @brief Sends data of a certain length using the DMA way.
  *
- * This function  sends the data to the Tx FIFO, does not exit until
- * the data is sent to FIFO, and uses the polling way to send audio data.
- * @param instance SAI module instance.
+ * This function  sends the data to the transmit FIFO. This function  
+ * starts the transfer, and, while finishing the transfer, calls the callback
+ * function registered by users. This function is an a-sync function.
+ * @param instance SAI module instance of the SAI module.
  * @param addr Address of the data which needs to be transferred.
  * @param len The number of bytes which need to be sent.
  * @return Returns the length which was sent.
  */
-uint32_t SAI_DRV_SendDataBlocking(uint32_t instance, uint8_t *addr, uint32_t len);
+uint32_t SAI_DRV_SendDataDma(uint32_t instance, uint8_t *addr, uint32_t len);
 
 /*!
- * @brief Receives data of a certain length in a blocking way.
+ * @brief Receives data using the DMA.
  *
- * This function receives data from the Rx FIFO, does not exit until
- * the data is received from FIFO, and uses the polling way to send audio data.
+ * This function  receives the data from the receive FIFO. This function  
+ * starts the transfer, and, while finishing the transfer,  calls the callback
+ * function registered by the user. This function is an a-sync function.
  * @param instance SAI module instance.
  * @param addr Address of the data which needs to be transferred.
- * @param len The number of bytes to receive.
- * @return Returns the length which was sent.
+ * @param len  The number of bytes to receive.
+ * @return Returns the length received.
  */
-uint32_t SAI_DRV_ReceiveDataBlocking(uint32_t instance,uint8_t * addr,uint32_t len);
+uint32_t SAI_DRV_ReceiveDataDma(uint32_t instance, uint8_t *addr, uint32_t len);
 
 /*!
  * @brief Registers the callback function after completing a send.
  *
- * This function  tells SAI which function needs to be called after a 
+ * This function  tells the SAI which function needs to be called after a 
  * period length sending. This callback function is used for non-blocking sending.
  * @param instance SAI module instance.
  * @param callback Callback function defined by users.
@@ -453,7 +471,7 @@ void SAI_DRV_TxRegisterCallback(uint32_t instance, sai_callback_t callback, void
 /*!
  * @brief Registers the callback function after completing a receive.
  *
- * This function  tells SAI which function needs to be called after a 
+ * This function  tells the SAI which function needs to be called after a 
  * period length receive. This callback function is used for non-blocking receiving.
  * @param instance SAI module instance.
  * @param callback Callback function defined by users.
@@ -462,7 +480,7 @@ void SAI_DRV_TxRegisterCallback(uint32_t instance, sai_callback_t callback, void
 void SAI_DRV_RxRegisterCallback(uint32_t instance, sai_callback_t callback, void *callback_param);
 
 /*!
- * @brief Default SAI Tx interrupt handler.
+ * @brief Default SAI transmit interrupt handler.
  *
  * This function sends data in the interrupt and checks the FIFO error.
  * @param instance SAI module instance.
@@ -470,7 +488,7 @@ void SAI_DRV_RxRegisterCallback(uint32_t instance, sai_callback_t callback, void
 void SAI_DRV_TxIRQHandler(uint32_t instance);
 
 /*!
- * @brief Default SAI Rx interrupt handler.
+ * @brief Default SAI receive interrupt handler.
  *
  * This function receives data in the interrupt and checks the FIFO error.
  * @param instance SAI module instance.
@@ -484,6 +502,7 @@ void SAI_DRV_RxIRQHandler(uint32_t instance);
 
 /*! @} */
 
+#endif
 #endif/* __FSL_SAI_DRIVER_H__ */
 /*******************************************************************************
  * EOF

@@ -878,12 +878,16 @@ uint32_t OSA_TimeGetMsec(void)
  * Description   : This function is used to install interrupt handler.
  *
  *END**************************************************************************/
-osa_status_t OSA_InstallIntHandler (int32_t IRQNumber,
-                                                        void (*handler)(void))
+osa_int_handler_t OSA_InstallIntHandler(int32_t IRQNumber,
+                                        osa_int_handler_t handler)
 {
-    INT_SYS_InstallHandler((IRQn_Type)IRQNumber, handler);
-
-    return kStatus_OSA_Success;
+#if defined ( __IAR_SYSTEMS_ICC__ )
+_Pragma ("diag_suppress = Pm138")
+#endif
+    return (osa_int_handler_t)INT_SYS_InstallHandler((IRQn_Type)IRQNumber, handler);
+#if defined ( __IAR_SYSTEMS_ICC__ )
+_Pragma ("diag_remark = PM138")
+#endif
 }
 
 /*FUNCTION**********************************************************************

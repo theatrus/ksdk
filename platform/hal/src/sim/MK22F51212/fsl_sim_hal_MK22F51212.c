@@ -49,12 +49,12 @@
  * Divider output clock = Divider input clock * [ (USBFRAC+1) / (USBDIV+1) ]
  *
  *END**************************************************************************/
-void CLOCK_HAL_SetUsbfsDiv(uint32_t baseAddr,
+void CLOCK_HAL_SetUsbfsDiv(SIM_Type * base,
                            uint8_t usbdiv,
                            uint8_t usbfrac)
 {
-    BW_SIM_CLKDIV2_USBDIV(baseAddr, usbdiv);
-    BW_SIM_CLKDIV2_USBFRAC(baseAddr, usbfrac);
+    SIM_BWR_CLKDIV2_USBDIV(base, usbdiv);
+    SIM_BWR_CLKDIV2_USBFRAC(base, usbfrac);
 }
 
 /*FUNCTION**********************************************************************
@@ -64,12 +64,12 @@ void CLOCK_HAL_SetUsbfsDiv(uint32_t baseAddr,
  * Divider output clock = Divider input clock * [ (USBFRAC+1) / (USBDIV+1) ]
  *
  *END**************************************************************************/
-void CLOCK_HAL_GetUsbfsDiv(uint32_t baseAddr,
+void CLOCK_HAL_GetUsbfsDiv(SIM_Type * base,
                            uint8_t *usbdiv,
                            uint8_t *usbfrac)
 {
-    *usbdiv  = BR_SIM_CLKDIV2_USBDIV(baseAddr);
-    *usbfrac = BR_SIM_CLKDIV2_USBFRAC(baseAddr);
+    *usbdiv  = SIM_BRD_CLKDIV2_USBDIV(base);
+    *usbfrac = SIM_BRD_CLKDIV2_USBFRAC(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -79,7 +79,7 @@ void CLOCK_HAL_GetUsbfsDiv(uint32_t baseAddr,
  * This function will set the setting for all clock out dividers.
  *
  *END**************************************************************************/
-void CLOCK_HAL_SetOutDiv(uint32_t baseAddr,
+void CLOCK_HAL_SetOutDiv(SIM_Type * base,
                          uint8_t outdiv1,
                          uint8_t outdiv2,
                          uint8_t outdiv3,
@@ -87,12 +87,12 @@ void CLOCK_HAL_SetOutDiv(uint32_t baseAddr,
 {
     uint32_t clkdiv1 = 0;
 
-    clkdiv1 |= BF_SIM_CLKDIV1_OUTDIV1(outdiv1);
-    clkdiv1 |= BF_SIM_CLKDIV1_OUTDIV2(outdiv2);
-    clkdiv1 |= BF_SIM_CLKDIV1_OUTDIV3(outdiv3);
-    clkdiv1 |= BF_SIM_CLKDIV1_OUTDIV4(outdiv4);
+    clkdiv1 |= SIM_CLKDIV1_OUTDIV1(outdiv1);
+    clkdiv1 |= SIM_CLKDIV1_OUTDIV2(outdiv2);
+    clkdiv1 |= SIM_CLKDIV1_OUTDIV3(outdiv3);
+    clkdiv1 |= SIM_CLKDIV1_OUTDIV4(outdiv4);
 
-    HW_SIM_CLKDIV1_WR(baseAddr, clkdiv1);
+    SIM_WR_CLKDIV1(base, clkdiv1);
 }
 
 /*FUNCTION**********************************************************************
@@ -102,16 +102,16 @@ void CLOCK_HAL_SetOutDiv(uint32_t baseAddr,
  * This function will get the setting for all clock out dividers.
  *
  *END**************************************************************************/
-void CLOCK_HAL_GetOutDiv(uint32_t baseAddr,
+void CLOCK_HAL_GetOutDiv(SIM_Type * base,
                          uint8_t *outdiv1,
                          uint8_t *outdiv2,
                          uint8_t *outdiv3,
                          uint8_t *outdiv4)
 {
-    *outdiv1 = BR_SIM_CLKDIV1_OUTDIV1(baseAddr);
-    *outdiv2 = BR_SIM_CLKDIV1_OUTDIV2(baseAddr);
-    *outdiv3 = BR_SIM_CLKDIV1_OUTDIV3(baseAddr);
-    *outdiv4 = BR_SIM_CLKDIV1_OUTDIV4(baseAddr);
+    *outdiv1 = SIM_BRD_CLKDIV1_OUTDIV1(base);
+    *outdiv2 = SIM_BRD_CLKDIV1_OUTDIV2(base);
+    *outdiv3 = SIM_BRD_CLKDIV1_OUTDIV3(base);
+    *outdiv4 = SIM_BRD_CLKDIV1_OUTDIV4(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -121,19 +121,19 @@ void CLOCK_HAL_GetOutDiv(uint32_t baseAddr,
  * This function will enable/disable alternative conversion triggers for ADCx.
  *
  *END**************************************************************************/
-void SIM_HAL_SetAdcAlternativeTriggerCmd(uint32_t baseAddr,
+void SIM_HAL_SetAdcAlternativeTriggerCmd(SIM_Type * base,
                                          uint32_t instance,
                                          bool enable)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
+    assert(instance < ADC_INSTANCE_COUNT);
 
     switch (instance)
     {
     case 0:
-        BW_SIM_SOPT7_ADC0ALTTRGEN(baseAddr, enable ? 1 : 0);
+        SIM_BWR_SOPT7_ADC0ALTTRGEN(base, enable ? 1 : 0);
         break;
     case 1:
-        BW_SIM_SOPT7_ADC1ALTTRGEN(baseAddr, enable ? 1 : 0);
+        SIM_BWR_SOPT7_ADC1ALTTRGEN(base, enable ? 1 : 0);
         break;
     default:
         break;
@@ -147,19 +147,19 @@ void SIM_HAL_SetAdcAlternativeTriggerCmd(uint32_t baseAddr,
  * This function will get ADCx alternate trigger enable setting.
  *
  *END**************************************************************************/
-bool SIM_HAL_GetAdcAlternativeTriggerCmd(uint32_t baseAddr, uint32_t instance)
+bool SIM_HAL_GetAdcAlternativeTriggerCmd(SIM_Type * base, uint32_t instance)
 {
     bool retValue = false;
 
-    assert(instance < HW_ADC_INSTANCE_COUNT);
+    assert(instance < ADC_INSTANCE_COUNT);
 
     switch (instance)
     {
     case 0:
-        retValue = BR_SIM_SOPT7_ADC0ALTTRGEN(baseAddr);
+        retValue = SIM_BRD_SOPT7_ADC0ALTTRGEN(base);
         break;
     case 1:
-        retValue = BR_SIM_SOPT7_ADC1ALTTRGEN(baseAddr);
+        retValue = SIM_BRD_SOPT7_ADC1ALTTRGEN(base);
         break;
     default:
         retValue = false;
@@ -177,19 +177,19 @@ bool SIM_HAL_GetAdcAlternativeTriggerCmd(uint32_t baseAddr, uint32_t instance)
  * triggers are enabled through ADCxALTTRGEN
  *
  *END**************************************************************************/
-void SIM_HAL_SetAdcPreTriggerMode(uint32_t baseAddr,
+void SIM_HAL_SetAdcPreTriggerMode(SIM_Type * base,
                                   uint32_t instance,
                                   sim_adc_pretrg_sel_t select)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
+    assert(instance < ADC_INSTANCE_COUNT);
 
     switch (instance)
     {
     case 0:
-        BW_SIM_SOPT7_ADC0PRETRGSEL(baseAddr, select);
+        SIM_BWR_SOPT7_ADC0PRETRGSEL(base, select);
         break;
     case 1:
-        BW_SIM_SOPT7_ADC1PRETRGSEL(baseAddr, select);
+        SIM_BWR_SOPT7_ADC1PRETRGSEL(base, select);
         break;
     default:
         break;
@@ -203,20 +203,20 @@ void SIM_HAL_SetAdcPreTriggerMode(uint32_t baseAddr,
  * This function will get ADCx pre-trigger select setting.
  *
  *END**************************************************************************/
-sim_adc_pretrg_sel_t SIM_HAL_GetAdcPreTriggerMode(uint32_t baseAddr,
+sim_adc_pretrg_sel_t SIM_HAL_GetAdcPreTriggerMode(SIM_Type * base,
                                                   uint32_t instance)
 {
     sim_adc_pretrg_sel_t retValue = (sim_adc_pretrg_sel_t)0;
 
-    assert(instance < HW_ADC_INSTANCE_COUNT);
+    assert(instance < ADC_INSTANCE_COUNT);
 
     switch (instance)
     {
     case 0:
-        retValue = (sim_adc_pretrg_sel_t)BR_SIM_SOPT7_ADC0PRETRGSEL(baseAddr);
+        retValue = (sim_adc_pretrg_sel_t)SIM_BRD_SOPT7_ADC0PRETRGSEL(base);
         break;
     case 1:
-        retValue = (sim_adc_pretrg_sel_t)BR_SIM_SOPT7_ADC1PRETRGSEL(baseAddr);
+        retValue = (sim_adc_pretrg_sel_t)SIM_BRD_SOPT7_ADC1PRETRGSEL(base);
         break;
     default:
         break;
@@ -233,19 +233,19 @@ sim_adc_pretrg_sel_t SIM_HAL_GetAdcPreTriggerMode(uint32_t baseAddr,
  * are enabled through ADCxALTTRGEN
  *
  *END**************************************************************************/
-void SIM_HAL_SetAdcTriggerMode(uint32_t baseAddr,
+void SIM_HAL_SetAdcTriggerMode(SIM_Type * base,
                                uint32_t instance,
                                sim_adc_trg_sel_t select)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
+    assert(instance < ADC_INSTANCE_COUNT);
 
     switch (instance)
     {
     case 0:
-        BW_SIM_SOPT7_ADC0TRGSEL(baseAddr, select);
+        SIM_BWR_SOPT7_ADC0TRGSEL(base, select);
         break;
     case 1:
-        BW_SIM_SOPT7_ADC1TRGSEL(baseAddr, select);
+        SIM_BWR_SOPT7_ADC1TRGSEL(base, select);
         break;
     default:
         break;
@@ -259,19 +259,19 @@ void SIM_HAL_SetAdcTriggerMode(uint32_t baseAddr,
  * This function will get ADCx trigger select setting.
  *
  *END**************************************************************************/
-sim_adc_trg_sel_t SIM_HAL_GetAdcTriggerMode(uint32_t baseAddr, uint32_t instance)
+sim_adc_trg_sel_t SIM_HAL_GetAdcTriggerMode(SIM_Type * base, uint32_t instance)
 {
     sim_adc_trg_sel_t retValue = (sim_adc_trg_sel_t)0;
 
-    assert(instance < HW_ADC_INSTANCE_COUNT);
+    assert(instance < ADC_INSTANCE_COUNT);
 
     switch (instance)
     {
     case 0:
-        retValue = (sim_adc_trg_sel_t)BR_SIM_SOPT7_ADC0TRGSEL(baseAddr);
+        retValue = (sim_adc_trg_sel_t)SIM_BRD_SOPT7_ADC0TRGSEL(base);
         break;
     case 1:
-        retValue = (sim_adc_trg_sel_t)BR_SIM_SOPT7_ADC1TRGSEL(baseAddr);
+        retValue = (sim_adc_trg_sel_t)SIM_BRD_SOPT7_ADC1TRGSEL(base);
         break;
     default:
         break;
@@ -287,23 +287,23 @@ sim_adc_trg_sel_t SIM_HAL_GetAdcTriggerMode(uint32_t baseAddr, uint32_t instance
  * This function sets ADC alternate trigger, pre-trigger mode and trigger mode.
  *
  *END**************************************************************************/
-void SIM_HAL_SetAdcTriggerModeOneStep(uint32_t baseAddr,
+void SIM_HAL_SetAdcTriggerModeOneStep(SIM_Type * base,
                                       uint32_t instance,
                                       bool    altTrigEn,
                                       sim_adc_pretrg_sel_t preTrigSel,
                                       sim_adc_trg_sel_t trigSel)
 {
-    assert(instance < HW_ADC_INSTANCE_COUNT);
+    assert(instance < ADC_INSTANCE_COUNT);
 
     switch (instance)
     {
         case 0:
-            BW_SIM_SOPT7_ADC0ALTTRGEN(baseAddr, altTrigEn ? 1 : 0);
-            BW_SIM_SOPT7_ADC0PRETRGSEL(baseAddr, preTrigSel);
+            SIM_BWR_SOPT7_ADC0ALTTRGEN(base, altTrigEn ? 1 : 0);
+            SIM_BWR_SOPT7_ADC0PRETRGSEL(base, preTrigSel);
             break;
         case 1:
-            BW_SIM_SOPT7_ADC1ALTTRGEN(baseAddr, altTrigEn ? 1 : 0);
-            BW_SIM_SOPT7_ADC1PRETRGSEL(baseAddr, preTrigSel);
+            SIM_BWR_SOPT7_ADC1ALTTRGEN(base, altTrigEn ? 1 : 0);
+            SIM_BWR_SOPT7_ADC1PRETRGSEL(base, preTrigSel);
             break;
     default:
         break;
@@ -314,10 +314,10 @@ void SIM_HAL_SetAdcTriggerModeOneStep(uint32_t baseAddr,
         switch (instance)
         {
             case 0:
-                BW_SIM_SOPT7_ADC0TRGSEL(baseAddr, trigSel);
+                SIM_BWR_SOPT7_ADC0TRGSEL(base, trigSel);
                 break;
             case 1:
-                BW_SIM_SOPT7_ADC1TRGSEL(baseAddr, trigSel);
+                SIM_BWR_SOPT7_ADC1TRGSEL(base, trigSel);
                 break;
             default:
                 break;
@@ -332,7 +332,7 @@ void SIM_HAL_SetAdcTriggerModeOneStep(uint32_t baseAddr,
  * This function will select the source for the UART1 receive data.
  *
  *END**************************************************************************/
-void SIM_HAL_SetUartRxSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetUartRxSrcMode(SIM_Type * base,
                               uint32_t instance,
                               sim_uart_rxsrc_t select)
 {
@@ -341,10 +341,10 @@ void SIM_HAL_SetUartRxSrcMode(uint32_t baseAddr,
     switch (instance)
     {
     case 0:
-        BW_SIM_SOPT5_UART0RXSRC(baseAddr, select);
+        SIM_BWR_SOPT5_UART0RXSRC(base, select);
         break;
     case 1:
-        BW_SIM_SOPT5_UART1RXSRC(baseAddr, select);
+        SIM_BWR_SOPT5_UART1RXSRC(base, select);
         break;
     default:
         break;
@@ -358,7 +358,7 @@ void SIM_HAL_SetUartRxSrcMode(uint32_t baseAddr,
  * This function will get UARTx receive data source select setting.
  *
  *END**************************************************************************/
-sim_uart_rxsrc_t SIM_HAL_GetUartRxSrcMode(uint32_t baseAddr, uint32_t instance)
+sim_uart_rxsrc_t SIM_HAL_GetUartRxSrcMode(SIM_Type * base, uint32_t instance)
 {
     sim_uart_rxsrc_t retValue = (sim_uart_rxsrc_t)0;
 
@@ -367,10 +367,10 @@ sim_uart_rxsrc_t SIM_HAL_GetUartRxSrcMode(uint32_t baseAddr, uint32_t instance)
     switch (instance)
     {
     case 0:
-        retValue = (sim_uart_rxsrc_t)BR_SIM_SOPT5_UART0RXSRC(baseAddr);
+        retValue = (sim_uart_rxsrc_t)SIM_BRD_SOPT5_UART0RXSRC(base);
         break;
     case 1:
-        retValue = (sim_uart_rxsrc_t)BR_SIM_SOPT5_UART1RXSRC(baseAddr);
+        retValue = (sim_uart_rxsrc_t)SIM_BRD_SOPT5_UART1RXSRC(base);
         break;
     default:
         break;
@@ -386,7 +386,7 @@ sim_uart_rxsrc_t SIM_HAL_GetUartRxSrcMode(uint32_t baseAddr, uint32_t instance)
  * This function will select the source for the UARTx transmit data.
  *
  *END**************************************************************************/
-void SIM_HAL_SetUartTxSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetUartTxSrcMode(SIM_Type * base,
                               uint32_t instance,
                               sim_uart_txsrc_t select)
 {
@@ -395,10 +395,10 @@ void SIM_HAL_SetUartTxSrcMode(uint32_t baseAddr,
     switch (instance)
     {
     case 0:
-        BW_SIM_SOPT5_UART0TXSRC(baseAddr, select);
+        SIM_BWR_SOPT5_UART0TXSRC(base, select);
         break;
     case 1:
-        BW_SIM_SOPT5_UART1TXSRC(baseAddr, select);
+        SIM_BWR_SOPT5_UART1TXSRC(base, select);
         break;
     default:
         break;
@@ -412,7 +412,7 @@ void SIM_HAL_SetUartTxSrcMode(uint32_t baseAddr,
  * This function will get UARTx transmit data source select setting.
  *
  *END**************************************************************************/
-sim_uart_txsrc_t SIM_HAL_GetUartTxSrcMode(uint32_t baseAddr, uint32_t instance)
+sim_uart_txsrc_t SIM_HAL_GetUartTxSrcMode(SIM_Type * base, uint32_t instance)
 {
     sim_uart_txsrc_t retValue =(sim_uart_txsrc_t)0;
 
@@ -421,10 +421,10 @@ sim_uart_txsrc_t SIM_HAL_GetUartTxSrcMode(uint32_t baseAddr, uint32_t instance)
     switch (instance)
     {
     case 0:
-        retValue = (sim_uart_txsrc_t)BR_SIM_SOPT5_UART0TXSRC(baseAddr);
+        retValue = (sim_uart_txsrc_t)SIM_BRD_SOPT5_UART0TXSRC(base);
         break;
     case 1:
-        retValue = (sim_uart_txsrc_t)BR_SIM_SOPT5_UART1TXSRC(baseAddr);
+        retValue = (sim_uart_txsrc_t)SIM_BRD_SOPT5_UART1TXSRC(base);
         break;
     default:
         break;
@@ -440,12 +440,12 @@ sim_uart_txsrc_t SIM_HAL_GetUartTxSrcMode(uint32_t baseAddr, uint32_t instance)
  * This function will select the source of FTMx hardware trigger y.
  *
  *END**************************************************************************/
-void SIM_HAL_SetFtmTriggerSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmTriggerSrcMode(SIM_Type * base,
                                   uint32_t instance,
                                   uint8_t  trigger,
                                   sim_ftm_trg_src_t select)
 {
-    assert (instance < HW_FTM_INSTANCE_COUNT);
+    assert (instance < FTM_INSTANCE_COUNT);
     assert (trigger < FSL_FEATURE_SIM_OPT_FTM_TRIGGER_COUNT);
 
     switch (instance)
@@ -454,10 +454,10 @@ void SIM_HAL_SetFtmTriggerSrcMode(uint32_t baseAddr,
         switch (trigger)
         {
         case 0:
-            BW_SIM_SOPT4_FTM0TRG0SRC(baseAddr, select);
+            SIM_BWR_SOPT4_FTM0TRG0SRC(base, select);
             break;
         case 1:
-            BW_SIM_SOPT4_FTM0TRG1SRC(baseAddr, select);
+            SIM_BWR_SOPT4_FTM0TRG1SRC(base, select);
             break;
         default:
             break;
@@ -467,10 +467,10 @@ void SIM_HAL_SetFtmTriggerSrcMode(uint32_t baseAddr,
         switch (trigger)
         {
         case 0:
-            BW_SIM_SOPT4_FTM3TRG0SRC(baseAddr, select);
+            SIM_BWR_SOPT4_FTM3TRG0SRC(base, select);
             break;
         case 1:
-            BW_SIM_SOPT4_FTM3TRG1SRC(baseAddr, select);
+            SIM_BWR_SOPT4_FTM3TRG1SRC(base, select);
             break;
         default:
             break;
@@ -488,13 +488,13 @@ void SIM_HAL_SetFtmTriggerSrcMode(uint32_t baseAddr,
  * This function will get FlexTimer x hardware trigger y source select setting.
  *
  *END**************************************************************************/
-sim_ftm_trg_src_t SIM_HAL_GetFtmTriggerSrcMode(uint32_t baseAddr,
+sim_ftm_trg_src_t SIM_HAL_GetFtmTriggerSrcMode(SIM_Type * base,
                                                uint32_t instance,
                                                uint8_t trigger)
 {
     sim_ftm_trg_src_t retValue = (sim_ftm_trg_src_t)0;
 
-    assert (instance < HW_FTM_INSTANCE_COUNT);
+    assert (instance < FTM_INSTANCE_COUNT);
     assert (trigger < FSL_FEATURE_SIM_OPT_FTM_TRIGGER_COUNT);
 
     switch (instance)
@@ -503,10 +503,10 @@ sim_ftm_trg_src_t SIM_HAL_GetFtmTriggerSrcMode(uint32_t baseAddr,
         switch (trigger)
         {
         case 0:
-            retValue = (sim_ftm_trg_src_t)BR_SIM_SOPT4_FTM0TRG0SRC(baseAddr);
+            retValue = (sim_ftm_trg_src_t)SIM_BRD_SOPT4_FTM0TRG0SRC(base);
             break;
         case 1:
-            retValue = (sim_ftm_trg_src_t)BR_SIM_SOPT4_FTM0TRG1SRC(baseAddr);
+            retValue = (sim_ftm_trg_src_t)SIM_BRD_SOPT4_FTM0TRG1SRC(base);
             break;
         default:
             break;
@@ -516,10 +516,10 @@ sim_ftm_trg_src_t SIM_HAL_GetFtmTriggerSrcMode(uint32_t baseAddr,
         switch (trigger)
         {
         case 0:
-            retValue = (sim_ftm_trg_src_t)BR_SIM_SOPT4_FTM3TRG0SRC(baseAddr);
+            retValue = (sim_ftm_trg_src_t)SIM_BRD_SOPT4_FTM3TRG0SRC(base);
             break;
         case 1:
-            retValue = (sim_ftm_trg_src_t)BR_SIM_SOPT4_FTM3TRG1SRC(baseAddr);
+            retValue = (sim_ftm_trg_src_t)SIM_BRD_SOPT4_FTM3TRG1SRC(base);
             break;
         default:
             break;
@@ -539,25 +539,25 @@ sim_ftm_trg_src_t SIM_HAL_GetFtmTriggerSrcMode(uint32_t baseAddr,
  * This function will select the source of FTMx external clock pin select
  *
  *END**************************************************************************/
-void SIM_HAL_SetFtmExternalClkPinMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmExternalClkPinMode(SIM_Type * base,
                                       uint32_t instance,
                                       sim_ftm_clk_sel_t select)
 {
-    assert (instance < HW_FTM_INSTANCE_COUNT);
+    assert (instance < FTM_INSTANCE_COUNT);
 
     switch (instance)
     {
     case 0:
-        BW_SIM_SOPT4_FTM0CLKSEL(baseAddr, select);
+        SIM_BWR_SOPT4_FTM0CLKSEL(base, select);
         break;
     case 1:
-        BW_SIM_SOPT4_FTM1CLKSEL(baseAddr, select);
+        SIM_BWR_SOPT4_FTM1CLKSEL(base, select);
         break;
     case 2:
-        BW_SIM_SOPT4_FTM2CLKSEL(baseAddr, select);
+        SIM_BWR_SOPT4_FTM2CLKSEL(base, select);
         break;
     case 3:
-        BW_SIM_SOPT4_FTM3CLKSEL(baseAddr, select);
+        SIM_BWR_SOPT4_FTM3CLKSEL(base, select);
         break;
     default:
         break;
@@ -571,26 +571,26 @@ void SIM_HAL_SetFtmExternalClkPinMode(uint32_t baseAddr,
  * This function will get FlexTimer x external clock pin select setting.
  *
  *END**************************************************************************/
-sim_ftm_clk_sel_t SIM_HAL_GetFtmExternalClkPinMode(uint32_t baseAddr,
+sim_ftm_clk_sel_t SIM_HAL_GetFtmExternalClkPinMode(SIM_Type * base,
                                                    uint32_t instance)
 {
     sim_ftm_clk_sel_t retValue = (sim_ftm_clk_sel_t)0;
 
-    assert (instance < HW_FTM_INSTANCE_COUNT);
+    assert (instance < FTM_INSTANCE_COUNT);
 
     switch (instance)
     {
     case 0:
-        retValue = (sim_ftm_clk_sel_t)BR_SIM_SOPT4_FTM0CLKSEL(baseAddr);
+        retValue = (sim_ftm_clk_sel_t)SIM_BRD_SOPT4_FTM0CLKSEL(base);
         break;
     case 1:
-        retValue = (sim_ftm_clk_sel_t)BR_SIM_SOPT4_FTM1CLKSEL(baseAddr);
+        retValue = (sim_ftm_clk_sel_t)SIM_BRD_SOPT4_FTM1CLKSEL(base);
         break;
     case 2:
-        retValue = (sim_ftm_clk_sel_t)BR_SIM_SOPT4_FTM2CLKSEL(baseAddr);
+        retValue = (sim_ftm_clk_sel_t)SIM_BRD_SOPT4_FTM2CLKSEL(base);
         break;
     case 3:
-        retValue = (sim_ftm_clk_sel_t)BR_SIM_SOPT4_FTM3CLKSEL(baseAddr);
+        retValue = (sim_ftm_clk_sel_t)SIM_BRD_SOPT4_FTM3CLKSEL(base);
         break;
     default:
         break;
@@ -606,12 +606,12 @@ sim_ftm_clk_sel_t SIM_HAL_GetFtmExternalClkPinMode(uint32_t baseAddr,
  * This function will select FlexTimer x channel y input capture source
  *
  *END**************************************************************************/
-void SIM_HAL_SetFtmChSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmChSrcMode(SIM_Type * base,
                              uint32_t instance,
                              uint8_t  channel,
                              sim_ftm_ch_src_t select)
 {
-    assert (instance < HW_FTM_INSTANCE_COUNT);
+    assert (instance < FTM_INSTANCE_COUNT);
 
     switch (instance)
     {
@@ -619,7 +619,7 @@ void SIM_HAL_SetFtmChSrcMode(uint32_t baseAddr,
         switch (channel)
         {
         case 0:
-            BW_SIM_SOPT4_FTM1CH0SRC(baseAddr, select);
+            SIM_BWR_SOPT4_FTM1CH0SRC(base, select);
             break;
         default:
             break;
@@ -629,10 +629,10 @@ void SIM_HAL_SetFtmChSrcMode(uint32_t baseAddr,
         switch (channel)
         {
         case 0:
-            BW_SIM_SOPT4_FTM2CH0SRC(baseAddr, select);
+            SIM_BWR_SOPT4_FTM2CH0SRC(base, select);
             break;
         case 1:
-            BW_SIM_SOPT4_FTM2CH1SRC(baseAddr, select);
+            SIM_BWR_SOPT4_FTM2CH1SRC(base, select);
             break;
         default:
             break;
@@ -651,13 +651,13 @@ void SIM_HAL_SetFtmChSrcMode(uint32_t baseAddr,
  * setting.
  *
  *END**************************************************************************/
-sim_ftm_ch_src_t SIM_HAL_GetFtmChSrcMode(uint32_t baseAddr,
+sim_ftm_ch_src_t SIM_HAL_GetFtmChSrcMode(SIM_Type * base,
                                          uint32_t instance,
                                          uint8_t channel)
 {
     sim_ftm_ch_src_t retValue = (sim_ftm_ch_src_t)0;
 
-    assert (instance < HW_FTM_INSTANCE_COUNT);
+    assert (instance < FTM_INSTANCE_COUNT);
 
     switch (instance)
     {
@@ -665,7 +665,7 @@ sim_ftm_ch_src_t SIM_HAL_GetFtmChSrcMode(uint32_t baseAddr,
         switch (channel)
         {
         case 0:
-            retValue = (sim_ftm_ch_src_t)BR_SIM_SOPT4_FTM1CH0SRC(baseAddr);
+            retValue = (sim_ftm_ch_src_t)SIM_BRD_SOPT4_FTM1CH0SRC(base);
             break;
         default:
             break;
@@ -675,10 +675,10 @@ sim_ftm_ch_src_t SIM_HAL_GetFtmChSrcMode(uint32_t baseAddr,
         switch (channel)
         {
         case 0:
-            retValue = (sim_ftm_ch_src_t)BR_SIM_SOPT4_FTM2CH0SRC(baseAddr);
+            retValue = (sim_ftm_ch_src_t)SIM_BRD_SOPT4_FTM2CH0SRC(base);
             break;
         case 1:
-            retValue = (sim_ftm_ch_src_t)BR_SIM_SOPT4_FTM2CH1SRC(baseAddr);
+            retValue = (sim_ftm_ch_src_t)SIM_BRD_SOPT4_FTM2CH1SRC(base);
             break;
         default:
             break;
@@ -702,7 +702,7 @@ sim_ftm_ch_src_t SIM_HAL_GetFtmChSrcMode(uint32_t baseAddr,
  * This function will select FlexTimer x channel y output source
  *
  *END**************************************************************************/
-void SIM_HAL_SetFtmChOutSrcMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmChOutSrcMode(SIM_Type * base,
                                 uint32_t instance,
                                 uint8_t channel,
                                 sim_ftm_ch_out_src_t select)
@@ -712,11 +712,11 @@ void SIM_HAL_SetFtmChOutSrcMode(uint32_t baseAddr,
 
     if (kSimFtmChOutSrc0 == select)
     {
-        HW_SIM_SOPT8_CLR(baseAddr, FTM_CH_OUT_SRC_MASK(instance, channel));
+        SIM_CLR_SOPT8(base, FTM_CH_OUT_SRC_MASK(instance, channel));
     }
     else
     {
-        HW_SIM_SOPT8_SET(baseAddr, FTM_CH_OUT_SRC_MASK(instance, channel));
+        SIM_SET_SOPT8(base, FTM_CH_OUT_SRC_MASK(instance, channel));
     }
 }
 
@@ -728,14 +728,14 @@ void SIM_HAL_SetFtmChOutSrcMode(uint32_t baseAddr,
  * setting.
  *
  *END**************************************************************************/
-sim_ftm_ch_out_src_t SIM_HAL_GetFtmChOutSrcMode(uint32_t baseAddr,
+sim_ftm_ch_out_src_t SIM_HAL_GetFtmChOutSrcMode(SIM_Type * base,
                                                 uint32_t instance,
                                                 uint8_t channel)
 {
     assert ((0U==instance) || (3U==instance));
     assert (8U>channel);
     return (sim_ftm_ch_out_src_t)
-        (HW_SIM_SOPT8_RD(baseAddr) & FTM_CH_OUT_SRC_MASK(instance, channel));
+        (SIM_RD_SOPT8(base) & FTM_CH_OUT_SRC_MASK(instance, channel));
 }
 
 /*FUNCTION**********************************************************************
@@ -745,16 +745,16 @@ sim_ftm_ch_out_src_t SIM_HAL_GetFtmChOutSrcMode(uint32_t baseAddr,
  * This function sets FlexTimer x hardware trigger 0 software synchronization.
  *
  *END**************************************************************************/
-void SIM_HAL_SetFtmSyncCmd(uint32_t baseAddr, uint32_t instance, bool sync)
+void SIM_HAL_SetFtmSyncCmd(SIM_Type * base, uint32_t instance, bool sync)
 {
-    assert (instance < HW_FTM_INSTANCE_COUNT);
+    assert (instance < FTM_INSTANCE_COUNT);
     if (sync)
     {
-        HW_SIM_SOPT8_SET(baseAddr, (1U<<instance));
+        SIM_SET_SOPT8(base, (1U<<instance));
     }
     else
     {
-        HW_SIM_SOPT8_CLR(baseAddr, (1U<<instance));
+        SIM_CLR_SOPT8(base, (1U<<instance));
     }
 }
 
@@ -765,12 +765,12 @@ void SIM_HAL_SetFtmSyncCmd(uint32_t baseAddr, uint32_t instance, bool sync)
  * This function will set the FlexTimer x fault y select setting.
  *
  *END**************************************************************************/
-void SIM_HAL_SetFtmFaultSelMode(uint32_t baseAddr,
+void SIM_HAL_SetFtmFaultSelMode(SIM_Type * base,
                                 uint32_t  instance,
                                 uint8_t  fault,
                                 sim_ftm_flt_sel_t select)
 {
-    assert (instance < HW_FTM_INSTANCE_COUNT);
+    assert (instance < FTM_INSTANCE_COUNT);
 
     switch (instance)
     {
@@ -778,23 +778,23 @@ void SIM_HAL_SetFtmFaultSelMode(uint32_t baseAddr,
         switch (fault)
         {
         case 0:
-            BW_SIM_SOPT4_FTM0FLT0(baseAddr, select);
+            SIM_BWR_SOPT4_FTM0FLT0(base, select);
             break;
         case 1:
-            BW_SIM_SOPT4_FTM0FLT1(baseAddr, select);
+            SIM_BWR_SOPT4_FTM0FLT1(base, select);
             break;
         default:
             break;
         }
         break;
     case 1:
-        BW_SIM_SOPT4_FTM1FLT0(baseAddr, select);
+        SIM_BWR_SOPT4_FTM1FLT0(base, select);
         break;
     case 2:
-        BW_SIM_SOPT4_FTM2FLT0(baseAddr, select);
+        SIM_BWR_SOPT4_FTM2FLT0(base, select);
         break;
     case 3:
-        BW_SIM_SOPT4_FTM3FLT0(baseAddr, select);
+        SIM_BWR_SOPT4_FTM3FLT0(base, select);
         break;
     default:
         break;
@@ -808,13 +808,13 @@ void SIM_HAL_SetFtmFaultSelMode(uint32_t baseAddr,
  * This function will get FlexTimer x fault y select setting.
  *
  *END**************************************************************************/
-sim_ftm_flt_sel_t SIM_HAL_GetFtmFaultSelMode(uint32_t baseAddr,
+sim_ftm_flt_sel_t SIM_HAL_GetFtmFaultSelMode(SIM_Type * base,
                                              uint32_t instance,
                                              uint8_t fault)
 {
     sim_ftm_flt_sel_t retValue = (sim_ftm_flt_sel_t)0;
 
-    assert (instance < HW_FTM_INSTANCE_COUNT);
+    assert (instance < FTM_INSTANCE_COUNT);
 
     switch (instance)
     {
@@ -822,23 +822,23 @@ sim_ftm_flt_sel_t SIM_HAL_GetFtmFaultSelMode(uint32_t baseAddr,
         switch (fault)
         {
         case 0:
-            retValue = (sim_ftm_flt_sel_t)BR_SIM_SOPT4_FTM0FLT0(baseAddr);
+            retValue = (sim_ftm_flt_sel_t)SIM_BRD_SOPT4_FTM0FLT0(base);
             break;
         case 1:
-            retValue = (sim_ftm_flt_sel_t)BR_SIM_SOPT4_FTM0FLT1(baseAddr);
+            retValue = (sim_ftm_flt_sel_t)SIM_BRD_SOPT4_FTM0FLT1(base);
             break;
         default:
             break;
         }
         break;
     case 1:
-        retValue = (sim_ftm_flt_sel_t)BR_SIM_SOPT4_FTM1FLT0(baseAddr);
+        retValue = (sim_ftm_flt_sel_t)SIM_BRD_SOPT4_FTM1FLT0(base);
         break;
     case 2:
-        retValue = (sim_ftm_flt_sel_t)BR_SIM_SOPT4_FTM2FLT0(baseAddr);
+        retValue = (sim_ftm_flt_sel_t)SIM_BRD_SOPT4_FTM2FLT0(base);
         break;
     case 3:
-        retValue = (sim_ftm_flt_sel_t)BR_SIM_SOPT4_FTM3FLT0(baseAddr);
+        retValue = (sim_ftm_flt_sel_t)SIM_BRD_SOPT4_FTM3FLT0(base);
         break;
     default:
         break;

@@ -37,25 +37,25 @@
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-extern void LPUART_DRV_IrqHandler(uint32_t instance);
+extern void LPUART_DRV_IRQHandler(uint32_t instance);
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
 
-#if (HW_LPUART_INSTANCE_COUNT > 0)
+#if (LPUART_INSTANCE_COUNT > 0)
 /* Implementation of LPUART0 handler named in startup code. */
 void LPUART0_IRQHandler(void)
 {
-    LPUART_DRV_IrqHandler(0);
+    LPUART_DRV_IRQHandler(0);
 }
 #endif
 
-#if (HW_LPUART_INSTANCE_COUNT > 1)
+#if (LPUART_INSTANCE_COUNT > 1)
 /* Implementation of LPUART0 handler named in startup code. */
-void LPUART0_IRQHandler(void)
+void LPUART1_IRQHandler(void)
 {
-    LPUART_DRV_IrqHandler(1);
+    LPUART_DRV_IRQHandler(1);
 }
 #endif
 

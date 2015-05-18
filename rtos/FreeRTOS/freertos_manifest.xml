@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ksdk:manifest format_version="1.2" xmlns:ksdk="http://freescale.com/ksdk/1.2/ksdk_manifest.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://freescale.com/ksdk/1.2/ksdk_manifest.xsd http://freescale.com/ksdk/1.2/ksdk_manifest.xsd">
+  <!--This file is designed to identify uCOSIII RTOS in Kinetis SDK release. -->
+  <components>
+    <component name="FreeRTOS" type="os" api_version="1.0.0">
+      <!-- \include -->
+      <source path="rtos/FreeRTOS/include" type="c_include">
+        <files mask="*.h"/>
+      </source>          
+      <!-- \port -->
+      <source path="rtos/FreeRTOS/port/gcc" type="src" compiler="gcc">
+        <files mask="*.S"/>
+        <files mask="*.c"/>
+      </source>     
+      <source path="rtos/FreeRTOS/port/gcc" type="c_include" compiler="gcc">
+        <files mask="*.h"/>
+      </source>     
+      <source path="rtos/FreeRTOS/port/iar" type="src" compiler="iar">
+        <files mask="*.s"/>
+        <files mask="*.c"/>
+      </source>     
+      <source path="rtos/FreeRTOS/port/iar" type="c_include" compiler="iar">
+        <files mask="*.h"/>
+      </source>     
+      <source path="rtos/FreeRTOS/port/mdk" type="src" compiler="arm">
+        <files mask="*.S"/>
+        <files mask="*.c"/>
+      </source>     
+      <source path="rtos/FreeRTOS/port/mdk" type="c_include" compiler="arm">
+        <files mask="*.h"/>
+      </source>     
+      <!-- \src -->    
+      <source path="rtos/FreeRTOS/src" type="src">
+        <files mask="*.c"/>
+      </source>                         
+    </component>
+  </components>
+</ksdk:manifest>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+#if FSL_FEATURE_SOC_SMC_COUNT
 
 /*! @addtogroup smc_hal*/
 /*! @{*/
@@ -46,16 +47,16 @@
  ******************************************************************************/
 /*! @brief Power Modes */
 typedef enum _power_modes {
-    kPowerModeRun,
-    kPowerModeWait,
-    kPowerModeStop,
-    kPowerModeVlpr,
-    kPowerModeVlpw,
-    kPowerModeVlps,
-    kPowerModeLls,
-    kPowerModeVlls,
-    kPowerModeHsrun,
-    kPowerModeMax
+    kPowerModeRun    = 0x01U << 0U,
+    kPowerModeWait   = 0x01U << 1U,
+    kPowerModeStop   = 0x01U << 2U,
+    kPowerModeVlpr   = 0x01U << 3U,
+    kPowerModeVlpw   = 0x01U << 4U,
+    kPowerModeVlps   = 0x01U << 5U,
+    kPowerModeLls    = 0x01U << 6U,
+    kPowerModeVlls   = 0x01U << 7U,
+    kPowerModeHsrun  = 0x01U << 8U,
+    kPowerModeMax    = 0x01U << 9U,
 } power_modes_t;
 
 /*!
@@ -70,27 +71,38 @@ typedef enum _smc_hal_error_code {
 
 /*! @brief Power Modes in PMSTAT*/
 typedef enum _power_mode_stat {
-    kStatRun    = 0x01,             /*!< 0000_0001 - Current power mode is RUN*/
-    kStatStop   = 0x02,             /*!< 0000_0010 - Current power mode is STOP*/
-    kStatVlpr   = 0x04,             /*!< 0000_0100 - Current power mode is VLPR*/
-    kStatVlpw   = 0x08,             /*!< 0000_1000 - Current power mode is VLPW*/
-    kStatVlps   = 0x10,             /*!< 0001_0000 - Current power mode is VLPS*/
+    kStatRun    = 0x01U,             /*!< 0000_0001 - Current power mode is RUN*/
+    kStatStop   = 0x02U,             /*!< 0000_0010 - Current power mode is STOP*/
+    kStatVlpr   = 0x04U,             /*!< 0000_0100 - Current power mode is VLPR*/
+    kStatVlpw   = 0x08U,             /*!< 0000_1000 - Current power mode is VLPW*/
+    kStatVlps   = 0x10U,             /*!< 0001_0000 - Current power mode is VLPS*/
 #if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE
-    kStatLls    = 0x20,             /*!< 0010_0000 - Current power mode is LLS*/
+    kStatLls    = 0x20U,             /*!< 0010_0000 - Current power mode is LLS*/
 #endif
-    kStatVlls   = 0x40,             /*!< 0100_0000 - Current power mode is VLLS*/
+    kStatVlls   = 0x40U,             /*!< 0100_0000 - Current power mode is VLLS*/
 #if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-    kStatHsrun  = 0x80              /*!< 1000_0000 - Current power mode is HSRUN*/
+    kStatHsrun  = 0x80U              /*!< 1000_0000 - Current power mode is HSRUN*/
 #endif
 } power_mode_stat_t;
 
 /*! @brief Power Modes Protection*/
 typedef enum _power_modes_protect {
-    kAllowHsrun,                    /*!< Allow High Speed Run mode*/
-    kAllowVlp,                      /*!< Allow Very-Low-Power Modes*/
-    kAllowLls,                      /*!< Allow Low-Leakage Stop Mode*/
-    kAllowVlls,                     /*!< Allow Very-Low-Leakage Stop Mode*/
-    kAllowMax
+    kAllowPowerModeVlls  = SMC_PMPROT_AVLLS_MASK,   /*!< Allow Very-Low-Leakage Stop Mode*/
+#if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE
+    kAllowPowerModeLls   = SMC_PMPROT_ALLS_MASK,    /*!< Allow Low-Leakage Stop Mode*/
+#endif
+    kAllowPowerModeVlp   = SMC_PMPROT_AVLP_MASK,    /*!< Allow Very-Low-Power Modes*/
+#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
+    kAllowPowerModeHsrun = SMC_PMPROT_AHSRUN_MASK,  /*!< Allow High Speed Run mode*/
+#endif
+    kAllowPowerModeAll   = (SMC_PMPROT_AVLLS_MASK  |
+#if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE
+                            SMC_PMPROT_ALLS_MASK   |
+#endif
+#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
+                            SMC_PMPROT_AHSRUN_MASK |
+#endif
+                            SMC_PMPROT_AVLP_MASK)   /*!< Allow all power modes. */
 } power_modes_protect_t;
 
 /*!
@@ -122,10 +134,10 @@ typedef enum _smc_stop_mode {
  * @brief VLLS/LLS stop sub mode definition
  */
 typedef enum _smc_stop_submode {
-    kSmcStopSub0,                               
-    kSmcStopSub1,                               
-    kSmcStopSub2,                               
-    kSmcStopSub3                                
+    kSmcStopSub0,          /*!< Stop submode 0, for VLLS0/LLS0. */
+    kSmcStopSub1,          /*!< Stop submode 1, for VLLS1/LLS1. */
+    kSmcStopSub2,          /*!< Stop submode 2, for VLLS2/LLS2. */
+    kSmcStopSub3           /*!< Stop submode 3, for VLLS3/LLS3. */
 } smc_stop_submode_t;
 
 /*! @brief Low Power Wake Up on Interrupt option*/
@@ -139,7 +151,7 @@ typedef enum _smc_pstop_option {
     kSmcPstopStop,                          /*!< STOP - Normal Stop mode*/
     kSmcPstopStop1,                         /*!< Partial Stop with both system and bus clocks disabled*/
     kSmcPstopStop2,                         /*!< Partial Stop with system clock disabled and bus clock enabled*/
-    kSmcPstopReserved,
+    kSmcPstopReserved
 } smc_pstop_option_t;
 
 /*! @brief POR option*/
@@ -160,48 +172,23 @@ typedef enum _smc_lpo_option {
     kSmcLpoDisabled                        /*!< LPO clock is disabled in LLS/VLLSx. @internal gui name="Disabled" */
 } smc_lpo_option_t;
 
-/*! @brief Power mode control options*/
-typedef enum _smc_power_options {
-    kSmcOptionLpwui,                        /*!< Low Power Wake Up on Interrupt*/
-    kSmcOptionPropo                         /*!< POR option*/
-} smc_power_options_t;
-
-/*! @brief Power mode protection configuration*/
-typedef struct _smc_power_mode_protection_config {
-    bool                vlpProt;            /*!< VLP protect*/
-#if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE
-    bool                llsProt;            /*!< LLS protect */
-#endif
-    bool                vllsProt;           /*!< VLLS protect*/
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE 
-    bool                hsrunProt;          /*!< HSRUN protect */
-#endif
-} smc_power_mode_protection_config_t;
-
 /*! @brief Power mode control configuration used for calling the SMC_SYS_SetPowerMode API. */
 typedef struct _smc_power_mode_config {
     power_modes_t       powerModeName;      /*!< Power mode(enum), see power_modes_t */
     smc_stop_submode_t  stopSubMode;        /*!< Stop submode(enum), see smc_stop_submode_t */
 #if FSL_FEATURE_SMC_HAS_LPWUI
-    bool                lpwuiOption;        /*!< If LPWUI option is needed */
     smc_lpwui_option_t  lpwuiOptionValue;   /*!< LPWUI option(enum), see smc_lpwui_option_t */
 #endif
 #if FSL_FEATURE_SMC_HAS_PORPO
-    bool                porOption;          /*!< If POR option is needed */
     smc_por_option_t    porOptionValue;     /*!< POR option(enum), see smc_por_option_t */
 #endif
-
 #if FSL_FEATURE_SMC_HAS_RAM2_POWER_OPTION
-    bool                ram2Option;         /*!< If RAM2 option is needed */
     smc_ram2_option_t   ram2OptionValue;    /*!< RAM2 option(enum), see smc_ram2_option_t */
 #endif
-
 #if FSL_FEATURE_SMC_HAS_PSTOPO
-    bool                pstopOption;        /*!< If PSTOPO option is needed */
     smc_pstop_option_t  pstopOptionValue;   /*!< PSTOPO option(enum), see smc_por_option_t */
 #endif
 #if FSL_FEATURE_SMC_HAS_LPOPO
-    bool                lpoOption;          /*!< If the LPOPO option is needed */
     smc_lpo_option_t    lpoOptionValue;     /*!< LPOPO option, see smc_lpo_option_t */
 #endif
 } smc_power_mode_config_t;
@@ -220,21 +207,15 @@ extern "C" {
 /*!
  * @brief Configures the power mode.
  *
- * This function configures the power mode control for both run, stop, and
- * stop sub mode if needed. Also it configures the power options for a specific
- * power mode. An application should follow the proper procedure to configure and 
- * switch power modes between  different run and stop modes. For proper procedures 
- * and supported power modes, see an appropriate chip reference
- * manual. See the smc_power_mode_config_t for required
- * parameters to configure the power mode and the supported options. Other options
- * may need to be individually configured through the HAL driver. See the HAL driver
- * header file for details.
+ * This function configures the power mode base on configuration structure, if
+ * could not switch to the target mode directly, this function could check
+ * internally and choose the right path.
  *
- * @param baseAddr  Base address for current SMC instance.
+ * @param base  Base address for current SMC instance.
  * @param powerModeConfig Power mode configuration structure smc_power_mode_config_t 
- * @return errorCode SMC error code
+ * @return SMC error code.
  */
-smc_hal_error_code_t SMC_HAL_SetMode(uint32_t baseAddr, 
+smc_hal_error_code_t SMC_HAL_SetMode(SMC_Type * base, 
                                      const smc_power_mode_config_t *powerModeConfig);
 
 /*!
@@ -242,232 +223,38 @@ smc_hal_error_code_t SMC_HAL_SetMode(uint32_t baseAddr,
  *
  * This function  configures the power mode protection settings for
  * supported power modes in the specified chip family. The available power modes
- * are defined in the smc_power_mode_protection_config_t. An application should provide
- * the protect settings for all supported power modes on the chip. This
- * should be done at an early system level initialization stage. See the reference manual
- * for details. This register can only write once after the power reset. If the user has 
- * only a single option to set,
- * either use this function or use the individual set function.
+ * are defined in the power_modes_protect_t. This should be done at an early
+ * system level initialization stage. See the reference manual for details.
+ * This register can only write once after the power reset.
+ *
+ * The allowed modes are passed as bit map, for example, to allow LLS and VLLS,
+ * plase use SMC_HAL_SetProtection(SMC, kAllowPowerModeLls | kAllowPowerModeVlls).
+ * To allow all modes, please use SMC_HAL_SetProtection(SMC, kAllowPowerModeAll).
  * 
+ * @param base  Base address for current SMC instance.
+ * @param allowedModes Bitmap of the allowed power modes.
+ */
+static inline void SMC_HAL_SetProtection(SMC_Type * base, uint8_t allowedModes)
+{
+    SMC_WR_PMPROT(base, allowedModes);
+}
+
+/*!
+ * @brief Get the power mode protection setting.
+ *
+ * This function checks whether the power modes are allowed. The modes to check
+ * are passed as bit map, for example, to check LLS and VLLS,
+ * plase use SMC_HAL_GetProtection(SMC, kAllowPowerModeLls | kAllowPowerModeVlls).
+ * To test all modes, please use SMC_HAL_GetProtection(SMC, kAllowPowerModeAll).
  * 
- * @param baseAddr  Base address for current SMC instance.
- * @param protectConfig Configurations for the supported power mode protect settings
- *                      - See smc_power_mode_protection_config_t for details.
+ * @param base  Base address for current SMC instance.
+ * @param modes Bitmap of the power modes to check.
+ * @return Bitmap of the allowed power modes.
  */
-void SMC_HAL_SetProtection(uint32_t baseAddr, smc_power_mode_protection_config_t *protectConfig);
-
-/*!
- * @brief Configures the individual power mode protection settings.
- *
- * This function  only configures the power mode protection settings for
- * a specified power mode on the specified chip family. The available power modes
- * are defined in the smc_power_mode_protection_config_t. See the reference manual
- * for details. This register can only write once after the power reset.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @param protect Power mode to set for protection
- * @param allow   Allow or not allow the power mode protection
- */
-void SMC_HAL_SetProtectionMode(uint32_t baseAddr, power_modes_protect_t protect, bool allow);
-
-/*!
- * @brief Gets the the current power mode protection setting.
- *
- * This function  gets the current power mode protection settings for
- * a specified power mode.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @param protect Power mode to set for protection
- * @return state  Status of the protection setting
- *                - true: Allowed
- *                - false: Not allowed
-*/
-bool SMC_HAL_GetProtectionMode(uint32_t baseAddr, power_modes_protect_t protect);
-
-/*!
- * @brief Configures the the RUN mode control setting.
- *
- * This function  sets the run mode settings, for example, normal run mode,
- * very lower power run mode, etc. See the smc_run_mode_t for supported run
- * mode on the chip family and the reference manual for details about the 
- * run mode.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @param runMode Run mode setting defined in smc_run_mode_t
- */
-void SMC_HAL_SetRunMode(uint32_t baseAddr, smc_run_mode_t runMode);
-
-/*!
- * @brief Gets  the current RUN mode configuration setting.
- *
- * This function  gets the run mode settings. See the smc_run_mode_t 
- * for a supported run mode on the chip family and the reference manual for 
- * details about the run mode.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @return setting Run mode configuration setting
- */
-smc_run_mode_t SMC_HAL_GetRunMode(uint32_t baseAddr);
-
-/*!
- * @brief Configures  the STOP mode control setting.
- *
- * This function  sets the stop mode settings, for example, normal stop mode,
- * very lower power stop mode, etc. See the  smc_stop_mode_t for supported stop
- * mode on the chip family and the reference manual for details about the 
- * stop mode.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @param stopMode Stop mode defined in smc_stop_mode_t
- */
-void SMC_HAL_SetStopMode(uint32_t baseAddr, smc_stop_mode_t stopMode);
-
-/*!
- * @brief Gets the current STOP mode control settings.
- *
- * This function  gets the stop mode settings, for example, normal stop mode,
- * very lower power stop mode, etc. See the  smc_stop_mode_t for supported stop
- * mode on the chip family and the reference manual for details about the 
- * stop mode.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @return setting Current stop mode configuration setting
- */
-smc_stop_mode_t SMC_HAL_GetStopMode(uint32_t baseAddr);
-
-/*!
- * @brief Configures the stop sub mode control setting.
- *
- * This function  sets the stop submode settings. Some of the stop mode 
- * further supports submodes. See the  smc_stop_submode_t for supported
- * stop submodes and the  reference manual for details about the submodes
- * for a specific stop mode.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @param stopSubMode Stop submode setting defined in smc_stop_submode_t
- */
-void SMC_HAL_SetStopSubMode(uint32_t baseAddr, smc_stop_submode_t stopSubMode);
-
-/*!
- * @brief Gets the current stop submode configuration settings. 
- *
- * This function  gets the stop submode settings. Some of the stop mode 
- * further support  submodes. See the smc_stop_submode_t for supported
- * stop submodes and the reference manual for details about the submode
- * for a specific stop mode.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @return setting Current stop submode setting
-*/
-smc_stop_submode_t SMC_HAL_GetStopSubMode(uint32_t baseAddr);
-
-#if FSL_FEATURE_SMC_HAS_PORPO
-/*!
- * @brief Configures the POR (power-on-reset) option.
- *
- * This function  sets the POR power option setting. It controls whether the
- * POR detect circuit (for brown-out detection) is enabled in a certain stop mode.
- * The setting either enables or disables the above feature when the POR 
- * occurs. See the reference manual for details.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @param option POR option setting refer to smc_por_option_t
- */
-void SMC_HAL_SetPorMode(uint32_t baseAddr, smc_por_option_t option);
-
-/*!
- * @brief Gets the configuration settings for the POR option.
- *
- * This function  sets the POR power option setting. See the configuration function
- * header for details.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @return option Current POR option setting
-*/
-smc_por_option_t SMC_HAL_GetPorMode(uint32_t baseAddr);
-#endif
-
-#if FSL_FEATURE_SMC_HAS_PSTOPO
-/*!
- * @brief Configures the PSTOPO (Partial Stop Option).
- *
- * This function  sets the PSTOPO option. It controls whether a Partial 
- * Stop mode is entered when the STOPM=STOP. When entering a Partial Stop mode from the
- * RUN mode, the PMC, MCG and Flash remain fully powered allowing the device 
- * to wakeup almost instantaneously at the expense of a higher power consumption.
- * In PSTOP2, only the system clocks are gated, which allows the peripherals running on bus
- * clock to remain fully functional. In PSTOP1, both system and bus clocks are
- * gated. Refer to the smc_pstop_option_t for supported options. See the reference
- * manual for details.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @param option PSTOPO option setting defined in smc_pstop_option_t
- */
-void SMC_HAL_SetPstopMode(uint32_t baseAddr, smc_pstop_option_t option);
-
-/*!
- * @brief Gets the configuration of the PSTOPO option.
- *
- * This function  gets the current PSTOPO option setting. See the  configuration
- * function for more details.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @return option Current PSTOPO option setting
- */
-smc_pstop_option_t SMC_HAL_GetPstopMode(uint32_t baseAddr);
-#endif
-
-#if FSL_FEATURE_SMC_HAS_RAM2_POWER_OPTION
-/*!
- * @brief Configures the RAM2PO (RAM2 Power Option).
- *
- * This function  sets the RAM2PO option. It controls whether powering of RAM partition 2
- * is enabled in LLS2 or VLLS2 mode. See the smc_ram2_option_t for supported options
- * and the reference manual for details about this option.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @param option RAM2PO option setting defined in smc_ram2_option_t
- */
-void SMC_HAL_SetRam2Mode(uint32_t baseAddr, smc_ram2_option_t option);
-
-/*!
- * @brief Gets the configuration of the RAM2PO option.
- *
- * This function gets the current RAM2PO option setting. See the configuration
- * function for more details.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @return option Current RAM2PO option setting
- */
-smc_ram2_option_t SMC_HAL_GetRam2Mode(uint32_t baseAddr);
-#endif
-
-
-#if FSL_FEATURE_SMC_HAS_LPOPO
-/*!
- * @brief Configures the LPO option setting.
- *
- * This function  sets the LPO option setting. It controls whether the 1 kHZ
- * LPO clock is enabled in a certain lower power stop modes. See the 
- * smc_lpo_option_t for supported options and the reference manual for 
- * details about this option.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @param option LPO option setting defined in smc_lpo_option_t
- */
-void SMC_HAL_SetLpoMode(uint32_t baseAddr, smc_lpo_option_t option);
-
-/*!
- * @brief Gets the  settings of the LPO option. 
- *
- * This function  gets the current LPO option setting. See the  configuration 
- * function for details.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @return option Current LPO option setting
- */
-smc_lpo_option_t SMC_HAL_GetLpoMode(uint32_t baseAddr);
-#endif
+static inline uint8_t SMC_HAL_GetProtection(SMC_Type * base, uint8_t modes)
+{
+    return (uint8_t)(SMC_RD_PMPROT(base) & modes);
+}
 
 #if FSL_FEATURE_SMC_HAS_LPWUI
 /*!
@@ -477,26 +264,32 @@ smc_lpo_option_t SMC_HAL_GetLpoMode(uint32_t baseAddr);
  * to normal RUN mode when any active interrupt occurs while in a specific lower
  * power mode. See the  smc_lpwui_option_t for supported options and the  
  * reference manual for more details about this option.
+ * The function SMC_HAL_SetMode does not affect this bit, to configure it,
+ * please make sure current power mode is normal RUN mode.
  *
- * @param baseAddr  Base address for current SMC instance.
+ * @param base  Base address for current SMC instance.
  * @param option LPWUI option setting defined in smc_lpwui_option_t
  */
-void SMC_HAL_SetLpwuiMode(uint32_t baseAddr, smc_lpwui_option_t option);
-
-/*!
- * @brief Gets the current LPWUI option.
- *
- * This function  gets the LPWUI option. See the configuration function for more
- * details.
- *
- * @param baseAddr  Base address for current SMC instance.
- * @return setting Current LPWAUI option setting
- */
-smc_lpwui_option_t SMC_HAL_GetLpwuiMode(uint32_t baseAddr);
+static inline void SMC_HAL_SetLpwuiMode(SMC_Type * base, smc_lpwui_option_t option)
+{
+    SMC_BWR_PMCTRL_LPWUI(base, option);
+}
 #endif
 
 /*!
- * @brief Gets the current power mode stat.
+ * @brief Check whether previous stop mode entry was successsful.
+ *
+ * @param base  Base address for current SMC instance.
+ * @retval true  The previous stop mode entry was aborted.
+ * @retval false The previous stop mode entry was successsful.
+ */
+static inline bool SMC_HAL_IsStopAbort(SMC_Type * base)
+{
+    return (bool)SMC_BRD_PMCTRL_STOPA(base);
+}
+
+/*!
+ * @brief Gets the current power mode status.
  *
  * This function  returns the current power mode stat. Once application
  * switches the power mode, it should always check the stat to check whether it 
@@ -506,10 +299,10 @@ smc_lpwui_option_t SMC_HAL_GetLpwuiMode(uint32_t baseAddr);
  * reference manual for details and the _power_mode_stat for information about
  * the power stat.
  *
- * @param baseAddr  Base address for current SMC instance.
- * @return stat  Current power mode stat
+ * @param base  Base address for current SMC instance.
+ * @return Current power mode status.
  */
-power_mode_stat_t SMC_HAL_GetStat(uint32_t baseAddr);
+power_mode_stat_t SMC_HAL_GetStat(SMC_Type * base);
 
 /*@}*/
 
@@ -519,6 +312,7 @@ power_mode_stat_t SMC_HAL_GetStat(uint32_t baseAddr);
 
 /*! @}*/
 
+#endif
 #endif /* __FSL_SMC_HAL_H__*/
 /*******************************************************************************
  * EOF

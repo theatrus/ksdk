@@ -40,12 +40,12 @@ SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DDEBUG")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MKV10Z32VLF7")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_MQX")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR_KV10Z75M")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR_KV10Z32")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DNDEBUG")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MKV10Z32VLF7")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_MQX")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTWR_KV10Z75M")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTWR_KV10Z32")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTWR")
 
 # CXX MACRO
@@ -55,12 +55,13 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/mqx/source/psp/cortex_m/compiler/gcc_arm)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/config/common)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/config/mcu/mkv10z75m)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/config/mcu/MKV10Z7)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/mqx/source/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/mqx/source/psp/cortex_m)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include/device)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MKV10Z7)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MKV10Z7/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MKV10Z7/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/drivers/inc)
@@ -70,12 +71,13 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/mqx/source/psp/cortex_m/compiler/gcc_arm)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/config/common)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/config/mcu/mkv10z75m)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/config/mcu/MKV10Z7)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/mqx/source/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../rtos/mqx/mqx/source/psp/cortex_m)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/CMSIS/Include/device)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/startup/MKV10Z7)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MKV10Z7/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/devices/MKV10Z7/startup)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../platform/drivers/inc)
@@ -133,7 +135,7 @@ ADD_LIBRARY(KsdkMqxLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/dspi/fsl_dspi_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_dspi_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_shared_function.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_shared_function.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_shared_function.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_common.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_master_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_master_driver.c"
@@ -144,7 +146,7 @@ ADD_LIBRARY(KsdkMqxLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_slave_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_slave_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_shared_function.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_shared_function.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_shared_function.h"
     "${ProjDirPath}/../../../../platform/hal/src/ftm/fsl_ftm_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_ftm_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/ftm/fsl_ftm_driver.c"
@@ -158,7 +160,7 @@ ADD_LIBRARY(KsdkMqxLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/i2c/fsl_i2c_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_i2c_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_shared_function.c"
-    "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_shared_function.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_i2c_shared_function.h"
     "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_common.c"
     "${ProjDirPath}/../../../../platform/drivers/src/i2c/fsl_i2c_master_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_i2c_master_driver.h"
@@ -189,7 +191,6 @@ ADD_LIBRARY(KsdkMqxLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/sim/MKV10Z7/fsl_sim_hal_MKV10Z7.h"
     "${ProjDirPath}/../../../../platform/hal/src/smc/fsl_smc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_smc_hal.h"
-    "${ProjDirPath}/../../../../platform/hal/src/pmc/fsl_pmc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_pmc_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/rcm/fsl_rcm_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_rcm_hal.h"

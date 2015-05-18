@@ -30,16 +30,20 @@
 
 #include "fsl_device_registers.h"
 
+#if FSL_FEATURE_SOC_RTC_COUNT
+
 /*******************************************************************************
  * Variables
  ******************************************************************************/
 
 /* Table of base addresses for RTC instances. */
-const uint32_t g_rtcBaseAddr[] = RTC_BASE_ADDRS;
+RTC_Type * const g_rtcBase[RTC_INSTANCE_COUNT] = RTC_BASE_PTRS;
 
 /* Tables to save RTC IRQ enum numbers defined in CMSIS header file. */
-const IRQn_Type g_rtcIrqId[] = RTC_IRQS;
-const IRQn_Type g_rtcSecondsIrqId[] = RTC_SECONDS_IRQS;
+const IRQn_Type g_rtcIrqId[RTC_INSTANCE_COUNT] = RTC_IRQS;
+const IRQn_Type g_rtcSecondsIrqId[RTC_INSTANCE_COUNT] = RTC_SECONDS_IRQS;
+
+#endif /* FSL_FEATURE_SOC_RTC_COUNT */
 
 /*******************************************************************************
  * EOF

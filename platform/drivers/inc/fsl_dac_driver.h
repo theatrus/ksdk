@@ -35,6 +35,8 @@
 #include <stdbool.h>
 #include "fsl_dac_hal.h"
 
+#if FSL_FEATURE_SOC_DAC_COUNT
+
 /*!
  * @addtogroup dac_driver
  * @{
@@ -43,47 +45,6 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
-/*!
- * @brief Defines the configuration buffer structure inside the DAC module.
- *
- * This structure  holds the configuration for the internal buffer
- * inside the DAC module. The DAC buffer is an advanced feature, which helps
- * improve the performance of an application.
- */
-typedef struct DacBuffConfig
-{
-#if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
-    bool buffIndexWatermarkIntEnable; 
-        /*!< Switcher to enable interrupt when buffer index hits the watermark. */
-    dac_buff_watermark_mode_t watermarkMode;
-        /*!< Selection of watermark setting. See "dac_buff_watermark_mode_t". */
-#endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
-    bool buffIndexStartIntEnable;
-        /*!< Switcher to enable interrupt when buffer index hits the start (0). */
-    bool buffIndexUpperIntEnable;
-        /*!< Switcher to enable interrupt when buffer index hits the upper. */
-    bool dmaEnable; /*!< Switcher to enable DMA request by original interrupts. */
-    dac_buff_work_mode_t buffWorkMode;
-        /*!< Selection of buffer's work mode. See "dac_buff_work_mode_t". */
-    uint8_t buffUpperIndex; /* Setting of the buffer's upper limit, 0-15. */
-} dac_buff_config_t;
-
-/*!
- * @brief Defines the converted configuration structure.
- *
- * This structure  holds the configuration for DAC module basic converter.
- * The DAC converter is the core part of the DAC module. When
- * initialized, the DAC module can act as a simple DAC converter. 
- */
-typedef struct DacUserConfig
-{
-    dac_ref_volt_src_mode_t refVoltSrcMode;
-        /*!< Selection of reference voltage source for DAC module. */
-    dac_trigger_mode_t triggerMode;
-        /*!< Selection of hardware mode or software mode. */
-    bool lowPowerEnable; /*!< Switcher to enable working in low power mode. */
-} dac_user_config_t;
 
 /*!
  * @brief Defines the type of event flags.
@@ -98,10 +59,10 @@ typedef enum _dac_flag_t
 } dac_flag_t;
 
 /*! @brief Table of base addresses for DAC instances. */
-extern const uint32_t g_dacBaseAddr[];
+extern DAC_Type * const g_dacBase[];
 
 /*! @brief Table to save DAC IRQ enumeration numbers defined in the CMSIS header file. */
-extern const IRQn_Type g_dacIrqId[HW_DAC_INSTANCE_COUNT];
+extern const IRQn_Type g_dacIrqId[DAC_INSTANCE_COUNT];
 
 #if defined(__cplusplus)
 extern "C" {
@@ -122,32 +83,29 @@ extern "C" {
  * @param userConfigPtr Pointer to the user configuration structure. See the "dac_user_config_t".
  * @return Execution status.
  */
-dac_status_t DAC_DRV_StructInitUserConfigNormal(dac_user_config_t *userConfigPtr);
+dac_status_t DAC_DRV_StructInitUserConfigNormal(dac_converter_config_t *userConfigPtr);
 
 /*!
  * @brief Initializes the converter. 
  *
- * This function initializes the converter. It 
- * configures the DAC converter itself but does not include the advanced features, such as 
- * interrupt and internal buffer. This API should be called before any
- * operations in the DAC module. After it is initialized, the DAC module can function  
- * as a simple DAC converter.
+ * This function initializes the converter. 
  *
  * @param instance DAC instance ID.
  * @param userConfigPtr Pointer to the initialization structure. See the "dac_user_config_t".
  * @return Execution status.
  */
-dac_status_t DAC_DRV_Init(uint32_t instance, dac_user_config_t *userConfigPtr);
+dac_status_t DAC_DRV_Init(uint32_t instance, const dac_converter_config_t *userConfigPtr);
 
 /*!
  * @brief De-initializes the DAC module converter.
  *
- * This function de-initializes the converter. It  disables the
+ * This function de-initializes the converter. It disables the
  * DAC module and shuts down the clock to reduce the power consumption. 
  *
  * @param instance DAC instance ID.
+ * @return Execution status.
  */
-void DAC_DRV_Deinit(uint32_t instance);
+dac_status_t DAC_DRV_Deinit(uint32_t instance);
 
 /*!
  * @brief Drives the converter to output the DAC value.
@@ -170,21 +128,10 @@ void DAC_DRV_Output(uint32_t instance, uint16_t value);
  * the buffer and configures it.
  *
  * @param instance DAC instance ID.
- * @param buffConfigPtr Pointer to the configuration structure. See the "dac_buff_config_t".
+ * @param configPtr Pointer to the configuration structure. See the "dac_buff_config_t".
  * @return Execution status.
  */
-dac_status_t DAC_DRV_EnableBuff(uint32_t instance, dac_buff_config_t *buffConfigPtr);
-
-/*!
- * @brief Disables the internal buffer.
- *
- * This function  disables the internal buffer feature.
- * Calling this API  disables the internal buffer feature and resets the
- * DAC module as a simple DAC converter.
- *
- * @param instance DAC instance ID.
- */
-void DAC_DRV_DisableBuff(uint32_t instance);
+dac_status_t DAC_DRV_ConfigBuffer(uint32_t instance, const dac_buffer_config_t *configPtr);
 
 /*!
  * @brief Sets values into the DAC internal buffer.
@@ -209,19 +156,8 @@ dac_status_t DAC_DRV_SetBuffValue(uint32_t instance, uint8_t start, uint8_t offs
  * Then, the value kept inside the pointed item  is immediately output.
  *
  * @param instance DAC instance ID.
- * @return Current output value.
  */
-uint16_t DAC_DRV_SoftTriggerBuff(uint32_t instance);
-
-/*!
- * @brief Gets the DAC buffer current index.
- *
- * This function gets the DAC buffer current index.
- *
- * @param instance DAC instance ID.
- * @return Current index of DAC buffer.
- */
-uint8_t DAC_DRV_GetBufferIndex(uint32_t instance);
+void DAC_DRV_SoftTriggerBuffCmd(uint32_t instance);
 
 /*!
  * @brief Clears the flag for an indicated event causing an interrupt.
@@ -231,7 +167,7 @@ uint8_t DAC_DRV_GetBufferIndex(uint32_t instance);
  * @param instance DAC instance ID.
  * @param flag Indicated flag. See "dac_flag_t".
  */
-void DAC_DRV_ClearFlag(uint32_t instance, dac_flag_t flag);
+void DAC_DRV_ClearBuffFlag(uint32_t instance, dac_flag_t flag);
 
 /*!
  * @brief Gets the flag for an indicated event causing an interrupt.
@@ -243,10 +179,30 @@ void DAC_DRV_ClearFlag(uint32_t instance, dac_flag_t flag);
  * @param flag Indicated flag. See "dac_flag_t".
  * @return Assertion of indicated event.
  */
-bool DAC_DRV_GetFlag(uint32_t instance, dac_flag_t flag);
+bool DAC_DRV_GetBuffFlag(uint32_t instance, dac_flag_t flag);
+
+/*!
+ * @brief Sets the current read pointer in DAC buffer.
+ *
+ * This function sets the current read pointer in DAC buffer.
+ *
+ * @param instance DAC instance ID.
+ * @param idx Index for read pointer in buffer.
+ */
+void DAC_DRV_SetBuffCurIdx(uint32_t instance, uint8_t idx);
+
+/*!
+ * @brief Gets the current read pointer in the DAC buffer.
+ *
+ * This function gets the current read pointer in DAC buffer.
+ *
+ * @param instance DAC instance ID.
+ * @return Index for current read pointer in buffer.
+ */
+uint8_t DAC_DRV_GetBuffCurIdx(uint32_t instance);
 
 #if defined(__cplusplus)
-extern }
+}
 #endif
 
 /*!
@@ -258,3 +214,5 @@ extern }
 /******************************************************************************
  * EOF
  *****************************************************************************/
+
+#endif

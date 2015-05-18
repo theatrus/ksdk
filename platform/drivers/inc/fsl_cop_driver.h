@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -47,24 +47,7 @@
  *******************************************************************************/
 
 /*! @brief Table of base addresses for COP instances. */
-extern const uint32_t g_copBaseAddr[];
-
-/*! 
- * @brief Data structure to initialize the COP.
- *
- * This structure is used to initialize the COP during the cop_init function call.
- * It contains all COP configurations.
- */
-typedef struct CopUserConfig{
-    bool copWindowModeEnable;                   /*!< Set COP watchdog run mode---Window mode or Normal mode >*/
-#if FSL_FEATURE_COP_HAS_LONGTIME_MODE
-    cop_timeout_mode_t copTimeoutMode;          /*!< Set COP watchdog timeout mode---Long timeout or Short tomeout >*/
-    bool copStopModeEnable;                     /*!< Set COP enable or disable in STOP mode >*/ 
-    bool copDebugModeEnable;                    /*!< Set COP enable or disable in DEBUG mode >*/
-#endif
-    cop_clock_source_t copClockSource;          /*!< Set COP watchdog clock source >*/
-    cop_timeout_cycles_t copTimeout;            /*!< Set COP watchdog timeout value >*/
-}cop_user_config_t;
+extern SIM_Type * const g_copBase[];
 
 /*******************************************************************************
  * API
@@ -92,18 +75,18 @@ extern "C" {
  * @param initPtr COP Initialize data structure.
  *
  */
-void COP_DRV_Init(uint32_t instance, const cop_user_config_t* initPtr);
+cop_status_t COP_DRV_Init(uint32_t instance, const cop_config_t* initPtr);
 
 /*!
  * @brief Disables the COP Watchdog.
  *
  * This function disables the COP Watchdog.
- * Note: The COP configuration register is write-once after reset. 
+ * Note: The COP configuration register is write-once after reset.
  * To disable the COP Watchdog, call this function first.
  *
  * @param instance The COP peripheral instance number.
  */
-void COP_DRV_Deinit(uint32_t instance);
+void COP_DRV_Disable(uint32_t instance);
 
 /*!
  * @brief Resets the COP timeout counter.

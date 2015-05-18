@@ -151,7 +151,7 @@ static sdspi_status_t SDSPI_DRV_SendCommand(sdspi_spi_t *spi,
     {
         spi->ops->sendWord(spi, 0xFF);
     }
-
+    /* Wait for the response coming, the left most bit which is transfered first in response is 0 */
     for (i = 0; i < 9; i++)
     {
         response = spi->ops->sendWord(spi, 0xFF);
@@ -197,21 +197,13 @@ static sdspi_status_t SDSPI_DRV_SendCommand(sdspi_spi_t *spi,
         case kSdSpiRespTypeR3:
         case kSdSpiRespTypeR7:
         default:
-            for (i = 1; i < 4; i++)
+            for (i = 1; i <= 4; i++)/* R7 has total 5 bytes in SPI mode. */
             {
                 req->response[i] = spi->ops->sendWord(spi, 0xFF);
             }
             break;
     }
 
-    for (i = 9; i > 0; i--)
-    {
-        response = spi->ops->sendWord(spi, 0xFF);
-        if (response == 0xFF)
-        {
-            break;
-        }
-    }
 
     return kStatus_SDSPI_NoError;
 }
@@ -495,7 +487,7 @@ static uint32_t SDSPI_DRV_Read(sdspi_spi_t *spi, uint8_t *buffer, uint32_t size)
     assert(spi->ops->exchange);
     assert(buffer);
     assert(size);
-
+    memset(buffer, 0xFF, size);
     startTime = OSA_TimeGetMsec();
     do
     {
@@ -508,7 +500,7 @@ static uint32_t SDSPI_DRV_Read(sdspi_spi_t *spi, uint8_t *buffer, uint32_t size)
         return 0;
     }
 
-    if (spi->ops->exchange(spi, NULL, buffer, size))
+    if (spi->ops->exchange(spi, buffer, buffer, size))
     {
         return 0;
     }
@@ -694,7 +686,7 @@ static sdspi_status_t SDSPI_DRV_InitSd(sdspi_spi_t *spi, sdspi_card_t *card)
     /* Calculate frequency */
     maxFrequency = g_transpeedtv[SDMMC_CSD_TRANSPEED_TV(card->rawCsd)] *
                 g_transpeedru[SDMMC_CSD_TRANSPEED_RU(card->rawCsd)];
-    if (maxFrequency > spi->ops->getMaxFrequency(spi))
+    if (maxFrequency > spi->busBaudRate)
     {
         maxFrequency = spi->ops->getMaxFrequency(spi);
     }

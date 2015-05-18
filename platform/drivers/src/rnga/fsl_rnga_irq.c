@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_rnga_driver.h"
+#if FSL_FEATURE_SOC_RNG_COUNT
 
 /******************************************************************************
  * Code
@@ -40,6 +41,7 @@ void RNG_IRQHandler(void)
 {
     RNGA_DRV_IRQHandler(0);
 }
+#endif
 
 /******************************************************************************
  * EOF

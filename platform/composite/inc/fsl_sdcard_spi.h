@@ -65,6 +65,7 @@ typedef struct SdSpiDevice {
     struct SdSpiOps *ops;                   /*!< SPI operating struct pointer */
     void *spiState;                         /*!< SPI specific state */
     void *spiDevice;                        /*!< SPI specific device */
+    uint32_t busBaudRate;
 } sdspi_spi_t;
 
 typedef struct SdSpiOps {

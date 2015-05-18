@@ -106,7 +106,7 @@
 /*! @brief Endianness */
 #define ENDIANNESS              LITTLE_ENDIAN
 
-/*! @brief cpu core */
+/*! @brief CPU core */
 #define CPU_CORE                ARM_CORTEX_M
 
 /*! @brief P-Flash sector size */
@@ -117,37 +117,37 @@
 #define DEBLOCK_SIZE            (FSL_FEATURE_FLASH_FLEX_NVM_BLOCK_SIZE * FSL_FEATURE_FLASH_FLEX_NVM_BLOCK_COUNT)
 
 /* EEE Data Set Size Field Description */
-/*! @brief Emulated eeprom size code 0000 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 0000 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_0000            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_0000
-/*! @brief Emulated eeprom size code 0001 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 0001 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_0001            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_0001
-/*! @brief Emulated eeprom size code 0010 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 0010 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_0010            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_0010
-/*! @brief Emulated eeprom size code 0011 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 0011 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_0011            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_0011
-/*! @brief Emulated eeprom size code 0100 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 0100 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_0100            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_0100
-/*! @brief Emulated eeprom size code 0101 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 0101 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_0101            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_0101
-/*! @brief Emulated eeprom size code 0110 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 0110 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_0110            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_0110
-/*! @brief Emulated eeprom size code 0111 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 0111 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_0111            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_0111
-/*! @brief Emulated eeprom size code 1000 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 1000 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_1000            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_1000
-/*! @brief Emulated eeprom size code 1001 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 1001 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_1001            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_1001
-/*! @brief Emulated eeprom size code 1010 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 1010 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_1010            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_1010
-/*! @brief Emulated eeprom size code 1011 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 1011 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_1011            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_1011
-/*! @brief Emulated eeprom size code 1100 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 1100 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_1100            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_1100
-/*! @brief Emulated eeprom size code 1101 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 1101 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_1101            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_1101
-/*! @brief Emulated eeprom size code 1110 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 1110 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_1110            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_1110
-/*! @brief Emulated eeprom size code 1111 mapping to emulated eeprom size in bytes (0xFFFF = reserved) */
+/*! @brief Emulated EEPROM size code 1111 mapping to emulated EEPROM size in bytes (0xFFFF = reserved) */
 #define EEESIZE_1111            FSL_FEATURE_FLASH_FLEX_NVM_EEPROM_SIZE_FOR_EEESIZE_1111
 
 /* D/E-Flash Partition Code Field Description */

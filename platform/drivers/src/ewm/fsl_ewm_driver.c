@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -31,6 +31,7 @@
 #include "fsl_ewm_driver.h"
 #include "fsl_interrupt_manager.h"
 #include "fsl_clock_manager.h"
+#if FSL_FEATURE_SOC_EWM_COUNT
 
 /*******************************************************************************
  * Definitions
@@ -52,38 +53,25 @@
  * will run immediately according to the configure.
  *
  *END*********************************************************************/
-ewm_status_t EWM_DRV_Init(uint32_t instance, const ewm_user_config_t* userConfigPtr)
+ewm_status_t EWM_DRV_Init(uint32_t instance, const ewm_config_t* ConfigPtr)
 {
-    assert(userConfigPtr&&(instance < HW_EWM_INSTANCE_COUNT));
-    
-    ewm_common_config_t ewmCommonConfig;
-    uint32_t baseAddr;
-    
-    baseAddr = g_ewmBaseAddr[instance];
-    ewmCommonConfig.commonConfig.ewmEnable          = userConfigPtr->ewmEnable;
-    ewmCommonConfig.commonConfig.ewmInAssertState   = userConfigPtr->ewmInAssertionState;
-    ewmCommonConfig.commonConfig.ewmInputEnable     = userConfigPtr->ewmInputEnable;
-    ewmCommonConfig.commonConfig.ewmIntEnable       = userConfigPtr->ewmIntEnable;
-    ewmCommonConfig.commonConfig.reserved           = 0;   
-    if(userConfigPtr->ewmIntEnable)
+    assert(instance < EWM_INSTANCE_COUNT);
+    EWM_Type * base;
+    base = g_ewmBase[instance];
+    if(!ConfigPtr)
     {
-        INT_SYS_EnableIRQ(g_ewmIrqId[instance]);    /*!< Enable EWM interrupt in NVIC level */
+	return kStatus_EWM_NullArgument;
+    }
+    if(ConfigPtr->intEnable)
+    {
+        INT_SYS_EnableIRQ(g_ewmIrqId[instance]);    /*!< Enable EWM interrupt in NVIC level  */
     }
     else
     {
         INT_SYS_DisableIRQ(g_ewmIrqId[instance]);   /*!< Disable EWM interrupt in NVIC level */
     }
-    CLOCK_SYS_EnableEwmClock(instance);             /*!< Enable ewm clock */
-    
-    EWM_HAL_SetCmpLowRegValue(baseAddr, userConfigPtr->ewmCmpLowValue);
-    
-    EWM_HAL_SetCmpHighRegValue(baseAddr, userConfigPtr->ewmCmpHighValue);
-    
-#if FSL_FEATURE_EWM_HAS_PRESCALER
-    EWM_HAL_SetPrescalerValue(baseAddr, userConfigPtr->ewmPrescalerValue);
-#endif
-    
-    EWM_HAL_SetCommonConfig(baseAddr, ewmCommonConfig);
+    CLOCK_SYS_EnableEwmClock(instance);             /*!< Enable ewm clock 					 */
+    EWM_HAL_SetConfig(base, ConfigPtr);
     
     return kStatus_EWM_Success;
 }
@@ -92,20 +80,15 @@ ewm_status_t EWM_DRV_Init(uint32_t instance, const ewm_user_config_t* userConfig
  *
  * Function Name : EWM_DRV_Deinit
  * Description   : Shutdown EWM clock
- * This function is used to shutdown the EWM.
+ * This function is used to shut down the EWM.
  *
  *END*********************************************************************/
-ewm_status_t EWM_DRV_Deinit(uint32_t instance)
+void EWM_DRV_Deinit(uint32_t instance)
 {
-    assert(instance < HW_EWM_INSTANCE_COUNT);
-  
-    uint32_t baseAddr = g_ewmBaseAddr[instance];
-    
-    EWM_HAL_SetIntCmd(baseAddr, (bool)0);
-    
+    assert(instance < EWM_INSTANCE_COUNT);
+    EWM_Type * base = g_ewmBase[instance];
+    EWM_HAL_SetIntCmd(base, false);
     CLOCK_SYS_DisableEwmClock(instance);
-    
-    return kStatus_EWM_Success;
 }
 
 /*FUNCTION****************************************************************
@@ -117,11 +100,9 @@ ewm_status_t EWM_DRV_Deinit(uint32_t instance)
  *END*********************************************************************/
 bool EWM_DRV_IsRunning(uint32_t instance)
 {
-    assert(instance < HW_EWM_INSTANCE_COUNT);
-  
-    uint32_t baseAddr = g_ewmBaseAddr[instance]; 
-  
-    return EWM_HAL_IsEnabled(baseAddr);
+    assert(instance < EWM_INSTANCE_COUNT);
+    EWM_Type * base = g_ewmBase[instance];
+    return EWM_HAL_IsEnable(base);
 }
 
 /*FUNCTION****************************************************************
@@ -134,48 +115,27 @@ bool EWM_DRV_IsRunning(uint32_t instance)
   *END*********************************************************************/
 void EWM_DRV_Refresh(uint32_t instance)
 {
-    assert(instance < HW_EWM_INSTANCE_COUNT);
-    
-    uint32_t baseAddr;
-    
-    baseAddr = g_ewmBaseAddr[instance];
-  
+    assert(instance < EWM_INSTANCE_COUNT);
+    EWM_Type * base;
+    base = g_ewmBase[instance];
     INT_SYS_DisableIRQGlobal();
-    
-    EWM_HAL_Refresh(baseAddr);
-
+    EWM_HAL_Refresh(base);
     INT_SYS_EnableIRQGlobal();
 }
 
 /*FUNCTION*********************************************************************
  *
- * Function Name : EWM_DRV_GetIntCmd
- * Description   : Return EWM interrupt status
- *END*************************************************************************/
-bool EWM_DRV_GetIntCmd(uint32_t instance)
-{
-  
-   assert(instance < HW_EWM_INSTANCE_COUNT);
-  
-   uint32_t baseAddr;
-  
-   baseAddr = g_ewmBaseAddr[instance];
-   
-   return (EWM_HAL_GetIntCmd(baseAddr));
-}
-
-/*FUNCTION*********************************************************************
- *
  * Function Name : EWM_DRV_SetIntCmd
- * Description   : Enable/disable EWM interrupt
+ * Description   : Enables/disables EWM interrupt
  *END*************************************************************************/
 void EWM_DRV_SetIntCmd(uint32_t instance, bool enable)
 {
-    uint32_t baseAddr;
-    baseAddr = g_ewmBaseAddr[instance];
-    
-    EWM_HAL_SetIntCmd(baseAddr, enable);
+    EWM_Type * base;
+    base = g_ewmBase[instance];
+    EWM_HAL_SetIntCmd(base, enable);
 }
+
+#endif
 /*******************************************************************************
  * EOF
  *******************************************************************************/

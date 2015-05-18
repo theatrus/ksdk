@@ -31,13 +31,14 @@
 #include "fsl_tsi_driver.h"
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
+#if FSL_FEATURE_SOC_TSI_COUNT
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-extern IRQn_Type tsi_irq_ids[HW_TSI_INSTANCE_COUNT];
+extern IRQn_Type tsi_irq_ids[TSI_INSTANCE_COUNT];
 extern void TSI_DRV_IRQHandler0(void);
-extern const tsi_parameter_limits_t g_tsiParamLimits[tsi_OpModeCnt];
+extern const tsi_parameter_limits_t * g_tsiParamLimits[tsi_OpModeCnt];
 
 /*******************************************************************************
  * Variables
@@ -54,11 +55,11 @@ extern const tsi_parameter_limits_t g_tsiParamLimits[tsi_OpModeCnt];
 * To initialize the TSI driver, the configuration structure should be handled.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_Init(const uint32_t instance, tsi_state_t * tsiState, const tsi_user_config_t * tsiUserConfig)
+tsi_status_t TSI_DRV_Init(uint32_t instance, tsi_state_t * tsiState, const tsi_user_config_t * tsiUserConfig)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_state_t * tsiSt = g_tsiStatePtr[instance];
 
     /* Critical section. */
@@ -106,11 +107,11 @@ tsi_status_t TSI_DRV_Init(const uint32_t instance, tsi_state_t * tsiState, const
     /* Initialize the interrupt sync object. */
     OSA_SemaCreate(&tsiSt->irqSync, 0);
 
-    TSI_HAL_Init(baseAddr);
-    TSI_HAL_SetConfiguration(baseAddr, &tsiSt->opModesData[tsiSt->opMode].config);
-    TSI_HAL_EnableInterrupt(baseAddr);
-    TSI_HAL_EnableEndOfScanInterrupt(baseAddr);
-    TSI_HAL_EnableSoftwareTriggerScan(baseAddr);
+    TSI_HAL_Init(base);
+    TSI_HAL_SetConfiguration(base, &tsiSt->opModesData[tsiSt->opMode].config);
+    TSI_HAL_EnableInterrupt(base);
+    TSI_HAL_EnableEndOfScanInterrupt(base);
+    TSI_HAL_EnableSoftwareTriggerScan(base);
 
     /* Disable all electrodes */
     tsiState->opModesData[tsiState->opMode].enabledElectrodes = 0;
@@ -133,11 +134,11 @@ tsi_status_t TSI_DRV_Init(const uint32_t instance, tsi_state_t * tsiState, const
 * for any future use and don't load the system.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_DeInit(const uint32_t instance)
+tsi_status_t TSI_DRV_DeInit(uint32_t instance)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
 
     if (tsiState == NULL)
@@ -145,11 +146,11 @@ tsi_status_t TSI_DRV_DeInit(const uint32_t instance)
         return kStatus_TSI_Error;
     }
 
-    TSI_HAL_DisableInterrupt(baseAddr);
+    TSI_HAL_DisableInterrupt(base);
     tsiState->opModesData[tsiState->opMode].enabledElectrodes = 0;
-    TSI_HAL_ClearOutOfRangeFlag(baseAddr);
-    TSI_HAL_ClearEndOfScanFlag(baseAddr);
-    TSI_HAL_DisableModule(baseAddr);
+    TSI_HAL_ClearOutOfRangeFlag(base);
+    TSI_HAL_ClearEndOfScanFlag(base);
+    TSI_HAL_DisableModule(base);
 
     /* Disable the interrupt */
     INT_SYS_DisableIRQ(g_tsiIrqId[instance]);
@@ -173,9 +174,9 @@ tsi_status_t TSI_DRV_DeInit(const uint32_t instance)
 *
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_SetCallBackFunc(const uint32_t instance, const tsi_callback_t pFuncCallBack, void * usrData)
+tsi_status_t TSI_DRV_SetCallBackFunc(uint32_t instance, const tsi_callback_t pFuncCallBack, void * usrData)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
 
     /* Critical section. Access to global variable */
@@ -207,9 +208,9 @@ tsi_status_t TSI_DRV_SetCallBackFunc(const uint32_t instance, const tsi_callback
 * Description   : Get Enables electrodes for measuring.
 *
 *END**************************************************************************/
-uint32_t TSI_DRV_GetEnabledElectrodes(const uint32_t instance)
+uint32_t TSI_DRV_GetEnabledElectrodes(uint32_t instance)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
 
@@ -223,9 +224,9 @@ uint32_t TSI_DRV_GetEnabledElectrodes(const uint32_t instance)
 *               from the TSI module using a blocking method.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_MeasureBlocking(const uint32_t instance)
+tsi_status_t TSI_DRV_MeasureBlocking(uint32_t instance)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
     osa_status_t syncStatus;
     tsi_status_t status;
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
@@ -259,11 +260,11 @@ tsi_status_t TSI_DRV_MeasureBlocking(const uint32_t instance)
 * Description   : This function aborts possible measure cycle.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_AbortMeasure(const uint32_t instance)
+tsi_status_t TSI_DRV_AbortMeasure(uint32_t instance)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_status_t  status = kStatus_TSI_Success;
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
 
@@ -279,9 +280,9 @@ tsi_status_t TSI_DRV_AbortMeasure(const uint32_t instance)
     }
     else if(tsiState->status != kStatus_TSI_Initialized)
     {
-        TSI_HAL_ClearOutOfRangeFlag(baseAddr);
-        TSI_HAL_ClearEndOfScanFlag(baseAddr);
-        TSI_HAL_DisableModule(baseAddr);
+        TSI_HAL_ClearOutOfRangeFlag(base);
+        TSI_HAL_ClearEndOfScanFlag(base);
+        TSI_HAL_DisableModule(base);
 
         if(tsiState->isBlockingMeasure)
         {
@@ -306,9 +307,9 @@ tsi_status_t TSI_DRV_AbortMeasure(const uint32_t instance)
 * Description   : Function returns the busy state of the driver
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_GetStatus(const uint32_t instance)
+tsi_status_t TSI_DRV_GetStatus(uint32_t instance)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
     return g_tsiStatePtr[instance]->status;
 }
@@ -319,11 +320,11 @@ tsi_status_t TSI_DRV_GetStatus(const uint32_t instance)
 * Description   : The function force the recalibration process of TSI parameters.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_Recalibrate(const uint32_t instance, uint32_t * lowestSignal)
+tsi_status_t TSI_DRV_Recalibrate(uint32_t instance, uint32_t * lowestSignal)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
     
     /* Critical section. Access to global variable */
@@ -341,16 +342,23 @@ tsi_status_t TSI_DRV_Recalibrate(const uint32_t instance, uint32_t * lowestSigna
 
     tsiState->status = kStatus_TSI_Recalibration;
 
-    *lowestSignal = TSI_HAL_Recalibrate(baseAddr, &(tsiState->opModesData[tsiState->opMode].config),
+    *lowestSignal = TSI_HAL_Recalibrate(base, &(tsiState->opModesData[tsiState->opMode].config),
                                        tsiState->opModesData[tsiState->opMode].enabledElectrodes,
-                                       &g_tsiParamLimits[tsiState->opMode]);
+                                       g_tsiParamLimits[tsiState->opMode]);
 
     tsiState->status = kStatus_TSI_Initialized;
 
     /* End of critical section. */
     OSA_MutexUnlock(&tsiState->lock);
 
-    return kStatus_TSI_Success;
+    if(*lowestSignal == 0)
+    {
+      return kStatus_TSI_Error;
+    }
+    else
+    {
+      return kStatus_TSI_Success;
+    }
 }
 
 /*FUNCTION**********************************************************************
@@ -359,11 +367,11 @@ tsi_status_t TSI_DRV_Recalibrate(const uint32_t instance, uint32_t * lowestSigna
 * Description   : Enables/Disables the low power module.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_DisableLowPower(const uint32_t instance, const tsi_modes_t mode)
+tsi_status_t TSI_DRV_DisableLowPower(uint32_t instance, const tsi_modes_t mode)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
-    uint32_t baseAddr = g_tsiBaseAddr[instance];
+    TSI_Type * base = g_tsiBase[instance];
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
     tsi_status_t status;
 
@@ -381,10 +389,10 @@ tsi_status_t TSI_DRV_DisableLowPower(const uint32_t instance, const tsi_modes_t 
         return tsiState->status;
     }
 
-    TSI_HAL_DisableLowPower(baseAddr);
-    TSI_HAL_EnableInterrupt(baseAddr);
-    TSI_HAL_EnableEndOfScanInterrupt(baseAddr);
-    TSI_HAL_EnableSoftwareTriggerScan(baseAddr);
+    TSI_HAL_DisableLowPower(base);
+    TSI_HAL_EnableInterrupt(base);
+    TSI_HAL_EnableEndOfScanInterrupt(base);
+    TSI_HAL_EnableSoftwareTriggerScan(base);
 
     tsiState->status = kStatus_TSI_Initialized;
 
@@ -402,9 +410,9 @@ tsi_status_t TSI_DRV_DisableLowPower(const uint32_t instance, const tsi_modes_t 
 * Description   : Function returns the current mode of the driver
 *
 *END**************************************************************************/
-tsi_modes_t TSI_DRV_GetMode(const uint32_t instance)
+tsi_modes_t TSI_DRV_GetMode(uint32_t instance)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
 
     return g_tsiStatePtr[instance]->opMode;
 }
@@ -415,9 +423,9 @@ tsi_modes_t TSI_DRV_GetMode(const uint32_t instance)
 * Description   : The function save the configuration for one mode of operation.
 *
 *END**************************************************************************/
-tsi_status_t TSI_DRV_SaveConfiguration(const uint32_t instance, const tsi_modes_t mode, tsi_operation_mode_t * operationMode)
+tsi_status_t TSI_DRV_SaveConfiguration(uint32_t instance, const tsi_modes_t mode, tsi_operation_mode_t * operationMode)
 {
-    assert(instance < HW_TSI_INSTANCE_COUNT);
+    assert(instance < TSI_INSTANCE_COUNT);
     assert(operationMode);
     tsi_state_t * tsiState = g_tsiStatePtr[instance];
     
@@ -439,6 +447,7 @@ tsi_status_t TSI_DRV_SaveConfiguration(const uint32_t instance, const tsi_modes_
 
     return  kStatus_TSI_Success;
 }
+#endif
 
 /*******************************************************************************
  * EOF

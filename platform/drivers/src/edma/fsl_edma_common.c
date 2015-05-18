@@ -30,14 +30,16 @@
 #include <stdint.h>
 #include "fsl_device_registers.h"
 
-const uint32_t g_edmaBaseAddr[] = DMA_BASE_ADDRS;
-const uint32_t g_dmamuxBaseAddr[] = DMAMUX_BASE_ADDRS;
-const IRQn_Type g_edmaIrqId[HW_DMA_INSTANCE_COUNT][FSL_FEATURE_EDMA_MODULE_CHANNEL] = 
+DMA_Type * const g_edmaBase[] = DMA_BASE_PTRS;
+DMAMUX_Type * const  g_dmamuxBase[] = DMAMUX_BASE_PTRS;
+const IRQn_Type g_edmaIrqId[DMA_INSTANCE_COUNT][FSL_FEATURE_EDMA_MODULE_CHANNEL] = 
 {
     DMA_CHN_IRQS
 };
 
-const IRQn_Type g_edmaErrIrqId[HW_DMA_INSTANCE_COUNT] = DMA_ERROR_IRQS;
+#if !defined FSL_FEATURE_EDMA_HAS_ERROR_IRQ
+const IRQn_Type g_edmaErrIrqId[DMA_INSTANCE_COUNT] = DMA_ERROR_IRQS;
+#endif
 
 /*******************************************************************************
 * EOF

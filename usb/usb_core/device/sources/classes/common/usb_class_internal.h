@@ -52,7 +52,7 @@
 /******************************************************************************
  * Types
  *****************************************************************************/
-/* Strucutre holding USB class object state*/
+/* Structure holding USB class object state*/
 typedef struct _usb_class_object
 {
    uint32_t             usb_fw_handle;
@@ -68,7 +68,7 @@ typedef struct _usb_class_object
  *
  * @name  USB_Class_Init
  *
- * @brief The funtion initializes the Class Module 
+ * @brief The function initializes the Class Module
  *
  * @param handle             :handle to Identify the controller
  * @param class_callback     :event callback      
@@ -76,7 +76,7 @@ typedef struct _usb_class_object
  *                            CONTROL ENDPOINT
  *
  * @return status       
- *         USB_OK           : When Successfull 
+ *         USB_OK           : When Successfully
  *         Others           : Errors
  *
  *****************************************************************************/
@@ -93,13 +93,13 @@ class_handle_t USB_Class_Init
  *
  * @name  USB_Class_Deinit
  *
- * @brief The funtion initializes the Class Module 
+ * @brief The function initializes the Class Module
  *
  * @param handle             :handle to Identify the controller
  * @param class_handle       :class handle      
  *
  * @return status       
- *         USB_OK           : When Successfull 
+ *         USB_OK           : When Successfully
  *         Others           : Errors
  *
  *****************************************************************************/
@@ -112,7 +112,7 @@ usb_status USB_Class_Deinit
  *
  * @name  USB_Class_Send_Data
  *
- * @brief The funtion calls the device to send data upon recieving an IN token 
+ * @brief The function calls the device to send data upon receiving an IN token
  *
  * @param handle:               handle to Identify the controller
  * @param ep_num:               The endpoint number     
@@ -120,7 +120,7 @@ usb_status USB_Class_Deinit
  * @param size:                 length of transfer
  * 
  * @return status       
- *         USB_OK           : When Successfull 
+ *         USB_OK           : When Successfully
  *         Others           : Errors
  *
  *****************************************************************************/
@@ -132,20 +132,28 @@ usb_status USB_Class_Send_Data
     uint32_t                        size      /* [IN] length of the transfer */
 ); 
 
-
-
 /**************************************************************************//*!
  *
- * @name   USB_Class_Periodic_Task
+ * @name  USB_Class_Get_Status
  *
- * @brief  The funtion calls for periodic tasks 
+ * @brief The funtion calls the device to send data upon recieving an IN token 
  *
- * @param  None
- *
- * @return None
+ * @param handle:               handle to Identify the controller
+ * @param component:            component code   
+ * @param error_code:           the requested error
+ * 
+ * @return status       
+ *         USB_OK           : When Successfull 
+ *         Others           : Errors
  *
  *****************************************************************************/
-extern void USB_Class_Periodic_Task(void);
+usb_status USB_Class_Get_Status
+(
+    class_handle_t handle,     /* [IN] */
+    uint8_t        component,  /* [IN] component code */
+    uint16_t *     error_code /* [OUT] the requested error */
+);
+
 
 #ifdef USBCFG_DEV_COMPOSITE
 /**************************************************************************//*!

@@ -103,17 +103,29 @@ extern "C" {
 #endif
 
 //usb_status _usb_host_register_ch9_callback(usb_device_instance_handle, tr_callback, void*);
-usb_status _usb_host_ch9_clear_feature(usb_device_instance_handle, uint8_t, uint8_t, uint16_t);
-usb_status _usb_host_ch9_get_configuration(usb_device_instance_handle, uint8_t *);
-usb_status _usb_host_ch9_get_descriptor(usb_device_instance_handle, uint16_t, uint16_t, uint16_t, uint8_t *);
-usb_status _usb_host_ch9_get_interface(usb_device_instance_handle, uint8_t, uint8_t *);
-usb_status _usb_host_ch9_get_status(usb_device_instance_handle, uint8_t, uint16_t, uint8_t *);
-usb_status _usb_host_ch9_set_address(usb_device_instance_handle);
-usb_status _usb_host_ch9_set_configuration(usb_device_instance_handle, uint16_t);
-usb_status _usb_host_ch9_set_descriptor(usb_device_instance_handle, uint16_t, uint16_t, uint16_t, uint8_t *);
-usb_status _usb_host_ch9_set_feature(usb_device_instance_handle, uint8_t, uint8_t, uint16_t);
-usb_status _usb_host_ch9_set_interface(usb_device_instance_handle, uint8_t, uint8_t);
-usb_status _usb_host_ch9_synch_frame(usb_device_instance_handle, uint8_t, uint8_t *);
+usb_status _usb_host_ch9_clear_feature(usb_device_instance_handle dev_handle, uint8_t req_type, uint8_t intf_endpt, uint16_t feature);
+usb_status _usb_host_ch9_get_configuration(usb_device_instance_handle dev_handle, uint8_t* buffer);
+usb_status _usb_host_ch9_get_descriptor
+(
+    /* usb device */
+    usb_device_instance_handle   dev_handle,
+    /* descriptor type & index */
+    uint16_t                       type_index,
+    /* Language ID or 0 */
+    uint16_t                       lang_id,
+    /* buffer length */
+    uint16_t                       buflen,
+    /* descriptor buffer */
+    uint8_t *                     buffer
+);
+usb_status _usb_host_ch9_get_interface(usb_device_instance_handle dev_handle, uint8_t interface, uint8_t* buffer);
+usb_status _usb_host_ch9_get_status(usb_device_instance_handle dev_handle, uint8_t req_type, uint16_t intf_endpt, uint8_t* buffer);
+usb_status _usb_host_ch9_set_address(usb_device_instance_handle dev_handle);
+usb_status _usb_host_ch9_set_configuration(usb_device_instance_handle dev_handle, uint16_t config);
+usb_status _usb_host_ch9_set_descriptor(usb_device_instance_handle dev_handle, uint16_t type_index, uint16_t lang_id, uint16_t buflen, uint8_t* buffer);
+usb_status _usb_host_ch9_set_feature(usb_device_instance_handle dev_handle, uint8_t req_type, uint8_t intf_endpt, uint16_t feature);
+usb_status _usb_host_ch9_set_interface(usb_device_instance_handle dev_handle, uint8_t alternate, uint8_t intf);
+usb_status _usb_host_ch9_synch_frame(usb_device_instance_handle dev_handle, uint8_t interface, uint8_t* buffer);
 //usb_status _usb_hostdev_cntrl_request(usb_device_instance_handle, usb_setup_t*, uint8_t *, tr_callback, void*);
 
 #ifdef __cplusplus
