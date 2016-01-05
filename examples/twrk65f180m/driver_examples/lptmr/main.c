@@ -61,6 +61,7 @@ volatile uint32_t lptmrCounter=0;
 void lptmr_isr_callback(void)
 {
     lptmrCounter++;
+    LED1_TOGGLE;
 }
 
 /*!
@@ -94,7 +95,7 @@ int main (void)
     // Specify the callback function when a LPTMR interrupt occurs
     LPTMR_DRV_InstallCallback(LPTMR_INSTANCE,lptmr_isr_callback);
 
-    PRINTF("Low Power Timer Example\n\r");
+    PRINTF("Low Power Timer Example\r\n");
 
     // Start counting
     LPTMR_DRV_Start(LPTMR_INSTANCE);
@@ -104,7 +105,6 @@ int main (void)
         {
             currentCounter = lptmrCounter;
             PRINTF("LPTMR interrupt No.%d \r\n",currentCounter);
-            LED1_TOGGLE;
         }
     }
 }

@@ -53,7 +53,7 @@
 typedef enum _dac_status
 {
     kStatus_DAC_Success = 0U, /*!< Success. */
-    kStatus_DAC_InvalidArgument = 1U, /*!< Invalid argument existed. */
+    kStatus_DAC_InvalidArgument = 1U, /*!< Invalid argument. */
     kStatus_DAC_Failed = 2U /*!< Execution failed. */
 } dac_status_t;
 
@@ -80,8 +80,8 @@ typedef enum _dac_trigger_mode
 /*!
  * @brief Defines the type of selection for buffer watermark mode.
  *
- * If the buffer feature for DAC module is enabled, a watermark event will
- * occur when the buffer index hits the watermark.
+ * If the buffer feature for DAC module is enabled, a watermark event 
+ * occurs when the buffer index reaches the watermark.
  */
 typedef enum _dac_buff_watermark_mode
 {
@@ -95,30 +95,30 @@ typedef enum _dac_buff_watermark_mode
  * @brief Defines the type of selection for buffer work mode.
  *
  * These are the work modes when the DAC buffer is enabled.\n
- * \li Normal mode - When the buffer index hits the upper level, it
+ * \li Normal mode - When the buffer index reaches the upper level, it
  *     starts (0) on the next trigger.
- * \li Swing mode - When the buffer index hits the upper level, it goes backward to
+ * \li Swing mode - When the buffer index reaches the upper level, it goes backward to
  *    the start and is reduced one-by-one on the next trigger. When the buffer index
- *    hits the start, it goes backward to the upper level and increases one-by-one
+ *    reaches the start, it goes backward to the upper level and increases one-by-one
  *    on the next trigger.
  * \li One-Time-Scan mode - The buffer index can only be increased on the next trigger.
- *    When the buffer index hits the upper level, it is not updated by the trigger.
+ *    When the buffer index reaches the upper level, it is not updated by the trigger.
  * \li FIFO mode - In FIFO mode, the buffer is organized as a FIFO. For a valid 
- *    write to any item, the data will be put into the FIFO. The written index
- *    in buffer should be an EVEN number; otherwise, the write will be ignored.
+ *    write to any item, the data is put into the FIFO. The written index
+ *    in buffer should be an even number; otherwise, the write is ignored.
  */
 typedef enum _dac_buff_work_mode
 {
-    kDacBuffWorkAsNormalMode = 0U /*!< Buffer works as Normal. @internal gui name="Normal" */
+    kDacBuffWorkAsNormalMode = 0U /*!< Buffer works normally. @internal gui name="Normal" */
 /* For 1-bit DACBFMD. */
 #if DAC_C1_DACBFMD_WIDTH==1
-    ,kDacBuffWorkAsOneTimeScanMode = 1U /*!< Buffer works as one time scan. @internal gui name="" */
+    ,kDacBuffWorkAsOneTimeScanMode = 1U /*!< Buffer works as a one time scan. @internal gui name="" */
 /* For 2-bit DACBFMD. */
 #elif DAC_C1_DACBFMD_WIDTH==2
 #if FSL_FEATURE_DAC_HAS_BUFFER_SWING_MODE
-    ,kDacBuffWorkAsSwingMode = 1U /*!< Buffer works as swing. @internal gui name="Swing mode" */
+    ,kDacBuffWorkAsSwingMode = 1U /*!< Buffer works as a swing. @internal gui name="Swing mode" */
 #endif /* FSL_FEATURE_DAC_HAS_BUFFER_SWING_MODE */
-    ,kDacBuffWorkAsOneTimeScanMode = 2U /*!< Buffer works as one time scan. @internal gui name="One-time scan" */
+    ,kDacBuffWorkAsOneTimeScanMode = 2U /*!< Buffer works as a one time scan. @internal gui name="One-time scan" */
 #if FSL_FEATURE_DAC_HAS_BUFFER_FIFO_MODE
     ,kDacBuffWorkAsFIFOMode = 3U /*!< Buffer works as FIFO. @internal gui name="FIFO" */
 #endif /* FSL_FEATURE_DAC_HAS_BUFFER_FIFO_MODE */
@@ -149,14 +149,14 @@ typedef struct DacBufferConfig
     /* Buffer interrupt. */
 #if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
     bool idxWatermarkIntEnable; 
-        /*!< Switcher to enable interrupt when buffer index hits the watermark. @internal gui name="Watermark interrupt" id="WatermarkInterrupt" */
+        /*!< Switcher to enable interrupt when buffer index reaches the watermark. @internal gui name="Watermark interrupt" id="WatermarkInterrupt" */
     dac_buff_watermark_mode_t watermarkMode;
         /*!< Selection of watermark setting. See "dac_buff_watermark_mode_t". @internal gui name="Watermark mode" id="WatermarkMode" */
 #endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
     bool idxStartIntEnable;
-        /*!< Switcher to enable interrupt when buffer index hits the start (0). @internal gui name="Buffer bottom interrupt" id="BufferBottomInterrupt" */
+        /*!< Switcher to enable interrupt when buffer index reaches the start (0). @internal gui name="Buffer bottom interrupt" id="BufferBottomInterrupt" */
     bool idxUpperIntEnable;
-        /*!< Switcher to enable interrupt when buffer index hits the upper limit. @internal gui name="Buffer top interrupt" id="BufferTopInterrupt" */
+        /*!< Switcher to enable interrupt when buffer index reaches the upper limit. @internal gui name="Buffer top interrupt" id="BufferTopInterrupt" */
     bool dmaEnable; /*!< Switcher to enable DMA request by original interrupts. @internal gui name="DMA" id="DMASupport" */
     dac_buff_work_mode_t buffWorkMode;
         /*!< Selection of buffer's work mode. See "dac_buff_work_mode_t". @internal gui name="Buffer mode" id="BufferMode" */
@@ -172,9 +172,9 @@ extern "C" {
  ******************************************************************************/
 
 /*!
- * @brief Resets all configurable registers to be in the reset state for DAC.
+ * @brief Resets all configurable registers to the reset state for DAC.
  *
- * This function resets all configurable registers to be in the reset state for DAC.
+ * This function resets all configurable registers to the reset state for DAC.
  * It should be called before configuring the DAC module.
  *
  * @param base The DAC peripheral base address.
@@ -225,7 +225,7 @@ void DAC_HAL_SetBuffValue(DAC_Type * base, uint8_t idx, uint16_t value);
 /*!
  * @brief Clears the flag of the DAC buffer read pointer.
  *
- * This function clears the flag of the DAC buffer read pointer when it hits the
+ * This function clears the flag of the DAC buffer read pointer when it reaches the
  * bottom position.
  *
  * @param base The DAC peripheral base address.
@@ -236,9 +236,9 @@ static inline void DAC_HAL_ClearBuffIdxUpperFlag(DAC_Type * base)
 }
 
 /*!
- * @brief Gets the flag of the DAC buffer read pointer when it hits the bottom position.
+ * @brief Gets the flag of the DAC buffer read pointer when it reaches the bottom position.
  *
- * This function gets the flag of DAC buffer read pointer when it hits the
+ * This function gets the flag of DAC buffer read pointer when it reaches the
  * bottom position.
  *
  * @param base The DAC peripheral base address.
@@ -250,9 +250,9 @@ static inline bool DAC_HAL_GetBuffIdxUpperFlag(DAC_Type * base)
 }
 
 /*!
- * @brief Clears the flag of the DAC buffer read pointer when it hits the top position.
+ * @brief Clears the flag of the DAC buffer read pointer when it reaches the top position.
  *
- * This function clears the flag of the DAC buffer read pointer when it hits the
+ * This function clears the flag of the DAC buffer read pointer when it reaches the
  * top position.
  *
  * @param base The DAC peripheral base address.
@@ -263,9 +263,9 @@ static inline void DAC_HAL_ClearBuffIdxStartFlag(DAC_Type * base)
 }
 
 /*!
- * @brief Gets the flag of the DAC buffer read pointer when it hits the top position.
+ * @brief Gets the flag of the DAC buffer read pointer when it reaches the top position.
  *
- * This function gets the flag of the DAC buffer read pointer when it hits the
+ * This function gets the flag of the DAC buffer read pointer when it reaches the
  * top position.
  *
  * @param base The DAC peripheral base address.
@@ -279,9 +279,9 @@ static inline bool DAC_HAL_GetBuffIdxStartFlag(DAC_Type * base)
 #if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
 
 /*!
- * @brief Gets the flag of the DAC buffer read pointer when it hits the watermark position.
+ * @brief Gets the flag of the DAC buffer read pointer when it reaches the watermark position.
  *
- * This function gets the flag of the DAC buffer read pointer when it hits the
+ * This function gets the flag of the DAC buffer read pointer when it reaches the
  * watermark position.
  *
  * @param base The DAC peripheral base address.
@@ -293,9 +293,9 @@ static inline bool DAC_HAL_GetBuffIdxWatermarkFlag(DAC_Type * base)
 }
 
 /*!
- * @brief Clears the flag of the DAC buffer read pointer when it hits the watermark position.
+ * @brief Clears the flag of the DAC buffer read pointer when it reaches the watermark position.
  *
- * This function clears the flag of the DAC buffer read pointer when it hits the
+ * This function clears the flag of the DAC buffer read pointer when it reaches the
  * watermark position.
  *
  * @param base The DAC peripheral base address.
@@ -343,7 +343,6 @@ static inline void DAC_HAL_Disable(DAC_Type * base)
  */
 static inline void DAC_HAL_SetSoftTriggerCmd(DAC_Type * base)
 {
-    /* DAC_BWR_C0_DACSWTRG(base, 1U); */
     /* For supporting some chips with no bit-band access. */
     DAC_SET_C0(base, DAC_C0_DACSWTRG_MASK);  
 }

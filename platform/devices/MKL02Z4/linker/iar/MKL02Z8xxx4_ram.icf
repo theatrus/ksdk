@@ -3,13 +3,13 @@
 **     Processor:           MKL02Z8VFG4
 **     Compiler:            IAR ANSI C/C++ Compiler for ARM
 **     Reference manual:    KL02P32M48SF0RM Rev3.1, July 2013
-**     Version:             rev. 1.2, 2014-10-14
-**     Build:               b141113
+**     Version:             rev. 1.4, 2015-01-23
+**     Build:               b150602
 **
 **     Abstract:
 **         Linker file for the IAR ANSI C/C++ Compiler for ARM
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -46,11 +46,11 @@
 define symbol m_interrupts_start       = 0x1FFFFF00;
 define symbol m_interrupts_end         = 0x1FFFFFFF;
 
-define symbol m_data_start             = 0x20000000;
-define symbol m_data_end               = 0x2000017F;
+define symbol m_text_start             = 0x20000000;
+define symbol m_text_end               = 0x2000017F;
 
-define symbol m_text_start             = 0x20000180;
-define symbol m_text_end               = 0x200002FF;
+define symbol m_data_start             = 0x20000180;
+define symbol m_data_end               = 0x200002FF;
 
 /* Sizes */
 if (isdefinedsymbol(__stack_size__)) {

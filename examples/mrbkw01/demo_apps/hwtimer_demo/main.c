@@ -48,6 +48,7 @@
 #define HWTIMER_LL_DEVIF    kSystickDevif
 #define HWTIMER_LL_ID       0
 
+#define HWTIMER_ISR_PRIOR       5
 #define HWTIMER_PERIOD          100000
 #define HWTIMER_DOTS_PER_LINE   40
 #define HWTIMER_LINES_COUNT     2
@@ -106,6 +107,8 @@ int main (void)
      * appropriate priority setting:
      * NVIC_SetPriority(SysTick_IRQn, isrPrior);
      */
+    NVIC_SetPriority(SysTick_IRQn, HWTIMER_ISR_PRIOR);
+
     if (kHwtimerSuccess != HWTIMER_SYS_SetPeriod(&hwtimer, HWTIMER_PERIOD))
     {
         PRINTF("\r\nError: hwtimer set period.\r\n");

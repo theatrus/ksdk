@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "fsl_device_registers.h"
+
 #if FSL_FEATURE_SOC_ADC16_COUNT
 
 /*!
@@ -52,7 +53,7 @@
 typedef enum _adc16_status
 {
     kStatus_ADC16_Success         = 0U, /*!< Success. */
-    kStatus_ADC16_InvalidArgument = 1U, /*!< Invalid argument existed. */
+    kStatus_ADC16_InvalidArgument = 1U, /*!< Invalid argument. */
     kStatus_ADC16_Failed          = 2U  /*!< Execution failed. */
 } adc16_status_t;
 
@@ -131,7 +132,7 @@ typedef enum _adc16_long_sample_cycle
     kAdc16LongSampleCycleOf24 = 0U, /*!< 20 extra ADCK cycles, 24 ADCK cycles total. */
     kAdc16LongSampleCycleOf16 = 1U, /*!< 12 extra ADCK cycles, 16 ADCK cycles total. */
     kAdc16LongSampleCycleOf10 = 2U, /*!< 6 extra ADCK cycles, 10 ADCK cycles total. */
-    kAdc16LongSampleCycleOf4  = 3U  /*!< 2 extra ADCK cycles, 6 ADCK cycles total. */
+    kAdc16LongSampleCycleOf6  = 3U  /*!< 2 extra ADCK cycles, 6 ADCK cycles total. */
 } adc16_long_sample_cycle_t;
 
 /*!
@@ -140,7 +141,10 @@ typedef enum _adc16_long_sample_cycle
 typedef enum _adc16_ref_volt_src
 {
     kAdc16RefVoltSrcOfVref = 0U, /*!< For external pins pair of VrefH and VrefL. @internal gui name="Vref pair" */
-    kAdc16RefVoltSrcOfValt = 1U  /*!< For alternate reference pair of ValtH and ValtL. @internal gui name="Valt pair" */
+    kAdc16RefVoltSrcOfValt = 1U /*!< For alternate reference pair of ValtH and ValtL. @internal gui name="Valt pair" */
+#if defined(KM34Z7_SERIES)
+    ,kAdc16RefVoltSrcOfVbdg = 2U  /*!< For internal bandgap reference pair of VbdgH and VbdgL. @internal gui name="Vbdg pair" */
+#endif
 } adc16_ref_volt_src_t;
 
 #if FSL_FEATURE_ADC16_HAS_HW_AVERAGE
@@ -258,19 +262,19 @@ typedef struct Adc16ChnConfig
  */
 typedef struct Adc16ConverterConfig
 {
-    bool                    lowPowerEnable; /*!< Enable low power. @internal gui name="Low power mode" id="LowPowerMode" */
-    adc16_clk_divider_t     clkDividerMode; /*!< Select the divider of input clock source. @internal gui name="Clock divider" id="ClockDivider" */
-    bool                    longSampleTimeEnable; /*!< Enable the long sample time. @internal gui name="Long sample time" id="LongSampleTime" */
-    adc16_resolution_t      resolution; /*!< Select the sample resolution mode. @internal gui name="Resolution" id="Resolution" */
-    adc16_clk_src_mode_t    clkSrc; /*!< Select the input clock source to converter. @internal gui name="Clock source" id="ClockSource" */
-    bool                    asyncClkEnable; /*!< Enable the asynchronous clock inside the ADC. @internal gui name="Internal async. clock" id="InternalAsyncClock" */
-    bool                    highSpeedEnable; /*!< Enable the high speed mode. @internal gui name="High speed mode" id="HighSpeed" */
-    adc16_long_sample_cycle_t longSampleCycleMode; /*!< Select the long sample mode. @internal gui name="Long sample mode" id="LongSampleMode" */
-    bool                    hwTriggerEnable; /*!< Enable hardware trigger function. @internal gui name="Hardware trigger" id="HwTrigger" */
-    adc16_ref_volt_src_t    refVoltSrc; /*!< Select the reference voltage source. @internal gui name="Voltage reference" id="ReferenceVoltage" */
-    bool                    continuousConvEnable; /*!< Enable continuous conversion mode. @internal gui name="Continuous mode" id="ContinuousMode" */
+    bool                    lowPowerEnable; /*!< Enables low power. @internal gui name="Low power mode" id="LowPowerMode" */
+    adc16_clk_divider_t     clkDividerMode; /*!< Selects the divider of input clock source. @internal gui name="Clock divider" id="ClockDivider" */
+    bool                    longSampleTimeEnable; /*!< Enables the long sample time. @internal gui name="Long sample time" id="LongSampleTime" */
+    adc16_resolution_t      resolution; /*!< Selects the sample resolution mode. @internal gui name="Resolution" id="Resolution" */
+    adc16_clk_src_mode_t    clkSrc; /*!< Selects the input clock source to converter. @internal gui name="Clock source" id="ClockSource" */
+    bool                    asyncClkEnable; /*!< Enables the asynchronous clock inside the ADC. @internal gui name="Internal async. clock" id="InternalAsyncClock" */
+    bool                    highSpeedEnable; /*!< Enables the high-speed mode. @internal gui name="High speed mode" id="HighSpeed" */
+    adc16_long_sample_cycle_t longSampleCycleMode; /*!< Selects the long sample mode. @internal gui name="Long sample mode" id="LongSampleMode" */
+    bool                    hwTriggerEnable; /*!< Enables the hardware trigger function. @internal gui name="Hardware trigger" id="HwTrigger" */
+    adc16_ref_volt_src_t    refVoltSrc; /*!< Selects the reference voltage source. @internal gui name="Voltage reference" id="ReferenceVoltage" */
+    bool                    continuousConvEnable; /*!< Enables continuous conversion mode. @internal gui name="Continuous mode" id="ContinuousMode" */
 #if FSL_FEATURE_ADC16_HAS_DMA
-    bool                    dmaEnable; /*!< Enable the DMA for ADC converter. @internal gui name="DMA mode" id="DMASupport" */
+    bool                    dmaEnable; /*!< Enables the DMA for ADC converter. @internal gui name="DMA mode" id="DMASupport" */
 #endif /* FSL_FEATURE_ADC16_HAS_DMA */
 } adc16_converter_config_t;
 
@@ -280,8 +284,8 @@ typedef struct Adc16ConverterConfig
  */
 typedef struct Adc16HwCmpConfig
 {
-    bool hwCmpEnable; /*!< Enable the hardware compare function. @internal gui name="Hardware compare" */
-    bool hwCmpGreaterThanEnable; /*!< Configure the compare function. @internal gui name="Compare function greater than" */
+    bool hwCmpEnable; /*!< Enables the hardware compare function. @internal gui name="Hardware compare" */
+    bool hwCmpGreaterThanEnable; /*!< Configures the compare function. @internal gui name="Compare function greater than" */
     /*
      false - Configures less than the threshold. The outside and inside range are not inclusive.
              The functionality is based on the values
@@ -290,7 +294,7 @@ typedef struct Adc16HwCmpConfig
              ranges are inclusive. The functionality is based on the values placed in
              CV1 and CV2.
      */
-    bool hwCmpRangeEnable; /*!< Configure the comparator function. @internal gui name="Compare function range" */
+    bool hwCmpRangeEnable; /*!< Configures the comparator function. @internal gui name="Compare function range" */
     /*
      Configures the comparator function to check if the conversion result of the
      input being monitored is either between or outside the range formed by
@@ -323,19 +327,19 @@ typedef struct Adc16HwAverageConfig
  */
 typedef struct Adc16PgaConfig
 {
-    bool pgaEnable; /*!< Enable the PGA's function. @internal gui name="PGA module" */
-    bool runInNormalModeEnable; /*!< Enable PGA working in normal mode, or low power mode defaultly. @internal gui name="Low power mode run" */
-    adc16_pga_gain_t pgaGainMode; /*!< Select the PGA Gain factor. @internal gui name="Gain" */
+    bool pgaEnable; /*!< Enables the PGA's function. @internal gui name="PGA module" */
+    bool runInNormalModeEnable; /*!< Enables PGA working in normal mode or low power mode by default. @internal gui name="Low power mode run" */
+    adc16_pga_gain_t pgaGainMode; /*!< Selects the PGA Gain factor. @internal gui name="Gain" */
 
 #if FSL_FEATURE_ADC16_HAS_PGA_CHOPPING
-    bool pgaChoppingDisable; /*!< Disable the PGA chopping function. @internal gui name="Chopping control" */
+    bool pgaChoppingDisable; /*!< Disables the PGA chopping function. @internal gui name="Chopping control" */
     /*
      The PGA employs chopping to remove/reduce offset and 1/f noise and offers an
      offset measurement configuration that aids the offset calibration.
     */
 #endif /* FSL_FEATURE_ADC16_HAS_PGA_CHOPPING */
 #if FSL_FEATURE_ADC16_HAS_PGA_OFFSET_MEASUREMENT
-    bool runInOffsetMeasurementEnable; /*!< Enable the PGA working in offset measurement mode. @internal gui name="Offset measurement mode" */
+    bool runInOffsetMeasurementEnable; /*!< Enables the PGA working in offset measurement mode. @internal gui name="Offset measurement mode" */
     /*
      When this feature is enabled, the PGA disconnects itself from the external
      inputs and auto-configures into offset measurement mode. With this bit set,
@@ -652,6 +656,7 @@ void ADC16_HAL_ConfigPga(ADC_Type * base, const adc16_pga_config_t *configPtr);
 
 /*! @}*/
 #endif
+
 #endif /* __FSL_ADC16_HAL_H__ */
 
 /******************************************************************************

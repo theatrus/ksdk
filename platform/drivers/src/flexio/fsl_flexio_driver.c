@@ -36,7 +36,7 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-flexio_shifter_callback_t shifterIntCallback[FLEXIO_INSTANCE_COUNT][4];
+flexio_shifter_callback_t shifterIntCallback[FLEXIO_INSTANCE_COUNT][FLEXIO_SHIFTBUF_COUNT];
 /*FUNCTION*********************************************************************
  *
  * Function Name : FLEXIO_DRV_Init

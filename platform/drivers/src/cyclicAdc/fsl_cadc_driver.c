@@ -107,7 +107,7 @@ cadc_status_t CADC_DRV_Deinit(uint32_t instance)
     INT_SYS_DisableIRQ(g_cadcConvBIrqId[instance]);
 
     /* Gate the access to ADC module. */
-    CLOCK_SYS_DisableAdcClock(instance); /* BW_SIM_SCGC5_ADC(SIM_BASE,0U); */
+    CLOCK_SYS_DisableAdcClock(instance); 
 
     return kStatus_CADC_Success;
 }

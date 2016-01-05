@@ -45,7 +45,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions
 ///////////////////////////////////////////////////////////////////////////////
-#define MUSIC_LEN 78000 /*! Audio data length to playback */
+#define MUSIC_LEN 65000 /*! Audio data length to playback */
 ///////////////////////////////////////////////////////////////////////////////
 // Variables
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,12 @@ uint32_t sample_rate = 12000;
 uint32_t bits = 16;
 flexio_i2s_handler_t i2s_handler;
 flexio_i2s_config_t config;
+#if FSL_FEATURE_SOC_DMA_COUNT
 dma_state_t dma_state;
+#else
+edma_state_t dma_state;
+edma_user_config_t dma_config;
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Code
@@ -65,7 +70,7 @@ dma_state_t dma_state;
 */
 void Configure_Sgtl5000(bool master)
 {
-    handler.i2c_instance = 1;
+    handler.i2c_instance = BOARD_SAI_DEMO_I2C_INSTANCE;
     sgtl_init_t codec_init;
     codec_init.bus = kSgtlBusI2S;
     codec_init.master_slave = master;
@@ -114,12 +119,15 @@ void i2s_master_dma(void)
     //Configure Codec
     Configure_Sgtl5000(false);
     config.master_slave = kFlexioI2SMaster;
+#if defined(K80F25615_SERIES) || defined(K81F25615_SERIES)
+    config.baseSource = kDmaRequestMux0Group1FlexIO0Channel0;
+#else
+    config.baseSource = kDmaRequestMux0FlexIOChannel0;
+#endif
     //Configure flexio as an i2s master controller
     FLEXIO_I2S_DRV_Init(0, &i2s_handler, &config);
     //Start flexio functionality
     FLEXIO_DRV_Start(0);
-    //Use DMA method
-    DMA_DRV_Init(&dma_state);
     FLEXIO_I2S_DRV_SendDataDma(&i2s_handler, (uint8_t *) music, MUSIC_LEN);
     osa_status_t status;
     //Wait for data transfer finished
@@ -127,9 +135,15 @@ void i2s_master_dma(void)
     {
         status = OSA_SemaWait(&(i2s_handler.tx_sem), OSA_WAIT_FOREVER);
     }while(status == kStatus_OSA_Idle);
+	#if FSL_FEATURE_SOC_DMA_COUNT
     //Stop and release dma channel
     DMA_DRV_StopChannel(&i2s_handler.tx_dma_chn);
-    DMA_DRV_FreeChannel(&i2s_handler.tx_dma_chn);
+	DMA_DRV_FreeChannel(&i2s_handler.tx_dma_chn);
+#else
+    EDMA_DRV_StopChannel(&i2s_handler.tx_edma_state);
+    EDMA_DRV_ReleaseChannel(&i2s_handler.tx_edma_state);
+#endif
+
     PRINTF("\r\n Master DMA transfer Succeed! \r\n");
     SGTL_Deinit(&handler);
     FLEXIO_DRV_Pause(0);
@@ -168,12 +182,15 @@ void i2s_slave_dma()
     //Configure Codec as master
     Configure_Sgtl5000(true);
     config.master_slave = kFlexioI2SSlave;
+#if defined(K80F25615_SERIES) || defined(K81F25615_SERIES)
+    config.baseSource = kDmaRequestMux0Group1FlexIO0Channel0;
+#else
+    config.baseSource = kDmaRequestMux0FlexIOChannel0;
+#endif
     //Configure flexio as an i2s slave controller
     FLEXIO_I2S_DRV_Init(0, &i2s_handler, &config);
     //Start flexio functionality
     FLEXIO_DRV_Start(0);
-    //Use DMA method
-    DMA_DRV_Init(&dma_state);
     FLEXIO_I2S_DRV_SendDataDma(&i2s_handler, (uint8_t *) music, MUSIC_LEN);
     osa_status_t status;
     //Wait for data transfer finished
@@ -181,9 +198,14 @@ void i2s_slave_dma()
     {
         status = OSA_SemaWait(&(i2s_handler.tx_sem), OSA_WAIT_FOREVER);
     }while(status == kStatus_OSA_Idle);
+#if FSL_FEATURE_SOC_DMA_COUNT
     //Stop and release dma channel
     DMA_DRV_StopChannel(&i2s_handler.tx_dma_chn);
     DMA_DRV_FreeChannel(&i2s_handler.tx_dma_chn);
+#else
+    EDMA_DRV_StopChannel(&i2s_handler.tx_edma_state);
+    EDMA_DRV_ReleaseChannel(&i2s_handler.tx_edma_state);
+#endif
     PRINTF("\r\n Slave DMA transfer Succeed! \r\n");
     SGTL_Deinit(&handler);
     FLEXIO_DRV_Pause(0);
@@ -196,11 +218,18 @@ int main(void)
 {
     hardware_init();
     OSA_Init();
-    //Use pin0~pin3 in flexio
+    //Use pin0, pin1, pin4, pin5 in flexio
     configure_flexio_pins(0,0);
     configure_flexio_pins(0,1);
-    configure_flexio_pins(0,2);
-    configure_flexio_pins(0,3);
+    configure_flexio_pins(0,4);
+    configure_flexio_pins(0,5);
+#if FSL_FEATURE_SOC_DMA_COUNT
+    DMA_DRV_Init(&dma_state);
+#else
+    dma_config.chnArbitration = kEDMAChnArbitrationRoundrobin;
+    dma_config.notHaltOnError = false;
+    EDMA_DRV_Init(&dma_state, &dma_config);
+#endif
     while(1)
     {
         //Configure flexio I2S
@@ -218,14 +247,16 @@ int main(void)
         config.sample_rate = sample_rate;
         config.txPinIdx = 0; //flexio pin0 as Tx data line
         config.rxPinIdx = 1; //flexio pin1 as Rx data line
-        config.sckPinIdx = 2; // flexio pin2 as SCLK
-        config.wsPinIdx = 3; //flexio pin3 as Frame Sync
+        config.sckPinIdx = 4; // flexio pin4 as SCLK
+        config.wsPinIdx = 5; //flexio pin5 as Frame Sync
         config.shifterIdx[0] = 0; //Use shifter 0 for tx data
         config.shifterIdx[1] = 1; // Use shifer 1 for rx data
         config.timerIdx[0] = 0; // Use Timer0 as SCLK controller.
         config.timerIdx[1] = 1; // Use Timer1 as Frame Sync controller.
         i2s_master_int();
         i2s_master_dma();
+        PRINTF("\r\nPress any key to start I2S slave transfer...\r\n");
+        GETCHAR();
         i2s_slave_int();
         i2s_slave_dma();
         PRINTF("\r\nPress any key to playback again...\r\n");

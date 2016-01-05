@@ -36,7 +36,9 @@
 #include "usb_device_config.h"
 #include "usb.h"
 
+#ifndef HIGH_SPEED
 #define  HIGH_SPEED           (0)
+#endif
 
 #if HIGH_SPEED
 #define CONTROLLER_ID         USB_CONTROLLER_EHCI_0
@@ -44,27 +46,8 @@
 #define CONTROLLER_ID         USB_CONTROLLER_KHCI_0
 #endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#if defined(BSPCFG_ENABLE_SAI)
-    #if ! BSPCFG_ENABLE_SAI
-    #error This application requires BSPCFG_ENABLE_SAI defined non-zero in user_config.h. Please recompile libraries with this option.
-    #endif
-    #define AUDIO_DEVICE        "sai:"    
-    #define CLK_MULT            (384)
-    #define DATA_BUFF_SIZE      (2048) /* ((AUDIO_ENDPOINT_PACKET_SIZE) * 8) */
-#elif defined(BSPCFG_ENABLE_II2S0)
-    #if ! BSPCFG_ENABLE_II2S0
-    #error This application requires BSPCFG_ENABLE_II2S0 defined non-zero in user_config.h. Please recompile libraries with this option.
-    #endif
-    #define AUDIO_DEVICE        "ii2s0:"    
-    #define CLK_MULT            (256)
-    #define DATA_BUFF_SIZE      (256) /* ((AUDIO_ENDPOINT_PACKET_SIZE) * 8) */
-#else
-    #error This application requires SAI or I2S audio device.
-#endif
-#else
 #define DATA_BUFF_SIZE          (2048) /* ((AUDIO_ENDPOINT_PACKET_SIZE) * 8) */
-#endif
+
 /******************************************************************************
  * Constants - None
  *****************************************************************************/

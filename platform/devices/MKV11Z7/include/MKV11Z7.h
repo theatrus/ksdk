@@ -6,14 +6,14 @@
 **                          GNU C Compiler - CodeSourcery Sourcery G++
 **                          IAR ANSI C/C++ Compiler for ARM
 **
-**     Reference manual:    KV11P64M75RM Rev.0, November 2014
+**     Reference manual:    KV11P64M75RM Rev.2, April 2015
 **     Version:             rev. 1.0, 2014-12-14
-**     Build:               b150202
+**     Build:               b150525
 **
 **     Abstract:
 **         CMSIS Peripheral Access Layer for MKV11Z7
 **
-**     Copyright (c) 1997 - 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 1997 - 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -116,7 +116,7 @@ typedef enum IRQn {
   DMA_Error_IRQn               = 4,                /**< DMA error interrupt channels 0-7 */
   FTFA_IRQn                    = 5,                /**< FTFA command complete and read collision */
   LVD_LVW_IRQn                 = 6,                /**< Low-voltage detect, low-voltage warning */
-  LLW_IRQn                     = 7,                /**< Low Leakage Wakeup */
+  LLWU_IRQn                    = 7,                /**< Low Leakage Wakeup */
   I2C0_IRQn                    = 8,                /**< I2C0 interrupt */
   Reserved25_IRQn              = 9,                /**< Reserved interrupt */
   SPI0_IRQn                    = 10,               /**< SPI0 single interrupt vector for all sources */
@@ -342,10 +342,6 @@ typedef struct {
 #define ADC_CFG2_ADACKEN_SHIFT                   3
 #define ADC_CFG2_ADACKEN_WIDTH                   1
 #define ADC_CFG2_ADACKEN(x)                      (((uint32_t)(((uint32_t)(x))<<ADC_CFG2_ADACKEN_SHIFT))&ADC_CFG2_ADACKEN_MASK)
-#define ADC_CFG2_MUXSEL_MASK                     0x10u
-#define ADC_CFG2_MUXSEL_SHIFT                    4
-#define ADC_CFG2_MUXSEL_WIDTH                    1
-#define ADC_CFG2_MUXSEL(x)                       (((uint32_t)(((uint32_t)(x))<<ADC_CFG2_MUXSEL_SHIFT))&ADC_CFG2_MUXSEL_MASK)
 /* R Bit Fields */
 #define ADC_R_D_MASK                             0xFFFFu
 #define ADC_R_D_SHIFT                            0
@@ -1291,6 +1287,11 @@ typedef struct {
  * @}
  */ /* end of group CAN_Register_Accessor_Macros */
 
+#define CAN_IMASK1_BUFLM_MASK                    CAN_IMASK1_BUF31TO0M_MASK
+#define CAN_IMASK1_BUFLM_SHIFT                   CAN_IMASK1_BUF31TO0M_SHIFT
+#define CAN_IMASK1_BUFLM_WIDTH                   CAN_IMASK1_BUF31TO0M_WIDTH
+#define CAN_IMASK1_BUFLM(x)                      CAN_IMASK1_BUF31TO0M(x)
+
 
 /*!
  * @}
@@ -1515,15 +1516,15 @@ typedef struct {
 typedef struct {
   union {                                          /* offset: 0x0 */
     struct {                                         /* offset: 0x0 */
-      __IO uint16_t CRCL;                              /**< CRC_CRCL register., offset: 0x0 */
-      __IO uint16_t CRCH;                              /**< CRC_CRCH register., offset: 0x2 */
+      __IO uint16_t DATAL;                             /**< CRC_DATAL register., offset: 0x0 */
+      __IO uint16_t DATAH;                             /**< CRC_DATAH register., offset: 0x2 */
     } ACCESS16BIT;
-    __IO uint32_t CRC;                               /**< CRC Data register, offset: 0x0 */
+    __IO uint32_t DATA;                              /**< CRC Data register, offset: 0x0 */
     struct {                                         /* offset: 0x0 */
-      __IO uint8_t CRCLL;                              /**< CRC_CRCLL register., offset: 0x0 */
-      __IO uint8_t CRCLU;                              /**< CRC_CRCLU register., offset: 0x1 */
-      __IO uint8_t CRCHL;                              /**< CRC_CRCHL register., offset: 0x2 */
-      __IO uint8_t CRCHU;                              /**< CRC_CRCHU register., offset: 0x3 */
+      __IO uint8_t DATALL;                             /**< CRC_DATALL register., offset: 0x0 */
+      __IO uint8_t DATALU;                             /**< CRC_DATALU register., offset: 0x1 */
+      __IO uint8_t DATAHL;                             /**< CRC_DATAHL register., offset: 0x2 */
+      __IO uint8_t DATAHU;                             /**< CRC_DATAHU register., offset: 0x3 */
     } ACCESS8BIT;
   };
   union {                                          /* offset: 0x4 */
@@ -1559,13 +1560,13 @@ typedef struct {
 
 
 /* CRC - Register accessors */
-#define CRC_CRCL_REG(base)                       ((base)->ACCESS16BIT.CRCL)
-#define CRC_CRCH_REG(base)                       ((base)->ACCESS16BIT.CRCH)
-#define CRC_CRC_REG(base)                        ((base)->CRC)
-#define CRC_CRCLL_REG(base)                      ((base)->ACCESS8BIT.CRCLL)
-#define CRC_CRCLU_REG(base)                      ((base)->ACCESS8BIT.CRCLU)
-#define CRC_CRCHL_REG(base)                      ((base)->ACCESS8BIT.CRCHL)
-#define CRC_CRCHU_REG(base)                      ((base)->ACCESS8BIT.CRCHU)
+#define CRC_DATAL_REG(base)                      ((base)->ACCESS16BIT.DATAL)
+#define CRC_DATAH_REG(base)                      ((base)->ACCESS16BIT.DATAH)
+#define CRC_DATA_REG(base)                       ((base)->DATA)
+#define CRC_DATALL_REG(base)                     ((base)->ACCESS8BIT.DATALL)
+#define CRC_DATALU_REG(base)                     ((base)->ACCESS8BIT.DATALU)
+#define CRC_DATAHL_REG(base)                     ((base)->ACCESS8BIT.DATAHL)
+#define CRC_DATAHU_REG(base)                     ((base)->ACCESS8BIT.DATAHU)
 #define CRC_GPOLYL_REG(base)                     ((base)->GPOLY_ACCESS16BIT.GPOLYL)
 #define CRC_GPOLYH_REG(base)                     ((base)->GPOLY_ACCESS16BIT.GPOLYH)
 #define CRC_GPOLY_REG(base)                      ((base)->GPOLY)
@@ -1590,53 +1591,53 @@ typedef struct {
  * @{
  */
 
-/* CRCL Bit Fields */
-#define CRC_CRCL_CRCL_MASK                       0xFFFFu
-#define CRC_CRCL_CRCL_SHIFT                      0
-#define CRC_CRCL_CRCL_WIDTH                      16
-#define CRC_CRCL_CRCL(x)                         (((uint16_t)(((uint16_t)(x))<<CRC_CRCL_CRCL_SHIFT))&CRC_CRCL_CRCL_MASK)
-/* CRCH Bit Fields */
-#define CRC_CRCH_CRCH_MASK                       0xFFFFu
-#define CRC_CRCH_CRCH_SHIFT                      0
-#define CRC_CRCH_CRCH_WIDTH                      16
-#define CRC_CRCH_CRCH(x)                         (((uint16_t)(((uint16_t)(x))<<CRC_CRCH_CRCH_SHIFT))&CRC_CRCH_CRCH_MASK)
-/* CRC Bit Fields */
-#define CRC_CRC_LL_MASK                          0xFFu
-#define CRC_CRC_LL_SHIFT                         0
-#define CRC_CRC_LL_WIDTH                         8
-#define CRC_CRC_LL(x)                            (((uint32_t)(((uint32_t)(x))<<CRC_CRC_LL_SHIFT))&CRC_CRC_LL_MASK)
-#define CRC_CRC_LU_MASK                          0xFF00u
-#define CRC_CRC_LU_SHIFT                         8
-#define CRC_CRC_LU_WIDTH                         8
-#define CRC_CRC_LU(x)                            (((uint32_t)(((uint32_t)(x))<<CRC_CRC_LU_SHIFT))&CRC_CRC_LU_MASK)
-#define CRC_CRC_HL_MASK                          0xFF0000u
-#define CRC_CRC_HL_SHIFT                         16
-#define CRC_CRC_HL_WIDTH                         8
-#define CRC_CRC_HL(x)                            (((uint32_t)(((uint32_t)(x))<<CRC_CRC_HL_SHIFT))&CRC_CRC_HL_MASK)
-#define CRC_CRC_HU_MASK                          0xFF000000u
-#define CRC_CRC_HU_SHIFT                         24
-#define CRC_CRC_HU_WIDTH                         8
-#define CRC_CRC_HU(x)                            (((uint32_t)(((uint32_t)(x))<<CRC_CRC_HU_SHIFT))&CRC_CRC_HU_MASK)
-/* CRCLL Bit Fields */
-#define CRC_CRCLL_CRCLL_MASK                     0xFFu
-#define CRC_CRCLL_CRCLL_SHIFT                    0
-#define CRC_CRCLL_CRCLL_WIDTH                    8
-#define CRC_CRCLL_CRCLL(x)                       (((uint8_t)(((uint8_t)(x))<<CRC_CRCLL_CRCLL_SHIFT))&CRC_CRCLL_CRCLL_MASK)
-/* CRCLU Bit Fields */
-#define CRC_CRCLU_CRCLU_MASK                     0xFFu
-#define CRC_CRCLU_CRCLU_SHIFT                    0
-#define CRC_CRCLU_CRCLU_WIDTH                    8
-#define CRC_CRCLU_CRCLU(x)                       (((uint8_t)(((uint8_t)(x))<<CRC_CRCLU_CRCLU_SHIFT))&CRC_CRCLU_CRCLU_MASK)
-/* CRCHL Bit Fields */
-#define CRC_CRCHL_CRCHL_MASK                     0xFFu
-#define CRC_CRCHL_CRCHL_SHIFT                    0
-#define CRC_CRCHL_CRCHL_WIDTH                    8
-#define CRC_CRCHL_CRCHL(x)                       (((uint8_t)(((uint8_t)(x))<<CRC_CRCHL_CRCHL_SHIFT))&CRC_CRCHL_CRCHL_MASK)
-/* CRCHU Bit Fields */
-#define CRC_CRCHU_CRCHU_MASK                     0xFFu
-#define CRC_CRCHU_CRCHU_SHIFT                    0
-#define CRC_CRCHU_CRCHU_WIDTH                    8
-#define CRC_CRCHU_CRCHU(x)                       (((uint8_t)(((uint8_t)(x))<<CRC_CRCHU_CRCHU_SHIFT))&CRC_CRCHU_CRCHU_MASK)
+/* DATAL Bit Fields */
+#define CRC_DATAL_DATAL_MASK                     0xFFFFu
+#define CRC_DATAL_DATAL_SHIFT                    0
+#define CRC_DATAL_DATAL_WIDTH                    16
+#define CRC_DATAL_DATAL(x)                       (((uint16_t)(((uint16_t)(x))<<CRC_DATAL_DATAL_SHIFT))&CRC_DATAL_DATAL_MASK)
+/* DATAH Bit Fields */
+#define CRC_DATAH_DATAH_MASK                     0xFFFFu
+#define CRC_DATAH_DATAH_SHIFT                    0
+#define CRC_DATAH_DATAH_WIDTH                    16
+#define CRC_DATAH_DATAH(x)                       (((uint16_t)(((uint16_t)(x))<<CRC_DATAH_DATAH_SHIFT))&CRC_DATAH_DATAH_MASK)
+/* DATA Bit Fields */
+#define CRC_DATA_LL_MASK                         0xFFu
+#define CRC_DATA_LL_SHIFT                        0
+#define CRC_DATA_LL_WIDTH                        8
+#define CRC_DATA_LL(x)                           (((uint32_t)(((uint32_t)(x))<<CRC_DATA_LL_SHIFT))&CRC_DATA_LL_MASK)
+#define CRC_DATA_LU_MASK                         0xFF00u
+#define CRC_DATA_LU_SHIFT                        8
+#define CRC_DATA_LU_WIDTH                        8
+#define CRC_DATA_LU(x)                           (((uint32_t)(((uint32_t)(x))<<CRC_DATA_LU_SHIFT))&CRC_DATA_LU_MASK)
+#define CRC_DATA_HL_MASK                         0xFF0000u
+#define CRC_DATA_HL_SHIFT                        16
+#define CRC_DATA_HL_WIDTH                        8
+#define CRC_DATA_HL(x)                           (((uint32_t)(((uint32_t)(x))<<CRC_DATA_HL_SHIFT))&CRC_DATA_HL_MASK)
+#define CRC_DATA_HU_MASK                         0xFF000000u
+#define CRC_DATA_HU_SHIFT                        24
+#define CRC_DATA_HU_WIDTH                        8
+#define CRC_DATA_HU(x)                           (((uint32_t)(((uint32_t)(x))<<CRC_DATA_HU_SHIFT))&CRC_DATA_HU_MASK)
+/* DATALL Bit Fields */
+#define CRC_DATALL_DATALL_MASK                   0xFFu
+#define CRC_DATALL_DATALL_SHIFT                  0
+#define CRC_DATALL_DATALL_WIDTH                  8
+#define CRC_DATALL_DATALL(x)                     (((uint8_t)(((uint8_t)(x))<<CRC_DATALL_DATALL_SHIFT))&CRC_DATALL_DATALL_MASK)
+/* DATALU Bit Fields */
+#define CRC_DATALU_DATALU_MASK                   0xFFu
+#define CRC_DATALU_DATALU_SHIFT                  0
+#define CRC_DATALU_DATALU_WIDTH                  8
+#define CRC_DATALU_DATALU(x)                     (((uint8_t)(((uint8_t)(x))<<CRC_DATALU_DATALU_SHIFT))&CRC_DATALU_DATALU_MASK)
+/* DATAHL Bit Fields */
+#define CRC_DATAHL_DATAHL_MASK                   0xFFu
+#define CRC_DATAHL_DATAHL_SHIFT                  0
+#define CRC_DATAHL_DATAHL_WIDTH                  8
+#define CRC_DATAHL_DATAHL(x)                     (((uint8_t)(((uint8_t)(x))<<CRC_DATAHL_DATAHL_SHIFT))&CRC_DATAHL_DATAHL_MASK)
+/* DATAHU Bit Fields */
+#define CRC_DATAHU_DATAHU_MASK                   0xFFu
+#define CRC_DATAHU_DATAHU_SHIFT                  0
+#define CRC_DATAHU_DATAHU_WIDTH                  8
+#define CRC_DATAHU_DATAHU(x)                     (((uint8_t)(((uint8_t)(x))<<CRC_DATAHU_DATAHU_SHIFT))&CRC_DATAHU_DATAHU_MASK)
 /* GPOLYL Bit Fields */
 #define CRC_GPOLYL_GPOLYL_MASK                   0xFFFFu
 #define CRC_GPOLYL_GPOLYL_SHIFT                  0
@@ -1747,13 +1748,13 @@ typedef struct {
 
 /* CRC - Register instance definitions */
 /* CRC */
-#define CRC_CRCL                                 CRC_CRCL_REG(CRC0)
-#define CRC_CRCLL                                CRC_CRCLL_REG(CRC0)
-#define CRC_DATA                                 CRC_CRC_REG(CRC0)
-#define CRC_CRCLU                                CRC_CRCLU_REG(CRC0)
-#define CRC_CRCH                                 CRC_CRCH_REG(CRC0)
-#define CRC_CRCHL                                CRC_CRCHL_REG(CRC0)
-#define CRC_CRCHU                                CRC_CRCHU_REG(CRC0)
+#define CRC_DATA                                 CRC_DATA_REG(CRC0)
+#define CRC_DATAL                                CRC_DATAL_REG(CRC0)
+#define CRC_DATALL                               CRC_DATALL_REG(CRC0)
+#define CRC_DATALU                               CRC_DATALU_REG(CRC0)
+#define CRC_DATAH                                CRC_DATAH_REG(CRC0)
+#define CRC_DATAHL                               CRC_DATAHL_REG(CRC0)
+#define CRC_DATAHU                               CRC_DATAHU_REG(CRC0)
 #define CRC_GPOLY                                CRC_GPOLY_REG(CRC0)
 #define CRC_GPOLYL                               CRC_GPOLYL_REG(CRC0)
 #define CRC_GPOLYLL                              CRC_GPOLYLL_REG(CRC0)
@@ -1849,6 +1850,10 @@ typedef struct {
 #define DAC_SR_DACBFRPTF_SHIFT                   1
 #define DAC_SR_DACBFRPTF_WIDTH                   1
 #define DAC_SR_DACBFRPTF(x)                      (((uint8_t)(((uint8_t)(x))<<DAC_SR_DACBFRPTF_SHIFT))&DAC_SR_DACBFRPTF_MASK)
+#define DAC_SR_DACBFWMF_MASK                     0x4u
+#define DAC_SR_DACBFWMF_SHIFT                    2
+#define DAC_SR_DACBFWMF_WIDTH                    1
+#define DAC_SR_DACBFWMF(x)                       (((uint8_t)(((uint8_t)(x))<<DAC_SR_DACBFWMF_SHIFT))&DAC_SR_DACBFWMF_MASK)
 /* C0 Bit Fields */
 #define DAC_C0_DACBBIEN_MASK                     0x1u
 #define DAC_C0_DACBBIEN_SHIFT                    0
@@ -1887,14 +1892,10 @@ typedef struct {
 #define DAC_C1_DACBFEN_SHIFT                     0
 #define DAC_C1_DACBFEN_WIDTH                     1
 #define DAC_C1_DACBFEN(x)                        (((uint8_t)(((uint8_t)(x))<<DAC_C1_DACBFEN_SHIFT))&DAC_C1_DACBFEN_MASK)
-#define DAC_C1_DACBFMD_MASK                      0x6u
-#define DAC_C1_DACBFMD_SHIFT                     1
-#define DAC_C1_DACBFMD_WIDTH                     2
+#define DAC_C1_DACBFMD_MASK                      0x4u
+#define DAC_C1_DACBFMD_SHIFT                     2
+#define DAC_C1_DACBFMD_WIDTH                     1
 #define DAC_C1_DACBFMD(x)                        (((uint8_t)(((uint8_t)(x))<<DAC_C1_DACBFMD_SHIFT))&DAC_C1_DACBFMD_MASK)
-#define DAC_C1_DACBFWM_MASK                      0x18u
-#define DAC_C1_DACBFWM_SHIFT                     3
-#define DAC_C1_DACBFWM_WIDTH                     2
-#define DAC_C1_DACBFWM(x)                        (((uint8_t)(((uint8_t)(x))<<DAC_C1_DACBFWM_SHIFT))&DAC_C1_DACBFWM_MASK)
 #define DAC_C1_DMAEN_MASK                        0x80u
 #define DAC_C1_DMAEN_SHIFT                       7
 #define DAC_C1_DMAEN_WIDTH                       1
@@ -2010,9 +2011,9 @@ typedef struct {
     __IO uint16_t SOFF;                              /**< TCD Signed Source Address Offset, array offset: 0x1004, array step: 0x20 */
     __IO uint16_t ATTR;                              /**< TCD Transfer Attributes, array offset: 0x1006, array step: 0x20 */
     union {                                          /* offset: 0x1008, array step: 0x20 */
-      __IO uint32_t NBYTES_MLNO;                       /**< TCD Minor Byte Count (Minor Loop Disabled), array offset: 0x1008, array step: 0x20 */
-      __IO uint32_t NBYTES_MLOFFNO;                    /**< TCD Signed Minor Loop Offset (Minor Loop Enabled and Offset Disabled), array offset: 0x1008, array step: 0x20 */
-      __IO uint32_t NBYTES_MLOFFYES;                   /**< TCD Signed Minor Loop Offset (Minor Loop and Offset Enabled), array offset: 0x1008, array step: 0x20 */
+      __IO uint32_t NBYTES_MLNO;                       /**< TCD Minor Byte Count (Minor Loop Mapping Disabled), array offset: 0x1008, array step: 0x20 */
+      __IO uint32_t NBYTES_MLOFFNO;                    /**< TCD Signed Minor Loop Offset (Minor Loop Mapping Enabled and Offset Disabled), array offset: 0x1008, array step: 0x20 */
+      __IO uint32_t NBYTES_MLOFFYES;                   /**< TCD Signed Minor Loop Offset (Minor Loop Mapping and Offset Enabled), array offset: 0x1008, array step: 0x20 */
     };
     __IO uint32_t SLAST;                             /**< TCD Last Source Address Adjustment, array offset: 0x100C, array step: 0x20 */
     __IO uint32_t DADDR;                             /**< TCD Destination Address, array offset: 0x1010, array step: 0x20 */
@@ -2143,6 +2144,10 @@ typedef struct {
 #define DMA_CR_CX_SHIFT                          17
 #define DMA_CR_CX_WIDTH                          1
 #define DMA_CR_CX(x)                             (((uint32_t)(((uint32_t)(x))<<DMA_CR_CX_SHIFT))&DMA_CR_CX_MASK)
+#define DMA_CR_ACTIVE_MASK                       0x80000000u
+#define DMA_CR_ACTIVE_SHIFT                      31
+#define DMA_CR_ACTIVE_WIDTH                      1
+#define DMA_CR_ACTIVE(x)                         (((uint32_t)(((uint32_t)(x))<<DMA_CR_ACTIVE_SHIFT))&DMA_CR_ACTIVE_MASK)
 /* ES Bit Fields */
 #define DMA_ES_DBE_MASK                          0x1u
 #define DMA_ES_DBE_SHIFT                         0
@@ -5849,7 +5854,7 @@ typedef struct {
 /** Array initializer of LLWU peripheral base pointers */
 #define LLWU_BASE_PTRS                           { LLWU }
 /** Interrupt vectors for the LLWU peripheral type */
-#define LLWU_IRQS                                { LLW_IRQn }
+#define LLWU_IRQS                                { LLWU_IRQn }
 
 /* ----------------------------------------------------------------------------
    -- LLWU - Register accessor macros
@@ -6050,12 +6055,12 @@ typedef struct {
   __IO uint8_t C2;                                 /**< MCG Control 2 Register, offset: 0x1 */
   __IO uint8_t C3;                                 /**< MCG Control 3 Register, offset: 0x2 */
   __IO uint8_t C4;                                 /**< MCG Control 4 Register, offset: 0x3 */
-  __I  uint8_t C5;                                 /**< MCG Control 5 Register, offset: 0x4 */
+       uint8_t RESERVED_0[1];
   __IO uint8_t C6;                                 /**< MCG Control 6 Register, offset: 0x5 */
   __I  uint8_t S;                                  /**< MCG Status Register, offset: 0x6 */
-       uint8_t RESERVED_0[1];
-  __IO uint8_t SC;                                 /**< MCG Status and Control Register, offset: 0x8 */
        uint8_t RESERVED_1[1];
+  __IO uint8_t SC;                                 /**< MCG Status and Control Register, offset: 0x8 */
+       uint8_t RESERVED_2[1];
   __IO uint8_t ATCVH;                              /**< MCG Auto Trim Compare Value High Register, offset: 0xA */
   __IO uint8_t ATCVL;                              /**< MCG Auto Trim Compare Value Low Register, offset: 0xB */
 } MCG_Type, *MCG_MemMapPtr;
@@ -6075,7 +6080,6 @@ typedef struct {
 #define MCG_C2_REG(base)                         ((base)->C2)
 #define MCG_C3_REG(base)                         ((base)->C3)
 #define MCG_C4_REG(base)                         ((base)->C4)
-#define MCG_C5_REG(base)                         ((base)->C5)
 #define MCG_C6_REG(base)                         ((base)->C6)
 #define MCG_S_REG(base)                          ((base)->S)
 #define MCG_SC_REG(base)                         ((base)->SC)
@@ -6260,7 +6264,6 @@ typedef struct {
 #define MCG_C2                                   MCG_C2_REG(MCG)
 #define MCG_C3                                   MCG_C3_REG(MCG)
 #define MCG_C4                                   MCG_C4_REG(MCG)
-#define MCG_C5                                   MCG_C5_REG(MCG)
 #define MCG_C6                                   MCG_C6_REG(MCG)
 #define MCG_S                                    MCG_S_REG(MCG)
 #define MCG_SC                                   MCG_SC_REG(MCG)
@@ -7587,7 +7590,7 @@ typedef struct {
 #define PDB0                                     ((PDB_Type *)PDB0_BASE)
 #define PDB0_BASE_PTR                            (PDB0)
 /** Peripheral PDB1 base address */
-#define PDB1_BASE                                (0x40037000u)
+#define PDB1_BASE                                (0x40031000u)
 /** Peripheral PDB1 base pointer */
 #define PDB1                                     ((PDB_Type *)PDB1_BASE)
 #define PDB1_BASE_PTR                            (PDB1)
@@ -7873,6 +7876,10 @@ typedef struct {
 #define PORT_PCR_PE_SHIFT                        1
 #define PORT_PCR_PE_WIDTH                        1
 #define PORT_PCR_PE(x)                           (((uint32_t)(((uint32_t)(x))<<PORT_PCR_PE_SHIFT))&PORT_PCR_PE_MASK)
+#define PORT_PCR_SRE_MASK                        0x4u
+#define PORT_PCR_SRE_SHIFT                       2
+#define PORT_PCR_SRE_WIDTH                       1
+#define PORT_PCR_SRE(x)                          (((uint32_t)(((uint32_t)(x))<<PORT_PCR_SRE_SHIFT))&PORT_PCR_SRE_MASK)
 #define PORT_PCR_PFE_MASK                        0x10u
 #define PORT_PCR_PFE_SHIFT                       4
 #define PORT_PCR_PFE_WIDTH                       1
@@ -8535,7 +8542,7 @@ typedef struct {
   __I  uint32_t UIDML;                             /**< Unique Identification Register Mid Low, offset: 0x105C */
   __I  uint32_t UIDL;                              /**< Unique Identification Register Low, offset: 0x1060 */
        uint8_t RESERVED_5[156];
-  __IO uint32_t WDOGCTRL;                          /**< WDOG Control Register, offset: 0x1100 */
+  __IO uint32_t WDOGC;                             /**< WDOG Control Register, offset: 0x1100 */
 } SIM_Type, *SIM_MemMapPtr;
 
 /* ----------------------------------------------------------------------------
@@ -8568,7 +8575,7 @@ typedef struct {
 #define SIM_UIDMH_REG(base)                      ((base)->UIDMH)
 #define SIM_UIDML_REG(base)                      ((base)->UIDML)
 #define SIM_UIDL_REG(base)                       ((base)->UIDL)
-#define SIM_WDOGCTRL_REG(base)                   ((base)->WDOGCTRL)
+#define SIM_WDOGC_REG(base)                      ((base)->WDOGC)
 
 /*!
  * @}
@@ -8651,18 +8658,18 @@ typedef struct {
 #define SIM_SOPT4_FTM2TRG2SRC_SHIFT              15
 #define SIM_SOPT4_FTM2TRG2SRC_WIDTH              1
 #define SIM_SOPT4_FTM2TRG2SRC(x)                 (((uint32_t)(((uint32_t)(x))<<SIM_SOPT4_FTM2TRG2SRC_SHIFT))&SIM_SOPT4_FTM2TRG2SRC_MASK)
-#define SIM_SOPT4_FTM1ICH0SRC_MASK               0xC0000u
-#define SIM_SOPT4_FTM1ICH0SRC_SHIFT              18
-#define SIM_SOPT4_FTM1ICH0SRC_WIDTH              2
-#define SIM_SOPT4_FTM1ICH0SRC(x)                 (((uint32_t)(((uint32_t)(x))<<SIM_SOPT4_FTM1ICH0SRC_SHIFT))&SIM_SOPT4_FTM1ICH0SRC_MASK)
-#define SIM_SOPT4_FTM2ICH0SRC_MASK               0x300000u
-#define SIM_SOPT4_FTM2ICH0SRC_SHIFT              20
-#define SIM_SOPT4_FTM2ICH0SRC_WIDTH              2
-#define SIM_SOPT4_FTM2ICH0SRC(x)                 (((uint32_t)(((uint32_t)(x))<<SIM_SOPT4_FTM2ICH0SRC_SHIFT))&SIM_SOPT4_FTM2ICH0SRC_MASK)
-#define SIM_SOPT4_FTM2ICH1SRC_MASK               0x400000u
-#define SIM_SOPT4_FTM2ICH1SRC_SHIFT              22
-#define SIM_SOPT4_FTM2ICH1SRC_WIDTH              1
-#define SIM_SOPT4_FTM2ICH1SRC(x)                 (((uint32_t)(((uint32_t)(x))<<SIM_SOPT4_FTM2ICH1SRC_SHIFT))&SIM_SOPT4_FTM2ICH1SRC_MASK)
+#define SIM_SOPT4_FTM1CH0SRC_MASK                0xC0000u
+#define SIM_SOPT4_FTM1CH0SRC_SHIFT               18
+#define SIM_SOPT4_FTM1CH0SRC_WIDTH               2
+#define SIM_SOPT4_FTM1CH0SRC(x)                  (((uint32_t)(((uint32_t)(x))<<SIM_SOPT4_FTM1CH0SRC_SHIFT))&SIM_SOPT4_FTM1CH0SRC_MASK)
+#define SIM_SOPT4_FTM2CH0SRC_MASK                0x300000u
+#define SIM_SOPT4_FTM2CH0SRC_SHIFT               20
+#define SIM_SOPT4_FTM2CH0SRC_WIDTH               2
+#define SIM_SOPT4_FTM2CH0SRC(x)                  (((uint32_t)(((uint32_t)(x))<<SIM_SOPT4_FTM2CH0SRC_SHIFT))&SIM_SOPT4_FTM2CH0SRC_MASK)
+#define SIM_SOPT4_FTM2CH1SRC_MASK                0x400000u
+#define SIM_SOPT4_FTM2CH1SRC_SHIFT               22
+#define SIM_SOPT4_FTM2CH1SRC_WIDTH               1
+#define SIM_SOPT4_FTM2CH1SRC(x)                  (((uint32_t)(((uint32_t)(x))<<SIM_SOPT4_FTM2CH1SRC_SHIFT))&SIM_SOPT4_FTM2CH1SRC_MASK)
 #define SIM_SOPT4_FTM0CLKSEL_MASK                0x3000000u
 #define SIM_SOPT4_FTM0CLKSEL_SHIFT               24
 #define SIM_SOPT4_FTM0CLKSEL_WIDTH               2
@@ -8749,14 +8756,14 @@ typedef struct {
 #define SIM_SOPT6_FTM5TRG2SRC_SHIFT              15
 #define SIM_SOPT6_FTM5TRG2SRC_WIDTH              1
 #define SIM_SOPT6_FTM5TRG2SRC(x)                 (((uint32_t)(((uint32_t)(x))<<SIM_SOPT6_FTM5TRG2SRC_SHIFT))&SIM_SOPT6_FTM5TRG2SRC_MASK)
-#define SIM_SOPT6_FTM4ICH0SRC_MASK               0xC0000u
-#define SIM_SOPT6_FTM4ICH0SRC_SHIFT              18
-#define SIM_SOPT6_FTM4ICH0SRC_WIDTH              2
-#define SIM_SOPT6_FTM4ICH0SRC(x)                 (((uint32_t)(((uint32_t)(x))<<SIM_SOPT6_FTM4ICH0SRC_SHIFT))&SIM_SOPT6_FTM4ICH0SRC_MASK)
-#define SIM_SOPT6_FTM5ICH0SRC_MASK               0x300000u
-#define SIM_SOPT6_FTM5ICH0SRC_SHIFT              20
-#define SIM_SOPT6_FTM5ICH0SRC_WIDTH              2
-#define SIM_SOPT6_FTM5ICH0SRC(x)                 (((uint32_t)(((uint32_t)(x))<<SIM_SOPT6_FTM5ICH0SRC_SHIFT))&SIM_SOPT6_FTM5ICH0SRC_MASK)
+#define SIM_SOPT6_FTM4CH0SRC_MASK                0xC0000u
+#define SIM_SOPT6_FTM4CH0SRC_SHIFT               18
+#define SIM_SOPT6_FTM4CH0SRC_WIDTH               2
+#define SIM_SOPT6_FTM4CH0SRC(x)                  (((uint32_t)(((uint32_t)(x))<<SIM_SOPT6_FTM4CH0SRC_SHIFT))&SIM_SOPT6_FTM4CH0SRC_MASK)
+#define SIM_SOPT6_FTM5CH0SRC_MASK                0x300000u
+#define SIM_SOPT6_FTM5CH0SRC_SHIFT               20
+#define SIM_SOPT6_FTM5CH0SRC_WIDTH               2
+#define SIM_SOPT6_FTM5CH0SRC(x)                  (((uint32_t)(((uint32_t)(x))<<SIM_SOPT6_FTM5CH0SRC_SHIFT))&SIM_SOPT6_FTM5CH0SRC_MASK)
 #define SIM_SOPT6_FTM3CLKSEL_MASK                0x3000000u
 #define SIM_SOPT6_FTM3CLKSEL_SHIFT               24
 #define SIM_SOPT6_FTM3CLKSEL_WIDTH               2
@@ -9095,11 +9102,11 @@ typedef struct {
 #define SIM_UIDL_UID_SHIFT                       0
 #define SIM_UIDL_UID_WIDTH                       32
 #define SIM_UIDL_UID(x)                          (((uint32_t)(((uint32_t)(x))<<SIM_UIDL_UID_SHIFT))&SIM_UIDL_UID_MASK)
-/* WDOGCTRL Bit Fields */
-#define SIM_WDOGCTRL_WDOGCLKS_MASK               0x2u
-#define SIM_WDOGCTRL_WDOGCLKS_SHIFT              1
-#define SIM_WDOGCTRL_WDOGCLKS_WIDTH              1
-#define SIM_WDOGCTRL_WDOGCLKS(x)                 (((uint32_t)(((uint32_t)(x))<<SIM_WDOGCTRL_WDOGCLKS_SHIFT))&SIM_WDOGCTRL_WDOGCLKS_MASK)
+/* WDOGC Bit Fields */
+#define SIM_WDOGC_WDOGCLKS_MASK                  0x2u
+#define SIM_WDOGC_WDOGCLKS_SHIFT                 1
+#define SIM_WDOGC_WDOGCLKS_WIDTH                 1
+#define SIM_WDOGC_WDOGCLKS(x)                    (((uint32_t)(((uint32_t)(x))<<SIM_WDOGC_WDOGCLKS_SHIFT))&SIM_WDOGC_WDOGCLKS_MASK)
 
 /*!
  * @}
@@ -9148,7 +9155,7 @@ typedef struct {
 #define SIM_UIDMH                                SIM_UIDMH_REG(SIM)
 #define SIM_UIDML                                SIM_UIDML_REG(SIM)
 #define SIM_UIDL                                 SIM_UIDL_REG(SIM)
-#define SIM_WDOGCTRL                             SIM_WDOGCTRL_REG(SIM)
+#define SIM_WDOGC                                SIM_WDOGC_REG(SIM)
 
 /*!
  * @}
@@ -9234,10 +9241,6 @@ typedef struct {
 #define SMC_STOPCTRL_VLLSM_SHIFT                 0
 #define SMC_STOPCTRL_VLLSM_WIDTH                 3
 #define SMC_STOPCTRL_VLLSM(x)                    (((uint8_t)(((uint8_t)(x))<<SMC_STOPCTRL_VLLSM_SHIFT))&SMC_STOPCTRL_VLLSM_MASK)
-#define SMC_STOPCTRL_LPOPO_MASK                  0x8u
-#define SMC_STOPCTRL_LPOPO_SHIFT                 3
-#define SMC_STOPCTRL_LPOPO_WIDTH                 1
-#define SMC_STOPCTRL_LPOPO(x)                    (((uint8_t)(((uint8_t)(x))<<SMC_STOPCTRL_LPOPO_SHIFT))&SMC_STOPCTRL_LPOPO_MASK)
 #define SMC_STOPCTRL_PORPO_MASK                  0x20u
 #define SMC_STOPCTRL_PORPO_SHIFT                 5
 #define SMC_STOPCTRL_PORPO_WIDTH                 1
@@ -9331,7 +9334,7 @@ typedef struct {
   __I  uint32_t RXFR2;                             /**< Receive FIFO Registers, offset: 0x84 */
   __I  uint32_t RXFR3;                             /**< Receive FIFO Registers, offset: 0x88 */
        uint8_t RESERVED_3[176];
-  __IO uint32_t SREX;                              /**< Status Register Extended, offset: 0x13C */
+  __I  uint32_t SREX;                              /**< Status Register Extended, offset: 0x13C */
 } SPI_Type, *SPI_MemMapPtr;
 
 /* ----------------------------------------------------------------------------

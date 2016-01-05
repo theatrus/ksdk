@@ -57,7 +57,7 @@ extern const IRQn_Type g_pitIrqId[];
  * @brief PIT timer configuration structure
  *
  * Defines a structure PitConfig and uses the PIT_DRV_InitChannel() function to make necessary
- * initializations. You may also use the remaining functions for PIT configuration.
+ * initializations. The remaining functions can be used for PIT configuration.
  *
  * @note The timer chain feature is not valid in all devices. Check the
  * fsl_pit_features.h for accurate settings. If it's not valid, the value set here
@@ -85,7 +85,7 @@ extern "C" {
 /*!
  * @brief Initializes the PIT module.
  *
- * Call this function before calling all the other PIT driver functions.
+ * Call this function before calling any other PIT driver functions.
  * This function un-gates the PIT clock and enables the PIT module. The isRunInDebug
  * passed into function affects all timer channels.
  *
@@ -101,7 +101,7 @@ pit_status_t PIT_DRV_Init(uint32_t instance, bool isRunInDebug);
  * @brief Disables the PIT module and gate control.
  *
  * This function disables all PIT interrupts and PIT clock. It then gates the
- * PIT clock control. PIT_DRV_Init must be called if you want to use PIT again.
+ * PIT clock control. PIT_DRV_Init must be called to use PIT again.
  *
  * @param instance PIT module instance number.
  * @return Error or success status returned by API.
@@ -173,8 +173,8 @@ void PIT_DRV_StopTimer(uint32_t instance, uint32_t channel);
  *
  * The period range depends on the frequency of the PIT source clock. If the required period
  * is out of range, use the lifetime timer if applicable.
- * This function is only valid for one single channel. If channels are chained together,
- * the period here makes no sense.
+ * This function is only valid for one channel. If channels are chained together,
+ * the period makes no sense.
  *
  * @param instance PIT module instance number.
  * @param channel Timer channel number.
@@ -183,7 +183,7 @@ void PIT_DRV_StopTimer(uint32_t instance, uint32_t channel);
 void PIT_DRV_SetTimerPeriodByUs(uint32_t instance, uint32_t channel, uint32_t us);
 
 /*!
- * @brief Gets the timer period in microseconds for one single channel.
+ * @brief Gets the timer period in microseconds for a single channel.
  *
  * @param instance PIT module instance number.
  * @param channel Timer channel number.
@@ -234,7 +234,7 @@ uint32_t PIT_DRV_GetTimerPeriodByCount(uint32_t instance, uint32_t channel);
 /*!
  * @brief Reads the current timer counting value.
  *
- * This function returns the real-time timer counting value, in a range from 0 to a
+ * This function returns the real-time timer counting value in a range from 0 to a
  * timer period.
  *
  * @param instance PIT module instance number.
@@ -298,8 +298,8 @@ void PIT_DRV_InitUs(uint32_t instance, uint32_t channel);
  * @brief Gets an absolute time stamp.
  *
  * This function gets the elapsed time in time A
- * and calls it in time B. The elapsed time can be obtained by B-A. The result may have
- * 3-5 microseconds error depending on the system clock frequency.
+ * and calls it in time B. The elapsed time can be obtained by B - A. The result may have
+ * 3-5 microsecond error depending on the system clock frequency.
  *
  * @return Absolute time stamp from the chained lifetime timers in microsecond units.
  */
@@ -308,7 +308,7 @@ uint32_t PIT_DRV_GetUs(void);
 /*!
  * @brief Delays the specific microseconds.
  *
- * The delay may have a 3-5 microseconds error depending on the system clock frequency.
+ * The delay may have a 3-5 microsecond error depending on the system clock frequency.
  *
  * @param us Number of microseconds to delay.
  */
@@ -336,7 +336,7 @@ void PIT_DRV_ClearIntFlag(uint32_t instance, uint32_t channel);
 /*!
  * @brief Reads the current timer timeout flag.
  *
- * Every time the timer counts to 0, this flag is set.
+ * This flag is set every time the timer counts to 0.
  *
  * @param instance PIT module instance number.
  * @param channel Timer channel number

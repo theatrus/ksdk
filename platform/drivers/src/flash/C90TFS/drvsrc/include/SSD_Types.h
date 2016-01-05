@@ -1,5 +1,5 @@
 /****************************************************************************
- (c) Copyright 2010-2014 Freescale Semiconductor, Inc.
+ (c) Copyright 2010-2015 Freescale Semiconductor, Inc.
  ALL RIGHTS RESERVED.
 
  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@
 1.1.GA      09.25.2014      FPT Team      First version of SDK C90TFS flash driver
                                           inherited from BM C90TFS flash driver v1.02
                                           (08.04.2014, FPT Team)
+1.3.GA      06.23.2015      ROM Team      Sync function pointers with new updates in SSD_FTFx.h
 *************************************************************************/
 
 #ifndef _SSD_TYPES_H_
@@ -136,6 +137,18 @@ typedef uint32_t (*pPFLASHGETPROTECTION) (PFLASH_SSD_CONFIG pSSDConfig, \
 typedef uint32_t (*pPFLASHSETPROTECTION) (PFLASH_SSD_CONFIG  pSSDConfig, \
                                         uint32_t  protectStatus);
 
+/*! @brief PFlashFacGetXAProtection function pointer */
+typedef uint32_t (*pPFLASHFACGETXAPROTECTION)(PFLASH_SSD_CONFIG pSSDConfig, \
+                                         uint8_t * protectStatus,\
+                                         uint8_t * numberOfSegments,\
+                                         uint32_t * segmentSize);
+
+/*! @brief PFlashFacGetSAProtection function pointer */
+typedef uint32_t (*pPFLASHFACGETSAPROTECTION)(PFLASH_SSD_CONFIG pSSDConfig, \
+                                         uint8_t * protectStatus,\
+                                         uint8_t * numberOfSegments,\
+                                         uint32_t * segmentSize);
+
 /*! @brief FlashGetSecurityState function pointer */
 typedef uint32_t (*pFLASHGETSECURITYSTATE) (PFLASH_SSD_CONFIG pSSDConfig, \
                                           uint8_t* securityState);
@@ -147,6 +160,10 @@ typedef uint32_t (*pFLASHSECURITYBYPASS) (PFLASH_SSD_CONFIG pSSDConfig, \
 
 /*! @brief FlashEraseAllBlock function pointer */
 typedef uint32_t (*pFLASHERASEALLBLOCK) (PFLASH_SSD_CONFIG pSSDConfig, \
+                                       pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
+
+/*! @brief FlashEraseAllBlockUnsecure function pointer */
+typedef uint32_t (*pFLASHERASEALLBLOCKUNSECURE) (PFLASH_SSD_CONFIG pSSDConfig, \
                                        pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
 /*! @brief FlashEraseBlock function pointer */
@@ -198,11 +215,13 @@ typedef uint32_t (*pFLASHVERIFYSECTION) (PFLASH_SSD_CONFIG pSSDConfig, \
 /*! @brief FlashReadOnce function pointer */
 typedef uint32_t (*pFLASHREADONCE) (PFLASH_SSD_CONFIG pSSDConfig, \
                                   uint8_t* pDataArray, \
+                                  uint32_t size, \
                                   pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
 /*! @brief FlashProgramOnce function pointer */
 typedef uint32_t (*pFLASHPROGRAMONCE) (PFLASH_SSD_CONFIG pSSDConfig, \
                                      uint8_t* pDataArray, \
+                                     uint32_t size, \
                                      pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 /*! @brief FlashProgramCheck function pointer */
 typedef uint32_t (*pFLASHPROGRAMCHECK) (PFLASH_SSD_CONFIG pSSDConfig, \

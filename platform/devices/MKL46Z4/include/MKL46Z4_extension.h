@@ -8,12 +8,12 @@
 **
 **     Reference manual:    KL46P121M48SF4RM, Rev.2, Dec 2012
 **     Version:             rev. 3.4, 2014-10-14
-**     Build:               b150215
+**     Build:               b150612
 **
 **     Abstract:
 **         Extension to the CMSIS register access layer header.
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -84,6 +84,14 @@
 
 #include "MKL46Z4.h"
 #include "fsl_bitaccess.h"
+
+#if defined(__IAR_SYSTEMS_ICC__)
+  /*
+   * Suppress "Error[Pm008]: sections of code should not be 'commented out' (MISRA C 2004 rule 2.4)"
+   * as some register descriptions contain code examples
+   */
+  #pragma diag_suppress=pm008
+#endif
 
 /*
  * MKL46Z4 ADC
@@ -181,47 +189,67 @@
  * enters a low-power state when a conversion completes.
  *
  * Values:
- * - 00000 - When DIFF=0, DADP0 is selected as input; when DIFF=1, DAD0 is
+ * - 0b00000 - When DIFF=0, DADP0 is selected as input; when DIFF=1, DAD0 is
  *     selected as input.
- * - 00001 - When DIFF=0, DADP1 is selected as input; when DIFF=1, DAD1 is
+ * - 0b00001 - When DIFF=0, DADP1 is selected as input; when DIFF=1, DAD1 is
  *     selected as input.
- * - 00010 - When DIFF=0, DADP2 is selected as input; when DIFF=1, DAD2 is
+ * - 0b00010 - When DIFF=0, DADP2 is selected as input; when DIFF=1, DAD2 is
  *     selected as input.
- * - 00011 - When DIFF=0, DADP3 is selected as input; when DIFF=1, DAD3 is
+ * - 0b00011 - When DIFF=0, DADP3 is selected as input; when DIFF=1, DAD3 is
  *     selected as input.
- * - 00100 - When DIFF=0, AD4 is selected as input; when DIFF=1, it is reserved.
- * - 00101 - When DIFF=0, AD5 is selected as input; when DIFF=1, it is reserved.
- * - 00110 - When DIFF=0, AD6 is selected as input; when DIFF=1, it is reserved.
- * - 00111 - When DIFF=0, AD7 is selected as input; when DIFF=1, it is reserved.
- * - 01000 - When DIFF=0, AD8 is selected as input; when DIFF=1, it is reserved.
- * - 01001 - When DIFF=0, AD9 is selected as input; when DIFF=1, it is reserved.
- * - 01010 - When DIFF=0, AD10 is selected as input; when DIFF=1, it is reserved.
- * - 01011 - When DIFF=0, AD11 is selected as input; when DIFF=1, it is reserved.
- * - 01100 - When DIFF=0, AD12 is selected as input; when DIFF=1, it is reserved.
- * - 01101 - When DIFF=0, AD13 is selected as input; when DIFF=1, it is reserved.
- * - 01110 - When DIFF=0, AD14 is selected as input; when DIFF=1, it is reserved.
- * - 01111 - When DIFF=0, AD15 is selected as input; when DIFF=1, it is reserved.
- * - 10000 - When DIFF=0, AD16 is selected as input; when DIFF=1, it is reserved.
- * - 10001 - When DIFF=0, AD17 is selected as input; when DIFF=1, it is reserved.
- * - 10010 - When DIFF=0, AD18 is selected as input; when DIFF=1, it is reserved.
- * - 10011 - When DIFF=0, AD19 is selected as input; when DIFF=1, it is reserved.
- * - 10100 - When DIFF=0, AD20 is selected as input; when DIFF=1, it is reserved.
- * - 10101 - When DIFF=0, AD21 is selected as input; when DIFF=1, it is reserved.
- * - 10110 - When DIFF=0, AD22 is selected as input; when DIFF=1, it is reserved.
- * - 10111 - When DIFF=0, AD23 is selected as input; when DIFF=1, it is reserved.
- * - 11000 - Reserved.
- * - 11001 - Reserved.
- * - 11010 - When DIFF=0, Temp Sensor (single-ended) is selected as input; when
- *     DIFF=1, Temp Sensor (differential) is selected as input.
- * - 11011 - When DIFF=0, Bandgap (single-ended) is selected as input; when
+ * - 0b00100 - When DIFF=0, AD4 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b00101 - When DIFF=0, AD5 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b00110 - When DIFF=0, AD6 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b00111 - When DIFF=0, AD7 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01000 - When DIFF=0, AD8 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01001 - When DIFF=0, AD9 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01010 - When DIFF=0, AD10 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01011 - When DIFF=0, AD11 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01100 - When DIFF=0, AD12 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01101 - When DIFF=0, AD13 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01110 - When DIFF=0, AD14 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01111 - When DIFF=0, AD15 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10000 - When DIFF=0, AD16 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10001 - When DIFF=0, AD17 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10010 - When DIFF=0, AD18 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10011 - When DIFF=0, AD19 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10100 - When DIFF=0, AD20 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10101 - When DIFF=0, AD21 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10110 - When DIFF=0, AD22 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10111 - When DIFF=0, AD23 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b11000 - Reserved.
+ * - 0b11001 - Reserved.
+ * - 0b11010 - When DIFF=0, Temp Sensor (single-ended) is selected as input;
+ *     when DIFF=1, Temp Sensor (differential) is selected as input.
+ * - 0b11011 - When DIFF=0, Bandgap (single-ended) is selected as input; when
  *     DIFF=1, Bandgap (differential) is selected as input.
- * - 11100 - Reserved.
- * - 11101 - When DIFF=0,VREFSH is selected as input; when DIFF=1, -VREFSH
+ * - 0b11100 - Reserved.
+ * - 0b11101 - When DIFF=0,VREFSH is selected as input; when DIFF=1, -VREFSH
  *     (differential) is selected as input. Voltage reference selected is determined
  *     by SC2[REFSEL].
- * - 11110 - When DIFF=0,VREFSL is selected as input; when DIFF=1, it is
+ * - 0b11110 - When DIFF=0,VREFSL is selected as input; when DIFF=1, it is
  *     reserved. Voltage reference selected is determined by SC2[REFSEL].
- * - 11111 - Module is disabled.
+ * - 0b11111 - Module is disabled.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC1_ADCH field. */
@@ -241,8 +269,8 @@
  * conversion algorithm and the number of cycles to complete a conversion.
  *
  * Values:
- * - 0 - Single-ended conversions and input channels are selected.
- * - 1 - Differential conversions and input channels are selected.
+ * - 0b0 - Single-ended conversions and input channels are selected.
+ * - 0b1 - Differential conversions and input channels are selected.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC1_DIFF field. */
@@ -261,8 +289,8 @@
  * respective AIEN is high, an interrupt is asserted.
  *
  * Values:
- * - 0 - Conversion complete interrupt is disabled.
- * - 1 - Conversion complete interrupt is enabled.
+ * - 0b0 - Conversion complete interrupt is disabled.
+ * - 0b1 - Conversion complete interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC1_AIEN field. */
@@ -288,8 +316,8 @@
  * respective Rn register is read.
  *
  * Values:
- * - 0 - Conversion is not completed.
- * - 1 - Conversion is completed.
+ * - 0b0 - Conversion is not completed.
+ * - 0b1 - Conversion is completed.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC1_COCO field. */
@@ -337,10 +365,10 @@
  * source is re-activated.
  *
  * Values:
- * - 00 - Bus clock
- * - 01 - Alternate clock 2 (ALTCLK2)
- * - 10 - Alternate clock (ALTCLK)
- * - 11 - Asynchronous clock (ADACK)
+ * - 0b00 - Bus clock
+ * - 0b01 - Alternate clock 2 (ALTCLK2)
+ * - 0b10 - Alternate clock (ALTCLK)
+ * - 0b11 - Asynchronous clock (ADACK)
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_ADICLK field. */
@@ -358,14 +386,14 @@
  * Selects the ADC resolution mode.
  *
  * Values:
- * - 00 - When DIFF=0:It is single-ended 8-bit conversion; when DIFF=1, it is
+ * - 0b00 - When DIFF=0:It is single-ended 8-bit conversion; when DIFF=1, it is
  *     differential 9-bit conversion with 2's complement output.
- * - 01 - When DIFF=0:It is single-ended 12-bit conversion ; when DIFF=1, it is
- *     differential 13-bit conversion with 2's complement output.
- * - 10 - When DIFF=0:It is single-ended 10-bit conversion. ; when DIFF=1, it is
- *     differential 11-bit conversion with 2's complement output
- * - 11 - When DIFF=0:It is single-ended 16-bit conversion..; when DIFF=1, it is
- *     differential 16-bit conversion with 2's complement output
+ * - 0b01 - When DIFF=0:It is single-ended 12-bit conversion ; when DIFF=1, it
+ *     is differential 13-bit conversion with 2's complement output.
+ * - 0b10 - When DIFF=0:It is single-ended 10-bit conversion. ; when DIFF=1, it
+ *     is differential 11-bit conversion with 2's complement output
+ * - 0b11 - When DIFF=0:It is single-ended 16-bit conversion..; when DIFF=1, it
+ *     is differential 16-bit conversion with 2's complement output
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_MODE field. */
@@ -389,8 +417,8 @@
  * extent of the long sample time.
  *
  * Values:
- * - 0 - Short sample time.
- * - 1 - Long sample time.
+ * - 0b0 - Short sample time.
+ * - 0b1 - Long sample time.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_ADLSMP field. */
@@ -408,10 +436,10 @@
  * Selects the divide ratio used by the ADC to generate the internal clock ADCK.
  *
  * Values:
- * - 00 - The divide ratio is 1 and the clock rate is input clock.
- * - 01 - The divide ratio is 2 and the clock rate is (input clock)/2.
- * - 10 - The divide ratio is 4 and the clock rate is (input clock)/4.
- * - 11 - The divide ratio is 8 and the clock rate is (input clock)/8.
+ * - 0b00 - The divide ratio is 1 and the clock rate is input clock.
+ * - 0b01 - The divide ratio is 2 and the clock rate is (input clock)/2.
+ * - 0b10 - The divide ratio is 4 and the clock rate is (input clock)/4.
+ * - 0b11 - The divide ratio is 8 and the clock rate is (input clock)/8.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_ADIV field. */
@@ -430,9 +458,9 @@
  * This optimizes power consumption when higher sample rates are not required.
  *
  * Values:
- * - 0 - Normal power configuration.
- * - 1 - Low-power configuration. The power is reduced at the expense of maximum
- *     clock speed.
+ * - 0b0 - Normal power configuration.
+ * - 0b1 - Low-power configuration. The power is reduced at the expense of
+ *     maximum clock speed.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_ADLPC field. */
@@ -483,11 +511,11 @@
  * continuous conversions are enabled if high conversion rates are not required.
  *
  * Values:
- * - 00 - Default longest sample time; 20 extra ADCK cycles; 24 ADCK cycles
+ * - 0b00 - Default longest sample time; 20 extra ADCK cycles; 24 ADCK cycles
  *     total.
- * - 01 - 12 extra ADCK cycles; 16 ADCK cycles total sample time.
- * - 10 - 6 extra ADCK cycles; 10 ADCK cycles total sample time.
- * - 11 - 2 extra ADCK cycles; 6 ADCK cycles total sample time.
+ * - 0b01 - 12 extra ADCK cycles; 16 ADCK cycles total sample time.
+ * - 0b10 - 6 extra ADCK cycles; 10 ADCK cycles total sample time.
+ * - 0b11 - 2 extra ADCK cycles; 6 ADCK cycles total sample time.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG2_ADLSTS field. */
@@ -507,8 +535,8 @@
  * conversion clocks.
  *
  * Values:
- * - 0 - Normal conversion sequence selected.
- * - 1 - High-speed conversion sequence selected with 2 additional ADCK cycles
+ * - 0b0 - Normal conversion sequence selected.
+ * - 0b1 - High-speed conversion sequence selected with 2 additional ADCK cycles
  *     to total conversion time.
  */
 /*@{*/
@@ -533,10 +561,10 @@
  * reduced because the ADACK clock is already operational.
  *
  * Values:
- * - 0 - Asynchronous clock output disabled; Asynchronous clock is enabled only
- *     if selected by ADICLK and a conversion is active.
- * - 1 - Asynchronous clock and clock output is enabled regardless of the state
- *     of the ADC.
+ * - 0b0 - Asynchronous clock output disabled; Asynchronous clock is enabled
+ *     only if selected by ADICLK and a conversion is active.
+ * - 0b1 - Asynchronous clock and clock output is enabled regardless of the
+ *     state of the ADC.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG2_ADACKEN field. */
@@ -554,8 +582,8 @@
  * Changes the ADC mux setting to select between alternate sets of ADC channels.
  *
  * Values:
- * - 0 - ADxxa channels are selected.
- * - 1 - ADxxb channels are selected.
+ * - 0b0 - ADxxa channels are selected.
+ * - 0b1 - ADxxb channels are selected.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG2_MUXSEL field. */
@@ -746,14 +774,14 @@
  * Selects the voltage reference source used for conversions.
  *
  * Values:
- * - 00 - Default voltage reference pin pair, that is, external pins VREFH and
+ * - 0b00 - Default voltage reference pin pair, that is, external pins VREFH and
  *     VREFL
- * - 01 - Alternate reference pair, that is, VALTH and VALTL . This pair may be
- *     additional external pins or internal sources depending on the MCU
- *     configuration. See the chip configuration information for details specific to this
- *     MCU
- * - 10 - Reserved
- * - 11 - Reserved
+ * - 0b01 - Alternate reference pair, that is, VALTH and VALTL . This pair may
+ *     be additional external pins or internal sources depending on the MCU
+ *     configuration. See the chip configuration information for details specific to
+ *     this MCU
+ * - 0b10 - Reserved
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_REFSEL field. */
@@ -769,8 +797,8 @@
  * @name Register ADC_SC2, field DMAEN[2] (RW)
  *
  * Values:
- * - 0 - DMA is disabled.
- * - 1 - DMA is enabled and will assert the ADC DMA request during an ADC
+ * - 0b0 - DMA is disabled.
+ * - 0b1 - DMA is enabled and will assert the ADC DMA request during an ADC
  *     conversion complete event noted when any of the SC1n[COCO] flags is asserted.
  */
 /*@{*/
@@ -792,8 +820,8 @@
  * effect.
  *
  * Values:
- * - 0 - Range function disabled. Only CV1 is compared.
- * - 1 - Range function enabled. Both CV1 and CV2 are compared.
+ * - 0b0 - Range function disabled. Only CV1 is compared.
+ * - 0b1 - Range function enabled. Both CV1 and CV2 are compared.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_ACREN field. */
@@ -813,10 +841,10 @@
  * have any effect.
  *
  * Values:
- * - 0 - Configures less than threshold, outside range not inclusive and inside
- *     range not inclusive; functionality based on the values placed in CV1 and
+ * - 0b0 - Configures less than threshold, outside range not inclusive and
+ *     inside range not inclusive; functionality based on the values placed in CV1 and
  *     CV2.
- * - 1 - Configures greater than or equal to threshold, outside and inside
+ * - 0b1 - Configures greater than or equal to threshold, outside and inside
  *     ranges inclusive; functionality based on the values placed in CV1 and CV2.
  */
 /*@{*/
@@ -835,8 +863,8 @@
  * Enables the compare function.
  *
  * Values:
- * - 0 - Compare function disabled.
- * - 1 - Compare function enabled.
+ * - 0b0 - Compare function disabled.
+ * - 0b1 - Compare function enabled.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_ACFE field. */
@@ -858,8 +886,8 @@
  * the ADHWT input after a pulse of the ADHWTSn input.
  *
  * Values:
- * - 0 - Software trigger selected.
- * - 1 - Hardware trigger selected.
+ * - 0b0 - Software trigger selected.
+ * - 0b1 - Hardware trigger selected.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_ADTRG field. */
@@ -879,8 +907,8 @@
  * aborted.
  *
  * Values:
- * - 0 - Conversion not in progress.
- * - 1 - Conversion in progress.
+ * - 0b0 - Conversion not in progress.
+ * - 0b1 - Conversion in progress.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_ADACT field. */
@@ -923,10 +951,10 @@
  * average result.
  *
  * Values:
- * - 00 - 4 samples averaged.
- * - 01 - 8 samples averaged.
- * - 10 - 16 samples averaged.
- * - 11 - 32 samples averaged.
+ * - 0b00 - 4 samples averaged.
+ * - 0b01 - 8 samples averaged.
+ * - 0b10 - 16 samples averaged.
+ * - 0b11 - 32 samples averaged.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC3_AVGS field. */
@@ -944,8 +972,8 @@
  * Enables the hardware average function of the ADC.
  *
  * Values:
- * - 0 - Hardware average function disabled.
- * - 1 - Hardware average function enabled.
+ * - 0b0 - Hardware average function disabled.
+ * - 0b1 - Hardware average function enabled.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC3_AVGE field. */
@@ -963,9 +991,9 @@
  * Enables continuous conversions.
  *
  * Values:
- * - 0 - One conversion or one set of conversions if the hardware average
+ * - 0b0 - One conversion or one set of conversions if the hardware average
  *     function is enabled, that is, AVGE=1, after initiating a conversion.
- * - 1 - Continuous conversions or sets of conversions if the hardware average
+ * - 0b1 - Continuous conversions or sets of conversions if the hardware average
  *     function is enabled, that is, AVGE=1, after initiating a conversion.
  */
 /*@{*/
@@ -986,8 +1014,8 @@
  * entered before the calibration sequence completes. Writing 1 to CALF clears it.
  *
  * Values:
- * - 0 - Calibration completed normally.
- * - 1 - Calibration failed. ADC accuracy specifications are not guaranteed.
+ * - 0b0 - Calibration completed normally.
+ * - 0b1 - Calibration failed. ADC accuracy specifications are not guaranteed.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC3_CALF field. */
@@ -1804,10 +1832,10 @@
  * exact values.
  *
  * Values:
- * - 00 - Level 0
- * - 01 - Level 1
- * - 10 - Level 2
- * - 11 - Level 3
+ * - 0b00 - Level 0
+ * - 0b01 - Level 1
+ * - 0b10 - Level 2
+ * - 0b11 - Level 3
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR0_HYSTCTR field. */
@@ -1828,15 +1856,15 @@
  * can be used to compare two analog input voltages applied to INP and INM. .
  *
  * Values:
- * - 000 - Filter is disabled. If SE = 1, then COUT is a logic 0. This is not a
- *     legal state, and is not recommended. If SE = 0, COUT = COUTA.
- * - 001 - One sample must agree. The comparator output is simply sampled.
- * - 010 - 2 consecutive samples must agree.
- * - 011 - 3 consecutive samples must agree.
- * - 100 - 4 consecutive samples must agree.
- * - 101 - 5 consecutive samples must agree.
- * - 110 - 6 consecutive samples must agree.
- * - 111 - 7 consecutive samples must agree.
+ * - 0b000 - Filter is disabled. If SE = 1, then COUT is a logic 0. This is not
+ *     a legal state, and is not recommended. If SE = 0, COUT = COUTA.
+ * - 0b001 - One sample must agree. The comparator output is simply sampled.
+ * - 0b010 - 2 consecutive samples must agree.
+ * - 0b011 - 3 consecutive samples must agree.
+ * - 0b100 - 4 consecutive samples must agree.
+ * - 0b101 - 5 consecutive samples must agree.
+ * - 0b110 - 6 consecutive samples must agree.
+ * - 0b111 - 7 consecutive samples must agree.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR0_FILTER_CNT field. */
@@ -1882,8 +1910,8 @@
  * disabled automatically.
  *
  * Values:
- * - 0 - Analog Comparator is disabled.
- * - 1 - Analog Comparator is enabled.
+ * - 0b0 - Analog Comparator is disabled.
+ * - 0b1 - Analog Comparator is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_EN field. */
@@ -1899,12 +1927,12 @@
  * @name Register CMP_CR1, field OPE[1] (RW)
  *
  * Values:
- * - 0 - CMPO is not available on the associated CMPO output pin. If the
+ * - 0b0 - CMPO is not available on the associated CMPO output pin. If the
  *     comparator does not own the pin, this field has no effect.
- * - 1 - CMPO is available on the associated CMPO output pin. The comparator
+ * - 0b1 - CMPO is available on the associated CMPO output pin. The comparator
  *     output (CMPO) is driven out on the associated CMPO output pin if the
- *     comparator owns the pin. If the comparator does not own the field, this bit has no
- *     effect.
+ *     comparator owns the pin. If the comparator does not own the field, this bit has
+ *     no effect.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_OPE field. */
@@ -1920,8 +1948,8 @@
  * @name Register CMP_CR1, field COS[2] (RW)
  *
  * Values:
- * - 0 - Set the filtered comparator output (CMPO) to equal COUT.
- * - 1 - Set the unfiltered comparator output (CMPO) to equal COUTA.
+ * - 0b0 - Set the filtered comparator output (CMPO) to equal COUT.
+ * - 0b1 - Set the unfiltered comparator output (CMPO) to equal COUTA.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_COS field. */
@@ -1941,8 +1969,8 @@
  * OPE=0.
  *
  * Values:
- * - 0 - Does not invert the comparator output.
- * - 1 - Inverts the comparator output.
+ * - 0b0 - Does not invert the comparator output.
+ * - 0b1 - Inverts the comparator output.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_INV field. */
@@ -1960,10 +1988,10 @@
  * See the electrical specifications table in the device Data Sheet for details.
  *
  * Values:
- * - 0 - Low-Speed (LS) Comparison mode selected. In this mode, CMP has slower
+ * - 0b0 - Low-Speed (LS) Comparison mode selected. In this mode, CMP has slower
  *     output propagation delay and lower current consumption.
- * - 1 - High-Speed (HS) Comparison mode selected. In this mode, CMP has faster
- *     output propagation delay and higher current consumption.
+ * - 0b1 - High-Speed (HS) Comparison mode selected. In this mode, CMP has
+ *     faster output propagation delay and higher current consumption.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_PMODE field. */
@@ -1987,8 +2015,8 @@
  * the chip configuration chapter for details about the external timer resource.
  *
  * Values:
- * - 0 - Trigger mode is disabled.
- * - 1 - Trigger mode is enabled.
+ * - 0b0 - Trigger mode is disabled.
+ * - 0b1 - Trigger mode is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_TRIGM field. */
@@ -2007,8 +2035,8 @@
  * set SE and WE both at a given time.
  *
  * Values:
- * - 0 - Windowing mode is not selected.
- * - 1 - Windowing mode is selected.
+ * - 0b0 - Windowing mode is not selected.
+ * - 0b1 - Windowing mode is selected.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_WE field. */
@@ -2027,8 +2055,8 @@
  * set SE and WE both at a given time.
  *
  * Values:
- * - 0 - Sampling mode is not selected.
- * - 1 - Sampling mode is selected.
+ * - 0b0 - Sampling mode is not selected.
+ * - 0b1 - Sampling mode is selected.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_SE field. */
@@ -2106,8 +2134,8 @@
  * cleared by writing 1 to it. During Stop modes, CFF is level sensitive .
  *
  * Values:
- * - 0 - Falling-edge on COUT has not been detected.
- * - 1 - Falling-edge on COUT has occurred.
+ * - 0b0 - Falling-edge on COUT has not been detected.
+ * - 0b1 - Falling-edge on COUT has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_CFF field. */
@@ -2126,8 +2154,8 @@
  * cleared by writing 1 to it. During Stop modes, CFR is level sensitive .
  *
  * Values:
- * - 0 - Rising-edge on COUT has not been detected.
- * - 1 - Rising-edge on COUT has occurred.
+ * - 0b0 - Rising-edge on COUT has not been detected.
+ * - 0b1 - Rising-edge on COUT has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_CFR field. */
@@ -2146,8 +2174,8 @@
  * will be asserted when CFF is set.
  *
  * Values:
- * - 0 - Interrupt is disabled.
- * - 1 - Interrupt is enabled.
+ * - 0b0 - Interrupt is disabled.
+ * - 0b1 - Interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_IEF field. */
@@ -2166,8 +2194,8 @@
  * will be asserted when CFR is set.
  *
  * Values:
- * - 0 - Interrupt is disabled.
- * - 1 - Interrupt is enabled.
+ * - 0b0 - Interrupt is disabled.
+ * - 0b1 - Interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_IER field. */
@@ -2186,8 +2214,8 @@
  * set, a DMA request is asserted when CFR or CFF is set.
  *
  * Values:
- * - 0 - DMA is disabled.
- * - 1 - DMA is enabled.
+ * - 0b0 - DMA is disabled.
+ * - 0b1 - DMA is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_DMAEN field. */
@@ -2244,8 +2272,8 @@
  * @name Register CMP_DACCR, field VRSEL[6] (RW)
  *
  * Values:
- * - 0 - V is selected as resistor ladder network supply reference V. in1 in
- * - 1 - V is selected as resistor ladder network supply reference V. in2 in
+ * - 0b0 - V is selected as resistor ladder network supply reference V. in1 in
+ * - 0b1 - V is selected as resistor ladder network supply reference V. in2 in
  */
 /*@{*/
 /*! @brief Read current value of the CMP_DACCR_VRSEL field. */
@@ -2264,8 +2292,8 @@
  * power.
  *
  * Values:
- * - 0 - DAC is disabled.
- * - 1 - DAC is enabled.
+ * - 0b0 - DAC is disabled.
+ * - 0b1 - DAC is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_DACCR_DACEN field. */
@@ -2311,14 +2339,14 @@
  * shuts down to prevent itself from becoming a noise generator.
  *
  * Values:
- * - 000 - IN0
- * - 001 - IN1
- * - 010 - IN2
- * - 011 - IN3
- * - 100 - IN4
- * - 101 - IN5
- * - 110 - IN6
- * - 111 - IN7
+ * - 0b000 - IN0
+ * - 0b001 - IN1
+ * - 0b010 - IN2
+ * - 0b011 - IN3
+ * - 0b100 - IN4
+ * - 0b101 - IN5
+ * - 0b110 - IN6
+ * - 0b111 - IN7
  */
 /*@{*/
 /*! @brief Read current value of the CMP_MUXCR_MSEL field. */
@@ -2339,14 +2367,14 @@
  * shuts down to prevent itself from becoming a noise generator.
  *
  * Values:
- * - 000 - IN0
- * - 001 - IN1
- * - 010 - IN2
- * - 011 - IN3
- * - 100 - IN4
- * - 101 - IN5
- * - 110 - IN6
- * - 111 - IN7
+ * - 0b000 - IN0
+ * - 0b001 - IN1
+ * - 0b010 - IN2
+ * - 0b011 - IN3
+ * - 0b100 - IN4
+ * - 0b101 - IN5
+ * - 0b110 - IN6
+ * - 0b111 - IN7
  */
 /*@{*/
 /*! @brief Read current value of the CMP_MUXCR_PSEL field. */
@@ -2366,8 +2394,8 @@
  * the lack of package pins.
  *
  * Values:
- * - 0 - Pass Through Mode is disabled.
- * - 1 - Pass Through Mode is enabled.
+ * - 0b0 - Pass Through Mode is disabled.
+ * - 0b1 - Pass Through Mode is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_MUXCR_PSTM field. */
@@ -2494,8 +2522,8 @@
  * @name Register DAC_SR, field DACBFRPBF[0] (RW)
  *
  * Values:
- * - 0 - The DAC buffer read pointer is not equal to C2[DACBFUP].
- * - 1 - The DAC buffer read pointer is equal to C2[DACBFUP].
+ * - 0b0 - The DAC buffer read pointer is not equal to C2[DACBFUP].
+ * - 0b1 - The DAC buffer read pointer is equal to C2[DACBFUP].
  */
 /*@{*/
 /*! @brief Read current value of the DAC_SR_DACBFRPBF field. */
@@ -2511,8 +2539,8 @@
  * @name Register DAC_SR, field DACBFRPTF[1] (RW)
  *
  * Values:
- * - 0 - The DAC buffer read pointer is not zero.
- * - 1 - The DAC buffer read pointer is zero.
+ * - 0b0 - The DAC buffer read pointer is not zero.
+ * - 0b1 - The DAC buffer read pointer is zero.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_SR_DACBFRPTF field. */
@@ -2555,8 +2583,8 @@
  * @name Register DAC_C0, field DACBBIEN[0] (RW)
  *
  * Values:
- * - 0 - The DAC buffer read pointer bottom flag interrupt is disabled.
- * - 1 - The DAC buffer read pointer bottom flag interrupt is enabled.
+ * - 0b0 - The DAC buffer read pointer bottom flag interrupt is disabled.
+ * - 0b1 - The DAC buffer read pointer bottom flag interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACBBIEN field. */
@@ -2572,8 +2600,8 @@
  * @name Register DAC_C0, field DACBTIEN[1] (RW)
  *
  * Values:
- * - 0 - The DAC buffer read pointer top flag interrupt is disabled.
- * - 1 - The DAC buffer read pointer top flag interrupt is enabled.
+ * - 0b0 - The DAC buffer read pointer top flag interrupt is disabled.
+ * - 0b1 - The DAC buffer read pointer top flag interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACBTIEN field. */
@@ -2592,8 +2620,8 @@
  * details on the impact of the modes below.
  *
  * Values:
- * - 0 - High-Power mode
- * - 1 - Low-Power mode
+ * - 0b0 - High-Power mode
+ * - 0b1 - Low-Power mode
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_LPEN field. */
@@ -2613,8 +2641,8 @@
  * advance the buffer read pointer once.
  *
  * Values:
- * - 0 - The DAC soft trigger is not valid.
- * - 1 - The DAC soft trigger is valid.
+ * - 0b0 - The DAC soft trigger is not valid.
+ * - 0b1 - The DAC soft trigger is valid.
  */
 /*@{*/
 /*! @brief Set the DACSWTRG field to a new value. */
@@ -2626,8 +2654,8 @@
  * @name Register DAC_C0, field DACTRGSEL[5] (RW)
  *
  * Values:
- * - 0 - The DAC hardware trigger is selected.
- * - 1 - The DAC software trigger is selected.
+ * - 0b0 - The DAC hardware trigger is selected.
+ * - 0b1 - The DAC software trigger is selected.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACTRGSEL field. */
@@ -2643,8 +2671,8 @@
  * @name Register DAC_C0, field DACRFS[6] (RW)
  *
  * Values:
- * - 0 - The DAC selects DACREF_1 as the reference voltage.
- * - 1 - The DAC selects DACREF_2 as the reference voltage.
+ * - 0b0 - The DAC selects DACREF_1 as the reference voltage.
+ * - 0b1 - The DAC selects DACREF_2 as the reference voltage.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACRFS field. */
@@ -2662,8 +2690,8 @@
  * Starts the Programmable Reference Generator operation.
  *
  * Values:
- * - 0 - The DAC system is disabled.
- * - 1 - The DAC system is enabled.
+ * - 0b0 - The DAC system is disabled.
+ * - 0b1 - The DAC system is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACEN field. */
@@ -2706,10 +2734,10 @@
  * @name Register DAC_C1, field DACBFEN[0] (RW)
  *
  * Values:
- * - 0 - Buffer read pointer is disabled. The converted data is always the first
- *     word of the buffer.
- * - 1 - Buffer read pointer is enabled. The converted data is the word that the
- *     read pointer points to. It means converted data can be from any word of
+ * - 0b0 - Buffer read pointer is disabled. The converted data is always the
+ *     first word of the buffer.
+ * - 0b1 - Buffer read pointer is enabled. The converted data is the word that
+ *     the read pointer points to. It means converted data can be from any word of
  *     the buffer.
  */
 /*@{*/
@@ -2726,8 +2754,8 @@
  * @name Register DAC_C1, field DACBFMD[2] (RW)
  *
  * Values:
- * - 0 - Normal mode
- * - 1 - One-Time Scan mode
+ * - 0b0 - Normal mode
+ * - 0b1 - One-Time Scan mode
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C1_DACBFMD field. */
@@ -2743,9 +2771,9 @@
  * @name Register DAC_C1, field DMAEN[7] (RW)
  *
  * Values:
- * - 0 - DMA is disabled.
- * - 1 - DMA is enabled. When DMA is enabled, the DMA request will be generated
- *     by original interrupts. The interrupts will not be presented on this
+ * - 0b0 - DMA is disabled.
+ * - 0b1 - DMA is enabled. When DMA is enabled, the DMA request will be
+ *     generated by original interrupts. The interrupts will not be presented on this
  *     module at the same time.
  */
 /*@{*/
@@ -2953,8 +2981,8 @@
  * DONE before reprogramming the DMA.
  *
  * Values:
- * - 0 - DMA transfer is not yet complete. Writing a 0 has no effect.
- * - 1 - DMA transfer completed. Writing a 1 to this bit clears all DMA status
+ * - 0b0 - DMA transfer is not yet complete. Writing a 0 has no effect.
+ * - 0b1 - DMA transfer completed. Writing a 1 to this bit clears all DMA status
  *     bits and should be used in an interrupt service routine to clear the DMA
  *     interrupt and error bits.
  */
@@ -2972,9 +3000,9 @@
  * @name Register DMA_DSR_BCR, field BSY[25] (RO)
  *
  * Values:
- * - 0 - DMA channel is inactive. Cleared when the DMA has finished the last
+ * - 0b0 - DMA channel is inactive. Cleared when the DMA has finished the last
  *     transaction.
- * - 1 - BSY is set the first time the channel is enabled after a transfer is
+ * - 0b1 - BSY is set the first time the channel is enabled after a transfer is
  *     initiated.
  */
 /*@{*/
@@ -2987,9 +3015,9 @@
  * @name Register DMA_DSR_BCR, field REQ[26] (RO)
  *
  * Values:
- * - 0 - No request is pending or the channel is currently active. Cleared when
- *     the channel is selected.
- * - 1 - The DMA channel has a transfer remaining and the channel is not
+ * - 0b0 - No request is pending or the channel is currently active. Cleared
+ *     when the channel is selected.
+ * - 0b1 - The DMA channel has a transfer remaining and the channel is not
  *     selected.
  */
 /*@{*/
@@ -3004,9 +3032,9 @@
  * BED is cleared at hardware reset or by writing a 1 to DONE.
  *
  * Values:
- * - 0 - No bus error occurred.
- * - 1 - The DMA channel terminated with a bus error during the write portion of
- *     a transfer.
+ * - 0b0 - No bus error occurred.
+ * - 0b1 - The DMA channel terminated with a bus error during the write portion
+ *     of a transfer.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DSR_BCR_BED field. */
@@ -3020,9 +3048,9 @@
  * BES is cleared at hardware reset or by writing a 1 to DONE.
  *
  * Values:
- * - 0 - No bus error occurred.
- * - 1 - The DMA channel terminated with a bus error during the read portion of
- *     a transfer.
+ * - 0b0 - No bus error occurred.
+ * - 0b1 - The DMA channel terminated with a bus error during the read portion
+ *     of a transfer.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DSR_BCR_BES field. */
@@ -3041,8 +3069,8 @@
  * cleared at hardware reset or by writing a 1 to DONE.
  *
  * Values:
- * - 0 - No configuration error exists.
- * - 1 - A configuration error has occurred.
+ * - 0b0 - No configuration error exists.
+ * - 0b1 - A configuration error has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DSR_BCR_CE field. */
@@ -3104,10 +3132,10 @@
  * configuration error if this is attempted (DSRn[CE] is set).
  *
  * Values:
- * - 00 - DMA Channel 0
- * - 01 - DMA Channel 1
- * - 10 - DMA Channel 2
- * - 11 - DMA Channel 3
+ * - 0b00 - DMA Channel 0
+ * - 0b01 - DMA Channel 1
+ * - 0b10 - DMA Channel 2
+ * - 0b11 - DMA Channel 3
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_LCH2 field. */
@@ -3127,10 +3155,10 @@
  * configuration error if this is attempted (DSRn[CE] is set).
  *
  * Values:
- * - 00 - DMA Channel 0
- * - 01 - DMA Channel 1
- * - 10 - DMA Channel 2
- * - 11 - DMA Channel 3
+ * - 0b00 - DMA Channel 0
+ * - 0b01 - DMA Channel 1
+ * - 0b10 - DMA Channel 2
+ * - 0b11 - DMA Channel 3
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_LCH1 field. */
@@ -3154,11 +3182,11 @@
  * reaches zero, then the link to LCH1 is closed and a link to LCH2 is created.
  *
  * Values:
- * - 00 - No channel-to-channel linking
- * - 01 - Perform a link to channel LCH1 after each cycle-steal transfer
+ * - 0b00 - No channel-to-channel linking
+ * - 0b01 - Perform a link to channel LCH1 after each cycle-steal transfer
  *     followed by a link to LCH2 after the BCR decrements to 0.
- * - 10 - Perform a link to channel LCH1 after each cycle-steal transfer
- * - 11 - Perform a link to channel LCH1 after the BCR decrements to 0.
+ * - 0b10 - Perform a link to channel LCH1 after each cycle-steal transfer
+ * - 0b11 - Perform a link to channel LCH1 after the BCR decrements to 0.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_LINKCC field. */
@@ -3177,8 +3205,8 @@
  * byte count register reaches 0.
  *
  * Values:
- * - 0 - ERQ bit is not affected.
- * - 1 - ERQ bit is cleared when the BCR is exhausted.
+ * - 0b0 - ERQ bit is not affected.
+ * - 0b1 - ERQ bit is cleared when the BCR is exhausted.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_D_REQ field. */
@@ -3202,22 +3230,22 @@
  * field selection.
  *
  * Values:
- * - 0000 - Buffer disabled
- * - 0001 - Circular buffer size is 16 bytes
- * - 0010 - Circular buffer size is 32 bytes
- * - 0011 - Circular buffer size is 64 bytes
- * - 0100 - Circular buffer size is 128 bytes
- * - 0101 - Circular buffer size is 256 bytes
- * - 0110 - Circular buffer size is 512 bytes
- * - 0111 - Circular buffer size is 1 KB
- * - 1000 - Circular buffer size is 2 KB
- * - 1001 - Circular buffer size is 4 KB
- * - 1010 - Circular buffer size is 8 KB
- * - 1011 - Circular buffer size is 16 KB
- * - 1100 - Circular buffer size is 32 KB
- * - 1101 - Circular buffer size is 64 KB
- * - 1110 - Circular buffer size is 128 KB
- * - 1111 - Circular buffer size is 256 KB
+ * - 0b0000 - Buffer disabled
+ * - 0b0001 - Circular buffer size is 16 bytes
+ * - 0b0010 - Circular buffer size is 32 bytes
+ * - 0b0011 - Circular buffer size is 64 bytes
+ * - 0b0100 - Circular buffer size is 128 bytes
+ * - 0b0101 - Circular buffer size is 256 bytes
+ * - 0b0110 - Circular buffer size is 512 bytes
+ * - 0b0111 - Circular buffer size is 1 KB
+ * - 0b1000 - Circular buffer size is 2 KB
+ * - 0b1001 - Circular buffer size is 4 KB
+ * - 0b1010 - Circular buffer size is 8 KB
+ * - 0b1011 - Circular buffer size is 16 KB
+ * - 0b1100 - Circular buffer size is 32 KB
+ * - 0b1101 - Circular buffer size is 64 KB
+ * - 0b1110 - Circular buffer size is 128 KB
+ * - 0b1111 - Circular buffer size is 256 KB
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_DMOD field. */
@@ -3241,22 +3269,22 @@
  * selection.
  *
  * Values:
- * - 0000 - Buffer disabled
- * - 0001 - Circular buffer size is 16 bytes.
- * - 0010 - Circular buffer size is 32 bytes.
- * - 0011 - Circular buffer size is 64 bytes.
- * - 0100 - Circular buffer size is 128 bytes.
- * - 0101 - Circular buffer size is 256 bytes.
- * - 0110 - Circular buffer size is 512 bytes.
- * - 0111 - Circular buffer size is 1 KB.
- * - 1000 - Circular buffer size is 2 KB.
- * - 1001 - Circular buffer size is 4 KB.
- * - 1010 - Circular buffer size is 8 KB.
- * - 1011 - Circular buffer size is 16 KB.
- * - 1100 - Circular buffer size is 32 KB.
- * - 1101 - Circular buffer size is 64 KB.
- * - 1110 - Circular buffer size is 128 KB.
- * - 1111 - Circular buffer size is 256 KB.
+ * - 0b0000 - Buffer disabled
+ * - 0b0001 - Circular buffer size is 16 bytes.
+ * - 0b0010 - Circular buffer size is 32 bytes.
+ * - 0b0011 - Circular buffer size is 64 bytes.
+ * - 0b0100 - Circular buffer size is 128 bytes.
+ * - 0b0101 - Circular buffer size is 256 bytes.
+ * - 0b0110 - Circular buffer size is 512 bytes.
+ * - 0b0111 - Circular buffer size is 1 KB.
+ * - 0b1000 - Circular buffer size is 2 KB.
+ * - 0b1001 - Circular buffer size is 4 KB.
+ * - 0b1010 - Circular buffer size is 8 KB.
+ * - 0b1011 - Circular buffer size is 16 KB.
+ * - 0b1100 - Circular buffer size is 32 KB.
+ * - 0b1101 - Circular buffer size is 64 KB.
+ * - 0b1110 - Circular buffer size is 128 KB.
+ * - 0b1111 - Circular buffer size is 256 KB.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_SMOD field. */
@@ -3272,8 +3300,8 @@
  * @name Register DMA_DCR, field START[16] (WORZ)
  *
  * Values:
- * - 0 - DMA inactive
- * - 1 - The DMA begins the transfer in accordance to the values in the TCDn.
+ * - 0b0 - DMA inactive
+ * - 0b1 - The DMA begins the transfer in accordance to the values in the TCDn.
  *     START is cleared automatically after one module clock and always reads as
  *     logic 0.
  */
@@ -3289,10 +3317,10 @@
  * Determines the data size of the destination bus cycle for the DMA controller.
  *
  * Values:
- * - 00 - 32-bit
- * - 01 - 8-bit
- * - 10 - 16-bit
- * - 11 - Reserved (generates a configuration error (DSRn[CE]) if incorrectly
+ * - 0b00 - 32-bit
+ * - 0b01 - 8-bit
+ * - 0b10 - 16-bit
+ * - 0b11 - Reserved (generates a configuration error (DSRn[CE]) if incorrectly
  *     specified at time of channel activation)
  */
 /*@{*/
@@ -3312,8 +3340,8 @@
  * transfer.
  *
  * Values:
- * - 0 - No change to the DAR after a successful transfer.
- * - 1 - The DAR increments by 1, 2, 4 depending upon the size of the transfer.
+ * - 0b0 - No change to the DAR after a successful transfer.
+ * - 0b1 - The DAR increments by 1, 2, 4 depending upon the size of the transfer.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_DINC field. */
@@ -3331,10 +3359,10 @@
  * Determines the data size of the source bus cycle for the DMA controller.
  *
  * Values:
- * - 00 - 32-bit
- * - 01 - 8-bit
- * - 10 - 16-bit
- * - 11 - Reserved (generates a configuration error (DSRn[CE]) if incorrectly
+ * - 0b00 - 32-bit
+ * - 0b01 - 8-bit
+ * - 0b10 - 16-bit
+ * - 0b11 - Reserved (generates a configuration error (DSRn[CE]) if incorrectly
  *     specified at time of channel activation)
  */
 /*@{*/
@@ -3353,8 +3381,8 @@
  * Controls whether the source address increments after each successful transfer.
  *
  * Values:
- * - 0 - No change to SAR after a successful transfer.
- * - 1 - The SAR increments by 1, 2, 4 as determined by the transfer size.
+ * - 0b0 - No change to SAR after a successful transfer.
+ * - 0b1 - The SAR increments by 1, 2, 4 as determined by the transfer size.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_SINC field. */
@@ -3373,8 +3401,8 @@
  * mode.
  *
  * Values:
- * - 0 - Disabled
- * - 1 - Enabled
+ * - 0b0 - Disabled
+ * - 0b1 - Enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_EADREQ field. */
@@ -3393,12 +3421,12 @@
  * that is, transfers are optimized based on the address and size.
  *
  * Values:
- * - 0 - Auto-align disabled
- * - 1 - If SSIZE indicates a transfer no smaller than DSIZE, source accesses
+ * - 0b0 - Auto-align disabled
+ * - 0b1 - If SSIZE indicates a transfer no smaller than DSIZE, source accesses
  *     are auto-aligned; otherwise, destination accesses are auto-aligned. Source
- *     alignment takes precedence over destination alignment. If auto-alignment is
- *     enabled, the appropriate address register increments, regardless of DINC
- *     or SINC.
+ *     alignment takes precedence over destination alignment. If auto-alignment
+ *     is enabled, the appropriate address register increments, regardless of
+ *     DINC or SINC.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_AA field. */
@@ -3414,9 +3442,9 @@
  * @name Register DMA_DCR, field CS[29] (RW)
  *
  * Values:
- * - 0 - DMA continuously makes read/write transfers until the BCR decrements to
- *     0.
- * - 1 - Forces a single read/write transfer per request.
+ * - 0b0 - DMA continuously makes read/write transfers until the BCR decrements
+ *     to 0.
+ * - 0b1 - Forces a single read/write transfer per request.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_CS field. */
@@ -3434,8 +3462,8 @@
  * Be careful: a collision can occur between START and D_REQ when ERQ is 1.
  *
  * Values:
- * - 0 - Peripheral request is ignored.
- * - 1 - Enables peripheral request to initiate transfer. A software-initiated
+ * - 0b0 - Peripheral request is ignored.
+ * - 0b1 - Enables peripheral request to initiate transfer. A software-initiated
  *     request (setting START) is always enabled.
  */
 /*@{*/
@@ -3455,8 +3483,8 @@
  * the occurrence of an error condition.
  *
  * Values:
- * - 0 - No interrupt is generated.
- * - 1 - Interrupt signal is enabled.
+ * - 0b0 - No interrupt is generated.
+ * - 0b1 - Interrupt signal is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCR_EINT field. */
@@ -3534,10 +3562,10 @@
  * Enables the periodic trigger capability for the triggered DMA channel.
  *
  * Values:
- * - 0 - Triggering is disabled. If triggering is disabled and ENBL is set, the
- *     DMA Channel will simply route the specified source to the DMA channel.
+ * - 0b0 - Triggering is disabled. If triggering is disabled and ENBL is set,
+ *     the DMA Channel will simply route the specified source to the DMA channel.
  *     (Normal mode)
- * - 1 - Triggering is enabled. If triggering is enabled and ENBL is set, the
+ * - 0b1 - Triggering is enabled. If triggering is enabled and ENBL is set, the
  *     DMAMUX is in Periodic Trigger mode.
  */
 /*@{*/
@@ -3556,10 +3584,10 @@
  * Enables the DMA channel.
  *
  * Values:
- * - 0 - DMA channel is disabled. This mode is primarily used during
+ * - 0b0 - DMA channel is disabled. This mode is primarily used during
  *     configuration of the DMAMux. The DMA has separate channel enables/disables, which
  *     should be used to disable or reconfigure a DMA channel.
- * - 1 - DMA channel is enabled
+ * - 0b1 - DMA channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMAMUX_CHCFG_ENBL field. */
@@ -3802,8 +3830,8 @@
  * cleared by writing a 1 to it. Writing a 0 to the FPVIOL bit has no effect.
  *
  * Values:
- * - 0 - No protection violation detected
- * - 1 - Protection violation detected
+ * - 0b0 - No protection violation detected
+ * - 0b1 - Protection violation detected
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSTAT_FPVIOL field. */
@@ -3825,8 +3853,8 @@
  * has no effect.
  *
  * Values:
- * - 0 - No access error detected
- * - 1 - Access error detected
+ * - 0b0 - No access error detected
+ * - 0b1 - Access error detected
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSTAT_ACCERR field. */
@@ -3848,8 +3876,8 @@
  * it. Writing a 0 to RDCOLERR has no effect.
  *
  * Values:
- * - 0 - No collision error detected
- * - 1 - Collision error detected
+ * - 0b0 - No collision error detected
+ * - 0b1 - Collision error detected
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSTAT_RDCOLERR field. */
@@ -3872,8 +3900,8 @@
  * hardware reset value.
  *
  * Values:
- * - 0 - Flash command in progress
- * - 1 - Flash command has completed
+ * - 0b0 - Flash command in progress
+ * - 0b1 - Flash command has completed
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSTAT_CCIF field. */
@@ -3921,8 +3949,8 @@
  * it is executing.
  *
  * Values:
- * - 0 - No suspend requested
- * - 1 - Suspend the current Erase Flash Sector command execution.
+ * - 0b0 - No suspend requested
+ * - 0b1 - Suspend the current Erase Flash Sector command execution.
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FCNFG_ERSSUSP field. */
@@ -3946,10 +3974,10 @@
  * completes.
  *
  * Values:
- * - 0 - No request or request complete
- * - 1 - Request to: run the Erase All Blocks command, verify the erased state,
- *     program the security byte in the Flash Configuration Field to the unsecure
- *     state, and release MCU security by setting the FSEC[SEC] field to the
+ * - 0b0 - No request or request complete
+ * - 0b1 - Request to: run the Erase All Blocks command, verify the erased
+ *     state, program the security byte in the Flash Configuration Field to the
+ *     unsecure state, and release MCU security by setting the FSEC[SEC] field to the
  *     unsecure state.
  */
 /*@{*/
@@ -3964,8 +3992,8 @@
  * Controls interrupt generation when a flash memory read collision error occurs.
  *
  * Values:
- * - 0 - Read collision error interrupt disabled
- * - 1 - Read collision error interrupt enabled. An interrupt request is
+ * - 0b0 - Read collision error interrupt disabled
+ * - 0b1 - Read collision error interrupt enabled. An interrupt request is
  *     generated whenever a flash memory read collision error is detected (see the
  *     description of FSTAT[RDCOLERR]).
  */
@@ -3985,8 +4013,8 @@
  * Controls interrupt generation when a flash command completes.
  *
  * Values:
- * - 0 - Command complete interrupt disabled
- * - 1 - Command complete interrupt enabled. An interrupt request is generated
+ * - 0b0 - Command complete interrupt disabled
+ * - 0b1 - Command complete interrupt enabled. An interrupt request is generated
  *     whenever the FSTAT[CCIF] flag is set.
  */
 /*@{*/
@@ -4034,11 +4062,11 @@
  * is unsecured using backdoor key access, SEC is forced to 10b.
  *
  * Values:
- * - 00 - MCU security status is secure.
- * - 01 - MCU security status is secure.
- * - 10 - MCU security status is unsecure. (The standard shipping condition of
+ * - 0b00 - MCU security status is secure.
+ * - 0b01 - MCU security status is secure.
+ * - 0b10 - MCU security status is unsecure. (The standard shipping condition of
  *     the flash memory module is unsecure.)
- * - 11 - MCU security status is secure.
+ * - 0b11 - MCU security status is secure.
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSEC_SEC field. */
@@ -4059,10 +4087,10 @@
  * is set to unsecure, the FSLACC setting does not matter.
  *
  * Values:
- * - 00 - Freescale factory access granted
- * - 01 - Freescale factory access denied
- * - 10 - Freescale factory access denied
- * - 11 - Freescale factory access granted
+ * - 0b00 - Freescale factory access granted
+ * - 0b01 - Freescale factory access denied
+ * - 0b10 - Freescale factory access denied
+ * - 0b11 - Freescale factory access granted
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSEC_FSLACC field. */
@@ -4078,10 +4106,10 @@
  * Normal Mode. When SEC is set to unsecure, the MEEN setting does not matter.
  *
  * Values:
- * - 00 - Mass erase is enabled
- * - 01 - Mass erase is enabled
- * - 10 - Mass erase is disabled
- * - 11 - Mass erase is enabled
+ * - 0b00 - Mass erase is enabled
+ * - 0b01 - Mass erase is enabled
+ * - 0b10 - Mass erase is disabled
+ * - 0b11 - Mass erase is enabled
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSEC_MEEN field. */
@@ -4095,11 +4123,11 @@
  * Enables or disables backdoor key access to the flash memory module.
  *
  * Values:
- * - 00 - Backdoor key access disabled
- * - 01 - Backdoor key access disabled (preferred KEYEN state to disable
+ * - 0b00 - Backdoor key access disabled
+ * - 0b01 - Backdoor key access disabled (preferred KEYEN state to disable
  *     backdoor key access)
- * - 10 - Backdoor key access enabled
- * - 11 - Backdoor key access disabled
+ * - 0b10 - Backdoor key access enabled
+ * - 0b11 - Backdoor key access disabled
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSEC_KEYEN field. */
@@ -4880,10 +4908,10 @@
  * divider to generate the I2C baud rate.
  *
  * Values:
- * - 00 - mul = 1
- * - 01 - mul = 2
- * - 10 - mul = 4
- * - 11 - Reserved
+ * - 0b00 - mul = 1
+ * - 0b01 - mul = 2
+ * - 0b10 - mul = 4
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the I2C_F_MULT field. */
@@ -4926,11 +4954,11 @@
  * Enables or disables the DMA function.
  *
  * Values:
- * - 0 - All DMA signalling disabled.
- * - 1 - DMA transfer is enabled. While SMB[FACK] = 0, the following conditions
- *     trigger the DMA request: a data byte is received, and either address or
- *     data is transmitted. (ACK/NACK is automatic) the first byte received matches
- *     the A1 register or is a general call address. If any address matching
+ * - 0b0 - All DMA signalling disabled.
+ * - 0b1 - DMA transfer is enabled. While SMB[FACK] = 0, the following
+ *     conditions trigger the DMA request: a data byte is received, and either address or
+ *     data is transmitted. (ACK/NACK is automatic) the first byte received
+ *     matches the A1 register or is a general call address. If any address matching
  *     occurs, S[IAAS] and S[TCF] are set. If the direction of transfer is known
  *     from master to slave, then it is not required to check S[SRW]. With this
  *     assumption, DMA can also be used in this case. In other cases, if the master
@@ -4955,9 +4983,9 @@
  * running when slave address matching occurs.
  *
  * Values:
- * - 0 - Normal operation. No interrupt generated when address matching in low
+ * - 0b0 - Normal operation. No interrupt generated when address matching in low
  *     power mode.
- * - 1 - Enables the wakeup function in low power mode.
+ * - 0b1 - Enables the wakeup function in low power mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_WUEN field. */
@@ -4990,11 +5018,11 @@
  * generation. SCL is held low until TXAK is written.
  *
  * Values:
- * - 0 - An acknowledge signal is sent to the bus on the following receiving
+ * - 0b0 - An acknowledge signal is sent to the bus on the following receiving
  *     byte (if FACK is cleared) or the current receiving byte (if FACK is set).
- * - 1 - No acknowledge signal is sent to the bus on the following receiving
- *     data byte (if FACK is cleared) or the current receiving data byte (if FACK is
- *     set).
+ * - 0b1 - No acknowledge signal is sent to the bus on the following receiving
+ *     data byte (if FACK is cleared) or the current receiving data byte (if FACK
+ *     is set).
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_TXAK field. */
@@ -5015,8 +5043,8 @@
  * set by software according to the SRW bit in the status register.
  *
  * Values:
- * - 0 - Receive
- * - 1 - Transmit
+ * - 0b0 - Receive
+ * - 0b1 - Transmit
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_TX field. */
@@ -5036,8 +5064,8 @@
  * generated and the mode of operation changes from master to slave.
  *
  * Values:
- * - 0 - Slave mode
- * - 1 - Master mode
+ * - 0b0 - Slave mode
+ * - 0b1 - Master mode
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_MST field. */
@@ -5055,8 +5083,8 @@
  * Enables I2C interrupt requests.
  *
  * Values:
- * - 0 - Disabled
- * - 1 - Enabled
+ * - 0b0 - Disabled
+ * - 0b1 - Enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_IICIE field. */
@@ -5074,8 +5102,8 @@
  * Enables I2C module operation.
  *
  * Values:
- * - 0 - Disabled
- * - 1 - Enabled
+ * - 0b0 - Disabled
+ * - 0b1 - Enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_IICEN field. */
@@ -5116,9 +5144,9 @@
  * @name Register I2C_S, field RXAK[0] (RO)
  *
  * Values:
- * - 0 - Acknowledge signal was received after the completion of one byte of
+ * - 0b0 - Acknowledge signal was received after the completion of one byte of
  *     data transmission on the bus
- * - 1 - No acknowledge signal detected
+ * - 0b1 - No acknowledge signal detected
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_RXAK field. */
@@ -5144,8 +5172,8 @@
  * If this sequence is reversed, the IICIF bit is asserted again.
  *
  * Values:
- * - 0 - No interrupt pending
- * - 1 - Interrupt pending
+ * - 0b0 - No interrupt pending
+ * - 0b1 - Interrupt pending
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_IICIF field. */
@@ -5164,8 +5192,8 @@
  * the calling address sent to the master.
  *
  * Values:
- * - 0 - Slave receive, master writing to slave
- * - 1 - Slave transmit, master reading from slave
+ * - 0b0 - Slave receive, master writing to slave
+ * - 0b1 - Slave transmit, master reading from slave
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_SRW field. */
@@ -5183,8 +5211,8 @@
  * 1. Writing the C1 register with any value clears this bit to 0.
  *
  * Values:
- * - 0 - Not addressed
- * - 1 - Addressed as a slave
+ * - 0b0 - Not addressed
+ * - 0b1 - Addressed as a slave
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_RAM field. */
@@ -5203,8 +5231,8 @@
  * bit must be cleared by software, by writing 1 to it.
  *
  * Values:
- * - 0 - Standard bus operation.
- * - 1 - Loss of arbitration.
+ * - 0b0 - Standard bus operation.
+ * - 0b1 - Loss of arbitration.
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_ARBL field. */
@@ -5224,8 +5252,8 @@
  * detected.
  *
  * Values:
- * - 0 - Bus is idle
- * - 1 - Bus is busy
+ * - 0b0 - Bus is idle
+ * - 0b1 - Bus is busy
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_BUSY field. */
@@ -5247,8 +5275,8 @@
  * C1 register with any value clears this bit.
  *
  * Values:
- * - 0 - Not addressed
- * - 1 - Addressed as a slave
+ * - 0b0 - Not addressed
+ * - 0b1 - Addressed as a slave
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_IAAS field. */
@@ -5269,8 +5297,8 @@
  * or by writing to the I2C data register in transmit mode.
  *
  * Values:
- * - 0 - Transfer in progress
- * - 1 - Transfer complete
+ * - 0b0 - Transfer in progress
+ * - 0b1 - Transfer complete
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_TCF field. */
@@ -5349,9 +5377,9 @@
  * to the value of the RA register.
  *
  * Values:
- * - 0 - Range mode disabled. No address match occurs for an address within the
- *     range of values of the A1 and RA registers.
- * - 1 - Range mode enabled. Address matching occurs when a slave receives an
+ * - 0b0 - Range mode disabled. No address match occurs for an address within
+ *     the range of values of the A1 and RA registers.
+ * - 0b1 - Range mode enabled. Address matching occurs when a slave receives an
  *     address within the range of values of the A1 and RA registers.
  */
 /*@{*/
@@ -5373,9 +5401,9 @@
  * capture the master's data at only 10 kbit/s.
  *
  * Values:
- * - 0 - The slave baud rate follows the master baud rate and clock stretching
+ * - 0b0 - The slave baud rate follows the master baud rate and clock stretching
  *     may occur
- * - 1 - Slave baud rate is independent of the master baud rate
+ * - 0b1 - Slave baud rate is independent of the master baud rate
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C2_SBRC field. */
@@ -5393,8 +5421,8 @@
  * Controls the drive capability of the I2C pads.
  *
  * Values:
- * - 0 - Normal drive mode
- * - 1 - High drive mode
+ * - 0b0 - Normal drive mode
+ * - 0b1 - High drive mode
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C2_HDRS field. */
@@ -5412,8 +5440,8 @@
  * Controls the number of bits used for the slave address.
  *
  * Values:
- * - 0 - 7-bit address scheme
- * - 1 - 10-bit address scheme
+ * - 0b0 - 7-bit address scheme
+ * - 0b1 - 10-bit address scheme
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C2_ADEXT field. */
@@ -5431,8 +5459,8 @@
  * Enables general call address.
  *
  * Values:
- * - 0 - Disabled
- * - 1 - Enabled
+ * - 0b0 - Disabled
+ * - 0b1 - Enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C2_GCAEN field. */
@@ -5477,7 +5505,7 @@
  * width setting, the filter does not allow the glitch to pass.
  *
  * Values:
- * - 0 - No filter/bypass
+ * - 0b0000 - No filter/bypass
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_FLT field. */
@@ -5496,8 +5524,8 @@
  * STARTF bit must be cleared by writing 1 to it.
  *
  * Values:
- * - 0 - No start happens on I2C bus
- * - 1 - Start detected on I2C bus
+ * - 0b0 - No start happens on I2C bus
+ * - 0b1 - Start detected on I2C bus
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_STARTF field. */
@@ -5519,8 +5547,8 @@
  * is asserted again.
  *
  * Values:
- * - 0 - Stop or start detection interrupt is disabled
- * - 1 - Stop or start detection interrupt is enabled
+ * - 0b0 - Stop or start detection interrupt is disabled
+ * - 0b1 - Stop or start detection interrupt is enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_SSIE field. */
@@ -5539,8 +5567,8 @@
  * bit must be cleared by writing 1 to it.
  *
  * Values:
- * - 0 - No stop happens on I2C bus
- * - 1 - Stop detected on I2C bus
+ * - 0b0 - No stop happens on I2C bus
+ * - 0b1 - Stop detected on I2C bus
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_STOPF field. */
@@ -5575,8 +5603,8 @@
  * TCF bit after the MCU wakes from the stop mode.
  *
  * Values:
- * - 0 - Stop holdoff is disabled. The MCU's entry to stop mode is not gated.
- * - 1 - Stop holdoff is enabled.
+ * - 0b0 - Stop holdoff is disabled. The MCU's entry to stop mode is not gated.
+ * - 0b1 - Stop holdoff is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_SHEN field. */
@@ -5670,8 +5698,8 @@
  * Enables SCL high and SDA low timeout interrupt.
  *
  * Values:
- * - 0 - SHTF2 interrupt is disabled
- * - 1 - SHTF2 interrupt is enabled
+ * - 0b0 - SHTF2 interrupt is disabled
+ * - 0b1 - SHTF2 interrupt is enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SHTF2IE field. */
@@ -5690,8 +5718,8 @@
  * LoValue / 512. Software clears this bit by writing 1 to it.
  *
  * Values:
- * - 0 - No SCL high and SDA low timeout occurs
- * - 1 - SCL high and SDA low timeout occurs
+ * - 0b0 - No SCL high and SDA low timeout occurs
+ * - 0b1 - SCL high and SDA low timeout occurs
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SHTF2 field. */
@@ -5710,8 +5738,8 @@
  * LoValue / 512, which indicates the bus is free. This bit is cleared automatically.
  *
  * Values:
- * - 0 - No SCL high and SDA high timeout occurs
- * - 1 - SCL high and SDA high timeout occurs
+ * - 0b0 - No SCL high and SDA high timeout occurs
+ * - 0b1 - SCL high and SDA high timeout occurs
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SHTF1 field. */
@@ -5728,8 +5756,8 @@
  * is disabled when the SLT register's value is 0.
  *
  * Values:
- * - 0 - No low timeout occurs
- * - 1 - Low timeout occurs
+ * - 0b0 - No low timeout occurs
+ * - 0b1 - Low timeout occurs
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SLTF field. */
@@ -5747,8 +5775,8 @@
  * Selects the clock source of the timeout counter.
  *
  * Values:
- * - 0 - Timeout counter counts at the frequency of the I2C module clock / 64
- * - 1 - Timeout counter counts at the frequency of the I2C module clock
+ * - 0b0 - Timeout counter counts at the frequency of the I2C module clock / 64
+ * - 0b1 - Timeout counter counts at the frequency of the I2C module clock
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_TCKSEL field. */
@@ -5766,8 +5794,8 @@
  * Enables or disables SMBus device default address.
  *
  * Values:
- * - 0 - I2C address register 2 matching is disabled
- * - 1 - I2C address register 2 matching is enabled
+ * - 0b0 - I2C address register 2 matching is disabled
+ * - 0b1 - I2C address register 2 matching is enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SIICAEN field. */
@@ -5788,8 +5816,8 @@
  * SMBus specification.
  *
  * Values:
- * - 0 - SMBus alert response address matching is disabled
- * - 1 - SMBus alert response address matching is enabled
+ * - 0b0 - SMBus alert response address matching is disabled
+ * - 0b1 - SMBus alert response address matching is enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_ALERTEN field. */
@@ -5808,9 +5836,9 @@
  * according to the result of receiving data byte.
  *
  * Values:
- * - 0 - An ACK or NACK is sent on the following receiving data byte
- * - 1 - Writing 0 to TXAK after receiving a data byte generates an ACK. Writing
- *     1 to TXAK after receiving a data byte generates a NACK.
+ * - 0b0 - An ACK or NACK is sent on the following receiving data byte
+ * - 0b1 - Writing 0 to TXAK after receiving a data byte generates an ACK.
+ *     Writing 1 to TXAK after receiving a data byte generates a NACK.
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_FACK field. */
@@ -5963,8 +5991,8 @@
  * Enables/disables DMA requests.
  *
  * Values:
- * - 0 - Disables the DMA request.
- * - 1 - Enables the DMA request.
+ * - 0b0 - Disables the DMA request.
+ * - 0b1 - Enables the DMA request.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_FWDE field. */
@@ -5982,8 +6010,8 @@
  * Enables/disables FIFO warning interrupts.
  *
  * Values:
- * - 0 - Disables the interrupt.
- * - 1 - Enables the interrupt.
+ * - 0b0 - Disables the interrupt.
+ * - 0b1 - Enables the interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_FWIE field. */
@@ -6001,8 +6029,8 @@
  * Enables/disables FIFO error interrupts.
  *
  * Values:
- * - 0 - Disables the interrupt.
- * - 1 - Enables the interrupt.
+ * - 0b0 - Disables the interrupt.
+ * - 0b1 - Enables the interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_FEIE field. */
@@ -6020,8 +6048,8 @@
  * Enables/disables sync error interrupts.
  *
  * Values:
- * - 0 - Disables interrupt.
- * - 1 - Enables interrupt.
+ * - 0b0 - Disables interrupt.
+ * - 0b1 - Enables interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_SEIE field. */
@@ -6039,8 +6067,8 @@
  * Enables/disables word start interrupts.
  *
  * Values:
- * - 0 - Disables interrupt.
- * - 1 - Enables interrupt.
+ * - 0b0 - Disables interrupt.
+ * - 0b1 - Enables interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_WSIE field. */
@@ -6058,8 +6086,8 @@
  * Indicates that an enabled transmit FIFO is empty.
  *
  * Values:
- * - 0 - No enabled transmit FIFO is empty.
- * - 1 - Enabled transmit FIFO is empty.
+ * - 0b0 - No enabled transmit FIFO is empty.
+ * - 0b1 - Enabled transmit FIFO is empty.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_FWF field. */
@@ -6074,8 +6102,8 @@
  * field to clear this flag.
  *
  * Values:
- * - 0 - Transmit underrun not detected.
- * - 1 - Transmit underrun detected.
+ * - 0b0 - Transmit underrun not detected.
+ * - 0b1 - Transmit underrun detected.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_FEF field. */
@@ -6094,8 +6122,8 @@
  * detected. Write a logic 1 to this field to clear this flag.
  *
  * Values:
- * - 0 - Sync error not detected.
- * - 1 - Frame sync error detected.
+ * - 0b0 - Sync error not detected.
+ * - 0b1 - Frame sync error detected.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_SEF field. */
@@ -6114,8 +6142,8 @@
  * logic 1 to this field to clear this flag.
  *
  * Values:
- * - 0 - Start of word not detected.
- * - 1 - Start of word detected.
+ * - 0b0 - Start of word not detected.
+ * - 0b1 - Start of word detected.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_WSF field. */
@@ -6134,8 +6162,8 @@
  * Software-visible registers are not affected, except for the status registers.
  *
  * Values:
- * - 0 - No effect.
- * - 1 - Software reset.
+ * - 0b0 - No effect.
+ * - 0b1 - Software reset.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_SR field. */
@@ -6155,8 +6183,8 @@
  * flag is set.
  *
  * Values:
- * - 0 - No effect.
- * - 1 - FIFO reset.
+ * - 0b0 - No effect.
+ * - 0b1 - FIFO reset.
  */
 /*@{*/
 /*! @brief Set the FR field to a new value. */
@@ -6173,8 +6201,8 @@
  * current frame.
  *
  * Values:
- * - 0 - Transmit bit clock is disabled.
- * - 1 - Transmit bit clock is enabled.
+ * - 0b0 - Transmit bit clock is disabled.
+ * - 0b1 - Transmit bit clock is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_BCE field. */
@@ -6193,9 +6221,9 @@
  * is not affected by debug mode.
  *
  * Values:
- * - 0 - Transmitter is disabled in Debug mode, after completing the current
+ * - 0b0 - Transmitter is disabled in Debug mode, after completing the current
  *     frame.
- * - 1 - Transmitter is enabled in Debug mode.
+ * - 0b1 - Transmitter is enabled in Debug mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_DBGE field. */
@@ -6214,8 +6242,8 @@
  * transmitter is disabled in all low-leakage stop modes.
  *
  * Values:
- * - 0 - Transmitter disabled in Stop mode.
- * - 1 - Transmitter enabled in Stop mode.
+ * - 0b0 - Transmitter disabled in Stop mode.
+ * - 0b1 - Transmitter enabled in Stop mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCSR_STOPE field. */
@@ -6235,8 +6263,8 @@
  * frame.
  *
  * Values:
- * - 0 - Transmitter is disabled.
- * - 1 - Transmitter is enabled, or transmitter has been disabled and has not
+ * - 0b0 - Transmitter is disabled.
+ * - 0b1 - Transmitter is enabled, or transmitter has been disabled and has not
  *     yet reached end of frame.
  */
 /*@{*/
@@ -6298,8 +6326,8 @@
  * Configures the direction of the bit clock.
  *
  * Values:
- * - 0 - Bit clock is generated externally in Slave mode.
- * - 1 - Bit clock is generated internally in Master mode.
+ * - 0b0 - Bit clock is generated externally in Slave mode.
+ * - 0b1 - Bit clock is generated internally in Master mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR2_BCD field. */
@@ -6317,9 +6345,9 @@
  * Configures the polarity of the bit clock.
  *
  * Values:
- * - 0 - Bit clock is active high with drive outputs on rising edge and sample
+ * - 0b0 - Bit clock is active high with drive outputs on rising edge and sample
  *     inputs on falling edge.
- * - 1 - Bit clock is active low with drive outputs on falling edge and sample
+ * - 0b1 - Bit clock is active low with drive outputs on falling edge and sample
  *     inputs on rising edge.
  */
 /*@{*/
@@ -6342,10 +6370,10 @@
  * chip-specific meaning of each option.
  *
  * Values:
- * - 00 - Bus Clock selected.
- * - 01 - Master Clock (MCLK) 1 option selected.
- * - 10 - Master Clock (MCLK) 2 option selected.
- * - 11 - Master Clock (MCLK) 3 option selected.
+ * - 0b00 - Bus Clock selected.
+ * - 0b01 - Master Clock (MCLK) 1 option selected.
+ * - 0b10 - Master Clock (MCLK) 2 option selected.
+ * - 0b11 - Master Clock (MCLK) 3 option selected.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR2_MSEL field. */
@@ -6372,8 +6400,8 @@
  * bit clock .
  *
  * Values:
- * - 0 - No effect.
- * - 1 - Internal logic is clocked as if bit clock was externally generated.
+ * - 0b0 - No effect.
+ * - 0b1 - Internal logic is clocked as if bit clock was externally generated.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR2_BCI field. */
@@ -6399,8 +6427,8 @@
  * (SAI_RX_SYNC).
  *
  * Values:
- * - 0 - Use the normal bit clock source.
- * - 1 - Swap the bit clock source.
+ * - 0b0 - Use the normal bit clock source.
+ * - 0b1 - Swap the bit clock source.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR2_BCS field. */
@@ -6420,10 +6448,10 @@
  * for asynchronous operation.
  *
  * Values:
- * - 00 - Asynchronous mode.
- * - 01 - Synchronous with receiver.
- * - 10 - Synchronous with another SAI transmitter.
- * - 11 - Synchronous with another SAI receiver.
+ * - 0b00 - Asynchronous mode.
+ * - 0b01 - Synchronous with receiver.
+ * - 0b10 - Synchronous with another SAI transmitter.
+ * - 0b11 - Synchronous with another SAI receiver.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR2_SYNC field. */
@@ -6487,8 +6515,8 @@
  * be enabled before its FIFO is accessed.
  *
  * Values:
- * - 0 - Transmit data channel N is disabled.
- * - 1 - Transmit data channel N is enabled.
+ * - 0b0 - Transmit data channel N is disabled.
+ * - 0b1 - Transmit data channel N is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR3_TCE field. */
@@ -6533,8 +6561,8 @@
  * Configures the direction of the frame sync.
  *
  * Values:
- * - 0 - Frame sync is generated externally in Slave mode.
- * - 1 - Frame sync is generated internally in Master mode.
+ * - 0b0 - Frame sync is generated externally in Slave mode.
+ * - 0b1 - Frame sync is generated internally in Master mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR4_FSD field. */
@@ -6552,8 +6580,8 @@
  * Configures the polarity of the frame sync.
  *
  * Values:
- * - 0 - Frame sync is active high.
- * - 1 - Frame sync is active low.
+ * - 0b0 - Frame sync is active high.
+ * - 0b1 - Frame sync is active low.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR4_FSP field. */
@@ -6569,8 +6597,8 @@
  * @name Register I2S_TCR4, field FSE[3] (RW)
  *
  * Values:
- * - 0 - Frame sync asserts with the first bit of the frame.
- * - 1 - Frame sync asserts one bit before the first bit of the frame.
+ * - 0b0 - Frame sync asserts with the first bit of the frame.
+ * - 0b1 - Frame sync asserts one bit before the first bit of the frame.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR4_FSE field. */
@@ -6588,8 +6616,8 @@
  * Configures whether the LSB or the MSB is transmitted first.
  *
  * Values:
- * - 0 - LSB is transmitted first.
- * - 1 - MSB is transmitted first.
+ * - 0b0 - LSB is transmitted first.
+ * - 0b1 - MSB is transmitted first.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TCR4_MF field. */
@@ -6772,8 +6800,8 @@
  * and transmit data not read from FIFO) for the corresponding word in the frame.
  *
  * Values:
- * - 0 - Word N is enabled.
- * - 1 - Word N is masked. The transmit data pins are tri-stated when masked.
+ * - 0b00 - Word N is enabled.
+ * - 0b01 - Word N is masked. The transmit data pins are tri-stated when masked.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_TMR_TWM field. */
@@ -6816,8 +6844,8 @@
  * Enables/disables DMA requests.
  *
  * Values:
- * - 0 - Disables the DMA request.
- * - 1 - Enables the DMA request.
+ * - 0b0 - Disables the DMA request.
+ * - 0b1 - Enables the DMA request.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_FWDE field. */
@@ -6835,8 +6863,8 @@
  * Enables/disables FIFO warning interrupts.
  *
  * Values:
- * - 0 - Disables the interrupt.
- * - 1 - Enables the interrupt.
+ * - 0b0 - Disables the interrupt.
+ * - 0b1 - Enables the interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_FWIE field. */
@@ -6854,8 +6882,8 @@
  * Enables/disables FIFO error interrupts.
  *
  * Values:
- * - 0 - Disables the interrupt.
- * - 1 - Enables the interrupt.
+ * - 0b0 - Disables the interrupt.
+ * - 0b1 - Enables the interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_FEIE field. */
@@ -6873,8 +6901,8 @@
  * Enables/disables sync error interrupts.
  *
  * Values:
- * - 0 - Disables interrupt.
- * - 1 - Enables interrupt.
+ * - 0b0 - Disables interrupt.
+ * - 0b1 - Enables interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_SEIE field. */
@@ -6892,8 +6920,8 @@
  * Enables/disables word start interrupts.
  *
  * Values:
- * - 0 - Disables interrupt.
- * - 1 - Enables interrupt.
+ * - 0b0 - Disables interrupt.
+ * - 0b1 - Enables interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_WSIE field. */
@@ -6911,8 +6939,8 @@
  * Indicates that an enabled receive FIFO is full.
  *
  * Values:
- * - 0 - No enabled receive FIFO is full.
- * - 1 - Enabled receive FIFO is full.
+ * - 0b0 - No enabled receive FIFO is full.
+ * - 0b1 - Enabled receive FIFO is full.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_FWF field. */
@@ -6927,8 +6955,8 @@
  * this field to clear this flag.
  *
  * Values:
- * - 0 - Receive overflow not detected.
- * - 1 - Receive overflow detected.
+ * - 0b0 - Receive overflow not detected.
+ * - 0b1 - Receive overflow detected.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_FEF field. */
@@ -6947,8 +6975,8 @@
  * detected. Write a logic 1 to this field to clear this flag.
  *
  * Values:
- * - 0 - Sync error not detected.
- * - 1 - Frame sync error detected.
+ * - 0b0 - Sync error not detected.
+ * - 0b1 - Frame sync error detected.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_SEF field. */
@@ -6967,8 +6995,8 @@
  * logic 1 to this field to clear this flag.
  *
  * Values:
- * - 0 - Start of word not detected.
- * - 1 - Start of word detected.
+ * - 0b0 - Start of word not detected.
+ * - 0b1 - Start of word detected.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_WSF field. */
@@ -6987,8 +7015,8 @@
  * Software-visible registers are not affected, except for the status registers.
  *
  * Values:
- * - 0 - No effect.
- * - 1 - Software reset.
+ * - 0b0 - No effect.
+ * - 0b1 - Software reset.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_SR field. */
@@ -7008,8 +7036,8 @@
  * flag is set.
  *
  * Values:
- * - 0 - No effect.
- * - 1 - FIFO reset.
+ * - 0b0 - No effect.
+ * - 0b1 - FIFO reset.
  */
 /*@{*/
 /*! @brief Set the FR field to a new value. */
@@ -7026,8 +7054,8 @@
  * frame.
  *
  * Values:
- * - 0 - Receive bit clock is disabled.
- * - 1 - Receive bit clock is enabled.
+ * - 0b0 - Receive bit clock is disabled.
+ * - 0b1 - Receive bit clock is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_BCE field. */
@@ -7046,8 +7074,9 @@
  * not affected by Debug mode.
  *
  * Values:
- * - 0 - Receiver is disabled in Debug mode, after completing the current frame.
- * - 1 - Receiver is enabled in Debug mode.
+ * - 0b0 - Receiver is disabled in Debug mode, after completing the current
+ *     frame.
+ * - 0b1 - Receiver is enabled in Debug mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_DBGE field. */
@@ -7066,8 +7095,8 @@
  * receiver is disabled in all low-leakage stop modes.
  *
  * Values:
- * - 0 - Receiver disabled in Stop mode.
- * - 1 - Receiver enabled in Stop mode.
+ * - 0b0 - Receiver disabled in Stop mode.
+ * - 0b1 - Receiver enabled in Stop mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCSR_STOPE field. */
@@ -7086,8 +7115,8 @@
  * remains enabled, and this bit remains set, until the end of the current frame.
  *
  * Values:
- * - 0 - Receiver is disabled.
- * - 1 - Receiver is enabled, or receiver has been disabled and has not yet
+ * - 0b0 - Receiver is disabled.
+ * - 0b1 - Receiver is enabled, or receiver has been disabled and has not yet
  *     reached end of frame.
  */
 /*@{*/
@@ -7149,8 +7178,8 @@
  * Configures the direction of the bit clock.
  *
  * Values:
- * - 0 - Bit clock is generated externally in Slave mode.
- * - 1 - Bit clock is generated internally in Master mode.
+ * - 0b0 - Bit clock is generated externally in Slave mode.
+ * - 0b1 - Bit clock is generated internally in Master mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR2_BCD field. */
@@ -7168,9 +7197,9 @@
  * Configures the polarity of the bit clock.
  *
  * Values:
- * - 0 - Bit Clock is active high with drive outputs on rising edge and sample
+ * - 0b0 - Bit Clock is active high with drive outputs on rising edge and sample
  *     inputs on falling edge.
- * - 1 - Bit Clock is active low with drive outputs on falling edge and sample
+ * - 0b1 - Bit Clock is active low with drive outputs on falling edge and sample
  *     inputs on rising edge.
  */
 /*@{*/
@@ -7193,10 +7222,10 @@
  * chip-specific meaning of each option.
  *
  * Values:
- * - 00 - Bus Clock selected.
- * - 01 - Master Clock (MCLK) 1 option selected.
- * - 10 - Master Clock (MCLK) 2 option selected.
- * - 11 - Master Clock (MCLK) 3 option selected.
+ * - 0b00 - Bus Clock selected.
+ * - 0b01 - Master Clock (MCLK) 1 option selected.
+ * - 0b10 - Master Clock (MCLK) 2 option selected.
+ * - 0b11 - Master Clock (MCLK) 3 option selected.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR2_MSEL field. */
@@ -7223,8 +7252,8 @@
  * clock .
  *
  * Values:
- * - 0 - No effect.
- * - 1 - Internal logic is clocked as if bit clock was externally generated.
+ * - 0b0 - No effect.
+ * - 0b1 - Internal logic is clocked as if bit clock was externally generated.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR2_BCI field. */
@@ -7250,8 +7279,8 @@
  * (SAI_TX_SYNC).
  *
  * Values:
- * - 0 - Use the normal bit clock source.
- * - 1 - Swap the bit clock source.
+ * - 0b0 - Use the normal bit clock source.
+ * - 0b1 - Swap the bit clock source.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR2_BCS field. */
@@ -7271,10 +7300,10 @@
  * for asynchronous operation.
  *
  * Values:
- * - 00 - Asynchronous mode.
- * - 01 - Synchronous with transmitter.
- * - 10 - Synchronous with another SAI receiver.
- * - 11 - Synchronous with another SAI transmitter.
+ * - 0b00 - Asynchronous mode.
+ * - 0b01 - Synchronous with transmitter.
+ * - 0b10 - Synchronous with another SAI receiver.
+ * - 0b11 - Synchronous with another SAI transmitter.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR2_SYNC field. */
@@ -7338,8 +7367,8 @@
  * be enabled before its FIFO is accessed.
  *
  * Values:
- * - 0 - Receive data channel N is disabled.
- * - 1 - Receive data channel N is enabled.
+ * - 0b0 - Receive data channel N is disabled.
+ * - 0b1 - Receive data channel N is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR3_RCE field. */
@@ -7384,8 +7413,8 @@
  * Configures the direction of the frame sync.
  *
  * Values:
- * - 0 - Frame Sync is generated externally in Slave mode.
- * - 1 - Frame Sync is generated internally in Master mode.
+ * - 0b0 - Frame Sync is generated externally in Slave mode.
+ * - 0b1 - Frame Sync is generated internally in Master mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR4_FSD field. */
@@ -7403,8 +7432,8 @@
  * Configures the polarity of the frame sync.
  *
  * Values:
- * - 0 - Frame sync is active high.
- * - 1 - Frame sync is active low.
+ * - 0b0 - Frame sync is active high.
+ * - 0b1 - Frame sync is active low.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR4_FSP field. */
@@ -7420,8 +7449,8 @@
  * @name Register I2S_RCR4, field FSE[3] (RW)
  *
  * Values:
- * - 0 - Frame sync asserts with the first bit of the frame.
- * - 1 - Frame sync asserts one bit before the first bit of the frame.
+ * - 0b0 - Frame sync asserts with the first bit of the frame.
+ * - 0b1 - Frame sync asserts one bit before the first bit of the frame.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR4_FSE field. */
@@ -7439,8 +7468,8 @@
  * Configures whether the LSB or the MSB is received first.
  *
  * Values:
- * - 0 - LSB is received first.
- * - 1 - MSB is received first.
+ * - 0b0 - LSB is received first.
+ * - 0b1 - MSB is received first.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RCR4_MF field. */
@@ -7624,8 +7653,8 @@
  * written to receive FIFO) for the corresponding word in the frame.
  *
  * Values:
- * - 0 - Word N is enabled.
- * - 1 - Word N is masked.
+ * - 0b00 - Word N is enabled.
+ * - 0b01 - Word N is masked.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_RMR_RWM field. */
@@ -7673,10 +7702,10 @@
  * information about the connections to these inputs.
  *
  * Values:
- * - 00 - MCLK divider input clock 0 selected.
- * - 01 - MCLK divider input clock 1 selected.
- * - 10 - MCLK divider input clock 2 selected.
- * - 11 - MCLK divider input clock 3 selected.
+ * - 0b00 - MCLK divider input clock 0 selected.
+ * - 0b01 - MCLK divider input clock 1 selected.
+ * - 0b10 - MCLK divider input clock 2 selected.
+ * - 0b11 - MCLK divider input clock 3 selected.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_MCR_MICS field. */
@@ -7696,9 +7725,9 @@
  * disabled.
  *
  * Values:
- * - 0 - MCLK signal pin is configured as an input that bypasses the MCLK
+ * - 0b0 - MCLK signal pin is configured as an input that bypasses the MCLK
  *     divider.
- * - 1 - MCLK signal pin is configured as an output from the MCLK divider and
+ * - 0b1 - MCLK signal pin is configured as an output from the MCLK divider and
  *     the MCLK divider is enabled.
  */
 /*@{*/
@@ -7717,9 +7746,9 @@
  * Provides the status of on-the-fly updates to the MCLK divider ratio.
  *
  * Values:
- * - 0 - MCLK divider ratio is not being updated currently.
- * - 1 - MCLK divider ratio is updating on-the-fly. Further updates to the MCLK
- *     divider ratio are blocked while this flag remains set.
+ * - 0b0 - MCLK divider ratio is not being updated currently.
+ * - 0b1 - MCLK divider ratio is updating on-the-fly. Further updates to the
+ *     MCLK divider ratio are blocked while this flag remains set.
  */
 /*@{*/
 /*! @brief Read current value of the I2S_MCR_DUF field. */
@@ -7847,14 +7876,14 @@
  * Selects the duty cycle of the LCD controller driver.
  *
  * Values:
- * - 000 - Use 1 BP (1/1 duty cycle).
- * - 001 - Use 2 BP (1/2 duty cycle).
- * - 010 - Use 3 BP (1/3 duty cycle).
- * - 011 - Use 4 BP (1/4 duty cycle). (Default)
- * - 100 -
- * - 101 -
- * - 110 -
- * - 111 - Use 8 BP (1/8 duty cycle).
+ * - 0b000 - Use 1 BP (1/1 duty cycle).
+ * - 0b001 - Use 2 BP (1/2 duty cycle).
+ * - 0b010 - Use 3 BP (1/3 duty cycle).
+ * - 0b011 - Use 4 BP (1/4 duty cycle). (Default)
+ * - 0b100 -
+ * - 0b101 -
+ * - 0b110 -
+ * - 0b111 - Use 8 BP (1/8 duty cycle).
  */
 /*@{*/
 /*! @brief Read current value of the LCD_GCR_DUTY field. */
@@ -7897,9 +7926,9 @@
  * selection in SIM_SOPT1[OSC32KSEL].
  *
  * Values:
- * - 0 - Selects the default clock as the LCD clock source.
- * - 1 - Selects output of the alternate clock source selection (see ALTSOURCE)
- *     as the LCD clock source.
+ * - 0b0 - Selects the default clock as the LCD clock source.
+ * - 0b1 - Selects output of the alternate clock source selection (see
+ *     ALTSOURCE) as the LCD clock source.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_GCR_SOURCE field. */
@@ -7917,12 +7946,12 @@
  * Starts LCD controller waveform generator.
  *
  * Values:
- * - 0 - All front plane and back plane pins are disabled. The LCD controller
- *     system is also disabled, and all LCD waveform generation clocks are stopped.
- *     V LL3 is connected to V DD internally. All LCD pins, LCD_Pn, enabled
+ * - 0b0 - All front plane and back plane pins are disabled. The LCD controller
+ *     system is also disabled, and all LCD waveform generation clocks are
+ *     stopped. V LL3 is connected to V DD internally. All LCD pins, LCD_Pn, enabled
  *     using the LCD Pin Enable register, output a low value.
- * - 1 - LCD controller driver system is enabled, and front plane and back plane
- *     waveforms are generated. All LCD pins, LCD_Pn, enabled if PAD_SAFE is
+ * - 0b1 - LCD controller driver system is enabled, and front plane and back
+ *     plane waveforms are generated. All LCD pins, LCD_Pn, enabled if PAD_SAFE is
  *     clearusing the LCD Pin Enable register, output an LCD driver waveform. The
  *     back plane pins output an LCD driver back plane waveform based on the
  *     settings of DUTY[2:0]. Charge pump or resistor bias is enabled.
@@ -7944,9 +7973,9 @@
  * while in Stop mode.
  *
  * Values:
- * - 0 - Allows the LCD driver, charge pump, resistor bias network, and voltage
- *     regulator to continue running during Stop mode.
- * - 1 - Disables the LCD driver, charge pump, resistor bias network, and
+ * - 0b0 - Allows the LCD driver, charge pump, resistor bias network, and
+ *     voltage regulator to continue running during Stop mode.
+ * - 0b1 - Disables the LCD driver, charge pump, resistor bias network, and
  *     voltage regulator when MCU enters Stop mode.
  */
 /*@{*/
@@ -7966,9 +7995,9 @@
  * while in Doze mode.
  *
  * Values:
- * - 0 - Allows the LCD driver, charge pump, resistor bias network, and voltage
- *     regulator to continue running during Doze mode.
- * - 1 - Disables the LCD driver, charge pump, resistor bias network, and
+ * - 0b0 - Allows the LCD driver, charge pump, resistor bias network, and
+ *     voltage regulator to continue running during Doze mode.
+ * - 0b1 - Disables the LCD driver, charge pump, resistor bias network, and
  *     voltage regulator when MCU enters Doze mode.
  */
 /*@{*/
@@ -7987,8 +8016,8 @@
  * Increases the Frame Clock Frequency.
  *
  * Values:
- * - 0 - Standard Frame Rate LCD Frame Freq: 23.3 (min) 73.1 (max)
- * - 1 - Fast Frame Rate (Standard Frame Rate x2) LCD Frame Freq: 46.6 (min)
+ * - 0b0 - Standard Frame Rate LCD Frame Freq: 23.3 (min) 73.1 (max)
+ * - 0b1 - Fast Frame Rate (Standard Frame Rate x2) LCD Frame Freq: 46.6 (min)
  *     146.2 (max)
  */
 /*@{*/
@@ -8005,8 +8034,8 @@
  * @name Register LCD_GCR, field ALTSOURCE[11] (RW)
  *
  * Values:
- * - 0 - Select Alternate Clock Source 1 (default)
- * - 1 - Select Alternate Clock Source 2
+ * - 0b0 - Select Alternate Clock Source 1 (default)
+ * - 0b1 - Select Alternate Clock Source 2
  */
 /*@{*/
 /*! @brief Read current value of the LCD_GCR_ALTSOURCE field. */
@@ -8025,8 +8054,8 @@
  * selected as LCD clock source.
  *
  * Values:
- * - 0 - Divide factor = 1 (No divide)
- * - 1 - Divide factor = 8
+ * - 0b00 - Divide factor = 1 (No divide)
+ * - 0b01 - Divide factor = 8
  */
 /*@{*/
 /*! @brief Read current value of the LCD_GCR_ALTDIV field. */
@@ -8044,8 +8073,8 @@
  * Enables an LCD interrupt event when fault detection is completed.
  *
  * Values:
- * - 0 - No interrupt request is generated by this event.
- * - 1 - When a fault is detected and FDCF bit is set, this event causes an
+ * - 0b0 - No interrupt request is generated by this event.
+ * - 0b1 - When a fault is detected and FDCF bit is set, this event causes an
  *     interrupt request.
  */
 /*@{*/
@@ -8065,9 +8094,9 @@
  * functions disabled) regardless of other LCD control bits.
  *
  * Values:
- * - 0 - LCD frontplane and backplane functions enabled according to other LCD
+ * - 0b0 - LCD frontplane and backplane functions enabled according to other LCD
  *     control bits
- * - 1 - LCD frontplane and backplane functions disabled
+ * - 0b1 - LCD frontplane and backplane functions disabled
  */
 /*@{*/
 /*! @brief Read current value of the LCD_GCR_PADSAFE field. */
@@ -8087,8 +8116,8 @@
  * LCDEN = 1.
  *
  * Values:
- * - 0 - Drive VLL3 internally from VDD
- * - 1 - Drive VLL3 externally from VDD or drive VLL internally from vIREG
+ * - 0b0 - Drive VLL3 internally from VDD
+ * - 0b1 - Drive VLL3 externally from VDD or drive VLL internally from vIREG
  */
 /*@{*/
 /*! @brief Read current value of the LCD_GCR_VSUPPLY field. */
@@ -8137,9 +8166,9 @@
  * LCD voltages V LL1 , V LL2 , and V LL3 .
  *
  * Values:
- * - 0 - LCD charge pump is disabled. Resistor network selected. (The internal
+ * - 0b0 - LCD charge pump is disabled. Resistor network selected. (The internal
  *     1/3-bias is forced.)
- * - 1 - LCD charge pump is selected. Resistor network disabled. (The internal
+ * - 0b1 - LCD charge pump is selected. Resistor network disabled. (The internal
  *     1/3-bias is forced.)
  */
 /*@{*/
@@ -8175,8 +8204,8 @@
  * Enables internal voltage regulator. It must have the charge pump enabled.
  *
  * Values:
- * - 0 - Regulated voltage disabled.
- * - 1 - Regulated voltage enabled.
+ * - 0b0 - Regulated voltage disabled.
+ * - 0b1 - Regulated voltage enabled.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_GCR_RVEN field. */
@@ -8239,9 +8268,9 @@
  * Selects the blink mode displayed during the blink period.
  *
  * Values:
- * - 0 - Display blank during the blink period.
- * - 1 - Display alternate display during blink period (Ignored if duty is 5 or
- *     greater).
+ * - 0b0 - Display blank during the blink period.
+ * - 0b1 - Display alternate display during blink period (Ignored if duty is 5
+ *     or greater).
  */
 /*@{*/
 /*! @brief Read current value of the LCD_AR_BMODE field. */
@@ -8259,8 +8288,8 @@
  * Asserting this bit clears all segments in the LCD.
  *
  * Values:
- * - 0 - Normal or alternate display mode.
- * - 1 - Blank display mode.
+ * - 0b0 - Normal or alternate display mode.
+ * - 0b1 - Blank display mode.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_AR_BLANK field. */
@@ -8279,8 +8308,8 @@
  * an alternate display. ALT bit is ignored if DUTY[2:0] is 100 or greater.
  *
  * Values:
- * - 0 - Normal display mode.
- * - 1 - Alternate display mode.
+ * - 0b0 - Normal display mode.
+ * - 0b1 - Alternate display mode.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_AR_ALT field. */
@@ -8298,8 +8327,8 @@
  * Starts or stops SLCD blinking.
  *
  * Values:
- * - 0 - Disables blinking.
- * - 1 - Starts blinking at blinking frequency specified by LCD blink rate
+ * - 0b0 - Disables blinking.
+ * - 0b1 - Starts blinking at blinking frequency specified by LCD blink rate
  *     calculation.
  */
 /*@{*/
@@ -8345,8 +8374,8 @@
  * Specifies the LCD pin to be checked by pullup fault detection.
  *
  * Values:
- * - 0 - Fault detection for LCD_P0 pin.
- * - 1 - Fault detection for LCD_P1 pin.
+ * - 0b000000 - Fault detection for LCD_P0 pin.
+ * - 0b000001 - Fault detection for LCD_P1 pin.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_FDCR_FDPINID field. */
@@ -8366,8 +8395,8 @@
  * detect test.
  *
  * Values:
- * - 0 - Type of the selected pin under fault detect test is front plane.
- * - 1 - Type of the selected pin under fault detect test is back plane.
+ * - 0b0 - Type of the selected pin under fault detect test is front plane.
+ * - 0b1 - Type of the selected pin under fault detect test is back plane.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_FDCR_FDBPEN field. */
@@ -8389,8 +8418,8 @@
  * fault detection, FDEN must be set again.
  *
  * Values:
- * - 0 - Disable fault detection.
- * - 1 - Enable fault detection.
+ * - 0b0 - Disable fault detection.
+ * - 0b1 - Enable fault detection.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_FDCR_FDEN field. */
@@ -8409,8 +8438,8 @@
  * the range from 4-512 (Sample window = 4*2 N ).
  *
  * Values:
- * - 0 - Sample window width is 4 sample clock cycles.
- * - 1 - Sample window width is 8 sample clock cycles.
+ * - 0b000 - Sample window width is 4 sample clock cycles.
+ * - 0b001 - Sample window width is 8 sample clock cycles.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_FDCR_FDSWW field. */
@@ -8428,8 +8457,8 @@
  * Fault detect sample clock frequency is:
  *
  * Values:
- * - 0 - 1/1 bus clock.
- * - 1 - 1/2 bus clock.
+ * - 0b000 - 1/1 bus clock.
+ * - 0b001 - 1/2 bus clock.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_FDCR_FDPRS field. */
@@ -8475,8 +8504,8 @@
  * window.
  *
  * Values:
- * - 0 - No "one" samples.
- * - 1 - 1 "one" samples.
+ * - 0b00000000 - No "one" samples.
+ * - 0b00000001 - 1 "one" samples.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_FDSR_FDCNT field. */
@@ -8493,8 +8522,8 @@
  * detection is completed.
  *
  * Values:
- * - 0 - Fault detection is not completed.
- * - 1 - Fault detection is completed.
+ * - 0b0 - Fault detection is not completed.
+ * - 0b1 - Fault detection is completed.
  */
 /*@{*/
 /*! @brief Read current value of the LCD_FDSR_FDCF field. */
@@ -9659,8 +9688,8 @@
  * @name Register LCD_WF8B, field BPALCD0[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD0 field. */
@@ -9676,8 +9705,8 @@
  * @name Register LCD_WF8B, field BPALCD63[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD63 field. */
@@ -9693,8 +9722,8 @@
  * @name Register LCD_WF8B, field BPALCD62[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD62 field. */
@@ -9710,8 +9739,8 @@
  * @name Register LCD_WF8B, field BPALCD61[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD61 field. */
@@ -9727,8 +9756,8 @@
  * @name Register LCD_WF8B, field BPALCD60[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD60 field. */
@@ -9744,8 +9773,8 @@
  * @name Register LCD_WF8B, field BPALCD59[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD59 field. */
@@ -9761,8 +9790,8 @@
  * @name Register LCD_WF8B, field BPALCD58[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD58 field. */
@@ -9778,8 +9807,8 @@
  * @name Register LCD_WF8B, field BPALCD57[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD57 field. */
@@ -9795,8 +9824,8 @@
  * @name Register LCD_WF8B, field BPALCD1[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD1 field. */
@@ -9812,8 +9841,8 @@
  * @name Register LCD_WF8B, field BPALCD56[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD56 field. */
@@ -9829,8 +9858,8 @@
  * @name Register LCD_WF8B, field BPALCD55[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD55 field. */
@@ -9846,8 +9875,8 @@
  * @name Register LCD_WF8B, field BPALCD54[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD54 field. */
@@ -9863,8 +9892,8 @@
  * @name Register LCD_WF8B, field BPALCD53[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD53 field. */
@@ -9880,8 +9909,8 @@
  * @name Register LCD_WF8B, field BPALCD52[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD52 field. */
@@ -9897,8 +9926,8 @@
  * @name Register LCD_WF8B, field BPALCD51[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD51 field. */
@@ -9914,8 +9943,8 @@
  * @name Register LCD_WF8B, field BPALCD50[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD50 field. */
@@ -9931,8 +9960,8 @@
  * @name Register LCD_WF8B, field BPALCD2[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD2 field. */
@@ -9948,8 +9977,8 @@
  * @name Register LCD_WF8B, field BPALCD49[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD49 field. */
@@ -9965,8 +9994,8 @@
  * @name Register LCD_WF8B, field BPALCD48[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD48 field. */
@@ -9982,8 +10011,8 @@
  * @name Register LCD_WF8B, field BPALCD47[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD47 field. */
@@ -9999,8 +10028,8 @@
  * @name Register LCD_WF8B, field BPALCD46[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD46 field. */
@@ -10016,8 +10045,8 @@
  * @name Register LCD_WF8B, field BPALCD45[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD45 field. */
@@ -10033,8 +10062,8 @@
  * @name Register LCD_WF8B, field BPALCD44[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD44 field. */
@@ -10050,8 +10079,8 @@
  * @name Register LCD_WF8B, field BPALCD43[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD43 field. */
@@ -10067,8 +10096,8 @@
  * @name Register LCD_WF8B, field BPALCD3[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD3 field. */
@@ -10084,8 +10113,8 @@
  * @name Register LCD_WF8B, field BPALCD42[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD42 field. */
@@ -10101,8 +10130,8 @@
  * @name Register LCD_WF8B, field BPALCD41[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD41 field. */
@@ -10118,8 +10147,8 @@
  * @name Register LCD_WF8B, field BPALCD40[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD40 field. */
@@ -10135,8 +10164,8 @@
  * @name Register LCD_WF8B, field BPALCD39[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD39 field. */
@@ -10152,8 +10181,8 @@
  * @name Register LCD_WF8B, field BPALCD38[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD38 field. */
@@ -10169,8 +10198,8 @@
  * @name Register LCD_WF8B, field BPALCD37[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD37 field. */
@@ -10186,8 +10215,8 @@
  * @name Register LCD_WF8B, field BPALCD36[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD36 field. */
@@ -10203,8 +10232,8 @@
  * @name Register LCD_WF8B, field BPALCD4[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD4 field. */
@@ -10220,8 +10249,8 @@
  * @name Register LCD_WF8B, field BPALCD35[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD35 field. */
@@ -10237,8 +10266,8 @@
  * @name Register LCD_WF8B, field BPALCD34[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD34 field. */
@@ -10254,8 +10283,8 @@
  * @name Register LCD_WF8B, field BPALCD33[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD33 field. */
@@ -10271,8 +10300,8 @@
  * @name Register LCD_WF8B, field BPALCD32[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD32 field. */
@@ -10288,8 +10317,8 @@
  * @name Register LCD_WF8B, field BPALCD31[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD31 field. */
@@ -10305,8 +10334,8 @@
  * @name Register LCD_WF8B, field BPALCD30[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD30 field. */
@@ -10322,8 +10351,8 @@
  * @name Register LCD_WF8B, field BPALCD29[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD29 field. */
@@ -10339,8 +10368,8 @@
  * @name Register LCD_WF8B, field BPALCD5[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD5 field. */
@@ -10356,8 +10385,8 @@
  * @name Register LCD_WF8B, field BPALCD28[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD28 field. */
@@ -10373,8 +10402,8 @@
  * @name Register LCD_WF8B, field BPALCD27[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD27 field. */
@@ -10390,8 +10419,8 @@
  * @name Register LCD_WF8B, field BPALCD26[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD26 field. */
@@ -10407,8 +10436,8 @@
  * @name Register LCD_WF8B, field BPALCD25[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD25 field. */
@@ -10424,8 +10453,8 @@
  * @name Register LCD_WF8B, field BPALCD24[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD24 field. */
@@ -10441,8 +10470,8 @@
  * @name Register LCD_WF8B, field BPALCD23[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD23 field. */
@@ -10458,8 +10487,8 @@
  * @name Register LCD_WF8B, field BPALCD22[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD22 field. */
@@ -10475,8 +10504,8 @@
  * @name Register LCD_WF8B, field BPALCD6[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD6 field. */
@@ -10492,8 +10521,8 @@
  * @name Register LCD_WF8B, field BPALCD21[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD21 field. */
@@ -10509,8 +10538,8 @@
  * @name Register LCD_WF8B, field BPALCD20[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD20 field. */
@@ -10526,8 +10555,8 @@
  * @name Register LCD_WF8B, field BPALCD19[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD19 field. */
@@ -10543,8 +10572,8 @@
  * @name Register LCD_WF8B, field BPALCD18[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD18 field. */
@@ -10560,8 +10589,8 @@
  * @name Register LCD_WF8B, field BPALCD17[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD17 field. */
@@ -10577,8 +10606,8 @@
  * @name Register LCD_WF8B, field BPALCD16[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD16 field. */
@@ -10594,8 +10623,8 @@
  * @name Register LCD_WF8B, field BPALCD15[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD15 field. */
@@ -10611,8 +10640,8 @@
  * @name Register LCD_WF8B, field BPALCD7[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD7 field. */
@@ -10628,8 +10657,8 @@
  * @name Register LCD_WF8B, field BPALCD14[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD14 field. */
@@ -10645,8 +10674,8 @@
  * @name Register LCD_WF8B, field BPALCD13[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD13 field. */
@@ -10662,8 +10691,8 @@
  * @name Register LCD_WF8B, field BPALCD12[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD12 field. */
@@ -10679,8 +10708,8 @@
  * @name Register LCD_WF8B, field BPALCD11[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD11 field. */
@@ -10696,8 +10725,8 @@
  * @name Register LCD_WF8B, field BPALCD10[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD10 field. */
@@ -10713,8 +10742,8 @@
  * @name Register LCD_WF8B, field BPALCD9[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD9 field. */
@@ -10730,8 +10759,8 @@
  * @name Register LCD_WF8B, field BPALCD8[0] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase A
- * - 1 - LCD segment on or LCD backplane active for phase A
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase A
+ * - 0b1 - LCD segment on or LCD backplane active for phase A
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPALCD8 field. */
@@ -10747,8 +10776,8 @@
  * @name Register LCD_WF8B, field BPBLCD1[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD1 field. */
@@ -10764,8 +10793,8 @@
  * @name Register LCD_WF8B, field BPBLCD32[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD32 field. */
@@ -10781,8 +10810,8 @@
  * @name Register LCD_WF8B, field BPBLCD30[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD30 field. */
@@ -10798,8 +10827,8 @@
  * @name Register LCD_WF8B, field BPBLCD60[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD60 field. */
@@ -10815,8 +10844,8 @@
  * @name Register LCD_WF8B, field BPBLCD24[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD24 field. */
@@ -10832,8 +10861,8 @@
  * @name Register LCD_WF8B, field BPBLCD28[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD28 field. */
@@ -10849,8 +10878,8 @@
  * @name Register LCD_WF8B, field BPBLCD23[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD23 field. */
@@ -10866,8 +10895,8 @@
  * @name Register LCD_WF8B, field BPBLCD48[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD48 field. */
@@ -10883,8 +10912,8 @@
  * @name Register LCD_WF8B, field BPBLCD10[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD10 field. */
@@ -10900,8 +10929,8 @@
  * @name Register LCD_WF8B, field BPBLCD15[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD15 field. */
@@ -10917,8 +10946,8 @@
  * @name Register LCD_WF8B, field BPBLCD36[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD36 field. */
@@ -10934,8 +10963,8 @@
  * @name Register LCD_WF8B, field BPBLCD44[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD44 field. */
@@ -10951,8 +10980,8 @@
  * @name Register LCD_WF8B, field BPBLCD62[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD62 field. */
@@ -10968,8 +10997,8 @@
  * @name Register LCD_WF8B, field BPBLCD53[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD53 field. */
@@ -10985,8 +11014,8 @@
  * @name Register LCD_WF8B, field BPBLCD22[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD22 field. */
@@ -11002,8 +11031,8 @@
  * @name Register LCD_WF8B, field BPBLCD47[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD47 field. */
@@ -11019,8 +11048,8 @@
  * @name Register LCD_WF8B, field BPBLCD33[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD33 field. */
@@ -11036,8 +11065,8 @@
  * @name Register LCD_WF8B, field BPBLCD2[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD2 field. */
@@ -11053,8 +11082,8 @@
  * @name Register LCD_WF8B, field BPBLCD49[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD49 field. */
@@ -11070,8 +11099,8 @@
  * @name Register LCD_WF8B, field BPBLCD0[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD0 field. */
@@ -11087,8 +11116,8 @@
  * @name Register LCD_WF8B, field BPBLCD55[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD55 field. */
@@ -11104,8 +11133,8 @@
  * @name Register LCD_WF8B, field BPBLCD56[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD56 field. */
@@ -11121,8 +11150,8 @@
  * @name Register LCD_WF8B, field BPBLCD21[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD21 field. */
@@ -11138,8 +11167,8 @@
  * @name Register LCD_WF8B, field BPBLCD6[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD6 field. */
@@ -11155,8 +11184,8 @@
  * @name Register LCD_WF8B, field BPBLCD29[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD29 field. */
@@ -11172,8 +11201,8 @@
  * @name Register LCD_WF8B, field BPBLCD25[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD25 field. */
@@ -11189,8 +11218,8 @@
  * @name Register LCD_WF8B, field BPBLCD8[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD8 field. */
@@ -11206,8 +11235,8 @@
  * @name Register LCD_WF8B, field BPBLCD54[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD54 field. */
@@ -11223,8 +11252,8 @@
  * @name Register LCD_WF8B, field BPBLCD38[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD38 field. */
@@ -11240,8 +11269,8 @@
  * @name Register LCD_WF8B, field BPBLCD43[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD43 field. */
@@ -11257,8 +11286,8 @@
  * @name Register LCD_WF8B, field BPBLCD20[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD20 field. */
@@ -11274,8 +11303,8 @@
  * @name Register LCD_WF8B, field BPBLCD9[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD9 field. */
@@ -11291,8 +11320,8 @@
  * @name Register LCD_WF8B, field BPBLCD7[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD7 field. */
@@ -11308,8 +11337,8 @@
  * @name Register LCD_WF8B, field BPBLCD50[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD50 field. */
@@ -11325,8 +11354,8 @@
  * @name Register LCD_WF8B, field BPBLCD40[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD40 field. */
@@ -11342,8 +11371,8 @@
  * @name Register LCD_WF8B, field BPBLCD63[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD63 field. */
@@ -11359,8 +11388,8 @@
  * @name Register LCD_WF8B, field BPBLCD26[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD26 field. */
@@ -11376,8 +11405,8 @@
  * @name Register LCD_WF8B, field BPBLCD12[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD12 field. */
@@ -11393,8 +11422,8 @@
  * @name Register LCD_WF8B, field BPBLCD19[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD19 field. */
@@ -11410,8 +11439,8 @@
  * @name Register LCD_WF8B, field BPBLCD34[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD34 field. */
@@ -11427,8 +11456,8 @@
  * @name Register LCD_WF8B, field BPBLCD39[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD39 field. */
@@ -11444,8 +11473,8 @@
  * @name Register LCD_WF8B, field BPBLCD59[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD59 field. */
@@ -11461,8 +11490,8 @@
  * @name Register LCD_WF8B, field BPBLCD61[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD61 field. */
@@ -11478,8 +11507,8 @@
  * @name Register LCD_WF8B, field BPBLCD37[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD37 field. */
@@ -11495,8 +11524,8 @@
  * @name Register LCD_WF8B, field BPBLCD31[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD31 field. */
@@ -11512,8 +11541,8 @@
  * @name Register LCD_WF8B, field BPBLCD58[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD58 field. */
@@ -11529,8 +11558,8 @@
  * @name Register LCD_WF8B, field BPBLCD18[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD18 field. */
@@ -11546,8 +11575,8 @@
  * @name Register LCD_WF8B, field BPBLCD45[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD45 field. */
@@ -11563,8 +11592,8 @@
  * @name Register LCD_WF8B, field BPBLCD27[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD27 field. */
@@ -11580,8 +11609,8 @@
  * @name Register LCD_WF8B, field BPBLCD14[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD14 field. */
@@ -11597,8 +11626,8 @@
  * @name Register LCD_WF8B, field BPBLCD51[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD51 field. */
@@ -11614,8 +11643,8 @@
  * @name Register LCD_WF8B, field BPBLCD52[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD52 field. */
@@ -11631,8 +11660,8 @@
  * @name Register LCD_WF8B, field BPBLCD4[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD4 field. */
@@ -11648,8 +11677,8 @@
  * @name Register LCD_WF8B, field BPBLCD35[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD35 field. */
@@ -11665,8 +11694,8 @@
  * @name Register LCD_WF8B, field BPBLCD17[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD17 field. */
@@ -11682,8 +11711,8 @@
  * @name Register LCD_WF8B, field BPBLCD41[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD41 field. */
@@ -11699,8 +11728,8 @@
  * @name Register LCD_WF8B, field BPBLCD11[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD11 field. */
@@ -11716,8 +11745,8 @@
  * @name Register LCD_WF8B, field BPBLCD46[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD46 field. */
@@ -11733,8 +11762,8 @@
  * @name Register LCD_WF8B, field BPBLCD57[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD57 field. */
@@ -11750,8 +11779,8 @@
  * @name Register LCD_WF8B, field BPBLCD42[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD42 field. */
@@ -11767,8 +11796,8 @@
  * @name Register LCD_WF8B, field BPBLCD5[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD5 field. */
@@ -11784,8 +11813,8 @@
  * @name Register LCD_WF8B, field BPBLCD3[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD3 field. */
@@ -11801,8 +11830,8 @@
  * @name Register LCD_WF8B, field BPBLCD16[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD16 field. */
@@ -11818,8 +11847,8 @@
  * @name Register LCD_WF8B, field BPBLCD13[1] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase B
- * - 1 - LCD segment on or LCD backplane active for phase B
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase B
+ * - 0b1 - LCD segment on or LCD backplane active for phase B
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPBLCD13 field. */
@@ -11835,8 +11864,8 @@
  * @name Register LCD_WF8B, field BPCLCD10[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD10 field. */
@@ -11852,8 +11881,8 @@
  * @name Register LCD_WF8B, field BPCLCD55[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD55 field. */
@@ -11869,8 +11898,8 @@
  * @name Register LCD_WF8B, field BPCLCD2[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD2 field. */
@@ -11886,8 +11915,8 @@
  * @name Register LCD_WF8B, field BPCLCD23[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD23 field. */
@@ -11903,8 +11932,8 @@
  * @name Register LCD_WF8B, field BPCLCD48[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD48 field. */
@@ -11920,8 +11949,8 @@
  * @name Register LCD_WF8B, field BPCLCD24[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD24 field. */
@@ -11937,8 +11966,8 @@
  * @name Register LCD_WF8B, field BPCLCD60[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD60 field. */
@@ -11954,8 +11983,8 @@
  * @name Register LCD_WF8B, field BPCLCD47[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD47 field. */
@@ -11971,8 +12000,8 @@
  * @name Register LCD_WF8B, field BPCLCD22[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD22 field. */
@@ -11988,8 +12017,8 @@
  * @name Register LCD_WF8B, field BPCLCD8[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD8 field. */
@@ -12005,8 +12034,8 @@
  * @name Register LCD_WF8B, field BPCLCD21[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD21 field. */
@@ -12022,8 +12051,8 @@
  * @name Register LCD_WF8B, field BPCLCD49[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD49 field. */
@@ -12039,8 +12068,8 @@
  * @name Register LCD_WF8B, field BPCLCD25[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD25 field. */
@@ -12056,8 +12085,8 @@
  * @name Register LCD_WF8B, field BPCLCD1[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD1 field. */
@@ -12073,8 +12102,8 @@
  * @name Register LCD_WF8B, field BPCLCD20[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD20 field. */
@@ -12090,8 +12119,8 @@
  * @name Register LCD_WF8B, field BPCLCD50[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD50 field. */
@@ -12107,8 +12136,8 @@
  * @name Register LCD_WF8B, field BPCLCD19[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD19 field. */
@@ -12124,8 +12153,8 @@
  * @name Register LCD_WF8B, field BPCLCD26[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD26 field. */
@@ -12141,8 +12170,8 @@
  * @name Register LCD_WF8B, field BPCLCD59[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD59 field. */
@@ -12158,8 +12187,8 @@
  * @name Register LCD_WF8B, field BPCLCD61[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD61 field. */
@@ -12175,8 +12204,8 @@
  * @name Register LCD_WF8B, field BPCLCD46[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD46 field. */
@@ -12192,8 +12221,8 @@
  * @name Register LCD_WF8B, field BPCLCD18[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD18 field. */
@@ -12209,8 +12238,8 @@
  * @name Register LCD_WF8B, field BPCLCD5[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD5 field. */
@@ -12226,8 +12255,8 @@
  * @name Register LCD_WF8B, field BPCLCD63[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD63 field. */
@@ -12243,8 +12272,8 @@
  * @name Register LCD_WF8B, field BPCLCD27[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD27 field. */
@@ -12260,8 +12289,8 @@
  * @name Register LCD_WF8B, field BPCLCD17[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD17 field. */
@@ -12277,8 +12306,8 @@
  * @name Register LCD_WF8B, field BPCLCD51[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD51 field. */
@@ -12294,8 +12323,8 @@
  * @name Register LCD_WF8B, field BPCLCD9[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD9 field. */
@@ -12311,8 +12340,8 @@
  * @name Register LCD_WF8B, field BPCLCD54[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD54 field. */
@@ -12328,8 +12357,8 @@
  * @name Register LCD_WF8B, field BPCLCD15[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD15 field. */
@@ -12345,8 +12374,8 @@
  * @name Register LCD_WF8B, field BPCLCD16[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD16 field. */
@@ -12362,8 +12391,8 @@
  * @name Register LCD_WF8B, field BPCLCD14[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD14 field. */
@@ -12379,8 +12408,8 @@
  * @name Register LCD_WF8B, field BPCLCD32[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD32 field. */
@@ -12396,8 +12425,8 @@
  * @name Register LCD_WF8B, field BPCLCD28[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD28 field. */
@@ -12413,8 +12442,8 @@
  * @name Register LCD_WF8B, field BPCLCD53[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD53 field. */
@@ -12430,8 +12459,8 @@
  * @name Register LCD_WF8B, field BPCLCD33[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD33 field. */
@@ -12447,8 +12476,8 @@
  * @name Register LCD_WF8B, field BPCLCD0[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD0 field. */
@@ -12464,8 +12493,8 @@
  * @name Register LCD_WF8B, field BPCLCD43[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD43 field. */
@@ -12481,8 +12510,8 @@
  * @name Register LCD_WF8B, field BPCLCD7[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD7 field. */
@@ -12498,8 +12527,8 @@
  * @name Register LCD_WF8B, field BPCLCD4[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD4 field. */
@@ -12515,8 +12544,8 @@
  * @name Register LCD_WF8B, field BPCLCD34[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD34 field. */
@@ -12532,8 +12561,8 @@
  * @name Register LCD_WF8B, field BPCLCD29[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD29 field. */
@@ -12549,8 +12578,8 @@
  * @name Register LCD_WF8B, field BPCLCD45[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD45 field. */
@@ -12566,8 +12595,8 @@
  * @name Register LCD_WF8B, field BPCLCD57[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD57 field. */
@@ -12583,8 +12612,8 @@
  * @name Register LCD_WF8B, field BPCLCD42[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD42 field. */
@@ -12600,8 +12629,8 @@
  * @name Register LCD_WF8B, field BPCLCD35[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD35 field. */
@@ -12617,8 +12646,8 @@
  * @name Register LCD_WF8B, field BPCLCD13[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD13 field. */
@@ -12634,8 +12663,8 @@
  * @name Register LCD_WF8B, field BPCLCD36[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD36 field. */
@@ -12651,8 +12680,8 @@
  * @name Register LCD_WF8B, field BPCLCD30[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD30 field. */
@@ -12668,8 +12697,8 @@
  * @name Register LCD_WF8B, field BPCLCD52[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD52 field. */
@@ -12685,8 +12714,8 @@
  * @name Register LCD_WF8B, field BPCLCD58[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD58 field. */
@@ -12702,8 +12731,8 @@
  * @name Register LCD_WF8B, field BPCLCD41[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD41 field. */
@@ -12719,8 +12748,8 @@
  * @name Register LCD_WF8B, field BPCLCD37[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD37 field. */
@@ -12736,8 +12765,8 @@
  * @name Register LCD_WF8B, field BPCLCD3[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD3 field. */
@@ -12753,8 +12782,8 @@
  * @name Register LCD_WF8B, field BPCLCD12[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD12 field. */
@@ -12770,8 +12799,8 @@
  * @name Register LCD_WF8B, field BPCLCD11[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD11 field. */
@@ -12787,8 +12816,8 @@
  * @name Register LCD_WF8B, field BPCLCD38[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD38 field. */
@@ -12804,8 +12833,8 @@
  * @name Register LCD_WF8B, field BPCLCD44[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD44 field. */
@@ -12821,8 +12850,8 @@
  * @name Register LCD_WF8B, field BPCLCD31[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD31 field. */
@@ -12838,8 +12867,8 @@
  * @name Register LCD_WF8B, field BPCLCD40[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD40 field. */
@@ -12855,8 +12884,8 @@
  * @name Register LCD_WF8B, field BPCLCD62[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD62 field. */
@@ -12872,8 +12901,8 @@
  * @name Register LCD_WF8B, field BPCLCD56[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD56 field. */
@@ -12889,8 +12918,8 @@
  * @name Register LCD_WF8B, field BPCLCD39[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD39 field. */
@@ -12906,8 +12935,8 @@
  * @name Register LCD_WF8B, field BPCLCD6[2] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase C
- * - 1 - LCD segment on or LCD backplane active for phase C
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase C
+ * - 0b1 - LCD segment on or LCD backplane active for phase C
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPCLCD6 field. */
@@ -12923,8 +12952,8 @@
  * @name Register LCD_WF8B, field BPDLCD47[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD47 field. */
@@ -12940,8 +12969,8 @@
  * @name Register LCD_WF8B, field BPDLCD23[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD23 field. */
@@ -12957,8 +12986,8 @@
  * @name Register LCD_WF8B, field BPDLCD48[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD48 field. */
@@ -12974,8 +13003,8 @@
  * @name Register LCD_WF8B, field BPDLCD24[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD24 field. */
@@ -12991,8 +13020,8 @@
  * @name Register LCD_WF8B, field BPDLCD15[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD15 field. */
@@ -13008,8 +13037,8 @@
  * @name Register LCD_WF8B, field BPDLCD22[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD22 field. */
@@ -13025,8 +13054,8 @@
  * @name Register LCD_WF8B, field BPDLCD60[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD60 field. */
@@ -13042,8 +13071,8 @@
  * @name Register LCD_WF8B, field BPDLCD10[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD10 field. */
@@ -13059,8 +13088,8 @@
  * @name Register LCD_WF8B, field BPDLCD21[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD21 field. */
@@ -13076,8 +13105,8 @@
  * @name Register LCD_WF8B, field BPDLCD49[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD49 field. */
@@ -13093,8 +13122,8 @@
  * @name Register LCD_WF8B, field BPDLCD1[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD1 field. */
@@ -13110,8 +13139,8 @@
  * @name Register LCD_WF8B, field BPDLCD25[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD25 field. */
@@ -13127,8 +13156,8 @@
  * @name Register LCD_WF8B, field BPDLCD20[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD20 field. */
@@ -13144,8 +13173,8 @@
  * @name Register LCD_WF8B, field BPDLCD2[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD2 field. */
@@ -13161,8 +13190,8 @@
  * @name Register LCD_WF8B, field BPDLCD55[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD55 field. */
@@ -13178,8 +13207,8 @@
  * @name Register LCD_WF8B, field BPDLCD59[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD59 field. */
@@ -13195,8 +13224,8 @@
  * @name Register LCD_WF8B, field BPDLCD5[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD5 field. */
@@ -13212,8 +13241,8 @@
  * @name Register LCD_WF8B, field BPDLCD19[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD19 field. */
@@ -13229,8 +13258,8 @@
  * @name Register LCD_WF8B, field BPDLCD6[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD6 field. */
@@ -13246,8 +13275,8 @@
  * @name Register LCD_WF8B, field BPDLCD26[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD26 field. */
@@ -13263,8 +13292,8 @@
  * @name Register LCD_WF8B, field BPDLCD0[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD0 field. */
@@ -13280,8 +13309,8 @@
  * @name Register LCD_WF8B, field BPDLCD50[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD50 field. */
@@ -13297,8 +13326,8 @@
  * @name Register LCD_WF8B, field BPDLCD46[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD46 field. */
@@ -13314,8 +13343,8 @@
  * @name Register LCD_WF8B, field BPDLCD18[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD18 field. */
@@ -13331,8 +13360,8 @@
  * @name Register LCD_WF8B, field BPDLCD61[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD61 field. */
@@ -13348,8 +13377,8 @@
  * @name Register LCD_WF8B, field BPDLCD9[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD9 field. */
@@ -13365,8 +13394,8 @@
  * @name Register LCD_WF8B, field BPDLCD17[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD17 field. */
@@ -13382,8 +13411,8 @@
  * @name Register LCD_WF8B, field BPDLCD27[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD27 field. */
@@ -13399,8 +13428,8 @@
  * @name Register LCD_WF8B, field BPDLCD53[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD53 field. */
@@ -13416,8 +13445,8 @@
  * @name Register LCD_WF8B, field BPDLCD51[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD51 field. */
@@ -13433,8 +13462,8 @@
  * @name Register LCD_WF8B, field BPDLCD54[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD54 field. */
@@ -13450,8 +13479,8 @@
  * @name Register LCD_WF8B, field BPDLCD13[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD13 field. */
@@ -13467,8 +13496,8 @@
  * @name Register LCD_WF8B, field BPDLCD16[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD16 field. */
@@ -13484,8 +13513,8 @@
  * @name Register LCD_WF8B, field BPDLCD32[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD32 field. */
@@ -13501,8 +13530,8 @@
  * @name Register LCD_WF8B, field BPDLCD14[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD14 field. */
@@ -13518,8 +13547,8 @@
  * @name Register LCD_WF8B, field BPDLCD28[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD28 field. */
@@ -13535,8 +13564,8 @@
  * @name Register LCD_WF8B, field BPDLCD43[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD43 field. */
@@ -13552,8 +13581,8 @@
  * @name Register LCD_WF8B, field BPDLCD4[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD4 field. */
@@ -13569,8 +13598,8 @@
  * @name Register LCD_WF8B, field BPDLCD45[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD45 field. */
@@ -13586,8 +13615,8 @@
  * @name Register LCD_WF8B, field BPDLCD8[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD8 field. */
@@ -13603,8 +13632,8 @@
  * @name Register LCD_WF8B, field BPDLCD62[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD62 field. */
@@ -13620,8 +13649,8 @@
  * @name Register LCD_WF8B, field BPDLCD33[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD33 field. */
@@ -13637,8 +13666,8 @@
  * @name Register LCD_WF8B, field BPDLCD34[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD34 field. */
@@ -13654,8 +13683,8 @@
  * @name Register LCD_WF8B, field BPDLCD29[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD29 field. */
@@ -13671,8 +13700,8 @@
  * @name Register LCD_WF8B, field BPDLCD58[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD58 field. */
@@ -13688,8 +13717,8 @@
  * @name Register LCD_WF8B, field BPDLCD57[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD57 field. */
@@ -13705,8 +13734,8 @@
  * @name Register LCD_WF8B, field BPDLCD42[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD42 field. */
@@ -13722,8 +13751,8 @@
  * @name Register LCD_WF8B, field BPDLCD35[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD35 field. */
@@ -13739,8 +13768,8 @@
  * @name Register LCD_WF8B, field BPDLCD52[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD52 field. */
@@ -13756,8 +13785,8 @@
  * @name Register LCD_WF8B, field BPDLCD7[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD7 field. */
@@ -13773,8 +13802,8 @@
  * @name Register LCD_WF8B, field BPDLCD36[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD36 field. */
@@ -13790,8 +13819,8 @@
  * @name Register LCD_WF8B, field BPDLCD30[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD30 field. */
@@ -13807,8 +13836,8 @@
  * @name Register LCD_WF8B, field BPDLCD41[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD41 field. */
@@ -13824,8 +13853,8 @@
  * @name Register LCD_WF8B, field BPDLCD37[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD37 field. */
@@ -13841,8 +13870,8 @@
  * @name Register LCD_WF8B, field BPDLCD44[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD44 field. */
@@ -13858,8 +13887,8 @@
  * @name Register LCD_WF8B, field BPDLCD63[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD63 field. */
@@ -13875,8 +13904,8 @@
  * @name Register LCD_WF8B, field BPDLCD38[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD38 field. */
@@ -13892,8 +13921,8 @@
  * @name Register LCD_WF8B, field BPDLCD56[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD56 field. */
@@ -13909,8 +13938,8 @@
  * @name Register LCD_WF8B, field BPDLCD40[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD40 field. */
@@ -13926,8 +13955,8 @@
  * @name Register LCD_WF8B, field BPDLCD31[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD31 field. */
@@ -13943,8 +13972,8 @@
  * @name Register LCD_WF8B, field BPDLCD12[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD12 field. */
@@ -13960,8 +13989,8 @@
  * @name Register LCD_WF8B, field BPDLCD39[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD39 field. */
@@ -13977,8 +14006,8 @@
  * @name Register LCD_WF8B, field BPDLCD3[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD3 field. */
@@ -13994,8 +14023,8 @@
  * @name Register LCD_WF8B, field BPDLCD11[3] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase D
- * - 1 - LCD segment on or LCD backplane active for phase D
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase D
+ * - 0b1 - LCD segment on or LCD backplane active for phase D
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPDLCD11 field. */
@@ -14011,8 +14040,8 @@
  * @name Register LCD_WF8B, field BPELCD12[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD12 field. */
@@ -14028,8 +14057,8 @@
  * @name Register LCD_WF8B, field BPELCD39[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD39 field. */
@@ -14045,8 +14074,8 @@
  * @name Register LCD_WF8B, field BPELCD3[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD3 field. */
@@ -14062,8 +14091,8 @@
  * @name Register LCD_WF8B, field BPELCD38[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD38 field. */
@@ -14079,8 +14108,8 @@
  * @name Register LCD_WF8B, field BPELCD40[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD40 field. */
@@ -14096,8 +14125,8 @@
  * @name Register LCD_WF8B, field BPELCD37[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD37 field. */
@@ -14113,8 +14142,8 @@
  * @name Register LCD_WF8B, field BPELCD41[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD41 field. */
@@ -14130,8 +14159,8 @@
  * @name Register LCD_WF8B, field BPELCD36[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD36 field. */
@@ -14147,8 +14176,8 @@
  * @name Register LCD_WF8B, field BPELCD8[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD8 field. */
@@ -14164,8 +14193,8 @@
  * @name Register LCD_WF8B, field BPELCD35[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD35 field. */
@@ -14181,8 +14210,8 @@
  * @name Register LCD_WF8B, field BPELCD42[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD42 field. */
@@ -14198,8 +14227,8 @@
  * @name Register LCD_WF8B, field BPELCD34[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD34 field. */
@@ -14215,8 +14244,8 @@
  * @name Register LCD_WF8B, field BPELCD33[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD33 field. */
@@ -14232,8 +14261,8 @@
  * @name Register LCD_WF8B, field BPELCD11[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD11 field. */
@@ -14249,8 +14278,8 @@
  * @name Register LCD_WF8B, field BPELCD43[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD43 field. */
@@ -14266,8 +14295,8 @@
  * @name Register LCD_WF8B, field BPELCD32[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD32 field. */
@@ -14283,8 +14312,8 @@
  * @name Register LCD_WF8B, field BPELCD31[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD31 field. */
@@ -14300,8 +14329,8 @@
  * @name Register LCD_WF8B, field BPELCD44[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD44 field. */
@@ -14317,8 +14346,8 @@
  * @name Register LCD_WF8B, field BPELCD30[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD30 field. */
@@ -14334,8 +14363,8 @@
  * @name Register LCD_WF8B, field BPELCD29[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD29 field. */
@@ -14351,8 +14380,8 @@
  * @name Register LCD_WF8B, field BPELCD7[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD7 field. */
@@ -14368,8 +14397,8 @@
  * @name Register LCD_WF8B, field BPELCD45[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD45 field. */
@@ -14385,8 +14414,8 @@
  * @name Register LCD_WF8B, field BPELCD28[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD28 field. */
@@ -14402,8 +14431,8 @@
  * @name Register LCD_WF8B, field BPELCD2[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD2 field. */
@@ -14419,8 +14448,8 @@
  * @name Register LCD_WF8B, field BPELCD27[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD27 field. */
@@ -14436,8 +14465,8 @@
  * @name Register LCD_WF8B, field BPELCD46[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD46 field. */
@@ -14453,8 +14482,8 @@
  * @name Register LCD_WF8B, field BPELCD26[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD26 field. */
@@ -14470,8 +14499,8 @@
  * @name Register LCD_WF8B, field BPELCD10[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD10 field. */
@@ -14487,8 +14516,8 @@
  * @name Register LCD_WF8B, field BPELCD13[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD13 field. */
@@ -14504,8 +14533,8 @@
  * @name Register LCD_WF8B, field BPELCD25[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD25 field. */
@@ -14521,8 +14550,8 @@
  * @name Register LCD_WF8B, field BPELCD5[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD5 field. */
@@ -14538,8 +14567,8 @@
  * @name Register LCD_WF8B, field BPELCD24[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD24 field. */
@@ -14555,8 +14584,8 @@
  * @name Register LCD_WF8B, field BPELCD47[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD47 field. */
@@ -14572,8 +14601,8 @@
  * @name Register LCD_WF8B, field BPELCD23[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD23 field. */
@@ -14589,8 +14618,8 @@
  * @name Register LCD_WF8B, field BPELCD22[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD22 field. */
@@ -14606,8 +14635,8 @@
  * @name Register LCD_WF8B, field BPELCD48[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD48 field. */
@@ -14623,8 +14652,8 @@
  * @name Register LCD_WF8B, field BPELCD21[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD21 field. */
@@ -14640,8 +14669,8 @@
  * @name Register LCD_WF8B, field BPELCD49[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD49 field. */
@@ -14657,8 +14686,8 @@
  * @name Register LCD_WF8B, field BPELCD20[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD20 field. */
@@ -14674,8 +14703,8 @@
  * @name Register LCD_WF8B, field BPELCD19[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD19 field. */
@@ -14691,8 +14720,8 @@
  * @name Register LCD_WF8B, field BPELCD9[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD9 field. */
@@ -14708,8 +14737,8 @@
  * @name Register LCD_WF8B, field BPELCD50[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD50 field. */
@@ -14725,8 +14754,8 @@
  * @name Register LCD_WF8B, field BPELCD18[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD18 field. */
@@ -14742,8 +14771,8 @@
  * @name Register LCD_WF8B, field BPELCD6[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD6 field. */
@@ -14759,8 +14788,8 @@
  * @name Register LCD_WF8B, field BPELCD17[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD17 field. */
@@ -14776,8 +14805,8 @@
  * @name Register LCD_WF8B, field BPELCD51[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD51 field. */
@@ -14793,8 +14822,8 @@
  * @name Register LCD_WF8B, field BPELCD16[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD16 field. */
@@ -14810,8 +14839,8 @@
  * @name Register LCD_WF8B, field BPELCD56[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD56 field. */
@@ -14827,8 +14856,8 @@
  * @name Register LCD_WF8B, field BPELCD57[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD57 field. */
@@ -14844,8 +14873,8 @@
  * @name Register LCD_WF8B, field BPELCD52[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD52 field. */
@@ -14861,8 +14890,8 @@
  * @name Register LCD_WF8B, field BPELCD1[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD1 field. */
@@ -14878,8 +14907,8 @@
  * @name Register LCD_WF8B, field BPELCD58[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD58 field. */
@@ -14895,8 +14924,8 @@
  * @name Register LCD_WF8B, field BPELCD59[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD59 field. */
@@ -14912,8 +14941,8 @@
  * @name Register LCD_WF8B, field BPELCD53[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD53 field. */
@@ -14929,8 +14958,8 @@
  * @name Register LCD_WF8B, field BPELCD14[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD14 field. */
@@ -14946,8 +14975,8 @@
  * @name Register LCD_WF8B, field BPELCD0[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD0 field. */
@@ -14963,8 +14992,8 @@
  * @name Register LCD_WF8B, field BPELCD60[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD60 field. */
@@ -14980,8 +15009,8 @@
  * @name Register LCD_WF8B, field BPELCD15[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD15 field. */
@@ -14997,8 +15026,8 @@
  * @name Register LCD_WF8B, field BPELCD61[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD61 field. */
@@ -15014,8 +15043,8 @@
  * @name Register LCD_WF8B, field BPELCD54[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD54 field. */
@@ -15031,8 +15060,8 @@
  * @name Register LCD_WF8B, field BPELCD62[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD62 field. */
@@ -15048,8 +15077,8 @@
  * @name Register LCD_WF8B, field BPELCD63[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD63 field. */
@@ -15065,8 +15094,8 @@
  * @name Register LCD_WF8B, field BPELCD55[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD55 field. */
@@ -15082,8 +15111,8 @@
  * @name Register LCD_WF8B, field BPELCD4[4] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase E
- * - 1 - LCD segment on or LCD backplane active for phase E
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase E
+ * - 0b1 - LCD segment on or LCD backplane active for phase E
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPELCD4 field. */
@@ -15099,8 +15128,8 @@
  * @name Register LCD_WF8B, field BPFLCD13[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD13 field. */
@@ -15116,8 +15145,8 @@
  * @name Register LCD_WF8B, field BPFLCD39[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD39 field. */
@@ -15133,8 +15162,8 @@
  * @name Register LCD_WF8B, field BPFLCD55[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD55 field. */
@@ -15150,8 +15179,8 @@
  * @name Register LCD_WF8B, field BPFLCD47[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD47 field. */
@@ -15167,8 +15196,8 @@
  * @name Register LCD_WF8B, field BPFLCD63[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD63 field. */
@@ -15184,8 +15213,8 @@
  * @name Register LCD_WF8B, field BPFLCD43[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD43 field. */
@@ -15201,8 +15230,8 @@
  * @name Register LCD_WF8B, field BPFLCD5[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD5 field. */
@@ -15218,8 +15247,8 @@
  * @name Register LCD_WF8B, field BPFLCD62[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD62 field. */
@@ -15235,8 +15264,8 @@
  * @name Register LCD_WF8B, field BPFLCD14[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD14 field. */
@@ -15252,8 +15281,8 @@
  * @name Register LCD_WF8B, field BPFLCD24[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD24 field. */
@@ -15269,8 +15298,8 @@
  * @name Register LCD_WF8B, field BPFLCD54[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD54 field. */
@@ -15286,8 +15315,8 @@
  * @name Register LCD_WF8B, field BPFLCD15[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD15 field. */
@@ -15303,8 +15332,8 @@
  * @name Register LCD_WF8B, field BPFLCD32[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD32 field. */
@@ -15320,8 +15349,8 @@
  * @name Register LCD_WF8B, field BPFLCD61[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD61 field. */
@@ -15337,8 +15366,8 @@
  * @name Register LCD_WF8B, field BPFLCD25[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD25 field. */
@@ -15354,8 +15383,8 @@
  * @name Register LCD_WF8B, field BPFLCD60[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD60 field. */
@@ -15371,8 +15400,8 @@
  * @name Register LCD_WF8B, field BPFLCD41[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD41 field. */
@@ -15388,8 +15417,8 @@
  * @name Register LCD_WF8B, field BPFLCD33[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD33 field. */
@@ -15405,8 +15434,8 @@
  * @name Register LCD_WF8B, field BPFLCD53[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD53 field. */
@@ -15422,8 +15451,8 @@
  * @name Register LCD_WF8B, field BPFLCD59[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD59 field. */
@@ -15439,8 +15468,8 @@
  * @name Register LCD_WF8B, field BPFLCD0[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD0 field. */
@@ -15456,8 +15485,8 @@
  * @name Register LCD_WF8B, field BPFLCD46[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD46 field. */
@@ -15473,8 +15502,8 @@
  * @name Register LCD_WF8B, field BPFLCD58[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD58 field. */
@@ -15490,8 +15519,8 @@
  * @name Register LCD_WF8B, field BPFLCD26[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD26 field. */
@@ -15507,8 +15536,8 @@
  * @name Register LCD_WF8B, field BPFLCD36[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD36 field. */
@@ -15524,8 +15553,8 @@
  * @name Register LCD_WF8B, field BPFLCD10[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD10 field. */
@@ -15541,8 +15570,8 @@
  * @name Register LCD_WF8B, field BPFLCD52[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD52 field. */
@@ -15558,8 +15587,8 @@
  * @name Register LCD_WF8B, field BPFLCD57[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD57 field. */
@@ -15575,8 +15604,8 @@
  * @name Register LCD_WF8B, field BPFLCD27[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD27 field. */
@@ -15592,8 +15621,8 @@
  * @name Register LCD_WF8B, field BPFLCD11[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD11 field. */
@@ -15609,8 +15638,8 @@
  * @name Register LCD_WF8B, field BPFLCD56[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD56 field. */
@@ -15626,8 +15655,8 @@
  * @name Register LCD_WF8B, field BPFLCD1[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD1 field. */
@@ -15643,8 +15672,8 @@
  * @name Register LCD_WF8B, field BPFLCD8[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD8 field. */
@@ -15660,8 +15689,8 @@
  * @name Register LCD_WF8B, field BPFLCD40[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD40 field. */
@@ -15677,8 +15706,8 @@
  * @name Register LCD_WF8B, field BPFLCD51[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD51 field. */
@@ -15694,8 +15723,8 @@
  * @name Register LCD_WF8B, field BPFLCD16[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD16 field. */
@@ -15711,8 +15740,8 @@
  * @name Register LCD_WF8B, field BPFLCD45[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD45 field. */
@@ -15728,8 +15757,8 @@
  * @name Register LCD_WF8B, field BPFLCD6[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD6 field. */
@@ -15745,8 +15774,8 @@
  * @name Register LCD_WF8B, field BPFLCD17[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD17 field. */
@@ -15762,8 +15791,8 @@
  * @name Register LCD_WF8B, field BPFLCD28[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD28 field. */
@@ -15779,8 +15808,8 @@
  * @name Register LCD_WF8B, field BPFLCD42[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD42 field. */
@@ -15796,8 +15825,8 @@
  * @name Register LCD_WF8B, field BPFLCD29[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD29 field. */
@@ -15813,8 +15842,8 @@
  * @name Register LCD_WF8B, field BPFLCD50[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD50 field. */
@@ -15830,8 +15859,8 @@
  * @name Register LCD_WF8B, field BPFLCD18[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD18 field. */
@@ -15847,8 +15876,8 @@
  * @name Register LCD_WF8B, field BPFLCD34[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD34 field. */
@@ -15864,8 +15893,8 @@
  * @name Register LCD_WF8B, field BPFLCD19[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD19 field. */
@@ -15881,8 +15910,8 @@
  * @name Register LCD_WF8B, field BPFLCD2[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD2 field. */
@@ -15898,8 +15927,8 @@
  * @name Register LCD_WF8B, field BPFLCD9[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD9 field. */
@@ -15915,8 +15944,8 @@
  * @name Register LCD_WF8B, field BPFLCD3[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD3 field. */
@@ -15932,8 +15961,8 @@
  * @name Register LCD_WF8B, field BPFLCD37[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD37 field. */
@@ -15949,8 +15978,8 @@
  * @name Register LCD_WF8B, field BPFLCD49[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD49 field. */
@@ -15966,8 +15995,8 @@
  * @name Register LCD_WF8B, field BPFLCD20[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD20 field. */
@@ -15983,8 +16012,8 @@
  * @name Register LCD_WF8B, field BPFLCD44[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD44 field. */
@@ -16000,8 +16029,8 @@
  * @name Register LCD_WF8B, field BPFLCD30[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD30 field. */
@@ -16017,8 +16046,8 @@
  * @name Register LCD_WF8B, field BPFLCD21[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD21 field. */
@@ -16034,8 +16063,8 @@
  * @name Register LCD_WF8B, field BPFLCD35[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD35 field. */
@@ -16051,8 +16080,8 @@
  * @name Register LCD_WF8B, field BPFLCD4[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD4 field. */
@@ -16068,8 +16097,8 @@
  * @name Register LCD_WF8B, field BPFLCD31[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD31 field. */
@@ -16085,8 +16114,8 @@
  * @name Register LCD_WF8B, field BPFLCD48[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD48 field. */
@@ -16102,8 +16131,8 @@
  * @name Register LCD_WF8B, field BPFLCD7[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD7 field. */
@@ -16119,8 +16148,8 @@
  * @name Register LCD_WF8B, field BPFLCD22[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD22 field. */
@@ -16136,8 +16165,8 @@
  * @name Register LCD_WF8B, field BPFLCD38[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD38 field. */
@@ -16153,8 +16182,8 @@
  * @name Register LCD_WF8B, field BPFLCD12[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD12 field. */
@@ -16170,8 +16199,8 @@
  * @name Register LCD_WF8B, field BPFLCD23[5] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase F
- * - 1 - LCD segment on or LCD backplane active for phase F
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase F
+ * - 0b1 - LCD segment on or LCD backplane active for phase F
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPFLCD23 field. */
@@ -16187,8 +16216,8 @@
  * @name Register LCD_WF8B, field BPGLCD14[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD14 field. */
@@ -16204,8 +16233,8 @@
  * @name Register LCD_WF8B, field BPGLCD55[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD55 field. */
@@ -16221,8 +16250,8 @@
  * @name Register LCD_WF8B, field BPGLCD63[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD63 field. */
@@ -16238,8 +16267,8 @@
  * @name Register LCD_WF8B, field BPGLCD15[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD15 field. */
@@ -16255,8 +16284,8 @@
  * @name Register LCD_WF8B, field BPGLCD62[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD62 field. */
@@ -16272,8 +16301,8 @@
  * @name Register LCD_WF8B, field BPGLCD54[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD54 field. */
@@ -16289,8 +16318,8 @@
  * @name Register LCD_WF8B, field BPGLCD61[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD61 field. */
@@ -16306,8 +16335,8 @@
  * @name Register LCD_WF8B, field BPGLCD60[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD60 field. */
@@ -16323,8 +16352,8 @@
  * @name Register LCD_WF8B, field BPGLCD59[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD59 field. */
@@ -16340,8 +16369,8 @@
  * @name Register LCD_WF8B, field BPGLCD53[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD53 field. */
@@ -16357,8 +16386,8 @@
  * @name Register LCD_WF8B, field BPGLCD58[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD58 field. */
@@ -16374,8 +16403,8 @@
  * @name Register LCD_WF8B, field BPGLCD0[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD0 field. */
@@ -16391,8 +16420,8 @@
  * @name Register LCD_WF8B, field BPGLCD57[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD57 field. */
@@ -16408,8 +16437,8 @@
  * @name Register LCD_WF8B, field BPGLCD52[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD52 field. */
@@ -16425,8 +16454,8 @@
  * @name Register LCD_WF8B, field BPGLCD7[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD7 field. */
@@ -16442,8 +16471,8 @@
  * @name Register LCD_WF8B, field BPGLCD56[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD56 field. */
@@ -16459,8 +16488,8 @@
  * @name Register LCD_WF8B, field BPGLCD6[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD6 field. */
@@ -16476,8 +16505,8 @@
  * @name Register LCD_WF8B, field BPGLCD51[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD51 field. */
@@ -16493,8 +16522,8 @@
  * @name Register LCD_WF8B, field BPGLCD16[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD16 field. */
@@ -16510,8 +16539,8 @@
  * @name Register LCD_WF8B, field BPGLCD1[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD1 field. */
@@ -16527,8 +16556,8 @@
  * @name Register LCD_WF8B, field BPGLCD17[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD17 field. */
@@ -16544,8 +16573,8 @@
  * @name Register LCD_WF8B, field BPGLCD50[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD50 field. */
@@ -16561,8 +16590,8 @@
  * @name Register LCD_WF8B, field BPGLCD18[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD18 field. */
@@ -16578,8 +16607,8 @@
  * @name Register LCD_WF8B, field BPGLCD19[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD19 field. */
@@ -16595,8 +16624,8 @@
  * @name Register LCD_WF8B, field BPGLCD8[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD8 field. */
@@ -16612,8 +16641,8 @@
  * @name Register LCD_WF8B, field BPGLCD49[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD49 field. */
@@ -16629,8 +16658,8 @@
  * @name Register LCD_WF8B, field BPGLCD20[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD20 field. */
@@ -16646,8 +16675,8 @@
  * @name Register LCD_WF8B, field BPGLCD9[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD9 field. */
@@ -16663,8 +16692,8 @@
  * @name Register LCD_WF8B, field BPGLCD21[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD21 field. */
@@ -16680,8 +16709,8 @@
  * @name Register LCD_WF8B, field BPGLCD13[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD13 field. */
@@ -16697,8 +16726,8 @@
  * @name Register LCD_WF8B, field BPGLCD48[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD48 field. */
@@ -16714,8 +16743,8 @@
  * @name Register LCD_WF8B, field BPGLCD22[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD22 field. */
@@ -16731,8 +16760,8 @@
  * @name Register LCD_WF8B, field BPGLCD5[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD5 field. */
@@ -16748,8 +16777,8 @@
  * @name Register LCD_WF8B, field BPGLCD47[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD47 field. */
@@ -16765,8 +16794,8 @@
  * @name Register LCD_WF8B, field BPGLCD23[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD23 field. */
@@ -16782,8 +16811,8 @@
  * @name Register LCD_WF8B, field BPGLCD24[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD24 field. */
@@ -16799,8 +16828,8 @@
  * @name Register LCD_WF8B, field BPGLCD25[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD25 field. */
@@ -16816,8 +16845,8 @@
  * @name Register LCD_WF8B, field BPGLCD46[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD46 field. */
@@ -16833,8 +16862,8 @@
  * @name Register LCD_WF8B, field BPGLCD26[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD26 field. */
@@ -16850,8 +16879,8 @@
  * @name Register LCD_WF8B, field BPGLCD27[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD27 field. */
@@ -16867,8 +16896,8 @@
  * @name Register LCD_WF8B, field BPGLCD10[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD10 field. */
@@ -16884,8 +16913,8 @@
  * @name Register LCD_WF8B, field BPGLCD45[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD45 field. */
@@ -16901,8 +16930,8 @@
  * @name Register LCD_WF8B, field BPGLCD28[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD28 field. */
@@ -16918,8 +16947,8 @@
  * @name Register LCD_WF8B, field BPGLCD29[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD29 field. */
@@ -16935,8 +16964,8 @@
  * @name Register LCD_WF8B, field BPGLCD4[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD4 field. */
@@ -16952,8 +16981,8 @@
  * @name Register LCD_WF8B, field BPGLCD44[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD44 field. */
@@ -16969,8 +16998,8 @@
  * @name Register LCD_WF8B, field BPGLCD30[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD30 field. */
@@ -16986,8 +17015,8 @@
  * @name Register LCD_WF8B, field BPGLCD2[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD2 field. */
@@ -17003,8 +17032,8 @@
  * @name Register LCD_WF8B, field BPGLCD31[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD31 field. */
@@ -17020,8 +17049,8 @@
  * @name Register LCD_WF8B, field BPGLCD43[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD43 field. */
@@ -17037,8 +17066,8 @@
  * @name Register LCD_WF8B, field BPGLCD32[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD32 field. */
@@ -17054,8 +17083,8 @@
  * @name Register LCD_WF8B, field BPGLCD33[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD33 field. */
@@ -17071,8 +17100,8 @@
  * @name Register LCD_WF8B, field BPGLCD42[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD42 field. */
@@ -17088,8 +17117,8 @@
  * @name Register LCD_WF8B, field BPGLCD34[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD34 field. */
@@ -17105,8 +17134,8 @@
  * @name Register LCD_WF8B, field BPGLCD11[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD11 field. */
@@ -17122,8 +17151,8 @@
  * @name Register LCD_WF8B, field BPGLCD35[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD35 field. */
@@ -17139,8 +17168,8 @@
  * @name Register LCD_WF8B, field BPGLCD12[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD12 field. */
@@ -17156,8 +17185,8 @@
  * @name Register LCD_WF8B, field BPGLCD41[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD41 field. */
@@ -17173,8 +17202,8 @@
  * @name Register LCD_WF8B, field BPGLCD36[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD36 field. */
@@ -17190,8 +17219,8 @@
  * @name Register LCD_WF8B, field BPGLCD3[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD3 field. */
@@ -17207,8 +17236,8 @@
  * @name Register LCD_WF8B, field BPGLCD37[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD37 field. */
@@ -17224,8 +17253,8 @@
  * @name Register LCD_WF8B, field BPGLCD40[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD40 field. */
@@ -17241,8 +17270,8 @@
  * @name Register LCD_WF8B, field BPGLCD38[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD38 field. */
@@ -17258,8 +17287,8 @@
  * @name Register LCD_WF8B, field BPGLCD39[6] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase G
- * - 1 - LCD segment on or LCD backplane active for phase G
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase G
+ * - 0b1 - LCD segment on or LCD backplane active for phase G
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPGLCD39 field. */
@@ -17275,8 +17304,8 @@
  * @name Register LCD_WF8B, field BPHLCD63[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD63 field. */
@@ -17292,8 +17321,8 @@
  * @name Register LCD_WF8B, field BPHLCD62[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD62 field. */
@@ -17309,8 +17338,8 @@
  * @name Register LCD_WF8B, field BPHLCD61[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD61 field. */
@@ -17326,8 +17355,8 @@
  * @name Register LCD_WF8B, field BPHLCD60[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD60 field. */
@@ -17343,8 +17372,8 @@
  * @name Register LCD_WF8B, field BPHLCD59[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD59 field. */
@@ -17360,8 +17389,8 @@
  * @name Register LCD_WF8B, field BPHLCD58[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD58 field. */
@@ -17377,8 +17406,8 @@
  * @name Register LCD_WF8B, field BPHLCD57[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD57 field. */
@@ -17394,8 +17423,8 @@
  * @name Register LCD_WF8B, field BPHLCD0[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD0 field. */
@@ -17411,8 +17440,8 @@
  * @name Register LCD_WF8B, field BPHLCD56[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD56 field. */
@@ -17428,8 +17457,8 @@
  * @name Register LCD_WF8B, field BPHLCD55[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD55 field. */
@@ -17445,8 +17474,8 @@
  * @name Register LCD_WF8B, field BPHLCD54[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD54 field. */
@@ -17462,8 +17491,8 @@
  * @name Register LCD_WF8B, field BPHLCD53[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD53 field. */
@@ -17479,8 +17508,8 @@
  * @name Register LCD_WF8B, field BPHLCD52[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD52 field. */
@@ -17496,8 +17525,8 @@
  * @name Register LCD_WF8B, field BPHLCD51[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD51 field. */
@@ -17513,8 +17542,8 @@
  * @name Register LCD_WF8B, field BPHLCD50[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD50 field. */
@@ -17530,8 +17559,8 @@
  * @name Register LCD_WF8B, field BPHLCD1[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD1 field. */
@@ -17547,8 +17576,8 @@
  * @name Register LCD_WF8B, field BPHLCD49[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD49 field. */
@@ -17564,8 +17593,8 @@
  * @name Register LCD_WF8B, field BPHLCD48[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD48 field. */
@@ -17581,8 +17610,8 @@
  * @name Register LCD_WF8B, field BPHLCD47[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD47 field. */
@@ -17598,8 +17627,8 @@
  * @name Register LCD_WF8B, field BPHLCD46[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD46 field. */
@@ -17615,8 +17644,8 @@
  * @name Register LCD_WF8B, field BPHLCD45[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD45 field. */
@@ -17632,8 +17661,8 @@
  * @name Register LCD_WF8B, field BPHLCD44[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD44 field. */
@@ -17649,8 +17678,8 @@
  * @name Register LCD_WF8B, field BPHLCD43[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD43 field. */
@@ -17666,8 +17695,8 @@
  * @name Register LCD_WF8B, field BPHLCD2[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD2 field. */
@@ -17683,8 +17712,8 @@
  * @name Register LCD_WF8B, field BPHLCD42[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD42 field. */
@@ -17700,8 +17729,8 @@
  * @name Register LCD_WF8B, field BPHLCD41[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD41 field. */
@@ -17717,8 +17746,8 @@
  * @name Register LCD_WF8B, field BPHLCD40[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD40 field. */
@@ -17734,8 +17763,8 @@
  * @name Register LCD_WF8B, field BPHLCD39[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD39 field. */
@@ -17751,8 +17780,8 @@
  * @name Register LCD_WF8B, field BPHLCD38[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD38 field. */
@@ -17768,8 +17797,8 @@
  * @name Register LCD_WF8B, field BPHLCD37[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD37 field. */
@@ -17785,8 +17814,8 @@
  * @name Register LCD_WF8B, field BPHLCD36[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD36 field. */
@@ -17802,8 +17831,8 @@
  * @name Register LCD_WF8B, field BPHLCD3[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD3 field. */
@@ -17819,8 +17848,8 @@
  * @name Register LCD_WF8B, field BPHLCD35[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD35 field. */
@@ -17836,8 +17865,8 @@
  * @name Register LCD_WF8B, field BPHLCD34[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD34 field. */
@@ -17853,8 +17882,8 @@
  * @name Register LCD_WF8B, field BPHLCD33[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD33 field. */
@@ -17870,8 +17899,8 @@
  * @name Register LCD_WF8B, field BPHLCD32[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD32 field. */
@@ -17887,8 +17916,8 @@
  * @name Register LCD_WF8B, field BPHLCD31[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD31 field. */
@@ -17904,8 +17933,8 @@
  * @name Register LCD_WF8B, field BPHLCD30[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD30 field. */
@@ -17921,8 +17950,8 @@
  * @name Register LCD_WF8B, field BPHLCD29[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD29 field. */
@@ -17938,8 +17967,8 @@
  * @name Register LCD_WF8B, field BPHLCD4[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD4 field. */
@@ -17955,8 +17984,8 @@
  * @name Register LCD_WF8B, field BPHLCD28[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD28 field. */
@@ -17972,8 +18001,8 @@
  * @name Register LCD_WF8B, field BPHLCD27[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD27 field. */
@@ -17989,8 +18018,8 @@
  * @name Register LCD_WF8B, field BPHLCD26[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD26 field. */
@@ -18006,8 +18035,8 @@
  * @name Register LCD_WF8B, field BPHLCD25[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD25 field. */
@@ -18023,8 +18052,8 @@
  * @name Register LCD_WF8B, field BPHLCD24[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD24 field. */
@@ -18040,8 +18069,8 @@
  * @name Register LCD_WF8B, field BPHLCD23[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD23 field. */
@@ -18057,8 +18086,8 @@
  * @name Register LCD_WF8B, field BPHLCD22[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD22 field. */
@@ -18074,8 +18103,8 @@
  * @name Register LCD_WF8B, field BPHLCD5[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD5 field. */
@@ -18091,8 +18120,8 @@
  * @name Register LCD_WF8B, field BPHLCD21[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD21 field. */
@@ -18108,8 +18137,8 @@
  * @name Register LCD_WF8B, field BPHLCD20[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD20 field. */
@@ -18125,8 +18154,8 @@
  * @name Register LCD_WF8B, field BPHLCD19[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD19 field. */
@@ -18142,8 +18171,8 @@
  * @name Register LCD_WF8B, field BPHLCD18[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD18 field. */
@@ -18159,8 +18188,8 @@
  * @name Register LCD_WF8B, field BPHLCD17[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD17 field. */
@@ -18176,8 +18205,8 @@
  * @name Register LCD_WF8B, field BPHLCD16[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD16 field. */
@@ -18193,8 +18222,8 @@
  * @name Register LCD_WF8B, field BPHLCD15[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD15 field. */
@@ -18210,8 +18239,8 @@
  * @name Register LCD_WF8B, field BPHLCD6[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD6 field. */
@@ -18227,8 +18256,8 @@
  * @name Register LCD_WF8B, field BPHLCD14[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD14 field. */
@@ -18244,8 +18273,8 @@
  * @name Register LCD_WF8B, field BPHLCD13[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD13 field. */
@@ -18261,8 +18290,8 @@
  * @name Register LCD_WF8B, field BPHLCD12[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD12 field. */
@@ -18278,8 +18307,8 @@
  * @name Register LCD_WF8B, field BPHLCD11[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD11 field. */
@@ -18295,8 +18324,8 @@
  * @name Register LCD_WF8B, field BPHLCD10[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD10 field. */
@@ -18312,8 +18341,8 @@
  * @name Register LCD_WF8B, field BPHLCD9[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD9 field. */
@@ -18329,8 +18358,8 @@
  * @name Register LCD_WF8B, field BPHLCD8[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD8 field. */
@@ -18346,8 +18375,8 @@
  * @name Register LCD_WF8B, field BPHLCD7[7] (RW)
  *
  * Values:
- * - 0 - LCD segment off or LCD backplane inactive for phase H
- * - 1 - LCD segment on or LCD backplane active for phase H
+ * - 0b0 - LCD segment off or LCD backplane inactive for phase H
+ * - 0b1 - LCD segment on or LCD backplane active for phase H
  */
 /*@{*/
 /*! @brief Read current value of the LCD_WF8B_BPHLCD7 field. */
@@ -18359,6 +18388,7 @@
 #define LCD_BWR_WF8B_BPHLCD7(base, index, value) (BME_BFI8(&LCD_WF8B_REG(base, index), ((uint8_t)(value) << LCD_WF8B_BPHLCD7_SHIFT), LCD_WF8B_BPHLCD7_SHIFT, LCD_WF8B_BPHLCD7_WIDTH))
 /*@}*/
 
+/* SLCD */
 /* Unified SLCD WF register access macros */
 #define LCD_RD_WF8B_BPLCD(base, index, phaseIndex) ((LCD_WF8B_REG((base), (index)) & (1U << (phaseIndex))) >> (phaseIndex))
 #define LCD_BRD_WF8B_BPLCD(base, index, phaseIndex) (BME_UBFX8(&LCD_WF8B_REG((base), (index)), (phaseIndex), 1))
@@ -18425,10 +18455,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE1_WUPE0 field. */
@@ -18446,10 +18476,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE1_WUPE1 field. */
@@ -18467,10 +18497,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE1_WUPE2 field. */
@@ -18488,10 +18518,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE1_WUPE3 field. */
@@ -18542,10 +18572,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE2_WUPE4 field. */
@@ -18563,10 +18593,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE2_WUPE5 field. */
@@ -18584,10 +18614,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE2_WUPE6 field. */
@@ -18605,10 +18635,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE2_WUPE7 field. */
@@ -18659,10 +18689,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE3_WUPE8 field. */
@@ -18680,10 +18710,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE3_WUPE9 field. */
@@ -18701,10 +18731,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE3_WUPE10 field. */
@@ -18722,10 +18752,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE3_WUPE11 field. */
@@ -18776,10 +18806,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE4_WUPE12 field. */
@@ -18797,10 +18827,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE4_WUPE13 field. */
@@ -18818,10 +18848,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE4_WUPE14 field. */
@@ -18839,10 +18869,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE4_WUPE15 field. */
@@ -18893,8 +18923,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME0 field. */
@@ -18912,8 +18942,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME1 field. */
@@ -18931,8 +18961,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME2 field. */
@@ -18950,8 +18980,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME3 field. */
@@ -18969,8 +18999,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME4 field. */
@@ -18988,8 +19018,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME5 field. */
@@ -19007,8 +19037,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME6 field. */
@@ -19026,8 +19056,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME7 field. */
@@ -19083,8 +19113,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF0.
  *
  * Values:
- * - 0 - LLWU_P0 input was not a wakeup source
- * - 1 - LLWU_P0 input was a wakeup source
+ * - 0b0 - LLWU_P0 input was not a wakeup source
+ * - 0b1 - LLWU_P0 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F1_WUF0 field. */
@@ -19103,8 +19133,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF1.
  *
  * Values:
- * - 0 - LLWU_P1 input was not a wakeup source
- * - 1 - LLWU_P1 input was a wakeup source
+ * - 0b0 - LLWU_P1 input was not a wakeup source
+ * - 0b1 - LLWU_P1 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F1_WUF1 field. */
@@ -19123,8 +19153,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF2.
  *
  * Values:
- * - 0 - LLWU_P2 input was not a wakeup source
- * - 1 - LLWU_P2 input was a wakeup source
+ * - 0b0 - LLWU_P2 input was not a wakeup source
+ * - 0b1 - LLWU_P2 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F1_WUF2 field. */
@@ -19143,8 +19173,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF3.
  *
  * Values:
- * - 0 - LLWU_P3 input was not a wake-up source
- * - 1 - LLWU_P3 input was a wake-up source
+ * - 0b0 - LLWU_P3 input was not a wake-up source
+ * - 0b1 - LLWU_P3 input was a wake-up source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F1_WUF3 field. */
@@ -19163,8 +19193,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF4.
  *
  * Values:
- * - 0 - LLWU_P4 input was not a wakeup source
- * - 1 - LLWU_P4 input was a wakeup source
+ * - 0b0 - LLWU_P4 input was not a wakeup source
+ * - 0b1 - LLWU_P4 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F1_WUF4 field. */
@@ -19183,8 +19213,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF5.
  *
  * Values:
- * - 0 - LLWU_P5 input was not a wakeup source
- * - 1 - LLWU_P5 input was a wakeup source
+ * - 0b0 - LLWU_P5 input was not a wakeup source
+ * - 0b1 - LLWU_P5 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F1_WUF5 field. */
@@ -19203,8 +19233,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF6.
  *
  * Values:
- * - 0 - LLWU_P6 input was not a wakeup source
- * - 1 - LLWU_P6 input was a wakeup source
+ * - 0b0 - LLWU_P6 input was not a wakeup source
+ * - 0b1 - LLWU_P6 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F1_WUF6 field. */
@@ -19223,8 +19253,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF7.
  *
  * Values:
- * - 0 - LLWU_P7 input was not a wakeup source
- * - 1 - LLWU_P7 input was a wakeup source
+ * - 0b0 - LLWU_P7 input was not a wakeup source
+ * - 0b1 - LLWU_P7 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F1_WUF7 field. */
@@ -19280,8 +19310,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF8.
  *
  * Values:
- * - 0 - LLWU_P8 input was not a wakeup source
- * - 1 - LLWU_P8 input was a wakeup source
+ * - 0b0 - LLWU_P8 input was not a wakeup source
+ * - 0b1 - LLWU_P8 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F2_WUF8 field. */
@@ -19300,8 +19330,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF9.
  *
  * Values:
- * - 0 - LLWU_P9 input was not a wakeup source
- * - 1 - LLWU_P9 input was a wakeup source
+ * - 0b0 - LLWU_P9 input was not a wakeup source
+ * - 0b1 - LLWU_P9 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F2_WUF9 field. */
@@ -19320,8 +19350,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF10.
  *
  * Values:
- * - 0 - LLWU_P10 input was not a wakeup source
- * - 1 - LLWU_P10 input was a wakeup source
+ * - 0b0 - LLWU_P10 input was not a wakeup source
+ * - 0b1 - LLWU_P10 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F2_WUF10 field. */
@@ -19340,8 +19370,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF11.
  *
  * Values:
- * - 0 - LLWU_P11 input was not a wakeup source
- * - 1 - LLWU_P11 input was a wakeup source
+ * - 0b0 - LLWU_P11 input was not a wakeup source
+ * - 0b1 - LLWU_P11 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F2_WUF11 field. */
@@ -19360,8 +19390,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF12.
  *
  * Values:
- * - 0 - LLWU_P12 input was not a wakeup source
- * - 1 - LLWU_P12 input was a wakeup source
+ * - 0b0 - LLWU_P12 input was not a wakeup source
+ * - 0b1 - LLWU_P12 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F2_WUF12 field. */
@@ -19380,8 +19410,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF13.
  *
  * Values:
- * - 0 - LLWU_P13 input was not a wakeup source
- * - 1 - LLWU_P13 input was a wakeup source
+ * - 0b0 - LLWU_P13 input was not a wakeup source
+ * - 0b1 - LLWU_P13 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F2_WUF13 field. */
@@ -19400,8 +19430,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF14.
  *
  * Values:
- * - 0 - LLWU_P14 input was not a wakeup source
- * - 1 - LLWU_P14 input was a wakeup source
+ * - 0b0 - LLWU_P14 input was not a wakeup source
+ * - 0b1 - LLWU_P14 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F2_WUF14 field. */
@@ -19420,8 +19450,8 @@
  * low-leakage power mode. To clear the flag, write a 1 to WUF15.
  *
  * Values:
- * - 0 - LLWU_P15 input was not a wakeup source
- * - 1 - LLWU_P15 input was a wakeup source
+ * - 0b0 - LLWU_P15 input was not a wakeup source
+ * - 0b1 - LLWU_P15 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F2_WUF15 field. */
@@ -19475,8 +19505,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 0 input was not a wakeup source
- * - 1 - Module 0 input was a wakeup source
+ * - 0b0 - Module 0 input was not a wakeup source
+ * - 0b1 - Module 0 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F3_MWUF0 field. */
@@ -19492,8 +19522,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 1 input was not a wakeup source
- * - 1 - Module 1 input was a wakeup source
+ * - 0b0 - Module 1 input was not a wakeup source
+ * - 0b1 - Module 1 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F3_MWUF1 field. */
@@ -19509,8 +19539,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 2 input was not a wakeup source
- * - 1 - Module 2 input was a wakeup source
+ * - 0b0 - Module 2 input was not a wakeup source
+ * - 0b1 - Module 2 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F3_MWUF2 field. */
@@ -19526,8 +19556,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 3 input was not a wakeup source
- * - 1 - Module 3 input was a wakeup source
+ * - 0b0 - Module 3 input was not a wakeup source
+ * - 0b1 - Module 3 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F3_MWUF3 field. */
@@ -19543,8 +19573,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 4 input was not a wakeup source
- * - 1 - Module 4 input was a wakeup source
+ * - 0b0 - Module 4 input was not a wakeup source
+ * - 0b1 - Module 4 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F3_MWUF4 field. */
@@ -19560,8 +19590,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 5 input was not a wakeup source
- * - 1 - Module 5 input was a wakeup source
+ * - 0b0 - Module 5 input was not a wakeup source
+ * - 0b1 - Module 5 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F3_MWUF5 field. */
@@ -19577,8 +19607,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 6 input was not a wakeup source
- * - 1 - Module 6 input was a wakeup source
+ * - 0b0 - Module 6 input was not a wakeup source
+ * - 0b1 - Module 6 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F3_MWUF6 field. */
@@ -19594,8 +19624,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 7 input was not a wakeup source
- * - 1 - Module 7 input was a wakeup source
+ * - 0b0 - Module 7 input was not a wakeup source
+ * - 0b1 - Module 7 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_F3_MWUF7 field. */
@@ -19642,8 +19672,8 @@
  * Selects 1 out of the 16 wakeup pins to be muxed into the filter.
  *
  * Values:
- * - 0000 - Select LLWU_P0 for filter
- * - 1111 - Select LLWU_P15 for filter
+ * - 0b0000 - Select LLWU_P0 for filter
+ * - 0b1111 - Select LLWU_P15 for filter
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT1_FILTSEL field. */
@@ -19661,10 +19691,10 @@
  * Controls the digital filter options for the external pin detect.
  *
  * Values:
- * - 00 - Filter disabled
- * - 01 - Filter posedge detect enabled
- * - 10 - Filter negedge detect enabled
- * - 11 - Filter any edge detect enabled
+ * - 0b00 - Filter disabled
+ * - 0b01 - Filter posedge detect enabled
+ * - 0b10 - Filter negedge detect enabled
+ * - 0b11 - Filter any edge detect enabled
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT1_FILTE field. */
@@ -19684,8 +19714,8 @@
  * FILTF.
  *
  * Values:
- * - 0 - Pin Filter 1 was not a wakeup source
- * - 1 - Pin Filter 1 was a wakeup source
+ * - 0b0 - Pin Filter 1 was not a wakeup source
+ * - 0b1 - Pin Filter 1 was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT1_FILTF field. */
@@ -19736,8 +19766,8 @@
  * Selects 1 out of the 16 wakeup pins to be muxed into the filter.
  *
  * Values:
- * - 0000 - Select LLWU_P0 for filter
- * - 1111 - Select LLWU_P15 for filter
+ * - 0b0000 - Select LLWU_P0 for filter
+ * - 0b1111 - Select LLWU_P15 for filter
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT2_FILTSEL field. */
@@ -19755,10 +19785,10 @@
  * Controls the digital filter options for the external pin detect.
  *
  * Values:
- * - 00 - Filter disabled
- * - 01 - Filter posedge detect enabled
- * - 10 - Filter negedge detect enabled
- * - 11 - Filter any edge detect enabled
+ * - 0b00 - Filter disabled
+ * - 0b01 - Filter posedge detect enabled
+ * - 0b10 - Filter negedge detect enabled
+ * - 0b11 - Filter any edge detect enabled
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT2_FILTE field. */
@@ -19778,8 +19808,8 @@
  * FILTF.
  *
  * Values:
- * - 0 - Pin Filter 2 was not a wakeup source
- * - 1 - Pin Filter 2 was a wakeup source
+ * - 0b0 - Pin Filter 2 was not a wakeup source
+ * - 0b1 - Pin Filter 2 was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT2_FILTF field. */
@@ -19839,8 +19869,8 @@
  * CSR[5:1] must not be altered.
  *
  * Values:
- * - 0 - LPTMR is disabled and internal logic is reset.
- * - 1 - LPTMR is enabled.
+ * - 0b0 - LPTMR is disabled and internal logic is reset.
+ * - 0b1 - LPTMR is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TEN field. */
@@ -19859,8 +19889,8 @@
  * disabled.
  *
  * Values:
- * - 0 - Time Counter mode.
- * - 1 - Pulse Counter mode.
+ * - 0b0 - Time Counter mode.
+ * - 0b1 - Pulse Counter mode.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TMS field. */
@@ -19880,8 +19910,8 @@
  * LPTMR is disabled.
  *
  * Values:
- * - 0 - CNR is reset whenever TCF is set.
- * - 1 - CNR is reset on overflow.
+ * - 0b0 - CNR is reset whenever TCF is set.
+ * - 0b1 - CNR is reset on overflow.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TFC field. */
@@ -19900,10 +19930,10 @@
  * be changed only when the LPTMR is disabled.
  *
  * Values:
- * - 0 - Pulse Counter input source is active-high, and the CNR will increment
+ * - 0b0 - Pulse Counter input source is active-high, and the CNR will increment
  *     on the rising-edge.
- * - 1 - Pulse Counter input source is active-low, and the CNR will increment on
- *     the falling-edge.
+ * - 0b1 - Pulse Counter input source is active-low, and the CNR will increment
+ *     on the falling-edge.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TPP field. */
@@ -19924,10 +19954,10 @@
  * inputs.
  *
  * Values:
- * - 00 - Pulse counter input 0 is selected.
- * - 01 - Pulse counter input 1 is selected.
- * - 10 - Pulse counter input 2 is selected.
- * - 11 - Pulse counter input 3 is selected.
+ * - 0b00 - Pulse counter input 0 is selected.
+ * - 0b01 - Pulse counter input 1 is selected.
+ * - 0b10 - Pulse counter input 2 is selected.
+ * - 0b11 - Pulse counter input 3 is selected.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TPS field. */
@@ -19945,8 +19975,8 @@
  * When TIE is set, the LPTMR Interrupt is generated whenever TCF is also set.
  *
  * Values:
- * - 0 - Timer interrupt disabled.
- * - 1 - Timer interrupt enabled.
+ * - 0b0 - Timer interrupt disabled.
+ * - 0b1 - Timer interrupt enabled.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TIE field. */
@@ -19965,8 +19995,8 @@
  * increments. TCF is cleared when the LPTMR is disabled or a logic 1 is written to it.
  *
  * Values:
- * - 0 - The value of CNR is not equal to CMR and increments.
- * - 1 - The value of CNR is equal to CMR and increments.
+ * - 0b0 - The value of CNR is not equal to CMR and increments.
+ * - 0b1 - The value of CNR is equal to CMR and increments.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TCF field. */
@@ -20012,10 +20042,10 @@
  * these inputs.
  *
  * Values:
- * - 00 - Prescaler/glitch filter clock 0 selected.
- * - 01 - Prescaler/glitch filter clock 1 selected.
- * - 10 - Prescaler/glitch filter clock 2 selected.
- * - 11 - Prescaler/glitch filter clock 3 selected.
+ * - 0b00 - Prescaler/glitch filter clock 0 selected.
+ * - 0b01 - Prescaler/glitch filter clock 1 selected.
+ * - 0b10 - Prescaler/glitch filter clock 2 selected.
+ * - 0b11 - Prescaler/glitch filter clock 3 selected.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_PSR_PCS field. */
@@ -20036,8 +20066,8 @@
  * must be altered only when the LPTMR is disabled.
  *
  * Values:
- * - 0 - Prescaler/glitch filter is enabled.
- * - 1 - Prescaler/glitch filter is bypassed.
+ * - 0b0 - Prescaler/glitch filter is enabled.
+ * - 0b1 - Prescaler/glitch filter is bypassed.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_PSR_PBYP field. */
@@ -20057,37 +20087,37 @@
  * is disabled.
  *
  * Values:
- * - 0000 - Prescaler divides the prescaler clock by 2; glitch filter does not
+ * - 0b0000 - Prescaler divides the prescaler clock by 2; glitch filter does not
  *     support this configuration.
- * - 0001 - Prescaler divides the prescaler clock by 4; glitch filter recognizes
- *     change on input pin after 2 rising clock edges.
- * - 0010 - Prescaler divides the prescaler clock by 8; glitch filter recognizes
- *     change on input pin after 4 rising clock edges.
- * - 0011 - Prescaler divides the prescaler clock by 16; glitch filter
+ * - 0b0001 - Prescaler divides the prescaler clock by 4; glitch filter
+ *     recognizes change on input pin after 2 rising clock edges.
+ * - 0b0010 - Prescaler divides the prescaler clock by 8; glitch filter
+ *     recognizes change on input pin after 4 rising clock edges.
+ * - 0b0011 - Prescaler divides the prescaler clock by 16; glitch filter
  *     recognizes change on input pin after 8 rising clock edges.
- * - 0100 - Prescaler divides the prescaler clock by 32; glitch filter
+ * - 0b0100 - Prescaler divides the prescaler clock by 32; glitch filter
  *     recognizes change on input pin after 16 rising clock edges.
- * - 0101 - Prescaler divides the prescaler clock by 64; glitch filter
+ * - 0b0101 - Prescaler divides the prescaler clock by 64; glitch filter
  *     recognizes change on input pin after 32 rising clock edges.
- * - 0110 - Prescaler divides the prescaler clock by 128; glitch filter
+ * - 0b0110 - Prescaler divides the prescaler clock by 128; glitch filter
  *     recognizes change on input pin after 64 rising clock edges.
- * - 0111 - Prescaler divides the prescaler clock by 256; glitch filter
+ * - 0b0111 - Prescaler divides the prescaler clock by 256; glitch filter
  *     recognizes change on input pin after 128 rising clock edges.
- * - 1000 - Prescaler divides the prescaler clock by 512; glitch filter
+ * - 0b1000 - Prescaler divides the prescaler clock by 512; glitch filter
  *     recognizes change on input pin after 256 rising clock edges.
- * - 1001 - Prescaler divides the prescaler clock by 1024; glitch filter
+ * - 0b1001 - Prescaler divides the prescaler clock by 1024; glitch filter
  *     recognizes change on input pin after 512 rising clock edges.
- * - 1010 - Prescaler divides the prescaler clock by 2048; glitch filter
+ * - 0b1010 - Prescaler divides the prescaler clock by 2048; glitch filter
  *     recognizes change on input pin after 1024 rising clock edges.
- * - 1011 - Prescaler divides the prescaler clock by 4096; glitch filter
+ * - 0b1011 - Prescaler divides the prescaler clock by 4096; glitch filter
  *     recognizes change on input pin after 2048 rising clock edges.
- * - 1100 - Prescaler divides the prescaler clock by 8192; glitch filter
+ * - 0b1100 - Prescaler divides the prescaler clock by 8192; glitch filter
  *     recognizes change on input pin after 4096 rising clock edges.
- * - 1101 - Prescaler divides the prescaler clock by 16,384; glitch filter
+ * - 0b1101 - Prescaler divides the prescaler clock by 16,384; glitch filter
  *     recognizes change on input pin after 8192 rising clock edges.
- * - 1110 - Prescaler divides the prescaler clock by 32,768; glitch filter
+ * - 0b1110 - Prescaler divides the prescaler clock by 32,768; glitch filter
  *     recognizes change on input pin after 16,384 rising clock edges.
- * - 1111 - Prescaler divides the prescaler clock by 65,536; glitch filter
+ * - 0b1111 - Prescaler divides the prescaler clock by 65,536; glitch filter
  *     recognizes change on input pin after 32,768 rising clock edges.
  */
 /*@{*/
@@ -20238,8 +20268,8 @@
  * MCG enters Stop mode.
  *
  * Values:
- * - 0 - Internal reference clock is disabled in Stop mode.
- * - 1 - Internal reference clock is enabled in Stop mode if IRCLKEN is set or
+ * - 0b0 - Internal reference clock is disabled in Stop mode.
+ * - 0b1 - Internal reference clock is enabled in Stop mode if IRCLKEN is set or
  *     if MCG is in FEI, FBI, or BLPI modes before entering Stop mode.
  */
 /*@{*/
@@ -20258,8 +20288,8 @@
  * Enables the internal reference clock for use as MCGIRCLK.
  *
  * Values:
- * - 0 - MCGIRCLK inactive.
- * - 1 - MCGIRCLK active.
+ * - 0b0 - MCGIRCLK inactive.
+ * - 0b1 - MCGIRCLK active.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C1_IRCLKEN field. */
@@ -20277,8 +20307,8 @@
  * Selects the reference clock source for the FLL.
  *
  * Values:
- * - 0 - External reference clock is selected.
- * - 1 - The slow internal reference clock is selected.
+ * - 0b0 - External reference clock is selected.
+ * - 0b1 - The slow internal reference clock is selected.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C1_IREFS field. */
@@ -20300,21 +20330,21 @@
  * to enter a FLL mode from FBE).
  *
  * Values:
- * - 000 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 1; for all other RANGE
- *     0 values, Divide Factor is 32.
- * - 001 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 2; for all other RANGE
- *     0 values, Divide Factor is 64.
- * - 010 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 4; for all other RANGE
- *     0 values, Divide Factor is 128.
- * - 011 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 8; for all other RANGE
- *     0 values, Divide Factor is 256.
- * - 100 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 16; for all other RANGE
- *     0 values, Divide Factor is 512.
- * - 101 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 32; for all other RANGE
- *     0 values, Divide Factor is 1024.
- * - 110 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 64; for all other RANGE
- *     0 values, Divide Factor is 1280 .
- * - 111 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 128; for all other
+ * - 0b000 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 1; for all other
+ *     RANGE 0 values, Divide Factor is 32.
+ * - 0b001 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 2; for all other
+ *     RANGE 0 values, Divide Factor is 64.
+ * - 0b010 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 4; for all other
+ *     RANGE 0 values, Divide Factor is 128.
+ * - 0b011 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 8; for all other
+ *     RANGE 0 values, Divide Factor is 256.
+ * - 0b100 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 16; for all other
+ *     RANGE 0 values, Divide Factor is 512.
+ * - 0b101 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 32; for all other
+ *     RANGE 0 values, Divide Factor is 1024.
+ * - 0b110 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 64; for all other
+ *     RANGE 0 values, Divide Factor is 1280 .
+ * - 0b111 - If RANGE 0 = 0 or OSCSEL=1 , Divide Factor is 128; for all other
  *     RANGE 0 values, Divide Factor is 1536 .
  */
 /*@{*/
@@ -20333,11 +20363,11 @@
  * Selects the clock source for MCGOUTCLK .
  *
  * Values:
- * - 00 - Encoding 0 - Output of FLL or PLL is selected (depends on PLLS control
- *     bit).
- * - 01 - Encoding 1 - Internal reference clock is selected.
- * - 10 - Encoding 2 - External reference clock is selected.
- * - 11 - Encoding 3 - Reserved.
+ * - 0b00 - Encoding 0 - Output of FLL or PLL is selected (depends on PLLS
+ *     control bit).
+ * - 0b01 - Encoding 1 - Internal reference clock is selected.
+ * - 0b10 - Encoding 2 - External reference clock is selected.
+ * - 0b11 - Encoding 3 - Reserved.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C1_CLKS field. */
@@ -20380,8 +20410,8 @@
  * Selects between the fast or slow internal reference clock source.
  *
  * Values:
- * - 0 - Slow internal reference clock selected.
- * - 1 - Fast internal reference clock selected.
+ * - 0b0 - Slow internal reference clock selected.
+ * - 0b1 - Fast internal reference clock selected.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_IRCS field. */
@@ -20402,8 +20432,8 @@
  * other MCG mode, LP bit has no affect.
  *
  * Values:
- * - 0 - FLL or PLL is not disabled in bypass modes.
- * - 1 - FLL or PLL is disabled in bypass modes (lower power)
+ * - 0b0 - FLL or PLL is not disabled in bypass modes.
+ * - 0b1 - FLL or PLL is disabled in bypass modes (lower power)
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_LP field. */
@@ -20422,8 +20452,8 @@
  * chapter for more details.
  *
  * Values:
- * - 0 - External reference clock requested.
- * - 1 - Oscillator requested.
+ * - 0b0 - External reference clock requested.
+ * - 0b1 - Oscillator requested.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_EREFS0 field. */
@@ -20442,8 +20472,8 @@
  * chapter for more details.
  *
  * Values:
- * - 0 - Configure crystal oscillator for low-power operation.
- * - 1 - Configure crystal oscillator for high-gain operation.
+ * - 0b0 - Configure crystal oscillator for low-power operation.
+ * - 0b1 - Configure crystal oscillator for high-gain operation.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_HGO0 field. */
@@ -20463,8 +20493,10 @@
  * sheet for the frequency ranges used.
  *
  * Values:
- * - 00 - Encoding 0 - Low frequency range selected for the crystal oscillator .
- * - 01 - Encoding 1 - High frequency range selected for the crystal oscillator .
+ * - 0b00 - Encoding 0 - Low frequency range selected for the crystal oscillator
+ *     .
+ * - 0b01 - Encoding 1 - High frequency range selected for the crystal
+ *     oscillator .
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_RANGE0 field. */
@@ -20503,9 +20535,9 @@
  * set.
  *
  * Values:
- * - 0 - Interrupt request is generated on a loss of OSC0 external reference
+ * - 0b0 - Interrupt request is generated on a loss of OSC0 external reference
  *     clock.
- * - 1 - Generate a reset request on a loss of OSC0 external reference clock.
+ * - 0b1 - Generate a reset request on a loss of OSC0 external reference clock.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_LOCRE0 field. */
@@ -20616,10 +20648,10 @@
  * clock domains. See the DCO Frequency Range table for more details.
  *
  * Values:
- * - 00 - Encoding 0 - Low range (reset default).
- * - 01 - Encoding 1 - Mid range.
- * - 10 - Encoding 2 - Mid-high range.
- * - 11 - Encoding 3 - High range.
+ * - 0b00 - Encoding 0 - Low range (reset default).
+ * - 0b01 - Encoding 1 - Mid range.
+ * - 0b10 - Encoding 2 - Mid-high range.
+ * - 0b11 - Encoding 3 - High range.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C4_DRST_DRS field. */
@@ -20644,8 +20676,8 @@
  * 80-100 MHz 1 32.768 kHz 2929 96 MHz
  *
  * Values:
- * - 0 - DCO has a default range of 25%.
- * - 1 - DCO is fine-tuned for maximum frequency with 32.768 kHz reference.
+ * - 0b0 - DCO has a default range of 25%.
+ * - 0b1 - DCO is fine-tuned for maximum frequency with 32.768 kHz reference.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C4_DMX32 field. */
@@ -20714,8 +20746,8 @@
  * has no affect and does not enable the PLL Clock to run if it is written to 1.
  *
  * Values:
- * - 0 - MCGPLLCLK is disabled in any of the Stop modes.
- * - 1 - MCGPLLCLK is enabled if system is in Normal Stop mode.
+ * - 0b0 - MCGPLLCLK is disabled in any of the Stop modes.
+ * - 0b1 - MCGPLLCLK is enabled if system is in Normal Stop mode.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C5_PLLSTEN0 field. */
@@ -20739,8 +20771,8 @@
  * bit should be checked to make sure it is set.
  *
  * Values:
- * - 0 - MCGPLLCLK is inactive.
- * - 1 - MCGPLLCLK is active.
+ * - 0b0 - MCGPLLCLK is inactive.
+ * - 0b1 - MCGPLLCLK is active.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C5_PLLCLKEN0 field. */
@@ -20814,8 +20846,8 @@
  * logic 0 before entering VLPR or VLPW power modes if the MCG is in BLPE mode.
  *
  * Values:
- * - 0 - External clock monitor is disabled for OSC0.
- * - 1 - External clock monitor is enabled for OSC0.
+ * - 0b0 - External clock monitor is disabled for OSC0.
+ * - 0b1 - External clock monitor is enabled for OSC0.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C6_CME0 field. */
@@ -20835,10 +20867,10 @@
  * disabled in all modes. If the PLLS is set, the FLL is disabled in all modes.
  *
  * Values:
- * - 0 - FLL is selected.
- * - 1 - PLL is selected (PRDIV 0 need to be programmed to the correct divider
- *     to generate a PLL reference clock in the range of 2-4 MHz prior to setting
- *     the PLLS bit).
+ * - 0b0 - FLL is selected.
+ * - 0b1 - PLL is selected (PRDIV 0 need to be programmed to the correct divider
+ *     to generate a PLL reference clock in the range of 2-4 MHz prior to
+ *     setting the PLLS bit).
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C6_PLLS field. */
@@ -20857,8 +20889,8 @@
  * indication. This bit only has an effect when LOLS 0 is set.
  *
  * Values:
- * - 0 - No interrupt request is generated on loss of lock.
- * - 1 - Generate an interrupt request on loss of lock.
+ * - 0b0 - No interrupt request is generated on loss of lock.
+ * - 0b1 - Generate an interrupt request on loss of lock.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C6_LOLIE0 field. */
@@ -20906,8 +20938,8 @@
  * bit .
  *
  * Values:
- * - 0 - Source of internal reference clock is the slow clock (32 kHz IRC).
- * - 1 - Source of internal reference clock is the fast clock (4 MHz IRC).
+ * - 0b0 - Source of internal reference clock is the slow clock (32 kHz IRC).
+ * - 0b1 - Source of internal reference clock is the fast clock (4 MHz IRC).
  */
 /*@{*/
 /*! @brief Read current value of the MCG_S_IRCST field. */
@@ -20937,10 +20969,10 @@
  * clock domains.
  *
  * Values:
- * - 00 - Encoding 0 - Output of the FLL is selected (reset default).
- * - 01 - Encoding 1 - Internal reference clock is selected.
- * - 10 - Encoding 2 - External reference clock is selected.
- * - 11 - Encoding 3 - Output of the PLL is selected.
+ * - 0b00 - Encoding 0 - Output of the FLL is selected (reset default).
+ * - 0b01 - Encoding 1 - Internal reference clock is selected.
+ * - 0b10 - Encoding 2 - External reference clock is selected.
+ * - 0b11 - Encoding 3 - Output of the PLL is selected.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_S_CLKST field. */
@@ -20956,8 +20988,8 @@
  * internal synchronization between clock domains.
  *
  * Values:
- * - 0 - Source of FLL reference clock is the external reference clock.
- * - 1 - Source of FLL reference clock is the internal reference clock.
+ * - 0b0 - Source of FLL reference clock is the external reference clock.
+ * - 0b1 - Source of FLL reference clock is the internal reference clock.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_S_IREFST field. */
@@ -20973,8 +21005,8 @@
  * synchronization between clock domains.
  *
  * Values:
- * - 0 - Source of PLLS clock is FLL clock.
- * - 1 - Source of PLLS clock is PLL output clock.
+ * - 0b0 - Source of PLLS clock is FLL clock.
+ * - 0b1 - Source of PLLS clock is PLL output clock.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_S_PLLST field. */
@@ -21000,8 +21032,8 @@
  * again.
  *
  * Values:
- * - 0 - PLL is currently unlocked.
- * - 1 - PLL is currently locked.
+ * - 0b0 - PLL is currently unlocked.
+ * - 0b1 - PLL is currently locked.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_S_LOCK0 field. */
@@ -21020,8 +21052,8 @@
  * when set. Writing a logic 0 to this bit has no effect.
  *
  * Values:
- * - 0 - PLL has not lost lock since LOLS 0 was last cleared.
- * - 1 - PLL has lost lock since LOLS 0 was last cleared.
+ * - 0b0 - PLL has not lost lock since LOLS 0 was last cleared.
+ * - 0b1 - PLL has lost lock since LOLS 0 was last cleared.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_S_LOLS0 field. */
@@ -21066,8 +21098,8 @@
  * logic 1 to it when set.
  *
  * Values:
- * - 0 - Loss of OSC0 has not occurred.
- * - 1 - Loss of OSC0 has occurred.
+ * - 0b0 - Loss of OSC0 has not occurred.
+ * - 0b1 - Loss of OSC0 has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_LOCS0 field. */
@@ -21087,14 +21119,14 @@
  * divider when the Fast IRC is enabled is not supported).
  *
  * Values:
- * - 000 - Divide Factor is 1
- * - 001 - Divide Factor is 2.
- * - 010 - Divide Factor is 4.
- * - 011 - Divide Factor is 8.
- * - 100 - Divide Factor is 16
- * - 101 - Divide Factor is 32
- * - 110 - Divide Factor is 64
- * - 111 - Divide Factor is 128.
+ * - 0b000 - Divide Factor is 1
+ * - 0b001 - Divide Factor is 2.
+ * - 0b010 - Divide Factor is 4.
+ * - 0b011 - Divide Factor is 8.
+ * - 0b100 - Divide Factor is 16
+ * - 0b101 - Divide Factor is 32
+ * - 0b110 - Divide Factor is 64
+ * - 0b111 - Divide Factor is 128.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_FCRDIV field. */
@@ -21116,9 +21148,9 @@
  * Otherwise FLL filter and frequency values will change.)
  *
  * Values:
- * - 0 - FLL filter and FLL frequency will reset on changes to currect clock
+ * - 0b0 - FLL filter and FLL frequency will reset on changes to currect clock
  *     mode.
- * - 1 - Fll filter and FLL frequency retain their previous values during new
+ * - 0b1 - Fll filter and FLL frequency retain their previous values during new
  *     clock mode change.
  */
 /*@{*/
@@ -21140,8 +21172,8 @@
  * clears the flag.
  *
  * Values:
- * - 0 - Automatic Trim Machine completed normally.
- * - 1 - Automatic Trim Machine failed.
+ * - 0b0 - Automatic Trim Machine completed normally.
+ * - 0b1 - Automatic Trim Machine failed.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_ATMF field. */
@@ -21159,8 +21191,8 @@
  * Selects the IRCS clock for Auto Trim Test.
  *
  * Values:
- * - 0 - 32 kHz Internal Reference Clock selected.
- * - 1 - 4 MHz Internal Reference Clock selected.
+ * - 0b0 - 32 kHz Internal Reference Clock selected.
+ * - 0b1 - 4 MHz Internal Reference Clock selected.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_ATMS field. */
@@ -21182,8 +21214,8 @@
  * operation and clears this bit.
  *
  * Values:
- * - 0 - Auto Trim Machine disabled.
- * - 1 - Auto Trim Machine enabled.
+ * - 0b0 - Auto Trim Machine disabled.
+ * - 0b1 - Auto Trim Machine enabled.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_ATME field. */
@@ -21269,10 +21301,10 @@
  * lock.
  *
  * Values:
- * - 0 - Interrupt request is generated on a PLL loss of lock indication. The
+ * - 0b0 - Interrupt request is generated on a PLL loss of lock indication. The
  *     PLL loss of lock interrupt enable bit must also be set to generate the
  *     interrupt request.
- * - 1 - Generate a reset request on a PLL loss of lock indication.
+ * - 0b1 - Generate a reset request on a PLL loss of lock indication.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C8_LOLRE field. */
@@ -21374,8 +21406,8 @@
  * @name Register MCM_PLASC, field ASC[7:0] (RO)
  *
  * Values:
- * - 0 - A bus slave connection to AXBS input port n is absent.
- * - 1 - A bus slave connection to AXBS input port n is present.
+ * - 0b00000000 - A bus slave connection to AXBS input port n is absent.
+ * - 0b00000001 - A bus slave connection to AXBS input port n is present.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLASC_ASC field. */
@@ -21410,8 +21442,8 @@
  * @name Register MCM_PLAMC, field AMC[7:0] (RO)
  *
  * Values:
- * - 0 - A bus master connection to AXBS input port n is absent
- * - 1 - A bus master connection to AXBS input port n is present
+ * - 0b00000000 - A bus master connection to AXBS input port n is absent
+ * - 0b00000001 - A bus master connection to AXBS input port n is present
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLAMC_AMC field. */
@@ -21461,8 +21493,8 @@
  * @name Register MCM_PLACR, field ARB[9] (RW)
  *
  * Values:
- * - 0 - Fixed-priority arbitration for the crossbar masters
- * - 1 - Round-robin arbitration for the crossbar masters
+ * - 0b0 - Fixed-priority arbitration for the crossbar masters
+ * - 0b1 - Round-robin arbitration for the crossbar masters
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_ARB field. */
@@ -21492,8 +21524,8 @@
  * Disables flash controller data caching.
  *
  * Values:
- * - 0 - Enable flash controller data caching
- * - 1 - Disable flash controller data caching.
+ * - 0b0 - Enable flash controller data caching
+ * - 0b1 - Disable flash controller data caching.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_DFCDA field. */
@@ -21511,8 +21543,8 @@
  * Disables flash controller instruction caching.
  *
  * Values:
- * - 0 - Enable flash controller instruction caching.
- * - 1 - Disable flash controller instruction caching.
+ * - 0b0 - Enable flash controller instruction caching.
+ * - 0b1 - Disable flash controller instruction caching.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_DFCIC field. */
@@ -21530,8 +21562,8 @@
  * Disables flash controller cache.
  *
  * Values:
- * - 0 - Enable flash controller cache.
- * - 1 - Disable flash controller cache.
+ * - 0b0 - Enable flash controller cache.
+ * - 0b1 - Disable flash controller cache.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_DFCC field. */
@@ -21549,8 +21581,8 @@
  * Enables flash data speculation.
  *
  * Values:
- * - 0 - Disable flash data speculation.
- * - 1 - Enable flash data speculation.
+ * - 0b0 - Disable flash data speculation.
+ * - 0b1 - Enable flash data speculation.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_EFDS field. */
@@ -21568,8 +21600,8 @@
  * Disables flash controller speculation.
  *
  * Values:
- * - 0 - Enable flash controller speculation.
- * - 1 - Disable flash controller speculation.
+ * - 0b0 - Enable flash controller speculation.
+ * - 0b1 - Disable flash controller speculation.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_DFCS field. */
@@ -21595,8 +21627,8 @@
  * when the operation completes.
  *
  * Values:
- * - 0 - Disable stalling flash controller when flash is busy.
- * - 1 - Enable stalling flash controller when flash is busy.
+ * - 0b0 - Disable stalling flash controller when flash is busy.
+ * - 0b1 - Enable stalling flash controller when flash is busy.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_ESFC field. */
@@ -21641,8 +21673,8 @@
  * This bit is auto-cleared by vector fetching if CPOWOI = 1.
  *
  * Values:
- * - 0 - Request is cleared.
- * - 1 - Request Compute Operation.
+ * - 0b0 - Request is cleared.
+ * - 0b1 - Request Compute Operation.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_CPO_CPOREQ field. */
@@ -21658,10 +21690,10 @@
  * @name Register MCM_CPO, field CPOACK[1] (RO)
  *
  * Values:
- * - 0 - Compute operation entry has not completed or compute operation exit has
- *     completed.
- * - 1 - Compute operation entry has completed or compute operation exit has not
- *     completed.
+ * - 0b0 - Compute operation entry has not completed or compute operation exit
+ *     has completed.
+ * - 0b1 - Compute operation entry has completed or compute operation exit has
+ *     not completed.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_CPO_CPOACK field. */
@@ -21673,8 +21705,8 @@
  * @name Register MCM_CPO, field CPOWOI[2] (RW)
  *
  * Values:
- * - 0 - No effect.
- * - 1 - When set, the CPOREQ is cleared on any interrupt or exception vector
+ * - 0b0 - No effect.
+ * - 0b1 - When set, the CPOREQ is cleared on any interrupt or exception vector
  *     fetch.
  */
 /*@{*/
@@ -22555,11 +22587,11 @@
  * non-zero value, so the combined comparators match on a range of addresses.
  *
  * Values:
- * - 0000 - Disabled.
- * - 0100 - Instruction fetch.
- * - 0101 - Data operand read.
- * - 0110 - Data operand write.
- * - 0111 - Data operand (read + write).
+ * - 0b0000 - Disabled.
+ * - 0b0100 - Instruction fetch.
+ * - 0b0101 - Data operand read.
+ * - 0b0110 - Data operand write.
+ * - 0b0111 - Data operand (read + write).
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_FCT_FUNCTION field. */
@@ -22579,8 +22611,8 @@
  * supports address comparisons.
  *
  * Values:
- * - 0 - Perform address comparison.
- * - 1 - Perform data value comparison.
+ * - 0b0 - Perform address comparison.
+ * - 0b1 - Perform data value comparison.
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_FCT_DATAVMATCH field. */
@@ -22599,10 +22631,10 @@
  * comparison.
  *
  * Values:
- * - 00 - Byte.
- * - 01 - Halfword.
- * - 10 - Word.
- * - 11 - Reserved. Any attempts to use this value results in UNPREDICTABLE
+ * - 0b00 - Byte.
+ * - 0b01 - Halfword.
+ * - 0b10 - Word.
+ * - 0b11 - Reserved. Any attempts to use this value results in UNPREDICTABLE
  *     behavior.
  */
 /*@{*/
@@ -22642,8 +22674,8 @@
  * register clears this bit.
  *
  * Values:
- * - 0 - No match.
- * - 1 - Match occurred.
+ * - 0b0 - No match.
+ * - 0b1 - Match occurred.
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_FCT_MATCHED field. */
@@ -22696,8 +22728,8 @@
  * {1,1}
  *
  * Values:
- * - 0 - Trigger TSTOP based on the assertion of MTBDWT_FCT0[MATCHED].
- * - 1 - Trigger TSTART based on the assertion of MTBDWT_FCT0[MATCHED].
+ * - 0b0 - Trigger TSTOP based on the assertion of MTBDWT_FCT0[MATCHED].
+ * - 0b1 - Trigger TSTART based on the assertion of MTBDWT_FCT0[MATCHED].
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_TBCTRL_ACOMP0 field. */
@@ -22716,8 +22748,8 @@
  * compare has triggered and the trace buffer's recording state is changed.
  *
  * Values:
- * - 0 - Trigger TSTOP based on the assertion of MTBDWT_FCT1[MATCHED].
- * - 1 - Trigger TSTART based on the assertion of MTBDWT_FCT1[MATCHED].
+ * - 0b0 - Trigger TSTOP based on the assertion of MTBDWT_FCT1[MATCHED].
+ * - 0b1 - Trigger TSTART based on the assertion of MTBDWT_FCT1[MATCHED].
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_TBCTRL_ACOMP1 field. */
@@ -23060,8 +23092,8 @@
  * @name Register NV_FSEC, field SEC[1:0] (RO)
  *
  * Values:
- * - 10 - MCU security status is unsecure
- * - 11 - MCU security status is secure
+ * - 0b10 - MCU security status is unsecure
+ * - 0b11 - MCU security status is secure
  */
 /*@{*/
 /*! @brief Read current value of the NV_FSEC_SEC field. */
@@ -23073,8 +23105,8 @@
  * @name Register NV_FSEC, field FSLACC[3:2] (RO)
  *
  * Values:
- * - 10 - Freescale factory access denied
- * - 11 - Freescale factory access granted
+ * - 0b10 - Freescale factory access denied
+ * - 0b11 - Freescale factory access granted
  */
 /*@{*/
 /*! @brief Read current value of the NV_FSEC_FSLACC field. */
@@ -23086,8 +23118,8 @@
  * @name Register NV_FSEC, field MEEN[5:4] (RO)
  *
  * Values:
- * - 10 - Mass erase is disabled
- * - 11 - Mass erase is enabled
+ * - 0b10 - Mass erase is disabled
+ * - 0b11 - Mass erase is enabled
  */
 /*@{*/
 /*! @brief Read current value of the NV_FSEC_MEEN field. */
@@ -23099,8 +23131,8 @@
  * @name Register NV_FSEC, field KEYEN[7:6] (RO)
  *
  * Values:
- * - 10 - Backdoor key access enabled
- * - 11 - Backdoor key access disabled
+ * - 0b10 - Backdoor key access enabled
+ * - 0b11 - Backdoor key access disabled
  */
 /*@{*/
 /*! @brief Read current value of the NV_FSEC_KEYEN field. */
@@ -23132,9 +23164,9 @@
  * @name Register NV_FOPT, field LPBOOT0[0] (RO)
  *
  * Values:
- * - 00 - Core and system clock divider (OUTDIV1) is 0x7 (divide by 8) when
+ * - 0b0 - Core and system clock divider (OUTDIV1) is 0x7 (divide by 8) when
  *     LPBOOT1=0 or 0x1 (divide by 2) when LPBOOT1=1.
- * - 01 - Core and system clock divider (OUTDIV1) is 0x3 (divide by 4) when
+ * - 0b1 - Core and system clock divider (OUTDIV1) is 0x3 (divide by 4) when
  *     LPBOOT1=0 or 0x0 (divide by 1) when LPBOOT1=1.
  */
 /*@{*/
@@ -23147,8 +23179,8 @@
  * @name Register NV_FOPT, field NMI_DIS[2] (RO)
  *
  * Values:
- * - 00 - NMI interrupts are always blocked
- * - 01 - NMI_b pin/interrupts reset default to enabled
+ * - 0b0 - NMI interrupts are always blocked
+ * - 0b1 - NMI_b pin/interrupts reset default to enabled
  */
 /*@{*/
 /*! @brief Read current value of the NV_FOPT_NMI_DIS field. */
@@ -23160,9 +23192,9 @@
  * @name Register NV_FOPT, field RESET_PIN_CFG[3] (RO)
  *
  * Values:
- * - 00 - RESET pin is disabled following a POR and cannot be enabled as reset
+ * - 0b0 - RESET pin is disabled following a POR and cannot be enabled as reset
  *     function
- * - 01 - RESET_b pin is dedicated
+ * - 0b1 - RESET_b pin is dedicated
  */
 /*@{*/
 /*! @brief Read current value of the NV_FOPT_RESET_PIN_CFG field. */
@@ -23174,9 +23206,9 @@
  * @name Register NV_FOPT, field LPBOOT1[4] (RO)
  *
  * Values:
- * - 00 - Core and system clock divider (OUTDIV1) is 0x7 (divide by 8) when
+ * - 0b0 - Core and system clock divider (OUTDIV1) is 0x7 (divide by 8) when
  *     LPBOOT0=0 or 0x3 (divide by 4) when LPBOOT0=1.
- * - 01 - Core and system clock divider (OUTDIV1) is 0x1 (divide by 2) when
+ * - 0b1 - Core and system clock divider (OUTDIV1) is 0x1 (divide by 2) when
  *     LPBOOT0=0 or 0x0 (divide by 1) when LPBOOT0=1.
  */
 /*@{*/
@@ -23189,8 +23221,8 @@
  * @name Register NV_FOPT, field FAST_INIT[5] (RO)
  *
  * Values:
- * - 00 - Slower initialization
- * - 01 - Fast Initialization
+ * - 0b0 - Slower initialization
+ * - 0b1 - Fast Initialization
  */
 /*@{*/
 /*! @brief Read current value of the NV_FOPT_FAST_INIT field. */
@@ -23244,8 +23276,8 @@
  * Configures the oscillator load.
  *
  * Values:
- * - 0 - Disable the selection.
- * - 1 - Add 16 pF capacitor to the oscillator load.
+ * - 0b0 - Disable the selection.
+ * - 0b1 - Add 16 pF capacitor to the oscillator load.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_SC16P field. */
@@ -23263,8 +23295,8 @@
  * Configures the oscillator load.
  *
  * Values:
- * - 0 - Disable the selection.
- * - 1 - Add 8 pF capacitor to the oscillator load.
+ * - 0b0 - Disable the selection.
+ * - 0b1 - Add 8 pF capacitor to the oscillator load.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_SC8P field. */
@@ -23282,8 +23314,8 @@
  * Configures the oscillator load.
  *
  * Values:
- * - 0 - Disable the selection.
- * - 1 - Add 4 pF capacitor to the oscillator load.
+ * - 0b0 - Disable the selection.
+ * - 0b1 - Add 4 pF capacitor to the oscillator load.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_SC4P field. */
@@ -23301,8 +23333,8 @@
  * Configures the oscillator load.
  *
  * Values:
- * - 0 - Disable the selection.
- * - 1 - Add 2 pF capacitor to the oscillator load.
+ * - 0b0 - Disable the selection.
+ * - 0b1 - Add 2 pF capacitor to the oscillator load.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_SC2P field. */
@@ -23321,8 +23353,8 @@
  * enabled when MCU enters Stop mode.
  *
  * Values:
- * - 0 - External reference clock is disabled in Stop mode.
- * - 1 - External reference clock stays enabled in Stop mode if ERCLKEN is set
+ * - 0b0 - External reference clock is disabled in Stop mode.
+ * - 0b1 - External reference clock stays enabled in Stop mode if ERCLKEN is set
  *     before entering Stop mode.
  */
 /*@{*/
@@ -23341,8 +23373,8 @@
  * Enables external reference clock (OSCERCLK).
  *
  * Values:
- * - 0 - External reference clock is inactive.
- * - 1 - External reference clock is enabled.
+ * - 0b0 - External reference clock is inactive.
+ * - 0b1 - External reference clock is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_ERCLKEN field. */
@@ -23406,8 +23438,8 @@
  * Allows the timers to be stopped when the device enters the Debug mode.
  *
  * Values:
- * - 0 - Timers continue to run in Debug mode.
- * - 1 - Timers are stopped in Debug mode.
+ * - 0b0 - Timers continue to run in Debug mode.
+ * - 0b1 - Timers are stopped in Debug mode.
  */
 /*@{*/
 /*! @brief Read current value of the PIT_MCR_FRZ field. */
@@ -23426,8 +23458,8 @@
  * setup is done.
  *
  * Values:
- * - 0 - Clock for standard PIT timers is enabled.
- * - 1 - Clock for standard PIT timers is disabled.
+ * - 0b0 - Clock for standard PIT timers is enabled.
+ * - 0b1 - Clock for standard PIT timers is disabled.
  */
 /*@{*/
 /*! @brief Read current value of the PIT_MCR_MDIS field. */
@@ -23556,8 +23588,8 @@
  * Enables or disables the timer.
  *
  * Values:
- * - 0 - Timer n is disabled.
- * - 1 - Timer n is enabled.
+ * - 0b0 - Timer n is disabled.
+ * - 0b1 - Timer n is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the PIT_TCTRL_TEN field. */
@@ -23577,8 +23609,8 @@
  * TFLGn[TIF] must be cleared first.
  *
  * Values:
- * - 0 - Interrupt requests from Timer n are disabled.
- * - 1 - Interrupt will be requested whenever TIF is set.
+ * - 0b0 - Interrupt requests from Timer n are disabled.
+ * - 0b1 - Interrupt will be requested whenever TIF is set.
  */
 /*@{*/
 /*! @brief Read current value of the PIT_TCTRL_TIE field. */
@@ -23597,9 +23629,9 @@
  * Timer 0 cannot be chained.
  *
  * Values:
- * - 0 - Timer is not chained.
- * - 1 - Timer is chained to previous timer. For example, for Channel 2, if this
- *     field is set, Timer 2 is chained to Timer 1.
+ * - 0b0 - Timer is not chained.
+ * - 0b1 - Timer is chained to previous timer. For example, for Channel 2, if
+ *     this field is set, Timer 2 is chained to Timer 1.
  */
 /*@{*/
 /*! @brief Read current value of the PIT_TCTRL_CHN field. */
@@ -23646,8 +23678,8 @@
  * interrupt request.
  *
  * Values:
- * - 0 - Timeout has not yet occurred.
- * - 1 - Timeout has occurred.
+ * - 0b0 - Timeout has not yet occurred.
+ * - 0b1 - Timeout has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the PIT_TFLG_TIF field. */
@@ -23716,10 +23748,10 @@
  * Selects the LVD trip point voltage (V LVD ).
  *
  * Values:
- * - 00 - Low trip point selected (V LVD = V LVDL )
- * - 01 - High trip point selected (V LVD = V LVDH )
- * - 10 - Reserved
- * - 11 - Reserved
+ * - 0b00 - Low trip point selected (V LVD = V LVDL )
+ * - 0b01 - High trip point selected (V LVD = V LVDH )
+ * - 0b10 - Reserved
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC1_LVDV field. */
@@ -23738,8 +23770,8 @@
  * Additional writes are ignored.
  *
  * Values:
- * - 0 - LVDF does not generate hardware resets
- * - 1 - Force an MCU reset when LVDF = 1
+ * - 0b0 - LVDF does not generate hardware resets
+ * - 0b1 - Force an MCU reset when LVDF = 1
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC1_LVDRE field. */
@@ -23757,8 +23789,8 @@
  * Enables hardware interrupt requests for LVDF.
  *
  * Values:
- * - 0 - Hardware interrupt disabled (use polling)
- * - 1 - Request a hardware interrupt when LVDF = 1
+ * - 0b0 - Hardware interrupt disabled (use polling)
+ * - 0b1 - Request a hardware interrupt when LVDF = 1
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC1_LVDIE field. */
@@ -23788,8 +23820,8 @@
  * This read-only status field indicates a low-voltage detect event.
  *
  * Values:
- * - 0 - Low-voltage event not detected
- * - 1 - Low-voltage event detected
+ * - 0b0 - Low-voltage event not detected
+ * - 0b1 - Low-voltage event detected
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC1_LVDF field. */
@@ -23837,10 +23869,10 @@
  * depends on LVDSC1[LVDV].
  *
  * Values:
- * - 00 - Low trip point selected (VLVW = VLVW1)
- * - 01 - Mid 1 trip point selected (VLVW = VLVW2)
- * - 10 - Mid 2 trip point selected (VLVW = VLVW3)
- * - 11 - High trip point selected (VLVW = VLVW4)
+ * - 0b00 - Low trip point selected (VLVW = VLVW1)
+ * - 0b01 - Mid 1 trip point selected (VLVW = VLVW2)
+ * - 0b10 - Mid 2 trip point selected (VLVW = VLVW3)
+ * - 0b11 - High trip point selected (VLVW = VLVW4)
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC2_LVWV field. */
@@ -23858,8 +23890,8 @@
  * Enables hardware interrupt requests for LVWF.
  *
  * Values:
- * - 0 - Hardware interrupt disabled (use polling)
- * - 1 - Request a hardware interrupt when LVWF = 1
+ * - 0b0 - Hardware interrupt disabled (use polling)
+ * - 0b1 - Request a hardware interrupt when LVWF = 1
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC2_LVWIE field. */
@@ -23893,8 +23925,8 @@
  * LVWACK first.
  *
  * Values:
- * - 0 - Low-voltage warning event not detected
- * - 1 - Low-voltage warning event detected
+ * - 0b0 - Low-voltage warning event not detected
+ * - 0b1 - Low-voltage warning event detected
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC2_LVWF field. */
@@ -23940,8 +23972,8 @@
  * Enables the bandgap buffer.
  *
  * Values:
- * - 0 - Bandgap buffer not enabled
- * - 1 - Bandgap buffer enabled
+ * - 0b0 - Bandgap buffer not enabled
+ * - 0b1 - Bandgap buffer enabled
  */
 /*@{*/
 /*! @brief Read current value of the PMC_REGSC_BGBE field. */
@@ -23960,8 +23992,8 @@
  * regulator.
  *
  * Values:
- * - 0 - Regulator is in stop regulation or in transition to/from it
- * - 1 - Regulator is in run regulation
+ * - 0b0 - Regulator is in stop regulation or in transition to/from it
+ * - 0b1 - Regulator is in run regulation
  */
 /*@{*/
 /*! @brief Read current value of the PMC_REGSC_REGONS field. */
@@ -23981,8 +24013,8 @@
  * being falsely set when ACKISO is cleared.
  *
  * Values:
- * - 0 - Peripherals and I/O pads are in normal run state.
- * - 1 - Certain peripherals and I/O pads are in an isolated and latched state.
+ * - 0b0 - Peripherals and I/O pads are in normal run state.
+ * - 0b1 - Certain peripherals and I/O pads are in an isolated and latched state.
  */
 /*@{*/
 /*! @brief Read current value of the PMC_REGSC_ACKISO field. */
@@ -24004,8 +24036,8 @@
  * power modes, clear BGEN to avoid excess power consumption.
  *
  * Values:
- * - 0 - Bandgap voltage reference is disabled in VLPx , LLS , and VLLSx modes.
- * - 1 - Bandgap voltage reference is enabled in VLPx , LLS , and VLLSx modes.
+ * - 0b0 - Bandgap voltage reference is disabled in VLPx , LLS , and VLLSx modes.
+ * - 0b1 - Bandgap voltage reference is enabled in VLPx , LLS , and VLLSx modes.
  */
 /*@{*/
 /*! @brief Read current value of the PMC_REGSC_BGEN field. */
@@ -24074,9 +24106,9 @@
  * resistor direction. Pull configuration is valid in all digital pin muxing modes.
  *
  * Values:
- * - 0 - Internal pulldown resistor is enabled on the corresponding pin, if the
- *     corresponding PE field is set.
- * - 1 - Internal pullup resistor is enabled on the corresponding pin, if the
+ * - 0b0 - Internal pulldown resistor is enabled on the corresponding pin, if
+ *     the corresponding PE field is set.
+ * - 0b1 - Internal pullup resistor is enabled on the corresponding pin, if the
  *     corresponding PE field is set.
  */
 /*@{*/
@@ -24098,9 +24130,9 @@
  * valid in all digital pin muxing modes.
  *
  * Values:
- * - 0 - Internal pullup or pulldown resistor is not enabled on the
+ * - 0b0 - Internal pullup or pulldown resistor is not enabled on the
  *     corresponding pin.
- * - 1 - Internal pullup or pulldown resistor is enabled on the corresponding
+ * - 0b1 - Internal pullup or pulldown resistor is enabled on the corresponding
  *     pin, if the pin is configured as a digital input.
  */
 /*@{*/
@@ -24120,9 +24152,9 @@
  * rate. Slew rate configuration is valid in all digital pin muxing modes.
  *
  * Values:
- * - 0 - Fast slew rate is configured on the corresponding pin, if the pin is
+ * - 0b0 - Fast slew rate is configured on the corresponding pin, if the pin is
  *     configured as a digital output.
- * - 1 - Slow slew rate is configured on the corresponding pin, if the pin is
+ * - 0b1 - Slow slew rate is configured on the corresponding pin, if the pin is
  *     configured as a digital output.
  */
 /*@{*/
@@ -24143,10 +24175,10 @@
  * modes.
  *
  * Values:
- * - 0 - Passive input filter is disabled on the corresponding pin.
- * - 1 - Passive input filter is enabled on the corresponding pin, if the pin is
- *     configured as a digital input. Refer to the device data sheet for filter
- *     characteristics.
+ * - 0b0 - Passive input filter is disabled on the corresponding pin.
+ * - 0b1 - Passive input filter is enabled on the corresponding pin, if the pin
+ *     is configured as a digital input. Refer to the device data sheet for
+ *     filter characteristics.
  */
 /*@{*/
 /*! @brief Read current value of the PORT_PCR_PFE field. */
@@ -24165,9 +24197,9 @@
  * strength. Drive strength configuration is valid in all digital pin muxing modes.
  *
  * Values:
- * - 0 - Low drive strength is configured on the corresponding pin, if pin is
+ * - 0b0 - Low drive strength is configured on the corresponding pin, if pin is
  *     configured as a digital output.
- * - 1 - High drive strength is configured on the corresponding pin, if pin is
+ * - 0b1 - High drive strength is configured on the corresponding pin, if pin is
  *     configured as a digital output.
  */
 /*@{*/
@@ -24189,14 +24221,14 @@
  * follows:
  *
  * Values:
- * - 000 - Pin disabled (analog).
- * - 001 - Alternative 1 (GPIO).
- * - 010 - Alternative 2 (chip-specific).
- * - 011 - Alternative 3 (chip-specific).
- * - 100 - Alternative 4 (chip-specific).
- * - 101 - Alternative 5 (chip-specific).
- * - 110 - Alternative 6 (chip-specific).
- * - 111 - Alternative 7 (chip-specific).
+ * - 0b000 - Pin disabled (analog).
+ * - 0b001 - Alternative 1 (GPIO).
+ * - 0b010 - Alternative 2 (chip-specific).
+ * - 0b011 - Alternative 3 (chip-specific).
+ * - 0b100 - Alternative 4 (chip-specific).
+ * - 0b101 - Alternative 5 (chip-specific).
+ * - 0b110 - Alternative 6 (chip-specific).
+ * - 0b111 - Alternative 7 (chip-specific).
  */
 /*@{*/
 /*! @brief Read current value of the PORT_PCR_MUX field. */
@@ -24216,15 +24248,15 @@
  * corresponding pin is configured to generate interrupt/DMA request as follows:
  *
  * Values:
- * - 0000 - Interrupt/DMA request disabled.
- * - 0001 - DMA request on rising edge.
- * - 0010 - DMA request on falling edge.
- * - 0011 - DMA request on either edge.
- * - 1000 - Interrupt when logic 0.
- * - 1001 - Interrupt on rising-edge.
- * - 1010 - Interrupt on falling-edge.
- * - 1011 - Interrupt on either edge.
- * - 1100 - Interrupt when logic 1.
+ * - 0b0000 - Interrupt/DMA request disabled.
+ * - 0b0001 - DMA request on rising edge.
+ * - 0b0010 - DMA request on falling edge.
+ * - 0b0011 - DMA request on either edge.
+ * - 0b1000 - Interrupt when logic 0.
+ * - 0b1001 - Interrupt on rising-edge.
+ * - 0b1010 - Interrupt on falling-edge.
+ * - 0b1011 - Interrupt on either edge.
+ * - 0b1100 - Interrupt when logic 1.
  */
 /*@{*/
 /*! @brief Read current value of the PORT_PCR_IRQC field. */
@@ -24243,12 +24275,12 @@
  * The pin interrupt configuration is valid in all digital pin muxing modes.
  *
  * Values:
- * - 0 - Configured interrupt is not detected.
- * - 1 - Configured interrupt is detected. If the pin is configured to generate
- *     a DMA request, then the corresponding flag will be cleared automatically
+ * - 0b0 - Configured interrupt is not detected.
+ * - 0b1 - Configured interrupt is detected. If the pin is configured to
+ *     generate a DMA request, then the corresponding flag will be cleared automatically
  *     at the completion of the requested DMA transfer. Otherwise, the flag
- *     remains set until a logic 1 is written to the flag. If the pin is configured for
- *     a level sensitive interrupt and the pin remains asserted, then the flag
+ *     remains set until a logic 1 is written to the flag. If the pin is configured
+ *     for a level sensitive interrupt and the pin remains asserted, then the flag
  *     is set again immediately after it is cleared.
  */
 /*@{*/
@@ -24304,9 +24336,10 @@
  * the value in GPWD.
  *
  * Values:
- * - 0 - Corresponding Pin Control Register is not updated with the value in
- *     GPWD.
- * - 1 - Corresponding Pin Control Register is updated with the value in GPWD.
+ * - 0b0000000000000000 - Corresponding Pin Control Register is not updated with
+ *     the value in GPWD.
+ * - 0b0000000000000001 - Corresponding Pin Control Register is updated with the
+ *     value in GPWD.
  */
 /*@{*/
 /*! @brief Set the GPWE field to a new value. */
@@ -24357,9 +24390,10 @@
  * the value in GPWD.
  *
  * Values:
- * - 0 - Corresponding Pin Control Register is not updated with the value in
- *     GPWD.
- * - 1 - Corresponding Pin Control Register is updated with the value in GPWD.
+ * - 0b0000000000000000 - Corresponding Pin Control Register is not updated with
+ *     the value in GPWD.
+ * - 0b0000000000000001 - Corresponding Pin Control Register is updated with the
+ *     value in GPWD.
  */
 /*@{*/
 /*! @brief Set the GPWE field to a new value. */
@@ -24444,8 +24478,8 @@
  * mode causes a reset. This bit is cleared by any reset except WAKEUP.
  *
  * Values:
- * - 0 - Reset not caused by LLWU module wakeup source
- * - 1 - Reset caused by LLWU module wakeup source
+ * - 0b0 - Reset not caused by LLWU module wakeup source
+ * - 0b1 - Reset caused by LLWU module wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_WAKEUP field. */
@@ -24460,8 +24494,8 @@
  * an LVD reset occurs. This field is also set by POR.
  *
  * Values:
- * - 0 - Reset not caused by LVD trip or POR
- * - 1 - Reset caused by LVD trip or POR
+ * - 0b0 - Reset not caused by LVD trip or POR
+ * - 0b1 - Reset caused by LVD trip or POR
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_LVD field. */
@@ -24477,8 +24511,8 @@
  * detailed MCG description for information on enabling the clock monitor.
  *
  * Values:
- * - 0 - Reset not caused by a loss of external clock.
- * - 1 - Reset caused by a loss of external clock.
+ * - 0b0 - Reset not caused by a loss of external clock.
+ * - 0b1 - Reset caused by a loss of external clock.
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_LOC field. */
@@ -24493,8 +24527,8 @@
  * MCG description for information on the loss-of-clock event.
  *
  * Values:
- * - 0 - Reset not caused by a loss of lock in the PLL
- * - 1 - Reset caused by a loss of lock in the PLL
+ * - 0b0 - Reset not caused by a loss of lock in the PLL
+ * - 0b1 - Reset caused by a loss of lock in the PLL
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_LOL field. */
@@ -24509,8 +24543,8 @@
  * reset source can be blocked by disabling the watchdog.
  *
  * Values:
- * - 0 - Reset not caused by watchdog timeout
- * - 1 - Reset caused by watchdog timeout
+ * - 0b0 - Reset not caused by watchdog timeout
+ * - 0b1 - Reset caused by watchdog timeout
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_WDOG field. */
@@ -24525,8 +24559,8 @@
  * RESET pin.
  *
  * Values:
- * - 0 - Reset not caused by external reset pin
- * - 1 - Reset caused by external reset pin
+ * - 0b0 - Reset not caused by external reset pin
+ * - 0b1 - Reset caused by external reset pin
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_PIN field. */
@@ -24543,8 +24577,8 @@
  * internal supply was below the LVD threshold.
  *
  * Values:
- * - 0 - Reset not caused by POR
- * - 1 - Reset caused by POR
+ * - 0b0 - Reset not caused by POR
+ * - 0b1 - Reset caused by POR
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_POR field. */
@@ -24585,8 +24619,8 @@
  * event.
  *
  * Values:
- * - 0 - Reset not caused by core LOCKUP event
- * - 1 - Reset caused by core LOCKUP event
+ * - 0b0 - Reset not caused by core LOCKUP event
+ * - 0b1 - Reset caused by core LOCKUP event
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS1_LOCKUP field. */
@@ -24601,8 +24635,8 @@
  * Application Interrupt and Reset Control Register in the ARM core.
  *
  * Values:
- * - 0 - Reset not caused by software setting of SYSRESETREQ bit
- * - 1 - Reset caused by software setting of SYSRESETREQ bit
+ * - 0b0 - Reset not caused by software setting of SYSRESETREQ bit
+ * - 0b1 - Reset caused by software setting of SYSRESETREQ bit
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS1_SW field. */
@@ -24617,9 +24651,9 @@
  * System Reset Request bit in the MDM-AP Control Register.
  *
  * Values:
- * - 0 - Reset not caused by host debugger system setting of the System Reset
+ * - 0b0 - Reset not caused by host debugger system setting of the System Reset
  *     Request bit
- * - 1 - Reset caused by host debugger system setting of the System Reset
+ * - 0b1 - Reset caused by host debugger system setting of the System Reset
  *     Request bit
  */
 /*@{*/
@@ -24636,10 +24670,10 @@
  * second to enter stop mode.
  *
  * Values:
- * - 0 - Reset not caused by peripheral failure to acknowledge attempt to enter
+ * - 0b0 - Reset not caused by peripheral failure to acknowledge attempt to
+ *     enter stop mode
+ * - 0b1 - Reset caused by peripheral failure to acknowledge attempt to enter
  *     stop mode
- * - 1 - Reset caused by peripheral failure to acknowledge attempt to enter stop
- *     mode
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS1_SACKERR field. */
@@ -24682,10 +24716,10 @@
  * Selects how the reset pin filter is enabled in run and wait modes.
  *
  * Values:
- * - 00 - All filtering disabled
- * - 01 - Bus clock filter enabled for normal operation
- * - 10 - LPO clock filter enabled for normal operation
- * - 11 - Reserved
+ * - 0b00 - All filtering disabled
+ * - 0b01 - Bus clock filter enabled for normal operation
+ * - 0b10 - LPO clock filter enabled for normal operation
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the RCM_RPFC_RSTFLTSRW field. */
@@ -24705,8 +24739,8 @@
  * reconfigured before clearing PMC_REGSC[ACKISO].
  *
  * Values:
- * - 0 - All filtering disabled
- * - 1 - LPO clock filter enabled
+ * - 0b0 - All filtering disabled
+ * - 0b1 - LPO clock filter enabled
  */
 /*@{*/
 /*! @brief Read current value of the RCM_RPFC_RSTFLTSS field. */
@@ -24752,38 +24786,38 @@
  * Selects the reset pin bus clock filter width.
  *
  * Values:
- * - 00000 - Bus clock filter count is 1
- * - 00001 - Bus clock filter count is 2
- * - 00010 - Bus clock filter count is 3
- * - 00011 - Bus clock filter count is 4
- * - 00100 - Bus clock filter count is 5
- * - 00101 - Bus clock filter count is 6
- * - 00110 - Bus clock filter count is 7
- * - 00111 - Bus clock filter count is 8
- * - 01000 - Bus clock filter count is 9
- * - 01001 - Bus clock filter count is 10
- * - 01010 - Bus clock filter count is 11
- * - 01011 - Bus clock filter count is 12
- * - 01100 - Bus clock filter count is 13
- * - 01101 - Bus clock filter count is 14
- * - 01110 - Bus clock filter count is 15
- * - 01111 - Bus clock filter count is 16
- * - 10000 - Bus clock filter count is 17
- * - 10001 - Bus clock filter count is 18
- * - 10010 - Bus clock filter count is 19
- * - 10011 - Bus clock filter count is 20
- * - 10100 - Bus clock filter count is 21
- * - 10101 - Bus clock filter count is 22
- * - 10110 - Bus clock filter count is 23
- * - 10111 - Bus clock filter count is 24
- * - 11000 - Bus clock filter count is 25
- * - 11001 - Bus clock filter count is 26
- * - 11010 - Bus clock filter count is 27
- * - 11011 - Bus clock filter count is 28
- * - 11100 - Bus clock filter count is 29
- * - 11101 - Bus clock filter count is 30
- * - 11110 - Bus clock filter count is 31
- * - 11111 - Bus clock filter count is 32
+ * - 0b00000 - Bus clock filter count is 1
+ * - 0b00001 - Bus clock filter count is 2
+ * - 0b00010 - Bus clock filter count is 3
+ * - 0b00011 - Bus clock filter count is 4
+ * - 0b00100 - Bus clock filter count is 5
+ * - 0b00101 - Bus clock filter count is 6
+ * - 0b00110 - Bus clock filter count is 7
+ * - 0b00111 - Bus clock filter count is 8
+ * - 0b01000 - Bus clock filter count is 9
+ * - 0b01001 - Bus clock filter count is 10
+ * - 0b01010 - Bus clock filter count is 11
+ * - 0b01011 - Bus clock filter count is 12
+ * - 0b01100 - Bus clock filter count is 13
+ * - 0b01101 - Bus clock filter count is 14
+ * - 0b01110 - Bus clock filter count is 15
+ * - 0b01111 - Bus clock filter count is 16
+ * - 0b10000 - Bus clock filter count is 17
+ * - 0b10001 - Bus clock filter count is 18
+ * - 0b10010 - Bus clock filter count is 19
+ * - 0b10011 - Bus clock filter count is 20
+ * - 0b10100 - Bus clock filter count is 21
+ * - 0b10101 - Bus clock filter count is 22
+ * - 0b10110 - Bus clock filter count is 23
+ * - 0b10111 - Bus clock filter count is 24
+ * - 0b11000 - Bus clock filter count is 25
+ * - 0b11001 - Bus clock filter count is 26
+ * - 0b11010 - Bus clock filter count is 27
+ * - 0b11011 - Bus clock filter count is 28
+ * - 0b11100 - Bus clock filter count is 29
+ * - 0b11101 - Bus clock filter count is 30
+ * - 0b11110 - Bus clock filter count is 31
+ * - 0b11111 - Bus clock filter count is 32
  */
 /*@{*/
 /*! @brief Read current value of the RCM_RPFW_RSTFLTSEL field. */
@@ -25186,11 +25220,11 @@
  * current compensation interval.
  *
  * Values:
- * - 10000000 - Time Prescaler Register overflows every 32896 clock cycles.
- * - 11111111 - Time Prescaler Register overflows every 32769 clock cycles.
- * - 0 - Time Prescaler Register overflows every 32768 clock cycles.
- * - 1 - Time Prescaler Register overflows every 32767 clock cycles.
- * - 1111111 - Time Prescaler Register overflows every 32641 clock cycles.
+ * - 0b10000000 - Time Prescaler Register overflows every 32896 clock cycles.
+ * - 0b11111111 - Time Prescaler Register overflows every 32769 clock cycles.
+ * - 0b00000000 - Time Prescaler Register overflows every 32768 clock cycles.
+ * - 0b00000001 - Time Prescaler Register overflows every 32767 clock cycles.
+ * - 0b01111111 - Time Prescaler Register overflows every 32641 clock cycles.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_TCR_TCR field. */
@@ -25278,8 +25312,8 @@
  * @name Register RTC_CR, field SWR[0] (RW)
  *
  * Values:
- * - 0 - No effect.
- * - 1 - Resets all RTC registers except for the SWR bit . The SWR bit is
+ * - 0b0 - No effect.
+ * - 0b1 - Resets all RTC registers except for the SWR bit . The SWR bit is
  *     cleared by POR and by software explicitly clearing it.
  */
 /*@{*/
@@ -25298,8 +25332,8 @@
  * The wakeup pin is optional and not available on all devices.
  *
  * Values:
- * - 0 - Wakeup pin is disabled.
- * - 1 - Wakeup pin is enabled and wakeup pin asserts if the RTC interrupt
+ * - 0b0 - Wakeup pin is disabled.
+ * - 0b1 - Wakeup pin is enabled and wakeup pin asserts if the RTC interrupt
  *     asserts or the wakeup pin is turned on.
  */
 /*@{*/
@@ -25316,9 +25350,9 @@
  * @name Register RTC_CR, field SUP[2] (RW)
  *
  * Values:
- * - 0 - Non-supervisor mode write accesses are not supported and generate a bus
- *     error.
- * - 1 - Non-supervisor mode write accesses are supported.
+ * - 0b0 - Non-supervisor mode write accesses are not supported and generate a
+ *     bus error.
+ * - 0b1 - Non-supervisor mode write accesses are supported.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_CR_SUP field. */
@@ -25338,8 +25372,8 @@
  * the SR[TCE] is clear.
  *
  * Values:
- * - 0 - Registers cannot be written when locked.
- * - 1 - Registers can be written when locked under limited conditions.
+ * - 0b0 - Registers cannot be written when locked.
+ * - 0b1 - Registers can be written when locked under limited conditions.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_CR_UM field. */
@@ -25357,10 +25391,10 @@
  * The wakeup pin is optional and not available on all devices.
  *
  * Values:
- * - 0 - Wakeup pin asserts (active low, open drain) if the RTC interrupt
+ * - 0b0 - Wakeup pin asserts (active low, open drain) if the RTC interrupt
  *     asserts or the wakeup pin is turned on.
- * - 1 - Wakeup pin instead outputs the RTC 32kHz clock, provided the wakeup pin
- *     is turned on and the 32kHz clock is output to other peripherals.
+ * - 0b1 - Wakeup pin instead outputs the RTC 32kHz clock, provided the wakeup
+ *     pin is turned on and the 32kHz clock is output to other peripherals.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_CR_WPS field. */
@@ -25376,8 +25410,8 @@
  * @name Register RTC_CR, field OSCE[8] (RW)
  *
  * Values:
- * - 0 - 32.768 kHz oscillator is disabled.
- * - 1 - 32.768 kHz oscillator is enabled. After setting this bit, wait the
+ * - 0b0 - 32.768 kHz oscillator is disabled.
+ * - 0b1 - 32.768 kHz oscillator is enabled. After setting this bit, wait the
  *     oscillator startup time before enabling the time counter to allow the 32.768
  *     kHz clock time to stabilize.
  */
@@ -25395,8 +25429,8 @@
  * @name Register RTC_CR, field CLKO[9] (RW)
  *
  * Values:
- * - 0 - The 32 kHz clock is output to other peripherals.
- * - 1 - The 32 kHz clock is not output to other peripherals.
+ * - 0b0 - The 32 kHz clock is output to other peripherals.
+ * - 0b1 - The 32 kHz clock is not output to other peripherals.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_CR_CLKO field. */
@@ -25412,8 +25446,8 @@
  * @name Register RTC_CR, field SC16P[10] (RW)
  *
  * Values:
- * - 0 - Disable the load.
- * - 1 - Enable the additional load.
+ * - 0b0 - Disable the load.
+ * - 0b1 - Enable the additional load.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_CR_SC16P field. */
@@ -25429,8 +25463,8 @@
  * @name Register RTC_CR, field SC8P[11] (RW)
  *
  * Values:
- * - 0 - Disable the load.
- * - 1 - Enable the additional load.
+ * - 0b0 - Disable the load.
+ * - 0b1 - Enable the additional load.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_CR_SC8P field. */
@@ -25446,8 +25480,8 @@
  * @name Register RTC_CR, field SC4P[12] (RW)
  *
  * Values:
- * - 0 - Disable the load.
- * - 1 - Enable the additional load.
+ * - 0b0 - Disable the load.
+ * - 0b1 - Enable the additional load.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_CR_SC4P field. */
@@ -25463,8 +25497,8 @@
  * @name Register RTC_CR, field SC2P[13] (RW)
  *
  * Values:
- * - 0 - Disable the load.
- * - 1 - Enable the additional load.
+ * - 0b0 - Disable the load.
+ * - 0b1 - Enable the additional load.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_CR_SC2P field. */
@@ -25509,8 +25543,8 @@
  * writing the TSR register when the time counter is disabled.
  *
  * Values:
- * - 0 - Time is valid.
- * - 1 - Time is invalid and time counter is read as zero.
+ * - 0b0 - Time is valid.
+ * - 0b1 - Time is invalid and time counter is read as zero.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_SR_TIF field. */
@@ -25526,8 +25560,8 @@
  * is cleared by writing the TSR register when the time counter is disabled.
  *
  * Values:
- * - 0 - Time overflow has not occurred.
- * - 1 - Time overflow has occurred and time counter is read as zero.
+ * - 0b0 - Time overflow has not occurred.
+ * - 0b1 - Time overflow has occurred and time counter is read as zero.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_SR_TOF field. */
@@ -25542,8 +25576,8 @@
  * increments. This bit is cleared by writing the TAR register.
  *
  * Values:
- * - 0 - Time alarm has not occurred.
- * - 1 - Time alarm has occurred.
+ * - 0b0 - Time alarm has not occurred.
+ * - 0b1 - Time alarm has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_SR_TAF field. */
@@ -25559,8 +25593,8 @@
  * register are not writeable, but increment.
  *
  * Values:
- * - 0 - Time counter is disabled.
- * - 1 - Time counter is enabled.
+ * - 0b0 - Time counter is disabled.
+ * - 0b1 - Time counter is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_SR_TCE field. */
@@ -25603,8 +25637,9 @@
  * After being cleared, this bit can be set only by POR or software reset.
  *
  * Values:
- * - 0 - Time Compensation Register is locked and writes are ignored.
- * - 1 - Time Compensation Register is not locked and writes complete as normal.
+ * - 0b0 - Time Compensation Register is locked and writes are ignored.
+ * - 0b1 - Time Compensation Register is not locked and writes complete as
+ *     normal.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_LR_TCL field. */
@@ -25622,8 +25657,8 @@
  * After being cleared, this bit can only be set by POR.
  *
  * Values:
- * - 0 - Control Register is locked and writes are ignored.
- * - 1 - Control Register is not locked and writes complete as normal.
+ * - 0b0 - Control Register is locked and writes are ignored.
+ * - 0b1 - Control Register is not locked and writes complete as normal.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_LR_CRL field. */
@@ -25641,8 +25676,8 @@
  * After being cleared, this bit can be set only by POR or software reset.
  *
  * Values:
- * - 0 - Status Register is locked and writes are ignored.
- * - 1 - Status Register is not locked and writes complete as normal.
+ * - 0b0 - Status Register is locked and writes are ignored.
+ * - 0b1 - Status Register is not locked and writes complete as normal.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_LR_SRL field. */
@@ -25660,8 +25695,8 @@
  * After being cleared, this bit can be set only by POR or software reset.
  *
  * Values:
- * - 0 - Lock Register is locked and writes are ignored.
- * - 1 - Lock Register is not locked and writes complete as normal.
+ * - 0b0 - Lock Register is locked and writes are ignored.
+ * - 0b1 - Lock Register is not locked and writes complete as normal.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_LR_LRL field. */
@@ -25702,8 +25737,8 @@
  * @name Register RTC_IER, field TIIE[0] (RW)
  *
  * Values:
- * - 0 - Time invalid flag does not generate an interrupt.
- * - 1 - Time invalid flag does generate an interrupt.
+ * - 0b0 - Time invalid flag does not generate an interrupt.
+ * - 0b1 - Time invalid flag does generate an interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_IER_TIIE field. */
@@ -25719,8 +25754,8 @@
  * @name Register RTC_IER, field TOIE[1] (RW)
  *
  * Values:
- * - 0 - Time overflow flag does not generate an interrupt.
- * - 1 - Time overflow flag does generate an interrupt.
+ * - 0b0 - Time overflow flag does not generate an interrupt.
+ * - 0b1 - Time overflow flag does generate an interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_IER_TOIE field. */
@@ -25736,8 +25771,8 @@
  * @name Register RTC_IER, field TAIE[2] (RW)
  *
  * Values:
- * - 0 - Time alarm flag does not generate an interrupt.
- * - 1 - Time alarm flag does generate an interrupt.
+ * - 0b0 - Time alarm flag does not generate an interrupt.
+ * - 0b1 - Time alarm flag does generate an interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_IER_TAIE field. */
@@ -25757,8 +25792,8 @@
  * (there is no corresponding status flag to clear).
  *
  * Values:
- * - 0 - Seconds interrupt is disabled.
- * - 1 - Seconds interrupt is enabled.
+ * - 0b0 - Seconds interrupt is disabled.
+ * - 0b1 - Seconds interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_IER_TSIE field. */
@@ -25777,8 +25812,8 @@
  * wakeup pin is enabled and this bit is set, the wakeup pin will assert.
  *
  * Values:
- * - 0 - No effect.
- * - 1 - If the wakeup pin is enabled, then the wakeup pin will assert.
+ * - 0b0 - No effect.
+ * - 0b1 - If the wakeup pin is enabled, then the wakeup pin will assert.
  */
 /*@{*/
 /*! @brief Read current value of the RTC_IER_WPON field. */
@@ -25854,10 +25889,10 @@
  * reset only on POR/LVD.
  *
  * Values:
- * - 00 - System oscillator (OSC32KCLK)
- * - 01 - Reserved
- * - 10 - RTC_CLKIN
- * - 11 - LPO 1kHz
+ * - 0b00 - System oscillator (OSC32KCLK)
+ * - 0b01 - Reserved
+ * - 0b10 - RTC_CLKIN
+ * - 0b11 - LPO 1kHz
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT1_OSC32KSEL field. */
@@ -25876,8 +25911,8 @@
  * VLPR and VLPW modes.
  *
  * Values:
- * - 0 - USB voltage regulator not in standby during VLPR and VLPW modes.
- * - 1 - USB voltage regulator in standby during VLPR and VLPW modes.
+ * - 0b0 - USB voltage regulator not in standby during VLPR and VLPW modes.
+ * - 0b1 - USB voltage regulator in standby during VLPR and VLPW modes.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT1_USBVSTBY field. */
@@ -25896,9 +25931,10 @@
  * Stop, VLPS, LLS and VLLS modes.
  *
  * Values:
- * - 0 - USB voltage regulator not in standby during Stop, VLPS, LLS and VLLS
+ * - 0b0 - USB voltage regulator not in standby during Stop, VLPS, LLS and VLLS
  *     modes.
- * - 1 - USB voltage regulator in standby during Stop, VLPS, LLS and VLLS modes.
+ * - 0b1 - USB voltage regulator in standby during Stop, VLPS, LLS and VLLS
+ *     modes.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT1_USBSSTBY field. */
@@ -25916,8 +25952,8 @@
  * Controls whether the USB voltage regulator is enabled.
  *
  * Values:
- * - 0 - USB voltage regulator is disabled.
- * - 1 - USB voltage regulator is enabled.
+ * - 0b0 - USB voltage regulator is disabled.
+ * - 0b1 - USB voltage regulator is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT1_USBREGEN field. */
@@ -25963,8 +25999,8 @@
  * register bit clears after a write to USBREGEN.
  *
  * Values:
- * - 0 - SOPT1 USBREGEN cannot be written.
- * - 1 - SOPT1 USBREGEN can be written.
+ * - 0b0 - SOPT1 USBREGEN cannot be written.
+ * - 0b1 - SOPT1 USBREGEN can be written.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT1CFG_URWE field. */
@@ -25983,8 +26019,8 @@
  * This register bit clears after a write to USBVSTBY.
  *
  * Values:
- * - 0 - SOPT1 USBVSTB cannot be written.
- * - 1 - SOPT1 USBVSTB can be written.
+ * - 0b0 - SOPT1 USBVSTB cannot be written.
+ * - 0b1 - SOPT1 USBVSTB can be written.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT1CFG_UVSWE field. */
@@ -26003,8 +26039,8 @@
  * This register bit clears after a write to USBSSTBY.
  *
  * Values:
- * - 0 - SOPT1 USBSSTB cannot be written.
- * - 1 - SOPT1 USBSSTB can be written.
+ * - 0b0 - SOPT1 USBSSTB cannot be written.
+ * - 0b1 - SOPT1 USBSSTB can be written.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT1CFG_USSWE field. */
@@ -26052,8 +26088,8 @@
  * RTC_CLKOUT pin.
  *
  * Values:
- * - 0 - RTC 1 Hz clock is output on the RTC_CLKOUT pin.
- * - 1 - OSCERCLK clock is output on the RTC_CLKOUT pin.
+ * - 0b0 - RTC 1 Hz clock is output on the RTC_CLKOUT pin.
+ * - 0b1 - OSCERCLK clock is output on the RTC_CLKOUT pin.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT2_RTCCLKOUTSEL field. */
@@ -26071,14 +26107,14 @@
  * Selects the clock to output on the CLKOUT pin.
  *
  * Values:
- * - 000 - Reserved
- * - 001 - Reserved
- * - 010 - Bus clock
- * - 011 - LPO clock (1 kHz)
- * - 100 - MCGIRCLK
- * - 101 - Reserved
- * - 110 - OSCERCLK
- * - 111 - Reserved
+ * - 0b000 - Reserved
+ * - 0b001 - Reserved
+ * - 0b010 - Bus clock
+ * - 0b011 - LPO clock (1 kHz)
+ * - 0b100 - MCGIRCLK
+ * - 0b101 - Reserved
+ * - 0b110 - OSCERCLK
+ * - 0b111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT2_CLKOUTSEL field. */
@@ -26097,8 +26133,8 @@
  * options.
  *
  * Values:
- * - 0 - MCGFLLCLK clock
- * - 1 - MCGPLLCLK clock with fixed divide by 2
+ * - 0b0 - MCGFLLCLK clock
+ * - 0b1 - MCGPLLCLK clock with fixed divide by 2
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT2_PLLFLLSEL field. */
@@ -26116,8 +26152,8 @@
  * Selects the clock source for the USB 48 MHz clock.
  *
  * Values:
- * - 0 - External bypass clock (USB_CLKIN).
- * - 1 - MCGFLLCLK clock , or MCGPLLCLK/2 clock
+ * - 0b0 - External bypass clock (USB_CLKIN).
+ * - 0b1 - MCGFLLCLK clock , or MCGPLLCLK/2 clock
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT2_USBSRC field. */
@@ -26135,10 +26171,10 @@
  * Selects the clock source for the TPM counter clock
  *
  * Values:
- * - 00 - Clock disabled
- * - 01 - MCGFLLCLK clock , or MCGPLLCLK/2
- * - 10 - OSCERCLK clock
- * - 11 - MCGIRCLK clock
+ * - 0b00 - Clock disabled
+ * - 0b01 - MCGFLLCLK clock , or MCGPLLCLK/2
+ * - 0b10 - OSCERCLK clock
+ * - 0b11 - MCGIRCLK clock
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT2_TPMSRC field. */
@@ -26156,10 +26192,10 @@
  * Selects the clock source for the UART0 transmit and receive clock.
  *
  * Values:
- * - 00 - Clock disabled
- * - 01 - MCGFLLCLK clock , or MCGPLLCLK/2
- * - 10 - OSCERCLK clock
- * - 11 - MCGIRCLK clock
+ * - 0b00 - Clock disabled
+ * - 0b01 - MCGFLLCLK clock , or MCGPLLCLK/2
+ * - 0b10 - OSCERCLK clock
+ * - 0b11 - MCGIRCLK clock
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT2_UART0SRC field. */
@@ -26203,10 +26239,10 @@
  * input capture mode, clear this field.
  *
  * Values:
- * - 00 - TPM1_CH0 signal
- * - 01 - CMP0 output
- * - 10 - Reserved
- * - 11 - USB start of frame pulse
+ * - 0b00 - TPM1_CH0 signal
+ * - 0b01 - CMP0 output
+ * - 0b10 - Reserved
+ * - 0b11 - USB start of frame pulse
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_TPM1CH0SRC field. */
@@ -26225,8 +26261,8 @@
  * input capture mode, clear this field.
  *
  * Values:
- * - 0 - TPM2_CH0 signal
- * - 1 - CMP0 output
+ * - 0b0 - TPM2_CH0 signal
+ * - 0b1 - CMP0 output
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_TPM2CH0SRC field. */
@@ -26246,8 +26282,8 @@
  * the appropriate pin control register in the port control module.
  *
  * Values:
- * - 0 - TPM0 external clock driven by TPM_CLKIN0 pin.
- * - 1 - TPM0 external clock driven by TPM_CLKIN1 pin.
+ * - 0b0 - TPM0 external clock driven by TPM_CLKIN0 pin.
+ * - 0b1 - TPM0 external clock driven by TPM_CLKIN1 pin.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_TPM0CLKSEL field. */
@@ -26267,8 +26303,8 @@
  * the appropriate pin control register in the port control module.
  *
  * Values:
- * - 0 - TPM1 external clock driven by TPM_CLKIN0 pin.
- * - 1 - TPM1 external clock driven by TPM_CLKIN1 pin.
+ * - 0b0 - TPM1 external clock driven by TPM_CLKIN0 pin.
+ * - 0b1 - TPM1 external clock driven by TPM_CLKIN1 pin.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_TPM1CLKSEL field. */
@@ -26288,8 +26324,8 @@
  * the appropriate Pin Control Register in the Port Control module.
  *
  * Values:
- * - 0 - TPM2 external clock driven by TPM_CLKIN0 pin.
- * - 1 - TPM2 external clock driven by TPM_CLKIN1 pin.
+ * - 0b0 - TPM2 external clock driven by TPM_CLKIN0 pin.
+ * - 0b1 - TPM2 external clock driven by TPM_CLKIN1 pin.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_TPM2CLKSEL field. */
@@ -26332,10 +26368,10 @@
  * Selects the source for the UART0 transmit data.
  *
  * Values:
- * - 00 - UART0_TX pin
- * - 01 - UART0_TX pin modulated with TPM1 channel 0 output
- * - 10 - UART0_TX pin modulated with TPM2 channel 0 output
- * - 11 - Reserved
+ * - 0b00 - UART0_TX pin
+ * - 0b01 - UART0_TX pin modulated with TPM1 channel 0 output
+ * - 0b10 - UART0_TX pin modulated with TPM2 channel 0 output
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART0TXSRC field. */
@@ -26353,8 +26389,8 @@
  * Selects the source for the UART0 receive data.
  *
  * Values:
- * - 0 - UART_RX pin
- * - 1 - CMP0 output
+ * - 0b0 - UART_RX pin
+ * - 0b1 - CMP0 output
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART0RXSRC field. */
@@ -26372,10 +26408,10 @@
  * Selects the source for the UART1 transmit data.
  *
  * Values:
- * - 00 - UART1_TX pin
- * - 01 - UART1_TX pin modulated with TPM1 channel 0 output
- * - 10 - UART1_TX pin modulated with TPM2 channel 0 output
- * - 11 - Reserved
+ * - 0b00 - UART1_TX pin
+ * - 0b01 - UART1_TX pin modulated with TPM1 channel 0 output
+ * - 0b10 - UART1_TX pin modulated with TPM2 channel 0 output
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART1TXSRC field. */
@@ -26393,8 +26429,8 @@
  * Selects the source for the UART1 receive data.
  *
  * Values:
- * - 0 - UART1_RX pin
- * - 1 - CMP0 output
+ * - 0b0 - UART1_RX pin
+ * - 0b1 - CMP0 output
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART1RXSRC field. */
@@ -26410,8 +26446,8 @@
  * @name Register SIM_SOPT5, field UART0ODE[16] (RW)
  *
  * Values:
- * - 0 - Open drain is disabled on UART0.
- * - 1 - Open drain is enabled on UART0.
+ * - 0b0 - Open drain is disabled on UART0.
+ * - 0b1 - Open drain is enabled on UART0.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART0ODE field. */
@@ -26427,8 +26463,8 @@
  * @name Register SIM_SOPT5, field UART1ODE[17] (RW)
  *
  * Values:
- * - 0 - Open drain is disabled on UART1.
- * - 1 - Open drain is enabled on UART1
+ * - 0b0 - Open drain is disabled on UART1.
+ * - 0b1 - Open drain is enabled on UART1
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART1ODE field. */
@@ -26444,8 +26480,8 @@
  * @name Register SIM_SOPT5, field UART2ODE[18] (RW)
  *
  * Values:
- * - 0 - Open drain is disabled on UART2
- * - 1 - Open drain is enabled on UART2
+ * - 0b0 - Open drain is disabled on UART2
+ * - 0b1 - Open drain is enabled on UART2
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART2ODE field. */
@@ -26489,22 +26525,22 @@
  * stop and VLPS modes.
  *
  * Values:
- * - 0000 - External trigger pin input (EXTRG_IN)
- * - 0001 - CMP0 output
- * - 0010 - Reserved
- * - 0011 - Reserved
- * - 0100 - PIT trigger 0
- * - 0101 - PIT trigger 1
- * - 0110 - Reserved
- * - 0111 - Reserved
- * - 1000 - TPM0 overflow
- * - 1001 - TPM1 overflow
- * - 1010 - TPM2 overflow
- * - 1011 - Reserved
- * - 1100 - RTC alarm
- * - 1101 - RTC seconds
- * - 1110 - LPTMR0 trigger
- * - 1111 - Reserved
+ * - 0b0000 - External trigger pin input (EXTRG_IN)
+ * - 0b0001 - CMP0 output
+ * - 0b0010 - Reserved
+ * - 0b0011 - Reserved
+ * - 0b0100 - PIT trigger 0
+ * - 0b0101 - PIT trigger 1
+ * - 0b0110 - Reserved
+ * - 0b0111 - Reserved
+ * - 0b1000 - TPM0 overflow
+ * - 0b1001 - TPM1 overflow
+ * - 0b1010 - TPM2 overflow
+ * - 0b1011 - Reserved
+ * - 0b1100 - RTC alarm
+ * - 0b1101 - RTC seconds
+ * - 0b1110 - LPTMR0 trigger
+ * - 0b1111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT7_ADC0TRGSEL field. */
@@ -26523,8 +26559,8 @@
  * through ADC0ALTTRGEN.
  *
  * Values:
- * - 0 - Pre-trigger A
- * - 1 - Pre-trigger B
+ * - 0b0 - Pre-trigger A
+ * - 0b1 - Pre-trigger B
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT7_ADC0PRETRGSEL field. */
@@ -26542,8 +26578,8 @@
  * Enables alternative conversion triggers for ADC0.
  *
  * Values:
- * - 0 - TPM1 channel 0 (A) and channel 1 (B) triggers selected for ADC0.
- * - 1 - Alternate trigger selected for ADC0.
+ * - 0b0 - TPM1 channel 0 (A) and channel 1 (B) triggers selected for ADC0.
+ * - 0b1 - Alternate trigger selected for ADC0.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT7_ADC0ALTTRGEN field. */
@@ -26581,22 +26617,22 @@
  * Specifies the pincount of the device.
  *
  * Values:
- * - 0000 - 16-pin
- * - 0001 - 24-pin
- * - 0010 - 32-pin
- * - 0011 - 36-pin
- * - 0100 - 48-pin
- * - 0101 - 64-pin
- * - 0110 - 80-pin
- * - 0111 - Reserved
- * - 1000 - 100-pin
- * - 1001 - Reserved
- * - 1010 - Reserved
- * - 1011 - Custom pinout (WLCSP)
- * - 1100 - Reserved
- * - 1101 - Reserved
- * - 1110 - Reserved
- * - 1111 - Reserved
+ * - 0b0000 - 16-pin
+ * - 0b0001 - 24-pin
+ * - 0b0010 - 32-pin
+ * - 0b0011 - 36-pin
+ * - 0b0100 - 48-pin
+ * - 0b0101 - 64-pin
+ * - 0b0110 - 80-pin
+ * - 0b0111 - Reserved
+ * - 0b1000 - 100-pin
+ * - 0b1001 - Reserved
+ * - 0b1010 - Reserved
+ * - 0b1011 - Custom pinout (WLCSP)
+ * - 0b1100 - Reserved
+ * - 0b1101 - Reserved
+ * - 0b1110 - Reserved
+ * - 0b1111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_PINID field. */
@@ -26632,14 +26668,14 @@
  * Specifies the size of the System SRAM
  *
  * Values:
- * - 0000 - 0.5 KB
- * - 0001 - 1 KB
- * - 0010 - 2 KB
- * - 0011 - 4 KB
- * - 0100 - 8 KB
- * - 0101 - 16 KB
- * - 0110 - 32 KB
- * - 0111 - 64 KB
+ * - 0b0000 - 0.5 KB
+ * - 0b0001 - 1 KB
+ * - 0b0010 - 2 KB
+ * - 0b0011 - 4 KB
+ * - 0b0100 - 8 KB
+ * - 0b0101 - 16 KB
+ * - 0b0110 - 32 KB
+ * - 0b0111 - 64 KB
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_SRAMSIZE field. */
@@ -26653,7 +26689,7 @@
  * Specifies the Kinetis family of the device.
  *
  * Values:
- * - 0001 - KL family
+ * - 0b0001 - KL family
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_SERIESID field. */
@@ -26667,12 +26703,12 @@
  * Specifies the Kinetis sub-family of the device.
  *
  * Values:
- * - 0010 - KLx2 Subfamily
- * - 0011 - KLx3 Subfamily
- * - 0100 - KLx4 Subfamily
- * - 0101 - KLx5 Subfamily
- * - 0110 - KLx6 Subfamily
- * - 0111 - KLx7 Subfamily
+ * - 0b0010 - KLx2 Subfamily
+ * - 0b0011 - KLx3 Subfamily
+ * - 0b0100 - KLx4 Subfamily
+ * - 0b0101 - KLx5 Subfamily
+ * - 0b0110 - KLx6 Subfamily
+ * - 0b0111 - KLx7 Subfamily
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_SUBFAMID field. */
@@ -26686,11 +26722,11 @@
  * Specifies the Kinetis family of the device.
  *
  * Values:
- * - 0000 - KL0x Family (low end)
- * - 0001 - KL1x Family (basic)
- * - 0010 - KL2x Family (USB)
- * - 0011 - KL3x Family (Segment LCD)
- * - 0100 - KL4x Family (USB and Segment LCD)
+ * - 0b0000 - KL0x Family (low end)
+ * - 0b0001 - KL1x Family (basic)
+ * - 0b0010 - KL2x Family (USB)
+ * - 0b0011 - KL3x Family (Segment LCD)
+ * - 0b0100 - KL4x Family (USB and Segment LCD)
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_FAMID field. */
@@ -26737,8 +26773,8 @@
  * Controls the clock gate to the I2C0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_I2C0 field. */
@@ -26756,8 +26792,8 @@
  * Controls the clock gate to the I2C1 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_I2C1 field. */
@@ -26775,8 +26811,8 @@
  * Controls the clock gate to the UART0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_UART0 field. */
@@ -26794,8 +26830,8 @@
  * Controls the clock gate to the UART1 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_UART1 field. */
@@ -26813,8 +26849,8 @@
  * Controls the clock gate to the UART2 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_UART2 field. */
@@ -26832,8 +26868,8 @@
  * This bit controls the clock gate to the USB module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_USBOTG field. */
@@ -26851,8 +26887,8 @@
  * Controls the clock gate to the comparator module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_CMP field. */
@@ -26870,8 +26906,8 @@
  * Controls the clock gate to the SPI0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_SPI0 field. */
@@ -26889,8 +26925,8 @@
  * Controls the clock gate to the SPI1 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_SPI1 field. */
@@ -26933,8 +26969,8 @@
  * Controls software access to the Low Power Timer module.
  *
  * Values:
- * - 0 - Access disabled
- * - 1 - Access enabled
+ * - 0b0 - Access disabled
+ * - 0b1 - Access enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_LPTMR field. */
@@ -26952,8 +26988,8 @@
  * Controls software access to the TSI module.
  *
  * Values:
- * - 0 - Access disabled
- * - 1 - Access enabled
+ * - 0b0 - Access disabled
+ * - 0b1 - Access enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_TSI field. */
@@ -26971,8 +27007,8 @@
  * Controls the clock gate to the Port A module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTA field. */
@@ -26990,8 +27026,8 @@
  * Controls the clock gate to the Port B module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTB field. */
@@ -27009,8 +27045,8 @@
  * Controls the clock gate to the Port C module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTC field. */
@@ -27028,8 +27064,8 @@
  * Controls the clock gate to the Port D module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTD field. */
@@ -27047,8 +27083,8 @@
  * Controls the clock gate to the Port E module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTE field. */
@@ -27066,8 +27102,8 @@
  * This bit controls the clock gate to the Segment LCD module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_SLCD field. */
@@ -27112,8 +27148,8 @@
  * blocked.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_FTF field. */
@@ -27131,8 +27167,8 @@
  * Controls the clock gate to the DMA Mux module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_DMAMUX field. */
@@ -27150,8 +27186,8 @@
  * This bit controls the clock gate to the I2S module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_I2S field. */
@@ -27169,8 +27205,8 @@
  * This bit controls the clock gate to the PIT module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_PIT field. */
@@ -27188,8 +27224,8 @@
  * Controls the clock gate to the TPM0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_TPM0 field. */
@@ -27207,8 +27243,8 @@
  * Controls the clock gate to the TPM1 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_TPM1 field. */
@@ -27226,8 +27262,8 @@
  * Controls the clock gate to the TPM2 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_TPM2 field. */
@@ -27245,8 +27281,8 @@
  * Controls the clock gate to the ADC0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_ADC0 field. */
@@ -27264,8 +27300,8 @@
  * Controls software access and interrupts to the RTC module.
  *
  * Values:
- * - 0 - Access and interrupts disabled
- * - 1 - Access and interrupts enabled
+ * - 0b0 - Access and interrupts disabled
+ * - 0b1 - Access and interrupts enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_RTC field. */
@@ -27283,8 +27319,8 @@
  * This bit controls the clock gate to the DAC0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_DAC0 field. */
@@ -27327,8 +27363,8 @@
  * Controls the clock gate to the DMA module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC7_DMA field. */
@@ -27376,14 +27412,14 @@
  * by 2).
  *
  * Values:
- * - 000 - Divide-by-1.
- * - 001 - Divide-by-2.
- * - 010 - Divide-by-3.
- * - 011 - Divide-by-4.
- * - 100 - Divide-by-5.
- * - 101 - Divide-by-6.
- * - 110 - Divide-by-7.
- * - 111 - Divide-by-8.
+ * - 0b000 - Divide-by-1.
+ * - 0b001 - Divide-by-2.
+ * - 0b010 - Divide-by-3.
+ * - 0b011 - Divide-by-4.
+ * - 0b100 - Divide-by-5.
+ * - 0b101 - Divide-by-6.
+ * - 0b110 - Divide-by-7.
+ * - 0b111 - Divide-by-8.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_CLKDIV1_OUTDIV4 field. */
@@ -27404,22 +27440,22 @@
  * setting of the FTFA_FOPT[LPBOOT] (See ).
  *
  * Values:
- * - 0000 - Divide-by-1.
- * - 0001 - Divide-by-2.
- * - 0010 - Divide-by-3.
- * - 0011 - Divide-by-4.
- * - 0100 - Divide-by-5.
- * - 0101 - Divide-by-6.
- * - 0110 - Divide-by-7.
- * - 0111 - Divide-by-8.
- * - 1000 - Divide-by-9.
- * - 1001 - Divide-by-10.
- * - 1010 - Divide-by-11.
- * - 1011 - Divide-by-12.
- * - 1100 - Divide-by-13.
- * - 1101 - Divide-by-14.
- * - 1110 - Divide-by-15.
- * - 1111 - Divide-by-16.
+ * - 0b0000 - Divide-by-1.
+ * - 0b0001 - Divide-by-2.
+ * - 0b0010 - Divide-by-3.
+ * - 0b0011 - Divide-by-4.
+ * - 0b0100 - Divide-by-5.
+ * - 0b0101 - Divide-by-6.
+ * - 0b0110 - Divide-by-7.
+ * - 0b0111 - Divide-by-8.
+ * - 0b1000 - Divide-by-9.
+ * - 0b1001 - Divide-by-10.
+ * - 0b1010 - Divide-by-11.
+ * - 0b1011 - Divide-by-12.
+ * - 0b1100 - Divide-by-13.
+ * - 0b1101 - Divide-by-14.
+ * - 0b1110 - Divide-by-15.
+ * - 0b1111 - Divide-by-16.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_CLKDIV1_OUTDIV1 field. */
@@ -27465,8 +27501,8 @@
  * Flash.
  *
  * Values:
- * - 0 - Flash is enabled.
- * - 1 - Flash is disabled.
+ * - 0b0 - Flash is enabled.
+ * - 0b1 - Flash is disabled.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_FCFG1_FLASHDIS field. */
@@ -27489,8 +27525,8 @@
  * when the flash is disabled will result in a bus error.
  *
  * Values:
- * - 0 - Flash remains enabled during Doze mode.
- * - 1 - Flash is disabled for the duration of Doze mode.
+ * - 0b0 - Flash remains enabled during Doze mode.
+ * - 0b1 - Flash is disabled for the duration of Doze mode.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_FCFG1_FLASHDOZE field. */
@@ -27509,13 +27545,13 @@
  * Undefined values are reserved.
  *
  * Values:
- * - 0000 - 8 KB of program flash memory, 0.25 KB protection region
- * - 0001 - 16 KB of program flash memory, 0.5 KB protection region
- * - 0011 - 32 KB of program flash memory, 1 KB protection region
- * - 0101 - 64 KB of program flash memory, 2 KB protection region
- * - 0111 - 128 KB of program flash memory, 4 KB protection region
- * - 1001 - 256 KB of program flash memory, 8 KB protection region
- * - 1111 - 128 KB of program flash memory, 4 KB protection region 256 KB of
+ * - 0b0000 - 8 KB of program flash memory, 0.25 KB protection region
+ * - 0b0001 - 16 KB of program flash memory, 0.5 KB protection region
+ * - 0b0011 - 32 KB of program flash memory, 1 KB protection region
+ * - 0b0101 - 64 KB of program flash memory, 2 KB protection region
+ * - 0b0111 - 128 KB of program flash memory, 4 KB protection region
+ * - 0b1001 - 256 KB of program flash memory, 8 KB protection region
+ * - 0b1111 - 128 KB of program flash memory, 4 KB protection region 256 KB of
  *     program flash memory, 8 KB protection region
  */
 /*@{*/
@@ -27670,8 +27706,8 @@
  * COP window is opened three quarters through the timeout period.
  *
  * Values:
- * - 0 - Normal mode
- * - 1 - Windowed mode
+ * - 0b0 - Normal mode
+ * - 0b1 - Windowed mode
  */
 /*@{*/
 /*! @brief Read current value of the SIM_COPC_COPW field. */
@@ -27689,8 +27725,8 @@
  * This write-once field selects the clock source of the COP watchdog.
  *
  * Values:
- * - 0 - Internal 1 kHz clock is source to COP.
- * - 1 - Bus clock is source to COP.
+ * - 0b0 - Internal 1 kHz clock is source to COP.
+ * - 0b1 - Bus clock is source to COP.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_COPC_COPCLKS field. */
@@ -27709,10 +27745,10 @@
  * the COPCLKS field define the COP timeout period.
  *
  * Values:
- * - 00 - COP disabled
- * - 01 - COP timeout after 25 LPO cycles or 213 bus clock cycles
- * - 10 - COP timeout after 28 LPO cycles or 216 bus clock cycles
- * - 11 - COP timeout after 210 LPO cycles or 218 bus clock cycles
+ * - 0b00 - COP disabled
+ * - 0b01 - COP timeout after 25 LPO cycles or 213 bus clock cycles
+ * - 0b10 - COP timeout after 28 LPO cycles or 216 bus clock cycles
+ * - 0b11 - COP timeout after 210 LPO cycles or 218 bus clock cycles
  */
 /*@{*/
 /*! @brief Read current value of the SIM_COPC_COPT field. */
@@ -27815,8 +27851,8 @@
  * bit allows the MCU to enter any very-low-leakage stop mode (VLLSx).
  *
  * Values:
- * - 0 - Any VLLSx mode is not allowed
- * - 1 - Any VLLSx mode is allowed
+ * - 0b0 - Any VLLSx mode is not allowed
+ * - 0b1 - Any VLLSx mode is allowed
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMPROT_AVLLS field. */
@@ -27835,8 +27871,8 @@
  * field allows the MCU to enter any low-leakage stop mode (LLS).
  *
  * Values:
- * - 0 - LLS is not allowed
- * - 1 - LLS is allowed
+ * - 0b0 - LLS is not allowed
+ * - 0b1 - LLS is allowed
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMPROT_ALLS field. */
@@ -27855,8 +27891,8 @@
  * field allows the MCU to enter any very-low-power mode (VLPR, VLPW, and VLPS).
  *
  * Values:
- * - 0 - VLPR, VLPW, and VLPS are not allowed.
- * - 1 - VLPR, VLPW, and VLPS are allowed.
+ * - 0b0 - VLPR, VLPW, and VLPS are not allowed.
+ * - 0b1 - VLPR, VLPW, and VLPS are allowed.
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMPROT_AVLP field. */
@@ -27913,14 +27949,14 @@
  * select a Partial Stop mode if desired.
  *
  * Values:
- * - 000 - Normal Stop (STOP)
- * - 001 - Reserved
- * - 010 - Very-Low-Power Stop (VLPS)
- * - 011 - Low-Leakage Stop (LLS)
- * - 100 - Very-Low-Leakage Stop (VLLSx)
- * - 101 - Reserved
- * - 110 - Reseved
- * - 111 - Reserved
+ * - 0b000 - Normal Stop (STOP)
+ * - 0b001 - Reserved
+ * - 0b010 - Very-Low-Power Stop (VLPS)
+ * - 0b011 - Low-Leakage Stop (LLS)
+ * - 0b100 - Very-Low-Leakage Stop (VLLSx)
+ * - 0b101 - Reserved
+ * - 0b110 - Reseved
+ * - 0b111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMCTRL_STOPM field. */
@@ -27941,8 +27977,8 @@
  * mode entry sequence and is set if the sequence was aborted.
  *
  * Values:
- * - 0 - The previous stop mode entry was successsful.
- * - 1 - The previous stop mode entry was aborted.
+ * - 0b0 - The previous stop mode entry was successsful.
+ * - 0b1 - The previous stop mode entry was aborted.
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMCTRL_STOPA field. */
@@ -27960,10 +27996,10 @@
  * should not be written back to RUN until PMSTAT=VLPR.
  *
  * Values:
- * - 00 - Normal Run mode (RUN)
- * - 01 - Reserved
- * - 10 - Very-Low-Power Run mode (VLPR)
- * - 11 - Reserved
+ * - 0b00 - Normal Run mode (RUN)
+ * - 0b01 - Reserved
+ * - 0b10 - Very-Low-Power Run mode (VLPR)
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMCTRL_RUNM field. */
@@ -28012,14 +28048,14 @@
  * This field controls which VLLS sub-mode to enter if STOPM=VLLSx.
  *
  * Values:
- * - 000 - VLLS0
- * - 001 - VLLS1
- * - 010 - Reserved
- * - 011 - VLLS3
- * - 100 - Reserved
- * - 101 - Reserved
- * - 110 - Reserved
- * - 111 - Reserved
+ * - 0b000 - VLLS0
+ * - 0b001 - VLLS1
+ * - 0b010 - Reserved
+ * - 0b011 - VLLS3
+ * - 0b100 - Reserved
+ * - 0b101 - Reserved
+ * - 0b110 - Reserved
+ * - 0b111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SMC_STOPCTRL_VLLSM field. */
@@ -28037,8 +28073,8 @@
  * This bit controls whether the POR detect circuit is enabled in VLLS0 mode.
  *
  * Values:
- * - 0 - POR detect circuit is enabled in VLLS0
- * - 1 - POR detect circuit is disabled in VLLS0
+ * - 0b0 - POR detect circuit is enabled in VLLS0
+ * - 0b1 - POR detect circuit is disabled in VLLS0
  */
 /*@{*/
 /*! @brief Read current value of the SMC_STOPCTRL_PORPO field. */
@@ -28061,10 +28097,11 @@
  * both system and bus clocks are gated.
  *
  * Values:
- * - 00 - STOP - Normal Stop mode
- * - 01 - PSTOP1 - Partial Stop with both system and bus clocks disabled
- * - 10 - PSTOP2 - Partial Stop with system clock disabled and bus clock enabled
- * - 11 - Reserved
+ * - 0b00 - STOP - Normal Stop mode
+ * - 0b01 - PSTOP1 - Partial Stop with both system and bus clocks disabled
+ * - 0b10 - PSTOP2 - Partial Stop with system clock disabled and bus clock
+ *     enabled
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SMC_STOPCTRL_PSTOPO field. */
@@ -28196,9 +28233,9 @@
  * FIFOMODE is 1, TNEAREF and RFIFOEF reset to 1.
  *
  * Values:
- * - 0 - Read FIFO has data. Reads of the DH:DL registers in 16-bit mode or the
- *     DL register in 8-bit mode will empty the read FIFO.
- * - 1 - Read FIFO is empty.
+ * - 0b0 - Read FIFO has data. Reads of the DH:DL registers in 16-bit mode or
+ *     the DL register in 8-bit mode will empty the read FIFO.
+ * - 0b1 - Read FIFO is empty.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_S_RFIFOEF field. */
@@ -28216,8 +28253,8 @@
  * not full, the DMA request is active, and remains active until the FIFO is full.
  *
  * Values:
- * - 0 - Transmit FIFO has less than 8 bytes
- * - 1 - Transmit FIFO has 8 bytes of data
+ * - 0b0 - Transmit FIFO has less than 8 bytes
+ * - 0b1 - Transmit FIFO has 8 bytes of data
  */
 /*@{*/
 /*! @brief Read current value of the SPI_S_TXFULLF field. */
@@ -28239,11 +28276,11 @@
  * RFIFOEF reset to 1.
  *
  * Values:
- * - 0 - Transmit FIFO has more than 16 bits (when C3[TNEAREF_MARK] is 0) or
+ * - 0b0 - Transmit FIFO has more than 16 bits (when C3[TNEAREF_MARK] is 0) or
  *     more than 32 bits (when C3[TNEAREF_MARK] is 1) remaining to transmit
- * - 1 - Transmit FIFO has an amount of data equal to or less than 16 bits (when
- *     C3[TNEAREF_MARK] is 0) or 32 bits (when C3[TNEAREF_MARK] is 1) remaining
- *     to transmit
+ * - 0b1 - Transmit FIFO has an amount of data equal to or less than 16 bits
+ *     (when C3[TNEAREF_MARK] is 0) or 32 bits (when C3[TNEAREF_MARK] is 1)
+ *     remaining to transmit
  */
 /*@{*/
 /*! @brief Read current value of the SPI_S_TNEAREF field. */
@@ -28261,10 +28298,11 @@
  * is 0.
  *
  * Values:
- * - 0 - Receive FIFO has received less than 48 bits (when C3[RNFULLF_MARK] is
+ * - 0b0 - Receive FIFO has received less than 48 bits (when C3[RNFULLF_MARK] is
  *     0) or less than 32 bits (when C3[RNFULLF_MARK] is 1)
- * - 1 - Receive FIFO has received data of an amount equal to or greater than 48
- *     bits (when C3[RNFULLF_MARK] is 0) or 32 bits (when C3[RNFULLF_MARK] is 1)
+ * - 0b1 - Receive FIFO has received data of an amount equal to or greater than
+ *     48 bits (when C3[RNFULLF_MARK] is 0) or 32 bits (when C3[RNFULLF_MARK] is
+ *     1)
  */
 /*@{*/
 /*! @brief Read current value of the SPI_S_RNFULLF field. */
@@ -28282,8 +28320,8 @@
  * reading MODF while it is 1 and then writing to the SPI Control Register 1 (C1).
  *
  * Values:
- * - 0 - No mode fault error
- * - 1 - Mode fault error detected
+ * - 0b0 - No mode fault error
+ * - 0b1 - Mode fault error detected
  */
 /*@{*/
 /*! @brief Read current value of the SPI_S_MODF field. */
@@ -28328,10 +28366,10 @@
  * remains set and no data moves from the buffer to the shifter.
  *
  * Values:
- * - 0 - SPI transmit buffer not empty (when FIFOMODE is not present or is 0) or
- *     SPI FIFO not empty (when FIFOMODE is 1)
- * - 1 - SPI transmit buffer empty (when FIFOMODE is not present or is 0) or SPI
- *     FIFO empty (when FIFOMODE is 1)
+ * - 0b0 - SPI transmit buffer not empty (when FIFOMODE is not present or is 0)
+ *     or SPI FIFO not empty (when FIFOMODE is 1)
+ * - 0b1 - SPI transmit buffer empty (when FIFOMODE is not present or is 0) or
+ *     SPI FIFO empty (when FIFOMODE is 1)
  */
 /*@{*/
 /*! @brief Read current value of the SPI_S_SPTEF field. */
@@ -28347,9 +28385,9 @@
  * and then write a 1 to it.
  *
  * Values:
- * - 0 - Value in the receive data buffer does not match the value in the MH:ML
- *     registers
- * - 1 - Value in the receive data buffer matches the value in the MH:ML
+ * - 0b0 - Value in the receive data buffer does not match the value in the
+ *     MH:ML registers
+ * - 0b1 - Value in the receive data buffer matches the value in the MH:ML
  *     registers
  */
 /*@{*/
@@ -28382,10 +28420,10 @@
  * transfer for the receive DMA request is completed (RX DMA Done is asserted).
  *
  * Values:
- * - 0 - No data available in the receive data buffer (when FIFOMODE is not
+ * - 0b0 - No data available in the receive data buffer (when FIFOMODE is not
  *     present or is 0) or Read FIFO is not full (when FIFOMODE is 1)
- * - 1 - Data available in the receive data buffer (when FIFOMODE is not present
- *     or is 0) or Read FIFO is full (when FIFOMODE is 1)
+ * - 0b1 - Data available in the receive data buffer (when FIFOMODE is not
+ *     present or is 0) or Read FIFO is full (when FIFOMODE is 1)
  */
 /*@{*/
 /*! @brief Read current value of the SPI_S_SPRF field. */
@@ -28429,15 +28467,15 @@
  * description of "SPI Baud Rate Generation" for details.
  *
  * Values:
- * - 0000 - Baud rate divisor is 2.
- * - 0001 - Baud rate divisor is 4.
- * - 0010 - Baud rate divisor is 8.
- * - 0011 - Baud rate divisor is 16.
- * - 0100 - Baud rate divisor is 32.
- * - 0101 - Baud rate divisor is 64.
- * - 0110 - Baud rate divisor is 128.
- * - 0111 - Baud rate divisor is 256.
- * - 1000 - Baud rate divisor is 512.
+ * - 0b0000 - Baud rate divisor is 2.
+ * - 0b0001 - Baud rate divisor is 4.
+ * - 0b0010 - Baud rate divisor is 8.
+ * - 0b0011 - Baud rate divisor is 16.
+ * - 0b0100 - Baud rate divisor is 32.
+ * - 0b0101 - Baud rate divisor is 64.
+ * - 0b0110 - Baud rate divisor is 128.
+ * - 0b0111 - Baud rate divisor is 256.
+ * - 0b1000 - Baud rate divisor is 512.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_BR_SPR field. */
@@ -28458,14 +28496,14 @@
  * of "SPI Baud Rate Generation" for details.
  *
  * Values:
- * - 000 - Baud rate prescaler divisor is 1.
- * - 001 - Baud rate prescaler divisor is 2.
- * - 010 - Baud rate prescaler divisor is 3.
- * - 011 - Baud rate prescaler divisor is 4.
- * - 100 - Baud rate prescaler divisor is 5.
- * - 101 - Baud rate prescaler divisor is 6.
- * - 110 - Baud rate prescaler divisor is 7.
- * - 111 - Baud rate prescaler divisor is 8.
+ * - 0b000 - Baud rate prescaler divisor is 1.
+ * - 0b001 - Baud rate prescaler divisor is 2.
+ * - 0b010 - Baud rate prescaler divisor is 3.
+ * - 0b011 - Baud rate prescaler divisor is 4.
+ * - 0b100 - Baud rate prescaler divisor is 5.
+ * - 0b101 - Baud rate prescaler divisor is 6.
+ * - 0b110 - Baud rate prescaler divisor is 7.
+ * - 0b111 - Baud rate prescaler divisor is 8.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_BR_SPPR field. */
@@ -28511,12 +28549,12 @@
  * Enables bidirectional pin configurations.
  *
  * Values:
- * - 0 - SPI uses separate pins for data input and data output (pin mode is
+ * - 0b0 - SPI uses separate pins for data input and data output (pin mode is
  *     normal). In master mode of operation: MISO is master in and MOSI is master
  *     out. In slave mode of operation: MISO is slave out and MOSI is slave in.
- * - 1 - SPI configured for single-wire bidirectional operation (pin mode is
- *     bidirectional). In master mode of operation: MISO is not used by SPI; MOSI is
- *     master in when BIDIROE is 0 or master I/O when BIDIROE is 1. In slave
+ * - 0b1 - SPI configured for single-wire bidirectional operation (pin mode is
+ *     bidirectional). In master mode of operation: MISO is not used by SPI; MOSI
+ *     is master in when BIDIROE is 0 or master I/O when BIDIROE is 1. In slave
  *     mode of operation: MISO is slave in when BIDIROE is 0 or slave I/O when
  *     BIDIROE is 1; MOSI is not used by SPI.
  */
@@ -28536,8 +28574,8 @@
  * This bit is used for power conservation while the device is in Wait mode.
  *
  * Values:
- * - 0 - SPI clocks continue to operate in Wait mode.
- * - 1 - SPI clocks stop when the MCU enters Wait mode.
+ * - 0b0 - SPI clocks continue to operate in Wait mode.
+ * - 0b1 - SPI clocks stop when the MCU enters Wait mode.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C2_SPISWAI field. */
@@ -28557,8 +28595,8 @@
  * interrupt from SPRF is disabled.
  *
  * Values:
- * - 0 - DMA request for receive is disabled and interrupt from SPRF is allowed
- * - 1 - DMA request for receive is enabled and interrupt from SPRF is disabled
+ * - 0b0 - DMA request for receive is disabled and interrupt from SPRF is allowed
+ * - 0b1 - DMA request for receive is enabled and interrupt from SPRF is disabled
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C2_RXDMAE field. */
@@ -28581,8 +28619,8 @@
  * effect.
  *
  * Values:
- * - 0 - Output driver disabled so SPI data I/O pin acts as an input
- * - 1 - SPI I/O pin enabled as an output
+ * - 0b0 - Output driver disabled so SPI data I/O pin acts as an input
+ * - 0b1 - SPI I/O pin enabled as an output
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C2_BIDIROE field. */
@@ -28603,10 +28641,10 @@
  * in the C1 register.
  *
  * Values:
- * - 0 - Mode fault function disabled, master SS pin reverts to general-purpose
- *     I/O not controlled by SPI
- * - 1 - Mode fault function enabled, master SS pin acts as the mode fault input
- *     or the slave select output
+ * - 0b0 - Mode fault function disabled, master SS pin reverts to
+ *     general-purpose I/O not controlled by SPI
+ * - 0b1 - Mode fault function enabled, master SS pin acts as the mode fault
+ *     input or the slave select output
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C2_MODFEN field. */
@@ -28626,8 +28664,10 @@
  * from SPTEF is disabled.
  *
  * Values:
- * - 0 - DMA request for transmit is disabled and interrupt from SPTEF is allowed
- * - 1 - DMA request for transmit is enabled and interrupt from SPTEF is disabled
+ * - 0b0 - DMA request for transmit is disabled and interrupt from SPTEF is
+ *     allowed
+ * - 0b1 - DMA request for transmit is enabled and interrupt from SPTEF is
+ *     disabled
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C2_TXDMAE field. */
@@ -28649,8 +28689,8 @@
  * details.
  *
  * Values:
- * - 0 - 8-bit SPI shift register, match register, and buffers
- * - 1 - 16-bit SPI shift register, match register, and buffers
+ * - 0b0 - 8-bit SPI shift register, match register, and buffers
+ * - 0b1 - 16-bit SPI shift register, match register, and buffers
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C2_SPIMODE field. */
@@ -28669,8 +28709,8 @@
  * match (SPMF) function.
  *
  * Values:
- * - 0 - Interrupts from SPMF inhibited (use polling)
- * - 1 - When SPMF is 1, requests a hardware interrupt
+ * - 0b0 - Interrupts from SPMF inhibited (use polling)
+ * - 0b1 - When SPMF is 1, requests a hardware interrupt
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C2_SPMIE field. */
@@ -28718,8 +28758,8 @@
  * 15 in 16-bit mode).
  *
  * Values:
- * - 0 - SPI serial data transfers start with the most significant bit.
- * - 1 - SPI serial data transfers start with the least significant bit.
+ * - 0b0 - SPI serial data transfers start with the most significant bit.
+ * - 0b1 - SPI serial data transfers start with the least significant bit.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C1_LSBFE field. */
@@ -28739,14 +28779,14 @@
  * function of the SS pin.
  *
  * Values:
- * - 0 - When C2[MODFEN] is 0: In master mode, SS pin function is
+ * - 0b0 - When C2[MODFEN] is 0: In master mode, SS pin function is
  *     general-purpose I/O (not SPI). In slave mode, SS pin function is slave select input.
  *     When C2[MODFEN] is 1: In master mode, SS pin function is SS input for mode
  *     fault. In slave mode, SS pin function is slave select input.
- * - 1 - When C2[MODFEN] is 0: In master mode, SS pin function is
+ * - 0b1 - When C2[MODFEN] is 0: In master mode, SS pin function is
  *     general-purpose I/O (not SPI). In slave mode, SS pin function is slave select input.
- *     When C2[MODFEN] is 1: In master mode, SS pin function is automatic SS output.
- *     In slave mode: SS pin function is slave select input.
+ *     When C2[MODFEN] is 1: In master mode, SS pin function is automatic SS
+ *     output. In slave mode: SS pin function is slave select input.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C1_SSOE field. */
@@ -28765,9 +28805,9 @@
  * peripheral devices. Refer to the description of "SPI Clock Formats" for details.
  *
  * Values:
- * - 0 - First edge on SPSCK occurs at the middle of the first cycle of a data
+ * - 0b0 - First edge on SPSCK occurs at the middle of the first cycle of a data
  *     transfer.
- * - 1 - First edge on SPSCK occurs at the start of the first cycle of a data
+ * - 0b1 - First edge on SPSCK occurs at the start of the first cycle of a data
  *     transfer.
  */
 /*@{*/
@@ -28790,8 +28830,8 @@
  * for details.
  *
  * Values:
- * - 0 - Active-high SPI clock (idles low)
- * - 1 - Active-low SPI clock (idles high)
+ * - 0b0 - Active-high SPI clock (idles low)
+ * - 0b1 - Active-low SPI clock (idles high)
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C1_CPOL field. */
@@ -28809,8 +28849,8 @@
  * Selects master or slave mode operation.
  *
  * Values:
- * - 0 - SPI module configured as a slave SPI device
- * - 1 - SPI module configured as a master SPI device
+ * - 0b0 - SPI module configured as a slave SPI device
+ * - 0b1 - SPI module configured as a master SPI device
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C1_MSTR field. */
@@ -28833,8 +28873,8 @@
  * transmit FIFO is empty (SPTEF is set).
  *
  * Values:
- * - 0 - Interrupts from SPTEF inhibited (use polling)
- * - 1 - When SPTEF is 1, hardware interrupt requested
+ * - 0b0 - Interrupts from SPTEF inhibited (use polling)
+ * - 0b1 - When SPTEF is 1, hardware interrupt requested
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C1_SPTIE field. */
@@ -28854,8 +28894,8 @@
  * all status bits in the S register are reset.
  *
  * Values:
- * - 0 - SPI system inactive
- * - 1 - SPI system enabled
+ * - 0b0 - SPI system inactive
+ * - 0b1 - SPI system enabled
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C1_SPE field. */
@@ -28877,10 +28917,10 @@
  * interrupt occurs when the SPRF bit is set or the MODF bit is set.
  *
  * Values:
- * - 0 - Interrupts from SPRF and MODF are inhibited-use polling (when FIFOMODE
- *     is not present or is 0) or Read FIFO Full Interrupts are disabled (when
+ * - 0b0 - Interrupts from SPRF and MODF are inhibited-use polling (when
+ *     FIFOMODE is not present or is 0) or Read FIFO Full Interrupts are disabled (when
  *     FIFOMODE is 1)
- * - 1 - Request a hardware interrupt when SPRF or MODF is 1 (when FIFOMODE is
+ * - 0b1 - Request a hardware interrupt when SPRF or MODF is 1 (when FIFOMODE is
  *     not present or is 0) or Read FIFO Full Interrupts are enabled (when
  *     FIFOMODE is 1)
  */
@@ -29109,8 +29149,8 @@
  * This flag indicates that a receive FIFO overflow condition has occurred.
  *
  * Values:
- * - 0 - Receive FIFO overflow condition has not occurred
- * - 1 - Receive FIFO overflow condition occurred
+ * - 0b0 - Receive FIFO overflow condition has not occurred
+ * - 0b1 - Receive FIFO overflow condition occurred
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CI_RXFOF field. */
@@ -29124,8 +29164,8 @@
  * This flag indicates that a transmit FIFO overflow condition has occurred.
  *
  * Values:
- * - 0 - Transmit FIFO overflow condition has not occurred
- * - 1 - Transmit FIFO overflow condition occurred
+ * - 0b0 - Transmit FIFO overflow condition has not occurred
+ * - 0b1 - Transmit FIFO overflow condition occurred
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CI_TXFOF field. */
@@ -29140,8 +29180,8 @@
  * FIFO total more than 64 bits of data.
  *
  * Values:
- * - 0 - No receive FIFO error occurred
- * - 1 - A receive FIFO error occurred
+ * - 0b0 - No receive FIFO error occurred
+ * - 0b1 - A receive FIFO error occurred
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CI_RXFERR field. */
@@ -29156,8 +29196,8 @@
  * the FIFO total more than 64 bits of data.
  *
  * Values:
- * - 0 - No transmit FIFO error occurred
- * - 1 - A transmit FIFO error occurred
+ * - 0b0 - No transmit FIFO error occurred
+ * - 0b1 - A transmit FIFO error occurred
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CI_TXFERR field. */
@@ -29215,8 +29255,8 @@
  * for both transmit and receive buffers.
  *
  * Values:
- * - 0 - Buffer mode disabled
- * - 1 - Data available in the receive data buffer
+ * - 0b0 - Buffer mode disabled
+ * - 0b1 - Data available in the receive data buffer
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C3_FIFOMODE field. */
@@ -29235,8 +29275,8 @@
  * flag is set. This bit is ignored and has no function if the FIFOMODE bit is 0.
  *
  * Values:
- * - 0 - No interrupt upon RNFULLF being set
- * - 1 - Enable interrupts upon RNFULLF being set
+ * - 0b0 - No interrupt upon RNFULLF being set
+ * - 0b1 - Enable interrupts upon RNFULLF being set
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C3_RNFULLIEN field. */
@@ -29255,8 +29295,8 @@
  * flag is set. This bit is ignored and has no function if the FIFOMODE bit is 0.
  *
  * Values:
- * - 0 - No interrupt upon TNEAREF being set
- * - 1 - Enable interrupts upon TNEAREF being set
+ * - 0b0 - No interrupt upon TNEAREF being set
+ * - 0b1 - Enable interrupts upon TNEAREF being set
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C3_TNEARIEN field. */
@@ -29275,9 +29315,9 @@
  * interrupts are cleared.
  *
  * Values:
- * - 0 - These interrupts are cleared when the corresponding flags are cleared
+ * - 0b0 - These interrupts are cleared when the corresponding flags are cleared
  *     depending on the state of the FIFOs
- * - 1 - These interrupts are cleared by writing the corresponding bits in the
+ * - 0b1 - These interrupts are cleared by writing the corresponding bits in the
  *     CI register
  */
 /*@{*/
@@ -29296,8 +29336,8 @@
  * This bit selects the mark after which the RNFULLF flag is asserted.
  *
  * Values:
- * - 0 - RNFULLF is set when the receive FIFO has 48 bits or more
- * - 1 - RNFULLF is set when the receive FIFO has 32 bits or more
+ * - 0b0 - RNFULLF is set when the receive FIFO has 48 bits or more
+ * - 0b1 - RNFULLF is set when the receive FIFO has 32 bits or more
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C3_RNFULLF_MARK field. */
@@ -29315,8 +29355,8 @@
  * This bit selects the mark after which the TNEAREF flag is asserted.
  *
  * Values:
- * - 0 - TNEAREF is set when the transmit FIFO has 16 bits or less
- * - 1 - TNEAREF is set when the transmit FIFO has 32 bits or less
+ * - 0b0 - TNEAREF is set when the transmit FIFO has 16 bits or less
+ * - 0b1 - TNEAREF is set when the transmit FIFO has 32 bits or less
  */
 /*@{*/
 /*! @brief Read current value of the SPI_C3_TNEAREF_MARK field. */
@@ -29384,14 +29424,14 @@
  * field is write protected. It can be written only when the counter is disabled.
  *
  * Values:
- * - 000 - Divide by 1
- * - 001 - Divide by 2
- * - 010 - Divide by 4
- * - 011 - Divide by 8
- * - 100 - Divide by 16
- * - 101 - Divide by 32
- * - 110 - Divide by 64
- * - 111 - Divide by 128
+ * - 0b000 - Divide by 1
+ * - 0b001 - Divide by 2
+ * - 0b010 - Divide by 4
+ * - 0b011 - Divide by 8
+ * - 0b100 - Divide by 16
+ * - 0b101 - Divide by 32
+ * - 0b110 - Divide by 64
+ * - 0b111 - Divide by 128
  */
 /*@{*/
 /*! @brief Read current value of the TPM_SC_PS field. */
@@ -29410,11 +29450,11 @@
  * remain set until acknolwedged in the TPM clock domain.
  *
  * Values:
- * - 00 - TPM counter is disabled
- * - 01 - TPM counter increments on every TPM counter clock
- * - 10 - TPM counter increments on rising edge of TPM_EXTCLK synchronized to
+ * - 0b00 - TPM counter is disabled
+ * - 0b01 - TPM counter increments on every TPM counter clock
+ * - 0b10 - TPM counter increments on rising edge of TPM_EXTCLK synchronized to
  *     the TPM counter clock
- * - 11 - Reserved
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the TPM_SC_CMOD field. */
@@ -29434,8 +29474,8 @@
  * is disabled.
  *
  * Values:
- * - 0 - TPM counter operates in up counting mode.
- * - 1 - TPM counter operates in up-down counting mode.
+ * - 0b0 - TPM counter operates in up counting mode.
+ * - 0b1 - TPM counter operates in up-down counting mode.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_SC_CPWMS field. */
@@ -29453,8 +29493,8 @@
  * Enables TPM overflow interrupts.
  *
  * Values:
- * - 0 - Disable TOF interrupts. Use software polling or DMA request.
- * - 1 - Enable TOF interrupts. An interrupt is generated when TOF equals one.
+ * - 0b0 - Disable TOF interrupts. Use software polling or DMA request.
+ * - 0b1 - Enable TOF interrupts. An interrupt is generated when TOF equals one.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_SC_TOIE field. */
@@ -29477,8 +29517,8 @@
  * due to a delay in clearing the previous TOF.
  *
  * Values:
- * - 0 - TPM counter has not overflowed.
- * - 1 - TPM counter has overflowed.
+ * - 0b0 - TPM counter has not overflowed.
+ * - 0b1 - TPM counter has overflowed.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_SC_TOF field. */
@@ -29496,8 +29536,8 @@
  * Enables DMA transfers for the overflow flag.
  *
  * Values:
- * - 0 - Disables DMA transfers.
- * - 1 - Enables DMA transfers.
+ * - 0b0 - Disables DMA transfers.
+ * - 0b1 - Enables DMA transfers.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_SC_DMA field. */
@@ -29650,8 +29690,8 @@
  * Enables DMA transfers for the channel.
  *
  * Values:
- * - 0 - Disable DMA transfers.
- * - 1 - Enable DMA transfers.
+ * - 0b0 - Disable DMA transfers.
+ * - 0b1 - Enable DMA transfers.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_CnSC_DMA field. */
@@ -29737,8 +29777,8 @@
  * Enables channel interrupts.
  *
  * Values:
- * - 0 - Disable channel interrupts.
- * - 1 - Enable channel interrupts.
+ * - 0b0 - Disable channel interrupts.
+ * - 0b1 - Enable channel interrupts.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_CnSC_CHIE field. */
@@ -29761,8 +29801,8 @@
  * previous CHF.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_CnSC_CHF field. */
@@ -29864,8 +29904,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_STATUS_CH0F field. */
@@ -29883,8 +29923,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_STATUS_CH1F field. */
@@ -29902,8 +29942,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_STATUS_CH2F field. */
@@ -29921,8 +29961,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_STATUS_CH3F field. */
@@ -29940,8 +29980,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_STATUS_CH4F field. */
@@ -29959,8 +29999,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_STATUS_CH5F field. */
@@ -29978,8 +30018,8 @@
  * See register description
  *
  * Values:
- * - 0 - TPM counter has not overflowed.
- * - 1 - TPM counter has overflowed.
+ * - 0b0 - TPM counter has not overflowed.
+ * - 0b1 - TPM counter has overflowed.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_STATUS_TOF field. */
@@ -30025,9 +30065,9 @@
  * Configures the TPM behavior in wait mode.
  *
  * Values:
- * - 0 - Internal TPM counter continues in Doze mode.
- * - 1 - Internal TPM counter is paused and does not increment during Doze mode.
- *     Trigger inputs and input capture events are also ignored.
+ * - 0b0 - Internal TPM counter continues in Doze mode.
+ * - 0b1 - Internal TPM counter is paused and does not increment during Doze
+ *     mode. Trigger inputs and input capture events are also ignored.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_CONF_DOZEEN field. */
@@ -30046,9 +30086,9 @@
  * reserved.
  *
  * Values:
- * - 00 - TPM counter is paused and does not increment during debug mode.
+ * - 0b00 - TPM counter is paused and does not increment during debug mode.
  *     Trigger inputs and input capture events are also ignored.
- * - 11 - TPM counter continues in debug mode.
+ * - 0b11 - TPM counter continues in debug mode.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_CONF_DBGMODE field. */
@@ -30069,8 +30109,9 @@
  * request using the Modulo register and timer overflow flag.
  *
  * Values:
- * - 0 - All channels use the internally generated TPM counter as their timebase
- * - 1 - All channels use an externally generated global timebase as their
+ * - 0b0 - All channels use the internally generated TPM counter as their
+ *     timebase
+ * - 0b1 - All channels use an externally generated global timebase as their
  *     timebase
  */
 /*@{*/
@@ -30094,8 +30135,8 @@
  * field should only be changed when the TPM counter is disabled.
  *
  * Values:
- * - 0 - TPM counter starts to increment immediately, once it is enabled.
- * - 1 - TPM counter only starts to increment when it a rising edge on the
+ * - 0b0 - TPM counter starts to increment immediately, once it is enabled.
+ * - 0b1 - TPM counter only starts to increment when it a rising edge on the
  *     selected input trigger is detected, after it has been enabled or after it has
  *     stopped due to overflow.
  */
@@ -30121,8 +30162,8 @@
  * CSOT set. This field should only be changed when the TPM counter is disabled.
  *
  * Values:
- * - 0 - TPM counter continues incrementing or decrementing after overflow
- * - 1 - TPM counter stops incrementing or decrementing after overflow.
+ * - 0b0 - TPM counter continues incrementing or decrementing after overflow
+ * - 0b1 - TPM counter stops incrementing or decrementing after overflow.
  */
 /*@{*/
 /*! @brief Read current value of the TPM_CONF_CSOO field. */
@@ -30144,9 +30185,9 @@
  * disabled.
  *
  * Values:
- * - 0 - Counter is not reloaded due to a rising edge on the selected input
+ * - 0b0 - Counter is not reloaded due to a rising edge on the selected input
  *     trigger
- * - 1 - Counter is reloaded when a rising edge is detected on the selected
+ * - 0b1 - Counter is reloaded when a rising edge is detected on the selected
  *     input trigger
  */
 /*@{*/
@@ -30227,8 +30268,8 @@
  * reference oscillator are swapped.
  *
  * Values:
- * - 0 - The current source pair are not swapped.
- * - 1 - The current source pair are swapped.
+ * - 0b0 - The current source pair are not swapped.
+ * - 0b1 - The current source pair are swapped.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_CURSW field. */
@@ -30247,8 +30288,8 @@
  * scan trigger. Write "1" , when this flag is set, to clear it.
  *
  * Values:
- * - 0 - Scan not complete.
- * - 1 - Scan complete.
+ * - 0b0 - Scan not complete.
+ * - 0b1 - Scan complete.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_EOSF field. */
@@ -30268,8 +30309,8 @@
  * automatically by the TSI.
  *
  * Values:
- * - 0 - No scan in progress.
- * - 1 - Scan in progress.
+ * - 0b0 - No scan in progress.
+ * - 0b1 - Scan in progress.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_SCNIP field. */
@@ -30284,8 +30325,8 @@
  * TSI is not working in progress.
  *
  * Values:
- * - 0 - Software trigger scan.
- * - 1 - Hardware trigger scan.
+ * - 0b0 - Software trigger scan.
+ * - 0b1 - Hardware trigger scan.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_STM field. */
@@ -30304,8 +30345,8 @@
  * VLLS{3,2,1}).
  *
  * Values:
- * - 0 - TSI is disabled when MCU goes into low power mode.
- * - 1 - Allows TSI to continue running in all low power modes.
+ * - 0b0 - TSI is disabled when MCU goes into low power mode.
+ * - 0b1 - Allows TSI to continue running in all low power modes.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_STPE field. */
@@ -30324,8 +30365,8 @@
  * The interrupt will wake MCU from low power mode if this interrupt is enabled.
  *
  * Values:
- * - 0 - TSI interrupt is disabled.
- * - 1 - TSI interrupt is enabled.
+ * - 0b0 - TSI interrupt is disabled.
+ * - 0b1 - TSI interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_TSIIEN field. */
@@ -30343,8 +30384,8 @@
  * This bit enables TSI module.
  *
  * Values:
- * - 0 - TSI module disabled.
- * - 1 - TSI module enabled.
+ * - 0b0 - TSI module disabled.
+ * - 0b1 - TSI module enabled.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_TSIEN field. */
@@ -30365,38 +30406,38 @@
  * eletrode channel.
  *
  * Values:
- * - 00000 - Once per electrode
- * - 00001 - Twice per electrode
- * - 00010 - 3 times per electrode
- * - 00011 - 4 times per electrode
- * - 00100 - 5 times per electrode
- * - 00101 - 6 times per electrode
- * - 00110 - 7 times per electrode
- * - 00111 - 8 times per electrode
- * - 01000 - 9 times per electrode
- * - 01001 - 10 times per electrode
- * - 01010 - 11 times per electrode
- * - 01011 - 12 times per electrode
- * - 01100 - 13 times per electrode
- * - 01101 - 14 times per electrode
- * - 01110 - 15 times per electrode
- * - 01111 - 16 times per electrode
- * - 10000 - 17 times per electrode
- * - 10001 - 18 times per electrode
- * - 10010 - 19 times per electrode
- * - 10011 - 20 times per electrode
- * - 10100 - 21 times per electrode
- * - 10101 - 22 times per electrode
- * - 10110 - 23 times per electrode
- * - 10111 - 24 times per electrode
- * - 11000 - 25 times per electrode
- * - 11001 - 26 times per electrode
- * - 11010 - 27 times per electrode
- * - 11011 - 28 times per electrode
- * - 11100 - 29 times per electrode
- * - 11101 - 30 times per electrode
- * - 11110 - 31 times per electrode
- * - 11111 - 32 times per electrode
+ * - 0b00000 - Once per electrode
+ * - 0b00001 - Twice per electrode
+ * - 0b00010 - 3 times per electrode
+ * - 0b00011 - 4 times per electrode
+ * - 0b00100 - 5 times per electrode
+ * - 0b00101 - 6 times per electrode
+ * - 0b00110 - 7 times per electrode
+ * - 0b00111 - 8 times per electrode
+ * - 0b01000 - 9 times per electrode
+ * - 0b01001 - 10 times per electrode
+ * - 0b01010 - 11 times per electrode
+ * - 0b01011 - 12 times per electrode
+ * - 0b01100 - 13 times per electrode
+ * - 0b01101 - 14 times per electrode
+ * - 0b01110 - 15 times per electrode
+ * - 0b01111 - 16 times per electrode
+ * - 0b10000 - 17 times per electrode
+ * - 0b10001 - 18 times per electrode
+ * - 0b10010 - 19 times per electrode
+ * - 0b10011 - 20 times per electrode
+ * - 0b10100 - 21 times per electrode
+ * - 0b10101 - 22 times per electrode
+ * - 0b10110 - 23 times per electrode
+ * - 0b10111 - 24 times per electrode
+ * - 0b11000 - 25 times per electrode
+ * - 0b11001 - 26 times per electrode
+ * - 0b11010 - 27 times per electrode
+ * - 0b11011 - 28 times per electrode
+ * - 0b11100 - 29 times per electrode
+ * - 0b11101 - 30 times per electrode
+ * - 0b11110 - 31 times per electrode
+ * - 0b11111 - 32 times per electrode
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_NSCN field. */
@@ -30414,14 +30455,14 @@
  * These bits indicate the prescaler of the output of electrode oscillator.
  *
  * Values:
- * - 000 - Electrode Oscillator Frequency divided by 1
- * - 001 - Electrode Oscillator Frequency divided by 2
- * - 010 - Electrode Oscillator Frequency divided by 4
- * - 011 - Electrode Oscillator Frequency divided by 8
- * - 100 - Electrode Oscillator Frequency divided by 16
- * - 101 - Electrode Oscillator Frequency divided by 32
- * - 110 - Electrode Oscillator Frequency divided by 64
- * - 111 - Electrode Oscillator Frequency divided by 128
+ * - 0b000 - Electrode Oscillator Frequency divided by 1
+ * - 0b001 - Electrode Oscillator Frequency divided by 2
+ * - 0b010 - Electrode Oscillator Frequency divided by 4
+ * - 0b011 - Electrode Oscillator Frequency divided by 8
+ * - 0b100 - Electrode Oscillator Frequency divided by 16
+ * - 0b101 - Electrode Oscillator Frequency divided by 32
+ * - 0b110 - Electrode Oscillator Frequency divided by 64
+ * - 0b111 - Electrode Oscillator Frequency divided by 128
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_PS field. */
@@ -30440,14 +30481,14 @@
  * value.
  *
  * Values:
- * - 000 - 500 nA.
- * - 001 - 1 uA.
- * - 010 - 2 uA.
- * - 011 - 4 uA.
- * - 100 - 8 uA.
- * - 101 - 16 uA.
- * - 110 - 32 uA.
- * - 111 - 64 uA.
+ * - 0b000 - 500 nA.
+ * - 0b001 - 1 uA.
+ * - 0b010 - 2 uA.
+ * - 0b011 - 4 uA.
+ * - 0b100 - 8 uA.
+ * - 0b101 - 16 uA.
+ * - 0b110 - 32 uA.
+ * - 0b111 - 64 uA.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_EXTCHRG field. */
@@ -30465,10 +30506,10 @@
  * These bits indicate the oscillator's voltage rails as below.
  *
  * Values:
- * - 00 - DV = 1.03 V; VP = 1.33 V; Vm = 0.30 V.
- * - 01 - DV = 0.73 V; VP = 1.18 V; Vm = 0.45 V.
- * - 10 - DV = 0.43 V; VP = 1.03 V; Vm = 0.60 V.
- * - 11 - DV = 0.29 V; VP = 0.95 V; Vm = 0.67 V.
+ * - 0b00 - DV = 1.03 V; VP = 1.33 V; Vm = 0.30 V.
+ * - 0b01 - DV = 0.73 V; VP = 1.18 V; Vm = 0.45 V.
+ * - 0b10 - DV = 0.43 V; VP = 1.03 V; Vm = 0.60 V.
+ * - 0b11 - DV = 0.29 V; VP = 0.95 V; Vm = 0.67 V.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_DVOLT field. */
@@ -30487,14 +30528,14 @@
  * value.
  *
  * Values:
- * - 000 - 500 nA.
- * - 001 - 1 uA.
- * - 010 - 2 uA.
- * - 011 - 4 uA.
- * - 100 - 8 uA.
- * - 101 - 16 uA.
- * - 110 - 32 uA.
- * - 111 - 64 uA.
+ * - 0b000 - 500 nA.
+ * - 0b001 - 1 uA.
+ * - 0b010 - 2 uA.
+ * - 0b011 - 4 uA.
+ * - 0b100 - 8 uA.
+ * - 0b101 - 16 uA.
+ * - 0b110 - 32 uA.
+ * - 0b111 - 64 uA.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_REFCHRG field. */
@@ -30516,13 +30557,13 @@
  * details.
  *
  * Values:
- * - 0000 - Set TSI in capacitive sensing(non-noise detection) mode.
- * - 0100 - Set TSI analog to work in single threshold noise detection mode and
- *     the frequency limitation circuit is disabled.
- * - 1000 - Set TSI analog to work in single threshold noise detection mode and
- *     the frequency limitation circuit is enabled to work in higher frequencies
- *     operations.
- * - 1100 - Set TSI analog to work in automatic noise detection mode.
+ * - 0b0000 - Set TSI in capacitive sensing(non-noise detection) mode.
+ * - 0b0100 - Set TSI analog to work in single threshold noise detection mode
+ *     and the frequency limitation circuit is disabled.
+ * - 0b1000 - Set TSI analog to work in single threshold noise detection mode
+ *     and the frequency limitation circuit is enabled to work in higher
+ *     frequencies operations.
+ * - 0b1100 - Set TSI analog to work in automatic noise detection mode.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_MODE field. */
@@ -30541,8 +30582,8 @@
  * interrupt.
  *
  * Values:
- * - 0 - Out-of-range interrupt is allowed.
- * - 1 - End-of-scan interrupt is allowed.
+ * - 0b0 - Out-of-range interrupt is allowed.
+ * - 0b1 - End-of-scan interrupt is allowed.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_GENCS_ESOR field. */
@@ -30617,8 +30658,9 @@
  * determinated by TSI_DATA[TSICH] bits.
  *
  * Values:
- * - 0 - No effect.
- * - 1 - Start a scan to determine which channel is specified by TSI_DATA[TSICH].
+ * - 0b0 - No effect.
+ * - 0b1 - Start a scan to determine which channel is specified by
+ *     TSI_DATA[TSICH].
  */
 /*@{*/
 /*! @brief Set the SWTS field to a new value. */
@@ -30633,9 +30675,9 @@
  * generate a DMA transfer request instead of an interrupt.
  *
  * Values:
- * - 0 - Interrupt is selected when the interrupt enable bit is set and the
+ * - 0b0 - Interrupt is selected when the interrupt enable bit is set and the
  *     corresponding TSI events assert.
- * - 1 - DMA transfer request is selected when the interrupt enable bit is set
+ * - 0b1 - DMA transfer request is selected when the interrupt enable bit is set
  *     and the corresponding TSI events assert.
  */
 /*@{*/
@@ -30657,22 +30699,22 @@
  * when TSI_DATA[SWTS] bit is written by 1.
  *
  * Values:
- * - 0000 - Channel 0.
- * - 0001 - Channel 1.
- * - 0010 - Channel 2.
- * - 0011 - Channel 3.
- * - 0100 - Channel 4.
- * - 0101 - Channel 5.
- * - 0110 - Channel 6.
- * - 0111 - Channel 7.
- * - 1000 - Channel 8.
- * - 1001 - Channel 9.
- * - 1010 - Channel 10.
- * - 1011 - Channel 11.
- * - 1100 - Channel 12.
- * - 1101 - Channel 13.
- * - 1110 - Channel 14.
- * - 1111 - Channel 15.
+ * - 0b0000 - Channel 0.
+ * - 0b0001 - Channel 1.
+ * - 0b0010 - Channel 2.
+ * - 0b0011 - Channel 3.
+ * - 0b0100 - Channel 4.
+ * - 0b0101 - Channel 5.
+ * - 0b0110 - Channel 6.
+ * - 0b0111 - Channel 7.
+ * - 0b1000 - Channel 8.
+ * - 0b1001 - Channel 9.
+ * - 0b1010 - Channel 10.
+ * - 0b1011 - Channel 11.
+ * - 0b1100 - Channel 12.
+ * - 0b1101 - Channel 13.
+ * - 0b1110 - Channel 14.
+ * - 0b1111 - Channel 15.
  */
 /*@{*/
 /*! @brief Read current value of the TSI_DATA_TSICH field. */
@@ -30814,8 +30856,8 @@
  * SBNS determines whether data characters are one or two stop bits.
  *
  * Values:
- * - 0 - One stop bit.
- * - 1 - Two stop bit.
+ * - 0b0 - One stop bit.
+ * - 0b1 - Two stop bit.
  */
 /*@{*/
 /*! @brief Read current value of the UART_BDH_SBNS field. */
@@ -30831,8 +30873,8 @@
  * @name Register UART_BDH, field RXEDGIE[6] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from UART_S2[RXEDGIF] disabled (use polling).
- * - 1 - Hardware interrupt requested when UART_S2[RXEDGIF] flag is 1.
+ * - 0b0 - Hardware interrupts from UART_S2[RXEDGIF] disabled (use polling).
+ * - 0b1 - Hardware interrupt requested when UART_S2[RXEDGIF] flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART_BDH_RXEDGIE field. */
@@ -30848,8 +30890,8 @@
  * @name Register UART_BDH, field LBKDIE[7] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from UART_S2[LBKDIF] disabled (use polling).
- * - 1 - Hardware interrupt requested when UART_S2[LBKDIF] flag is 1.
+ * - 0b0 - Hardware interrupts from UART_S2[LBKDIF] disabled (use polling).
+ * - 0b1 - Hardware interrupt requested when UART_S2[LBKDIF] flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART_BDH_LBKDIE field. */
@@ -30927,8 +30969,8 @@
  * character, including the parity bit, is even.
  *
  * Values:
- * - 0 - Even parity.
- * - 1 - Odd parity.
+ * - 0b0 - Even parity.
+ * - 0b1 - Odd parity.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_PT field. */
@@ -30948,8 +30990,8 @@
  * treated as the parity bit.
  *
  * Values:
- * - 0 - No hardware parity generation or checking.
- * - 1 - Parity enabled.
+ * - 0b0 - No hardware parity generation or checking.
+ * - 0b1 - Parity enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_PE field. */
@@ -30969,8 +31011,8 @@
  * level needed by the idle line detection logic.
  *
  * Values:
- * - 0 - Idle character bit count starts after start bit.
- * - 1 - Idle character bit count starts after stop bit.
+ * - 0b0 - Idle character bit count starts after start bit.
+ * - 0b1 - Idle character bit count starts after stop bit.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_ILT field. */
@@ -30988,8 +31030,8 @@
  * This field selects the receiver wakeup method.
  *
  * Values:
- * - 0 - Idle-line wake-up.
- * - 1 - Address-mark wake-up.
+ * - 0b0 - Idle-line wake-up.
+ * - 0b1 - Address-mark wake-up.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_WAKE field. */
@@ -31007,9 +31049,9 @@
  * This field configures the UART to be operated in 9-bit or 8-bit data mode.
  *
  * Values:
- * - 0 - Normal - start + 8 data bits (lsb first) + stop.
- * - 1 - Receiver and transmitter use 9-bit data characters start + 8 data bits
- *     (lsb first) + 9th data bit + stop.
+ * - 0b0 - Normal - start + 8 data bits (lsb first) + stop.
+ * - 0b1 - Receiver and transmitter use 9-bit data characters start + 8 data
+ *     bits (lsb first) + 9th data bit + stop.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_M field. */
@@ -31029,10 +31071,10 @@
  * determines whether this connection is also connected to the transmitter output.
  *
  * Values:
- * - 0 - Provided LOOPS is set, RSRC is cleared, selects internal loop back mode
- *     and the UART does not use the RxD pins.
- * - 1 - Single-wire UART mode where the TxD pin is connected to the transmitter
- *     output and receiver input.
+ * - 0b0 - Provided LOOPS is set, RSRC is cleared, selects internal loop back
+ *     mode and the UART does not use the RxD pins.
+ * - 0b1 - Single-wire UART mode where the TxD pin is connected to the
+ *     transmitter output and receiver input.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_RSRC field. */
@@ -31048,9 +31090,9 @@
  * @name Register UART_C1, field UARTSWAI[6] (RW)
  *
  * Values:
- * - 0 - UART clocks continue to run in Wait mode so the UART can be the source
- *     of an interrupt that wakes up the CPU.
- * - 1 - UART clocks freeze while CPU is in Wait mode.
+ * - 0b0 - UART clocks continue to run in Wait mode so the UART can be the
+ *     source of an interrupt that wakes up the CPU.
+ * - 0b1 - UART clocks freeze while CPU is in Wait mode.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_UARTSWAI field. */
@@ -31069,9 +31111,9 @@
  * set, the transmitter output is internally connected to the receiver input.
  *
  * Values:
- * - 0 - Normal operation - RxD and TxD use separate pins.
- * - 1 - Loop mode or single-wire mode where transmitter outputs are internally
- *     connected to receiver input. (See RSRC bit.) RxD pin is not used by UART.
+ * - 0b0 - Normal operation - RxD and TxD use separate pins.
+ * - 0b1 - Loop mode or single-wire mode where transmitter outputs are
+ *     internally connected to receiver input. (See RSRC bit.) RxD pin is not used by UART.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_LOOPS field. */
@@ -31121,8 +31163,8 @@
  * SBK.
  *
  * Values:
- * - 0 - Normal transmitter operation.
- * - 1 - Queue break character(s) to be sent.
+ * - 0b0 - Normal transmitter operation.
+ * - 0b1 - Queue break character(s) to be sent.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_SBK field. */
@@ -31145,8 +31187,8 @@
  * selected hardware condition automatically clears RWU.
  *
  * Values:
- * - 0 - Normal UART receiver operation.
- * - 1 - UART receiver in standby waiting for wake-up condition.
+ * - 0b0 - Normal UART receiver operation.
+ * - 0b1 - UART receiver in standby waiting for wake-up condition.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_RWU field. */
@@ -31166,8 +31208,8 @@
  * general-purpose I/O pin even if RE is set.
  *
  * Values:
- * - 0 - Receiver off.
- * - 1 - Receiver on.
+ * - 0b0 - Receiver off.
+ * - 0b1 - Receiver on.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_RE field. */
@@ -31192,8 +31234,8 @@
  * transmitting before allowing the pin to revert to a general-purpose I/O pin.
  *
  * Values:
- * - 0 - Transmitter off.
- * - 1 - Transmitter on.
+ * - 0b0 - Transmitter off.
+ * - 0b1 - Transmitter on.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_TE field. */
@@ -31209,8 +31251,8 @@
  * @name Register UART_C2, field ILIE[4] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from S1[IDLE] disabled; use polling.
- * - 1 - Hardware interrupt requested when S1[IDLE] flag is 1.
+ * - 0b0 - Hardware interrupts from S1[IDLE] disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when S1[IDLE] flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_ILIE field. */
@@ -31226,8 +31268,8 @@
  * @name Register UART_C2, field RIE[5] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from S1[RDRF] disabled; use polling.
- * - 1 - Hardware interrupt requested when S1[RDRF] flag is 1.
+ * - 0b0 - Hardware interrupts from S1[RDRF] disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when S1[RDRF] flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_RIE field. */
@@ -31243,8 +31285,8 @@
  * @name Register UART_C2, field TCIE[6] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from TC disabled; use polling.
- * - 1 - Hardware interrupt requested when TC flag is 1.
+ * - 0b0 - Hardware interrupts from TC disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when TC flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_TCIE field. */
@@ -31260,8 +31302,8 @@
  * @name Register UART_C2, field TIE[7] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from TDRE disabled; use polling.
- * - 1 - Hardware interrupt requested when TDRE flag is 1.
+ * - 0b0 - Hardware interrupts from TDRE disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when TDRE flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_TIE field. */
@@ -31305,8 +31347,8 @@
  * value. To clear PF, read UART_S1 and then read the UART data register (UART_D).
  *
  * Values:
- * - 0 - No parity error.
- * - 1 - Parity error.
+ * - 0b0 - No parity error.
+ * - 0b1 - Parity error.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_PF field. */
@@ -31323,9 +31365,9 @@
  * the UART data register (UART_D).
  *
  * Values:
- * - 0 - No framing error detected. This does not guarantee the framing is
+ * - 0b0 - No framing error detected. This does not guarantee the framing is
  *     correct.
- * - 1 - Framing error.
+ * - 0b1 - Framing error.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_FE field. */
@@ -31343,8 +31385,8 @@
  * character. To clear NF, read UART_S1 and then read the UART data register (UART_D).
  *
  * Values:
- * - 0 - No noise detected.
- * - 1 - Noise detected in the received character in UART_D.
+ * - 0b0 - No noise detected.
+ * - 0b1 - Noise detected in the received character in UART_D.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_NF field. */
@@ -31362,8 +31404,8 @@
  * clear OR, read UART_S1 with OR set and then read the UART data register (UART_D).
  *
  * Values:
- * - 0 - No overrun.
- * - 1 - Receive overrun (new UART data lost).
+ * - 0b0 - No overrun.
+ * - 0b1 - Receive overrun (new UART data lost).
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_OR field. */
@@ -31389,8 +31431,8 @@
  * even if the receive line remains idle for an extended period.
  *
  * Values:
- * - 0 - No idle line detected.
- * - 1 - Idle line was detected.
+ * - 0b0 - No idle line detected.
+ * - 0b1 - Idle line was detected.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_IDLE field. */
@@ -31406,8 +31448,8 @@
  * then read the UART data register (UART_D).
  *
  * Values:
- * - 0 - Receive data register empty.
- * - 1 - Receive data register full.
+ * - 0b0 - Receive data register empty.
+ * - 0b1 - Receive data register full.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_RDRF field. */
@@ -31425,8 +31467,8 @@
  * TE from 0 to 1 Queue a break character by writing 1 to UART_C2[SBK]
  *
  * Values:
- * - 0 - Transmitter active (sending data, a preamble, or a break).
- * - 1 - Transmitter idle (transmission activity complete).
+ * - 0b0 - Transmitter active (sending data, a preamble, or a break).
+ * - 0b1 - Transmitter idle (transmission activity complete).
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_TC field. */
@@ -31443,8 +31485,8 @@
  * UART data register (UART_D).
  *
  * Values:
- * - 0 - Transmit data register (buffer) full.
- * - 1 - Transmit data register (buffer) empty.
+ * - 0b0 - Transmit data register (buffer) full.
+ * - 0b1 - Transmit data register (buffer) empty.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_TDRE field. */
@@ -31496,8 +31538,8 @@
  * before instructing the MCU to go to stop mode.
  *
  * Values:
- * - 0 - UART receiver idle waiting for a start bit.
- * - 1 - UART receiver active (RxD input not idle).
+ * - 0b0 - UART receiver idle waiting for a start bit.
+ * - 0b1 - UART receiver active (RxD input not idle).
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_RAF field. */
@@ -31512,8 +31554,8 @@
  * flags are prevented from setting.
  *
  * Values:
- * - 0 - Break detection is disabled.
- * - 1 - Break detection is enabled (Break character is detected at length 11
+ * - 0b0 - Break detection is disabled.
+ * - 0b1 - Break detection is enabled (Break character is detected at length 11
  *     bit times (if C1[M] = 0, BDH[SBNS] = 0) or 12 (if C1[M] = 1, BDH[SBNS] = 0
  *     or C1[M] = 0, BDH[SBNS] = 1) or 13 (if C1[M] = 1, BDH[SBNS] = 1)).
  */
@@ -31534,10 +31576,10 @@
  * framing error is not affected by the state of this field.
  *
  * Values:
- * - 0 - Break character is transmitted with length of 10 bit times (if M = 0,
+ * - 0b0 - Break character is transmitted with length of 10 bit times (if M = 0,
  *     SBNS = 0) or 11 (if M = 1, SBNS = 0 or M = 0, SBNS = 1) or 12 (if M = 1,
  *     SBNS = 1).
- * - 1 - Break character is transmitted with length of 13 bit times (if M = 0,
+ * - 0b1 - Break character is transmitted with length of 13 bit times (if M = 0,
  *     SBNS = 0) or 14 (if M = 1, SBNS = 0 or M = 0, SBNS = 1) or 15 (if M = 1,
  *     SBNS = 1).
  */
@@ -31558,9 +31600,9 @@
  * S1[IDLE].
  *
  * Values:
- * - 0 - During receive standby state (RWU = 1), S1[IDLE] does not get set upon
- *     detection of an idle character.
- * - 1 - During receive standby state (RWU = 1), S1[IDLE] gets set upon
+ * - 0b0 - During receive standby state (RWU = 1), S1[IDLE] does not get set
+ *     upon detection of an idle character.
+ * - 0b1 - During receive standby state (RWU = 1), S1[IDLE] gets set upon
  *     detection of an idle character.
  */
 /*@{*/
@@ -31581,8 +31623,8 @@
  * break, and idle.
  *
  * Values:
- * - 0 - Receive data not inverted.
- * - 1 - Receive data inverted.
+ * - 0b0 - Receive data not inverted.
+ * - 0b1 - Receive data inverted.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_RXINV field. */
@@ -31601,8 +31643,8 @@
  * on the RxD pin occurs. RXEDGIF is cleared by writing a 1 to it.
  *
  * Values:
- * - 0 - No active edge on the receive pin has occurred.
- * - 1 - An active edge on the receive pin has occurred.
+ * - 0b0 - No active edge on the receive pin has occurred.
+ * - 0b1 - An active edge on the receive pin has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_RXEDGIF field. */
@@ -31621,8 +31663,8 @@
  * character is detected. LBKDIF is cleared by writing a 1 to it.
  *
  * Values:
- * - 0 - No LIN break character has been detected.
- * - 1 - LIN break character has been detected.
+ * - 0b0 - No LIN break character has been detected.
+ * - 0b1 - LIN break character has been detected.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_LBKDIF field. */
@@ -31665,8 +31707,8 @@
  * Enables the parity error flag (PF) to generate hardware interrupt requests.
  *
  * Values:
- * - 0 - PF interrupts disabled; use polling).
- * - 1 - Hardware interrupt requested when PF is set.
+ * - 0b0 - PF interrupts disabled; use polling).
+ * - 0b1 - Hardware interrupt requested when PF is set.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_PEIE field. */
@@ -31684,8 +31726,8 @@
  * Enables the framing error flag (FE) to generate hardware interrupt requests.
  *
  * Values:
- * - 0 - FE interrupts disabled; use polling).
- * - 1 - Hardware interrupt requested when FE is set.
+ * - 0b0 - FE interrupts disabled; use polling).
+ * - 0b1 - Hardware interrupt requested when FE is set.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_FEIE field. */
@@ -31703,8 +31745,8 @@
  * Enables the noise flag (NF) to generate hardware interrupt requests.
  *
  * Values:
- * - 0 - NF interrupts disabled; use polling).
- * - 1 - Hardware interrupt requested when NF is set.
+ * - 0b0 - NF interrupts disabled; use polling).
+ * - 0b1 - Hardware interrupt requested when NF is set.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_NEIE field. */
@@ -31722,8 +31764,8 @@
  * Enables the overrun flag (OR) to generate hardware interrupt requests.
  *
  * Values:
- * - 0 - OR interrupts disabled; use polling.
- * - 1 - Hardware interrupt requested when OR is set.
+ * - 0b0 - OR interrupts disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when OR is set.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_ORIE field. */
@@ -31743,8 +31785,8 @@
  * bits, break, and idle.
  *
  * Values:
- * - 0 - Transmit data not inverted.
- * - 1 - Transmit data inverted.
+ * - 0b0 - Transmit data not inverted.
+ * - 0b1 - Transmit data inverted.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_TXINV field. */
@@ -31763,8 +31805,8 @@
  * RSRC = 1), this field determines the direction of data at the TxD pin.
  *
  * Values:
- * - 0 - TxD pin is an input in single-wire mode.
- * - 1 - TxD pin is an output in single-wire mode.
+ * - 0b0 - TxD pin is an input in single-wire mode.
+ * - 0b1 - TxD pin is an output in single-wire mode.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_TXDIR field. */
@@ -31996,10 +32038,10 @@
  * regardless of the state of RDMAS.
  *
  * Values:
- * - 0 - If RIE is set and the RDRF flag is set, the RDRF interrupt request
+ * - 0b0 - If RIE is set and the RDRF flag is set, the RDRF interrupt request
  *     signal is asserted to request interrupt service.
- * - 1 - If RIE is set and the RDRF flag is set, the RDRF DMA request signal is
- *     asserted to request a DMA transfer.
+ * - 0b1 - If RIE is set and the RDRF flag is set, the RDRF DMA request signal
+ *     is asserted to request a DMA transfer.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C4_RDMAS field. */
@@ -32022,10 +32064,10 @@
  * servicing of a DMA request.
  *
  * Values:
- * - 0 - If TIE is set and the TDRE flag is set, the TDRE interrupt request
+ * - 0b0 - If TIE is set and the TDRE flag is set, the TDRE interrupt request
  *     signal is asserted to request interrupt service.
- * - 1 - If TIE is set and the TDRE flag is set, the TDRE DMA request signal is
- *     asserted to request a DMA transfer.
+ * - 0b1 - If TIE is set and the TDRE flag is set, the TDRE DMA request signal
+ *     is asserted to request a DMA transfer.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C4_TDMAS field. */
@@ -32113,8 +32155,8 @@
  * should only be changed when the transmitter and receiver are both disabled.
  *
  * Values:
- * - 0 - One stop bit.
- * - 1 - Two stop bit.
+ * - 0b0 - One stop bit.
+ * - 0b1 - Two stop bit.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_BDH_SBNS field. */
@@ -32130,8 +32172,8 @@
  * @name Register UART0_BDH, field RXEDGIE[6] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from UART_S2[RXEDGIF] disabled (use polling).
- * - 1 - Hardware interrupt requested when UART_S2[RXEDGIF] flag is 1.
+ * - 0b0 - Hardware interrupts from UART_S2[RXEDGIF] disabled (use polling).
+ * - 0b1 - Hardware interrupt requested when UART_S2[RXEDGIF] flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_BDH_RXEDGIE field. */
@@ -32147,8 +32189,8 @@
  * @name Register UART0_BDH, field LBKDIE[7] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from UART_S2[LBKDIF] disabled (use polling).
- * - 1 - Hardware interrupt requested when UART_S2[LBKDIF] flag is 1.
+ * - 0b0 - Hardware interrupts from UART_S2[LBKDIF] disabled (use polling).
+ * - 0b1 - Hardware interrupt requested when UART_S2[LBKDIF] flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_BDH_LBKDIE field. */
@@ -32226,8 +32268,8 @@
  * character, including the parity bit, is even.
  *
  * Values:
- * - 0 - Even parity.
- * - 1 - Odd parity.
+ * - 0b0 - Even parity.
+ * - 0b1 - Odd parity.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C1_PT field. */
@@ -32246,8 +32288,8 @@
  * bit immediately before the stop bit is treated as the parity bit.
  *
  * Values:
- * - 0 - No hardware parity generation or checking.
- * - 1 - Parity enabled.
+ * - 0b0 - No hardware parity generation or checking.
+ * - 0b1 - Parity enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C1_PE field. */
@@ -32267,8 +32309,8 @@
  * needed by the idle line detection logic.
  *
  * Values:
- * - 0 - Idle character bit count starts after start bit.
- * - 1 - Idle character bit count starts after stop bit.
+ * - 0b0 - Idle character bit count starts after start bit.
+ * - 0b1 - Idle character bit count starts after stop bit.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C1_ILT field. */
@@ -32284,8 +32326,8 @@
  * @name Register UART0_C1, field WAKE[3] (RW)
  *
  * Values:
- * - 0 - Idle-line wakeup.
- * - 1 - Address-mark wakeup.
+ * - 0b0 - Idle-line wakeup.
+ * - 0b1 - Address-mark wakeup.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C1_WAKE field. */
@@ -32301,8 +32343,8 @@
  * @name Register UART0_C1, field M[4] (RW)
  *
  * Values:
- * - 0 - Receiver and transmitter use 8-bit data characters.
- * - 1 - Receiver and transmitter use 9-bit data characters.
+ * - 0b0 - Receiver and transmitter use 8-bit data characters.
+ * - 0b1 - Receiver and transmitter use 9-bit data characters.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C1_M field. */
@@ -32323,9 +32365,9 @@
  * output.
  *
  * Values:
- * - 0 - Provided LOOPS is set, RSRC is cleared, selects internal loop back mode
- *     and the UART does not use the UART_RX pins.
- * - 1 - Single-wire UART mode where the UART_TX pin is connected to the
+ * - 0b0 - Provided LOOPS is set, RSRC is cleared, selects internal loop back
+ *     mode and the UART does not use the UART_RX pins.
+ * - 0b1 - Single-wire UART mode where the UART_TX pin is connected to the
  *     transmitter output and receiver input.
  */
 /*@{*/
@@ -32342,8 +32384,8 @@
  * @name Register UART0_C1, field DOZEEN[6] (RW)
  *
  * Values:
- * - 0 - UART is enabled in Wait mode.
- * - 1 - UART is disabled in Wait mode.
+ * - 0b0 - UART is enabled in Wait mode.
+ * - 0b1 - UART is disabled in Wait mode.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C1_DOZEEN field. */
@@ -32362,9 +32404,9 @@
  * LOOPS is set, the transmitter output is internally connected to the receiver input.
  *
  * Values:
- * - 0 - Normal operation - UART_RX and UART_TX use separate pins.
- * - 1 - Loop mode or single-wire mode where transmitter outputs are internally
- *     connected to receiver input. (See RSRC bit.) UART_RX pin is not used by
+ * - 0b0 - Normal operation - UART_RX and UART_TX use separate pins.
+ * - 0b1 - Loop mode or single-wire mode where transmitter outputs are
+ *     internally connected to receiver input. (See RSRC bit.) UART_RX pin is not used by
  *     UART.
  */
 /*@{*/
@@ -32414,8 +32456,8 @@
  * transmitted, a second break character may be queued before software clears SBK.
  *
  * Values:
- * - 0 - Normal transmitter operation.
- * - 1 - Queue break character(s) to be sent.
+ * - 0b0 - Normal transmitter operation.
+ * - 0b1 - Queue break character(s) to be sent.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C2_SBK field. */
@@ -32438,8 +32480,8 @@
  * hardware condition automatically clears RWU.
  *
  * Values:
- * - 0 - Normal UART receiver operation.
- * - 1 - UART receiver in standby waiting for wakeup condition.
+ * - 0b0 - Normal UART receiver operation.
+ * - 0b1 - UART receiver in standby waiting for wakeup condition.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C2_RWU field. */
@@ -32459,8 +32501,8 @@
  * current character (if any).
  *
  * Values:
- * - 0 - Receiver disabled.
- * - 1 - Receiver enabled.
+ * - 0b0 - Receiver disabled.
+ * - 0b1 - Receiver enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C2_RE field. */
@@ -32485,8 +32527,8 @@
  * transmitting before allowing the pin to tristate.
  *
  * Values:
- * - 0 - Transmitter disabled.
- * - 1 - Transmitter enabled.
+ * - 0b0 - Transmitter disabled.
+ * - 0b1 - Transmitter enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C2_TE field. */
@@ -32502,8 +32544,8 @@
  * @name Register UART0_C2, field ILIE[4] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from IDLE disabled; use polling.
- * - 1 - Hardware interrupt requested when IDLE flag is 1.
+ * - 0b0 - Hardware interrupts from IDLE disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when IDLE flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C2_ILIE field. */
@@ -32519,8 +32561,8 @@
  * @name Register UART0_C2, field RIE[5] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from RDRF disabled; use polling.
- * - 1 - Hardware interrupt requested when RDRF flag is 1.
+ * - 0b0 - Hardware interrupts from RDRF disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when RDRF flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C2_RIE field. */
@@ -32536,8 +32578,8 @@
  * @name Register UART0_C2, field TCIE[6] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from TC disabled; use polling.
- * - 1 - Hardware interrupt requested when TC flag is 1.
+ * - 0b0 - Hardware interrupts from TC disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when TC flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C2_TCIE field. */
@@ -32553,8 +32595,8 @@
  * @name Register UART0_C2, field TIE[7] (RW)
  *
  * Values:
- * - 0 - Hardware interrupts from TDRE disabled; use polling.
- * - 1 - Hardware interrupt requested when TDRE flag is 1.
+ * - 0b0 - Hardware interrupts from TDRE disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when TDRE flag is 1.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C2_TIE field. */
@@ -32599,8 +32641,8 @@
  * value. To clear PF, write a logic one to the PF.
  *
  * Values:
- * - 0 - No parity error.
- * - 1 - Parity error.
+ * - 0b0 - No parity error.
+ * - 0b1 - Parity error.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S1_PF field. */
@@ -32620,9 +32662,9 @@
  * to a character frame. To clear FE, write a logic one to the FE flag.
  *
  * Values:
- * - 0 - No framing error detected. This does not guarantee the framing is
+ * - 0b0 - No framing error detected. This does not guarantee the framing is
  *     correct.
- * - 1 - Framing error.
+ * - 0b1 - Framing error.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S1_FE field. */
@@ -32643,8 +32685,8 @@
  * time as RDRF is set for the character. To clear NF, write logic one to the NF.
  *
  * Values:
- * - 0 - No noise detected.
- * - 1 - Noise detected in the received character in UART_D.
+ * - 0b0 - No noise detected.
+ * - 0b1 - Noise detected in the received character in UART_D.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S1_NF field. */
@@ -32666,8 +32708,8 @@
  * write a logic 1 to the OR flag.
  *
  * Values:
- * - 0 - No overrun.
- * - 1 - Receive overrun (new UART data lost).
+ * - 0b0 - No overrun.
+ * - 0b1 - Receive overrun (new UART data lost).
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S1_OR field. */
@@ -32696,8 +32738,8 @@
  * once even if the receive line remains idle for an extended period.
  *
  * Values:
- * - 0 - No idle line detected.
- * - 1 - Idle line was detected.
+ * - 0b0 - No idle line detected.
+ * - 0b1 - Idle line was detected.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S1_IDLE field. */
@@ -32716,8 +32758,8 @@
  * read the UART data register ( UART_D).
  *
  * Values:
- * - 0 - Receive data buffer empty.
- * - 1 - Receive data buffer full.
+ * - 0b0 - Receive data buffer empty.
+ * - 0b1 - Receive data buffer full.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S1_RDRF field. */
@@ -32735,8 +32777,8 @@
  * UART_C2[SBK]
  *
  * Values:
- * - 0 - Transmitter active (sending data, a preamble, or a break).
- * - 1 - Transmitter idle (transmission activity complete).
+ * - 0b0 - Transmitter active (sending data, a preamble, or a break).
+ * - 0b1 - Transmitter idle (transmission activity complete).
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S1_TC field. */
@@ -32751,8 +32793,8 @@
  * transmit data buffer. To clear TDRE, write to the UART data register ( UART_D).
  *
  * Values:
- * - 0 - Transmit data buffer full.
- * - 1 - Transmit data buffer empty.
+ * - 0b0 - Transmit data buffer full.
+ * - 0b1 - Transmit data buffer empty.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S1_TDRE field. */
@@ -32801,8 +32843,8 @@
  * and RAF is cleared automatically when the receiver detects an idle line.
  *
  * Values:
- * - 0 - UART receiver idle waiting for a start bit.
- * - 1 - UART receiver active ( UART_RXD input not idle).
+ * - 0b0 - UART receiver idle waiting for a start bit.
+ * - 0b1 - UART receiver active ( UART_RXD input not idle).
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S2_RAF field. */
@@ -32818,12 +32860,12 @@
  * from setting.
  *
  * Values:
- * - 0 - Break character is detected at length 10 bit times (if M = 0, SBNS = 0)
- *     or 11 (if M = 1, SBNS = 0 or M = 0, SBNS = 1) or 12 (if M = 1, SBNS = 1
+ * - 0b0 - Break character is detected at length 10 bit times (if M = 0, SBNS =
+ *     0) or 11 (if M = 1, SBNS = 0 or M = 0, SBNS = 1) or 12 (if M = 1, SBNS = 1
  *     or M10 = 1, SNBS = 0) or 13 (if M10 = 1, SNBS = 1).
- * - 1 - Break character is detected at length of 11 bit times (if M = 0, SBNS =
- *     0) or 12 (if M = 1, SBNS = 0 or M = 0, SBNS = 1) or 14 (if M = 1, SBNS =
- *     1 or M10 = 1, SNBS = 0) or 15 (if M10 = 1, SNBS = 1).
+ * - 0b1 - Break character is detected at length of 11 bit times (if M = 0, SBNS
+ *     = 0) or 12 (if M = 1, SBNS = 0 or M = 0, SBNS = 1) or 14 (if M = 1, SBNS
+ *     = 1 or M10 = 1, SNBS = 0) or 15 (if M10 = 1, SNBS = 1).
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S2_LBKDE field. */
@@ -32843,10 +32885,10 @@
  * changed when the transmitter is disabled.
  *
  * Values:
- * - 0 - Break character is transmitted with length of 10 bit times (if M = 0,
+ * - 0b0 - Break character is transmitted with length of 10 bit times (if M = 0,
  *     SBNS = 0) or 11 (if M = 1, SBNS = 0 or M = 0, SBNS = 1) or 12 (if M = 1,
  *     SBNS = 1 or M10 = 1, SNBS = 0) or 13 (if M10 = 1, SNBS = 1).
- * - 1 - Break character is transmitted with length of 13 bit times (if M = 0,
+ * - 0b1 - Break character is transmitted with length of 13 bit times (if M = 0,
  *     SBNS = 0) or 14 (if M = 1, SBNS = 0 or M = 0, SBNS = 1) or 15 (if M = 1,
  *     SBNS = 1 or M10 = 1, SNBS = 0) or 16 (if M10 = 1, SNBS = 1).
  */
@@ -32867,9 +32909,9 @@
  * IDLE bit. This bit should only be changed when the receiver is disabled.
  *
  * Values:
- * - 0 - During receive standby state (RWU = 1), the IDLE bit does not get set
+ * - 0b0 - During receive standby state (RWU = 1), the IDLE bit does not get set
  *     upon detection of an idle character.
- * - 1 - During receive standby state (RWU = 1), the IDLE bit gets set upon
+ * - 0b1 - During receive standby state (RWU = 1), the IDLE bit gets set upon
  *     detection of an idle character.
  */
 /*@{*/
@@ -32890,8 +32932,8 @@
  * break, and idle.
  *
  * Values:
- * - 0 - Receive data not inverted.
- * - 1 - Receive data inverted.
+ * - 0b0 - Receive data not inverted.
+ * - 0b1 - Receive data inverted.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S2_RXINV field. */
@@ -32912,10 +32954,10 @@
  * should only be changed when the transmitter and receiver are both disabled.
  *
  * Values:
- * - 0 - LSB (bit0) is the first bit that is transmitted following the start
+ * - 0b0 - LSB (bit0) is the first bit that is transmitted following the start
  *     bit. Further, the first bit received after the start bit is identified as
  *     bit0.
- * - 1 - MSB (bit9, bit8, bit7 or bit6) is the first bit that is transmitted
+ * - 0b1 - MSB (bit9, bit8, bit7 or bit6) is the first bit that is transmitted
  *     following the start bit depending on the setting of C1[M], C1[PE] and
  *     C4[M10]. Further, the first bit received after the start bit is identified as
  *     bit9, bit8, bit7 or bit6 depending on the setting of C1[M] and C1[PE].
@@ -32937,8 +32979,8 @@
  * on the UART_RX pin occurs. RXEDGIF is cleared by writing a 1 to it.
  *
  * Values:
- * - 0 - No active edge on the receive pin has occurred.
- * - 1 - An active edge on the receive pin has occurred.
+ * - 0b0 - No active edge on the receive pin has occurred.
+ * - 0b1 - An active edge on the receive pin has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S2_RXEDGIF field. */
@@ -32957,8 +32999,8 @@
  * character is detected. LBKDIF is cleared by writing a 1 to it.
  *
  * Values:
- * - 0 - No LIN break character has been detected.
- * - 1 - LIN break character has been detected.
+ * - 0b0 - No LIN break character has been detected.
+ * - 0b1 - LIN break character has been detected.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_S2_LBKDIF field. */
@@ -33002,8 +33044,8 @@
  * requests.
  *
  * Values:
- * - 0 - PF interrupts disabled; use polling).
- * - 1 - Hardware interrupt requested when PF is set.
+ * - 0b0 - PF interrupts disabled; use polling).
+ * - 0b1 - Hardware interrupt requested when PF is set.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C3_PEIE field. */
@@ -33022,8 +33064,8 @@
  * requests.
  *
  * Values:
- * - 0 - FE interrupts disabled; use polling.
- * - 1 - Hardware interrupt requested when FE is set.
+ * - 0b0 - FE interrupts disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when FE is set.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C3_FEIE field. */
@@ -33041,8 +33083,8 @@
  * This bit enables the noise flag (NF) to generate hardware interrupt requests.
  *
  * Values:
- * - 0 - NF interrupts disabled; use polling.
- * - 1 - Hardware interrupt requested when NF is set.
+ * - 0b0 - NF interrupts disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when NF is set.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C3_NEIE field. */
@@ -33061,8 +33103,8 @@
  * requests.
  *
  * Values:
- * - 0 - OR interrupts disabled; use polling.
- * - 1 - Hardware interrupt requested when OR is set.
+ * - 0b0 - OR interrupts disabled; use polling.
+ * - 0b1 - Hardware interrupt requested when OR is set.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C3_ORIE field. */
@@ -33082,8 +33124,8 @@
  * bits, break, and idle.
  *
  * Values:
- * - 0 - Transmit data not inverted.
- * - 1 - Transmit data inverted.
+ * - 0b0 - Transmit data not inverted.
+ * - 0b1 - Transmit data inverted.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C3_TXINV field. */
@@ -33104,8 +33146,8 @@
  * any) before the receiver starts receiving data from the UART_TXD pin.
  *
  * Values:
- * - 0 - UART_TXD pin is an input in single-wire mode.
- * - 1 - UART_TXD pin is an output in single-wire mode.
+ * - 0b0 - UART_TXD pin is an input in single-wire mode.
+ * - 0b1 - UART_TXD pin is an output in single-wire mode.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C3_TXDIR field. */
@@ -33421,8 +33463,8 @@
  * bit should only be changed when the transmitter and receiver are both disabled.
  *
  * Values:
- * - 0 - Receiver and transmitter use 8-bit or 9-bit data characters.
- * - 1 - Receiver and transmitter use 10-bit data characters.
+ * - 0b0 - Receiver and transmitter use 8-bit or 9-bit data characters.
+ * - 0b1 - Receiver and transmitter use 10-bit data characters.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C4_M10 field. */
@@ -33440,11 +33482,12 @@
  * Refer to Match address operation for more information.
  *
  * Values:
- * - 0 - All data received is transferred to the data buffer if MAEN1 is cleared.
- * - 1 - All data received with the most significant bit cleared, is discarded.
- *     All data received with the most significant bit set, is compared with
- *     contents of MA2 register. If no match occurs, the data is discarded. If match
- *     occurs, data is transferred to the data buffer.
+ * - 0b0 - All data received is transferred to the data buffer if MAEN1 is
+ *     cleared.
+ * - 0b1 - All data received with the most significant bit cleared, is
+ *     discarded. All data received with the most significant bit set, is compared with
+ *     contents of MA2 register. If no match occurs, the data is discarded. If
+ *     match occurs, data is transferred to the data buffer.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C4_MAEN2 field. */
@@ -33462,11 +33505,12 @@
  * Refer to Match address operation for more information.
  *
  * Values:
- * - 0 - All data received is transferred to the data buffer if MAEN2 is cleared.
- * - 1 - All data received with the most significant bit cleared, is discarded.
- *     All data received with the most significant bit set, is compared with
- *     contents of MA1 register. If no match occurs, the data is discarded. If match
- *     occurs, data is transferred to the data buffer.
+ * - 0b0 - All data received is transferred to the data buffer if MAEN2 is
+ *     cleared.
+ * - 0b1 - All data received with the most significant bit cleared, is
+ *     discarded. All data received with the most significant bit set, is compared with
+ *     contents of MA1 register. If no match occurs, the data is discarded. If
+ *     match occurs, data is transferred to the data buffer.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C4_MAEN1 field. */
@@ -33511,8 +33555,8 @@
  * changed when the receiver is disabled.
  *
  * Values:
- * - 0 - Resynchronization during received data word is supported
- * - 1 - Resynchronization during received data word is disabled
+ * - 0b0 - Resynchronization during received data word is supported
+ * - 0b1 - Resynchronization during received data word is disabled
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C5_RESYNCDIS field. */
@@ -33534,9 +33578,9 @@
  * only be changed when the receiver is disabled.
  *
  * Values:
- * - 0 - Receiver samples input data using the rising edge of the baud rate
+ * - 0b0 - Receiver samples input data using the rising edge of the baud rate
  *     clock.
- * - 1 - Receiver samples input data using the rising and falling edge of the
+ * - 0b1 - Receiver samples input data using the rising and falling edge of the
  *     baud rate clock.
  */
 /*@{*/
@@ -33556,8 +33600,8 @@
  * a DMA request.
  *
  * Values:
- * - 0 - DMA request disabled.
- * - 1 - DMA request enabled.
+ * - 0b0 - DMA request disabled.
+ * - 0b1 - DMA request enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C5_RDMAE field. */
@@ -33576,8 +33620,8 @@
  * a DMA request.
  *
  * Values:
- * - 0 - DMA request disabled.
- * - 1 - DMA request enabled.
+ * - 0b0 - DMA request disabled.
+ * - 0b1 - DMA request enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART0_C5_TDMAE field. */
@@ -33914,8 +33958,8 @@
  * @name Register USB_OTGICR, field AVBUSEN[0] (RW)
  *
  * Values:
- * - 0 - Disables the AVBUSCHG interrupt.
- * - 1 - Enables the AVBUSCHG interrupt.
+ * - 0b0 - Disables the AVBUSCHG interrupt.
+ * - 0b1 - Enables the AVBUSCHG interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGICR_AVBUSEN field. */
@@ -33931,8 +33975,8 @@
  * @name Register USB_OTGICR, field BSESSEN[2] (RW)
  *
  * Values:
- * - 0 - Disables the B_SESS_CHG interrupt.
- * - 1 - Enables the B_SESS_CHG interrupt.
+ * - 0b0 - Disables the B_SESS_CHG interrupt.
+ * - 0b1 - Enables the B_SESS_CHG interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGICR_BSESSEN field. */
@@ -33948,8 +33992,8 @@
  * @name Register USB_OTGICR, field SESSVLDEN[3] (RW)
  *
  * Values:
- * - 0 - Disables the SESSVLDCHG interrupt.
- * - 1 - Enables the SESSVLDCHG interrupt.
+ * - 0b0 - Disables the SESSVLDCHG interrupt.
+ * - 0b1 - Enables the SESSVLDCHG interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGICR_SESSVLDEN field. */
@@ -33965,8 +34009,8 @@
  * @name Register USB_OTGICR, field LINESTATEEN[5] (RW)
  *
  * Values:
- * - 0 - Disables the LINE_STAT_CHG interrupt.
- * - 1 - Enables the LINE_STAT_CHG interrupt.
+ * - 0b0 - Disables the LINE_STAT_CHG interrupt.
+ * - 0b1 - Enables the LINE_STAT_CHG interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGICR_LINESTATEEN field. */
@@ -33982,8 +34026,8 @@
  * @name Register USB_OTGICR, field ONEMSECEN[6] (RW)
  *
  * Values:
- * - 0 - Diables the 1ms timer interrupt.
- * - 1 - Enables the 1ms timer interrupt.
+ * - 0b0 - Diables the 1ms timer interrupt.
+ * - 0b1 - Enables the 1ms timer interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGICR_ONEMSECEN field. */
@@ -33999,8 +34043,8 @@
  * @name Register USB_OTGICR, field IDEN[7] (RW)
  *
  * Values:
- * - 0 - The ID interrupt is disabled
- * - 1 - The ID interrupt is enabled
+ * - 0b0 - The ID interrupt is disabled
+ * - 0b1 - The ID interrupt is enabled
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGICR_IDEN field. */
@@ -34044,8 +34088,8 @@
  * @name Register USB_OTGSTAT, field AVBUSVLD[0] (RW)
  *
  * Values:
- * - 0 - The VBUS voltage is below the A VBUS Valid threshold.
- * - 1 - The VBUS voltage is above the A VBUS Valid threshold.
+ * - 0b0 - The VBUS voltage is below the A VBUS Valid threshold.
+ * - 0b1 - The VBUS voltage is above the A VBUS Valid threshold.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGSTAT_AVBUSVLD field. */
@@ -34061,8 +34105,8 @@
  * @name Register USB_OTGSTAT, field BSESSEND[2] (RW)
  *
  * Values:
- * - 0 - The VBUS voltage is above the B session end threshold.
- * - 1 - The VBUS voltage is below the B session end threshold.
+ * - 0b0 - The VBUS voltage is above the B session end threshold.
+ * - 0b1 - The VBUS voltage is below the B session end threshold.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGSTAT_BSESSEND field. */
@@ -34078,8 +34122,8 @@
  * @name Register USB_OTGSTAT, field SESS_VLD[3] (RW)
  *
  * Values:
- * - 0 - The VBUS voltage is below the B session valid threshold
- * - 1 - The VBUS voltage is above the B session valid threshold.
+ * - 0b0 - The VBUS voltage is below the B session valid threshold
+ * - 0b1 - The VBUS voltage is above the B session valid threshold.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGSTAT_SESS_VLD field. */
@@ -34100,8 +34144,8 @@
  * LINE_STATE_CHG can be considered stable.
  *
  * Values:
- * - 0 - The LINE_STAT_CHG bit is not yet stable.
- * - 1 - The LINE_STAT_CHG bit has been debounced and is stable.
+ * - 0b0 - The LINE_STAT_CHG bit is not yet stable.
+ * - 0b1 - The LINE_STAT_CHG bit has been debounced and is stable.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGSTAT_LINESTATESTABLE field. */
@@ -34134,8 +34178,8 @@
  * Indicates the current state of the ID pin on the USB connector
  *
  * Values:
- * - 0 - Indicates a Type A cable is plugged into the USB connector.
- * - 1 - Indicates no cable is attached or a Type B cable is plugged into the
+ * - 0b0 - Indicates a Type A cable is plugged into the USB connector.
+ * - 0b1 - Indicates no cable is attached or a Type B cable is plugged into the
  *     USB connector.
  */
 /*@{*/
@@ -34179,10 +34223,10 @@
  * @name Register USB_OTGCTL, field OTGEN[2] (RW)
  *
  * Values:
- * - 0 - If USB_EN is 1 and HOST_MODE is 0 in the Control Register (CTL), then
+ * - 0b0 - If USB_EN is 1 and HOST_MODE is 0 in the Control Register (CTL), then
  *     the D+ Data Line pull-up resistors are enabled. If HOST_MODE is 1 the D+
  *     and D- Data Line pull-down resistors are engaged.
- * - 1 - The pull-up and pull-down controls in this register are used.
+ * - 0b1 - The pull-up and pull-down controls in this register are used.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGCTL_OTGEN field. */
@@ -34198,8 +34242,8 @@
  * @name Register USB_OTGCTL, field DMLOW[4] (RW)
  *
  * Values:
- * - 0 - D- pulldown resistor is not enabled.
- * - 1 - D- pulldown resistor is enabled.
+ * - 0b0 - D- pulldown resistor is not enabled.
+ * - 0b1 - D- pulldown resistor is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGCTL_DMLOW field. */
@@ -34217,8 +34261,8 @@
  * This bit should always be enabled together with bit 4 (DMLOW)
  *
  * Values:
- * - 0 - D+ pulldown resistor is not enabled.
- * - 1 - D+ pulldown resistor is enabled.
+ * - 0b0 - D+ pulldown resistor is not enabled.
+ * - 0b1 - D+ pulldown resistor is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGCTL_DPLOW field. */
@@ -34234,8 +34278,8 @@
  * @name Register USB_OTGCTL, field DPHIGH[7] (RW)
  *
  * Values:
- * - 0 - D+ pullup resistor is not enabled
- * - 1 - D+ pullup resistor is enabled
+ * - 0b0 - D+ pullup resistor is not enabled
+ * - 0b1 - D+ pullup resistor is enabled
  */
 /*@{*/
 /*! @brief Read current value of the USB_OTGCTL_DPHIGH field. */
@@ -34454,8 +34498,8 @@
  * @name Register USB_INTEN, field USBRSTEN[0] (RW)
  *
  * Values:
- * - 0 - Disables the USBRST interrupt.
- * - 1 - Enables the USBRST interrupt.
+ * - 0b0 - Disables the USBRST interrupt.
+ * - 0b1 - Enables the USBRST interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_INTEN_USBRSTEN field. */
@@ -34471,8 +34515,8 @@
  * @name Register USB_INTEN, field ERROREN[1] (RW)
  *
  * Values:
- * - 0 - Disables the ERROR interrupt.
- * - 1 - Enables the ERROR interrupt.
+ * - 0b0 - Disables the ERROR interrupt.
+ * - 0b1 - Enables the ERROR interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_INTEN_ERROREN field. */
@@ -34488,8 +34532,8 @@
  * @name Register USB_INTEN, field SOFTOKEN[2] (RW)
  *
  * Values:
- * - 0 - Disbles the SOFTOK interrupt.
- * - 1 - Enables the SOFTOK interrupt.
+ * - 0b0 - Disbles the SOFTOK interrupt.
+ * - 0b1 - Enables the SOFTOK interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_INTEN_SOFTOKEN field. */
@@ -34505,8 +34549,8 @@
  * @name Register USB_INTEN, field TOKDNEEN[3] (RW)
  *
  * Values:
- * - 0 - Disables the TOKDNE interrupt.
- * - 1 - Enables the TOKDNE interrupt.
+ * - 0b0 - Disables the TOKDNE interrupt.
+ * - 0b1 - Enables the TOKDNE interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_INTEN_TOKDNEEN field. */
@@ -34522,8 +34566,8 @@
  * @name Register USB_INTEN, field SLEEPEN[4] (RW)
  *
  * Values:
- * - 0 - Disables the SLEEP interrupt.
- * - 1 - Enables the SLEEP interrupt.
+ * - 0b0 - Disables the SLEEP interrupt.
+ * - 0b1 - Enables the SLEEP interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_INTEN_SLEEPEN field. */
@@ -34539,8 +34583,8 @@
  * @name Register USB_INTEN, field RESUMEEN[5] (RW)
  *
  * Values:
- * - 0 - Disables the RESUME interrupt.
- * - 1 - Enables the RESUME interrupt.
+ * - 0b0 - Disables the RESUME interrupt.
+ * - 0b1 - Enables the RESUME interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_INTEN_RESUMEEN field. */
@@ -34556,8 +34600,8 @@
  * @name Register USB_INTEN, field ATTACHEN[6] (RW)
  *
  * Values:
- * - 0 - Disables the ATTACH interrupt.
- * - 1 - Enables the ATTACH interrupt.
+ * - 0b0 - Disables the ATTACH interrupt.
+ * - 0b1 - Enables the ATTACH interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_INTEN_ATTACHEN field. */
@@ -34573,8 +34617,8 @@
  * @name Register USB_INTEN, field STALLEN[7] (RW)
  *
  * Values:
- * - 0 - Diasbles the STALL interrupt.
- * - 1 - Enables the STALL interrupt.
+ * - 0b0 - Diasbles the STALL interrupt.
+ * - 0b1 - Enables the STALL interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_INTEN_STALLEN field. */
@@ -34782,8 +34826,8 @@
  * @name Register USB_ERREN, field PIDERREN[0] (RW)
  *
  * Values:
- * - 0 - Disables the PIDERR interrupt.
- * - 1 - Enters the PIDERR interrupt.
+ * - 0b0 - Disables the PIDERR interrupt.
+ * - 0b1 - Enters the PIDERR interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_ERREN_PIDERREN field. */
@@ -34799,8 +34843,8 @@
  * @name Register USB_ERREN, field CRC5EOFEN[1] (RW)
  *
  * Values:
- * - 0 - Disables the CRC5/EOF interrupt.
- * - 1 - Enables the CRC5/EOF interrupt.
+ * - 0b0 - Disables the CRC5/EOF interrupt.
+ * - 0b1 - Enables the CRC5/EOF interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_ERREN_CRC5EOFEN field. */
@@ -34816,8 +34860,8 @@
  * @name Register USB_ERREN, field CRC16EN[2] (RW)
  *
  * Values:
- * - 0 - Disables the CRC16 interrupt.
- * - 1 - Enables the CRC16 interrupt.
+ * - 0b0 - Disables the CRC16 interrupt.
+ * - 0b1 - Enables the CRC16 interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_ERREN_CRC16EN field. */
@@ -34833,8 +34877,8 @@
  * @name Register USB_ERREN, field DFN8EN[3] (RW)
  *
  * Values:
- * - 0 - Disables the DFN8 interrupt.
- * - 1 - Enables the DFN8 interrupt.
+ * - 0b0 - Disables the DFN8 interrupt.
+ * - 0b1 - Enables the DFN8 interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_ERREN_DFN8EN field. */
@@ -34850,8 +34894,8 @@
  * @name Register USB_ERREN, field BTOERREN[4] (RW)
  *
  * Values:
- * - 0 - Disables the BTOERR interrupt.
- * - 1 - Enables the BTOERR interrupt.
+ * - 0b0 - Disables the BTOERR interrupt.
+ * - 0b1 - Enables the BTOERR interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_ERREN_BTOERREN field. */
@@ -34867,8 +34911,8 @@
  * @name Register USB_ERREN, field DMAERREN[5] (RW)
  *
  * Values:
- * - 0 - Disables the DMAERR interrupt.
- * - 1 - Enables the DMAERR interrupt.
+ * - 0b0 - Disables the DMAERR interrupt.
+ * - 0b1 - Enables the DMAERR interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_ERREN_DMAERREN field. */
@@ -34884,8 +34928,8 @@
  * @name Register USB_ERREN, field BTSERREN[7] (RW)
  *
  * Values:
- * - 0 - Disables the BTSERR interrupt.
- * - 1 - Enables the BTSERR interrupt.
+ * - 0b0 - Disables the BTSERR interrupt.
+ * - 0b1 - Enables the BTSERR interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_ERREN_BTSERREN field. */
@@ -34947,8 +34991,8 @@
  * @name Register USB_STAT, field TX[3] (RO)
  *
  * Values:
- * - 0 - The most recent transaction was a receive operation.
- * - 1 - The most recent transaction was a transmit operation.
+ * - 0b0 - The most recent transaction was a receive operation.
+ * - 0b1 - The most recent transaction was a transmit operation.
  */
 /*@{*/
 /*! @brief Read current value of the USB_STAT_TX field. */
@@ -35004,8 +35048,8 @@
  * is enabled, clearing this bit causes the SIE to stop sending SOF tokens.
  *
  * Values:
- * - 0 - Disables the USB Module.
- * - 1 - Enables the USB Module.
+ * - 0b0 - Disables the USB Module.
+ * - 0b1 - Enables the USB Module.
  */
 /*@{*/
 /*! @brief Read current value of the USB_CTL_USBENSOFEN field. */
@@ -35381,9 +35425,9 @@
  * Contains the token type executed by the USB module.
  *
  * Values:
- * - 0001 - OUT Token. USB Module performs an OUT (TX) transaction.
- * - 1001 - IN Token. USB Module performs an In (RX) transaction.
- * - 1101 - SETUP Token. USB Module performs a SETUP (TX) transaction
+ * - 0b0001 - OUT Token. USB Module performs an OUT (TX) transaction.
+ * - 0b1001 - IN Token. USB Module performs an In (RX) transaction.
+ * - 0b1101 - SETUP Token. USB Module performs a SETUP (TX) transaction
  */
 /*@{*/
 /*! @brief Read current value of the USB_TOKEN_TOKENPID field. */
@@ -35670,8 +35714,8 @@
  * Enables the weak pulldowns on the USB transceiver.
  *
  * Values:
- * - 0 - Weak pulldowns are disabled on D+ and D-.
- * - 1 - Weak pulldowns are enabled on D+ and D-.
+ * - 0b0 - Weak pulldowns are disabled on D+ and D-.
+ * - 0b1 - Weak pulldowns are enabled on D+ and D-.
  */
 /*@{*/
 /*! @brief Read current value of the USB_USBCTRL_PDE field. */
@@ -35689,8 +35733,8 @@
  * Places the USB transceiver into the suspend state.
  *
  * Values:
- * - 0 - USB transceiver is not in suspend state.
- * - 1 - USB transceiver is in suspend state.
+ * - 0b0 - USB transceiver is not in suspend state.
+ * - 0b1 - USB transceiver is in suspend state.
  */
 /*@{*/
 /*! @brief Read current value of the USB_USBCTRL_SUSP field. */
@@ -35733,8 +35777,8 @@
  * module
  *
  * Values:
- * - 0 - D- pulldown disabled.
- * - 1 - D- pulldown enabled.
+ * - 0b0 - D- pulldown disabled.
+ * - 0b1 - D- pulldown enabled.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OBSERVE_DMPD field. */
@@ -35749,8 +35793,8 @@
  * module
  *
  * Values:
- * - 0 - D+ pulldown disabled.
- * - 1 - D+ pulldown enabled.
+ * - 0b0 - D+ pulldown disabled.
+ * - 0b1 - D+ pulldown enabled.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OBSERVE_DPPD field. */
@@ -35765,8 +35809,8 @@
  * module
  *
  * Values:
- * - 0 - D+ pullup disabled.
- * - 1 - D+ pullup enabled.
+ * - 0b0 - D+ pullup disabled.
+ * - 0b1 - D+ pullup enabled.
  */
 /*@{*/
 /*! @brief Read current value of the USB_OBSERVE_DPPU field. */
@@ -35806,8 +35850,8 @@
  * in non-OTG device mode.
  *
  * Values:
- * - 0 - DP Pullup in non-OTG device mode is not enabled.
- * - 1 - DP Pullup in non-OTG device mode is enabled.
+ * - 0b0 - DP Pullup in non-OTG device mode is not enabled.
+ * - 0b1 - DP Pullup in non-OTG device mode is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the USB_CONTROL_DPPULLUPNONOTG field. */
@@ -35852,8 +35896,8 @@
  * @name Register USB_USBTRC0, field USB_RESUME_INT[0] (RO)
  *
  * Values:
- * - 0 - No interrupt was generated.
- * - 1 - Interrupt was generated because of the USB asynchronous interrupt.
+ * - 0b0 - No interrupt was generated.
+ * - 0b1 - Interrupt was generated because of the USB asynchronous interrupt.
  */
 /*@{*/
 /*! @brief Read current value of the USB_USBTRC0_USB_RESUME_INT field. */
@@ -35865,8 +35909,8 @@
  * @name Register USB_USBTRC0, field SYNC_DET[1] (RO)
  *
  * Values:
- * - 0 - Synchronous interrupt has not been detected.
- * - 1 - Synchronous interrupt has been detected.
+ * - 0b0 - Synchronous interrupt has not been detected.
+ * - 0b1 - Synchronous interrupt has been detected.
  */
 /*@{*/
 /*! @brief Read current value of the USB_USBTRC0_SYNC_DET field. */
@@ -35884,11 +35928,12 @@
  * Async wakeup only works in device mode.
  *
  * Values:
- * - 0 - USB asynchronous wakeup from suspend mode disabled.
- * - 1 - USB asynchronous wakeup from suspend mode enabled. The asynchronous
+ * - 0b0 - USB asynchronous wakeup from suspend mode disabled.
+ * - 0b1 - USB asynchronous wakeup from suspend mode enabled. The asynchronous
  *     resume interrupt differs from the synchronous resume interrupt in that it
  *     asynchronously detects K-state using the unfiltered state of the D+ and D-
- *     pins. This interupt should only be enabled when the Transceiver is suspended.
+ *     pins. This interupt should only be enabled when the Transceiver is
+ *     suspended.
  */
 /*@{*/
 /*! @brief Read current value of the USB_USBTRC0_USBRESMEN field. */
@@ -35908,8 +35953,8 @@
  * zero. Wait two USB clock cycles after setting this bit.
  *
  * Values:
- * - 0 - Normal USB module operation.
- * - 1 - Returns the USB module to its reset state.
+ * - 0b0 - Normal USB module operation.
+ * - 0b1 - Returns the USB module to its reset state.
  */
 /*@{*/
 /*! @brief Set the USBRESET field to a new value. */
@@ -35943,6 +35988,11 @@
 #define TPIU_IDX (0) /*!< Instance number for TPIU. */
 #define SCB_IDX (0) /*!< Instance number for SCB. */
 #define CoreDebug_IDX (0) /*!< Instance number for CoreDebug. */
+
+#if defined(__IAR_SYSTEMS_ICC__)
+  /* Restore checking of "Error[Pm008]: sections of code should not be 'commented out' (MISRA C 2004 rule 2.4)" */
+  #pragma diag_default=pm008
+#endif
 
 #endif /* __MKL46Z4_EXTENSION_H__ */
 /* EOF */

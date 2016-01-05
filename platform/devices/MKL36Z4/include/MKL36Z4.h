@@ -18,12 +18,12 @@
 **
 **     Reference manual:    KL36P121M48SF4RM, Rev.2, Dec 2012
 **     Version:             rev. 2.1, 2014-10-14
-**     Build:               b150225
+**     Build:               b150721
 **
 **     Abstract:
 **         CMSIS Peripheral Access Layer for MKL36Z4
 **
-**     Copyright (c) 1997 - 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 1997 - 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -9976,7 +9976,7 @@ typedef struct {
 /** Array initializer of UART peripheral base addresses */
 #define UART_BASE_ADDRS                          { 0u, UART1_BASE, UART2_BASE }
 /** Array initializer of UART peripheral base pointers */
-#define UART_BASE_PTRS                           { (void *)0u, UART1, UART2 }
+#define UART_BASE_PTRS                           { (UART_Type *)0u, UART1, UART2 }
 /** Interrupt vectors for the UART peripheral type */
 #define UART_RX_TX_IRQS                          { NotAvail_IRQn, UART1_IRQn, UART2_IRQn }
 #define UART_ERR_IRQS                            { NotAvail_IRQn, UART1_IRQn, UART2_IRQn }

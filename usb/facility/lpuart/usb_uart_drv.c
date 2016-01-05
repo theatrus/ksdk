@@ -74,9 +74,6 @@ usb_uart_status_t _USB_UART_DRV_Convert_RetVal(uint32_t retval)
     case kStatus_LPUART_RxNotDisabled:
         return kStatus_USB_UART_RxNotDisabled;
 
-    case kStatus_LPUART_TxOrRxNotDisabled:
-        return kStatus_USB_UART_TxOrRxNotDisabled;
-
     case kStatus_LPUART_TxBusy:
         return kStatus_USB_UART_TxBusy;
 
@@ -153,6 +150,7 @@ usb_uart_status_t USB_UART_DRV_Init(uint32_t instance, usb_uart_state_t * uartSt
 {
     lpuart_status_t uart_sts;
     lpuart_user_config_t lpuartUserCfg;
+    lpuartUserCfg.clockSource = (clock_lpuart_src_t) uartUserConfig->clockSource;
     lpuartUserCfg.baudRate = uartUserConfig->baudRate;
     lpuartUserCfg.parityMode = (lpuart_parity_mode_t) uartUserConfig->parityMode;
     lpuartUserCfg.stopBitCount = (lpuart_stop_bit_count_t) uartUserConfig->stopBitCount;

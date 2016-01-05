@@ -43,7 +43,6 @@
 #include "usb_host_hub_sm.h"
 #include "mouse_keyboard.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 //#include "MK70F12_port.h"
 //#include "fsl_usb_features.h"
@@ -54,24 +53,8 @@
 #include "fsl_port_hal.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "fsl_uart_driver.h"
-#endif
+//#include "fsl_uart_driver.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-#if !MQX_HAS_TIME_SLICE
-#error This application requires that MQX_HAS_TIME_SLICE is set to 1
-#endif
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-
-#endif
 /*
  ** Globals
  */
@@ -129,7 +112,6 @@ extern os_event_handle kbd_usb_event;
 extern hid_command_t* kbd_hid_com;
 extern void time_init(void);
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if USE_RTOS
 #define USB_KEYBOARD_TASK_ADDRESS        Keyboard_Task_Stun
 #define USB_MOUSE_TASK_ADDRESS           Mouse_Task_Stun
@@ -141,35 +123,7 @@ void Mouse_Task(void* param);
 #define USB_KEYBOARD_TASK_ADDRESS        Keyboard_Task
 #define USB_MOUSE_TASK_ADDRESS           Mouse_Task
 #endif
-#endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#define USB_KEYBOARD_TASK_ADDRESS                       Keyboard_Task_Stun
-#define USB_MOUSE_TASK_ADDRESS                          Mouse_Task_Stun
-#define USB_KEYBOARD_PRESS_TASK_ADDRESS                 Long_Press_Task
-#define USB_KEYBOARD_PRESS_TASK_PRIORITY                7
-#define MAIN_TASK          (10)
-#define LONG_PRESS_TASK    (7)
-//#define KEYBOARD_TASK      (11)
-//#define MOUSE_TASK         (12)
-extern void Main_Task(uint32_t param);
-extern void Keyboard_Task_Stun(void* param);
-extern void Mouse_Task_Stun(void* param);
-extern void Long_Press_Task(uint32_t param);
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    { MAIN_TASK, Main_Task, 3000L, 9L, "Main", MQX_AUTO_START_TASK | MQX_TIME_SLICE_TASK },
-    //{ KEYBOARD_TASK,  Keyboard_Task,  3000L,  9L, "Keyboard",  MQX_TIME_SLICE_TASK},
-    //{ MOUSE_TASK,     Mouse_Task,     3000L,  9L, "Mouse",     MQX_TIME_SLICE_TASK},
-        { LONG_PRESS_TASK, USB_KEYBOARD_PRESS_TASK_ADDRESS, 1000L, 7L, "press_task", MQX_AUTO_START_TASK | MQX_TIME_SLICE_TASK },
-        { 0L, 0L, 0L, 0L, 0L, 0L }
-};
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-void Keyboard_Task(void* param);
-void Mouse_Task(void* param);
-#define USB_KEYBOARD_TASK_ADDRESS        Keyboard_Task
-#define USB_MOUSE_TASK_ADDRESS           Mouse_Task
-#endif
 
 #define USB_KEYBOARD_TASK_PRIORITY       9
 #define USB_MOUSE_TASK_PRIORITY          9
@@ -223,13 +177,9 @@ usb_status usb_host_hid_unsupported_device_event
 void APP_init(void)
 {
     usb_status status = USB_OK;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    uint32_t opt = MQX_TIME_SLICE_TASK;
-#else
     uint32_t opt = 0;
-#endif
 
-    status = usb_host_init(CONTROLLER_ID, &g_host_handle);
+    status = usb_host_init(CONTROLLER_ID, usb_host_board_init, &g_host_handle);
     if (status != USB_OK)
     {
         USB_PRINTF("\r\nUSB Host Initialization failed! STATUS: 0x%x", status);
@@ -291,9 +241,7 @@ void APP_init(void)
         USB_PRINTF("mouse task create failed\r\n");
         return;
     }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK | OS_ADAPTER_ACTIVE_OS==OS_ADAPTER_BM)
     time_init();
-#endif   
     USB_PRINTF("\fUSB HID Mouse+Keyboard\r\nWaiting for USB Mouse or Keyboard to be attached...\r\n");
 }
 
@@ -302,30 +250,6 @@ void APP_task(void)
     return;
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : main (Main_Task if using MQX)
- * Returned Value : none
- * Comments       :
- *     Execution starts here
- *
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    APP_init();
-    OS_Task_suspend(0);
-    /*
-     ** Infinite loop, waiting for events requiring action
-     */
-    for (;;)
-    {
-        APP_task();
-    } /* Endfor */
-} /* Endbody */
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
@@ -357,11 +281,10 @@ int main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
     OSA_Start();
 #if !defined(FSL_RTOS_MQX)
     return 1;
 #endif
 }
-#endif
 

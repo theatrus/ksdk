@@ -96,11 +96,11 @@ int main(void)
     PIT_DRV_InitChannel(BOARD_PIT_INSTANCE, 1, &chn1Confg);
 
     // Start channel 0
-    PRINTF("\n\rStarting channel No.0 ...");
+    PRINTF("\r\nStarting channel No.0 ...");
     PIT_DRV_StartTimer(BOARD_PIT_INSTANCE, 0);
 
     // Start channel 1
-    PRINTF("\n\rStarting channel No.1 ...");
+    PRINTF("\r\nStarting channel No.1 ...");
     PIT_DRV_StartTimer(BOARD_PIT_INSTANCE, 1);
 
     while (true)
@@ -108,14 +108,14 @@ int main(void)
         // Check whether occur interupt and toggle LED
         if (true == pitIsrFlag[0])
         {
-            PRINTF("\n\r Channel No.0 interrupt is occured !");
+            PRINTF("\r\n Channel No.0 interrupt is occured !");
             LED1_TOGGLE;
             pitIsrFlag[0] = false;
         }
 
         if (true == pitIsrFlag[1])
         {
-            PRINTF("\n\r Channel No.1 interrupt is occured !");
+            PRINTF("\r\n Channel No.1 interrupt is occured !");
             LED2_TOGGLE;
             pitIsrFlag[1] = false;
         }

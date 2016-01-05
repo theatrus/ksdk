@@ -22,16 +22,16 @@ SET(CMAKE_EXECUTABLE_LIBRARY_SUFFIX)
 SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m0plus  -mfloat-abi=soft ")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m0plus  -mfloat-abi=soft ")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m0plus  -mfloat-abi=soft  -MMD  -MP")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m0plus  -mfloat-abi=soft  -MMD  -MP")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m0plus  -mfloat-abi=soft ")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m0plus  -mfloat-abi=soft ")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m0plus  -mfloat-abi=soft  -MMD  -MP")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m0plus  -mfloat-abi=soft  -MMD  -MP")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -65,6 +65,10 @@ ENDIF()
 ADD_LIBRARY(KsdkHalLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/adc16/fsl_adc16_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_adc16_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/cop/fsl_cop_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_cop_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/dma/fsl_dma_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_dma_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/cmp/fsl_cmp_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_cmp_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/dmamux/fsl_dmamux_hal.c"
@@ -75,6 +79,8 @@ ADD_LIBRARY(KsdkHalLib STATIC
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_i2c_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/llwu/fsl_llwu_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_llwu_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/lpsci/fsl_lpsci_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_lpsci_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/lptmr/fsl_lptmr_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_lptmr_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/mcg/fsl_mcg_hal.c"
@@ -93,6 +99,10 @@ ADD_LIBRARY(KsdkHalLib STATIC
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_sim_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/smc/fsl_smc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_smc_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/spi/fsl_spi_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_spi_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_tpm_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/tpm/fsl_tpm_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_uart_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/uart/fsl_uart_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_pmc_hal.h"

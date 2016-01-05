@@ -132,10 +132,7 @@ void calibrateParams(void)
     adcUserConfig.resolution = kAdc16ResolutionBitOf16;
     adcUserConfig.continuousConvEnable = false;
     adcUserConfig.clkSrc = kAdc16ClkSrcOfAsynClk;
-#if (  defined(FRDM_KL43Z)   /* CPU_MKL43Z256VLH4 */ \
-    || defined(TWR_KL43Z48M) /* CPU_MKL43Z256VLH4 */ \
-    || defined(FRDM_KL27Z)   /* CPU_MKL27Z64VLH4  */ \
-    )
+#if BOARD_ADC_USE_ALT_VREF
     adcUserConfig.refVoltSrc = kAdc16RefVoltSrcOfValt;
 #endif
     ADC16_DRV_Init(ADC_0, &adcUserConfig);
@@ -210,10 +207,7 @@ int32_t init_adc(uint32_t instance)
     adcUserConfig.hwTriggerEnable = true;
     adcUserConfig.continuousConvEnable = false;
     adcUserConfig.clkSrc = kAdc16ClkSrcOfAsynClk;
-#if (  defined(FRDM_KL43Z)   /* CPU_MKL43Z256VLH4 */ \
-    || defined(TWR_KL43Z48M) /* CPU_MKL43Z256VLH4 */ \
-    || defined(FRDM_KL27Z)   /* CPU_MKL27Z64VLH4  */ \
-    )
+#if BOARD_ADC_USE_ALT_VREF
     adcUserConfig.refVoltSrc = kAdc16RefVoltSrcOfValt;
 #endif
     ADC16_DRV_Init(instance, &adcUserConfig);

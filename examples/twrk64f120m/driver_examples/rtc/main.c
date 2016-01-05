@@ -79,6 +79,11 @@ int main(void)
 
     // Init RTC
     RTC_DRV_Init(RTC_INSTANCE);
+
+    /* Need to check this here as the RTC_DRV_Init() may have issued a software reset on the
+     * module clearing all prior RTC OSC related setup */
+    BOARD_InitRtcOsc();
+
     // Set a start date time and start RT.
     date.year   = 2014U;
     date.month  = 12U;

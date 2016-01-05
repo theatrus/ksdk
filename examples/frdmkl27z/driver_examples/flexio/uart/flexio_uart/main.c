@@ -43,16 +43,20 @@
 static uint32_t s_flexioInstance;
 flexio_uart_state_t uartState;
 #define DATA_LENGTH         65
-const uint8_t txBuff[] = "This data to transfer between FlexIO simulated UART and LPUART1";
+const uint8_t txBuff[] = "This data to transfer between FlexIO simulated UART and LPUART";
 uint8_t rxBuff[DATA_LENGTH] = {0};
-#define COMM_UART_INSTANCE    1							
+#if defined TWR_K80F150M || defined TWR_K81F150M || defined FRDM_K82F
+#define COMM_UART_INSTANCE    0
+#else
+#define COMM_UART_INSTANCE    1
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 //  Codes
 ///////////////////////////////////////////////////////////////////////////////
 /*
- * This example will show transmit/receive FlexIO simulated UART's driver, 
- * the efficiency of the transmit/receive drivers with using blocking method. 
- * Transfer data between FlexIO simulated UART and LPUART1.Compare the rxBuff
+ * This example will show transmit/receive FlexIO simulated UART's driver,
+ * the efficiency of the transmit/receive drivers with using blocking method.
+ * Transfer data between FlexIO simulated UART and LPUART.Compare the rxBuff
  * and txBuff to see whether the result is right.
  */
 /*!
@@ -97,39 +101,39 @@ int main(void)
 {
     lpuart_state_t lpuartStatePtr;
     s_flexioInstance = 0;
-    /* Fill in FlexIO config data */        
-    flexio_user_config_t userConfig = 
+    /* Fill in FlexIO config data */
+    flexio_user_config_t userConfig =
     {
         .useInt = true,
         .onDozeEnable = false,
         .onDebugEnable = true,
         .fastAccessEnable = false
     };
-    
+
     // Enable clock for PORTs, setup board clock source, config pin
     hardware_init();
 
     // Call OSA_Init to setup LP Timer for timeout
     OSA_Init();
-    
+
     FLEXIO_DRV_Init(s_flexioInstance,&userConfig);
     FLEXIO_DRV_Start(s_flexioInstance);
-    
+
     /* Fill in FlexIO UART config data */
     flexio_uart_userconfig_t uartConfig;
     uartConfig.bitCounter = kFlexIOUart8BitsPerChar;
     uartConfig.baudRate = 115200;
     uartConfig.uartMode = flexioUART_TxRx;
-    uartConfig.txConfig.pinIdx = 2;           
+    uartConfig.txConfig.pinIdx = 5;
     uartConfig.txConfig.shifterIdx = 0;
     uartConfig.txConfig.timerIdx = 0;
-    uartConfig.rxConfig.pinIdx = 4;           
+    uartConfig.rxConfig.pinIdx = 4;
     uartConfig.rxConfig.shifterIdx = 1;
     uartConfig.rxConfig.timerIdx = 1;
 
     // Fill in lpuart config data
     lpuart_user_config_t lpuartConfig = {
-        .clockSource     = kClockLpuartSrcIrc48M,
+        .clockSource     = BOARD_LPUART_CLOCK_SOURCE,
         .bitCountPerChar = kLpuart8BitsPerChar,
         .parityMode      = kLpuartParityDisabled,
         .stopBitCount    = kLpuartOneStopBit,
@@ -141,40 +145,42 @@ int main(void)
     // Initialize the lpuart module with instance number and config structure
     LPUART_DRV_Init(COMM_UART_INSTANCE, &lpuartStatePtr, &lpuartConfig);
     // Inform to start blocking example
-    PRINTF("\n\r++++++++++++++++ FLEXIO UART Send/Receive Example Start +++++++++++++++++\n\r");
-    PRINTF("\n\r1. FlexIO simulated UART send a buffer \
-            \r\n2. LPUART1 receives data from FlexIO simulated UART.\
+    PRINTF("\r\n++++++++++++++++ FLEXIO UART Send/Receive Example Start +++++++++++++++++\r\n");
+    PRINTF("\r\n1. FlexIO simulated UART send a buffer \
+            \r\n2. LPUART receives data from FlexIO simulated UART.\
             \r\n3. Compare rxBuff and txBuff to see result.\
-            \n\r4. LPUART1 send a buffer\
-            \r\n5. FlexIO simulated UART receives data from LPUART1.\
+            \r\n4. LPUART send a buffer\
+            \r\n5. FlexIO simulated UART receives data from LPUART.\
             \r\n6. Compare rxBuff and txBuff to see result.\r\n");
     PRINTF("\r\n============================================================\r\n");
-    PRINTF("\r\nPress any key to start transfer:\r\n\n");
+    PRINTF("\r\nPress any key to start transfer:\r\n\r\n");
     while(true)
     {
         GETCHAR();
-       // FlexIO UART sends data to LPUART1
-#ifndef FRDM_KL43Z
+       // FlexIO UART sends data to LPUART
+
         FLEXIO_UART_DRV_SendData(&uartState, txBuff, DATA_LENGTH);
         LPUART_DRV_ReceiveDataBlocking(COMM_UART_INSTANCE, rxBuff, DATA_LENGTH, 1000U);
         if(flexio_uart_compare((uint8_t*)txBuff, rxBuff, DATA_LENGTH) != true)
         {
-            PRINTF("\r\nFailure transfer from FlexIO simualted UART to LPUART1");
+            PRINTF("\r\nFailure transfer from FlexIO simualted UART to LPUART");
             break;
         }
-        PRINTF("Transfer from FlexIO simulated UART to LPUART1 successfully\r\n");
-#endif
+        PRINTF("Transfer from FlexIO simulated UART to LPUART successfully\r\n");
+
         flexio_uart_reset_buffer(rxBuff,DATA_LENGTH);
-        // FlexIO UART receives data from LPUART1
+        // FlexIO UART receives data from LPUART
         LPUART_DRV_SendData(COMM_UART_INSTANCE, txBuff, DATA_LENGTH);
         FLEXIO_UART_DRV_ReceiveDataBlocking(&uartState, rxBuff, DATA_LENGTH,1000U);
         if(flexio_uart_compare((uint8_t*)txBuff, rxBuff, DATA_LENGTH) != true)
         {
-            PRINTF("\r\nFailure FlexIO simulated UART receive from FlexIO LPUART1");
+            PRINTF("\r\nFailure FlexIO simulated UART receive from FlexIO LPUART");
             break;
         }
-        PRINTF("FlexIO simulated UART receive from FlexIO LPUART1 successfully\r\n");
+        PRINTF("FlexIO simulated UART receive from FlexIO LPUART successfully\r\n");
     }
+
+    return 0;
 }
 
 /*******************************************************************************

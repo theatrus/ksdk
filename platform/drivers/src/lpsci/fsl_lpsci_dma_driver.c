@@ -91,13 +91,6 @@ lpsci_status_t LPSCI_DRV_DmaInit(uint32_t instance,
     uint32_t lpsciSourceClock = 0;
     dma_request_source_t lpsciTxDmaRequest = kDmaRequestMux0Disable;
     dma_request_source_t lpsciRxDmaRequest = kDmaRequestMux0Disable;
-    dma_channel_t *chn;
-    DMA_Type * dmaBase;
-    dma_channel_link_config_t config;
-
-    config.channel1 = 0;
-    config.channel2 = 0;
-    config.linkType = kDmaChannelLinkDisable;
 
     /* Exit if current instance is already initialized. */
     if (g_lpsciStatePtr[instance])
@@ -156,51 +149,11 @@ lpsci_status_t LPSCI_DRV_DmaInit(uint32_t instance,
     DMA_DRV_RegisterCallback(&lpsciDmaStatePtr->dmaLpsciRx,
                     LPSCI_DRV_DmaRxCallback, (void *)instance);
 
-    chn = &lpsciDmaStatePtr->dmaLpsciRx;
-    dmaBase = g_dmaBase[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
-
-    DMA_HAL_SetAutoAlignCmd(dmaBase, chn->channel, false);
-    DMA_HAL_SetCycleStealCmd(dmaBase, chn->channel, true);
-    DMA_HAL_SetAsyncDmaRequestCmd(dmaBase, chn->channel, false);
-    DMA_HAL_SetDisableRequestAfterDoneCmd(dmaBase, chn->channel, true);
-    DMA_HAL_SetChanLink(dmaBase, chn->channel, &config);
-
-    DMA_HAL_SetSourceAddr(dmaBase, chn->channel, LPSCI_HAL_GetDataRegAddr(base));
-    DMA_HAL_SetSourceModulo(dmaBase, chn->channel, kDmaModuloDisable);
-    DMA_HAL_SetSourceTransferSize(dmaBase, chn->channel, kDmaTransfersize8bits);
-    DMA_HAL_SetSourceIncrementCmd(dmaBase, chn->channel, false);
-
-    DMA_HAL_SetDestModulo(dmaBase, chn->channel, kDmaModuloDisable);
-    DMA_HAL_SetDestTransferSize(dmaBase, chn->channel, kDmaTransfersize8bits);
-    DMA_HAL_SetDestIncrementCmd(dmaBase, chn->channel, true);
-
-    DMA_HAL_SetIntCmd(dmaBase, chn->channel, true);
-
     /* Request DMA channels for TX FIFO. */
     DMA_DRV_RequestChannel(kDmaAnyChannel, lpsciTxDmaRequest,
                             &lpsciDmaStatePtr->dmaLpsciTx);
     DMA_DRV_RegisterCallback(&lpsciDmaStatePtr->dmaLpsciTx,
                     LPSCI_DRV_DmaTxCallback, (void *)instance);
-
-    chn = &lpsciDmaStatePtr->dmaLpsciTx;
-    dmaBase = g_dmaBase[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
-
-    DMA_HAL_SetAutoAlignCmd(dmaBase, chn->channel, false);
-    DMA_HAL_SetCycleStealCmd(dmaBase, chn->channel, true);
-    DMA_HAL_SetAsyncDmaRequestCmd(dmaBase, chn->channel, false);
-    DMA_HAL_SetDisableRequestAfterDoneCmd(dmaBase, chn->channel, true);
-    DMA_HAL_SetChanLink(dmaBase, chn->channel, &config);
-
-    DMA_HAL_SetSourceModulo(dmaBase, chn->channel, kDmaModuloDisable);
-    DMA_HAL_SetSourceTransferSize(dmaBase, chn->channel, kDmaTransfersize8bits);
-    DMA_HAL_SetSourceIncrementCmd(dmaBase, chn->channel, true);
-
-    DMA_HAL_SetDestAddr(dmaBase, chn->channel, LPSCI_HAL_GetDataRegAddr(base));
-    DMA_HAL_SetDestModulo(dmaBase, chn->channel, kDmaModuloDisable);
-    DMA_HAL_SetDestTransferSize(dmaBase, chn->channel, kDmaTransfersize8bits);
-    DMA_HAL_SetDestIncrementCmd(dmaBase, chn->channel, false);
-
-    DMA_HAL_SetIntCmd(dmaBase, chn->channel, true);
 
     /* Finally, enable the LPSCI transmitter and receiver*/
     LPSCI_HAL_EnableTransmitter(base);
@@ -570,10 +523,10 @@ static lpsci_status_t LPSCI_DRV_DmaStartSendData(uint32_t instance,
 {
     assert(instance < UART0_INSTANCE_COUNT);
 
+    UART0_Type * base = g_lpsciBase[instance];
     /* Get current runtime structure. */
     lpsci_dma_state_t * lpsciDmaState = (lpsci_dma_state_t *)g_lpsciStatePtr[instance];
     dma_channel_t *chn = &lpsciDmaState->dmaLpsciTx;
-    DMA_Type * dmaBase = g_dmaBase[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
 
     /* Check that we're not busy already transmitting data from a previous function call. */
     if (lpsciDmaState->isTxBusy)
@@ -584,8 +537,8 @@ static lpsci_status_t LPSCI_DRV_DmaStartSendData(uint32_t instance,
     /* Update LPSCI DMA run-time structure. */
     lpsciDmaState->isTxBusy = true;
 
-    DMA_HAL_SetSourceAddr(dmaBase, chn->channel, (uint32_t)txBuff);
-    DMA_HAL_SetTransferCount(dmaBase, chn->channel, txSize);
+    DMA_DRV_ConfigTransfer(&lpsciDmaState->dmaLpsciTx, kDmaMemoryToPeripheral,
+        1u, (uint32_t)txBuff, LPSCI_HAL_GetDataRegAddr(base), txSize);
 
     DMA_DRV_StartChannel(chn);
 
@@ -644,10 +597,10 @@ static lpsci_status_t LPSCI_DRV_DmaStartReceiveData(uint32_t instance,
 {
     assert(instance < UART0_INSTANCE_COUNT);
 
+    UART0_Type * base = g_lpsciBase[instance];
     /* Get current runtime structure. */
     lpsci_dma_state_t * lpsciDmaState = (lpsci_dma_state_t *)g_lpsciStatePtr[instance];
     dma_channel_t *chn = &lpsciDmaState->dmaLpsciRx;
-    DMA_Type * dmaBase = g_dmaBase[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
 
     /* Check that we're not busy already receiving data from a previous function call. */
     if (lpsciDmaState->isRxBusy)
@@ -658,8 +611,8 @@ static lpsci_status_t LPSCI_DRV_DmaStartReceiveData(uint32_t instance,
     /* Update LPSCI DMA run-time structure. */
     lpsciDmaState->isRxBusy = true;
 
-    DMA_HAL_SetDestAddr(dmaBase, chn->channel, (uint32_t)rxBuff);
-    DMA_HAL_SetTransferCount(dmaBase, chn->channel, rxSize);
+    DMA_DRV_ConfigTransfer(&lpsciDmaState->dmaLpsciRx, kDmaPeripheralToMemory,
+        1u, LPSCI_HAL_GetDataRegAddr(base), (uint32_t)rxBuff, rxSize);
 
     DMA_DRV_StartChannel(chn);
 

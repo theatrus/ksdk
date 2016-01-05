@@ -177,7 +177,7 @@ typedef  uint32_t  USB_REGISTER;
 
 #define  USBHS_HCS_PARAMS_PORT_POWER_CONTROL_FLAG (0x10)
 
-#define  USBHS_HOST_INTR_EN_BITS                  (0x37)
+#define  USBHS_HOST_INTR_EN_BITS                  (0x1000037)
 
 #define  USBHS_DEFAULT_PERIODIC_FRAME_LIST_SIZE   (1024)
 #define  USBHS_NEW_PERIODIC_FRAME_LIST_BITS       (2)
@@ -351,49 +351,7 @@ Split transatcions specific defines
 
 #define  DEFAULT_MAX_NAK_COUNT                     (15)
 
-#if (OS_ADAPTER_ACTIVE_OS != OS_ADAPTER_SDK)
-/* OTG Status and control register bit masks */
-
-/* OTG interrupt enable bit masks */
-#define  USBHS_OTGSC_INTERRUPT_ENABLE_BITS_MASK   (0x5F000000)
-#define  USBHS_OTGSC_DPIE                         (0x40000000)   /* Data-line pulsing IE */
-#define  USBHS_OTGSC_1MSIE                        (0x20000000)
-#define  USBHS_OTGSC_BSEIE                        (0x10000000)   /* B-session end IE */
-#define  USBHS_OTGSC_BSVIE                        (0x08000000)   /* B-session valid IE */
-#define  USBHS_OTGSC_ASVIE                        (0x04000000)   /* A-session valid IE */
-#define  USBHS_OTGSC_AVVIE                        (0x02000000)   /* A-V-bus valid IE */
-#define  USBHS_OTGSC_IDIE                         (0x01000000)   /* OTG ID IE */
-
-/* OTG interrupt status bit masks */
-#define  USBHS_OTGSC_INTERRUPT_STATUS_BITS_MASK   (0x005F0000)
-#define  USBHS_OTGSC_DPIS                         (0x00400000)   /* Data-line pulsing IS */
-#define  USBHS_OTGSC_1MSIS                        (0x00200000)
-#define  USBHS_OTGSC_BSEIS                        (0x00100000)   /* B-session end IS */
-#define  USBHS_OTGSC_BSVIS                        (0x00080000)   /* B-session valid IS */
-#define  USBHS_OTGSC_ASVIS                        (0x00040000)   /* A-session valid IS */
-#define  USBHS_OTGSC_AVVIS                        (0x00020000)   /* A-Vbus valid IS */
-#define  USBHS_OTGSC_IDIS                         (0x00010000)   /* OTG ID IS */
-
-/* OTG status bit masks */
-#define  USBHS_OTGSC_DPS                          (0x00004000)
-#define  USBHS_OTGSC_BSE                          (0x00001000)   /* B-session end */
-#define  USBHS_OTGSC_BSV                          (0x00000800)   /* B-session valid */
-#define  USBHS_OTGSC_ASV                          (0x00000400)   /* A-session valid */
-#define  USBHS_OTGSC_AVV                          (0x00000200)   /* A-Vbus Valid */
-#define  USBHS_OTGSC_ID                           (0x00000100)   /* OTG ID */
-
-/* OTG control bit masks */
-#define  USBHS_OTGSC_CTL_BITS                     (0x2F)
-#define  USBHS_OTGSC_B_HOST_EN                    (0x00000020)   /* B_host_enable */
-#define  USBHS_OTGSC_DP                           (0x00000010)   /* Data-pulsing */
-#define  USBHS_OTGSC_OT                           (0x00000008)   /* OTG termination */
-#define  USBHS_OTGSC_VO                           (0x00000004)   /* Vbus on */
-#define  USBHS_OTGSC_VC                           (0x00000002)   /* Vbus charge */
-#define  USBHS_OTGSC_VD                           (0x00000001)   /* Vbus discharge */
-#endif
-#if (OS_ADAPTER_ACTIVE_OS != OS_ADAPTER_MQX)
 #define _PSP_SYNC() 
-#endif
 
 #if (ENDIANNESS == BIG_ENDIAN)
    #define ehci_reg_read(r,n)           USB_LONG_BE_TO_HOST((uint32_t)r)
@@ -606,7 +564,7 @@ typedef volatile struct
     uint32_t     next_link_ptr;
 }link_obj_t;
 
-typedef volatile struct ehci_itd_struct
+typedef struct ehci_itd_struct
 {
    // ehci defined
    // these should be accessed via macros                                           
@@ -630,7 +588,7 @@ typedef volatile struct ehci_itd_struct
                                                 
    // usb host stack specific extensions (not read by controller)  
    // these can be accessed directly                                           
-   volatile struct ehci_itd_struct*      scratch_ptr;
+   struct ehci_itd_struct*      scratch_ptr;
    void*      pipe_descr_for_this_itd;
    void*      pipe_tr_descr_for_this_itd;
    uint32_t*  frame_list_ptr;
@@ -640,7 +598,7 @@ typedef volatile struct ehci_itd_struct
    uint32_t      reserved[10];
 } ehci_itd_struct_t;
 
-typedef volatile struct ehci_sitd_struct
+typedef struct ehci_sitd_struct
 {
    // ehci defined
    // these should be accessed via macros                                           
@@ -688,7 +646,7 @@ typedef volatile struct ehci_sitd_struct
                                           */
    // usb host stack specific extensions (not read by controller)  
    // these can be accessed directly                                           
-   volatile struct ehci_sitd_struct*      scratch_ptr;
+   struct ehci_sitd_struct*      scratch_ptr;
    void*      pipe_descr_for_this_sitd;
    void*      pipe_tr_descr_for_this_sitd;
    uint32_t  *frame_list_ptr;
@@ -698,7 +656,7 @@ typedef volatile struct ehci_sitd_struct
 
 } ehci_sitd_struct_t;
 
-typedef volatile struct _ehci_qtd_struct_t{
+typedef struct _ehci_qtd_struct_t{
     // ehci defined
     // these should be accessed via macros                                           
     uint32_t      next_qtd_ptr;     /* (5-31) memory address of 
@@ -745,11 +703,12 @@ typedef volatile struct _ehci_qtd_struct_t{
 
     // usb host stack specific extensions (not read by controller)  
     // these can be accessed directly                                           
-    volatile struct _ehci_qtd_struct_t*         next;
+    struct _ehci_qtd_struct_t*         next;
     void*         pipe;
     void*         tr;
     uint32_t      length;
-    uint32_t      reserved[4];    
+	uint32_t      qtd_timer;
+    uint32_t      reserved[3];    
 }ehci_qtd_struct_t;
 
 typedef struct
@@ -758,7 +717,7 @@ typedef struct
     uint32_t            occupied;
 }qtd_node_link_struct_t;
 
-typedef volatile struct ehci_qh_struct
+typedef struct ehci_qh_struct
 {
    // EHCI Defined
    // These should be accessed via macros                                           
@@ -832,7 +791,7 @@ typedef volatile struct ehci_qh_struct
                                           */
    // usb host stack specific extensions (not read by controller)  
    // these can be accessed directly                                           
-   volatile struct ehci_qh_struct*         next;
+   struct ehci_qh_struct*         next;
    void*                                   pipe;
    ehci_qtd_struct_t*                      qtd_head;
    uint32_t                                interval;

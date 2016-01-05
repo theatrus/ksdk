@@ -1,0 +1,92 @@
+Release Name: MQX RTOS for Freescale_KSDK_1.3.0     
+Version: 5.0.3
+
+List of components:
+
+AT&T getopt(3) implementation            
+                          Description: Shell get option code
+                          Version: NA
+                          Author:  AT&T
+                          License: Open Source: Public domain
+                          Format: source code
+                          URL: NA
+                          Location: 
+                          rtos/mqx/nshell/source/shell/sh_util.c
+                          
+HTTP Request Implementation
+                          Description: Mozilla Ajax http request implementation 
+                          Version: NA
+                          Author:  Mozilla Foundation
+                          License: Open Source: Creative Commons Attribution-ShareAlike license
+                          Format: source code
+                          URL: https://developer.mozilla.org/en-US/docs/AJAX/Getting_Started 
+                          Location:                           
+                          middleware/tcpip/rtcs/examples/httpsrv/filesystem/web/request.js
+
+IPv4 & IPv6            
+                          Description: IP code based on FreeBSD code
+                          Version: NA
+                          Author:  Internet Systems Consortium, Inc. ("ISC")
+                          License: Open Source: BSD-2-Clause, BSD simple
+                          Format: source code
+                          URL: svn.freebsd.org   
+                          Location: 
+                          middleware/tcpip/rtcs/source/if/getaddrinfo.c
+                          middleware/tcpip/rtcs/source/if/getnameinfo.c
+                          middleware/tcpip/rtcs/source/if/inet_ntop.c
+                          middleware/tcpip/rtcs/source/if/inet_pton.c
+                          middleware/tcpip/rtcs/source/include/addrinfo.h
+                          middleware/tcpip/rtcs/source/include/rtcs_sock.h (BSD simple)
+                          
+jQuery
+                          Description: JavaScript library
+                          Version: NA
+                          Author:  The jQuery Foundation
+                          License: Open Source: MIT
+                          Format: source code
+                          URL: https://jquery.org/
+                          Location:
+                          middleware/tcpip/rtcs/examples/httpsrv/chat_client/  
+
+PPP            
+                          Description: PPP IP Control Protocol
+                          Version: NA
+                          Author:  Carnegie Mellon University
+                          License: Open Source: BSD-4-Clause
+                          Format: source code
+                          URL: http://svn.freebsd.org/base/release/3.0.0/usr.sbin/pppd/
+                          Location:   
+                          middleware/tcpip/rtcs/source/media/ipcpfsm.c
+                          middleware/tcpip/rtcs/source/ppp/lcp.c
+                          middleware/tcpip/rtcs/source/ppp/pppfsm.c
+                          
+PrimeUI
+                          Description: Web UI components
+                          Version: NA
+                          Author:  PrimeTek
+                          License: Open Source: Apache-2.0
+                          Format: source code
+                          URL: http://www.primefaces.org/primeui/ 
+                          Location:
+                          middleware/tcpip/rtcs/examples/httpsrv/chat_client  
+                          
+SHA-1
+                          Description: SHA-1 implementation in C
+                          Version: NA
+                          Author:  Steve Reid <sreid@sea-to-sky.net>
+                          License: Open Source: Public Domain
+                          Format: source code
+                          URL: NA 
+                          Location: 
+                          middleware/tcpip/rtcs/source/apps/rtcs_sha1.c
+                          middleware/tcpip/rtcs/source/include/rtcs_sha1.h
+                                                    
+TLSF - Two Level Segregated Fit
+                          Description: Two Level Segregated Fit
+                          Version: 3.0
+                          Author:  Matthew Conte
+                          License: Open Source: Public domain
+                          Format: source code
+                          URL: http://tlsf.baisoku.org/ 
+                          Location: 
+                          rtos/mqx/mqx/source/kernel/tlsf.c

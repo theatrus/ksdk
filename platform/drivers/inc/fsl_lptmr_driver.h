@@ -85,6 +85,8 @@ typedef struct LptmrState {
     uint32_t prescalerClockHz;
 } lptmr_state_t;
 
+/*! @brief Table to save pointers to context data. */
+extern lptmr_state_t * g_lptmrStatePtr[LPTMR_INSTANCE_COUNT];
 
 /*******************************************************************************
  * API
@@ -114,9 +116,9 @@ extern "C" {
 lptmr_status_t LPTMR_DRV_Init(uint32_t instance, lptmr_state_t *userStatePtr, const lptmr_user_config_t* userConfigPtr);
 
 /*!
- * @brief De-initializes the LPTMR driver.
+ * @brief Deinitializes the LPTMR driver.
  *
- * This function  de-initializes the LPTMR. It disables the interrupt and turns off the LPTMR clock.
+ * This function  deinitializes the LPTMR. It disables the interrupt and turns off the LPTMR clock.
  *
  * @param instance The LPTMR peripheral instance number.
  * @return kStatus_LPTMR_Success means succeed, otherwise means failed.
@@ -151,8 +153,8 @@ lptmr_status_t LPTMR_DRV_Stop(uint32_t instance);
  * time counter. After the time period in microseconds, the callback function is called.
  * This function cannot be called while the LPTMR is working as a pulse counter.
  * The value in microseconds (us) should be integer multiple of the clock source time slice. If the clock source
- * is 1 kHz, then both 2000 us and 3000 us are valid while 2500 us gets the same result as the 2000 µs,
- * because 2500 us cannot be generated in 1 kHz clock source.
+ * is 1 kHz, then both 2000 µs and 3000 µs are valid while 2500 µs gets the same result as the 2000 µs,
+ * because 2500 µs cannot be generated in 1 kHz clock source.
  *
  * @param instance The LPTMR peripheral instance number.
  * @param us time period in microseconds.
@@ -212,8 +214,8 @@ lptmr_status_t LPTMR_DRV_InstallCallback(uint32_t instance, lptmr_callback_t use
 /*!
  * @brief Driver-defined ISR in the LPTMR module.
  *
- * This function is the driver-defined ISR in LPTMR module.
- * It includes the process for interrupt mode defined by driver. Currently, it
+ * This function is the driver-defined ISR in the LPTMR module.
+ * It includes the process for interrupt mode defined by the driver. Currently, it
  * is called inside the system-defined ISR.
  *
  * @param instance LPTMR instance ID.

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<ProjectWorkspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_mpw.xsd">
-  <SchemaVersion>1.0</SchemaVersion>
-  <Header>### uVision Project, (C) Keil Software</Header>
-  <WorkspaceName>WorkSpace</WorkspaceName>
-<project><PathAndName>../../../../../../../../../usb/usb_core/device/build/mdk/usbd_sdk_frdmk64f_ucosii/usbd_sdk_frdmk64f_ucosii.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../../lib/ksdk_ucosii_lib/mdk/K64F12/ksdk_ucosii_lib.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>dev_hid_mouse_frdmk64f_ucosii.uvprojx</PathAndName><NodeIsActive>1</NodeIsActive></project></ProjectWorkspace>

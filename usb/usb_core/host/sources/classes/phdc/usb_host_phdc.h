@@ -54,8 +54,6 @@
 #define PHDC_11073PHD_FUNCTION_DESCRIPTOR   0x30
 #define PHDC_METADATA_DESCRIPTOR            0x22
 
-#define USB_CLASS_PHDC                      0x0F
-
 /* Control Requests Types */
 #define PHDC_GET_STATUS_BMREQTYPE           0xA1
 #define PHDC_GET_STATUS_BREQ                0x00
@@ -155,12 +153,10 @@ typedef struct usb_phdc_param_type
 {
     /* [APP->PHDC] phdc call struct pointer */
     usb_class_handle class_ptr;
+    /* [APP->PHDC] phdc call back function ptr */
     tr_callback callback_fn;
+    /* [APP->PHDC] phdc call back param */
     void* callback_param;
-    /* [PHDC->APP] USB status code. usb_status (standard) code when the transfer is finished. Not valid until the callback is called */
-    usb_status status;
-    /* [APP->PHDC] length of buffer (only for PHDC Send/Recv requests) */
-    uint32_t buff_size;
     /* [PHDC->APP] USB transaction index. Used to identify the Send/Recv transaction */
     uint32_t tr_index;
     /* [PHDC->APP] USB transaction index. Used to identify the Send/Recv transaction */
@@ -173,12 +169,7 @@ typedef struct usb_phdc_param_type
     uint8_t qos;
     /* [PHDC->APP] USB PHDC status code. USB PHDC (specific) code when the transfer is finished. Not valid until the callback is called */
     uint8_t usb_phdc_status;
-    /* [APP->PHDC] data buffer (only for PHDC Send/Recv requests) */
-    uint8_t* buff_ptr;
 } usb_phdc_param_t;
-
-/* Callback function pointer keeping the current transaction parameters. It contains a pointer to a USB_PHDC_PARAM struct. */
-typedef void (*phdc_callback)(usb_phdc_param_t *call_param);
 
 /*
  * PHDC Class Interface structure. This structure will be passed to
@@ -198,9 +189,9 @@ typedef struct _usb_phdc_class_intf_struct_type
     usb_phdc_desc_qos_metadata_list_t *qos_metadata_list;
     usb_phdc_desc_fcn_ext_t *fcn_ext_desc;
     /* Callbacks */
-    phdc_callback send_callback; /* Send app callback */
-    phdc_callback recv_callback; /* Receive app callback */
-    phdc_callback ctrl_callback; /* Send ctrl app callback */
+    tr_callback send_callback; /* Send app callback */
+    tr_callback recv_callback; /* Receive app callback */
+    tr_callback ctrl_callback; /* Send ctrl app callback */
     /* Number of transfers until next metadata on the Bulk OUT. Required on transmit */
     os_mutex_handle mutex;
     uint32_t running;
@@ -245,10 +236,9 @@ usb_status usb_class_phdc_init
 );
 usb_status usb_class_phdc_deinit(usb_class_handle handle);
 usb_status usb_class_phdc_pre_deinit(usb_class_handle handle);
-usb_status usb_class_phdc_set_callbacks(usb_class_handle handle, phdc_callback sendCallback, phdc_callback recvCallback, phdc_callback ctrlCallback);
-usb_status usb_class_phdc_send_control_request(usb_phdc_param_t* call_param_ptr);
-usb_status usb_class_phdc_recv_data(usb_phdc_param_t *call_param_ptr);
-usb_status usb_class_phdc_send_data(usb_phdc_param_t *call_param_ptr);
+usb_status usb_class_phdc_send_control_request(usb_phdc_param_t* call_param_ptr, uint8_t * buffer, uint32_t buf_size);
+usb_status usb_class_phdc_recv_data(usb_phdc_param_t *call_param_ptr, uint8_t * buffer, uint32_t buf_size);
+usb_status usb_class_phdc_send_data(usb_phdc_param_t *call_param_ptr, uint8_t * buffer, uint32_t buf_size);
 
 #ifdef __cplusplus
 }

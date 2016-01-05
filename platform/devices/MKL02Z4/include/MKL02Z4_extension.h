@@ -72,6 +72,14 @@
 #include "MKL02Z4.h"
 #include "fsl_bitaccess.h"
 
+#if defined(__IAR_SYSTEMS_ICC__)
+  /*
+   * Suppress "Error[Pm008]: sections of code should not be 'commented out' (MISRA C 2004 rule 2.4)"
+   * as some register descriptions contain code examples
+   */
+  #pragma diag_suppress=pm008
+#endif
+
 /*
  * MKL02Z4 ADC
  *
@@ -12961,6 +12969,11 @@
 #define TPIU_IDX (0) /*!< Instance number for TPIU. */
 #define SCB_IDX (0) /*!< Instance number for SCB. */
 #define CoreDebug_IDX (0) /*!< Instance number for CoreDebug. */
+
+#if defined(__IAR_SYSTEMS_ICC__)
+  /* Restore checking of "Error[Pm008]: sections of code should not be 'commented out' (MISRA C 2004 rule 2.4)" */
+  #pragma diag_default=pm008
+#endif
 
 #endif /* __MKL02Z4_EXTENSION_H__ */
 /* EOF */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,45 +28,43 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
-#include "fsl_spi_slave_driver.h"
-
+///////////////////////////////////////////////////////////////////////////////
+//  Includes
+///////////////////////////////////////////////////////////////////////////////
+// Standard C Included Files
+#include <stdio.h>
+ // SDK Included Files
+#include "board.h"
+#include "fsl_spi_hal.h"
 #include "fsl_clock_manager.h"
 #include "fsl_debug_console.h"
-#include "board.h"
-#include <stdio.h>
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#if (defined FRDM_KL43Z) || (defined MRB_KW01)
-#define SPI_SLAVE_INSTANCE          (1)                 /*! User change define to choose SPI instance */
-#else
-#define SPI_SLAVE_INSTANCE          (0)                 /*! User change define to choose SPI instance */
-#endif
+#define SPI_SLAVE_INSTANCE          BOARD_SPI_INSTANCE    /*! User change define to choose SPI instance */
 #define TRANSFER_SIZE               (64)
-#define SLAVE_TRANSFER_TIMEOUT      (OSA_WAIT_FOREVER)             /*! Transfer timeout of slave - 5s */
-/*******************************************************************************
- * Prototypes
- ******************************************************************************/
+#define SLAVE_TRANSFER_TIMEOUT      (OSA_WAIT_FOREVER)    /*! Transfer timeout of slave - 5s */
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-/* Table of SPI FIFO sizes per instance. */
+// Table of SPI FIFO sizes per instance.
 extern const uint32_t g_spiFifoSize[SPI_INSTANCE_COUNT];
-/*! @brief Table of base pointers for SPI instances. */
+// Table of base pointers for SPI instances.
 extern SPI_Type * const g_spiBase[SPI_INSTANCE_COUNT];
-/*!
- * @brief Buffer for storing data received by the SPI slave driver.
- */
-uint8_t s_spiSinkBuffer[TRANSFER_SIZE] = {0};
 
+// Buffer for storing data received by the SPI slave driver.
+uint8_t s_spiSinkBuffer[TRANSFER_SIZE] = {0};
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
-
+/*!
+ * @brief SPI slave polling.
+ *
+ * This function sends back received buffer from master through SPI interface.
+ */
 int main (void)
 {
     uint32_t j;
@@ -81,8 +79,6 @@ int main (void)
     PRINTF("\r\nThis example run on instance %d", (uint32_t)SPI_SLAVE_INSTANCE);
     PRINTF("\r\nBe sure master's SPI%d and slave's SPI%d are connected",
                     (uint32_t)SPI_SLAVE_INSTANCE, (uint32_t)SPI_SLAVE_INSTANCE);
-
-    //USER CONFIGURABLE OPTION FOR SPI INSTANCE (if applicable)
 
     // Enable clock for SPI
     CLOCK_SYS_EnableSpiClock(SPI_SLAVE_INSTANCE);
@@ -112,18 +108,16 @@ int main (void)
     SPI_HAL_Enable(spiBaseAddr);
     // Setup format as same as master
     SPI_HAL_SetDataFormat(spiBaseAddr, kSpiClockPolarity_ActiveHigh, kSpiClockPhase_FirstEdge, kSpiMsbFirst);
+
     while(1)
     {
-        PRINTF("\r\nSlave example is running...");
+        PRINTF("\r\nSlave example is running...\r\n");
 
         // Reset the sink buffer
         for (j = 0; j < TRANSFER_SIZE; j++)
         {
             s_spiSinkBuffer[j] = 0;
         }
-
-        // Receive data from master
-        PRINTF("\r\nSPI is waiting to receive data \r\n");
 
         SPI_HAL_Disable(spiBaseAddr);
         SPI_HAL_Enable(spiBaseAddr);
@@ -150,27 +144,26 @@ int main (void)
         for (j = 0; j <TRANSFER_SIZE; j++)
         {
 #if FSL_FEATURE_SPI_16BIT_TRANSFERS
-         SPI_HAL_WriteDataBlocking(spiBaseAddr, kSpi8BitMode, 0, s_spiSinkBuffer[j]);
+            SPI_HAL_WriteDataBlocking(spiBaseAddr, kSpi8BitMode, 0, s_spiSinkBuffer[j]);
 #else
-         SPI_HAL_WriteDataBlocking(spiBaseAddr, s_spiSinkBuffer[j]);
+            SPI_HAL_WriteDataBlocking(spiBaseAddr, s_spiSinkBuffer[j]);
 #endif
         }
 
-        // Immediately Print out receive buffer and get ready for the next transfer
-        PRINTF("\r\nSlave receive:\r\n    ");
+        // Print out receive buffer
+        PRINTF("\r\nSlave receive:");
         for (j = 0; j < TRANSFER_SIZE; j++)
         {
-            if ((j>0) && (j%16 == 0))
+            // Print 16 numbers in a line.
+            if ((j & 0x0F) == 0)
             {
                 PRINTF("\r\n    ");
             }
             PRINTF(" %02X", s_spiSinkBuffer[j]);
         }
-        PRINTF("\r\n");
     }
 }
 
 /*******************************************************************************
  * EOF
  ******************************************************************************/
-

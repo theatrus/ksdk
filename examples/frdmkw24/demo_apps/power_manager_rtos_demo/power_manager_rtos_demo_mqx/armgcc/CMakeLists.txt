@@ -28,22 +28,22 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -T${ProjDirPat
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -T${ProjDirPath}/../../../../../../platform/devices/MKW24D5/linker/gcc/MKW24D512xxx5_flash.ld  -static")
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=soft    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x400  -Xlinker --defsym=__heap_size__=0x400  -Xlinker --defsym=__ram_vector_table__=1")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=soft    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x400  -Xlinker --defsym=__heap_size__=0x400  -Xlinker --defsym=__ram_vector_table__=1")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=soft    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x400  -Xlinker --defsym=__heap_size__=0x400  -Xlinker --defsym=__ram_vector_table__=1")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=soft    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x400  -Xlinker --defsym=__heap_size__=0x400  -Xlinker --defsym=__ram_vector_table__=1")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -53,16 +53,16 @@ SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DDEBUG")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D_AEABI_LC_CTYPE=C")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D__STRICT_ANSI__=1")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MKW24D512VHA5")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_MQX")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFRDM_KW24")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFREEDOM")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_MQX")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DNDEBUG")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D_AEABI_LC_CTYPE=C")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D__STRICT_ANSI__=1")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MKW24D512VHA5")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_MQX")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFRDM_KW24")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFREEDOM")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_MQX")
 
 # CXX MACRO
 
@@ -72,6 +72,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/debug/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/debug/mqx)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/debug/mqx_stdlib)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/debug/nshell)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include)
@@ -81,21 +82,6 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/mcu/MKW24D5)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/board/frdmkw24)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/KW24D5/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/KW24D5/startup)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/mpu)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/common)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/bsp)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/bsp)
@@ -108,11 +94,26 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/nio/drivers/nio_tfs)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/nio/drivers/nio_tty)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/uart)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/mcu/MKW24D5)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/board/frdmkw24)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKW24D5/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKW24D5/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/mpu)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/common)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/bsp)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../..)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release/mqx)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release/mqx_stdlib)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release/nshell)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/CMSIS/Include)
@@ -122,21 +123,6 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/mcu/MKW24D5)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/board/frdmkw24)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/KW24D5/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/KW24D5/startup)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/mpu)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/common)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/bsp)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/bsp)
@@ -149,11 +135,50 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/nio/drivers/nio_tfs)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/nio/drivers/nio_tty)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/uart)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/mcu/MKW24D5)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/board/frdmkw24)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKW24D5/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/devices/MKW24D5/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/mpu)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/startup)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/config/common)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/bsp)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../..)
 ENDIF()
 
 # ADD_EXECUTABLE
 ADD_EXECUTABLE(power_manager_rtos_demo_mqx 
     "${ProjDirPath}/../../../../../../platform/utilities/src/fsl_misc_utilities.c"
+    "${ProjDirPath}/../../adc16_lpm_callback.c"
+    "${ProjDirPath}/../../adc16_temperature.c"
+    "${ProjDirPath}/../../adc16_temperature.h"
+    "${ProjDirPath}/../../fsl_adc_irq.c"
+    "${ProjDirPath}/../../fsl_lptmr_irq.c"
+    "${ProjDirPath}/../../fsl_rtc_irq.c"
+    "${ProjDirPath}/../../lpm_rtos.h"
+    "${ProjDirPath}/../../lptmr_setup.c"
+    "${ProjDirPath}/../../lptmr_setup.h"
+    "${ProjDirPath}/../../rtc_setup.c"
+    "${ProjDirPath}/../../rtc_setup.h"
+    "${ProjDirPath}/../../main.c"
+    "${ProjDirPath}/../../task_lpm.c"
+    "${ProjDirPath}/../../task_lpm.h"
+    "${ProjDirPath}/../../hardware_init.c"
+    "${ProjDirPath}/../../../../gpio_pins.c"
+    "${ProjDirPath}/../../../../gpio_pins.h"
+    "${ProjDirPath}/../../../../pin_mux.c"
+    "${ProjDirPath}/../../../../pin_mux.h"
+    "${ProjDirPath}/../../../../board.c"
+    "${ProjDirPath}/../../../../board.h"
+    "${ProjDirPath}/../../../../../../platform/utilities/src/fsl_debug_console.c"
+    "${ProjDirPath}/../../../../../../platform/utilities/inc/fsl_debug_console.h"
+    "${ProjDirPath}/../../../../../../platform/utilities/src/print_scan.c"
+    "${ProjDirPath}/../../../../../../platform/utilities/src/print_scan.h"
     "${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/bsp/bsp.h"
     "${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/bsp/bsp_config.h"
     "${ProjDirPath}/../../../../../../rtos/mqx/mqx/source/bsp/init_bsp.c"
@@ -163,49 +188,21 @@ ADD_EXECUTABLE(power_manager_rtos_demo_mqx
     "${ProjDirPath}/../../../../../../rtos/mqx/config/common/verif_enabled_config.h"
     "${ProjDirPath}/../../../../../../rtos/mqx/config/mcu/MKW24D5/mqx_sdk_config.h"
     "${ProjDirPath}/../../../../../../rtos/mqx/config/board/frdmkw24/user_config.h"
-    "${ProjDirPath}/../../../../../../platform/utilities/src/fsl_debug_console.c"
-    "${ProjDirPath}/../../../../../../platform/utilities/inc/fsl_debug_console.h"
-    "${ProjDirPath}/../../../../../../platform/utilities/src/print_scan.c"
-    "${ProjDirPath}/../../../../../../platform/utilities/src/print_scan.h"
-    "${ProjDirPath}/../../../../gpio_pins.c"
-    "${ProjDirPath}/../../../../gpio_pins.h"
-    "${ProjDirPath}/../../../../pin_mux.c"
-    "${ProjDirPath}/../../../../pin_mux.h"
-    "${ProjDirPath}/../../../../board.c"
-    "${ProjDirPath}/../../../../board.h"
-    "${ProjDirPath}/../../hardware_init.c"
-    "${ProjDirPath}/../../adc16_lpm_callback.c"
-    "${ProjDirPath}/../../adc16_temperature.c"
-    "${ProjDirPath}/../../adc16_temperature.h"
-    "${ProjDirPath}/../../debug_console_lpm_callback.c"
-    "${ProjDirPath}/../../fsl_adc_irq.c"
-    "${ProjDirPath}/../../fsl_lptmr_irq.c"
-    "${ProjDirPath}/../../fsl_rtc_irq.c"
-    "${ProjDirPath}/../../fsl_uart_irq.c"
-    "${ProjDirPath}/../../main.c"
-    "${ProjDirPath}/../../lpm_rtos.h"
-    "${ProjDirPath}/../../lptmr_setup.c"
-    "${ProjDirPath}/../../lptmr_setup.h"
-    "${ProjDirPath}/../../register_callback.c"
-    "${ProjDirPath}/../../rtc_setup.c"
-    "${ProjDirPath}/../../rtc_setup.h"
-    "${ProjDirPath}/../../rtos_lpm_callback.c"
-    "${ProjDirPath}/../../task_led_toggle.c"
-    "${ProjDirPath}/../../task_lpm.c"
-    "${ProjDirPath}/../../task_lpm.h"
 )
 SET_TARGET_PROPERTIES(power_manager_rtos_demo_mqx PROPERTIES OUTPUT_NAME "power_manager_rtos_demo_mqx.elf")
 
 TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx -Wl,--start-group)
 # LIBRARIES
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
-    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/debug/mqx/lib_mqx.a)
-    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/debug/mqx_stdlib/lib_mqx_stdlib.a)
     TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../lib/ksdk_mqx_lib/armgcc/KW24D5/debug/libksdk_platform_mqx.a)
+    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/debug/nshell/lib_nshell.a)
+    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/debug/mqx_stdlib/lib_mqx_stdlib.a)
+    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/debug/mqx/lib_mqx.a)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
-    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release/mqx/lib_mqx.a)
-    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release/mqx_stdlib/lib_mqx_stdlib.a)
     TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../lib/ksdk_mqx_lib/armgcc/KW24D5/release/libksdk_platform_mqx.a)
+    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release/nshell/lib_nshell.a)
+    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release/mqx_stdlib/lib_mqx_stdlib.a)
+    TARGET_LINK_LIBRARIES(power_manager_rtos_demo_mqx ${ProjDirPath}/../../../../../../rtos/mqx/lib/frdmkw24.armgcc/release/mqx/lib_mqx.a)
 ENDIF()
 
 # SYSTEM LIBRARIES

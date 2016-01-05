@@ -39,7 +39,7 @@
 // SDK Included Files
 #include "fsl_power_manager.h"
 #include "fsl_clock_manager.h"
-#if FSL_FEATURE_SOC_DMA_COUNT
+#if FSL_FEATURE_SOC_EDMA_COUNT
 
 power_manager_error_code_t edma_pm_callback(power_manager_notify_struct_t * notify,
  power_manager_callback_data_t * dataPtr)

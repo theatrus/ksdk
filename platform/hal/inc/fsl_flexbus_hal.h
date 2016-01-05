@@ -144,10 +144,10 @@ typedef enum _flexbus_multiplex_group5_signal
  * @internal gui name="FlexBus configuration" id="fbCfg"
  */
 typedef struct _flexbus_user_config {
-    uint8_t chip;                                               /*!< Chip FlexBus for validation @internal gui name="Chip" */
-    uint8_t waitStates;                                         /*!< Value of wait states @internal gui name="WaitStates" */
+    uint8_t chip;                                               /*!< Chip FlexBus for validation @internal gui name="Chip" range="0..5" */
+    uint8_t waitStates;                                         /*!< Value of wait states @internal gui name="WaitStates" range="0..63" */
     uint32_t baseAddress;                                       /*!< Base address for using FlexBus @internal gui name="Base address" */
-    uint32_t baseAddressMask;                                   /*!< Base address mask @internal gui name="Base address mask" */
+    uint32_t baseAddressMask;                                   /*!< Base address mask @internal gui name="Base address mask" range="0..65535" */
     bool writeProtect;                                          /*!< Write protected @internal gui name="Write protect" */
     bool burstWrite;                                            /*!< Burst-Write enable @internal gui name="Burst write" */
     bool burstRead;                                             /*!< Burst-Read enable @internal gui name="Burst read" */

@@ -55,7 +55,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions
 ///////////////////////////////////////////////////////////////////////////////
-#if (defined(FSL_FEATURE_SIM_OPT_HAS_RTC_CLOCK_OUT_SELECTION) && FSL_FEATURE_SIM_OPT_HAS_RTC_CLOCK_OUT_SELECTION == 1)
+#if (defined(FSL_FEATURE_SOC_RTC_COUNT) && FSL_FEATURE_SOC_RTC_COUNT >= 1)
 /* The RTC instance used for RTC */
 #define PM_RTOS_DEMO_RTC_FUNC_INSTANCE                  0
 #endif
@@ -69,14 +69,6 @@
 /* The LLWU wakeup module for LPTMR */
 #define PM_RTOS_DEMO_LPTMR_LLWU_WAKEUP_MODULE           kLlwuWakeupModule0
 
-/************************* Configure for MQX **********************************/
-#if (defined FSL_RTOS_MQX)
-#define _MODULE_IRQ_HANDLER(module)  MQX_##module##IRQHandler
-#else
-#define _MODULE_IRQ_HANDLER(module)  module##IRQHandler
-#endif /* LPM_RTOS_H */
-#define MODULE_IRQ_HANDLER(module)  _MODULE_IRQ_HANDLER(module##_)
-/******************************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Structures & enumerations
@@ -97,54 +89,15 @@ enum LPM_DEMO_RETURN
 ///////////////////////////////////////////////////////////////////////////////
 clock_manager_error_code_t rtos_cm_callback(clock_notify_struct_t *notify, void* callbackData);
 clock_manager_error_code_t dbg_console_cm_callback(clock_notify_struct_t *notify, void* callbackData);
-power_manager_error_code_t rtos_pm_callback(power_manager_notify_struct_t * notify,
- power_manager_callback_data_t * dataPtr);
+power_manager_error_code_t rtos_pm_callback(power_manager_notify_struct_t * notify, power_manager_callback_data_t * dataPtr);
 power_manager_error_code_t adc16_pm_callback(power_manager_notify_struct_t * notify, power_manager_callback_data_t * dataPtr);
 
 /*!
  * @Brief get character from uart0 in blocking mode.
  */
 char getInput(void);
-
-/*!
- * @Brief IRQ handler.
- */
-/*******************************************************************************
- * ADC
- ******************************************************************************/
-#if (ADC_INSTANCE_COUNT > 0)
-void MODULE_IRQ_HANDLER(ADC0)(void);
-#endif
-#if (ADC_INSTANCE_COUNT > 1U)
-void MODULE_IRQ_HANDLER(ADC1)(void);
-#endif
-#if (ADC_INSTANCE_COUNT > 2U)
-void MODULE_IRQ_HANDLER(ADC2)(void);
-#endif
-#if (ADC_INSTANCE_COUNT > 3U)
-void MODULE_IRQ_HANDLER(ADC3)(void);
-#endif
-
-/*******************************************************************************
- * UART
- ******************************************************************************/
-void PM_DBG_UART_IRQ_HANDLER(void);
-
-/*******************************************************************************
- * RTC
- ******************************************************************************/
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
-void MODULE_IRQ_HANDLER(RTC)(void);
-#endif
-void MODULE_IRQ_HANDLER(LPTMR0)(void);
-/*******************************************************************************
- * LLW
- ******************************************************************************/
-void MODULE_IRQ_HANDLER(LLWU)(void);
-
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // EOF
 ///////////////////////////////////////////////////////////////////////////////
-

@@ -54,8 +54,16 @@
  *   FBI -> FEE
  *   FBI -> FBE
  *   FBI -> BLPI
+ *   FBI -> PBI
  *
  *   BLPI -> FBI
+ *   BLPI -> PBI
+ *
+ *   PBI -> FBI
+ *   PBI -> BLPI
+ *   PBI -> PEI
+ *
+ *   PEI -> PBI
  *
  *   FBE -> FEE
  *   FBE -> FEI
@@ -123,6 +131,12 @@ mcg_modes_t CLOCK_HAL_GetMcgMode(MCG_Type * base)
       PBE    |  10(EXT)   |   0(EXT)   |   1(PLL)  |   O(NORMAL)
     ____________________________________________________________________
 
+      PBI    |  01(INT)   |   1(INT)   |   1(PLL)  |   0(NORMAL)
+    ____________________________________________________________________
+
+      PEI    |  11(PLL)   |   1(INT)   |   1(PLL)  |      X
+    ____________________________________________________________________
+
     ***********************************************************************/
 
     switch (clkst)
@@ -144,6 +158,23 @@ mcg_modes_t CLOCK_HAL_GetMcgMode(MCG_Type * base)
         }
         break;
         case kMcgClkOutStatInternal:
+#if (defined(FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE) && FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE)
+ 		if (0U == lp)
+            {
+                if (pllst)
+                {
+                    mode = kMcgModePBI;
+                }
+                else
+                {
+                    mode = kMcgModeFBI;
+                }
+            }
+            else
+            {
+                mode = kMcgModeBLPI;
+            }
+#else
         if ((kMcgFllSrcInternal == irefst)
 #if FSL_FEATURE_MCG_HAS_PLL
             && (!pllst)
@@ -152,6 +183,7 @@ mcg_modes_t CLOCK_HAL_GetMcgMode(MCG_Type * base)
         {
             if (0U == lp)
             {
+		
                 mode = kMcgModeFBI;
             }
             else
@@ -159,6 +191,7 @@ mcg_modes_t CLOCK_HAL_GetMcgMode(MCG_Type * base)
                 mode = kMcgModeBLPI;
             }
         }
+#endif //FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE
         break;
         case kMcgClkOutStatExternal:
         if (kMcgFllSrcExternal == irefst)
@@ -184,11 +217,19 @@ mcg_modes_t CLOCK_HAL_GetMcgMode(MCG_Type * base)
         break;
 #if FSL_FEATURE_MCG_HAS_PLL
         case kMcgClkOutStatPll:
-        if ((kMcgFllSrcExternal == irefst) && pllst)
-        {
-            mode = kMcgModePEE;
-        }
-        break;
+#if (defined(FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE) && FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE)
+            if (kMcgPllRefClkSrcSlowIrc == MCG_RD_C7_PLL32KREFSEL(base))
+            {
+                mode = kMcgModePEI;
+            }
+            else
+#else
+	if ((kMcgFllSrcExternal == irefst) && pllst)
+#endif //FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE
+            {
+                mode = kMcgModePEE;
+            }
+            break;
 #endif
         default:
         break;
@@ -199,40 +240,21 @@ mcg_modes_t CLOCK_HAL_GetMcgMode(MCG_Type * base)
 
 /*FUNCTION******************************************************************************
  *
- * Function name : CLOCK_HAL_PrepareOsc
- * Description  : This function selects the OSC as clock source, and wait for it
- * is stable. This is an internal function used for MCG mode switch.
- *
- *END***********************************************************************************/
-static void CLOCK_HAL_PrepareOsc(MCG_Type * base, mcg_oscsel_select_t oscselVal)
-{
-#if FSL_FEATURE_MCG_USE_OSCSEL
-    MCG_BWR_C7_OSCSEL(base, oscselVal);
-    if (kMcgOscselOsc == oscselVal)
-#endif
-    {
-        if (MCG_BRD_C2_EREFS(base))
-        {
-            while(!CLOCK_HAL_IsOsc0Stable(base)){}
-        }
-    }
-}
-
-/*FUNCTION******************************************************************************
- *
  * Function name : CLOCK_HAL_SetFeiMode
  * Description  : This function sets MCG to FEI mode.
  *
  *END***********************************************************************************/
 mcg_mode_error_t CLOCK_HAL_SetFeiMode(MCG_Type * base,
                               mcg_dco_range_select_t drs,
-                              void (* fllStableDelay)(void),
-                              uint32_t *outClkFreq)
+                              void (* fllStableDelay)(void))
 {
-    uint32_t mcgOut;
+    uint8_t mcg_c4;
+    bool change_drs = false;
 
+#if MCG_MODE_CHECK_PARAM
+    uint32_t mcgOut;
     mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
-    if (!((kMcgModeFBI | kMcgModeFBE | kMcgModeFEE) & (uint32_t)mode))
+    if (!((kMcgModeFEI | kMcgModeFBI | kMcgModeFBE | kMcgModeFEE) & (uint32_t)mode))
     {
         return kMcgModeErrModeUnreachable;
     }
@@ -247,9 +269,24 @@ mcg_mode_error_t CLOCK_HAL_SetFeiMode(MCG_Type * base,
     {
         return kMcgModeErrFllRefRange;
     }
+#endif
 
     /* Set DMX32. DMX32 is recommended to be 0 in FEI mode. */
     MCG_BWR_C4_DMX32(base, kMcgDmx32Default);
+
+    /*
+     * Errata: ERR007993
+     * Workaround: Invert MCG_C4[DMX32] or change MCG_C4[DRST_DRS] before
+     * reference clock source changes, then reset to previous value after
+     * reference clock changes.
+     */
+    if (kMcgFllSrcExternal == CLOCK_HAL_GetFllSrc(base))
+    {
+        mcg_c4 = MCG_RD_C4(base);
+        // Change the LSB of DRST_DRS.
+        MCG_WR_C4(base, mcg_c4 ^ (1U << MCG_C4_DRST_DRS_SHIFT));
+        change_drs = true;
+    }
 
     /* Set CLKS and IREFS. */
     MCG_WR_C1(base, ((MCG_RD_C1(base) & ~(MCG_C1_CLKS_MASK | MCG_C1_IREFS_MASK)))
@@ -259,6 +296,12 @@ mcg_mode_error_t CLOCK_HAL_SetFeiMode(MCG_Type * base,
     /* Wait and check status. */
     while (CLOCK_HAL_GetFllSrc(base) != kMcgFllSrcInternal) {}
 
+    /* Errata: ERR007993 */
+    if (change_drs)
+    {
+        MCG_WR_C4(base, mcg_c4);
+    }
+
     while (CLOCK_HAL_GetClkOutStat(base) != kMcgClkOutStatFll) {}
     /* Set DRS. */
     MCG_WR_C4_DRST_DRS(base, drs);
@@ -267,9 +310,10 @@ mcg_mode_error_t CLOCK_HAL_SetFeiMode(MCG_Type * base,
     while (MCG_BRD_C4_DRST_DRS(base) != drs) {}
 
     /* Wait for FLL stable time. */
-    fllStableDelay();
-
-    *outClkFreq = mcgOut;
+    if (fllStableDelay)
+    {
+        fllStableDelay();
+    }
 
     return kMcgModeErrNone;
 }
@@ -285,13 +329,16 @@ mcg_mode_error_t CLOCK_HAL_SetFeeMode(MCG_Type * base,
                               uint8_t frdivVal,
                               mcg_dmx32_select_t dmx32,
                               mcg_dco_range_select_t drs,
-                              void (* fllStableDelay)(void),
-                              uint32_t *outClkFreq)
+                              void (* fllStableDelay)(void))
 {
+    uint8_t mcg_c4;
+    bool change_drs = false;
+
+#if MCG_MODE_CHECK_PARAM
     uint32_t mcgOut, extFreq;
 
     mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
-    if (!((kMcgModeFBI | kMcgModeFBE | kMcgModeFEI) & (uint32_t)mode))
+    if (!((kMcgModeFEE | kMcgModeFBI | kMcgModeFBE | kMcgModeFEI) & (uint32_t)mode))
     {
         return kMcgModeErrModeUnreachable;
     }
@@ -320,11 +367,26 @@ mcg_mode_error_t CLOCK_HAL_SetFeeMode(MCG_Type * base,
     {
         return kMcgModeErrFllRefRange;
     }
+#endif
 
     /* Set OSCSEL */
 #if FSL_FEATURE_MCG_USE_OSCSEL
     MCG_BWR_C7_OSCSEL(base, oscselVal);
 #endif
+
+    /*
+     * Errata: ERR007993
+     * Workaround: Invert MCG_C4[DMX32] or change MCG_C4[DRST_DRS] before
+     * reference clock source changes, then reset to previous value after
+     * reference clock changes.
+     */
+    if (kMcgFllSrcInternal == CLOCK_HAL_GetFllSrc(base))
+    {
+        mcg_c4 = MCG_RD_C4(base);
+        // Change the LSB of DRST_DRS.
+        MCG_WR_C4(base, mcg_c4 ^ (1U << MCG_C4_DRST_DRS_SHIFT));
+        change_drs = true;
+    }
 
     /* Set CLKS and IREFS. */
     MCG_WR_C1(base, (MCG_RD_C1(base) & ~(MCG_C1_CLKS_MASK | MCG_C1_FRDIV_MASK | MCG_C1_IREFS_MASK))
@@ -344,6 +406,12 @@ mcg_mode_error_t CLOCK_HAL_SetFeeMode(MCG_Type * base,
     /* Wait and check status. */
     while (CLOCK_HAL_GetFllSrc(base) != kMcgFllSrcExternal) {}
 
+    /* Errata: ERR007993 */
+    if (change_drs)
+    {
+        MCG_WR_C4(base, mcg_c4);
+    }
+
     /* Set DRS and DMX32. */
     MCG_WR_C4(base, (MCG_RD_C4(base)
                  & ~(MCG_C4_DMX32_MASK |
@@ -358,9 +426,10 @@ mcg_mode_error_t CLOCK_HAL_SetFeeMode(MCG_Type * base,
     while (CLOCK_HAL_GetClkOutStat(base) != kMcgClkOutStatFll) {}
 
     /* Wait for FLL stable time. */
-    fllStableDelay();
-
-    *outClkFreq = mcgOut;
+    if (fllStableDelay)
+    {
+        fllStableDelay();
+    }
 
     return kMcgModeErrNone;
 }
@@ -375,18 +444,43 @@ mcg_mode_error_t CLOCK_HAL_SetFbiMode(MCG_Type * base,
                               mcg_dco_range_select_t drs,
                               mcg_irc_mode_t ircSelect,
                               uint8_t fcrdivVal,
-                              void (* fllStableDelay)(void),
-                              uint32_t *outClkFreq)
+                              void (* fllStableDelay)(void))
 {
+    uint8_t mcg_c4;
+    bool change_drs = false;
+
+#if MCG_MODE_CHECK_PARAM
     mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
 
-    if (!((kMcgModeFEI | kMcgModeFBE | kMcgModeFEE | kMcgModeBLPI) & (uint32_t)mode))
+    if (!((kMcgModeFBI |
+           kMcgModeFEI |
+           kMcgModeFBE |
+           kMcgModeFEE |
+#if (defined(FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE) && FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE)
+           kMcgModePBI |
+#endif
+           kMcgModeBLPI) & (uint32_t)mode))
     {
         return kMcgModeErrModeUnreachable;
     }
+#endif
 
     /* In FBI and FEI modes, setting C4[DMX32] bit is not recommended. */
     MCG_BWR_C4_DMX32(base, kMcgDmx32Default);
+
+    /*
+     * Errata: ERR007993
+     * Workaround: Invert MCG_C4[DMX32] or change MCG_C4[DRST_DRS] before
+     * reference clock source changes, then reset to previous value after
+     * reference clock changes.
+     */
+    if (kMcgFllSrcExternal == CLOCK_HAL_GetFllSrc(base))
+    {
+        mcg_c4 = MCG_RD_C4(base);
+        // Change the LSB of DRST_DRS.
+        MCG_WR_C4(base, mcg_c4 ^ (1U << MCG_C4_DRST_DRS_SHIFT));
+        change_drs = true;
+    }
 
     /* Set CLKS and IREFS. */
     MCG_WR_C1(base, (MCG_RD_C1(base) & ~(MCG_C1_CLKS_MASK | MCG_C1_IREFS_MASK))
@@ -395,6 +489,12 @@ mcg_mode_error_t CLOCK_HAL_SetFbiMode(MCG_Type * base,
 
     /* Wait for state change. */
     while (CLOCK_HAL_GetFllSrc(base) != kMcgFllSrcInternal) {}
+
+    /* Errata: ERR007993 */
+    if (change_drs)
+    {
+        MCG_WR_C4(base, mcg_c4);
+    }
 
     if (kMcgIrcFast == ircSelect)
     {
@@ -415,16 +515,9 @@ mcg_mode_error_t CLOCK_HAL_SetFbiMode(MCG_Type * base,
     while (CLOCK_HAL_GetClkOutStat(base) != kMcgClkOutStatInternal){}
 
     /* Wait for FLL stable time. */
-    fllStableDelay();
-
-    /* wait until internal reference switches to requested irc. */
-    if (ircSelect == kMcgIrcSlow)
+    if (fllStableDelay)
     {
-        *outClkFreq = g_slowInternalRefClkFreq; /* MCGOUT frequency equals slow IRC frequency */
-    }
-    else
-    {
-        *outClkFreq = (g_fastInternalRefClkFreq >> fcrdivVal);
+        fllStableDelay();
     }
 
     return kMcgModeErrNone;
@@ -441,9 +534,12 @@ mcg_mode_error_t CLOCK_HAL_SetFbeMode(MCG_Type * base,
                              uint8_t frdivVal,
                              mcg_dmx32_select_t dmx32,
                              mcg_dco_range_select_t drs,
-                             void (* fllStableDelay)(void),
-                             uint32_t *outClkFreq)
+                             void (* fllStableDelay)(void))
 {
+    uint8_t mcg_c4;
+    bool change_drs = false;
+
+#if MCG_MODE_CHECK_PARAM
     uint32_t extFreq;
 
     mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
@@ -466,6 +562,7 @@ mcg_mode_error_t CLOCK_HAL_SetFbeMode(MCG_Type * base,
     {
         return kMcgModeErrOscFreqRange;
     }
+#endif
 
 #if FSL_FEATURE_MCG_HAS_PLL
     /* Set PLLS. */
@@ -477,11 +574,22 @@ mcg_mode_error_t CLOCK_HAL_SetFbeMode(MCG_Type * base,
     MCG_BWR_C2_LP(base, 0U);
 
 #if FSL_FEATURE_MCG_USE_OSCSEL
-    if (kMcgModeFEE != mode)
-    {
-        MCG_BWR_C7_OSCSEL(base, oscselVal);
-    }
+    MCG_BWR_C7_OSCSEL(base, oscselVal);
 #endif
+
+    /*
+     * Errata: ERR007993
+     * Workaround: Invert MCG_C4[DMX32] or change MCG_C4[DRST_DRS] before
+     * reference clock source changes, then reset to previous value after
+     * reference clock changes.
+     */
+    if (kMcgFllSrcInternal == CLOCK_HAL_GetFllSrc(base))
+    {
+        mcg_c4 = MCG_RD_C4(base);
+        // Change the LSB of DRST_DRS.
+        MCG_WR_C4(base, mcg_c4 ^ (1U << MCG_C4_DRST_DRS_SHIFT));
+        change_drs = true;
+    }
 
     /* Set CLKS and IREFS. */
     MCG_WR_C1(base, (MCG_RD_C1(base) & ~(MCG_C1_CLKS_MASK | MCG_C1_FRDIV_MASK | MCG_C1_IREFS_MASK))
@@ -492,11 +600,13 @@ mcg_mode_error_t CLOCK_HAL_SetFbeMode(MCG_Type * base,
     /* Wait for Reference clock Status bit to clear */
     while (kMcgFllSrcExternal != CLOCK_HAL_GetFllSrc(base)) {}
 
-#if FSL_FEATURE_MCG_USE_OSCSEL
-    if (kMcgModeFEE == mode)
+    /* Errata: ERR007993 */
+    if (change_drs)
     {
-        MCG_BWR_C7_OSCSEL(base, oscselVal);
+        MCG_WR_C4(base, mcg_c4);
     }
+
+#if FSL_FEATURE_MCG_USE_OSCSEL
     if (kMcgOscselOsc == oscselVal)
 #endif
     {
@@ -520,10 +630,10 @@ mcg_mode_error_t CLOCK_HAL_SetFbeMode(MCG_Type * base,
     while (CLOCK_HAL_GetClkOutStat(base) != kMcgClkOutStatExternal) {}
 
     /* Wait for fll stable time. */
-    fllStableDelay();
-
-    /* MCGOUT frequency equals external clock frequency */
-    *outClkFreq = extFreq;
+    if (fllStableDelay)
+    {
+        fllStableDelay();
+    }
 
     return kMcgModeErrNone;
 }
@@ -536,14 +646,19 @@ mcg_mode_error_t CLOCK_HAL_SetFbeMode(MCG_Type * base,
  *END***********************************************************************************/
 mcg_mode_error_t CLOCK_HAL_SetBlpiMode(MCG_Type * base,
                                uint8_t fcrdivVal,
-                               mcg_irc_mode_t ircSelect,
-                               uint32_t *outClkFreq)
+                               mcg_irc_mode_t ircSelect)
 {
+#if MCG_MODE_CHECK_PARAM
     mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
-    if ((kMcgModeFBI != mode))
+#if (defined(FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE) && FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE)
+    if (!((kMcgModeBLPI | kMcgModeFBI | kMcgModePBI) & (uint32_t)mode))
+#else
+    if (!((kMcgModeBLPI | kMcgModeFBI) & (uint32_t)mode))
+#endif
     {
         return kMcgModeErrModeUnreachable;
     }
+#endif
 
     if (kMcgIrcFast == ircSelect)
     {
@@ -558,16 +673,6 @@ mcg_mode_error_t CLOCK_HAL_SetBlpiMode(MCG_Type * base,
 
     while (CLOCK_HAL_GetInternalRefClkMode(base) != ircSelect){}
 
-    /* Now in BLPI */
-    if (ircSelect == kMcgIrcFast)
-    {
-        *outClkFreq = (g_fastInternalRefClkFreq >> fcrdivVal);
-    }
-    else
-    {
-        *outClkFreq = g_slowInternalRefClkFreq;
-    }
-
     return kMcgModeErrNone;
 }
 
@@ -578,13 +683,14 @@ mcg_mode_error_t CLOCK_HAL_SetBlpiMode(MCG_Type * base,
  *
  *END***********************************************************************************/
 mcg_mode_error_t CLOCK_HAL_SetBlpeMode(MCG_Type * base,
-                               mcg_oscsel_select_t oscselVal,
-                               uint32_t *outClkFreq)
+                               mcg_oscsel_select_t oscselVal)
 {
+#if MCG_MODE_CHECK_PARAM
     uint32_t extFreq;
 
     mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
     if (!((kMcgModeFBE
+         | kMcgModeBLPE
 #if FSL_FEATURE_MCG_HAS_PLL
          | kMcgModePBE
 #endif
@@ -600,13 +706,13 @@ mcg_mode_error_t CLOCK_HAL_SetBlpeMode(MCG_Type * base,
     {
         return kMcgModeErrOscFreqRange;
     }
+#endif
 
     /* Set LP bit to enter BLPE mode. */
     MCG_BWR_C2_LP(base, 1U);
 
     CLOCK_HAL_PrepareOsc(base, oscselVal);
 
-    *outClkFreq = extFreq;
     return kMcgModeErrNone;
 }
 
@@ -617,21 +723,63 @@ mcg_mode_error_t CLOCK_HAL_SetBlpeMode(MCG_Type * base,
  * Description  : This function sets MCG to PBE mode.
  *
  *END***********************************************************************************/
+#if (defined(FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE) && FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE)
+mcg_mode_error_t CLOCK_HAL_SetPbeMode(MCG_Type * base,
+                              mcg_oscsel_select_t oscselVal,
+                              mcg_pll_ref_clock_source_t pll32kRef,
+                              uint8_t frdivVal)
+{
+#if MCG_MODE_CHECK_PARAM
+    mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
+    if (!((kMcgModeFBE | kMcgModePEE | kMcgModeBLPE) & (uint32_t)mode))
+    {
+        return kMcgModeErrModeUnreachable;
+    }
+#endif
+
+    /* Clear LP */
+    MCG_BWR_C2_LP(base, 0U);
+
+    /* Set CLKS and IREFS. */
+    MCG_WR_C1(base, (MCG_RD_C1(base) & ~(MCG_C1_CLKS_MASK | MCG_C1_FRDIV_MASK))
+                  | (MCG_C1_CLKS(kMcgClkOutSrcExternal)  /* CLKS = 2 */
+                  | MCG_C1_FRDIV(frdivVal)));            /* FRDIV = frdivVal */
+
+    /* Wait for CLKST clock status bits to show clock source is ext ref clk */
+    while (CLOCK_HAL_GetClkOutStat(base) != kMcgClkOutStatExternal) {}
+
+    CLOCK_HAL_PrepareOsc(base, oscselVal);
+
+    /* Set MCG_C7[PLL32KREFSEL] to select PLL reference clock source */
+    CLOCK_HAL_SetPllRefSel0Mode(base, pll32kRef);
+
+    /* Enable PLL. */
+    MCG_BWR_C6_PLLS(base, 1U);
+
+    /* wait for PLLST status bit to set */
+    while ((CLOCK_HAL_IsPllSelected(base) != true)) {}
+
+    /* Wait for LOCK bit to set */
+    while (!CLOCK_HAL_IsPll0Locked(base)) {}
+
+    return kMcgModeErrNone;
+}
+#else
 mcg_mode_error_t CLOCK_HAL_SetPbeMode(MCG_Type * base,
                               mcg_oscsel_select_t oscselVal,
                               mcg_pll_clk_select_t pllcsSelect,
                               uint8_t prdivVal,
-                              uint8_t vdivVal,
-                              uint32_t *outClkFreq)
+                              uint8_t vdivVal)
 #if FSL_FEATURE_MCG_HAS_PLL1
 {
+#if MCG_MODE_CHECK_PARAM
     uint32_t extFreq, pllFreq;
 
     mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
     if (!((kMcgModeFBE |
            kMcgModePEE |
            kMcgModePBE |
-           kMcgModeBLPE) & (uint32_t)mode));
+           kMcgModeBLPE) & (uint32_t)mode))
     {
         return kMcgModeErrModeUnreachable;
     }
@@ -658,8 +806,9 @@ mcg_mode_error_t CLOCK_HAL_SetPbeMode(MCG_Type * base,
     if ((pllFreq < FSL_FEATURE_MCG_PLL_REF_MIN) ||
         (pllFreq > FSL_FEATURE_MCG_PLL_REF_MAX))
     {
-        return kMcgErrPllPrdivRange;
+        return kMcgModeErrPllPrdivRange;
     }
+#endif
 
     /* Set LP bit to enable the PLL */
     MCG_BWR_C2_LP(base, 0U);
@@ -709,11 +858,11 @@ mcg_mode_error_t CLOCK_HAL_SetPbeMode(MCG_Type * base,
         while (!CLOCK_HAL_IsPll0Locked(base)) {}
     }
 
-    *outClkFreq = extFreq;
     return kMcgModeErrNone;
 }
 #else
 {
+#if MCG_MODE_CHECK_PARAM
     uint32_t extFreq, pllRefFreq;
 
     mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
@@ -729,6 +878,7 @@ mcg_mode_error_t CLOCK_HAL_SetPbeMode(MCG_Type * base,
     {
         return kMcgModeErrOscFreqRange;
     }
+#endif
 
 #if FSL_FEATURE_MCG_HAS_EXTERNAL_PLL
     /* Set PLLCS to select PLL. */
@@ -738,6 +888,7 @@ mcg_mode_error_t CLOCK_HAL_SetPbeMode(MCG_Type * base,
     if (pllcsSelect == kMcgPllClkSelPll0)
     {
 #endif    
+#if MCG_MODE_CHECK_PARAM
         /* Check whether PRDIV value is OK. */
         pllRefFreq = extFreq / (prdivVal + FSL_FEATURE_MCG_PLL_PRDIV_BASE);
 
@@ -746,6 +897,7 @@ mcg_mode_error_t CLOCK_HAL_SetPbeMode(MCG_Type * base,
         {
             return kMcgModeErrPllPrdivRange;
         }
+#endif
 #if FSL_FEATURE_MCG_HAS_EXTERNAL_PLL
     }
 #endif
@@ -793,10 +945,10 @@ mcg_mode_error_t CLOCK_HAL_SetPbeMode(MCG_Type * base,
         while ((CLOCK_HAL_IsPllSelected(base) != true)) {}
     }
 #endif   
-    *outClkFreq = extFreq;
     return kMcgModeErrNone;
 }
-#endif
+#endif // FSL_FEATURE_MCG_HAS_PLL1
+#endif // FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE
 
 /*FUNCTION******************************************************************************
  *
@@ -804,14 +956,15 @@ mcg_mode_error_t CLOCK_HAL_SetPbeMode(MCG_Type * base,
  * Description  : This function sets MCG to PEE mode.
  *
  *END***********************************************************************************/
-mcg_mode_error_t CLOCK_HAL_SetPeeMode(MCG_Type * base,
-                                      uint32_t *outClkFreq)
+mcg_mode_error_t CLOCK_HAL_SetPeeMode(MCG_Type * base)
 {
+#if MCG_MODE_CHECK_PARAM
     mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
     if (kMcgModePBE != mode)
     {
         return kMcgModeErrModeUnreachable;
     }
+#endif
 
     /* Change to use PLL/FLL output clock first. */
     MCG_BWR_C1_CLKS(base, kMcgClkOutSrcOut);
@@ -819,11 +972,88 @@ mcg_mode_error_t CLOCK_HAL_SetPeeMode(MCG_Type * base,
     /* Wait for clock status bits to update */
     while (CLOCK_HAL_GetClkOutStat(base) != kMcgClkOutStatPll) {}
 
-    *outClkFreq = CLOCK_HAL_GetOutClk(base);
+    return kMcgModeErrNone;
+}
+
+#if (defined(FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE) && FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE)
+/*FUNCTION******************************************************************************
+ *
+ * Function name : CLOCK_HAL_SetPbiMode
+ * Description  : This function sets MCG to PBI mode.
+ *
+ *END***********************************************************************************/
+mcg_mode_error_t CLOCK_HAL_SetPbiMode(MCG_Type * base,
+                                      mcg_irc_mode_t ircSelect,
+                                      uint8_t fcrdivVal)
+{
+#if MCG_MODE_CHECK_PARAM
+    mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
+
+    if (!((kMcgModeFBI | kMcgModePEI | kMcgModeBLPI | kMcgModePBI) & (uint32_t)mode))
+    {
+        return kMcgModeErrModeUnreachable;
+    }
+#endif
+
+    if (kMcgIrcFast == ircSelect)
+    {
+        /* Update FCRDIV if necessary. */
+        CLOCK_HAL_UpdateFastClkInternalRefDiv(base, fcrdivVal);
+    }
+    /* Set LP and IRCS. */
+    MCG_WR_C2(base, (MCG_RD_C2(base) & ~(MCG_C2_LP_MASK | MCG_C2_IRCS_MASK))
+                                       | MCG_C2_IRCS(ircSelect));
+
+    while (CLOCK_HAL_GetInternalRefClkMode(base) != ircSelect){}
+
+    /* Set MCG_C7[PLL32KREFSEL] to select slow IRC clock source */
+    CLOCK_HAL_SetPllRefSel0Mode(base, kMcgPllRefClkSrcSlowIrc);
+
+    /* Set CLKS and IREFS. */
+    MCG_WR_C1(base, (MCG_RD_C1(base) & ~(MCG_C1_CLKS_MASK | MCG_C1_IREFS_MASK))
+                  | (MCG_C1_CLKS(kMcgClkOutSrcInternal) /* CLKS = 1  */
+                  | MCG_C1_IREFS(kMcgFllSrcInternal))); /* IREFS = 1 */
+
+    /* Wait for CLKST, IREFST state change. */
+    while (CLOCK_HAL_GetFllSrc(base) != kMcgFllSrcInternal) {}
+
+    while (CLOCK_HAL_GetClkOutStat(base) != kMcgClkOutStatInternal){}
+
+    /* set PLLS to select PLL */
+    MCG_BWR_C6_PLLS(base, 1U);
+    /* wait for PLLST status bit to set */
+    while ((CLOCK_HAL_IsPllSelected(base) != true)) {}
 
     return kMcgModeErrNone;
 }
 
-#endif
+/*FUNCTION******************************************************************************
+ *
+ * Function name : CLOCK_HAL_SetPeiMode
+ * Description  : This function sets MCG to PEI mode.
+ *
+ *END***********************************************************************************/
+mcg_mode_error_t CLOCK_HAL_SetPeiMode(MCG_Type * base)
+{
+
+#if MCG_MODE_CHECK_PARAM
+    mcg_modes_t mode = CLOCK_HAL_GetMcgMode(base);
+    if (kMcgModePBI != mode)
+    {
+        return kMcgModeErrModeUnreachable;
+    }
 #endif
 
+    /* Change to use PLL/FLL output clock first. */
+    MCG_BWR_C1_CLKS(base, kMcgClkOutSrcOut);
+
+    /* Wait for clock status bits to update */
+    while (CLOCK_HAL_GetClkOutStat(base) != kMcgClkOutStatPll) {}
+
+    return kMcgModeErrNone;
+}
+#endif // FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE
+
+#endif // FSL_FEATURE_MCG_HAS_PLL
+
+#endif // FSL_FEATURE_SOC_MCG_COUNT

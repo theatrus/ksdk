@@ -39,30 +39,12 @@
 #include "usb_host_config.h"
 #include "usb.h"
 #include "usb_host_stack_interface.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "derivative.h"
-#include "hidef.h"
-#include "mem_util.h"
-#endif
 #include "usb_host_hub_sm.h"
 #include "usb_host_audio.h"
 #include "hidkeyboard.h"
 #include "usb_host_hid.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_debug_console.h"
-#endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-#endif
 
 #define KEYBOARD_EVENT_MASK (USB_Keyboard_Event_CTRL | USB_Keyboard_Event_DATA)
 
@@ -184,9 +166,6 @@ void keyboard_task(uint32_t param)
             }
         }
     }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    OS_Time_delay(1);
-#endif
 }
 
 /*FUNCTION*-------------------------------------------------------------

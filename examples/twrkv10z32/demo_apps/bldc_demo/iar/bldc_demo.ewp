@@ -168,7 +168,7 @@
         <option>
           <name>CCDefines</name>
           
-        <state>DEBUG</state><state>CPU_MKV10Z32VLF7</state><state>TWR_KV10Z32</state><state>TOWER</state><state>TWR</state></option>
+        <state>DEBUG</state><state>CPU_MKV10Z32VLF7</state><state>TWR_KV10Z32</state><state>TOWER</state></option>
         <option>
           <name>CCPreprocFile</name>
           <state>0</state>
@@ -228,7 +228,7 @@
         <option>
           <name>CCAllowList</name>
           <version>1</version>
-          <state>00000000</state>
+          <state>00000001</state>
         </option>
         <option>
           <name>CCDebugInfo</name>
@@ -297,7 +297,7 @@
         <option>
           <name>CCIncludePath2</name>
           
-        <state>$PROJ_DIR$/../../../../../platform/osa/inc</state><state>$PROJ_DIR$/../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../../../platform/CMSIS/Include</state><state>$PROJ_DIR$/../../../../../platform/devices</state><state>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/include</state><state>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/startup</state><state>$PROJ_DIR$/../../../../../platform/hal/inc</state><state>$PROJ_DIR$/../../../../../platform/drivers/inc</state><state>$PROJ_DIR$/../../../../../platform/system/inc</state><state>$PROJ_DIR$/../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../..</state><state>$PROJ_DIR$/../MMCLIB</state><state>$PROJ_DIR$/../MMCLIB/Common</state><state>$PROJ_DIR$/../MMCLIB/GDFLIB</state><state>$PROJ_DIR$/../MMCLIB/GFLIB</state><state>$PROJ_DIR$/../MMCLIB/GMCLIB</state><state>$PROJ_DIR$/../MMCLIB/MLIB</state><state>$PROJ_DIR$/../project/peripherals</state><state>$PROJ_DIR$/../project</state><state>$PROJ_DIR$/../freemaster</state><state>$PROJ_DIR$/../../../../../platform/CMSIS/Include/device/MKV10Z7</state><state>$PROJ_DIR$/../../../../../platform/hal/src/sim/MKV10Z7</state></option>
+        <state>$PROJ_DIR$/../../../../../platform/osa/inc</state><state>$PROJ_DIR$/../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../../../platform/CMSIS/Include</state><state>$PROJ_DIR$/../../../../../platform/devices</state><state>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/include</state><state>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/startup</state><state>$PROJ_DIR$/../../../../../platform/hal/inc</state><state>$PROJ_DIR$/../../../../../platform/drivers/inc</state><state>$PROJ_DIR$/../../../../../platform/system/inc</state><state>$PROJ_DIR$/../MMCLIB</state><state>$PROJ_DIR$/../MMCLIB/Common</state><state>$PROJ_DIR$/../MMCLIB/GDFLIB</state><state>$PROJ_DIR$/../MMCLIB/GFLIB</state><state>$PROJ_DIR$/../MMCLIB/GMCLIB</state><state>$PROJ_DIR$/../MMCLIB/MLIB</state><state>$PROJ_DIR$/../project/peripherals</state><state>$PROJ_DIR$/../project</state><state>$PROJ_DIR$/../freemaster</state><state>$PROJ_DIR$/../../../../../platform/CMSIS/Include/device/MKV10Z7</state><state>$PROJ_DIR$/../../../../../platform/hal/src/sim/MKV10Z7</state><state>$PROJ_DIR$/../../..</state></option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -1109,7 +1109,7 @@
         <option>
           <name>CCDefines</name>
           
-        <state>NDEBUG</state><state>CPU_MKV10Z32VLF7</state><state>TWR_KV10Z32</state><state>TOWER</state><state>TWR</state></option>
+        <state>NDEBUG</state><state>CPU_MKV10Z32VLF7</state><state>TWR_KV10Z32</state><state>TOWER</state></option>
         <option>
           <name>CCPreprocFile</name>
           <state>0</state>
@@ -1169,7 +1169,7 @@
         <option>
           <name>CCAllowList</name>
           <version>1</version>
-          <state>00010000</state>
+          <state>11111111</state>
         </option>
         <option>
           <name>CCDebugInfo</name>
@@ -1238,7 +1238,7 @@
         <option>
           <name>CCIncludePath2</name>
           
-        <state>$PROJ_DIR$/../../../../../platform/osa/inc</state><state>$PROJ_DIR$/../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../../../platform/CMSIS/Include</state><state>$PROJ_DIR$/../../../../../platform/devices</state><state>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/include</state><state>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/startup</state><state>$PROJ_DIR$/../../../../../platform/hal/inc</state><state>$PROJ_DIR$/../../../../../platform/drivers/inc</state><state>$PROJ_DIR$/../../../../../platform/system/inc</state><state>$PROJ_DIR$/../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../..</state><state>$PROJ_DIR$/../MMCLIB</state><state>$PROJ_DIR$/../MMCLIB/Common</state><state>$PROJ_DIR$/../MMCLIB/GDFLIB</state><state>$PROJ_DIR$/../MMCLIB/GFLIB</state><state>$PROJ_DIR$/../MMCLIB/GMCLIB</state><state>$PROJ_DIR$/../MMCLIB/MLIB</state><state>$PROJ_DIR$/../project/peripherals</state><state>$PROJ_DIR$/../project</state><state>$PROJ_DIR$/../freemaster</state><state>$PROJ_DIR$/../../../../../platform/CMSIS/Include/device/MKV10Z7</state><state>$PROJ_DIR$/../../../../../platform/hal/src/sim/MKV10Z7</state></option>
+        <state>$PROJ_DIR$/../../../../../platform/osa/inc</state><state>$PROJ_DIR$/../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../../../platform/CMSIS/Include</state><state>$PROJ_DIR$/../../../../../platform/devices</state><state>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/include</state><state>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/startup</state><state>$PROJ_DIR$/../../../../../platform/hal/inc</state><state>$PROJ_DIR$/../../../../../platform/drivers/inc</state><state>$PROJ_DIR$/../../../../../platform/system/inc</state><state>$PROJ_DIR$/../MMCLIB</state><state>$PROJ_DIR$/../MMCLIB/Common</state><state>$PROJ_DIR$/../MMCLIB/GDFLIB</state><state>$PROJ_DIR$/../MMCLIB/GFLIB</state><state>$PROJ_DIR$/../MMCLIB/GMCLIB</state><state>$PROJ_DIR$/../MMCLIB/MLIB</state><state>$PROJ_DIR$/../project/peripherals</state><state>$PROJ_DIR$/../project</state><state>$PROJ_DIR$/../freemaster</state><state>$PROJ_DIR$/../../../../../platform/CMSIS/Include/device/MKV10Z7</state><state>$PROJ_DIR$/../../../../../platform/hal/src/sim/MKV10Z7</state><state>$PROJ_DIR$/../../..</state></option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -1888,4 +1888,4 @@
   
   
   
-<group><name>startup</name><file><name>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/startup/iar/startup_MKV10Z7.s</name></file><file><name>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/startup/system_MKV10Z7.c</name></file><file><name>$PROJ_DIR$/../../../../../platform/devices/startup.c</name></file><file><name>$PROJ_DIR$/../../../../../platform/devices/startup.h</name></file></group><group><name>utilities</name><file><name>$PROJ_DIR$/../../../../../platform/utilities/src/fsl_debug_console.c</name></file><file><name>$PROJ_DIR$/../../../../../platform/utilities/inc/fsl_debug_console.h</name></file><file><name>$PROJ_DIR$/../../../../../platform/utilities/src/print_scan.c</name></file><file><name>$PROJ_DIR$/../../../../../platform/utilities/src/print_scan.h</name></file></group><group><name>board</name><file><name>$PROJ_DIR$/../../../gpio_pins.c</name></file><file><name>$PROJ_DIR$/../../../gpio_pins.h</name></file><file><name>$PROJ_DIR$/../../../pin_mux.c</name></file><file><name>$PROJ_DIR$/../../../pin_mux.h</name></file><file><name>$PROJ_DIR$/../../../board.c</name></file><file><name>$PROJ_DIR$/../../../board.h</name></file><file><name>$PROJ_DIR$/../freemaster/hardware_init.c</name></file></group><group><name>source</name><group><name>project</name><file><name>$PROJ_DIR$/../project/main.c</name></file><file><name>$PROJ_DIR$/../project/state_machine.c</name></file><file><name>$PROJ_DIR$/../project/M1_StateMachine.c</name></file><file><name>$PROJ_DIR$/../project/demonstration.c</name></file><group><name>peripherals</name><file><name>$PROJ_DIR$/../project/peripherals/MC33927.c</name></file><file><name>$PROJ_DIR$/../project/peripherals/peripherals_init.c</name></file></group></group><group><name>freemaster</name><file><name>$PROJ_DIR$/../freemaster/freemaster_appcmd.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_can.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_Kxx.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_protocol.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_rec.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_scope.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_serial.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_sfio.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_tsa.c</name></file></group></group></project>
+<group><name>startup</name><file><name>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/startup/iar/startup_MKV10Z7.s</name></file><file><name>$PROJ_DIR$/../../../../../platform/devices/MKV10Z7/startup/system_MKV10Z7.c</name></file><file><name>$PROJ_DIR$/../../../../../platform/devices/startup.c</name></file><file><name>$PROJ_DIR$/../../../../../platform/devices/startup.h</name></file></group><group><name>source</name><group><name>project</name><file><name>$PROJ_DIR$/../project/main.c</name></file><file><name>$PROJ_DIR$/../project/state_machine.c</name></file><file><name>$PROJ_DIR$/../project/M1_StateMachine.c</name></file><file><name>$PROJ_DIR$/../project/demonstration.c</name></file><group><name>peripherals</name><file><name>$PROJ_DIR$/../project/peripherals/MC33927.c</name></file><file><name>$PROJ_DIR$/../project/peripherals/peripherals_init.c</name></file></group></group><group><name>freemaster</name><file><name>$PROJ_DIR$/../freemaster/freemaster_appcmd.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_can.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_Kxx.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_protocol.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_rec.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_scope.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_serial.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_sfio.c</name></file><file><name>$PROJ_DIR$/../freemaster/freemaster_tsa.c</name></file></group></group><group><name>board</name><file><name>$PROJ_DIR$/../freemaster/hardware_init.c</name></file><file><name>$PROJ_DIR$/../../../gpio_pins.c</name></file><file><name>$PROJ_DIR$/../../../gpio_pins.h</name></file><file><name>$PROJ_DIR$/../../../pin_mux.c</name></file><file><name>$PROJ_DIR$/../../../pin_mux.h</name></file><file><name>$PROJ_DIR$/../../../board.c</name></file><file><name>$PROJ_DIR$/../../../board.h</name></file></group><group><name>utilities</name><file><name>$PROJ_DIR$/../../../../../platform/utilities/src/fsl_debug_console.c</name></file><file><name>$PROJ_DIR$/../../../../../platform/utilities/inc/fsl_debug_console.h</name></file><file><name>$PROJ_DIR$/../../../../../platform/utilities/src/print_scan.c</name></file><file><name>$PROJ_DIR$/../../../../../platform/utilities/src/print_scan.h</name></file></group></project>

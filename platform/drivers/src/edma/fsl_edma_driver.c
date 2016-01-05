@@ -101,7 +101,7 @@ edma_status_t EDMA_DRV_Init(edma_state_t *edmaState, const edma_user_config_t *u
 #endif
         EDMA_HAL_SetHaltOnErrorCmd(edmaRegBase, !userConfig->notHaltOnError);
 
-#if !defined FSL_FEATURE_EDMA_HAS_ERROR_IRQ
+#if !defined FSL_FEATURE_EDMA_HAS_ERROR_IRQ 
         /* Enable the error interrupt for eDMA module. */
         irqNumber = g_edmaErrIrqId[i];
         INT_SYS_EnableIRQ(irqNumber);
@@ -121,7 +121,7 @@ edma_status_t EDMA_DRV_Init(edma_state_t *edmaState, const edma_user_config_t *u
         dmamuxRegBase = g_dmamuxBase[i];
         /* Enable dmamux clock gate */
         CLOCK_SYS_EnableDmamuxClock(i);
-
+         
         /* Init dmamux module in hardware level */
         DMAMUX_HAL_Init(dmamuxRegBase);
     }
@@ -219,7 +219,8 @@ uint8_t EDMA_DRV_RequestChannel(
         {
             if (map & (1U << i))
             {
-                for (j = i * FSL_FEATURE_DMAMUX_MODULE_CHANNEL; j < (i + 1) * FSL_FEATURE_DMAMUX_MODULE_CHANNEL; j++)
+                for (j = i * FSL_FEATURE_DMAMUX_MODULE_CHANNEL/FSL_FEATURE_EDMA_CHANNEL_GROUP_COUNT;
+                        j < (i + 1) * FSL_FEATURE_DMAMUX_MODULE_CHANNEL/FSL_FEATURE_EDMA_CHANNEL_GROUP_COUNT; j++)
                 {
                     EDMA_DRV_LOCK();
                     if (!g_edma->chn[j])
@@ -333,30 +334,7 @@ static void EDMA_DRV_ClearIntStatus(uint8_t channel)
     EDMA_HAL_ClearIntStatusFlag(edmaRegBase, (edma_channel_indicator_t)edmaChannel);
 }
 
-#if (FSL_FEATURE_EDMA_MODULE_CHANNEL <= 16U)
-/*FUNCTION**********************************************************************
- *
- * Function Name : EDMA_IRQ_HANDLER
- * Description   : EDMA IRQ handler.
- *
- *END**************************************************************************/
-void EDMA_DRV_IRQHandler(uint8_t channel)
-{
-    edma_chn_state_t *chn = g_edma->chn[channel];
-
-    if (!chn)
-    {
-        return;
-    }
-
-    EDMA_DRV_ClearIntStatus(channel);
-
-    if (chn->callback)
-    {
-        chn->callback(chn->parameter, chn->status);
-    }
-}
-#else
+#if (FSL_FEATURE_EDMA_MODULE_CHANNEL == 32U)
 /*FUNCTION**********************************************************************
  *
  * Function Name : EDMA_IRQ_HANDLER
@@ -385,6 +363,61 @@ void EDMA_DRV_IRQHandler(uint8_t channel)
         channel += 16;
         edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
         edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
+    }
+}
+#elif (FSL_FEATURE_EDMA_MODULE_CHANNEL == 8U)
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : EDMA_IRQ_HANDLER
+ * Description   : EDMA IRQ handler.This handler is for EDMA module in which
+ * 				   channel n share the irq number with channel (n + 4)
+ *
+ *END**************************************************************************/
+void EDMA_DRV_IRQHandler(uint8_t channel)
+{
+    edma_chn_state_t *chn = g_edma->chn[channel];
+    DMA_Type * edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+    uint32_t edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
+
+    while (channel < 8)
+    {
+        chn = g_edma->chn[channel];
+
+        if ((chn != NULL) && (EDMA_HAL_GetIntStatusFlag(edmaRegBase, edmaChannel) != 0))
+        {
+            EDMA_DRV_ClearIntStatus(channel);
+            if (chn->callback)
+            {
+                chn->callback(chn->parameter, chn->status);
+            }
+        }
+        channel += 4;
+        edmaRegBase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(channel);
+        edmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(channel);
+    }
+}
+#else
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : EDMA_IRQ_HANDLER
+ * Description   : EDMA IRQ handler.
+ *
+ *END**************************************************************************/
+void EDMA_DRV_IRQHandler(uint8_t channel)
+{
+    edma_chn_state_t *chn = g_edma->chn[channel];
+
+    if (!chn)
+    {
+        EDMA_DRV_StopChannel(chn);
+        return;
+    }
+
+    EDMA_DRV_ClearIntStatus(channel);
+
+    if (chn->callback)
+    {
+        chn->callback(chn->parameter, chn->status);
     }
 }
 #endif

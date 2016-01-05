@@ -85,6 +85,7 @@ typedef struct hid_device_struct
     usb_class_specific_callback_struct_t         class_specific_callback;
     usb_desc_request_notify_struct_t             desc_callback;
     hid_endpoint_data_struct_t                   hid_endpoint_data;
+    uint8_t                                      controller_id;
 }hid_device_struct_t;
  
 /******************************************************************************

@@ -90,6 +90,29 @@ uint32_t CLOCK_HAL_TestOscFreq(MCG_Type * base, mcg_oscsel_select_t oscselVal)
     return extFreq;
 }
 
+/*FUNCTION******************************************************************************
+ *
+ * Function name : CLOCK_HAL_PrepareOsc
+ * Description  : This function selects the OSC as clock source, and wait for it
+ * is stable.
+ *
+ *END***********************************************************************************/
+void CLOCK_HAL_PrepareOsc(MCG_Type * base, mcg_oscsel_select_t setting)
+{
+#if FSL_FEATURE_MCG_USE_OSCSEL
+    MCG_BWR_C7_OSCSEL(base, setting);
+    if (kMcgOscselOsc == setting)
+#endif
+    {
+#if FSL_FEATURE_SOC_OSC_COUNT 
+        if (MCG_BRD_C2_EREFS(base))
+        {
+            while(!CLOCK_HAL_IsOsc0Stable(base)){}
+        }
+#endif        
+    }
+}
+
 /*FUNCTION**********************************************************************
  *
  * Function Name : CLOCK_HAL_GetMcgExternalClkFreq
@@ -307,6 +330,37 @@ void CLOCK_HAL_UpdateFastClkInternalRefDiv(MCG_Type * base, uint8_t fcrdiv)
 
 /*FUNCTION**********************************************************************
  *
+ * Function Name : CLOCK_HAL_UpdateInternalRefClk
+ * Description   : This function setup the MCGIRCLK.
+ *
+ *END**************************************************************************/
+void CLOCK_HAL_UpdateInternalRefClk(MCG_Type      *base,
+                                    mcg_irc_mode_t ircs,
+                                    uint8_t        fcrdiv,
+                                    bool           enableInStop)
+{
+    if (kMcgIrcFast == ircs)
+    {
+        CLOCK_HAL_UpdateFastClkInternalRefDiv(base, fcrdiv);
+        /* Switch to fast IRC. */
+        CLOCK_HAL_SetInternalRefClkMode(base, kMcgIrcFast);
+        while (kMcgIrcFast != CLOCK_HAL_GetInternalRefClkMode(base)) {}
+    }
+    else
+    {
+        /* Switch to slow IRC. */
+        CLOCK_HAL_SetInternalRefClkMode(base, kMcgIrcSlow);
+        while (kMcgIrcSlow != CLOCK_HAL_GetInternalRefClkMode(base)) {}
+    }
+
+    // Enable MCGIRCLK.
+    MCG_WR_C1(base, (MCG_RD_C1(base) & ~MCG_C1_IREFSTEN_MASK)
+                                     |  MCG_C1_IRCLKEN_MASK
+                                     |  MCG_C1_IREFSTEN(enableInStop));
+}
+
+/*FUNCTION**********************************************************************
+ *
  * Function Name : CLOCK_HAL_GetAvailableFrdiv
  * Description   : This fucntion calculates the proper FRDIV setting according
  * to FLL reference clock.
@@ -377,7 +431,7 @@ mcg_status_t CLOCK_HAL_GetAvailableFrdiv(osc_range_t range0,
 }
 
 #if FSL_FEATURE_MCG_HAS_PLL
-
+#if (FSL_FEATURE_MCG_HAS_PLL_PRDIV ) && ( FSL_FEATURE_MCG_HAS_PLL_VDIV )
 /*FUNCTION**********************************************************************
  *
  * Function Name : CLOCK_HAL_CalculatePllDiv
@@ -470,6 +524,7 @@ uint32_t CLOCK_HAL_CalculatePllDiv(uint32_t refFreq,
         /* PRDIV/VDIV found. */
         *prdiv = ret_prdiv - FSL_FEATURE_MCG_PLL_PRDIV_BASE;
         *vdiv  = ret_vdiv  - FSL_FEATURE_MCG_PLL_VDIV_BASE;
+        ret_freq = (refFreq / ret_prdiv) * ret_vdiv;
 #if FSL_FEATURE_MCG_HAS_PLL_INTERNAL_DIV
         return ret_freq / 2U;
 #else
@@ -563,6 +618,88 @@ void CLOCK_HAL_EnablePll0InFllMode(MCG_Type * base,
                  |   MCG_C5_PRDIV0(prdiv));
     while(!CLOCK_HAL_IsPll0Locked(base)) {} // Wait until locked.
 }
+
+#else
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CLOCK_HAL_GetPll0RefFreq
+ * Description   : Get PLL0 external reference clock frequency, it is
+ * selected by PLL32KREFSEL, for kinetis M series.
+ *
+ *END**************************************************************************/
+uint32_t CLOCK_HAL_GetPll0RefFreq(MCG_Type * base)
+{
+    uint32_t pll0RefFreq;
+    mcg_pll_ref_clock_source_t pll0RefSrc;
+
+    pll0RefSrc = (mcg_pll_ref_clock_source_t)MCG_RD_C7_PLL32KREFSEL(base);
+
+    switch(pll0RefSrc)
+    {
+    case kMcgPllRefClkSrcRtc:
+          pll0RefFreq = g_xtalRtcClkFreq;
+          break;
+    case kMcgPllRefClkSrcSlowIrc:
+          pll0RefFreq = g_xtalRtcClkFreq;
+          break;
+    case kMcgPllRefClkSrcFllExtRef:
+          /* Note: Before enter PEE or PBE mode, the IREFS shall be set to 0 */
+          pll0RefFreq = CLOCK_HAL_GetFllRefClk(base); /* SELECT EXT REF FOR FLL */
+          break;
+    default:
+          pll0RefFreq = 0;
+          break;
+    }
+
+    if((pll0RefFreq < kMcgConstant31250) || (pll0RefFreq > kMcgConstant39063))
+    {
+        return 0;
+    }
+    else
+    {
+        return pll0RefFreq;
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CLOCK_HAL_GetPll0clk
+ * Description   : Get the current mcg pll/pll0 clock
+ * This function will return the mcgpllclk/mcgpll0 value in frequency(hz) based
+ * on current mcg configurations and settings. PLL/PLL0 should be properly
+ * configured in order to get the valid value.
+ *
+ *END**************************************************************************/
+uint32_t CLOCK_HAL_GetPll0Clk(MCG_Type * base)
+{
+    uint32_t mcgpll0clk;
+
+    mcgpll0clk = CLOCK_HAL_GetPll0RefFreq(base);
+    mcgpll0clk *= 375U;
+
+#if FSL_FEATURE_MCG_HAS_PLL_INTERNAL_DIV
+    mcgpll0clk >>= 1U;
+#endif
+    return mcgpll0clk;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : CLOCK_HAL_EnablePll0InFllMode
+ * Description   : Enable PLL0 when MCG is in FLL mode.
+ *
+ *END**************************************************************************/
+void CLOCK_HAL_EnablePll0InFllMode(MCG_Type * base,
+                                   bool enableInStop)
+{
+    MCG_WR_C5(base, (MCG_RD_C5(base)
+                 & ~(MCG_C5_PLLSTEN0_MASK))
+                 |   MCG_C5_PLLCLKEN0_MASK
+                 |   MCG_C5_PLLSTEN0(enableInStop)
+              );
+    while(!CLOCK_HAL_IsPll0Locked(base)) {} // Wait until locked.
+}
+#endif
 #endif
 
 #if FSL_FEATURE_MCG_HAS_PLL1

@@ -124,7 +124,7 @@ extern "C" {
  * This function uses a DMA-driven method for transferring data.
  * This function initializes the run-time state structure to track the ongoing
  * transfers, ungates the clock to the DSPI module, resets the DSPI module, initializes the module
- * to user defined settings and default settings, configures the IRQ state structure, enables
+ * to user-defined settings and default settings, configures the IRQ state structure, enables
  * the module-level interrupt to the core, and enables the DSPI module.
  * The CTAR parameter is special in that it allows the user to have different SPI devices
  * connected to the same DSPI module instance in addition to different peripheral chip
@@ -197,11 +197,11 @@ dspi_status_t DSPI_DRV_EdmaMasterDeinit(uint32_t instance);
  *                        is not adjustable for continuous clock mode because this delay is fixed at
  *                        one SCK period.
  *
- * Each of the above delay parameters use both a pre-scalar and scalar value to calculate the
- * needed delay. This function takes in as a parameter the desired delay type and the
+ * Each of the above delay parameters uses both a pre-scalar and scalar value to calculate the
+ * needed delay. This function takes  the desired delay type as a parameter and the
  * delay value (in nanoseconds), calculates the values needed for the prescaler and scaler.
  * Returning the actual calculated delay as an exact delay match may not be possible. In this
- * case, the closest match is calculated without going below the desired delay value input.
+ * situation, the closest match is calculated without going below the desired delay value input.
  * It is possible to input a very large delay value that exceeds the capability of the part, in
  * which case the maximum supported delay is returned.  In addition, the function returns
  * an out-of-range status.
@@ -228,14 +228,14 @@ dspi_status_t DSPI_DRV_EdmaMasterSetDelay(uint32_t instance, dspi_delay_type_t w
  * @brief Configures the DSPI port physical parameters to access a device on the bus with the EDMA
  *        support.
  *
- * The term "device" is used to indicate the SPI device for which the DSPI master is communicating.
+ * The term "device" describes the SPI device for which the DSPI master is communicating.
  * The user has two options to configure the device parameters: pass in the
  * pointer to the device configuration structure to the desired transfer function (see
  * DSPI_DRV_EdmaMasterTransferBlocking or DSPI_DRV_EdmaMasterTransfer) or pass it in to the
  * DSPI_DRV_EdmaMasterConfigureBus function.  The user can pass in a device structure to the
  * transfer function which contains the parameters for the bus (the transfer function then calls
- * this function). However, the user has the option to call this function directly especially
- * to get the calculated baud rate, at which point they may pass in NULL for the device
+ * this function). However, the user has the option to call this function directly 
+ * to get the calculated baud rate, at which point, the user may pass in NULL for the device
  * structure in the transfer function (assuming they have called this configure bus function
  * first). This is an example to set up the dspi_device_t structure to call
  * the DSPI_DRV_EdmaMasterConfigureBus function by passing in these parameters:
@@ -369,7 +369,7 @@ dspi_status_t DSPI_DRV_EdmaMasterAbortTransfer(uint32_t instance);
 
 /*!
  * @brief Interrupt handler for DSPI master mode.
- * This handler uses the buffers stored in the dspi_master_state_t structs to transfer data.
+ * This handler uses the buffers stored in the dspi_master_state_t structures to transfer data.
  *
  * @param instance The instance number of the DSPI peripheral.
  */

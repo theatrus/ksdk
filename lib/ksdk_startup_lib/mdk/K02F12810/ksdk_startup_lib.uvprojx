@@ -341,8 +341,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>DEBUG, CPU_MK02FN128VFM10, FRDM_KL02Z, FREEDOM</Define>
+              <Define>DEBUG, CPU_MK02FN128VFM10</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MK02F12810/include;../../../../platform/devices/MK02F12810/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>
@@ -719,8 +720,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>NDEBUG, CPU_MK02FN128VFM10, FRDM_KL02Z, FREEDOM</Define>
+              <Define>NDEBUG, CPU_MK02FN128VFM10</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MK02F12810/include;../../../../platform/devices/MK02F12810/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>

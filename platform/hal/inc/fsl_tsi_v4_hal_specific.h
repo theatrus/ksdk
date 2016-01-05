@@ -160,7 +160,7 @@ typedef enum _tsi_channel_number {
  * @brief TSI configuration structure.
  *
  * This structure contains the settings for the most common TSI configurations including
- * the TSI module charge currents, number of scans, thresholds etc.
+ * the TSI module charge currents, number of scans, thresholds, and so on.
  */
 typedef struct TsiConfig {
     tsi_electrode_osc_prescaler_t ps;       /*!< Prescaler */
@@ -189,17 +189,7 @@ extern "C" {
 #endif
 
 /*!
- * @brief Enable low power for TSI module.
- *
- * @param   base TSI module base address.
- *
- * @return  none
- *
- */
-void TSI_HAL_EnableLowPower(TSI_Type * base);
-
-/*!
-* @brief Enable out of range interrupt.
+* @brief Enables an out-of-range interrupt.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -211,7 +201,7 @@ static inline void TSI_HAL_EnableOutOfRangeInterrupt(TSI_Type * base)
 }
 
 /*!
-* @brief Enable end of scan interrupt.
+* @brief Enables the end of the scan interrupt.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -223,7 +213,7 @@ static inline void TSI_HAL_EnableEndOfScanInterrupt(TSI_Type * base)
 }
 
 /*!
-* @brief Enable Touch Sensing Input Module.
+* @brief Enables the Touch Sensing Input Module.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -235,7 +225,7 @@ static inline void TSI_HAL_EnableModule(TSI_Type * base)
 }
 
 /*!
-* @brief Disable Touch Sensing Input Module.
+* @brief Disables the Touch Sensing Input Module.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -247,7 +237,7 @@ static inline void TSI_HAL_DisableModule(TSI_Type * base)
 }
 
 /*!
-* @brief Enable TSI module interrupt.
+* @brief Enables the TSI module interrupt.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -259,7 +249,7 @@ static inline void TSI_HAL_EnableInterrupt(TSI_Type * base)
 }
 
 /*!
-* @brief Disable TSI interrupt.
+* @brief Disables the TSI interrupt.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -271,7 +261,7 @@ static inline void TSI_HAL_DisableInterrupt(TSI_Type * base)
 }
 
 /*!
-* @brief Get interrupt enable flag.
+* @brief Gets the interrupt enable flag.
 *
 * @param    base TSI module base address.
 * @return   State of enable interrupt flag.
@@ -282,7 +272,7 @@ static inline uint32_t TSI_HAL_IsInterruptEnabled(TSI_Type * base)
 }
 
 /*!
-* @brief Get TSI STOP enable.
+* @brief Gets the TSI STOP enable.
 *
 * @param    base    TSI module base address.
 * @return   Number of scans.
@@ -293,7 +283,7 @@ static inline uint32_t TSI_HAL_GetEnableStop(TSI_Type * base)
 }
 
 /*!
-* @brief Set TSI STOP enable. This enables TSI module function in low power modes.
+* @brief Sets the TSI STOP enable. This enables TSI module function in low power modes.
 *
 * @param    base    TSI module base address.
 * @return   None.
@@ -305,7 +295,7 @@ static inline void TSI_HAL_EnableStop(TSI_Type * base)
 }
 
 /*!
-* @brief Set TSI STOP disable. The TSI is disabled in low power modes.
+* @brief Sets the TSI STOP disable. The TSI is disabled in low power modes.
 *
 * @param    base    TSI module base address.
 * @return   None.
@@ -317,7 +307,7 @@ static inline void TSI_HAL_DisableStop(TSI_Type * base)
 }
 
 /*!
-* @brief Enable periodical (hardware) trigger scan.
+* @brief Enables the periodical (hardware) trigger scan.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -329,7 +319,7 @@ static inline void TSI_HAL_EnableHardwareTriggerScan(TSI_Type * base)
 }
 
 /*!
-* @brief Enable periodical (hardware) trigger scan.
+* @brief Enables the periodical (hardware) trigger scan.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -341,8 +331,8 @@ static inline void TSI_HAL_EnableSoftwareTriggerScan(TSI_Type * base)
 }
 
 /*!
-* @brief The current sources (CURSW) of electrode oscillator and reference
-* oscillator are swapped.
+* @brief Swaps the current sources (CURSW) of electrode oscillator and reference
+* oscillator.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -354,8 +344,8 @@ static inline void TSI_HAL_CurrentSourcePairSwapped(TSI_Type * base)
 }
 
 /*!
-* @brief The current sources (CURSW) of electrode oscillator and reference
-* oscillator are not swapped.
+* @brief Does not swap the current sources (CURSW) of electrode oscillator and reference
+* oscillator.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -367,7 +357,7 @@ static inline void TSI_HAL_CurrentSourcePairNotSwapped(TSI_Type * base)
 }
 
 /*!
-* @brief Get current source pair swapped status.
+* @brief Gets the current source pair swapped status.
 *
 * @param    base TSI module base address.
 * @return   Current source pair swapped status.
@@ -378,7 +368,7 @@ static inline uint32_t TSI_HAL_GetCurrentSourcePairSwapped(TSI_Type * base)
 }
 
 /*!
-* @brief Clear out of range flag.
+* @brief Clears an out-of-range flag.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -390,7 +380,7 @@ static inline void TSI_HAL_ClearOutOfRangeFlag(TSI_Type * base)
 
 
 /*!
-* @brief Clear end of scan flag.
+* @brief Clears the end of scan flag.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -401,7 +391,7 @@ static inline void TSI_HAL_ClearEndOfScanFlag(TSI_Type * base)
 }
 
 /*!
-* @brief Set prescaler.
+* @brief Sets the prescaler.
 *
 * @param    base    TSI module base address.
 * @param    prescaler   Prescaler value.
@@ -415,7 +405,7 @@ static inline void TSI_HAL_SetPrescaler(TSI_Type * base, tsi_electrode_osc_presc
 }
 
 /*!
-* @brief Set number of scans (NSCN).
+* @brief Sets the number of scans (NSCN).
 *
 * @param    base    TSI module base address.
 * @param    number      Number of scans.
@@ -429,7 +419,7 @@ static inline void TSI_HAL_SetNumberOfScans(TSI_Type * base, tsi_n_consecutive_s
 }
 
 /*!
-* @brief Set the measured channel number.
+* @brief Sets the the measured channel number.
 *
 * @param    base    TSI module base address.
 * @param    channel     Channel number 0 ... 15.
@@ -442,7 +432,7 @@ static inline void TSI_HAL_SetMeasuredChannelNumber(TSI_Type * base, uint32_t ch
 }
 
 /*!
-* @brief Get the measured channel number.
+* @brief Gets the measured channel number.
 *
 * @param    base    TSI module base address.
 * @return   uint32_t    Channel number 0 ... 15.
@@ -464,7 +454,7 @@ static inline void TSI_HAL_DmaTransferEnable(TSI_Type * base)
 }
 
 /*!
-* @brief DMA transfer disable - do not generate DMA transfer request.
+* @brief DMA transfer disable - does not generate DMA transfer request.
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -475,7 +465,7 @@ static inline void TSI_HAL_DmaTransferDisable(TSI_Type * base)
 }
 
 /*!
-* @brief Get DMA transfer enable flag.
+* @brief Gets the DMA transfer enable flag.
 *
 * @param    base TSI module base address.
 * @return   State of enable module flag.
@@ -486,7 +476,7 @@ static inline uint32_t TSI_HAL_IsDmaTransferEnable(TSI_Type * base)
 }
 
 /*!
-* @brief Start measurement (trigger the new measurement).
+* @brief Starts measurement (trigger the new measurement).
 *
 * @param    base TSI module base address.
 * @return   None.
@@ -497,7 +487,7 @@ static inline void TSI_HAL_StartSoftwareTrigger(TSI_Type * base)
 }
 
 /*!
-* @brief Get conversion counter value.
+* @brief Gets the conversion counter value.
 *
 * @param    base TSI module base address.
 * @return   Accumulated scan counter value ticked by the reference clock.
@@ -508,7 +498,7 @@ static inline uint32_t TSI_HAL_GetCounter(TSI_Type * base)
 }
 
 /*!
-* @brief Set TSI wake-up channel low threshold.
+* @brief Sets the TSI wake-up channel low threshold.
 *
 * @param    base        TSI module base address.
 * @param    low_threshold   Low counter threshold.
@@ -521,7 +511,7 @@ static inline void TSI_HAL_SetLowThreshold(TSI_Type * base, uint32_t low_thresho
 }
 
 /*!
-* @brief Set TSI wake-up channel high threshold.
+* @brief Sets the TSI wake-up channel high threshold.
 *
 * @param    base        TSI module base address.
 * @param    high_threshold  High counter threshold.
@@ -534,7 +524,7 @@ static inline void TSI_HAL_SetHighThreshold(TSI_Type * base, uint32_t high_thres
 }
 
 /*!
-* @brief Set analog mode of the TSI module.
+* @brief Sets the analog mode of the TSI module.
 *
 * @param    base    TSI module base address.
 * @param    mode   Mode value.
@@ -548,7 +538,7 @@ static inline void TSI_HAL_SetMode(TSI_Type * base, tsi_analog_mode_select_t mod
 }
 
 /*!
-* @brief Get analog mode of the TSI module.
+* @brief Gets the analog mode of the TSI module.
 *
 * @param    base    TSI module base address.
 * @return   tsi_analog_mode_select_t   Mode value.
@@ -559,7 +549,7 @@ static inline tsi_analog_mode_select_t TSI_HAL_GetMode(TSI_Type * base)
 }
 
 /*!
-* @brief Get analog mode of the TSI module.
+* @brief Gets the analog mode of the TSI module.
 *
 * @param    base    TSI module base address.
 * @return   tsi_analog_mode_select_t   Mode value.
@@ -572,7 +562,7 @@ static inline uint32_t TSI_HAL_GetNoiseResult(TSI_Type * base)
 }
 
 /*!
-* @brief Set the reference oscilator charge current.
+* @brief Sets the reference oscillator charge current.
 *
 * @param    base    TSI module base address.
 * @param    current     The charge current.
@@ -586,7 +576,7 @@ static inline void TSI_HAL_SetReferenceChargeCurrent(TSI_Type * base, tsi_refere
 }
 
 /*!
-* @brief Get the reference oscilator charge current.
+* @brief Gets the reference oscillator charge current.
 *
 * @param    base    TSI module base address.
 * @return   tsi_reference_osc_charge_current_t The charge current.
@@ -597,7 +587,7 @@ static inline tsi_reference_osc_charge_current_t TSI_HAL_GetReferenceChargeCurre
 }
 
 /*!
-* @brief Set the oscilator's volatage rails.
+* @brief Sets the oscillator's voltage rails.
 *
 * @param    base    TSI module base address.
 * @param    dvolt     The voltage rails.
@@ -611,7 +601,7 @@ static inline void TSI_HAL_SetOscilatorVoltageRails(TSI_Type * base, tsi_oscilat
 }
 
 /*!
-* @brief Get the oscilator's volatage rails.
+* @brief Gets the oscillator's voltage rails.
 *
 * @param    base    TSI module base address.
 * @return   dvolt     The voltage rails..
@@ -622,7 +612,7 @@ static inline tsi_oscilator_voltage_rails_t TSI_HAL_GetOscilatorVoltageRails(TSI
 }
 
 /*!
-* @brief Set external electrode charge current.
+* @brief Sets the external electrode charge current.
 *
 * @param    base    TSI module base address.
 * @param    current     Electrode current.
@@ -636,7 +626,7 @@ static inline void TSI_HAL_SetElectrodeChargeCurrent(TSI_Type * base, tsi_extern
 }
 
 /*!
-* @brief Get electrode charge current.
+* @brief Gets the electrode charge current.
 *
 * @param   base    TSI module base address.
 * @return  Charge current.

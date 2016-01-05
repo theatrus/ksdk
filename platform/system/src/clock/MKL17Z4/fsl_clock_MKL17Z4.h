@@ -488,7 +488,7 @@ static inline clock_flexio_src_t CLOCK_SYS_GetFlexioSrc(uint32_t instance)
  */
 uint32_t CLOCK_SYS_GetSaiFreq(uint32_t instance, clock_sai_src_t saiSrc);
 
-#if FSL_FEATURE_SOC_LCD_COUNT
+#if FSL_FEATURE_SOC_SLCD_COUNT
 /*!
  * @brief Gets the frequency for SLCD default clock.
  *
@@ -527,7 +527,7 @@ static inline uint32_t CLOCK_SYS_GetSlcdAlt2Freq(uint32_t instance)
 {
     return CLOCK_SYS_GetOsc0ExternalRefClockFreq();
 }
-#endif// FSL_FEATURE_SOC_LCD_COUNT
+#endif// FSL_FEATURE_SOC_SLCD_COUNT
 
 /*!
 * @brief Gets the clock frequency for FTF module. (Flash Memory)
@@ -660,7 +660,7 @@ void CLOCK_SYS_DisablePortClock(uint32_t instance);
 */
 bool CLOCK_SYS_GetPortGateCmd(uint32_t instance);
 
-#if FSL_FEATURE_SOC_LCD_COUNT
+#if FSL_FEATURE_SOC_SLCD_COUNT
 /*!
 * @brief Enable the clock for SLCD module.
 *
@@ -694,7 +694,7 @@ static inline bool CLOCK_SYS_GetSlcdGateCmd(uint32_t instance)
 {
     return SIM_HAL_GetGateCmd(SIM, kSimClockGateSlcd0);
 }
-#endif// FSL_FEATURE_SOC_LCD_COUNT
+#endif// FSL_FEATURE_SOC_SLCD_COUNT
 
 /*!
 * @brief Enable the clock for FTF module.

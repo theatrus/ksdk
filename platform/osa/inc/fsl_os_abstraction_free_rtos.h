@@ -110,9 +110,9 @@ typedef xSemaphoreHandle semaphore_t;
 /*! @brief Type for an event flags object.*/
 typedef EventBits_t      event_flags_t;
 
-/*! @brief Type for an event group object in FreeRTOS */
+/*! @brief Type for an event group object in FreeRTOS OS */
 typedef struct EventFreertos {
-    EventGroupHandle_t eventHandler;    /*!< FreeRTOS event handler       */
+    EventGroupHandle_t eventHandler;    /*!< FreeRTOS OS event handler       */
     osa_event_clear_mode_t clearMode;   /*!< Auto clear or manual clear   */
 } event_freertos;
 
@@ -134,6 +134,9 @@ typedef xQueueHandle  msg_queue_handler_t;
 
 /*! @brief The default interrupt handler installed in vector table. */
 #define OSA_DEFAULT_INT_HANDLER  ((osa_int_handler_t)(&DefaultISR))
+
+/*! @brief The Max depth of Enter/Exist Critical could be nested in interrupt. */
+#define OSA_MAX_ISR_CRITICAL_SECTION_DEPTH 0x8U
 
 extern void DefaultISR(void);
 

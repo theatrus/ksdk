@@ -1,22 +1,8 @@
 /*
-    FreeRTOS V8.0.0 - Copyright (C) 2014 Real Time Engineers Ltd.
+    FreeRTOS V8.2.0 - Copyright (C) 2015 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
-
-    ***************************************************************************
-     *                                                                       *
-     *    FreeRTOS provides completely free yet professionally developed,    *
-     *    robust, strictly quality controlled, supported, and cross          *
-     *    platform software that has become a de facto standard.             *
-     *                                                                       *
-     *    Help yourself get started quickly and support the FreeRTOS         *
-     *    project by purchasing a FreeRTOS tutorial book, reference          *
-     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
-     *                                                                       *
-     *    Thank you!                                                         *
-     *                                                                       *
-    ***************************************************************************
 
     This file is part of the FreeRTOS distribution.
 
@@ -24,37 +10,55 @@
     the terms of the GNU General Public License (version 2) as published by the
     Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>! NOTE: The modification to the GPL is included to allow you to distribute
-    >>! a combined work that includes FreeRTOS without being obliged to provide
-    >>! the source code for proprietary components outside of the FreeRTOS
-    >>! kernel.
+	***************************************************************************
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
+	***************************************************************************
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    FOR A PARTICULAR PURPOSE.  Full license text is available on the following
     link: http://www.freertos.org/a00114.html
 
-    1 tab == 4 spaces!
-
     ***************************************************************************
      *                                                                       *
-     *    Having a problem?  Start by reading the FAQ "My application does   *
-     *    not run, what could be wrong?"                                     *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that is more than just the market leader, it     *
+     *    is the industry's de facto standard.                               *
      *                                                                       *
-     *    http://www.FreeRTOS.org/FAQHelp.html                               *
+     *    Help yourself get started quickly while simultaneously helping     *
+     *    to support the FreeRTOS project by purchasing a FreeRTOS           *
+     *    tutorial book, reference manual, or both:                          *
+     *    http://www.FreeRTOS.org/Documentation                              *
      *                                                                       *
     ***************************************************************************
 
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
-    license and Real Time Engineers Ltd. contact details.
+    http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
+	the FAQ page "My application does not run, what could be wrong?".  Have you
+	defined configASSERT()?
+
+	http://www.FreeRTOS.org/support - In return for receiving this top quality
+	embedded software for free we request you assist our global community by
+	participating in the support forum.
+
+	http://www.FreeRTOS.org/training - Investing in training allows your team to
+	be as productive as possible as early as possible.  Now you can receive
+	FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
+	Ltd, and the world's leading authority on the world's leading RTOS.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool, a DOS
     compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
-    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
-    licenses offer ticketed support, indemnification and middleware.
+    http://www.FreeRTOS.org/labs - Where new FreeRTOS products go to incubate.
+    Come and try FreeRTOS+TCP, our new open source TCP/IP stack for FreeRTOS.
+
+    http://www.OpenRTOS.com - Real Time Engineers ltd. license FreeRTOS to High
+    Integrity Systems ltd. to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and commercial middleware.
 
     http://www.SafeRTOS.com - High Integrity Systems also provide a safety
     engineered and independently SIL3 certified version for use in safety and
@@ -68,13 +72,13 @@
 #define TIMERS_H
 
 #ifndef INC_FREERTOS_H
-        #error "include FreeRTOS.h must appear in source files before include timers.h"
+	#error "include FreeRTOS.h must appear in source files before include timers.h"
 #endif
 
 /*lint -e537 This headers are only multiply included if the application code
 happens to also be including task.h. */
 #include "task.h"
-/*lint +e956 */
+/*lint +e537 */
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,20 +93,20 @@ be used solely through the macros that make up the public software timer API,
 as defined below.  The commands that are sent from interrupts must use the
 highest numbers as tmrFIRST_FROM_ISR_COMMAND is used to determine if the task
 or interrupt version of the queue send function should be used. */
-#define tmrCOMMAND_EXECUTE_CALLBACK_FROM_ISR    ( ( BaseType_t ) -2 )
-#define tmrCOMMAND_EXECUTE_CALLBACK                             ( ( BaseType_t ) -1 )
-#define tmrCOMMAND_START_DONT_TRACE                             ( ( BaseType_t ) 0 )
-#define tmrCOMMAND_START                                            ( ( BaseType_t ) 1 )
-#define tmrCOMMAND_RESET                                                ( ( BaseType_t ) 2 )
-#define tmrCOMMAND_STOP                                                 ( ( BaseType_t ) 3 )
-#define tmrCOMMAND_CHANGE_PERIOD                                ( ( BaseType_t ) 4 )
-#define tmrCOMMAND_DELETE                                               ( ( BaseType_t ) 5 )
+#define tmrCOMMAND_EXECUTE_CALLBACK_FROM_ISR 	( ( BaseType_t ) -2 )
+#define tmrCOMMAND_EXECUTE_CALLBACK				( ( BaseType_t ) -1 )
+#define tmrCOMMAND_START_DONT_TRACE				( ( BaseType_t ) 0 )
+#define tmrCOMMAND_START					    ( ( BaseType_t ) 1 )
+#define tmrCOMMAND_RESET						( ( BaseType_t ) 2 )
+#define tmrCOMMAND_STOP							( ( BaseType_t ) 3 )
+#define tmrCOMMAND_CHANGE_PERIOD				( ( BaseType_t ) 4 )
+#define tmrCOMMAND_DELETE						( ( BaseType_t ) 5 )
 
-#define tmrFIRST_FROM_ISR_COMMAND                               ( ( BaseType_t ) 6 )
-#define tmrCOMMAND_START_FROM_ISR                               ( ( BaseType_t ) 6 )
-#define tmrCOMMAND_RESET_FROM_ISR                               ( ( BaseType_t ) 7 )
-#define tmrCOMMAND_STOP_FROM_ISR                                ( ( BaseType_t ) 8 )
-#define tmrCOMMAND_CHANGE_PERIOD_FROM_ISR               ( ( BaseType_t ) 9 )
+#define tmrFIRST_FROM_ISR_COMMAND				( ( BaseType_t ) 6 )
+#define tmrCOMMAND_START_FROM_ISR				( ( BaseType_t ) 6 )
+#define tmrCOMMAND_RESET_FROM_ISR				( ( BaseType_t ) 7 )
+#define tmrCOMMAND_STOP_FROM_ISR				( ( BaseType_t ) 8 )
+#define tmrCOMMAND_CHANGE_PERIOD_FROM_ISR		( ( BaseType_t ) 9 )
 
 
 /**
@@ -125,11 +129,11 @@ typedef void (*TimerCallbackFunction_t)( TimerHandle_t xTimer );
 typedef void (*PendedFunction_t)( void *, uint32_t );
 
 /**
- * TimerHandle_t xTimerCreate(  const char * const pcTimerName,
- *                                                              TickType_t xTimerPeriodInTicks,
- *                                                              UBaseType_t uxAutoReload,
- *                                                              void * pvTimerID,
- *                                                              TimerCallbackFunction_t pxCallbackFunction );
+ * TimerHandle_t xTimerCreate( 	const char * const pcTimerName,
+ * 								TickType_t xTimerPeriodInTicks,
+ * 								UBaseType_t uxAutoReload,
+ * 								void * pvTimerID,
+ * 								TimerCallbackFunction_t pxCallbackFunction );
  *
  * Creates a new software timer instance.  This allocates the storage required
  * by the new timer, initialises the new timers internal state, and returns a
@@ -164,7 +168,7 @@ typedef void (*PendedFunction_t)( void *, uint32_t );
  *
  * @param pxCallbackFunction The function to call when the timer expires.
  * Callback functions must have the prototype defined by TimerCallbackFunction_t,
- * which is     "void vCallbackFunction( TimerHandle_t xTimer );".
+ * which is	"void vCallbackFunction( TimerHandle_t xTimer );".
  *
  * @return If the timer is successfully created then a handle to the newly
  * created timer is returned.  If the timer cannot be created (because either
@@ -190,8 +194,8 @@ typedef void (*PendedFunction_t)( void *, uint32_t );
  * int32_t lArrayIndex;
  * const int32_t xMaxExpiryCountBeforeStopping = 10;
  *
- *         // Optionally do something if the pxTimer parameter is NULL.
- *         configASSERT( pxTimer );
+ * 	   // Optionally do something if the pxTimer parameter is NULL.
+ * 	   configASSERT( pxTimer );
  *
  *     // Which timer expired?
  *     lArrayIndex = ( int32_t ) pvTimerGetTimerID( pxTimer );
@@ -420,9 +424,9 @@ TaskHandle_t xTimerGetTimerDaemonTaskHandle( void );
 #define xTimerStop( xTimer, xTicksToWait ) xTimerGenericCommand( ( xTimer ), tmrCOMMAND_STOP, 0U, NULL, ( xTicksToWait ) )
 
 /**
- * BaseType_t xTimerChangePeriod(       TimerHandle_t xTimer,
- *                                                                              TickType_t xNewPeriod,
- *                                                                              TickType_t xTicksToWait );
+ * BaseType_t xTimerChangePeriod( 	TimerHandle_t xTimer,
+ *										TickType_t xNewPeriod,
+ *										TickType_t xTicksToWait );
  *
  * Timer functionality is provided by a timer service/daemon task.  Many of the
  * public FreeRTOS timer API functions send commands to the timer service task
@@ -662,8 +666,8 @@ TaskHandle_t xTimerGetTimerDaemonTaskHandle( void );
 #define xTimerReset( xTimer, xTicksToWait ) xTimerGenericCommand( ( xTimer ), tmrCOMMAND_RESET, ( xTaskGetTickCount() ), NULL, ( xTicksToWait ) )
 
 /**
- * BaseType_t xTimerStartFromISR(       TimerHandle_t xTimer,
- *                                                                      BaseType_t *pxHigherPriorityTaskWoken );
+ * BaseType_t xTimerStartFromISR( 	TimerHandle_t xTimer,
+ *									BaseType_t *pxHigherPriorityTaskWoken );
  *
  * A version of xTimerStart() that can be called from an interrupt service
  * routine.
@@ -748,8 +752,8 @@ TaskHandle_t xTimerGetTimerDaemonTaskHandle( void );
 #define xTimerStartFromISR( xTimer, pxHigherPriorityTaskWoken ) xTimerGenericCommand( ( xTimer ), tmrCOMMAND_START_FROM_ISR, ( xTaskGetTickCountFromISR() ), ( pxHigherPriorityTaskWoken ), 0U )
 
 /**
- * BaseType_t xTimerStopFromISR(        TimerHandle_t xTimer,
- *                                                                      BaseType_t *pxHigherPriorityTaskWoken );
+ * BaseType_t xTimerStopFromISR( 	TimerHandle_t xTimer,
+ *									BaseType_t *pxHigherPriorityTaskWoken );
  *
  * A version of xTimerStop() that can be called from an interrupt service
  * routine.
@@ -812,8 +816,8 @@ TaskHandle_t xTimerGetTimerDaemonTaskHandle( void );
 
 /**
  * BaseType_t xTimerChangePeriodFromISR( TimerHandle_t xTimer,
- *                                                                               TickType_t xNewPeriod,
- *                                                                               BaseType_t *pxHigherPriorityTaskWoken );
+ *										 TickType_t xNewPeriod,
+ *										 BaseType_t *pxHigherPriorityTaskWoken );
  *
  * A version of xTimerChangePeriod() that can be called from an interrupt
  * service routine.
@@ -884,8 +888,8 @@ TaskHandle_t xTimerGetTimerDaemonTaskHandle( void );
 #define xTimerChangePeriodFromISR( xTimer, xNewPeriod, pxHigherPriorityTaskWoken ) xTimerGenericCommand( ( xTimer ), tmrCOMMAND_CHANGE_PERIOD_FROM_ISR, ( xNewPeriod ), ( pxHigherPriorityTaskWoken ), 0U )
 
 /**
- * BaseType_t xTimerResetFromISR(       TimerHandle_t xTimer,
- *                                                                      BaseType_t *pxHigherPriorityTaskWoken );
+ * BaseType_t xTimerResetFromISR( 	TimerHandle_t xTimer,
+ *									BaseType_t *pxHigherPriorityTaskWoken );
  *
  * A version of xTimerReset() that can be called from an interrupt service
  * routine.
@@ -1020,42 +1024,42 @@ TaskHandle_t xTimerGetTimerDaemonTaskHandle( void );
  * Example usage:
  * @verbatim
  *
- *      // The callback function that will execute in the context of the daemon task.
+ *	// The callback function that will execute in the context of the daemon task.
  *  // Note callback functions must all use this same prototype.
  *  void vProcessInterface( void *pvParameter1, uint32_t ulParameter2 )
- *      {
- *              BaseType_t xInterfaceToService;
+ *	{
+ *		BaseType_t xInterfaceToService;
  *
- *              // The interface that requires servicing is passed in the second
+ *		// The interface that requires servicing is passed in the second
  *      // parameter.  The first parameter is not used in this case.
- *              xInterfaceToService = ( BaseType_t ) ulParameter2;
+ *		xInterfaceToService = ( BaseType_t ) ulParameter2;
  *
- *              // ...Perform the processing here...
- *      }
+ *		// ...Perform the processing here...
+ *	}
  *
- *      // An ISR that receives data packets from multiple interfaces
+ *	// An ISR that receives data packets from multiple interfaces
  *  void vAnISR( void )
- *      {
- *              BaseType_t xInterfaceToService, xHigherPriorityTaskWoken;
+ *	{
+ *		BaseType_t xInterfaceToService, xHigherPriorityTaskWoken;
  *
- *              // Query the hardware to determine which interface needs processing.
- *              xInterfaceToService = prvCheckInterfaces();
+ *		// Query the hardware to determine which interface needs processing.
+ *		xInterfaceToService = prvCheckInterfaces();
  *
  *      // The actual processing is to be deferred to a task.  Request the
  *      // vProcessInterface() callback function is executed, passing in the
- *              // number of the interface that needs processing.  The interface to
- *              // service is passed in the second parameter.  The first parameter is
- *              // not used in this case.
- *              xHigherPriorityTaskWoken = pdFALSE;
- *              xTimerPendFunctionCallFromISR( vProcessInterface, NULL, ( uint32_t ) xInterfaceToService, &xHigherPriorityTaskWoken );
+ *		// number of the interface that needs processing.  The interface to
+ *		// service is passed in the second parameter.  The first parameter is
+ *		// not used in this case.
+ *		xHigherPriorityTaskWoken = pdFALSE;
+ *		xTimerPendFunctionCallFromISR( vProcessInterface, NULL, ( uint32_t ) xInterfaceToService, &xHigherPriorityTaskWoken );
  *
- *              // If xHigherPriorityTaskWoken is now set to pdTRUE then a context
- *              // switch should be requested.  The macro used is port specific and will
- *              // be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
- *              // the documentation page for the port being used.
- *              portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+ *		// If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+ *		// switch should be requested.  The macro used is port specific and will
+ *		// be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+ *		// the documentation page for the port being used.
+ *		portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
  *
- *      }
+ *	}
  * @endverbatim
  */
 BaseType_t xTimerPendFunctionCallFromISR( PendedFunction_t xFunctionToPend, void *pvParameter1, uint32_t ulParameter2, BaseType_t *pxHigherPriorityTaskWoken );
@@ -1093,6 +1097,17 @@ BaseType_t xTimerPendFunctionCallFromISR( PendedFunction_t xFunctionToPend, void
   *
   */
 BaseType_t xTimerPendFunctionCall( PendedFunction_t xFunctionToPend, void *pvParameter1, uint32_t ulParameter2, TickType_t xTicksToWait );
+
+/**
+ * const char * const pcTimerGetTimerName( TimerHandle_t xTimer );
+ *
+ * Returns the name that was assigned to a timer when the timer was created.
+ *
+ * @param xTimer The handle of the timer being queried.
+ *
+ * @return The name assigned to the timer specified by the xTimer parameter.
+ */
+const char * pcTimerGetTimerName( TimerHandle_t xTimer ); /*lint !e971 Unqualified char types are allowed for strings and single characters only. */
 
 /*
  * Functions beyond this part are not part of the public API and are intended

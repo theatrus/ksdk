@@ -29,6 +29,7 @@
  */
 
 #include "fsl_device_registers.h"
+#include "fsl_lptmr_driver.h"
 
 /*******************************************************************************
  * Variables
@@ -39,6 +40,9 @@ LPTMR_Type * const g_lptmrBase[] = LPTMR_BASE_PTRS;
 
 /*! @brief Table to save LPTMR IRQ enum numbers defined in CMSIS header file. */
 const IRQn_Type g_lptmrIrqId[] = LPTMR_IRQS;
+
+/* Pointer to runtime state structure.*/
+lptmr_state_t * g_lptmrStatePtr[LPTMR_INSTANCE_COUNT] = { NULL };
 
 /*******************************************************************************
  * EOF

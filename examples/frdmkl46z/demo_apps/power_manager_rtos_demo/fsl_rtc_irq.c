@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -49,7 +49,7 @@
 /*!
  * @brief override the RTC_IRQ handler
  */
-void MODULE_IRQ_HANDLER(RTC)(void)
+void RTC_IRQHandler(void)
 {
     if (RTC_DRV_IsAlarmPending(0))
     {
@@ -60,7 +60,7 @@ void MODULE_IRQ_HANDLER(RTC)(void)
 /*!
  * @brief override the RTC Second IRQ handler
  */
-void MODULE_IRQ_HANDLER(RTC_Seconds)(void)
+void RTC_Seconds_IRQHandler(void)
 {
     RTC_DRV_SecsIntAction(0);
 }

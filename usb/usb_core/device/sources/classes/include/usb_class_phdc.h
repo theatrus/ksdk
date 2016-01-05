@@ -92,6 +92,7 @@ typedef struct _phdc_config_struct
     usb_vendor_req_callback_struct_t            vendor_req_callback;       /*!< application callback function to handle the vendor request related event, reserved for future use*/
     usb_class_specific_callback_struct_t        class_specific_callback;   /*!< application callback function to handle all the class related event*/
     usb_desc_request_notify_struct_t*           desc_callback_ptr;         /*!< descriptor related callback function data structure.*/
+    usb_board_init_callback_struct_t            board_init_callback;       /*!< application callback function to handle board init*/
 } phdc_config_struct_t;
 #ifdef __cplusplus
 extern "C" {

@@ -49,21 +49,24 @@
 #define I2C_RTOS_SLEEP_CMD        3
 #define I2C_RTOS_READID_CMD       4
 
-#define I2C_RTOS_MASTER_INSTANCE  (0)
 // Definition for boards with only 1 I2C.
-#if defined(FRDM_KL02Z) || defined(FRDM_KL03Z)
-#define I2C_RTOS_SLAVE_INSTANCE   (0)
+#if USE_RTOS
+  #ifdef FRDM_K82F
+#define I2C_RTOS_MASTER_INSTANCE  (0)
+#define I2C_RTOS_SLAVE_INSTANCE   (3U)
+  #elif defined(FRDM_K66F)
+#define I2C_RTOS_MASTER_INSTANCE  (3U)
+#define I2C_RTOS_SLAVE_INSTANCE   (1U)
+  #else
+#define I2C_RTOS_MASTER_INSTANCE  (0)
+#define I2C_RTOS_SLAVE_INSTANCE   (1U)
+  #endif // FRDM_K82F
 #else
-#define I2C_RTOS_SLAVE_INSTANCE   (1)
+#define I2C_RTOS_SLAVE_INSTANCE   (BOARD_I2C_INSTANCE)
+#define I2C_RTOS_MASTER_INSTANCE  (BOARD_I2C_INSTANCE)
 #endif
-
 
 #define I2C_RTOS_MAGIC            0xBB
-
-#if defined(FRDM_KL46Z) || defined(FRDM_KL02Z) || defined(FRDM_KL03Z)|| defined(FRDM_KL43Z) || defined(TWR_KL43Z48M) || defined(FRDM_KL27Z) || defined(FRDM_KL25Z) || defined(TWR_KL25Z48M) || defined(TWR_K21D50M) || defined(FRDM_KL26Z) || defined(MRB_KW01)
-#define ADC_INSTANCE            ADC0_IDX
-#else
-#define ADC_INSTANCE            ADC1_IDX
-#endif
+#define ADC_INSTANCE              HWADC_INSTANCE
 
 #endif /* __I2C_RTOS_H__ */

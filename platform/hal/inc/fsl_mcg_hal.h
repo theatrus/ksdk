@@ -124,6 +124,16 @@ typedef enum _mcg_clkout_src
     kMcgClkOutSrcExternal,              /*!< External reference clock is selected */
 } mcg_clkout_src_t;
 
+#if (defined(FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE) && FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE)
+/*! @brief MCG PLL reference clock source select MCG_C7[PLL32KREFSEL]*/
+typedef enum _mcg_pll_ref_clock_source
+{
+    kMcgPllRefClkSrcRtc       = 0U,  /* External RTC OSC reference clock is selected  */
+    kMcgPllRefClkSrcSlowIrc   = 1U,  /* The slow internal reference clock is selected */
+    kMcgPllRefClkSrcFllExtRef = 2U   /* The FLL FRDIV output clock is selected        */
+} mcg_pll_ref_clock_source_t;
+#endif
+
 /*! @brief MCG clock mode status */
 typedef enum _mcg_clkout_stat
 {
@@ -292,6 +302,7 @@ uint32_t CLOCK_HAL_TestFllFreq(MCG_Type * base,
 uint32_t CLOCK_HAL_GetFllClk(MCG_Type * base);
 
 #if FSL_FEATURE_MCG_HAS_PLL
+#if (FSL_FEATURE_MCG_HAS_PLL_PRDIV ) && ( FSL_FEATURE_MCG_HAS_PLL_VDIV )
 /*!
  * @brief Calculates the PLL PRDIV and VDIV.
  *
@@ -310,6 +321,7 @@ uint32_t CLOCK_HAL_CalculatePllDiv(uint32_t refFreq,
                                    uint32_t desireFreq,
                                    uint8_t *prdiv,
                                    uint8_t *vdiv);
+#endif
 
 /*!
  * @brief Gets the current MCG PLL/PLL0 clock.
@@ -409,6 +421,31 @@ static inline void CLOCK_HAL_SetClkOutSrc(MCG_Type * base, mcg_clkout_src_t sele
 }
 
 /*!
+ * @brief Sets the CLKS, FRDIV, IREFS at the same time.
+ *
+ * This function set the MCG_C1[CLKS], MCG_C1[FRDIV] and MCG_C1[IREFS] at the
+ * same time, in order keep the integrity of the clock switching.
+ *
+ * @param base  Base address for current MCG instance.
+ * @param clks  MCG_C1[CLKS].
+ * @param frdiv MCG_C1[FRDIV].
+ * @param irefs MCG_C1[IREFS].
+ */
+static inline void CLOCK_HAL_SetClksFrdivIrefs(MCG_Type * base,
+                                               mcg_clkout_src_t clks,
+                                               uint8_t frdiv,
+                                               mcg_fll_src_t irefs)
+{
+    MCG_WR_C1(base, (MCG_RD_C1(base)
+                 & ~(MCG_C1_CLKS_MASK  |
+                     MCG_C1_FRDIV_MASK |
+                     MCG_C1_IREFS_MASK))
+                 |  (MCG_C1_CLKS(clks)    |
+                     MCG_C1_FRDIV(frdiv)  |
+                     MCG_C1_IREFS(irefs)));
+}
+
+/*!
  * @brief Gets the Clock Mode Status.
  *
  * This function  gets the Clock Mode Status. These bits indicate the current clock mode.
@@ -461,6 +498,18 @@ static inline void CLOCK_HAL_SetOscselMode(MCG_Type * base, mcg_oscsel_select_t 
     MCG_WR_C7_OSCSEL(base, setting);
 }
 #endif
+
+/*!
+ * @brief Prepare the OSC external clock.
+ *
+ * This function set the OSCSEL, if external oscillator is used, it wait until
+ * it is stable. This function could be used to prepare the external clock source
+ * before switch to use.
+ *
+ * @param base    Base address for current MCG instance.
+ * @param setting MCG OSC Clock Select Setting
+ */
+void CLOCK_HAL_PrepareOsc(MCG_Type * base, mcg_oscsel_select_t setting);
 
 /*@}*/
 
@@ -518,6 +567,7 @@ static inline void CLOCK_HAL_SetFllFilterPreserveCmd(MCG_Type * base, bool enabl
  * @param oscsel OSCSEL setting.
  * @param inputFreq The reference clock frequency before FRDIV.
  * @param frdiv FRDIV result.
+ * @return Method return status.
  * @retval kStatus_MCG_Success Proper FRDIV is got.
  * @retval kStatus_MCG_Fail Could not get proper FRDIV.
  */
@@ -569,7 +619,7 @@ static inline void CLOCK_HAL_SetInternalRefClkEnableInStopCmd(MCG_Type * base, b
  * This function  selects between the fast or slow internal reference clock source.
  *
  * @param base  Base address for current MCG instance.
- * @param select Internal reference clock source.
+ * @param mode  Internal reference clock source.
  *                 - 0: Slow internal reference clock selected.
  *                 - 1: Fast internal reference clock selected.
  */
@@ -611,6 +661,23 @@ static inline mcg_irc_mode_t CLOCK_HAL_GetInternalRefClkMode(MCG_Type * base)
  * @param fcrdiv  Fast Clock Internal Reference Divider Setting
  */
 void CLOCK_HAL_UpdateFastClkInternalRefDiv(MCG_Type * base, uint8_t fcrdiv);
+
+/*!
+ * @brief Updates the Internal Reference clock (MCGIRCLK)
+ *
+ * This function setups the MCGIRCLK base on parameters. It selects the IRC
+ * source, if fast IRC is used, this function also sets the fast IRC divider.
+ * This function also sets whether enable MCGIRCLK in stop mode.
+ *
+ * @param base  Base address for current MCG instance.
+ * @param ircs  MCGIRCLK clock source, choose fast or slow.
+ * @param fcrdiv  Fast Clock Internal Reference Divider Setting.
+ * @param enableInStop MCGIRCLK enable in stop mode or not.
+ */
+void CLOCK_HAL_UpdateInternalRefClk(MCG_Type      *base,
+                                    mcg_irc_mode_t ircs,
+                                    uint8_t        fcrdiv,
+                                    bool           enableInStop);
 
 /*@}*/
 
@@ -777,6 +844,7 @@ static inline bool CLOCK_HAL_IsPllSelected(MCG_Type * base)
     return (bool)MCG_BRD_S_PLLST(base);
 }
 
+#if (FSL_FEATURE_MCG_HAS_PLL_PRDIV ) && ( FSL_FEATURE_MCG_HAS_PLL_VDIV )
 /*!
  * @brief Enables the PLL0 not in PLL mode.
  *
@@ -789,12 +857,27 @@ static inline bool CLOCK_HAL_IsPllSelected(MCG_Type * base)
  * @param base  Base address for current MCG instance.
  * @param prdiv PLL reference divider.
  * @param vdiv  PLL VCO divider.
- * @param enbleInStop  PLL enable or not in STOP mode.
+ * @param enableInStop  PLL enable or not in STOP mode.
  */
 void CLOCK_HAL_EnablePll0InFllMode(MCG_Type * base,
                                    uint8_t prdiv,
                                    uint8_t vdiv,
                                    bool enableInStop);
+#else
+/*!
+ * @brief Enables the PLL0 not in the PLL mode.
+ *
+ * This function enables the PLL0 when the MCG is not in the PLL modes. For example,
+ * when the MCG is in the FEI mode. This function only sets up the PLL dividers and makes
+ * sure PLL is locked. Ensure that the PLL reference clock is enabled
+ * before calling this function.
+ *
+ * @param base  Base address for current MCG instance.
+ * @param enableInStop  PLL enable or not in STOP mode.
+ */
+void CLOCK_HAL_EnablePll0InFllMode(MCG_Type * base,
+                                   bool enableInStop);
+#endif
 #endif
 
 #if FSL_FEATURE_MCG_HAS_PLL1
@@ -1027,8 +1110,27 @@ void CLOCK_HAL_SetOsc0Mode(MCG_Type * base,
                            osc_gain_t hgo,
                            osc_src_t erefs);
 
+#if FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE
 /*!
- * @brief Gets the OSC Initialization Status.
+ * @brief Sets the PLL0 32 kHz Reference Select Setting.
+ *
+ * This function  selects the PLL0 reference clock source.
+ *
+ * @param base  Base address for current MCG instance.
+ * @param setting  PLL0 32 kHz Reference Select Setting
+ *                  - 0: Selects 32 kHz RTC clock source as its reference clock
+ *                  - 1: Selects 32 kHz IRC clock source as its reference clock
+ *                  - 2: Selects FLL external ref clock source as its ref clock
+ */
+static inline void CLOCK_HAL_SetPllRefSel0Mode(MCG_Type * base,
+                                                mcg_pll_ref_clock_source_t setting)
+{
+    MCG_WR_C7_PLL32KREFSEL(base, setting);
+}
+#endif
+
+/*!
+ * @brief Gets the OSC initialization status.
  *
  * This function  gets the OSC Initialization Status. This bit, which resets to 0, is set
  * to 1 after the initialization cycles of the crystal oscillator clock have completed.

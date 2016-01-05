@@ -108,7 +108,7 @@ typedef struct VrefUserConfig
 #if FSL_FEATURE_VREF_HAS_CHOP_OSC
     bool        chopOscEnable;      /*!< Chop oscillator enable @internal gui name="Chop oscillator" id="chopOscEnable" */
 #endif
-    uint8_t     trimValue;          /*!< Trim bits @internal gui name="Trim value" id="trimValue" */
+    uint8_t     trimValue;          /*!< Trim bits @internal gui name="Trim value" id="trimValue" range="0..63" */
     bool        regulatorEnable;    /*!< Enable regulator @internal gui name="Regulator" id="regulatorEnable" */
 #if FSL_FEATURE_VREF_HAS_COMPENSATION
     bool        soccEnable;         /*!< Enable Second order curvature compensation @internal gui name="Second order curvature compensation" id="soccEnable" */

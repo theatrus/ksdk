@@ -30,11 +30,28 @@
 
 #include "fsl_i2c_shared_function.h"
 #include "fsl_device_registers.h"
+#include "fsl_clock_manager.h"
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
 
+#if defined(KM34Z7_SERIES)
+
+/* Implementation of I2C handler named in startup code. */
+void I2C0_I2C1_IRQHandler(void)
+{
+    if (CLOCK_SYS_GetI2cGateCmd(0))
+    {
+        I2C_DRV_IRQHandler(I2C0_IDX);
+    }
+
+    if (CLOCK_SYS_GetI2cGateCmd(1))
+    {
+        I2C_DRV_IRQHandler(I2C1_IDX);
+    }
+}
+#else
 #if (I2C_INSTANCE_COUNT > 0U)
 /* Implementation of I2C0 handler named in startup code. */
 void I2C0_IRQHandler(void)
@@ -59,6 +76,14 @@ void I2C2_IRQHandler(void)
 }
 #endif
 
+#if (I2C_INSTANCE_COUNT > 3U)
+/* Implementation of I2C3 handler named in startup code. */
+void I2C3_IRQHandler(void)
+{
+    I2C_DRV_IRQHandler(I2C3_IDX);
+}
+#endif
+#endif
 /*******************************************************************************
  * EOF
  ******************************************************************************/

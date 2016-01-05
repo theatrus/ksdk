@@ -58,7 +58,7 @@ extern const IRQn_Type g_rtcSecondsIrqId[RTC_INSTANCE_COUNT];
  */
 typedef struct RtcRepeatAlarmState
 {
-    rtc_datetime_t alarmTime; /*!< Set the RTC alarm time. */
+    rtc_datetime_t alarmTime; /*!< Sets the RTC alarm time. */
     rtc_datetime_t alarmRepTime;       /*!< Period for alarm to repeat, needs alarm interrupt be enabled.*/
 } rtc_repeat_alarm_state_t;
 
@@ -71,7 +71,7 @@ extern "C" {
 #endif
 
 /*!
- * @name Initialization and De-initialization
+ * @name Initialization and Deinitialization
  * @{
  */
 
@@ -81,7 +81,7 @@ extern "C" {
  * Enables the RTC clock and interrupts if requested by the user.
  *
  * @param  instance The RTC peripheral instance number.
- * @return kStatusRtcSuccess means succees, otherwise means failed.
+ * @return kStatusRtcSuccess means success; Otherwise means failed.
  */
 rtc_status_t RTC_DRV_Init(uint32_t instance);
 
@@ -153,17 +153,17 @@ void RTC_DRV_SetSecsIntCmd(uint32_t instance, bool secondsEnable);
 /*!
  * @brief  Sets the RTC alarm time and enables the alarm interrupt.
  *
- * The function checks if the specified alarm time is greater than the present
+ * The function checks whether the specified alarm time is greater than the present
  * time. If not, the function does not set the alarm and returns an error.
  *
  * @param  instance The RTC peripheral instance number.
- * @param  alarmTime [in] pointer to structure where the alarm time is store.
+ * @param  alarmTime [in] pointer to structure where the alarm time is stored.
  * @param  enableAlarmInterrupt Takes true of false\n
  *          true: indicates alarm interrupt should be enabled\n
  *          false: indicates alarm interrupt should be disabled
  *
  * @return  true: success in setting the RTC alarm\n
- *          false: error in setting the RTC alarm. Error is because the alarm datetime format
+ *          false: error in setting the RTC alarm. Error occurs because the alarm datetime format
  *                 is incorrect.
  */
 bool RTC_DRV_SetAlarm(uint32_t instance, rtc_datetime_t *alarmTime, bool enableAlarmInterrupt);
@@ -196,13 +196,13 @@ void RTC_DRV_InitRepeatAlarm(uint32_t instance, rtc_repeat_alarm_state_t *repeat
  * @param  alarmRepInterval pointer to structure with the alarm repeat interval.
  *
  * @return true: success in setting the RTC alarm\n
- *         false: error in setting the RTC alarm. Error is because the alarm datetime format
+ *         false: error in setting the RTC alarm. Error occurs because the alarm datetime format
  *                is incorrect.
  */
 bool RTC_DRV_SetAlarmRepeat(uint32_t instance, rtc_datetime_t *alarmTime, rtc_datetime_t *alarmRepInterval);
 
 /*!
- * @brief  De-initializes the RTC repeat alarm state structure.
+ * @brief  Deinitializes the RTC repeat alarm state structure.
  *
  * @param  instance The RTC peripheral instance number.
  */
@@ -231,7 +231,7 @@ void RTC_DRV_SetAlarmIntCmd(uint32_t instance, bool alarmEnable);
 bool RTC_DRV_GetAlarmIntCmd(uint32_t instance);
 
 /*!
- * @brief  Reads the alarm status to see if the alarm has triggered.
+ * @brief  Reads the alarm status to see if the alarm is triggered.
  *
  * @param  instance The RTC peripheral instance number.
  *
@@ -245,9 +245,9 @@ bool RTC_DRV_IsAlarmPending(uint32_t instance);
  * @brief  Writes the compensation value to the RTC compensation register.
  *
  * @param  instance The RTC peripheral instance number.
- * @param  compensationInterval User specified compensation interval that is written
+ * @param  compensationInterval User-specified compensation interval that is written
  *                           to the CIR field in RTC Time Compensation Register (TCR)
- * @param  compensationTime User specified compensation time that is written
+ * @param  compensationTime User-specified compensation time that is written
  *                           to the TCR field in RTC Time Compensation Register (TCR)
  */
 void RTC_DRV_SetTimeCompensation(uint32_t instance, uint32_t compensationInterval,
@@ -258,9 +258,9 @@ void RTC_DRV_SetTimeCompensation(uint32_t instance, uint32_t compensationInterva
  * @brief  Reads the compensation value from the RTC compensation register.
  *
  * @param  instance The RTC peripheral instance number.
- * @param  compensationInterval User specified pointer to store the compensation interval counter. This value
+ * @param  compensationInterval User-specified pointer to store the compensation interval counter. This value
  *                           is read from the CIC field in RTC Time Compensation Register (TCR)
- * @param  compensationTime User specified pointer to store the compensation time value. This value
+ * @param  compensationTime User-specified pointer to store the compensation time value. This value
  *                           is read from the TCV field in RTC Time Compensation Register (TCR)
  */
 void RTC_DRV_GetTimeCompensation(uint32_t instance, uint32_t *compensationInterval,
@@ -294,16 +294,16 @@ bool RTC_DRV_IncrementMonotonic(uint32_t instance);
 /*!
  * @brief Implements the RTC alarm handler named in the startup code.
  *
- * Handles the RTC alarm interrupt and invokes any callback that is interested
- * in the RTC alarm.
+ * Handles the RTC alarm interrupt and invokes any callback related to
+ * the RTC alarm.
  */
 void RTC_IRQHandler(void);
 
 /*!
  * @brief Implements the RTC seconds handler named in the startup code.
  *
- * Handles the RTC seconds interrupt and invokes any callback that is interested
- * in the RTC second tick.
+ * Handles the RTC seconds interrupt and invokes any callback related to
+ * the RTC second tick.
  */
 void RTC_Seconds_IRQHandler(void);
 

@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "fsl_pit_driver.h"
+#include "fsl_clock_manager.h"
 
 /*******************************************************************************
  * Variables
@@ -44,6 +45,27 @@ extern volatile bool pitIsrFlag[2];
  * @brief System default IRQ handler defined in startup code.
  */
 #if FSL_FEATURE_PIT_HAS_SHARED_IRQ_HANDLER
+#if defined(KM34Z7_SERIES)
+void PIT0_PIT1_IRQHandler(void)
+{
+    uint32_t i;
+    for(i=0; i < PIT_INSTANCE_COUNT; i++)
+    {
+        if (CLOCK_SYS_GetPitGateCmd(i))
+        {
+            for(i=0; i < FSL_FEATURE_PIT_TIMER_COUNT; i++)
+            {
+                if (PIT_HAL_IsIntPending(g_pitBase[0], i))
+                {
+                    /* Clear interrupt flag.*/
+                    PIT_HAL_ClearIntFlag(g_pitBase[0], i);
+                    pitIsrFlag[i] = true;
+                }
+            }
+        }
+    }
+}
+#else
 void PIT_IRQHandler(void)
 {
     uint32_t i;
@@ -57,6 +79,7 @@ void PIT_IRQHandler(void)
         }
     }
 }
+#endif
 #else
 
 #if (FSL_FEATURE_PIT_TIMER_COUNT > 0U)

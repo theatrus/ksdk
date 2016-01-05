@@ -135,6 +135,7 @@ typedef struct _cdc_config_struct
     usb_vendor_req_callback_struct_t         vendor_req_callback;             /*!< application callback function to handle the vendor request related event, reserved for future use*/
     usb_class_specific_callback_struct_t     class_specific_callback;         /*!< application callback function to handle all the class related event*/
     usb_desc_request_notify_struct_t*        desc_callback_ptr;               /*!< descriptor related callback function data structure*/
+    usb_board_init_callback_struct_t         board_init_callback;             /*!< application callback function to handle board init*/
 } cdc_config_struct_t;
 
 /*!
@@ -280,6 +281,25 @@ extern usb_status USB_Class_CDC_Get_Speed
     cdc_handle_t         cdc_handle,
     uint16_t *           speed/* [OUT] the requested error */
 );
+
+#if CDC_RNDIS_SUPPORT
+/**************************************************************************//*!
+ *
+ * @name  USB_Class_CDC_RNDIS_Get_Device_Status
+ *
+ * @brief The function returns the RNDIS device status
+ *
+ * @param handle :   handle returned by USB_Class_CDC_Init.
+ *
+ * @return status
+ *         USB_OK           : When Successfully
+ *         Others           : Errors
+ *****************************************************************************/
+extern uint8_t USB_Class_CDC_RNDIS_Get_Device_Status
+(
+    cdc_handle_t handle
+);
+#endif
 
 #ifdef __cplusplus
 }

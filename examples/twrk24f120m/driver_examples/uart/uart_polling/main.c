@@ -40,8 +40,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 //  Consts
 ///////////////////////////////////////////////////////////////////////////////
-const uint8_t buffStart[]    = "\n\r++++++++++++++++ UART Send/Receive Polling Example +++++++++++++++++\n\r";
-const uint8_t bufferData1[]  = "\n\rType characters from keyboard, the board will receive and then echo them to terminal screen\n\r";
+const uint8_t buffStart[]    = "\r\n++++++++++++++++ UART Send/Receive Polling Example +++++++++++++++++\r\n";
+const uint8_t bufferData1[]  = "\r\nType characters from keyboard, the board will receive and then echo them to terminal screen\r\n";
 /*
  * This example will example the efficiency of the transmit/receive drivers with
  * using polling method. Transfer data between board and PC. Board will transfer

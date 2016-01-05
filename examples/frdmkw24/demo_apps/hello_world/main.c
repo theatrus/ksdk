@@ -96,7 +96,7 @@ int main (void)
     LED1_EN;
 
     // Print the initial banner
-    PRINTF("\r\nHello World!\n\n\r");
+    PRINTF("\r\nHello World!\r\n\r\n");
 
     while(1)
     {

@@ -40,7 +40,6 @@
  *****************************************************************************/
 #include "usb_class.h"
 
-
 /******************************************************************************
  * Global Variables
  *****************************************************************************/
@@ -58,8 +57,17 @@ typedef struct _usb_class_object
    uint32_t             usb_fw_handle;
    usb_device_handle    controller_handle;
    void*                arg;
-   usb_device_notify_t  class_callback;   
+   usb_device_notify_t  class_callback;
 } usb_class_object_struct_t;
+
+/* Structure holding USB class object for composite device*/
+typedef struct _usb_class_handle
+{
+   class_handle_t class_handle;
+   uint8_t        controller_id;
+} usb_class_handle_struct_t;
+
+extern usb_class_handle_struct_t g_class_handle[USBCFG_DEV_MAX_CLASS_OBJECT];
 
 /******************************************************************************
  * Global Functions
@@ -74,6 +82,8 @@ typedef struct _usb_class_object
  * @param class_callback     :event callback      
  * @param other_req_callback :call back for class/vendor specific requests on 
  *                            CONTROL ENDPOINT
+ * @param user_arg           :up layer handle
+ * @param desc_callback_ptr  :descriptor callback list
  *
  * @return status       
  *         USB_OK           : When Successfully
@@ -82,12 +92,12 @@ typedef struct _usb_class_object
  *****************************************************************************/
 class_handle_t USB_Class_Init
 (
-    usb_device_handle                   handle,            /* [IN] the USB device controller to initialize */                  
-    usb_device_notify_t                 class_callback,    /*[IN]*/
-    usb_request_notify_t                other_req_callback,/*[IN]*/
-    void*                               user_arg,          /*[IN]*/
-    usb_desc_request_notify_struct_t*   desc_callback_ptr  /*[IN]*/
-); 
+    usb_device_handle                 handle, /* [IN] the USB device controller to initialize */
+    usb_device_notify_t               class_callback,/*[IN]*/
+    usb_request_notify_t              other_req_callback,/*[IN]*/
+    void*                             user_arg,/*[IN]*/
+    usb_desc_request_notify_struct_t* desc_callback_ptr/*[IN]*/
+);
 
 /**************************************************************************//*!
  *
@@ -154,19 +164,19 @@ usb_status USB_Class_Get_Status
     uint16_t *     error_code /* [OUT] the requested error */
 );
 
-
-#ifdef USBCFG_DEV_COMPOSITE
 /**************************************************************************//*!
  *
  * @name  USB_Class_Get_Class_Handle
  *
  * @brief  This function is called to return class handle.
  *
+ * @param controller_id:               controller id
+ * 
  * @return value:
  *                        class handle
  *
  *****************************************************************************/
-class_handle_t USB_Class_Get_Class_Handle(void);
+class_handle_t USB_Class_Get_Class_Handle(uint8_t controller_id);
 
 /**************************************************************************//*!
  *
@@ -179,7 +189,7 @@ class_handle_t USB_Class_Get_Class_Handle(void);
  *
  *****************************************************************************/
 usb_device_handle USB_Class_Get_Ctrler_Handle(class_handle_t class_handle);
-#endif
+
 
 #endif
 

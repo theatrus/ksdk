@@ -36,10 +36,17 @@
 /******************************************************************************
  * Code
  *****************************************************************************/
+#if defined(KM34Z7_SERIES)
+/* MPU IRQ handler that would cover the same name's APIs in startup code */
+void HardFault_Handler()
+{
+}
+#else
 /* MPU IRQ handler that would cover the same name's APIs in startup code */
 void BusFault_Handler()
 {
 }
+#endif
 
 #endif
 

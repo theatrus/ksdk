@@ -46,6 +46,12 @@
 #define CLOCK_INIT_CONFIG CLOCK_RUN
 #endif
 
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 120000000U
+#else
+#define CORE_CLOCK_FREQ 4000000U
+#endif
+
 /* OSC0 configuration. */
 #define OSC0_XTAL_FREQ 8000000U
 #define OSC0_SC2P_ENABLE_CONFIG  false
@@ -73,7 +79,6 @@
 #define RTC_SC8P_ENABLE_CONFIG       false
 #define RTC_SC16P_ENABLE_CONFIG      false
 #define RTC_OSC_ENABLE_CONFIG        true
-#define RTC_CLK_OUTPUT_ENABLE_CONFIG true
 
 #define BOARD_RTC_CLK_FREQUENCY     32768U;
 /* The UART to use for debug messages. */
@@ -89,7 +94,7 @@
 #define BOARD_LOW_POWER_UART_BAUD       9600
 
 #define BOARD_USE_UART
-#define PM_DBG_UART_IRQ_HANDLER         MODULE_IRQ_HANDLER(UART5_RX_TX)
+#define PM_DBG_UART_IRQ_HANDLER         UART5_RX_TX_IRQHandler
 #define PM_DBG_UART_IRQn                UART5_RX_TX_IRQn
 
 /* Define feature for the low_power_demo */
@@ -97,14 +102,19 @@
 
 /* Define the port interrupt number for the board switches */
 #define BOARD_SW_GPIO               kGpioSW2
-#define BOARD_SW_IRQ_NUM        PORTC_IRQn
+#define BOARD_SW_IRQ_NUM            PORTC_IRQn
 #define BOARD_SW_IRQ_HANDLER        PORTC_IRQHandler
-
+#define BOARD_SW_NAME               "SW2"
 /* Define print statement to inform user which switch to press for
  * power_manager_hal_demo and power_manager_rtos_demo
  */
 #define PRINT_LLWU_SW_NUM \
   PRINTF("SW3")
+
+#define BOARD_MAX3353_INT_PORT       (PORTA_BASE)        /* BOARD_MAX3353_INT_PORT */
+#define BOARD_MAX3353_INT_PIN        (1U)               /* BOARD_MAX3353_INT_PIN */
+#define BOARD_MAX3353_INT_VECTOR     (PORTA_IRQn)        /* BOARD_MAX3353_INT_VECTOR */
+#define BOARD_MAX3353_GPIO_INT       GPIO_MAKE_PIN(GPIOE_IDX, BOARD_MAX3353_INT_PIN)
 
 /* Defines the llwu pin number for board switch which is used in power_manager_demo. */
 #define BOARD_SW_HAS_LLWU_PIN        1
@@ -126,9 +136,6 @@
 
 #define HWADC_INSTANCE               0
 #define ADC_IRQ_N                    ADC0_IRQn
-#if (defined FSL_RTOS_MQX)
-#define MQX_ADC_IRQHandler           MQX_ADC0_IRQHandler
-#endif
 
 /* The CAN instance used for board */
 #define BOARD_CAN_INSTANCE              0
@@ -141,9 +148,15 @@
 /* The i2c instance used for i2c DAC demo */
 #define BOARD_DAC_I2C_INSTANCE          0
 
-/* The i2c instance used for i2c communication demo */
-#define BOARD_I2C_COMM_INSTANCE         1
+/* The i2c instance used for i2c connection by default */
+#define BOARD_I2C_INSTANCE              1
 
+/* The i2c instance used for OTG demo */
+#define BOARD_MAX3353_I2C_INSTANCE      1
+#define BOARD_MAX3353_I2C_VECTOR        I2C1_IRQn
+
+/* The dspi instance used for dspi example */
+#define BOARD_DSPI_INSTANCE             0
 
 /* The Flextimer instance/channel used for board */
 #define BOARD_FTM_INSTANCE              0
@@ -202,7 +215,8 @@
                            LED3_OFF;\
                            LED4_OFF;
 /* The SDHC instance/channel used for board */
-#define BOARD_SDHC_INSTANCE             0
+#define BOARD_SDHC_INSTANCE                   0
+#define BOARD_SDHC_CD_GPIO_IRQ_HANDLER        PORTC_IRQHandler
 
 /* The CMP instance used for board. */
 #define BOARD_CMP_INSTANCE              0
@@ -218,6 +232,25 @@
 
 /* The watchdog reset demo SW */
 #define BOARD_WDOG_GPIO_SW    kGpioSW3
+
+/* The UART Smartcard interface. */
+#define BOARD_SMARTCARD_MODULE_INSTANCE           (0)
+#define HW_SMARTCARD_CLOCK_MODULE_INSTANCE        (0)
+#define HW_SMARTCARD_CLOCK_MODULE_CHANNEL         (0)
+#define HW_SMARTCARD_CLOCK_VALUE                  (5000000)
+#define HW_SMARTCARD_CONTROL_PORT_INSTANCE        (PORTD_IDX)
+#define HW_SMARTCARD_CONTROL_PIN                  (10)
+#define HW_SMARTCARD_RST_PORT_INSTANCE            (PORTC_IDX)
+#define HW_SMARTCARD_RST_PIN                      (3)
+#define HW_SMARTCARD_IRQ_PORT_INSTANCE            (PORTD_IDX)
+#define HW_SMARTCARD_IRQ_PIN                      (14)
+#define HW_SMARTCARD_VSEL0_PORT_INSTANCE          (PORTA_IDX)
+#define HW_SMARTCARD_VSEL0_PIN                    (5)
+#define HW_SMARTCARD_VSEL1_PORT_INSTANCE          (PORTD_IDX)
+#define HW_SMARTCARD_VSEL1_PIN                    (11)
+
+/* The usb use native port  */
+#define USBCFG_HOST_PORT_NATIVE         (1)
 
 #if defined(__cplusplus)
 extern "C" {
@@ -237,6 +270,16 @@ void BOARD_InitOsc0(void);
 
 /* Function to initialize RTC external clock base on board configuration. */
 void BOARD_InitRtcOsc(void);
+
+/* Function to indicate whether a card is detected or not */
+bool BOARD_IsSDCardDetected(void);
+
+/*Function to handle board-specified initialization*/
+uint8_t usb_device_board_init(uint8_t controller_id);
+/*Function to handle board-specified initialization*/
+uint8_t usb_host_board_init(uint8_t controller_id);
+/*Function to handle board-specified initialization*/
+uint8_t usb_otg_board_init(uint8_t controller_id);
 
 #if defined(__cplusplus)
 }

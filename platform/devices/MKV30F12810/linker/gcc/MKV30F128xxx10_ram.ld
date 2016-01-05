@@ -6,13 +6,13 @@
 **
 **     Compiler:            GNU C Compiler
 **     Reference manual:    KV30P64M100SFARM, Rev. 0, February 14, 2014
-**     Version:             rev. 0.4, 2014-10-14
-**     Build:               b141113
+**     Version:             rev. 0.5, 2015-02-19
+**     Build:               b150624
 **
 **     Abstract:
 **         Linker file for the GNU C Compiler
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -56,8 +56,8 @@ STACK_SIZE = DEFINED(__stack_size__) ? __stack_size__ : 0x0400;
 MEMORY
 {
   m_interrupts          (RX)  : ORIGIN = 0x1FFFE000, LENGTH = 0x00000400
-  m_data                (RW)  : ORIGIN = 0x1FFFE400, LENGTH = 0x00001C00
-  m_text                (RX)  : ORIGIN = 0x20000000, LENGTH = 0x00002000
+  m_text                (RX)  : ORIGIN = 0x1FFFE400, LENGTH = 0x00001C00
+  m_data                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00002000
 }
 
 /* Define output sections */
@@ -177,6 +177,8 @@ SECTIONS
   } > m_data
 
   __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
+  text_end = ORIGIN(m_text) + LENGTH(m_text);
+  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   /* Uninitialized data section */
   .bss :

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2014 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,

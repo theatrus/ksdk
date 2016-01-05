@@ -4,7 +4,7 @@
 **     Compiler:            GNU C Compiler
 **     Reference manual:    MKW2xDRM Rev.2  July 2014
 **     Version:             rev. 2.0, 2015-01-06
-**     Build:               b150205
+**     Build:               b150624
 **
 **     Abstract:
 **         Linker file for the GNU C Compiler
@@ -195,6 +195,8 @@ SECTIONS
   } > m_data
 
   __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
+  text_end = ORIGIN(m_text) + LENGTH(m_text);
+  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   /* Uninitialized data section */
   .bss :

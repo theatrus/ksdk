@@ -34,7 +34,6 @@
 
 // Standard C Included Files
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 
 // SDK Included Files
@@ -44,14 +43,13 @@
 #include "fsl_mpu_driver.h"
 #include "fsl_sdhc_card.h"
 #include "fsl_sdmmc_card.h"
-#include "sdhc_sdcard.h"
 #include "fsl_debug_console.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions
 ///////////////////////////////////////////////////////////////////////////////
 
-#define TEST_BLOCK_NUM          4U 
+#define TEST_BLOCK_NUM          4U
 #define TEST_START_BLOCK        4U
 
 typedef enum
@@ -83,7 +81,7 @@ static volatile uint32_t cardInited = 0; /*!< Flag to indicate the card has been
 ///////////////////////////////////////////////////////////////////////////////
 
 /*!
- * @brief A function to fill a memory buffer of 'len' no of bytes 
+ * @brief A function to fill a memory buffer of 'len' no of bytes
  * with a reference data governed by a seed value.
  */
 static uint32_t fill_reference_data(uint8_t *pdata, uint8_t seed, uint32_t len)
@@ -604,43 +602,13 @@ static void show_card_info(sdhc_card_t *card, bool showDetail)
 /*!
  * @brief Function to indicate whether a card is detected or not
  */
-void sdhc_card_detection(bool inserted)
+void sdhc_card_detection(void)
 {
     // set or clear cardInserted flag
-    if (inserted)
-    {
-        cardInserted = 1;
-    }
-    else
-    {
-        cardInserted = 0;
-    }
+    cardInserted = BOARD_IsSDCardDetected();
 
     // Post semaphore object used for card detection
     OSA_SemaPost(&cd);
-}
-
-/*!
- * @brief Function to be called from Card detection interrupt context etc.
- */
-void sdhc_cd_irqhandler(void)
-{
-    if (GPIO_DRV_ReadPinInput(kGpioSdhc0Cd))
-#if defined FRDM_K64F
-        sdhc_card_detection(true);
-    else
-        sdhc_card_detection(false);
-#elif defined TWR_K64F120M || defined TWR_K65F180M || defined TWR_K60D100M
-        sdhc_card_detection(false);
-    else
-        sdhc_card_detection(true);
-#elif (defined TWR_K21F120M)
-        sdhc_card_detection(false);
-    else
-        sdhc_card_detection(true);
-#else
-#error unknown board
-#endif
 }
 
 /*!
@@ -660,7 +628,7 @@ static test_result_t demo_card_data_access(void)
     config.cdType = kSdhcCardDetectGpio;
 
     PRINTF("This demo is going to access data on card\r\n");
-    
+
     // initialize the SDHC driver with the user configuration
     if (SDHC_DRV_Init(BOARD_SDHC_INSTANCE, &host, &config) != kStatus_SDHC_NoError)
     {
@@ -668,7 +636,7 @@ static test_result_t demo_card_data_access(void)
     }
 
     // wait for a card detection
-    sdhc_cd_irqhandler();
+    sdhc_card_detection();
 
     // card insertion is detected based on interrupt
     do
@@ -678,11 +646,11 @@ static test_result_t demo_card_data_access(void)
 
     if (cardInserted)
     {
-        PRINTF("A card is detected\n\r");
+        PRINTF("A card is detected\r\n");
     }
     else
     {
-        PRINTF("A card is removed\n\r");
+        PRINTF("A card is removed\r\n");
         return kTestResultFailed;
     }
 
@@ -699,7 +667,7 @@ static test_result_t demo_card_data_access(void)
     // show card information
     show_card_info(&card, true);
 
-    // Check if the card is read only or not 
+    // Check if the card is read only or not
     // It checks the write protection information from the card, not from on-board WP signal.
     // High Capacity SD cards (More than 2GB and up to and including 32GB) doesn't support write protection.
     // Standard Capacity (Up to and including 2 GBytes) SD cards may optionally support write protection.
@@ -882,11 +850,11 @@ int main(void)
     uint32_t i;
     test_result_t testResult;
 
-    // initialize the OS services
-    OSA_Init();
-
     // initialize target hw
     hardware_init();
+
+    // initialize the OS services
+    OSA_Init();
 
     // enable SDHC module instance
     CLOCK_SYS_EnableSdhcClock(0);
@@ -924,6 +892,6 @@ int main(void)
     OSA_SemaDestroy(&cd);
 
     PRINTF("\r\nSD Card Demo End!\r\n\r\n");
-    
+
     return 0;
 }

@@ -153,16 +153,15 @@ sys_mbox_free(sys_mbox_t *mbox)
 {
     OSA_MsgQDestroy (mbox->queueHandler);
 #ifdef FSL_RTOS_UCOSII
-    OSA_MemFree(mbox->queueHandler);
     OSA_MemFree(mbox->queueHandler->msgTbl);
     OSA_MemFree(mbox->queueHandler->msgs);
-#elif defined(FSL_RTOS_UCOSIII)
     OSA_MemFree(mbox->queueHandler);
+#elif defined(FSL_RTOS_UCOSIII)
     OSA_MemFree(mbox->queueHandler->msgs);
+    OSA_MemFree(mbox->queueHandler);
 #elif defined(FSL_RTOS_MQX)
     OSA_MemFree(mbox->queueHandler);
 #endif
-    
     OSA_SemaDestroy(&(mbox->_semSync));
 }
 

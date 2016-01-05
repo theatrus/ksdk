@@ -1424,7 +1424,7 @@ static inline void SIM_HAL_SetUsbVoltRegulatorOutputTargetCmd(SIM_Type * base, s
  * This function  gets the USB voltage regulator output voltage.
  *
  * @param base     Base address for current SIM instance.
- * @param enable   USB voltage regulator output target
+ * @return USB voltage regulator output target value.
  */
 static inline sim_usbvout_mode_t SIM_HAL_GetUsbVoltRegulatorOutputTargetCmd(SIM_Type * base)
 {
@@ -1836,6 +1836,7 @@ void SIM_HAL_SetFtmSyncCmd(SIM_Type * base, uint32_t instance, bool sync);
  *
  * @param base     Base address for current SIM instance.
  * @param instance     device instance.
+ * @return The synchronization value.
  */
 static inline bool SIM_HAL_GetFtmSyncCmd(SIM_Type * base, uint32_t instance)
 {

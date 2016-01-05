@@ -22,16 +22,16 @@ SET(CMAKE_EXECUTABLE_LIBRARY_SUFFIX)
 SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99 ")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99 ")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -107,6 +107,11 @@ ADD_LIBRARY(KsdkMqxLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_adc16_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/adc16/fsl_adc16_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/src/adc16/fsl_adc16_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/flexbus/fsl_flexbus_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_flexbus_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/flexbus/fsl_flexbus_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_flexbus_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/flexbus/fsl_flexbus_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/flexcan/fsl_flexcan_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_flexcan_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/flexcan/fsl_flexcan_driver.c"
@@ -117,6 +122,11 @@ ADD_LIBRARY(KsdkMqxLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_cmp_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/cmt/fsl_cmt_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_cmt_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/cmt/fsl_cmt_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_cmt_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/cmt/fsl_cmt_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/crc/fsl_crc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_crc_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/crc/fsl_crc_driver.c"
@@ -229,6 +239,12 @@ ADD_LIBRARY(KsdkMqxLib STATIC
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_sim_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/sim/MK21FA12/fsl_sim_hal_MK21FA12.c"
     "${ProjDirPath}/../../../../platform/hal/src/sim/MK21FA12/fsl_sim_hal_MK21FA12.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/smartcard/fsl_smartcard_common.c"
+    "${ProjDirPath}/../../../../platform/drivers/src/smartcard/fsl_smartcard_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_smartcard_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/smartcard/fsl_smartcard_uart_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_smartcard_uart_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/smartcard/interface/fsl_smartcard_ncn8025_driver.c"
     "${ProjDirPath}/../../../../platform/hal/src/smc/fsl_smc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_smc_hal.h"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_pmc_hal.h"
@@ -246,6 +262,11 @@ ADD_LIBRARY(KsdkMqxLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/wdog/fsl_wdog_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_wdog_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/wdog/fsl_wdog_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/vref/fsl_vref_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_vref_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_vref_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/vref/fsl_vref_common.c"
+    "${ProjDirPath}/../../../../platform/drivers/src/vref/fsl_vref_driver.c"
 )
 
 SET_TARGET_PROPERTIES(KsdkMqxLib PROPERTIES OUTPUT_NAME "libksdk_platform_mqx.a")

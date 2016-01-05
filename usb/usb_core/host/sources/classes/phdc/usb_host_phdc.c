@@ -145,7 +145,7 @@ usb_class_handle* class_handle_ptr
                 return USBERR_ERROR;
             }
         }
-        /* init bulk in pipe */
+        /* init bulk out pipe */
         if ((((ep_desc->bEndpointAddress & 0x80u)>> 7) == 0x00) && ((ep_desc->bmAttributes & EP_TYPE_MASK) == BULK_ENDPOINT))
         {
             pipe_init.endpoint_number  = (ep_desc->bEndpointAddress & ENDPOINT_MASK);
@@ -373,7 +373,11 @@ usb_class_handle* class_handle_ptr
 usb_status usb_class_phdc_send_data
 (
 /* [IN] phdc specific generic parameter structure pointer */
-usb_phdc_param_t* call_param_ptr
+usb_phdc_param_t* call_param_ptr,
+/* [IN] buffer pointer */
+uint8_t * buffer,
+/* [IN] data length */
+uint32_t buf_size
 )
 { /* Body */
     usb_phdc_class_struct_t* phdc_class;
@@ -383,7 +387,7 @@ usb_phdc_param_t* call_param_ptr
     uint8_t numTransfers;
     uint8_t latencyReliability;
 
-    if (NULL == call_param_ptr)
+    if ((NULL == call_param_ptr) || (NULL == call_param_ptr->class_ptr))
     {
         status = USBERR_ERROR;
 #ifdef _HOST_DEBUG_
@@ -392,16 +396,7 @@ usb_phdc_param_t* call_param_ptr
         return status;
     }
 
-    if ((NULL == call_param_ptr->class_ptr) || (NULL == call_param_ptr->buff_ptr) )
-    {
-        status = USBERR_ERROR;
-#ifdef _HOST_DEBUG_
-        DEBUG_LOG_TRACE("usb_phdc_send_data, NULL pointer parameter");
-#endif
-        return status;
-    }
-
-    if (0 == call_param_ptr->buff_size)
+    if (0 == buf_size)
     {
         status = USBERR_ERROR;
 #ifdef _HOST_DEBUG_
@@ -411,6 +406,13 @@ usb_phdc_param_t* call_param_ptr
     }
 
     phdc_class = (usb_phdc_class_struct_t*)call_param_ptr->class_ptr;
+    if ((phdc_class == NULL) || (buffer == NULL))
+    {
+        USB_PRINTF("input parameter error\n");
+        return USBERR_ERROR;
+    }
+    
+    phdc_class->send_callback = call_param_ptr->callback_fn;
     /* check for pending transfers */
     if (TRUE == phdc_class->set_clear_request_pending)
     {
@@ -426,7 +428,7 @@ usb_phdc_param_t* call_param_ptr
         /* meta-data and QOS checking */
         if (TRUE == call_param_ptr->metadata)
         {
-            latencyReliability = ((usb_phdc_metadat_prreamble_t *)call_param_ptr->buff_ptr)->bm_latency_reliability;
+            latencyReliability = ((usb_phdc_metadat_prreamble_t *)buffer)->bm_latency_reliability;
             if (((latencyReliability & latencyReliability) - 1) || (0 == latencyReliability) || (latencyReliability & 0xC0))
             {
                 status = USBERR_INVALID_BMREQ_TYPE;
@@ -459,7 +461,7 @@ usb_phdc_param_t* call_param_ptr
                 return status;
             }
 
-            numTransfers = ((usb_phdc_metadat_prreamble_t *)call_param_ptr->buff_ptr)->b_num_transfers;
+            numTransfers = ((usb_phdc_metadat_prreamble_t *)buffer)->b_num_transfers;
             if (0 == numTransfers)
             {
                 status = USBERR_ERROR;
@@ -494,8 +496,8 @@ usb_phdc_param_t* call_param_ptr
         return USBERR_ERROR;
     }
 
-    tr_ptr->tx_buffer = call_param_ptr->buff_ptr;
-    tr_ptr->tx_length = call_param_ptr->buff_size;
+    tr_ptr->tx_buffer = buffer;
+    tr_ptr->tx_length = buf_size;
     call_param_ptr->tr_index = tr_ptr->tr_index;
     call_param_ptr->tr_pipe_handle = phdc_class->bulk_out_pipe;
 
@@ -515,51 +517,6 @@ usb_phdc_param_t* call_param_ptr
 
     return USB_OK;
 } /* Endbody */
-
-/* PUBLIC FUNCTION*--------------------------------------------------------
- * 
- * Function Name  : usb_class_phdc_set_callbacks
- * Returned Value : none
- * Comments       :
- *     Initializes the application callbacks for the current PHDC interface
- * 
- *END*--------------------------------------------------------------------*/
-usb_status usb_class_phdc_set_callbacks
-(
-/* [IN]  the class driver handle */
-usb_class_handle handle,
-/* [IN] phdc application-registered send Callback */
-phdc_callback sendCallback,
-/* [IN] phdc application-registered receive Callback */
-phdc_callback recvCallback,
-/* [IN] phdc application-registered control Callback */
-phdc_callback ctrlCallback
-)
-{
-    usb_phdc_class_struct_t* phdc_class = (usb_phdc_class_struct_t*)handle;
-    usb_status returnStatus = USBERR_NO_INTERFACE;
-
-#ifdef _HOST_DEBUG_
-    DEBUG_LOG_TRACE("usb_class_phdc_set_callbacks");
-#endif
-
-    if (phdc_class == NULL)
-    {
-        USB_PRINTF("usb_class_phdc_set_callbacks fail\n");
-        return USBERR_ERROR;
-    }
-
-    if (!usb_class_phdc_interface_transfers_pending(phdc_class))
-    {
-        /* No transfers are pending in the interface. Set the callbacks */
-        phdc_class->send_callback = sendCallback;
-        phdc_class->recv_callback = recvCallback;
-        phdc_class->ctrl_callback = ctrlCallback;
-        returnStatus = USB_OK;
-    }
-
-    return returnStatus;
-}
 
 /* PUBLIC FUNCTION*--------------------------------------------------------
  * 
@@ -690,7 +647,12 @@ usb_class_handle handle
  *END*--------------------------------------------------------------------*/
 usb_status usb_class_phdc_recv_data
 (
-usb_phdc_param_t* call_param_ptr
+/* [IN] phdc specific generic parameter structure pointer */
+usb_phdc_param_t* call_param_ptr,
+/* [IN] buffer pointer */
+uint8_t * buffer,
+/* [IN] data length */
+uint32_t buf_size
 )
 { /* Body */
     usb_phdc_class_struct_t* phdc_class;
@@ -699,7 +661,7 @@ usb_phdc_param_t* call_param_ptr
     usb_pipe_handle pipe;
     usb_phdc_desc_qos_metadata_list_t* phdcQosMetadataListParser = NULL;
 
-    if (NULL == call_param_ptr)
+    if ((NULL == call_param_ptr) || (NULL == call_param_ptr->class_ptr))
     {
         status = USBERR_ERROR;
 #ifdef _HOST_DEBUG_
@@ -708,16 +670,7 @@ usb_phdc_param_t* call_param_ptr
         return status;
     }
 
-    if ((NULL == call_param_ptr->class_ptr) || (NULL == call_param_ptr->buff_ptr) )
-    {
-        status = USBERR_ERROR;
-#ifdef _HOST_DEBUG_
-        DEBUG_LOG_TRACE("usb_phdc_send_data, NULL pointer parameter");
-#endif
-        return status;
-    }
-
-    if (0 == call_param_ptr->buff_size)
+    if (0 == buf_size)
     {
         status = USBERR_ERROR;
 #ifdef _HOST_DEBUG_
@@ -727,6 +680,12 @@ usb_phdc_param_t* call_param_ptr
     }
 
     phdc_class = (usb_phdc_class_struct_t*)call_param_ptr->class_ptr;
+    if ((phdc_class == NULL) || (buffer == NULL))
+    {
+        USB_PRINTF("input parameter error\n");
+        return USBERR_ERROR;
+    }
+    phdc_class->recv_callback = call_param_ptr->callback_fn;
 
     /* Checks if QoS 'points' to the interrupt pipe and this pipe exists OR 'qos' contains valid value */
     if (call_param_ptr ->qos & 0x01)
@@ -774,8 +733,8 @@ usb_phdc_param_t* call_param_ptr
         USB_PRINTF("error to get tr\n");
         return USBERR_ERROR;
     }
-    tr_ptr->rx_buffer = call_param_ptr->buff_ptr;
-    tr_ptr->rx_length = call_param_ptr->buff_size;
+    tr_ptr->rx_buffer = buffer;
+    tr_ptr->rx_length = buf_size;
 
     /* Save the transfer index and pipe handle */
     call_param_ptr->tr_index = tr_ptr->tr_index;
@@ -924,14 +883,10 @@ usb_status usb_sts
             }
         }
     }
-    /* Populates the 'usb_status and buff_size' in the usb_phdc_param_t */
-    callback_param_ptr ->status = usb_sts;
-    callback_param_ptr ->buff_size = buff_size;
-
     /* Call the application callback function unless the callback pointer is NULL */
     if (NULL != phdc_class->recv_callback)
     {
-        phdc_class->recv_callback(callback_param_ptr);
+        phdc_class->recv_callback(tr_ptr, param, buff_ptr, buff_size, usb_sts);
     }
 } /* EndBody */
 
@@ -980,7 +935,12 @@ uint8_t ep_dir
  *END*--------------------------------------------------------------------*/
 usb_status usb_class_phdc_send_control_request
 (
-usb_phdc_param_t* call_param_ptr
+/* [IN] phdc specific generic parameter structure pointer */
+usb_phdc_param_t* call_param_ptr,
+/* [IN] buffer pointer */
+uint8_t * buffer,
+/* [IN] data length */
+uint32_t buf_size
 )
 { /* Body */
     usb_status                      status = USBERR_NO_INTERFACE;
@@ -1011,6 +971,7 @@ usb_phdc_param_t* call_param_ptr
 #endif
         return USBERR_ERROR;
     } /* Endif */
+    phdc_class->ctrl_callback = call_param_ptr->callback_fn;
 
     pDeviceIntf = (usb_device_interface_struct_t*)phdc_class->intf_handle;
     intf = pDeviceIntf->lpinterfaceDesc;
@@ -1029,7 +990,7 @@ usb_phdc_param_t* call_param_ptr
     {
         case PHDC_GET_STATUS_BREQ:
         /* status bytes are to be received from the device, so, make sure that buff_ptr isn't NULL */
-        if (call_param_ptr->buff_ptr == NULL)
+        if (buffer == NULL)
         {
             return USBERR_ERROR;
         }
@@ -1086,13 +1047,13 @@ usb_phdc_param_t* call_param_ptr
     /* Set TR buffer length as required */
     if ((REQ_TYPE_IN & tr_ptr->setup_packet.bmrequesttype) != 0)
     {
-        tr_ptr->rx_buffer = call_param_ptr->buff_ptr;
-        tr_ptr->rx_length = call_param_ptr->buff_size;
+        tr_ptr->rx_buffer = buffer;
+        tr_ptr->rx_length = buf_size;
     }
     else
     {
-        tr_ptr->tx_buffer = call_param_ptr->buff_ptr;
-        tr_ptr->tx_length = call_param_ptr->buff_size;
+        tr_ptr->tx_buffer = buffer;
+        tr_ptr->tx_length = buf_size;
     }
 
     status = usb_host_send_setup(phdc_class->host_handle, pipe_handle, tr_ptr);
@@ -1146,7 +1107,7 @@ usb_status usb_sts
     param_ptr = (usb_phdc_param_t*)call_param_ptr;
     pipe_ptr = (pipe_struct_t*)param_ptr->tr_pipe_handle;
     /* populate the usb_phdc_param_t structure using the data provided by the host API */
-    param_ptr->status = usb_sts;
+    //param_ptr->status = usb_sts;
     class_interface_handle = (usb_phdc_class_struct_t*)param_ptr->class_ptr;
 
     /* verify the USB error code and generate the PHDC specific error code */
@@ -1176,7 +1137,7 @@ usb_status usb_sts
     /* verify the callback pointer and if != NULL, launch the application's callback function */
     if (NULL != class_interface_handle->send_callback)
     {
-        class_interface_handle->send_callback(param_ptr);
+        class_interface_handle->send_callback(tr_ptr, call_param_ptr, data_ptr, data_size, usb_sts);
     }
 }
 
@@ -1358,12 +1319,7 @@ usb_status usb_sts
         if (*intf_ptr->ctrl_callback != NULL)
         {
             call_param_ptr->usb_phdc_status = phdc_status;
-            call_param_ptr->status = usb_sts;
-            if (usb_sts == USB_OK)
-            {
-                call_param_ptr->buff_size = length;
-            }
-            (*intf_ptr->ctrl_callback)(call_param_ptr);
+            (*intf_ptr->ctrl_callback)(tr_ptr, callbackParam, bBuff, length, usb_sts);
         }
     }
 }

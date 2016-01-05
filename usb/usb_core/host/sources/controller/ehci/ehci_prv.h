@@ -104,7 +104,7 @@ typedef struct list_node_struct
 {
     struct list_node_struct *next; /* next member in the list */
     struct list_node_struct *prev; /* previous member in the list */
-    volatile void* member; /* pointer to the currently active ITD or SITD*/
+    void*  member; /* pointer to the currently active ITD or SITD*/
    bool                           next_active; /* is next node a active node */
 } list_node_struct_t;
 
@@ -321,16 +321,11 @@ void _usb_host_process_reset_recovery_done (usb_host_handle handle);
 
 void _usb_ehci_process_tr_complete(usb_host_handle handle);
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
-    void _usb_ehci_isr(usb_host_handle handle);
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 void _usb_ehci_isr
    (
       /* [IN] the USB Host state structure */
       void
    );
-#endif
 
 usb_status usb_ehci_preinit (usb_host_handle upper_layer_handle, usb_host_handle *handle);
 usb_status usb_ehci_init (uint8_t controller_id, usb_host_handle handle);

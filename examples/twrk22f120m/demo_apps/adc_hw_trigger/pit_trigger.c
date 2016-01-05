@@ -35,6 +35,9 @@
 // SDK Included Files
 #include "adc_hw_trigger.h"
 #include "fsl_pit_driver.h"
+#if defined(KM34Z7_SERIES)
+#include "fsl_xbar_driver.h"
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -70,9 +73,15 @@ void init_trigger_source(uint32_t adcInstance)
     PIT_DRV_StartTimer(0, 0);
 
     // Configure SIM for ADC hw trigger source selection
+#if defined(KM34Z7_SERIES)
+    SIM_HAL_EnableClock(gSimBase[0], kSimClockGateXbar0);
+    SIM_HAL_SetAdcTrgSelMode(gSimBase[0], kSimAdcTrgSelXbar);
+    XBAR_DRV_ConfigSignalConnection(kXbaraInputPIT0_TIF0, kXbaraOutputADC_TRGA);
+#else
     SIM_HAL_SetAdcAlternativeTriggerCmd(gSimBase[0], adcInstance, true);
     SIM_HAL_SetAdcPreTriggerMode(gSimBase[0], adcInstance, kSimAdcPretrgselA);
     SIM_HAL_SetAdcTriggerMode(gSimBase[0], adcInstance, kSimAdcTrgSelPit0);
+#endif
 }
 
 /*!

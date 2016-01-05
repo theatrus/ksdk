@@ -50,6 +50,8 @@
 #define LPUART_DATA_REG_ID (3U)
 #define LPUART_MATCH_REG_ID (4U)
 #define LPUART_MODIR_REG_ID (5U)
+#define LPUART_FIFO_REG_ID (6U)
+#define LPUART_WATER_REG_ID (7U)
 
 /*! @brief Error codes for the LPUART driver.*/
 typedef enum _lpuart_status
@@ -61,14 +63,15 @@ typedef enum _lpuart_status
     kStatus_LPUART_ClearStatusFlagError     = 0x04U,
     kStatus_LPUART_TxNotDisabled            = 0x05U,
     kStatus_LPUART_RxNotDisabled            = 0x06U,
-    kStatus_LPUART_TxBusy                   = 0x07U,
-    kStatus_LPUART_RxBusy                   = 0x08U,
-    kStatus_LPUART_NoTransmitInProgress     = 0x09U,
-    kStatus_LPUART_NoReceiveInProgress      = 0x0AU,
-    kStatus_LPUART_Timeout                  = 0x0BU,
-    kStatus_LPUART_Initialized              = 0x0CU,
-    kStatus_LPUART_NoDataToDeal             = 0x0DU,
-    kStatus_LPUART_RxOverRun                = 0x0EU
+    kStatus_LPUART_TxOrRxNotDisabled        = 0x07U,
+    kStatus_LPUART_TxBusy                   = 0x08U,
+    kStatus_LPUART_RxBusy                   = 0x09U,
+    kStatus_LPUART_NoTransmitInProgress     = 0x0AU,
+    kStatus_LPUART_NoReceiveInProgress      = 0x0BU,
+    kStatus_LPUART_Timeout                  = 0x0CU,
+    kStatus_LPUART_Initialized              = 0x0DU,
+    kStatus_LPUART_NoDataToDeal             = 0x0EU,
+    kStatus_LPUART_RxOverRun                = 0x0FU
 } lpuart_status_t;
 
 /*! @brief LPUART number of stop bits*/
@@ -186,35 +189,53 @@ typedef struct LpuartIdleLineConfig {
                                         get set (default), 1 - IDLE status bit gets set*/
 } lpuart_idle_line_config_t;
 
+/*! @brief LPUART Receiver Idle Empty Enable constants.*/
+typedef enum _lpuart_rx_idle_empty_config {
+    kLpuartRxidDisabled         = 0x0U,  /*!< Disable RDRF assertion due to partially filled FIFO when receiver is idle.*/
+    kLpuartRxidEnabledFor1Char  = 0x1U,  /*!< Enable RDRF assertion due to partially filled FIFO when receiver is idle for 1 character.*/
+    kLpuartRxidEnabledFor2Char  = 0x2U,  /*!< Enable RDRF assertion due to partially filled FIFO when receiver is idle for 2 characters.*/
+    kLpuartRxidEnabledFor4Char  = 0x3U,  /*!< Enable RDRF assertion due to partially filled FIFO when receiver is idle for 4 characters.*/
+    kLpuartRxidEnabledFor8Char  = 0x4U,  /*!< Enable RDRF assertion due to partially filled FIFO when receiver is idle for 8 characters.*/
+    kLpuartRxidEnabledFor16Char = 0x5U,  /*!< Enable RDRF assertion due to partially filled FIFO when receiver is idle for 16 characters.*/
+    kLpuartRxidEnabledFor32Char = 0x6U,  /*!< Enable RDRF assertion due to partially filled FIFO when receiver is idle for 32 characters.*/
+    kLpuartRxidEnabledFor64Char = 0x7U,  /*!< Enable RDRF assertion due to partially filled FIFO when receiver is idle for 64 characters.*/
+} lpuart_rx_idle_empty_config_t;
+
 /*!
  * @brief LPUART status flags.
  *
  * This provides constants for the LPUART status flags for use in the UART functions.
  */
 typedef enum _lpuart_status_flag {
-    kLpuartTxDataRegEmpty         = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_TDRE_SHIFT,    /*!< Tx data register empty flag, sets when Tx buffer is empty */
+    kLpuartTxDataRegEmpty         = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_TDRE_SHIFT,    /*!< Transmit data register empty flag, sets when transmit buffer is empty */
     kLpuartTxComplete             = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_TC_SHIFT,      /*!< Transmission complete flag, sets when transmission activity complete */
-    kLpuartRxDataRegFull          = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_RDRF_SHIFT,    /*!< Rx data register full flag, sets when the receive data buffer is full */
+    kLpuartRxDataRegFull          = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_RDRF_SHIFT,    /*!< Receive data register full flag, sets when the receive data buffer is full */
     kLpuartIdleLineDetect         = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_IDLE_SHIFT,    /*!< Idle line detect flag, sets when idle line detected */
-    kLpuartRxOverrun              = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_OR_SHIFT,      /*!< Rx Overrun, sets when new data is received before data is read from receive register */
-    kLpuartNoiseDetect            = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_NF_SHIFT,      /*!< Rx takes 3 samples of each received bit.  If any of these samples differ, noise flag sets */
+    kLpuartRxOverrun              = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_OR_SHIFT,      /*!< Receive Overrun, sets when new data is received before data is read from receive register */
+    kLpuartNoiseDetect            = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_NF_SHIFT,      /*!< Receive takes 3 samples of each received bit.  If any of these samples differ, noise flag sets */
     kLpuartFrameErr               = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_FE_SHIFT,      /*!< Frame error flag, sets if logic 0 was detected where stop bit expected */
     kLpuartParityErr              = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_PF_SHIFT,      /*!< If parity enabled, sets upon parity error detection */
     kLpuartLineBreakDetect        = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_LBKDE_SHIFT,   /*!< LIN break detect interrupt flag, sets when LIN break char detected and LIN circuit enabled */
-    kLpuartRxActiveEdgeDetect     = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_RXEDGIF_SHIFT, /*!< Rx pin active edge interrupt flag, sets when active edge detected */
+    kLpuartRxActiveEdgeDetect     = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_RXEDGIF_SHIFT, /*!< Receive pin active edge interrupt flag, sets when active edge detected */
     kLpuartRxActive               = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_RAF_SHIFT,     /*!< Receiver Active Flag (RAF), sets at beginning of valid start bit */
     kLpuartNoiseInCurrentWord     = LPUART_DATA_REG_ID << LPUART_SHIFT | LPUART_DATA_NOISY_SHIFT,     /*!< NOISY bit, sets if noise detected in current data word */
     kLpuartParityErrInCurrentWord = LPUART_DATA_REG_ID << LPUART_SHIFT | LPUART_DATA_PARITYE_SHIFT,   /*!< PARITYE bit, sets if noise detected in current data word */
 #if FSL_FEATURE_LPUART_HAS_ADDRESS_MATCHING
-    kLpuartMatchAddrOne              = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_MA1F_SHIFT,    /*!< Address one match flag */
-    kLpuartMatchAddrTwo              = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_MA2F_SHIFT,    /*!< Address two match flag */
+    kLpuartMatchAddrOne           = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_MA1F_SHIFT,    /*!< Address one match flag */
+    kLpuartMatchAddrTwo           = LPUART_STAT_REG_ID << LPUART_SHIFT | LPUART_STAT_MA2F_SHIFT,    /*!< Address two match flag */
+#endif
+#if FSL_FEATURE_LPUART_HAS_FIFO
+    kLpuartTxBuffEmpty              = LPUART_FIFO_REG_ID << LPUART_SHIFT | LPUART_FIFO_TXEMPT_SHIFT,  /*!< TXEMPT bit, sets if transmit buffer is empty */
+    kLpuartRxBuffEmpty              = LPUART_FIFO_REG_ID << LPUART_SHIFT | LPUART_FIFO_RXEMPT_SHIFT,  /*!< RXEMPT bit, sets if receive buffer is empty */
+    kLpuartTxBuffOverflow           = LPUART_FIFO_REG_ID << LPUART_SHIFT | LPUART_FIFO_TXOF_SHIFT,    /*!< TXOF bit, sets if transmit buffer overflow occurred */
+    kLpuartRxBuffUnderflow          = LPUART_FIFO_REG_ID << LPUART_SHIFT | LPUART_FIFO_RXUF_SHIFT,    /*!< RXUF bit, sets if receive buffer underflow occurred */
 #endif
 } lpuart_status_flag_t;
 
 /*! @brief LPUART interrupt configuration structure, default settings are 0 (disabled)*/
 typedef enum _lpuart_interrupt {
     kLpuartIntLinBreakDetect = LPUART_BAUD_REG_ID << LPUART_SHIFT | LPUART_BAUD_LBKDIE_SHIFT,  /*!< LIN break detect. */
-    kLpuartIntRxActiveEdge   = LPUART_BAUD_REG_ID << LPUART_SHIFT | LPUART_BAUD_RXEDGIE_SHIFT, /*!< RX Active Edge. */
+    kLpuartIntRxActiveEdge   = LPUART_BAUD_REG_ID << LPUART_SHIFT | LPUART_BAUD_RXEDGIE_SHIFT, /*!< Receive Active Edge. */
     kLpuartIntTxDataRegEmpty = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_TIE_SHIFT,     /*!< Transmit data register empty. */
     kLpuartIntTxComplete     = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_TCIE_SHIFT,    /*!< Transmission complete. */
     kLpuartIntRxDataRegFull  = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_RIE_SHIFT,     /*!< Receiver data register full. */
@@ -227,6 +248,10 @@ typedef enum _lpuart_interrupt {
     kLpuartIntMatchAddrOne   = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_MA1IE_SHIFT,   /*!< Match address one flag. */
     kLpuartIntMatchAddrTwo   = LPUART_CTRL_REG_ID << LPUART_SHIFT | LPUART_CTRL_MA2IE_SHIFT,   /*!< Match address two flag. */
 #endif
+#if FSL_FEATURE_LPUART_HAS_FIFO
+    kLpuartIntTxFifoOverflow  = LPUART_FIFO_REG_ID << LPUART_SHIFT | LPUART_FIFO_TXOFE_SHIFT,   /*!< Transmit FIFO Overflow. */
+    kLpuartIntRxFifoUnderflow = LPUART_FIFO_REG_ID << LPUART_SHIFT | LPUART_FIFO_RXUFE_SHIFT,   /*!< Receive FIFO Underflow. */
+#endif    
 } lpuart_interrupt_t;
 
 
@@ -251,7 +276,7 @@ extern "C" {
 void LPUART_HAL_Init(LPUART_Type * base);
 
 /*!
- * @brief Enable/Disable the LPUART transmitter.
+ * @brief Enables/disables the LPUART transmitter.
  *
  * @param base LPUART base pointer.
  * @param enable Enable(true) or disable(false) transmitter.
@@ -273,7 +298,7 @@ static inline bool LPUART_HAL_GetTransmitterCmd(LPUART_Type * base)
 }
 
 /*!
- * @brief Enable/Disable the LPUART receiver.
+ * @brief Enables/disables the LPUART receiver.
  *
  * @param base LPUART base pointer
  * @param enable Enable(true) or disable(false) receiver.
@@ -324,8 +349,8 @@ static inline void LPUART_HAL_SetBaudRateDivisor(LPUART_Type * base, uint32_t ba
 
 #if FSL_FEATURE_LPUART_HAS_BAUD_RATE_OVER_SAMPLING_SUPPORT
 /*!
- * @brief Sets the LPUART baud rate oversampling ratio (Note: Feature available on select
- *        LPUART instances used together with baud rate programming)
+ * @brief Sets the LPUART baud rate oversampling ratio. Note that this feature is available on select
+ *        LPUART instances used together with baud rate programming.
  *        The oversampling ratio should be set between 4x (00011) and 32x (11111). Writing
  *        an invalid oversampling ratio results in an error and is set to a default
  *        16x (01111) oversampling ratio.
@@ -344,8 +369,8 @@ static inline void LPUART_HAL_SetOversamplingRatio(LPUART_Type * base, uint32_t 
 
 #if FSL_FEATURE_LPUART_HAS_BOTH_EDGE_SAMPLING_SUPPORT
 /*!
- * @brief Configures the LPUART baud rate both edge sampling (Note: Feature available on select
- *        LPUART instances used with baud rate programming)
+ * @brief Configures the LPUART baud rate both edge sampling. Note that this feature is available on select
+ *        LPUART instances used with baud rate programming.
  *        When enabled, the received data is sampled on both edges of the baud rate clock.
  *        This must be set when the oversampling ratio is between 4x and 7x.
  *        This function should only be called when the receiver is disabled.
@@ -400,9 +425,10 @@ static inline void LPUART_HAL_SetStopBitCount(LPUART_Type * base, lpuart_stop_bi
 }
 
 /*!
- * @brief  Get LPUART tx/rx data register address.
+ * @brief  Gets the LPUART transmit/receive data register address.
  *
- * @return  LPUART tx/rx data register address.
+ * @param base LPUART base pointer.
+ * @return  LPUART transmit/receive data register address.
  */
 static inline uint32_t LPUART_HAL_GetDataRegAddr(LPUART_Type * base)
 {
@@ -508,7 +534,7 @@ static inline void LPUART_HAL_Putchar(LPUART_Type * base, uint8_t data)
 void LPUART_HAL_Putchar9(LPUART_Type * base, uint16_t data);
 
 /*!
- * @brief Sends the LPUART 10-bit character (Note: Feature available on select LPUART instances).
+ * @brief Sends the LPUART 10-bit character. Note that this feature is available on select LPUART instances.
  *
  * @param base LPUART Instance
  * @param data   data to send (10-bit)
@@ -544,7 +570,7 @@ void LPUART_HAL_Getchar9(LPUART_Type * base, uint16_t *readData);
 void LPUART_HAL_Getchar10(LPUART_Type * base, uint16_t *readData);
 
 /*!
- * @brief Send out multiple bytes of data using polling method.
+ * @brief Sends out multiple bytes of data using the polling method.
  *
  * This function only supports 8-bit transaction.
  *
@@ -555,14 +581,14 @@ void LPUART_HAL_Getchar10(LPUART_Type * base, uint16_t *readData);
 void LPUART_HAL_SendDataPolling(LPUART_Type * base, const uint8_t *txBuff, uint32_t txSize);
 
 /*!
- * @brief Receive multiple bytes of data using polling method.
+ * @brief Receives multiple bytes of data using the polling method.
  *
  * This function only supports 8-bit transaction.
  *
  * @param   base LPUART module base pointer.
  * @param   rxBuff The buffer pointer which saves the data to be received.
  * @param   rxSize Size of data need to be received in unit of byte.
- * @return  Whether the transaction is success or rx overrun.
+ * @return  Whether the transaction is success or receive overrun.
  */
 lpuart_status_t LPUART_HAL_ReceiveDataPolling(LPUART_Type * base, uint8_t *rxBuff, uint32_t rxSize);
 
@@ -574,7 +600,7 @@ lpuart_status_t LPUART_HAL_ReceiveDataPolling(LPUART_Type * base, uint8_t *rxBuf
  */
 
 /*!
- * @brief  LPUART get status flag
+ * @brief  LPUART get status flag.
  *
  * @param base LPUART base pointer
  * @param statusFlag  The status flag to query
@@ -644,7 +670,7 @@ static inline bool LPUART_HAL_IsCurrentDataWithFrameError(LPUART_Type * base)
 }
 
 /*!
- * @brief Set this bit to indicate a break or idle character is to be transmitted
+ * @brief Indicates a break or that the idle character is to be transmitted
  *        instead of the contents in DATA[T9:T0].
  *
  * @param base LPUART base pointer
@@ -701,7 +727,7 @@ static inline bool LPUART_HAL_WasPreviousReceiverStateIdle(LPUART_Type * base)
  */
 static inline void  LPUART_HAL_SetWaitModeOperation(LPUART_Type * base, lpuart_operation_config_t mode)
 {
-    /* In CPU wait mode: 0 - lpuart clocks continue to run; 1 - lpuart clocks freeze */
+    /* In CPU wait mode: 0 - LPUART clocks continue to run; 1 - LPUART clocks freeze */
     LPUART_BWR_CTRL_DOZEEN(base, mode);
 }
 
@@ -714,12 +740,12 @@ static inline void  LPUART_HAL_SetWaitModeOperation(LPUART_Type * base, lpuart_o
  */
 static inline lpuart_operation_config_t LPUART_HAL_GetWaitModeOperation(LPUART_Type * base)
 {
-    /* In CPU wait mode: 0 - lpuart clocks continue to run; 1 - lpuart clocks freeze  */
+    /* In CPU wait mode: 0 - LPUART clocks continue to run; 1 - LPUART clocks freeze  */
     return (lpuart_operation_config_t)LPUART_BRD_CTRL_DOZEEN(base);
 }
 
 /*!
- * @brief Configures the LPUART loopback operation (enable/disable loopback operation)
+ * @brief Configures the LPUART loopback operation (enables/disables the loopback operation).
  *
  * In some LPUART instances, the user should disable the transmitter/receiver
  * before calling this function.
@@ -731,7 +757,7 @@ static inline lpuart_operation_config_t LPUART_HAL_GetWaitModeOperation(LPUART_T
 void LPUART_HAL_SetLoopbackCmd(LPUART_Type * base, bool enable);
 
 /*!
- * @brief Configures the LPUART single-wire operation (enable/disable single-wire mode)
+ * @brief Configures the LPUART single-wire operation (enables/disables the single-wire mode).
  *
  * In some LPUART instances, the user should disable the transmitter/receiver
  * before calling this function.
@@ -784,7 +810,7 @@ static inline bool LPUART_HAL_IsReceiverInStandby(LPUART_Type * base)
 }
 
 /*!
- * @brief  LPUART receiver wakeup method (idle line or addr-mark) from standby mode
+ * @brief  LPUART receiver wakeup method (idle line or addr-mark) from standby mode.
  *
  * @param base LPUART base pointer
  * @param method   LPUART wakeup method: 0 - Idle-line wake (default), 1 - addr-mark wake
@@ -822,7 +848,7 @@ void LPUART_HAL_SetIdleLineDetect(LPUART_Type * base,
                                   const lpuart_idle_line_config_t *config);
 
 /*!
- * @brief  LPUART break character transmit length configuration
+ * @brief  LPUART break character transmit length configuration.
  *
  * In some LPUART instances, the user should disable the transmitter before calling
  * this function. Generally, this may be applied to all LPUARTs to ensure safe operation.
@@ -838,7 +864,7 @@ static inline void LPUART_HAL_SetBreakCharTransmitLength(LPUART_Type * base,
 }
 
 /*!
- * @brief  LPUART break character detect length configuration
+ * @brief  LPUART break character detect length configuration.
  *
  * @param base LPUART base pointer
  * @param length  LPUART break character length setting: 0 - minimum 10-bit times (default),
@@ -863,7 +889,7 @@ static inline void LPUART_HAL_QueueBreakCharToSend(LPUART_Type * base, bool enab
 }
 
 /*!
- * @brief LPUART configures match address mode control
+ * @brief LPUART configures match address mode control.
  *
  * @param base LPUART base pointer
  * @param config MATCFG: Configures the match addressing mode used.
@@ -874,9 +900,9 @@ static inline void LPUART_HAL_SetMatchAddressMode(LPUART_Type * base, lpuart_mat
 }
 
 /*!
- * @brief Configures address match register 1
+ * @brief Configures address match register 1.
  *
- * The MAEN bit must be cleared before configuring MA value, so the enable/disable
+ * The MAEN bit must be cleared before configuring the MA value. Therefore, the enable/disable
  * and set value must be included inside one function.
  *
  * @param base LPUART base pointer
@@ -886,9 +912,9 @@ static inline void LPUART_HAL_SetMatchAddressMode(LPUART_Type * base, lpuart_mat
 void LPUART_HAL_SetMatchAddressReg1(LPUART_Type * base, bool enable, uint8_t value);
 
 /*!
- * @brief Configures address match register 2
+ * @brief Configures address match register 2.
  *
- * The MAEN bit must be cleared before configuring MA value, so the enable/disable
+ * The MAEN bit must be cleared before configuring MA value. Therefore, the enable/disable
  * and set value must be included inside one function.
  *
  * @param base LPUART base pointer
@@ -898,7 +924,7 @@ void LPUART_HAL_SetMatchAddressReg1(LPUART_Type * base, bool enable, uint8_t val
 void LPUART_HAL_SetMatchAddressReg2(LPUART_Type * base, bool enable, uint8_t value);
 
 /*!
- * @brief LPUART sends the MSB first configuration
+ * @brief LPUART sends the MSB first configuration.
  *
  * In some LPUART instances, the user should disable the transmitter/receiver
  * before calling this function.
@@ -913,7 +939,7 @@ static inline void LPUART_HAL_SetSendMsbFirstCmd(LPUART_Type * base, bool enable
 }
 
 /*!
- * @brief  LPUART enable/disable re-sync of received data configuration
+ * @brief  LPUART enable/disable re-sync of received data configuration.
  *
  * @param base LPUART base pointer
  * @param enable  re-sync of received data word configuration:
@@ -956,7 +982,7 @@ static inline void LPUART_HAL_SetCtsMode(LPUART_Type * base, lpuart_cts_config_t
 }
 
 /*!
- * @brief Enable/Disable the transmitter clear-to-send.
+ * @brief Enables/disables the transmitter clear-to-send.
  *
  * @param base LPUART base pointer
  * @param enable  disable(0)/enable(1) transmitter CTS.
@@ -967,7 +993,7 @@ static inline void LPUART_HAL_SetTxCtsCmd(LPUART_Type * base, bool enable)
 }
 
 /*!
- * @brief  Enable/Disable the receiver request-to-send.
+ * @brief  Enables/disables the receiver request-to-send.
  *
  * Note: do not enable both Receiver RTS (RXRTSE) and Transmit RTS (TXRTSE).
  *
@@ -980,7 +1006,7 @@ static inline void LPUART_HAL_SetRxRtsCmd(LPUART_Type * base, bool enable)
 }
 
 /*!
- * @brief  Enable/Disable the transmitter request-to-send.
+ * @brief  Enables/disables the transmitter request-to-send.
  * Note: do not enable both Receiver RTS (RXRTSE) and Transmit RTS (TXRTSE).
  *
  * @param base LPUART base pointer
@@ -1015,6 +1041,228 @@ static inline void LPUART_HAL_SetTxRtsPolarityMode(LPUART_Type * base, bool pola
 void LPUART_HAL_SetInfrared(LPUART_Type * base, bool enable,
                             lpuart_ir_tx_pulsewidth_t pulseWidth);
 #endif  /* FSL_FEATURE_LPUART_HAS_IR_SUPPORT */
+
+/*!
+ * @name LPUART FIFO Configurations
+ * @{
+ */
+
+#if FSL_FEATURE_LPUART_HAS_FIFO
+/*!
+ * @brief  Enables or disable the LPUART transmit FIFO.
+ *
+ * This function allows the user to enable or disable the LPUART transmit FIFO.
+ * It is required that the transmitter/receiver be disabled before calling this function
+ * when the FIFO is empty.
+ * Additionally, TXFLUSH and RXFLUSH commands should be issued after calling this function.
+ *
+ * @param base LPUART module base pointer.
+ * @param enable Enable or disable Tx FIFO.
+ * @return Error code if it is detected that the transmitter or receiver is enabled or
+ *         kStatus_LPUART_Success.
+ */
+lpuart_status_t LPUART_HAL_SetTxFifoCmd(LPUART_Type * base, bool enable);
+
+/*!
+ * @brief  Enables or disables the LPUART receive FIFO.
+ *
+ * This function allows the user to enable or disable the LPUART receive FIFO.
+ * It is required that the transmitter/receiver be disabled before calling this function
+ * when the FIFO is empty.
+ * Additionally, TXFLUSH and RXFLUSH commands should be issued after calling this function.
+ *
+ * @param base LPUART module base pointer.
+ * @param enable Enable or disable Rx FIFO.
+ * @return Error code if it is detected that the transmitter or receiver is enabled or
+ *         kStatus_LPUART_Success.
+ */
+lpuart_status_t LPUART_HAL_SetRxFifoCmd(LPUART_Type * base, bool enable);
+
+/*!
+ * @brief  Gets the size of the LPUART transmit FIFO.
+ *
+ * This function returns the size (number of entries) supported in the LPUART transmit FIFO for
+ * a particular module base.
+ *
+ * @param base LPUART module base pointer.
+ * @return  The LPUART transmit FIFO size as follows:
+ *    0x0: 1 data word; 0x1: 4 data words; 0x2: 8 data words; 0x3: 16 data words
+ *    0x4: 32 data words; 0x5: 64 data words; 0x6: 128 data words; 0x7: 256 data words
+ */
+static inline uint8_t LPUART_HAL_GetTxFifoSize(LPUART_Type * base)
+{
+    return LPUART_BRD_FIFO_TXFIFOSIZE(base);
+}
+
+/*!
+ * @brief  Gets the size of the LPUART receive FIFO.
+ *
+ * This function returns the size (number of entries) supported in the LPUART receive FIFO for
+ * a particular module base.
+ *
+ * @param   base LPUART module base pointer.
+ * @return  The receive FIFO size as follows:
+ *    0x0: 1 data word; 0x1: 4 data words; 0x2: 8 data words; 0x3: 16 data words
+ *    0x4: 32 data words; 0x5: 64 data words; 0x6: 128 data words; 0x7: 256 data words
+ */
+static inline uint8_t LPUART_HAL_GetRxFifoSize(LPUART_Type * base)
+{
+    return LPUART_BRD_FIFO_RXFIFOSIZE(base);
+}
+
+/*!
+ * @brief  Flushes the LPUART transmit FIFO.
+ *
+ * This function allows the user to flush the LPUART transmit FIFO for a particular module base.
+ * Flushing the FIFO may result in data loss.
+ * It is recommended that the transmitter be disabled before calling this function.
+ *
+ * @param base LPUART module base pointer.
+ * @return Error code if it is detected that the transmitter or receiver is enabled or
+ *         kStatus_LPUART_Success.
+ */
+lpuart_status_t LPUART_HAL_FlushTxFifo(LPUART_Type * base);
+
+/*!
+ * @brief  Flushes the LPUART receive FIFO.
+ *
+ * This function allows the user to flush the LPUART receive FIFO for a particular module base.
+ * Flushing the FIFO may result in data loss.
+ * It is recommended that the receiver be disabled before calling this function.
+ *
+ * @param base LPUART module base pointer.
+ * @return Error code if it is detected that the transmitter or receiver is enabled or
+ *         kStatus_LPUART_Success.
+ */
+lpuart_status_t LPUART_HAL_FlushRxFifo(LPUART_Type * base);
+
+/*!
+ * @brief  Gets the LPUART transmit FIFO empty status state.
+ *
+ * The function returns the state of the transmit FIFO empty status state, but does not take into
+ * account data in the shift register.
+ *
+ * @param   base LPUART module base pointer.
+ * @return  The LPUART transmit FIFO empty status: true=empty; false=not-empty.
+ */
+static inline bool LPUART_HAL_IsTxFifoEmpty(LPUART_Type * base)
+{
+    return LPUART_BRD_FIFO_TXEMPT(base);
+}
+
+/*!
+ * @brief  Gets the LPUART receive FIFO empty status state.
+ *
+ * The function returns the state of the receive FIFO empty status state, but does not take into
+ * account data in the shift register.
+ *
+ * @param   base LPUART module base pointer.
+ * @return  The LPUART receive FIFO empty status: true=empty; false=not-empty.
+ */
+static inline bool LPUART_HAL_IsRxFifoEmpty(LPUART_Type * base)
+{
+    return LPUART_BRD_FIFO_RXEMPT(base);
+}
+
+/*!
+ * @brief  Configures the LPUART receiver idle empty enable value.
+ *
+ * The function enables configuration of the assertion of RDRF when the receiver is idle for a number of idle characters and the
+ * FIFO is not empty.
+ *
+ * @param   base LPUART module base pointer.
+ * @param   config Configures the number of idle characters that asserts RDRF.
+ * @return  Error code if transmitter is enabled or kStatus_LPUART_Success.
+ */
+lpuart_status_t LPUART_HAL_SetRxIdleEmpty(LPUART_Type * base, lpuart_rx_idle_empty_config_t config);
+
+/*!
+ * @brief  Gets the LPUART receiver idle empty enable value.
+ *
+ * @param   base LPUART module base pointer.
+ * @return  Current number of idle characters that asserts RDRF.
+ */
+static inline lpuart_rx_idle_empty_config_t LPUART_HAL_GetRxIdleEmpty(LPUART_Type * base)
+{
+    return (lpuart_rx_idle_empty_config_t)LPUART_BRD_FIFO_RXIDEN(base);
+}
+
+/*!
+ * @brief  Sets the LPUART transmit FIFO watermark value.
+ *
+ * Programming the transmit watermark should be done when LPUART the transmitter is disabled
+ * and the value must be set less than the size obtained from LPUART_HAL_GetTxFifoSize.
+ *
+ * @param   base LPUART module base pointer.
+ * @param   watermark  The LPUART transmit watermark value to be programmed.
+ * @return  Error code if transmitter is enabled or kStatus_LPUART_Success.
+ */
+lpuart_status_t LPUART_HAL_SetTxFifoWatermark(LPUART_Type * base, uint8_t watermark);
+
+/*!
+ * @brief  Gets the LPUART transmit FIFO watermark value.
+ *
+ * @param   base LPUART module base pointer.
+ * @return  The value currently programmed for the LPUART transmit watermark.
+ */
+static inline uint8_t LPUART_HAL_GetTxFifoWatermark(LPUART_Type * base)
+{
+    return LPUART_BRD_WATER_TXWATER(base);
+}
+
+/*!
+ * @brief  Gets the LPUART transmit FIFO data word count (number of words in the transmit FIFO).
+ *
+ * The function LPUART_HAL_GetTxDatawordCountInFifo excludes any data that may
+ * be in the LPUART transmit shift register.
+ *
+ * @param   base LPUART module base pointer.
+ * @return  The number of data words currently in the LPUART transmit FIFO.
+ */
+static inline uint8_t LPUART_HAL_GetTxDatawordCountInFifo(LPUART_Type * base)
+{
+    return LPUART_BRD_WATER_TXCOUNT(base);
+}
+
+/*!
+ * @brief  Sets the LPUART receive FIFO watermark value.
+ *
+ * Programming the receive watermark should be done when the receiver is disabled
+ * and the value must be set less than the size obtained from LPUART_HAL_GetRxFifoSize and
+ * greater than zero.
+ *
+ * @param   base LPUART module base pointer.
+ * @param  watermark  The LPUART receive watermark value to be programmed.
+ * @return  Error code if receiver is enabled or kStatus_LPUART_Success.
+ */
+lpuart_status_t LPUART_HAL_SetRxFifoWatermark(LPUART_Type * base, uint8_t watermark);
+
+/*!
+ * @brief  Gets the LPUART receive FIFO data word count (number of words in the receive FIFO).
+ *
+ * The function LPUART_HAL_GetRxDatawordCountInFifo excludes any data that may be
+ * in the receive shift register.
+ *
+ * @param   base LPUART module base pointer.
+ * @return  The number of data words currently in the LPUART receive FIFO.
+ */
+static inline uint8_t LPUART_HAL_GetRxDatawordCountInFifo(LPUART_Type * base)
+{
+    return LPUART_BRD_WATER_RXCOUNT(base);
+}
+
+/*!
+ * @brief  Gets the LPUART receive FIFO watermark value.
+ *
+ * @param   base LPUART module base pointer.
+ * @return  The value currently programmed for the LPUART receive watermark.
+ */
+static inline uint8_t LPUART_HAL_GetRxFifoWatermark(LPUART_Type * base)
+{
+    return LPUART_BRD_WATER_RXWATER(base);
+}
+
+#endif  /* FSL_FEATURE_LPUART_HAS_FIFO*/
 
 /*@}*/
 

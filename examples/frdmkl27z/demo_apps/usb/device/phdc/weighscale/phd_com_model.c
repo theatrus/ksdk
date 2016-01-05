@@ -40,24 +40,19 @@
 #include "usb_device_stack_interface.h"
 #include "weighscale.h"
 
-#if USBCFG_DEV_COMPOSITE
-#error This application requires USBCFG_DEV_COMPOSITE defined zero in usb_device_config.h. Please recompile usbd with this option.
-#endif
 /****************************************************************************
  * Global Variables
  ****************************************************************************/
 /* Add all the variables needed for phd_com_model.c to this structure */
 phdc_com_global_variable_struct_t g_phdc_com;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-uint8_t *g_receive_buff;
-#else
 uint8_t g_receive_buff[PHDC_BULK_OUT_BUFFER_SIZE];
-#endif
 uint16_t g_phdc_device_speed;
 uint32_t g_bulk_out_max_packet_size;
 
 extern usb_desc_request_notify_struct_t     g_desc_callback;
 extern weighscale_variable_struct_t         g_weighscale;
+extern uint8_t usb_device_board_init(uint8_t controller_id);;
+extern uint32_t iteration;
 
 /*****************************************************************************
  * Local Functions Prototypes
@@ -594,6 +589,7 @@ static void PHD_Disconnect_Handler
 {    
     UNUSED_ARGUMENT(handle)
     UNUSED_ARGUMENT(val)
+    iteration = 0;
     g_phdc_com.phd_com_state = PHD_AG_STATE_DISCONNECTED;
 }
 
@@ -819,6 +815,8 @@ uint8_t PHD_Transport_Init
     phdc_config.class_specific_callback.arg = (void *)handle;
     phdc_config.vendor_req_callback.callback = NULL;
     phdc_config.vendor_req_callback.arg = NULL;
+    phdc_config.board_init_callback.callback = usb_device_board_init;
+    phdc_config.board_init_callback.arg = CONTROLLER_ID;
     phdc_config.desc_callback_ptr = &g_desc_callback;
 
     OS_Mem_zero(&g_phdc_com, sizeof(phdc_com_global_variable_struct_t));
@@ -826,9 +824,7 @@ uint8_t PHD_Transport_Init
     g_phdc_com.phdc_com_callback = phd_callback;
     g_bulk_out_max_packet_size = PHDC_BULK_OUT_BUFFER_SIZE;
     USB_Class_PHDC_Init(CONTROLLER_ID,&phdc_config,handle);
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    g_receive_buff = OS_Mem_alloc_uncached_align(PHDC_BULK_OUT_BUFFER_SIZE, 32);
-#endif
+
     g_phdc_com.com_rx_buff_ptr = NULL; 
     return 0;
 }
@@ -849,7 +845,7 @@ uint8_t PHD_Transport_Init
  *****************************************************************************/    
 void PHD_Connect_to_Manager(uint32_t handle) 
 {
-    if(g_phdc_com.phd_com_state == PHD_AG_STATE_CON_UNASSOCIATED) 
+    if((g_phdc_com.phd_com_state == PHD_AG_STATE_CON_UNASSOCIATED) || (g_phdc_com.phd_com_state == PHD_AG_STATE_CON_ASSOCIATING)) 
     {
         /* Send Assoc request to Manager */   
         (void)USB_Class_PHDC_Send_Data(handle, FALSE, 0,SEND_DATA_QOS, 

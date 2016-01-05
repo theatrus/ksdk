@@ -108,10 +108,10 @@ typedef enum _lptmr_status {
  
 /*! @brief Define LPTMR prescaler user configure. */
 typedef struct LptmrPrescalerUserConfig {
-    bool prescalerBypass;                                /*!< Set this value will by pass the Prescaler or glitch filter. */
+    bool prescalerBypass;                                /*!< Set this value will by pass the prescaler or glitch filter. */
     lptmr_prescaler_clock_select_t prescalerClockSelect; /*!< Selects the clock to be used by the LPTMR prescaler/glitch filter. */
-    lptmr_prescaler_value_t prescalerValue;              /*!< Configures the size of the Prescaler in Time Counter mode 
-                                                              or width of the glitch filter in Pulse Counter mode. */
+    lptmr_prescaler_value_t prescalerValue;              /*!< Configures the size of the prescaler in time counter mode 
+                                                              or width of the glitch filter in pulse counter mode. */
 } lptmr_prescaler_user_config_t;
 
 /*! @brief Define LPTMR working mode user configure. */
@@ -185,12 +185,12 @@ static inline bool LPTMR_HAL_IsIntPending(LPTMR_Type * base)
 /*!
  * @brief Enables or disables the LPTMR interrupt.
  *
- * @param baseAddr The LPTMR peripheral base address
+ * @param base The LPTMR peripheral base address
  * @param enable Pass true to enable LPTMR interrupt
  */
-static inline void LPTMR_HAL_SetIntCmd(LPTMR_Type * baseAddr,  bool enable)
+static inline void LPTMR_HAL_SetIntCmd(LPTMR_Type * base,  bool enable)
 {
-    LPTMR_BWR_CSR_TIE(baseAddr, enable);
+    LPTMR_BWR_CSR_TIE(base, enable);
 }
 
 /*!
@@ -224,6 +224,7 @@ static inline void LPTMR_HAL_SetCompareValue(LPTMR_Type * base,  uint32_t compar
  * @brief Gets the LPTMR compare value.
  *
  * @param base The LPTMR peripheral base address.
+ * @return The LPTMR compare value.
  */
 static inline uint32_t LPTMR_HAL_GetCompareValue(LPTMR_Type * base)
 {

@@ -29,6 +29,7 @@
  */
 
 #include "fsl_flexio_uart_hal.h"
+#include <string.h>
 #if FSL_FEATURE_SOC_FLEXIO_COUNT
 
 /**************************************************************************
@@ -45,6 +46,9 @@ flexio_status_t FLEXIO_UART_Tx_HAL_Configure(
 {
     flexio_timer_config_t   mFlexioTimerConfigStruct;
     flexio_shifter_config_t mFlexioShifterConfigStruct;
+    memset(&mFlexioShifterConfigStruct, 0, sizeof(mFlexioShifterConfigStruct));
+    memset(&mFlexioTimerConfigStruct, 0, sizeof(mFlexioTimerConfigStruct));
+
     uint32_t divider, timCmp;
     
     if ( (!devPtr) || (!configPtr) )
@@ -251,6 +255,9 @@ flexio_status_t FLEXIO_UART_Rx_HAL_Configure(
 {
     flexio_timer_config_t   mFlexioTimerConfigStruct;
     flexio_shifter_config_t mFlexioShifterConfigStruct;
+    memset(&mFlexioShifterConfigStruct, 0, sizeof(mFlexioShifterConfigStruct));
+    memset(&mFlexioTimerConfigStruct, 0, sizeof(mFlexioTimerConfigStruct));
+
     uint32_t divider, timCmp;
 
     if  ( (!devPtr) || (!configPtr) )
@@ -279,9 +286,9 @@ flexio_status_t FLEXIO_UART_Rx_HAL_Configure(
     mFlexioTimerConfigStruct.pinsel = devPtr->rxPinIdx;
     mFlexioTimerConfigStruct.pinpol = kFlexioPinActiveLow;
     mFlexioTimerConfigStruct.timod  = kFlexioTimerModeDual8BitBaudBit; 
-    mFlexioTimerConfigStruct.timout = kFlexioTimerOutputOneNotAffectedByReset;
+    mFlexioTimerConfigStruct.timout = kFlexioTimerOutputOneAffectedByReset;
     mFlexioTimerConfigStruct.timdec = kFlexioTimerDecSrcOnFlexIOClockShiftTimerOutput;
-    mFlexioTimerConfigStruct.timrst = kFlexioTimerResetNever;
+    mFlexioTimerConfigStruct.timrst = kFlexioTimerResetOnTimerPinRisingEdge;
     mFlexioTimerConfigStruct.timdis = kFlexioTimerDisableOnTimerCompare;
     mFlexioTimerConfigStruct.timena = kFlexioTimerEnableOnPinRisingEdge;
     mFlexioTimerConfigStruct.tstop  = kFlexioTimerStopBitEnableOnTimerDisable;

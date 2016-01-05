@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 * 
-* Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
+* Copyright (c) 2008, 2013 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 * Copyright (c) 1989 - 2008 ARC International;
@@ -158,6 +158,7 @@ typedef struct _phdc_device_struct
     /* used to store whether meta-data feature is active or not */
     bool                                            phdc_metadata;
 #endif
+    uint8_t                                         controller_id;
 } phdc_device_struct_t;
 
 /******************************************************************************

@@ -53,7 +53,7 @@ const usb_dev_interface_functions_struct_t _usb_ehci_dev_function_table =
     usb_dci_usbhs_send_data,
     usb_dci_usbhs_recv_data,
 #if USBCFG_DEV_ADVANCED_CANCEL_ENABLE  
-    usb_dci_usbhs_cancel_transfer,
+    usb_dci_usbhs_cancel,
 #endif
     usb_dci_usbhs_init_endpoint,
     usb_dci_usbhs_deinit_endpoint,

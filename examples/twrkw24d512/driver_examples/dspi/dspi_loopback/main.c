@@ -42,10 +42,10 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define DSPI_INSTANCE               (0)       /*! User change define to choose DSPI instance */
-#define TRANSFER_SIZE               (32)      /*! Transfer size */
-#define TRANSFER_BAUDRATE           (500000U) /*! Transfer baudrate - 500k */
-#define MASTER_TRANSFER_TIMEOUT     (5000U)   /*! Transfer timeout of master - 5s */
+#define DSPI_INSTANCE               BOARD_DSPI_INSTANCE /*! User change define to choose DSPI instance */
+#define TRANSFER_SIZE               (32)                /*! Transfer size */
+#define TRANSFER_BAUDRATE           (500000U)           /*! Transfer baudrate - 500k */
+#define MASTER_TRANSFER_TIMEOUT     (5000U)             /*! Transfer timeout of master - 5s */
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -68,6 +68,7 @@ uint8_t sendBuffer[TRANSFER_SIZE] = {0};
 int main(void)
 {
     uint32_t i;
+    uint8_t errTransfer;
     uint8_t loopCount = 1;
     uint32_t calculatedBaudRate;
     dspi_status_t dspiResult;
@@ -88,8 +89,9 @@ int main(void)
 
     // Print a note.
     PRINTF("\r\n DSPI master self loopback example ");
-    PRINTF("\r\n This example run on instance 0 ");
-    PRINTF("\r\n Be sure MISO-to-MOSI are connected \r\n ");
+    PRINTF("\r\n This example run on instance %d ", (uint32_t)DSPI_INSTANCE);
+    PRINTF("\r\n Be sure DSPI%d-DSPI%d are connected \r\n",
+                        (uint32_t)DSPI_INSTANCE, (uint32_t)DSPI_INSTANCE);
 
     // Setup the configuration and get user options.
     masterDevice.dataBusConfig.bitsPerFrame = 8;
@@ -101,7 +103,7 @@ int main(void)
     dspiResult = DSPI_DRV_MasterInit(DSPI_INSTANCE, &masterState, &masterUserConfig);
     if (dspiResult != kStatus_DSPI_Success)
     {
-        PRINTF("\r\n ERROR: Can not initialize master driver \n");
+        PRINTF("\r\n ERROR: Can not initialize master driver \r\n");
         return -1;
     }
 
@@ -110,12 +112,12 @@ int main(void)
     dspiResult = DSPI_DRV_MasterConfigureBus(DSPI_INSTANCE, &masterDevice, &calculatedBaudRate);
     if (dspiResult != kStatus_DSPI_Success)
     {
-        PRINTF("\r\nERROR: failure in config bus, error %d\n\r", dspiResult);
+        PRINTF("\r\nERROR: failure in config bus, error %d\r\n", dspiResult);
         return -1;
     }
     else
     {
-        PRINTF("\r\n Transfer at baudrate %lu\n", calculatedBaudRate);
+        PRINTF("\r\n Transfer at baudrate %lu\r\n", calculatedBaudRate);
     }
 
     while(1)
@@ -127,7 +129,7 @@ int main(void)
         }
 
         // Print out transmit buffer.
-        PRINTF("\r\n Master transmit:\n");
+        PRINTF("\r\n Master transmit:\r\n");
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
             // Print 16 numbers in a line.
@@ -153,12 +155,12 @@ int main(void)
                                                      MASTER_TRANSFER_TIMEOUT);
         if (dspiResult != kStatus_DSPI_Success)
         {
-            PRINTF("\r\n ERROR: transfer error, err %d\n\r", dspiResult);
+            PRINTF("\r\n ERROR: transfer error, err %d\r\n", dspiResult);
             return -1;
         }
 
         // Print out receive buffer.
-        PRINTF("\r\n Master receive:\n");
+        PRINTF("\r\n Master receive:\r\n");
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
             // Print 16 numbers in a line.
@@ -169,20 +171,27 @@ int main(void)
             PRINTF(" %02X", receiveBuffer[i]);
         }
 
-        // Check receive buffer.
+        errTransfer = false;
+        // Check receiveBuffer.
         for (i = 0; i < TRANSFER_SIZE; ++i)
         {
             if (receiveBuffer[i] != sendBuffer[i])
             {
-                // Master received incorrect.
-                PRINTF("\r\n ERROR: master received incorrect \n\r");
-                return -1;
+                errTransfer = true;
+                break;
             }
         }
-
-        PRINTF("\r\n DSPI Sends/ Recevies Successfully");
+        if (errTransfer)
+        {
+            // Master received incorrect.
+            PRINTF("\r\n ERROR: master received incorrect at No.%d\r\n", i);
+        }
+        else
+        {
+            PRINTF("\r\n DSPI Master Sends/ Recevies Successfully");
+        }
         // Wait for press any key.
-        PRINTF("\r\n Press any key to run again\n");
+        PRINTF("\r\n Press any key to run again\r\n");
         GETCHAR();
         // Increase loop count to change transmit buffer.
         loopCount++;

@@ -5,7 +5,7 @@
 **     Compiler:            Keil ARM C/C++ Compiler
 **     Reference manual:    MKW2xDRM Rev.2  July 2014
 **     Version:             rev. 2.0, 2015-01-06
-**     Build:               b150317
+**     Build:               b150602
 **
 **     Abstract:
 **         Linker file for the Keil ARM C/C++ Compiler
@@ -47,11 +47,11 @@
 #define m_interrupts_start             0x1FFF8000
 #define m_interrupts_size              0x00000400
 
-#define m_data_start                   0x1FFF8400
-#define m_data_size                    0x00007C00
+#define m_text_start                   0x1FFF8400
+#define m_text_size                    0x00007C00
 
-#define m_text_start                   0x20000000
-#define m_text_size                    0x00008000
+#define m_data_start                   0x20000000
+#define m_data_size                    0x00008000
 
 /* Sizes */
 #if (defined(__stack_size__))

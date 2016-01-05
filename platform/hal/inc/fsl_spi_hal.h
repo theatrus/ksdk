@@ -61,6 +61,7 @@ typedef enum _spi_errors
     kStatus_SPI_NonInit,                /*!< SPI driver is not initialized */
     kStatus_SPI_AlreadyInitialized,     /*!< SPI driver already initialized */
     kStatus_SPI_DMAChannelInvalid,      /*!< SPI driver cannot requests DMA channel */
+    kStatus_SPI_Error,                  /*!< SPI driver error */
 } spi_status_t;
 
 /*! @brief SPI master or slave configuration.*/
@@ -163,22 +164,22 @@ typedef enum _spi_fifo_status_flag {
 /*! @brief SPI error flags.*/
 typedef enum _spi_fifo_error_flag {
     kSpiNoFifoError = 0,  /*!< No error is detected */
-    kSpiRxfof = 1, /*!< Rx FIFO Overflow */
-    kSpiTxfof = 2, /*!< Tx FIFO Overflow */
-    kSpiRxfofTxfof = 3, /*!< Rx FIFO Overflow, Tx FIFO Overflow */
-    kSpiRxferr = 4,  /*!< Rx FIFO Error */
-    kSpiRxfofRxferr = 5, /*!< Rx FIFO Overflow, Rx FIFO Error */
-    kSpiTxfofRxferr = 6, /*!< Tx FIFO Overflow, Rx FIFO Error */
-    kSpiRxfofTxfofRxferr = 7,  /*!< Rx FIFO Overflow, Tx FIFO Overflow, Rx FIFO Error */
-    kSpiTxferr = 8, /*!< Tx FIFO Error */
-    kSpiRxfofTxferr = 9, /*!< Rx FIFO Overflow, Tx FIFO Error */
-    kSpiTxfofTxferr = 10, /*!< Tx FIFO Overflow, Tx FIFO Error */
-    kSpiRxfofTxfofTxferr = 11, /*!< Rx FIFO Overflow, Tx FIFO Overflow, Tx FIFO Error */
-    kSpiRxferrTxferr = 12, /*!< Rx FIFO Error, Tx FIFO Error */
-    kSpiRxfofRxferrTxferr = 13, /*!< Rx FIFO Overflow, Rx FIFO Error, Tx FIFO Error */
-    kSpiTxfofRxferrTxferr = 14, /*!< Tx FIFO Overflow, Rx FIFO Error, Tx FIFO Error */
-    kSpiRxfofTxfofRxferrTxferr =15 /*!< Rx FIFO Overflow, Tx FIFO Overflow
-                                    * Rx FIFO Error, Tx FIFO Error */
+    kSpiRxfof = 1, /*!< Receive FIFO Overflow */
+    kSpiTxfof = 2, /*!< Transmit FIFO Overflow */
+    kSpiRxfofTxfof = 3, /*!< Receive FIFO Overflow, Transmit FIFO Overflow */
+    kSpiRxferr = 4,  /*!< Receive FIFO Error */
+    kSpiRxfofRxferr = 5, /*!< Receive FIFO Overflow, Receive FIFO Error */
+    kSpiTxfofRxferr = 6, /*!< Transmit FIFO Overflow, Receive FIFO Error */
+    kSpiRxfofTxfofRxferr = 7,  /*!< Receive FIFO Overflow, Transmit FIFO Overflow, Receive FIFO Error */
+    kSpiTxferr = 8, /*!< Transmit FIFO Error */
+    kSpiRxfofTxferr = 9, /*!< Receive FIFO Overflow, Transmit FIFO Error */
+    kSpiTxfofTxferr = 10, /*!< Transmit FIFO Overflow, Transmit FIFO Error */
+    kSpiRxfofTxfofTxferr = 11, /*!< Receive FIFO Overflow, Transmit FIFO Overflow, Transmit FIFO Error */
+    kSpiRxferrTxferr = 12, /*!< Receive FIFO Error, Transmit FIFO Error */
+    kSpiRxfofRxferrTxferr = 13, /*!< Receive FIFO Overflow, Receive FIFO Error, Transmit FIFO Error */
+    kSpiTxfofRxferrTxferr = 14, /*!< Transmit FIFO Overflow, Receive FIFO Error, Transmit FIFO Error */
+    kSpiRxfofTxfofRxferrTxferr =15 /*!< Receive FIFO Overflow, Transmit FIFO Overflow
+                                    * Receive FIFO Error, Transmit FIFO Error */
 } spi_fifo_error_flag_t;
 
 /*******************************************************************************
@@ -199,7 +200,7 @@ extern "C" {
  */
 
 /*!
- * @brief Restores the SPI to reset configuration.
+ * @brief Restores the SPI to the reset configuration.
  *
  * This function basically resets all of the SPI registers to their default setting including
  * disabling the module.
@@ -233,7 +234,7 @@ static inline void SPI_HAL_Disable(SPI_Type * base)
  *
  * This function takes in the desired bitsPerSec (baud rate) and calculates the nearest
  * possible baud rate without exceeding the desired baud rate unless the baud rate requested is
- * less than the absolute minimum in which case the minimum baud rate will be returned. The returned
+ * less than the absolute minimum in which case the minimum baud rate is returned. The returned
  * baud rate is in bits-per-second. It requires that the caller also provide the frequency of the
  * module source clock (in Hertz).
  *
@@ -394,8 +395,8 @@ void SPI_HAL_SetPinMode(SPI_Type * base, spi_pin_mode_t mode);
 /*!
  * @brief Configures the transmit DMA request.
  *
- * This function enables or disables the SPI TX DMA request.  When the TX DMA is enabled
- * it disables the TX interrupt.
+ * This function enables or disables the SPI transmit DMA request.  When the transmit DMA is enabled
+ * it disables the transmit interrupt.
  *
  * @param base Module base pointer of type SPI_Type.
  * @param enableTransmit Enable (true) or disable (false) the transmit DMA request.
@@ -408,8 +409,8 @@ static inline void SPI_HAL_SetTxDmaCmd(SPI_Type * base, bool enableTransmit)
 /*!
  * @brief Configures the receive DMA requests.
  *
- * This function enables or disables the SPI RX DMA request.  When the RX DMA is enabled
- * it disables the RX interrupt.
+ * This function enables or disables the SPI receive DMA request.  When the receive DMA is enabled
+ * it disables the receive interrupt.
  *
  * @param base Module base pointer of type SPI_Type.
  * @param enableReceive Enable (true) or disable (false) the receive DMA request.
@@ -430,9 +431,9 @@ static inline void SPI_HAL_SetRxDmaCmd(SPI_Type * base, bool enableReceive)
  * @brief Enables or disables the SPI interrupts.
  *
  * This function enables or disables the
- * SPI receive buffer (or FIFO if the module supports a FIFO) full and mode fault interrupt
- * SPI transmit buffer (or FIFO if the module supports a FIFO) empty interrupt
- * SPI match interrupt
+ * SPI receive buffer (or FIFO if the module supports a FIFO) full and mode fault interrupt,
+ * SPI transmit buffer (or FIFO if the module supports a FIFO) empty interrupt, and the
+ * SPI match interrupt.
  *
  * Example, to set the receive and mode fault interrupt:
  * SPI_HAL_SetIntMode(base, kSpiRxFullAndModfInt, true);
@@ -531,8 +532,8 @@ static inline bool SPI_HAL_IsReadBuffFullPending(SPI_Type * base)
 /*!
  * @brief Checks whether the transmit buffer/FIFO is empty.
  *
- * To clear the transmit buffer (or FIFO if the module supports a FIFO) empty flag, you must first
- * read the flag when it is set. Then write a new data value into the transmit buffer with a call
+ * To clear the transmit buffer (or FIFO if the module supports a FIFO) empty flag,
+ * read the flag when it is set. Then, write a new data value into the transmit buffer with a call
  * to the SPI_HAL_WriteData(). The example code shows how to do this.
    @code
         // Check if transmit buffer is empty.
@@ -644,8 +645,8 @@ static inline void SPI_HAL_WriteDataLow(SPI_Type * base, uint8_t data)
  * @brief Writes a byte into the data buffer and waits till complete to return.
  *
  * This function writes data to the SPI data registers and waits until the
- * TX is empty to return.  For 16-bit data, the lower byte is written to dataLow while
- * the upper byte is written to dataHigh.  The paramter bitCount is used to
+ * transmit is empty to return.  For 16-bit data, the lower byte is written to dataLow while
+ * the upper byte is written to dataHigh.  The parameter bitCount is used to
  * distinguish between 8- and 16-bit writes.
  *
  * Note, for 16-bit data writes, make sure that function SPI_HAL_Set8or16BitMode is set to
@@ -759,12 +760,12 @@ static inline void SPI_HAL_SetIntClearCmd(SPI_Type * base, bool enable)
 }
 
 /*!
- * @brief Enables or disables the SPI FIFO and configures the TX/RX FIFO watermarks.
+ * @brief Enables or disables the SPI FIFO and configures the transmit/receive FIFO watermarks.
  *
- * This all-in-one function will do the following:
- * Configure the TX FIFO empty watermark to be 16bits (1/4) or 32bits (1/2)
- * Configure the RX FIFO full watermark to be 48bits (3/4) or 32bits (1/2)
- * Enable/disable the FIFO
+ * This all-in-one function does the following:
+ * Configures the TX FIFO empty watermark to be 16bits (1/4) or 32bits (1/2)
+ * Configures the RX FIFO full watermark to be 48bits (3/4) or 32bits (1/2)
+ * Enables/disables the FIFO
  *
  * @param base Module base pointer of type SPI_Type.
  * @param enable Enable (true) or disable (false) the FIFO.
@@ -780,7 +781,7 @@ void SPI_HAL_SetFifoMode(SPI_Type * base, bool enable,
  *
  * This function returns the setting of the SPI FIFO mode (enable or disable).
  *
- * @param baseAddr Module base address.
+ * @param base Module base address.
  * @return The setting, enable (true) or disable (false), of the FIFO mode.
  */
 static inline bool SPI_HAL_GetFifoCmd(SPI_Type * base)
@@ -791,7 +792,7 @@ static inline bool SPI_HAL_GetFifoCmd(SPI_Type * base)
 /*!
  * @brief Enables or disables the SPI FIFO specific interrupts.
  *
- * This function enables or disables the SPI FIFO interrupts.  These FIFO interrupts are the TX
+ * This function enables or disables the SPI FIFO interrupts.  These FIFO interrupts are the transmit
  * FIFO nearly empty and the RX FIFO nearly full.  Note, there are separate HAL functions
  * to enable/disable receive buffer/FIFO full interrupt and the transmit buffer/FIFO empty
  * interrupt.
@@ -825,7 +826,7 @@ void SPI_HAL_ClearFifoIntUsingBitWrite(SPI_Type * base, spi_w1c_interrupt_t intS
  * @brief Returns the desired FIFO related status flag.
  *
  * This function allows the user to ascertain the state of a FIFO related status flag. The user
- * simply passes in the desired status flag and the function will return its current value.
+ * passes in the desired status flag and the function returns its current value.
  * The status flags are as follows:
  *  Rx Fifo Empty
  *  Tx Fifo Full
@@ -845,9 +846,9 @@ static inline bool SPI_HAL_GetFifoStatusFlag(SPI_Type * base, spi_fifo_status_fl
  * @brief Returns the FIFO related error flags.
  *
  * This function returns the consummate value of all four FIFO error flags.
- * Note that simply reading the SPI_CI register will clear all of the error flags that are set,
- * hence it is important to read them all at once and return the consummate value.
- * This consummate value is typecasted as type spi_fifo_error_flag_t and provides the details
+ * Note that simply reading the SPI_CI register clears all of the error flags that are set.
+ * Hence it is important to read them all at once and return the consummate value.
+ * This consummate value is typecast as type spi_fifo_error_flag_t and provides the details
  * of which flags are set.
  * The combination of error flags are as follows:
  *  Rx FIFO Overflow

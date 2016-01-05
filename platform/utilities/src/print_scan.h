@@ -76,7 +76,7 @@ int _doprint(void *farg, PUTCHAR_FUNC func_ptr, int max_count, char  *fmt, va_li
 int _sputc(int c, void * input_string);
 
 /*!
- * @brief Converts an input line of ASCII characters based upon a provided
+ * @brief Converts an input line of ASCII characters based on a provided
  * string format.
  *
  * @param[in] line_ptr The input line of ASCII data.

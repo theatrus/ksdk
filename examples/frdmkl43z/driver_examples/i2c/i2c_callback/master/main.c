@@ -100,10 +100,10 @@ int main(void)
     PRINTF("\r\n1. Master sends a frame includes CMD(size of data) and data\
     \r\n2. Master receives data from slave.\
     \r\n3. Compare rxBuff and txBuff to see result.\r\n");
-    PRINTF("\r\n============================================================\r\n\n");
+    PRINTF("\r\n============================================================\r\n\r\n");
 
     // Initialize i2c master
-    I2C_DRV_MasterInit(BOARD_I2C_COMM_INSTANCE, &master);
+    I2C_DRV_MasterInit(BOARD_I2C_INSTANCE, &master);
 
     // Initialize data to send
     for(i = 0; i < DATA_LENGTH; i++)
@@ -114,7 +114,7 @@ int main(void)
     // Start transfer with buffer size is 1 byte
     count = 1;
 
-    PRINTF("Press any key to start transfer:\r\n\n");
+    PRINTF("Press any key to start transfer:\r\n\r\n");
 
      // Loop for transfer
     while(1)
@@ -135,7 +135,7 @@ int main(void)
         }
 
         // Master sends 1 bytes CMD and data to slave
-        I2C_DRV_MasterSendDataBlocking(BOARD_I2C_COMM_INSTANCE, &device,
+        I2C_DRV_MasterSendDataBlocking(BOARD_I2C_INSTANCE, &device,
                         (const uint8_t*)&count, 1, (const uint8_t*)txBuff, count, 1000);
 
         // Delay to wait slave received data
@@ -148,17 +148,17 @@ int main(void)
         }
 
         // Master receives count byte data from slave
-        I2C_DRV_MasterReceiveDataBlocking(BOARD_I2C_COMM_INSTANCE, &device,
+        I2C_DRV_MasterReceiveDataBlocking(BOARD_I2C_INSTANCE, &device,
                                                   NULL, 0, rxBuff, count, 1000);
 
         /* Compare to check result */
         if(i2c_compare((uint8_t*)txBuff, rxBuff, count) != true)
         {
-            PRINTF("\r\nFailure when transfer with size of buffer is %d.\n\r", count);
+            PRINTF("\r\nFailure when transfer with size of buffer is %d.\r\n", count);
             break;
         }
 
-        PRINTF("\r\nMaster Sends/ Receives %2d bytes Successfully\r\n\n", count);
+        PRINTF("\r\nMaster Sends/ Receives %2d bytes Successfully\r\n\r\n", count);
         if(++count > DATA_LENGTH)
         {
             count = 1;
@@ -168,7 +168,7 @@ int main(void)
     PRINTF("\r\n==================== I2C MASTER FINISH =================== \r\n");
 
     // Deinit i2c
-    I2C_DRV_MasterDeinit(BOARD_I2C_COMM_INSTANCE);
+    I2C_DRV_MasterDeinit(BOARD_I2C_INSTANCE);
 
     return 0;
 }

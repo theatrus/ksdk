@@ -265,7 +265,7 @@ uint8_t g_config_descriptor[CONFIG_DESC_SIZE] =
    /*Endpoint 1 - standard descriptor*/
    ENDP_ONLY_DESC_SIZE,             /* bLength (9) */  
    USB_ENDPOINT_DESCRIPTOR,         /* Descriptor type (endpoint descriptor) */  
-   0x84,                            /* OUT endpoint address 1 */
+   AUDIO_ENDPOINT | (USB_SEND << 7),/* OUT endpoint address 1 */
    0x01,                            /* Isochronous endpoint */
    USB_uint_16_low(FS_ISO_OUT_ENDP_PACKET_SIZE),
    USB_uint_16_high(FS_ISO_OUT_ENDP_PACKET_SIZE), /* 16 bytes  */ 
@@ -820,18 +820,15 @@ uint8_t USB_Desc_Get_Entity(audio_handle_t handle,entity_type type, uint32_t *ob
             break;
         case USB_CLASS_INTERFACE_INDEX_INFO:
             *object = 0xff;
-            for (int i = 0;i < 2;i++)
+            if (handle == (uint32_t)g_composite_device.audio_handle)
             {
-                if (handle == (uint32_t)g_composite_device.audio_handle)
-                {
-                    *object = (uint32_t)AUDIO_INTERFACE_INDEX;
-                    break;
-                }
-                else if (handle == (uint32_t)g_composite_device.hid_mouse.app_handle)
-                {
-                    *object = (uint32_t)HID_MOUSE_INTERFACE_INDEX;
-                    break;
-                }
+                *object = (uint32_t)AUDIO_INTERFACE_INDEX;
+                break;
+            }
+            else if (handle == (uint32_t)g_composite_device.hid_mouse.app_handle)
+            {
+                *object = (uint32_t)HID_MOUSE_INTERFACE_INDEX;
+                break;
             }
             break;
          case USB_COMPOSITE_INFO:

@@ -4,7 +4,7 @@
 **     Compiler:            GNU C Compiler
 **     Reference manual:    MKW2xDRM Rev.2  July 2014
 **     Version:             rev. 2.0, 2015-01-06
-**     Build:               b150205
+**     Build:               b150624
 **
 **     Abstract:
 **         Linker file for the GNU C Compiler
@@ -53,8 +53,8 @@ STACK_SIZE = DEFINED(__stack_size__) ? __stack_size__ : 0x0400;
 MEMORY
 {
   m_interrupts          (RX)  : ORIGIN = 0x1FFF8000, LENGTH = 0x00000400
-  m_data                (RW)  : ORIGIN = 0x1FFF8400, LENGTH = 0x00007C00
-  m_text                (RX)  : ORIGIN = 0x20000000, LENGTH = 0x00008000
+  m_text                (RX)  : ORIGIN = 0x1FFF8400, LENGTH = 0x00007C00
+  m_data                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00008000
 }
 
 /* Define output sections */
@@ -174,6 +174,8 @@ SECTIONS
   } > m_data
 
   __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
+  text_end = ORIGIN(m_text) + LENGTH(m_text);
+  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   /* Uninitialized data section */
   .bss :

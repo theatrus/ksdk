@@ -22,16 +22,16 @@ SET(CMAKE_EXECUTABLE_LIBRARY_SUFFIX)
 SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99 ")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99 ")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -102,6 +102,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_cmp_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/crc/fsl_crc_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_crc_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/crc/fsl_crc_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_crc_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/crc/fsl_crc_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/dac/fsl_dac_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_dac_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dac/fsl_dac_driver.c"
@@ -156,6 +161,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_lptmr_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/lptmr/fsl_lptmr_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/src/lptmr/fsl_lptmr_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/ewm/fsl_ewm_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_ewm_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_ewm_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/ewm/fsl_ewm_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/src/ewm/fsl_ewm_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/mcg/fsl_mcg_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_mcg_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/mcg/fsl_mcg_hal_modes.c"

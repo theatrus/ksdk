@@ -190,12 +190,12 @@ typedef union _ftm_edge_mode_t
  */
 typedef struct FtmPwmParam
 {
-    ftm_config_mode_t mode;          /*!< FlexTimer PWM operation mode @internal gui name="Mode" id="ChannelMode" */
+    ftm_config_mode_t mode;          /*!< FlexTimer PWM operation mode @internal gui name="Mode" id="ChannelMode" default="2" */
     ftm_pwm_edge_mode_t edgeMode;    /*!< PWM output mode @internal gui name="Edge mode" id="ChannelEdgeMode" */
-    uint32_t uFrequencyHZ;           /*!< PWM period in Hz @internal gui name="Frequency" id="Frequency" */
+    uint32_t uFrequencyHZ;           /*!< PWM period in Hz @internal gui name="Frequency" id="Frequency" default="1000" */
     uint32_t uDutyCyclePercent;      /*!< PWM pulse width, value should be between 0 to 100
                                           0=inactive signal(0% duty cycle)...
-                                          100=active signal (100% duty cycle). @internal gui name="Duty cycle" id="ChannelDuty" */
+                                          100=active signal (100% duty cycle). @internal gui name="Duty cycle" id="ChannelDuty" default="50" */
     uint16_t uFirstEdgeDelayPercent; /*!< Used only in combined PWM mode to generate asymmetrical PWM.
                                           Specifies the delay to the first edge in a PWM period.
                                           If unsure please leave as 0, should be specified as
@@ -407,13 +407,13 @@ static inline uint16_t  FTM_HAL_GetCounterInitVal(FTM_Type *ftmBase)
     return FTM_RD_CNTIN_INIT(ftmBase);
 }
 
-/*FTM channel operating mode (Mode, edge and level selection) for capture, output, PWM, combine, dual */
+/*FTM channel operating mode (mode, edge and level selection) for capture, output, PWM, combine, and dual */
 /*!
  * @brief Sets the FTM peripheral timer channel mode.
  *
  * @param ftmBase The FTM base address pointer
  * @param channel  The FTM peripheral channel number
- * @param selection The mode to be set valid value MSnB:MSnA :00,01, 10, 11
+ * @param selection The mode to be set valid value MSnB:MSnA : 00, 01, 10, 11
  */
 static inline void FTM_HAL_SetChnMSnBAMode(FTM_Type *ftmBase, uint8_t channel, uint8_t selection)
 {
@@ -427,7 +427,7 @@ static inline void FTM_HAL_SetChnMSnBAMode(FTM_Type *ftmBase, uint8_t channel, u
  *
  * @param ftmBase The FTM base address pointer
  * @param channel  The FTM peripheral channel number
- * @param level The rising or falling edge to be set, valid value ELSnB:ELSnA :00,01, 10, 11
+ * @param level The rising or falling edge to be set, valid value ELSnB:ELSnA : 00, 01, 10, 11
  */
 static inline void FTM_HAL_SetChnEdgeLevel(FTM_Type *ftmBase, uint8_t channel, uint8_t level)
 {
@@ -441,7 +441,7 @@ static inline void FTM_HAL_SetChnEdgeLevel(FTM_Type *ftmBase, uint8_t channel, u
  *
  * @param ftmBase The FTM base address pointer
  * @param channel  The FTM peripheral channel number
- * @return The MSnB:MSnA mode value, will be 00,01, 10, 11
+ * @return The MSnB:MSnA mode value, will be 00, 01, 10, 11
  */
 static inline uint8_t FTM_HAL_GetChnMode(FTM_Type *ftmBase, uint8_t channel)
 {
@@ -454,7 +454,7 @@ static inline uint8_t FTM_HAL_GetChnMode(FTM_Type *ftmBase, uint8_t channel)
  *
  * @param ftmBase The FTM base address pointer
  * @param channel  The FTM peripheral channel number
- * @return The ELSnB:ELSnA mode value, will be 00,01, 10, 11
+ * @return The ELSnB:ELSnA mode value, will be 00, 01, 10, 11
  */
 static inline uint8_t FTM_HAL_GetChnEdgeLevel(FTM_Type *ftmBase, uint8_t channel)
 {
@@ -489,9 +489,10 @@ static inline bool FTM_HAL_IsChnDma(FTM_Type *ftmBase, uint8_t channel)
 }
 
 /*!
- * @brief Get FTM channel(n) interrupt enabled or not.
+ * @brief Gets the FTM channel(n) interrupt enabled or not.
  * @param ftmBase FTM module base address.
  * @param channel  The FTM peripheral channel number
+ * @return true if enabled, false if disabled
  */
 static inline bool FTM_HAL_IsChnIntEnabled(FTM_Type *ftmBase, uint8_t channel)
 {
@@ -536,7 +537,7 @@ static inline bool FTM_HAL_HasChnEventOccurred(FTM_Type *ftmBase, uint8_t channe
 }
 
 /*!
- * @brief Clear the channel flag by writing a 0 to the CHF bit.
+ * @brief Clears the channel flag by writing a 0 to the CHF bit.
  *
  * @param ftmBase The FTM base address pointer
  * @param channel  The FTM peripheral channel number
@@ -585,7 +586,6 @@ static inline uint32_t FTM_HAL_GetChnEventStatus(FTM_Type *ftmBase, uint8_t chan
 {
     assert(channel < FSL_FEATURE_FTM_CHANNEL_COUNT);
     return (FTM_RD_STATUS(ftmBase) & (1U << channel)) ? true : false;
-    /*return BR_FTM_STATUS(ftmBase, channel);*/
 }
 
 /*!
@@ -624,7 +624,6 @@ static inline void FTM_HAL_SetChnOutputMask(FTM_Type *ftmBase, uint8_t channel, 
 {
     assert(channel < FSL_FEATURE_FTM_CHANNEL_COUNT);
     mask ? FTM_SET_OUTMASK(ftmBase, 1U << channel) : FTM_CLR_OUTMASK(ftmBase, 1U << channel);
-    /* BW_FTM_OUTMASK_CHnOM(ftmBase, channel,mask); */
 }
 
 /*!
@@ -778,7 +777,7 @@ static inline void FTM_HAL_SetSoftwareTriggerCmd(FTM_Type *ftmBase, bool enable)
  * @brief Sets the FTM peripheral timer hardware trigger.
  *
  * @param ftmBase The FTM base address pointer
- * @param trigger_num  0, 1, 2 for trigger0, trigger1 and trigger3
+ * @param trigger_num  0, 1, 2 for trigger0, trigger1, and trigger3
  * @param enable true: enable hardware trigger from field trigger_num for PWM synch
  *               false: disable hardware trigger from field trigger_num for PWM synch
  */
@@ -1117,11 +1116,11 @@ static inline uint8_t FTM_HAL_GetQuadDir(FTM_Type *ftmBase)
 }
 
 /*!
- * @brief Gets the Timer overflow direction in quadrature mode.
+ * @brief Gets the timer overflow direction in quadrature mode.
  *
  * @param ftmBase The FTM base address pointer
  *
- * @return 1 if TOF bit was set on the top of counting, o if TOF bit was set on the bottom of counting
+ * @return 1 if TOF bit was set on the top of counting, 0 if TOF bit was set on the bottom of counting
  */
 static inline uint8_t FTM_HAL_GetQuadTimerOverflowDir(FTM_Type *ftmBase)
 {
@@ -1131,7 +1130,7 @@ static inline uint8_t FTM_HAL_GetQuadTimerOverflowDir(FTM_Type *ftmBase)
 /*!
  * @brief Sets the FTM peripheral timer channel input capture filter value.
  * @param ftmBase The FTM base address pointer
- * @param channel  The FTM peripheral channel number, only 0,1,2,3, channel 4, 5,6, 7 don't have.
+ * @param channel  The FTM peripheral channel number, only 0, 1, 2, 3, channel 4, 5, 6, 7 don't have.
  * @param val  Filter value to be set
  */
 void FTM_HAL_SetChnInputCaptureFilter(FTM_Type *ftmBase, uint8_t channel, uint8_t val);
@@ -1191,7 +1190,7 @@ static inline void FTM_HAL_SetDualChnInvertCmd(FTM_Type *ftmBase, uint8_t chnlPa
 }
 
 /*!
- * @brief Writes the provided value to the Inverting control register.
+ * @brief Writes the provided value to the Inverting Control register.
  *
  * This function is enable/disable inverting control on multiple channel pairs.
  *
@@ -1233,7 +1232,7 @@ static inline void FTM_HAL_SetChnSoftwareCtrlVal(FTM_Type *ftmBase, uint8_t chan
 
 /*FTM PWM load control*/
 /*!
- * @brief Enables or disables the loading of MOD, CNTIN and CV with values of their write buffer.
+ * @brief Enables or disables the loading of MOD, CNTIN, and CV with values of their write buffer.
  *
  * @param ftmBase The FTM base address pointer
  * @param enable  true to enable, false to disable
@@ -1412,7 +1411,7 @@ static inline void FTM_HAL_SetOutmaskSoftwareSyncModeCmd(FTM_Type *ftmBase, bool
 }
 
 /*!
- * @brief Sets synch mode for FTM MOD, CNTIN and CV registers when using a software trigger.
+ * @brief Sets synch mode for FTM MOD, CNTIN, and CV registers when using a software trigger.
  *
  * @param ftmBase The FTM base address pointer
  * @param enable  true means software trigger activates register sync\n

@@ -103,24 +103,36 @@ void BOARD_InitOsc0(void)
     CLOCK_SYS_OscInit(0U, &osc0Config);
 }
 
-/* Function to initialize RTC external clock base on board configuration. */
+/* Function to initialize OSC0 using the RTC override feature
+   RTC_CR[OSCE] has overriding control over the MCG_Lite and OSC_CR enable
+   functions. When RTC_CR[OSCE] is set, the OSC is configured for low frequency, low
+   power and RTC_CR[SCxP] override OSC_CR[SCxP] to control the internal capacitance
+   configuration
+*/
 void BOARD_InitRtcOsc(void)
 {
-#if ((OSC0_XTAL_FREQ != 32768U) && (RTC_OSC_ENABLE_CONFIG))
-#error Set RTC_OSC_ENABLE_CONFIG will override OSC0 configuration and OSC0 must be 32k.
-#endif
     rtc_osc_user_config_t rtcOscConfig =
     {
-        .freq                = RTC_XTAL_FREQ,
-        .enableCapacitor2p   = RTC_SC2P_ENABLE_CONFIG,
-        .enableCapacitor4p   = RTC_SC4P_ENABLE_CONFIG,
-        .enableCapacitor8p   = RTC_SC8P_ENABLE_CONFIG,
-        .enableCapacitor16p  = RTC_SC16P_ENABLE_CONFIG,
-        .enableOsc           = RTC_OSC_ENABLE_CONFIG,
-        .enableClockOutput   = RTC_CLK_OUTPUT_ENABLE_CONFIG,
+        .freq                = OSC0_XTAL_FREQ,
+        .enableCapacitor2p   = OSC0_SC2P_ENABLE_CONFIG,
+        .enableCapacitor4p   = OSC0_SC4P_ENABLE_CONFIG,
+        .enableCapacitor8p   = OSC0_SC8P_ENABLE_CONFIG,
+        .enableCapacitor16p  = OSC0_SC16P_ENABLE_CONFIG,
+        .enableOsc           = true,
     };
 
     CLOCK_SYS_RtcOscInit(0U, &rtcOscConfig);
+}
+
+static void CLOCK_SetBootConfig(clock_manager_user_config_t const* config)
+{
+    CLOCK_SYS_SetSimConfigration(&config->simConfig);
+
+    CLOCK_SYS_SetOscerConfigration(0, &config->oscerConfig);
+
+    CLOCK_SYS_SetMcgliteMode(&config->mcgliteConfig);
+
+    SystemCoreClock = CORE_CLOCK_FREQ;
 }
 
 /* Initialize clock. */
@@ -136,20 +148,11 @@ void BOARD_ClockInit(void)
     PORT_HAL_SetMuxMode(XTAL0_PORT, XTAL0_PIN, XTAL0_PINMUX);
     BOARD_InitOsc0();
 
-    // Setup RTC external clock if used.
-#if RTC_XTAL_FREQ
-    // If RTC_CLKIN is connected, need to set pin mux. Another way for
-    // RTC clock is set RTC_OSC_ENABLE_CONFIG to use OSC0, please check
-    // reference manual for datails.
-    PORT_HAL_SetMuxMode(RTC_CLKIN_PORT, RTC_CLKIN_PIN, RTC_CLKIN_PINMUX);
-#endif
-    BOARD_InitRtcOsc();
-
     /* Set system clock configuration. */
 #if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigVlpr);
+    CLOCK_SetBootConfig(&g_defaultClockConfigVlpr);
 #else
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigRun);
+    CLOCK_SetBootConfig(&g_defaultClockConfigRun);
 #endif
 }
 
@@ -169,5 +172,3 @@ void dbg_uart_init(void)
 /*******************************************************************************
  * EOF
  ******************************************************************************/
-
- 

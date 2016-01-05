@@ -41,7 +41,6 @@
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static lptmr_state_t *volatile lptmr_state_ptrs[LPTMR_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Code
@@ -82,7 +81,7 @@ lptmr_status_t LPTMR_DRV_Init(uint32_t instance, lptmr_state_t *userStatePtr, co
     /* Disable lptmr and reset lptmr logic */
     LPTMR_HAL_Disable(base);
 
-    /* LPTMR prescaler configure */  
+    /* LPTMR prescaler configure */
     prescalerUserConfig.prescalerClockSelect = (lptmr_prescaler_clock_select_t)userConfigPtr->prescalerClockSource;
     prescalerUserConfig.prescalerBypass = (uint8_t)(userConfigPtr->prescalerEnable == false);
     prescalerUserConfig.prescalerValue = userConfigPtr->prescalerValue;
@@ -96,7 +95,7 @@ lptmr_status_t LPTMR_DRV_Init(uint32_t instance, lptmr_state_t *userStatePtr, co
     LPTMR_HAL_SetTimerWorkingMode(base,workingModeUserConfig);
 
     /* Internal context */
-    lptmr_state_ptrs[instance] = userStatePtr;
+    g_lptmrStatePtr[instance] = userStatePtr;
 
     userStatePtr->userCallbackFunc = NULL;
 
@@ -155,7 +154,7 @@ lptmr_status_t LPTMR_DRV_Deinit(uint32_t instance)
     CLOCK_SYS_DisableLptmrClock(instance);
 
     /* Cleared state pointer */
-    lptmr_state_ptrs[instance] = NULL;
+    g_lptmrStatePtr[instance] = NULL;
 
     return kStatus_LPTMR_Success;
 }
@@ -214,41 +213,31 @@ lptmr_status_t LPTMR_DRV_SetTimerPeriodUs(uint32_t instance, uint32_t us)
     LPTMR_Type * base = g_lptmrBase[instance];
     uint32_t tick_count;
 
-    if (lptmr_state_ptrs[instance]->prescalerClockHz < 1000000U)
+    if (g_lptmrStatePtr[instance]->prescalerClockHz < 1000000U)
     {
-        if (us < (1000000U/lptmr_state_ptrs[instance]->prescalerClockHz))
-        {
-            return kStatus_LPTMR_TimerPeriodUsTooSmall;
-        }
-        else
-        {
-            tick_count = (us/(1000000U/lptmr_state_ptrs[instance]->prescalerClockHz));
-
-            /* CMR register is 16 Bits */
-            if ( tick_count > 0xFFFFU )
-            {
-                return kStatus_LPTMR_TimerPeriodUsTooLarge;
-            }
-            else
-            {
-                LPTMR_HAL_SetCompareValue(base,tick_count);
-            }
-        }
+        tick_count = (us/(1000000U/g_lptmrStatePtr[instance]->prescalerClockHz));
     }
     else
     {
-        tick_count = (us*(lptmr_state_ptrs[instance]->prescalerClockHz/1000000U));
-
-        /* CMR register is 16 Bits */
-        if ( tick_count > 0xFFFFU )
-        {
-            return kStatus_LPTMR_TimerPeriodUsTooLarge;
-        }
-        else
-        {
-            LPTMR_HAL_SetCompareValue(base,tick_count);
-        }
+        tick_count = (us*(g_lptmrStatePtr[instance]->prescalerClockHz/1000000U));
     }
+
+    /* CMR register is 16 Bits */
+    if (tick_count > 0xFFFFU)
+    {
+        return kStatus_LPTMR_TimerPeriodUsTooLarge;
+    }
+
+    /* CMR of 0 leaves the hardware trigger asserted */
+    if (tick_count <= 1)
+    {
+        return kStatus_LPTMR_TimerPeriodUsTooSmall;
+    }
+
+    /* We have to reduce by 1 as interrupt occurs when the CNR register equals the value of
+     * of CMR register and then increments
+     */
+    LPTMR_HAL_SetCompareValue(base, tick_count - 1);
 
     return kStatus_LPTMR_Success;
 }
@@ -269,13 +258,13 @@ uint32_t LPTMR_DRV_GetCurrentTimeUs(uint32_t instance)
 
     uint32_t us;
 
-    if (lptmr_state_ptrs[instance]->prescalerClockHz < 1000000U)
+    if (g_lptmrStatePtr[instance]->prescalerClockHz < 1000000U)
     {
-        us = LPTMR_HAL_GetCounterValue(base)*(1000000U/lptmr_state_ptrs[instance]->prescalerClockHz);
+        us = LPTMR_HAL_GetCounterValue(base)*(1000000U/g_lptmrStatePtr[instance]->prescalerClockHz);
     }
     else
     {
-        us = LPTMR_HAL_GetCounterValue(base)/(lptmr_state_ptrs[instance]->prescalerClockHz/1000000U);
+        us = LPTMR_HAL_GetCounterValue(base)/(g_lptmrStatePtr[instance]->prescalerClockHz/1000000U);
     }
 
     return us;
@@ -336,12 +325,12 @@ lptmr_status_t LPTMR_DRV_InstallCallback(uint32_t instance, lptmr_callback_t use
     assert(instance < LPTMR_INSTANCE_COUNT);
 
     assert (instance < LPTMR_INSTANCE_COUNT);
-    if (!lptmr_state_ptrs[instance])
+    if (!g_lptmrStatePtr[instance])
     {
         return kStatus_LPTMR_NotInitlialized;
     }
     /* Fill callback function into state structure. */
-    lptmr_state_ptrs[instance]->userCallbackFunc = userCallback;
+    g_lptmrStatePtr[instance]->userCallbackFunc = userCallback;
 
     return kStatus_LPTMR_Success;
 }
@@ -365,12 +354,12 @@ void LPTMR_DRV_IRQHandler(uint32_t instance)
     /* Clear interrupt flag */
     LPTMR_HAL_ClearIntFlag(base);
 
-    if (lptmr_state_ptrs[instance])
+    if (g_lptmrStatePtr[instance])
     {
-        if (lptmr_state_ptrs[instance]->userCallbackFunc)
+        if (g_lptmrStatePtr[instance]->userCallbackFunc)
         {
             /* Execute user-defined callback function. */
-            (*(lptmr_state_ptrs[instance]->userCallbackFunc))();
+            (*(g_lptmrStatePtr[instance]->userCallbackFunc))();
         }
     }
 }

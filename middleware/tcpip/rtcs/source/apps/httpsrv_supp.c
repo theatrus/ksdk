@@ -37,14 +37,8 @@
 #include "rtcs_base64.h"
 #include "rtcs_util.h"
 
-#if MQX_USE_IO_OLD
-#include <fio.h>
-#include <posix.h>
-#else
 #include <nio.h>
-#include "errno.h"
 #include <strings.h>
-#endif
 
 #define HTTPSRV_CALLBACK_TASK_NAME "HTTP server callback handler"
 

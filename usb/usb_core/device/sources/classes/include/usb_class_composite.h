@@ -71,8 +71,9 @@
      usb_vendor_req_callback_struct_t           vendor_req_callback;                      /*!< application callback function to handle the vendor request related event, reserved for future use*/
      usb_class_specific_callback_struct_t       class_specific_callback;                  /*!< application callback function to handle all the class related event for the specified type of class*/
      usb_desc_request_notify_struct_t*          desc_callback_ptr;                        /*!< related callback function data structure for the specified type of class*/
+     usb_board_init_callback_struct_t           board_init_callback;                      /*!< application callback function to handle board init*/
      uint32_t                                   class_handle;                             /*!< the handle of the class*/
-     class_type                                 type;                                     /*!< class type*/
+     uint8_t                                    type;                                     /*!< class type*/
  }class_config_struct_t;
 
 

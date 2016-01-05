@@ -47,7 +47,9 @@
 #define AUDIO_INTERFACE_INDEX        0
 #define HID_MOUSE_INTERFACE_INDEX    1
 
+#ifndef HIGH_SPEED
 #define  HIGH_SPEED                  (0)
+#endif
 
 #if HIGH_SPEED
 #define CONTROLLER_ID                USB_CONTROLLER_EHCI_0

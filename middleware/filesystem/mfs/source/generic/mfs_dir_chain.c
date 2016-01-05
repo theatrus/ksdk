@@ -129,7 +129,6 @@ _mfs_error MFS_scan_dir_chain(
         {
             /* there is an unprocessed sector located during previous iteration, use it */
             sector_num++;
-            sector_count--;
         }
         else
         {
@@ -139,6 +138,7 @@ _mfs_error MFS_scan_dir_chain(
                 break;
             }
         }
+        sector_count--; //consume one sector
 
         error_code = MFS_sector_map(drive_ptr, sector_num, (void **)&dir_entry_ptr, MFS_MAP_MODE_READONLY, 0);
         if (error_code != MFS_NO_ERROR)
@@ -203,6 +203,7 @@ _mfs_error MFS_scan_dir_chain(
             }
             else
             {
+                if (0 == (dir_entry_ptr->ATTRIBUTE[0] & MFS_ATTR_VOLUME_NAME)) {
                 /* main (SFN) entry, check if there was valid and corresponding LFN found */
                 if ((lfn_chksum >= 0) && (lfn_ord == 1) && (lfn_chksum == MFS_lfn_checksum(dir_entry_ptr->NAME)))
                 {
@@ -237,6 +238,7 @@ _mfs_error MFS_scan_dir_chain(
                     }
                 }
 
+                }
                 lfn_chksum = -1; /* ensure that the LFN (if any) is no longer considered valid for subsequent SFNs */
             }
 
@@ -356,7 +358,6 @@ _mfs_error MFS_read_dir_chain(
         {
             /* there is an unprocessed sector located during previous iteration, use it */
             sector_num++;
-            sector_count--;
         }
         else
         {
@@ -366,6 +367,7 @@ _mfs_error MFS_read_dir_chain(
                 break;
             }
         }
+        sector_count--; //consume one sector
 
         error_code = MFS_sector_map(drive_ptr, sector_num, (void **)&dir_entry_ptr, MFS_MAP_MODE_READONLY, 0);
         if (error_code != MFS_NO_ERROR)
@@ -679,7 +681,6 @@ _mfs_error MFS_free_dir_entry(
         {
             /* there is an unprocessed sector located during previous iteration, use it */
             sector_num++;
-            sector_count--;
         }
         else
         {
@@ -689,6 +690,7 @@ _mfs_error MFS_free_dir_entry(
                 break;
             }
         }
+        sector_count--;
 
         error_code = MFS_sector_map(drive_ptr, sector_num, (void **)&dir_entry_ptr, MFS_MAP_MODE_MODIFY, 0);
         if (error_code != MFS_NO_ERROR)
@@ -776,7 +778,6 @@ _mfs_error MFS_check_dir_empty(
         {
             /* there is an unprocessed sector located during previous iteration, use it */
             sector_num++;
-            sector_count--;
         }
         else
         {
@@ -786,6 +787,7 @@ _mfs_error MFS_check_dir_empty(
                 break;
             }
         }
+        sector_count--;
 
         error_code = MFS_sector_map(drive_ptr, sector_num, (void **)&dir_entry_ptr, MFS_MAP_MODE_READONLY, 0);
         if (error_code != MFS_NO_ERROR)

@@ -38,7 +38,9 @@
 /******************************************************************************
  * Macro's
  *****************************************************************************/
+#ifndef HIGH_SPEED
 #define  HIGH_SPEED           (0)
+#endif
 
 #if HIGH_SPEED
 #define CONTROLLER_ID         USB_CONTROLLER_EHCI_0
@@ -298,10 +300,8 @@ typedef struct _keyboard_variable_struct
     hid_handle_t app_handle;
     uint16_t app_speed;
     bool keyboard_init;/* flag to check lower layer status*/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     uint8_t rpt_buf[KEYBOARD_BUFF_SIZE];/*report/data buff for mouse application*/
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    uint8_t* rpt_buf;/*report/data buff for mouse application*/
 #endif
     uint8_t app_request_params[2]; /* for get/set idle and protocol requests*/
 } keyboard_global_variable_struct_t;

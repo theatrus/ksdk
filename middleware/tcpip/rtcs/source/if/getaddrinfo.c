@@ -72,7 +72,7 @@ static int add_ipv6(const char *hostname, int flags, struct addrinfo **aip, int 
 #endif
 static void set_order(int, int (**)(const char *, int, struct addrinfo **, int, int));
 static int add_ip(int family, const char *hostname, int flags, struct addrinfo **aip, int socktype, int port);
-static char * strdup( const char *s);
+static char * rtcs_strdup(const char *s);
 
 
 #define FOUND_IPV4  0x1
@@ -396,7 +396,7 @@ common:
                                     NI_NUMERICHOST
                                 ) == 0) 
                 {
-                    ai->ai_canonname = strdup(nbuf);
+                    ai->ai_canonname = rtcs_strdup(nbuf);
                     if (ai->ai_canonname == NULL) 
                     {
                         freeaddrinfo(ai_list);
@@ -657,7 +657,7 @@ static int add_ip(int family, const char *hostname, int flags, struct addrinfo *
                 /* If using /etc/hosts, the hostname on the list is
                  * considered as the canonical name.*/
 
-                ai->ai_canonname = strdup(hostname);
+                ai->ai_canonname = rtcs_strdup(hostname);
                 if (ai->ai_canonname == NULL)
                 {
                     freeaddrinfo(*aip);
@@ -739,7 +739,7 @@ static int add_ip(int family, const char *hostname, int flags, struct addrinfo *
                         {
                             if(dns_record->name)  
                             {
-                                ai->ai_canonname = strdup(dns_record->name);
+                                ai->ai_canonname = rtcs_strdup(dns_record->name);
                                 if (ai->ai_canonname == NULL)
                                 {
                                     freeaddrinfo(*aip);
@@ -877,7 +877,7 @@ static struct addrinfo *ai_reverse(struct addrinfo *oai)
 }
 
 
-static char * strdup(const char *s)
+static char * rtcs_strdup(const char *s)
 {
     unsigned int len = strlen (s) + 1;
   

@@ -46,7 +46,7 @@
  ******************************************************************************/
 
 /*!
- * @brief Hwtimer error codes definition.
+ * @brief HwTimer error codes definition.
  */
 typedef enum _hwtimer_error_code
 {
@@ -59,19 +59,19 @@ typedef enum _hwtimer_error_code
 } _hwtimer_error_code_t;
 
 /*!
- * @brief Hwtimer low level context data length definition.
+ * @brief HwTimer low level context data length definition.
  */
 #define HWTIMER_LL_CONTEXT_LEN 5U
 
 /*!
- * @brief Define for low level context data length
+ * @brief Definition for low level context data length.
  */
 typedef void (* hwtimer_callback_t)(void *p);
 
 /*!
- * @brief Hwtimer structure.
+ * @brief HwTimer structure.
  *
- * This structure defines a hwtimer.
+ * This structure defines a HwTimer.
  * The context structure is passed to all API functions (besides other parameters).
  *
  * @warning Application should not access members of this structure directly.
@@ -92,7 +92,7 @@ typedef void (* hwtimer_callback_t)(void *p);
  */
 typedef struct Hwtimer
 {
-    /*! @brief Pointer to device interface structure */
+    /*! @brief Pointer to a device interface structure */
     const struct Hwtimer_devif *    devif;
     /*! @brief Timer's source clock frequency */
     uint32_t                        clockFreq;
@@ -118,7 +118,7 @@ typedef struct Hwtimer
 /*!
  * @brief Hwtimer_time structure.
  *
- * Hwtimer time structure represents a time stamp consisting of timer elapsed periods (TICKS) and current value of the timer counter (subTicks).
+ * HwTimer time structure represents a time stamp consisting of timer elapsed periods (TICKS) and current value of the timer counter (subTicks).
  *
  * @see HWTIMER_SYS_GetTime
  */
@@ -131,12 +131,12 @@ typedef struct Hwtimer_time
 } hwtimer_time_t, * hwtimer_time_ptr_t;
 
 /*!
- * @brief Type defines init function for devif structure.
+ * @brief Type defines initialization function for devif structure.
  */
 typedef _hwtimer_error_code_t (*  hwtimer_devif_init_t)(hwtimer_t *hwtimer, uint32_t id, void *data);
 
 /*!
- * @brief Type defines deinit function for devif structure.
+ * @brief Type defines deinitialization function for devif structure.
  */
 typedef _hwtimer_error_code_t (*  hwtimer_devif_deinit_t)(hwtimer_t *hwtimer);
 
@@ -168,8 +168,8 @@ typedef _hwtimer_error_code_t (*  hwtimer_devif_get_time_t)(hwtimer_t *hwtimer, 
 /*!
  * @brief hwtimer_devif structure.
  *
- * Each low layer driver exports instance of this structure initialized with pointers to API functions the driver implements.
- * The functions themselves should be declared as static (not exported directly).
+ * Each low layer driver exports an instance of this structure initialized with pointers to API functions that the driver implements.
+ * The functions should be declared as static (not exported directly).
  *
  * @see HWTIMER_SYS_Init
  * @see HWTIMER_SYS_Deinit
@@ -195,23 +195,23 @@ extern "C" {
 #endif
 
 /*!
- * @brief Initializes caller allocated structure according to given parameters.
+ * @brief Initializes a caller allocated structure according to given parameters.
  *
- * The device interface pointer determines low layer driver to be used.
+ * The device interface pointer determines the low layer driver to be used.
  * Device interface structure is exported by each low layer driver and is opaque to the applications.
- * Please refer to chapter concerning low layer driver below for details.
- * Meaning of the numerical identifier varies depending on low layer driver used.
- * Typically, it identifies particular timer channel to initialize.
- * The initialization function has to be called prior using any other API function.
+ * See a chapter about the low layer driver below for details.
+ * Meaning of the numerical identifier varies depending on the low layer driver used.
+ * Typically, it identifies a particular timer channel to initialize.
+ * The initialization function has to be called prior to using any other API function.
  *
- * @param hwtimer [out]  Returns initialized hwtimer structure handle.
+ * @param hwtimer [out]  Returns initialized HwTimer structure handle.
  * @param kDevif [in]    Structure determines low layer driver to be used.
  * @param id [in]        Numerical identifier of the timer.
  * @param data [in]      Specific data for low level of interrupt.
  *
- * @return success or an error code returned from low level init function.
+ * @return success or an error code returned from low level initialization function.
  * @retval kHwtimerSuccess          Success
- * @retval kHwtimerInvalidInput     When input parameter hwtimer is a NULL pointer
+ * @retval kHwtimerInvalidInput     When input parameter HwTimer is a NULL pointer
  * @retval kHwtimerInvalidPointer   When device structure points to NULL.
  *
  * @warning The initialization function has to be called prior using any other API function.
@@ -223,16 +223,16 @@ extern "C" {
 _hwtimer_error_code_t HWTIMER_SYS_Init(hwtimer_t *hwtimer, const hwtimer_devif_t * kDevif, uint32_t id, void *data);
 
 /*!
- * @brief De-initialization of the hwtimer.
+ * @brief Deinitializes the HwTimer.
  *
- * Calls lower layer stop function to stop timer, then calls low layer de-initialization function
- * and afterwards invalidates hwtimer structure by clearing it.
+ * Calls the lower layer stop function to stop the timer. Then, calls the low layer de-initialization function
+ * and afterwards invalidates HwTimer structure by clearing it.
  *
- * @param hwtimer [in] Pointer to hwtimer structure.
+ * @param hwtimer [in] Pointer to HwTimer structure.
  *
  * @return success or an error code returned from low level DEINIT function.
  * @retval kHwtimerSuccess          Success
- * @retval kHwtimerInvalidInput     When input parameter hwtimer is a NULL pointer
+ * @retval kHwtimerInvalidInput     When input parameter HwTimer is a NULL pointer
  * @retval kHwtimerInvalidPointer   When device structure points to NULL.
  *
  * @see HWTIMER_SYS_Init
@@ -242,17 +242,17 @@ _hwtimer_error_code_t HWTIMER_SYS_Init(hwtimer_t *hwtimer, const hwtimer_devif_t
 _hwtimer_error_code_t HWTIMER_SYS_Deinit(hwtimer_t *hwtimer);
 
 /*!
- * @brief Set period of hwtimer.
+ * @brief Sets the period of the HwTimer.
  *
- * The function provides a way to set up the timer to desired period specified in microseconds.
+ * The function provides a way to set up the timer to a desired period specified in microseconds.
  * Calls the low layer driver to set up the timer divider according to the specified period.
  *
- * @param hwtimer [in]   Pointer to hwtimer structure.
+ * @param hwtimer [in]   Pointer to HwTimer structure.
  * @param period [in]    Required period of timer in micro seconds.
  *
  * @return success or an error code returned from low level SETDIV function.
  * @retval kHwtimerSuccess           Success
- * @retval kHwtimerInvalidInput      When input parameter hwtimer or his device structure are NULL pointers.
+ * @retval kHwtimerInvalidInput      When input parameter HwTimer or his device structure are NULL pointers.
  * @retval kHwtimerInvalidPointer    When low level SETDIV function point to NULL.
  * @retval kHwtimerClockManagerError When Clock manager returns error.
  *
@@ -264,14 +264,14 @@ _hwtimer_error_code_t HWTIMER_SYS_Deinit(hwtimer_t *hwtimer);
 _hwtimer_error_code_t HWTIMER_SYS_SetPeriod(hwtimer_t *hwtimer, uint32_t period);
 
 /*!
- * @brief Get period of hwtimer.
+ * @brief Gets the period of the HwTimer.
  *
- * The function returns current period of the timer in microseconds calculated from the base frequency and actual divider settings of the timer.
+ * The function returns the current period of the timer in microseconds calculated from the base frequency and actual divider settings of the timer.
  *
- * @param hwtimer [in]   Pointer to hwtimer structure.
+ * @param hwtimer [in]   Pointer to HwTimer structure.
  *
- * @return already set period of hwtimer.
- * @retval 0  Input parameter hwtimer is NULL pointer or clock manager returns error.
+ * @return already set period of HwTimer.
+ * @retval 0  Input parameter HwTimer is NULL pointer or clock manager returns error.
  *
  * @see HWTIMER_SYS_SetPeriod
  * @see HWTIMER_SYS_GetModulo
@@ -285,11 +285,11 @@ uint32_t HWTIMER_SYS_GetPeriod(hwtimer_t *hwtimer);
  *
  * The timer starts counting a new period generating interrupts every time the timer rolls over.
  *
- * @param hwtimer [in] Pointer to hwtimer structure.
+ * @param hwtimer [in] Pointer to HwTimer structure.
  *
  * @return success or an error code returned from low level START function.
  * @retval kHwtimerSuccess           Success
- * @retval kHwtimerInvalidInput      When input parameter hwtimer is a NULL pointer
+ * @retval kHwtimerInvalidInput      When input parameter HwTimer is a NULL pointer
  * @retval kHwtimerInvalidPointer    When device structure points to NULL.
  *
  * @see HWTIMER_SYS_Init
@@ -303,11 +303,11 @@ _hwtimer_error_code_t HWTIMER_SYS_Start(hwtimer_t *hwtimer);
  *
  * Pending interrupts and callbacks are cancelled.
  *
- * @param hwtimer [in] Pointer to hwtimer structure.
+ * @param hwtimer [in] Pointer to HwTimer structure.
  *
  * @return success or an error code returned from low level STOP function.
  * @retval kHwtimerSuccess           Success
- * @retval kHwtimerInvalidInput      When input parameter hwtimer is a NULL pointer
+ * @retval kHwtimerInvalidInput      When input parameter HwTimer is a NULL pointer
  * @retval kHwtimerInvalidPointer    When device structure points to NULL.
  *
  * @see HWTIMER_SYS_Init
@@ -321,10 +321,10 @@ _hwtimer_error_code_t HWTIMER_SYS_Stop(hwtimer_t *hwtimer);
  *
  * It is typically called after HWTIMER_SYS_SetPeriod() to obtain actual resolution of the timer in the current configuration.
  *
- * @param hwtimer [in]   Pointer to hwtimer structure.
+ * @param hwtimer [in]   Pointer to HwTimer structure.
  *
- * @return resolution of hwtimer.
- * @retval 0 Input parameter hwtimer is NULL pointer.
+ * @return resolution of HwTimer.
+ * @retval 0 Input parameter HwTimer is NULL pointer.
  *
  * @see HWTIMER_SYS_SetPeriod
  * @see HWTIMER_SYS_GetPeriod
@@ -334,17 +334,17 @@ _hwtimer_error_code_t HWTIMER_SYS_Stop(hwtimer_t *hwtimer);
 uint32_t HWTIMER_SYS_GetModulo(hwtimer_t *hwtimer);
 
 /*!
- * @brief The function reads the current value of the hwtimer.
+ * @brief The function reads the current value of the HwTimer.
  *
  * Elapsed periods(ticks) and current value of the timer counter (sub-ticks) are filled into the Hwtimer_time structure.
  * The sub-ticks number always counts up and is reset to zero when the timer overflows regardless of the counting direction of the underlying device.
  *
- * @param hwtimer [in]   Pointer to hwtimer structure.
+ * @param hwtimer [in]   Pointer to HwTimer structure.
  * @param time [out]     Pointer to time structure. This value is filled with current value of the timer.
  *
  * @return success or an error code returned from low level GET_TIME function.
  * @retval kHwtimerSuccess        Success
- * @retval kHwtimerInvalidInput   When input parameter hwtimer or input parameter time are NULL pointers.
+ * @retval kHwtimerInvalidInput   When input parameter HwTimer or input parameter time are NULL pointers.
  * @retval kHwtimerInvalidPointer When device structure points to NULL.
  *
  * @see HWTIMER_SYS_SetPeriod
@@ -355,16 +355,16 @@ uint32_t HWTIMER_SYS_GetModulo(hwtimer_t *hwtimer);
 _hwtimer_error_code_t HWTIMER_SYS_GetTime(hwtimer_t *hwtimer, hwtimer_time_t *time);
 
 /*!
- * @brief The function reads the current value of the hwtimer
+ * @brief The function reads the current value of the HwTimer
  *
- * The returned value corresponds with lower 32 bits of elapsed periods (ticks).
- * The value is guaranteed to be obtained atomically without necessity to mask timer interrupt.
- * Lower layer driver is not involved at all, thus call to this function is considerably faster than HWTIMER_SYS_GetTime.
+ * The returned value corresponds to the lower 32 bits of elapsed periods (ticks).
+ * The value is guaranteed to be obtained without needing to mask timer interrupt.
+ * Lower layer driver is not involved at all and calling this function is considerably faster than HWTIMER_SYS_GetTime.
  *
- * @param hwtimer [in]   Pointer to hwtimer structure.
+ * @param hwtimer [in]   Pointer to HwTimer structure.
  *
  * @return low 32 bits of 64 bit tick value.
- * @retval 0  When input parameter hwtimer is NULL pointer.
+ * @retval 0  When input parameter HwTimer is NULL pointer.
  *
  * @see HWTIMER_SYS_SetPeriod
  * @see HWTIMER_SYS_GetPeriod
@@ -378,12 +378,12 @@ uint32_t HWTIMER_SYS_GetTicks(hwtimer_t *hwtimer);
  *
  * The callback_data is arbitrary pointer passed as parameter to the callback function.
  *
- * @param hwtimer [in]        Pointer to hwtimer structure.
+ * @param hwtimer [in]        Pointer to HwTimer structure.
  * @param callbackFunc [in] Function pointer to be called when the timer expires.
  * @param callbackData [in] Data pointer for the function callback_func.
  *
  * @return success or an error code
- * @retval kHwtimerInvalidInput When input parameter hwtimer is NULL pointer.
+ * @retval kHwtimerInvalidInput When input parameter HwTimer is NULL pointer.
  * @retval kHwtimerSuccess      When registration callback succeed.
  *
  * @warning This function must not be called from a callback routine.
@@ -399,10 +399,10 @@ _hwtimer_error_code_t HWTIMER_SYS_RegisterCallback(hwtimer_t *hwtimer, hwtimer_c
  *
  * If the timer overflows when callbacks are blocked the callback becomes pending.
  *
- * @param hwtimer [in] Pointer to hwtimer structure.
+ * @param hwtimer [in] Pointer to HwTimer structure.
  *
  * @return success or an error code
- * @retval kHwtimerInvalidInput When input parameter hwtimer is NULL pointer.
+ * @retval kHwtimerInvalidInput When input parameter HwTimer is NULL pointer.
  * @retval kHwtimerSuccess      When callback block succeed.
  *
  * @warning This function must not be called from a callback routine.
@@ -419,10 +419,10 @@ _hwtimer_error_code_t HWTIMER_SYS_BlockCallback(hwtimer_t *hwtimer);
  * If there is a callback pending, it gets immediately executed.
  * This function must not be called from a callback routine (it does not make sense to do so anyway as callback function never gets executed while callbacks are blocked).
  *
- * @param hwtimer [in] Pointer to hwtimer structure.
+ * @param hwtimer [in] Pointer to HwTimer structure.
  *
  * @return success or an error code
- * @retval kHwtimerInvalidInput When input parameter hwtimer is NULL pointer.
+ * @retval kHwtimerInvalidInput When input parameter HwTimer is NULL pointer.
  * @retval kHwtimerSuccess      When callback unblock succeed.
  *
  * @warning This function must not be called from a callback routine.
@@ -436,10 +436,10 @@ _hwtimer_error_code_t HWTIMER_SYS_UnblockCallback(hwtimer_t *hwtimer);
 /*!
  * @brief The function cancels pending callback, if any.
  *
- * @param hwtimer [in] Pointer to hwtimer structure.
+ * @param hwtimer [in] Pointer to HwTimer structure.
  *
  * @return success or an error code
- * @retval kHwtimerInvalidInput When input parameter hwtimer is NULL pointer.
+ * @retval kHwtimerInvalidInput When input parameter HwTimer is NULL pointer.
  * @retval kHwtimerSuccess      When callback cancel succeed.
  *
  * @warning This function must not be called from a callback routine (it does not make sense to do so anyway as callback function never gets executed while callbacks are blocked).

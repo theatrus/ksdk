@@ -159,7 +159,7 @@ static uint32_t ProgramApplicationCode(void)
         ret |= FlashEraseBlock(&flashSSDConfig, dest, g_FlashLaunchCommand);
         if (FTFx_OK != ret)
         {
-            PRINTF("\n\rFlash Erase Upper Block Error, Address: 0x%x", (int)dest);
+            PRINTF("\r\nFlash Erase Upper Block Error, Address: 0x%x", (int)dest);
             return ret;
         }
     }
@@ -174,7 +174,7 @@ static uint32_t ProgramApplicationCode(void)
     ret = FlashProgram(&flashSSDConfig, dest, size, P_FLASH_BASE, g_FlashLaunchCommand);
     if (FTFx_OK != ret)
     {
-      PRINTF("\n\rFlashProgram Error, Pflash half program, Address: 0x%x", (int)dest);
+      PRINTF("\r\nFlashProgram Error, Pflash half program, Address: 0x%x", (int)dest);
       return ret;
     }
     /* program data to upper Pflash half for verification */
@@ -199,17 +199,17 @@ bool SwapCallback(uint8_t currentSwapMode)
     {
         case FTFx_SWAP_UNINIT:
             /* Put your application-specific code here */
-            PRINTF("\n\r\tSwap Callback -> Swap flash is uninitialization status!");
+            PRINTF("\r\n\tSwap Callback -> Swap flash is uninitialization status!");
             break;
 
         case FTFx_SWAP_READY:
             /* Put your application-specific code here */
-            PRINTF("\n\r\tSwap Callback -> Swap flash is initialization status!");
+            PRINTF("\r\n\tSwap Callback -> Swap flash is initialization status!");
             break;
 
         case FTFx_SWAP_UPDATE:
             /* Put your application-specific code here */
-            PRINTF("\n\r\tSwap Callback -> Swap flash is update status!");
+            PRINTF("\r\n\tSwap Callback -> Swap flash is update status!");
             /**************************************************************************/
             /* erase swap indicator address so we can move to update-erased state */
             /*************************************************************************/
@@ -223,7 +223,7 @@ bool SwapCallback(uint8_t currentSwapMode)
 
         case FTFx_SWAP_UPDATE_ERASED:
             /* Put your application-specific code here */
-            PRINTF("\n\r\tSwap Callback -> swap flash is update erased status!");
+            PRINTF("\r\n\tSwap Callback -> swap flash is update erased status!");
 
             /* Erase non active swap indicator and Program example application code to lower and upper location */
             /* In a typical user mode, it may be desired to only update the upper half, then swap to run the new code */
@@ -233,7 +233,7 @@ bool SwapCallback(uint8_t currentSwapMode)
 
         case FTFx_SWAP_COMPLETE:
             /* Put your application-specific code here */
-            PRINTF("\n\r\tSwap Callback -> swap flash is complete status!");
+            PRINTF("\r\n\tSwap Callback -> swap flash is complete status!");
             break;
         default:
             break;
@@ -253,19 +253,19 @@ void print_swap_application_data()
     {
         /* Swap status bit is set, upper half mapped to 0x0000 - printout */
 
-        PRINTF("\n\n\r\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        PRINTF("\n\r\tSwap Status Bit: 1, UPPER half resides at location 0x0000_0000!");
-        PRINTF("\n\r\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        PRINTF("\r\n\r\n\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        PRINTF("\r\n\tSwap Status Bit: 1, UPPER half resides at location 0x0000_0000!");
+        PRINTF("\r\n\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     }
     else
     {
         /* Swap status bit is clear, lower half mapped to 0x0000 - printout  */
-        PRINTF("\n\n\r\t---------------------------------------------------------------");
-        PRINTF("\n\r\tSwap Status Bit: 0, LOWER half resides at location 0x0000_0000!");
-        PRINTF("\n\r\t---------------------------------------------------------------");
+        PRINTF("\r\n\r\n\t---------------------------------------------------------------");
+        PRINTF("\r\n\tSwap Status Bit: 0, LOWER half resides at location 0x0000_0000!");
+        PRINTF("\r\n\t---------------------------------------------------------------");
     }
-    PRINTF("\n\r\t\tP-Flash Lower Test Data @(0x%x): 0x%x", PSWAP_LOWERDATA_ADDR, (unsigned int)READ32(PSWAP_LOWERDATA_ADDR));
-    PRINTF("\n\r\t\tP-Flash Upper Test Data @(0x%x): 0x%x", PSWAP_UPPERDATA_ADDR, (unsigned int)READ32(PSWAP_UPPERDATA_ADDR));
+    PRINTF("\r\n\t\tP-Flash Lower Test Data @(0x%x): 0x%x", PSWAP_LOWERDATA_ADDR, (unsigned int)READ32(PSWAP_LOWERDATA_ADDR));
+    PRINTF("\r\n\t\tP-Flash Upper Test Data @(0x%x): 0x%x", PSWAP_UPPERDATA_ADDR, (unsigned int)READ32(PSWAP_UPPERDATA_ADDR));
 }
 
 #endif /* #if (defined(SWAP)) */

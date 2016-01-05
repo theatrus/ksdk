@@ -35,8 +35,6 @@
 
 void hardware_init(void) {
 
-  uint8_t i;
-
   /* enable clock for PORTs */
   CLOCK_SYS_EnablePortClock(PORTA_IDX);
   CLOCK_SYS_EnablePortClock(PORTC_IDX);

@@ -50,26 +50,28 @@
  */
 typedef struct PdbAdcPreTriggerConfig
 {
-    uint32_t adcPreTriggerIdx; /*!< Setting pre_trigger's index. */
-    bool preTriggerEnable; /*!< Enable the pre_trigger. */
-    bool preTriggerOutputEnable; /*!< Enable the pre_trigger output. @internal gui name="Trigger output" id="AdcTriggerOutput" */
-    bool preTriggerBackToBackEnable; /*!< Enable the back to back mode for ADC pre_trigger. @internal gui name="Back-To-Back mode" id="AdcBackToBackMode" */
+    uint32_t adcPreTriggerIdx; /*!< Setting pre_trigger's index. @internal gui name="Pre-Trigger index value" id="adcPreTriggerIdx" range="0..7" */
+    bool preTriggerEnable; /*!< Enables the pre_trigger. @internal gui name="Pre-Trigger index" id="preTriggerEnable" */
+    bool preTriggerOutputEnable; /*!< Enables the pre_trigger output. @internal gui name="Pre-Trigger output" id="AdcTriggerOutput" */
+    bool preTriggerBackToBackEnable; /*!< Enables the back to back mode for ADC pre_trigger. @internal gui name="Back-To-Back mode" id="AdcBackToBackMode" */
 } pdb_adc_pretrigger_config_t;
 
+#if FSL_FEATURE_PDB_HAS_DAC
 /*!
  * @brief Defines the type of flag for PDB pre-trigger events.
  * @internal gui name="DAC trigger configuration" id="pdbDacTrgCfg"
  */
 typedef struct PdbDacIntervalConfig
 {
-    bool intervalTriggerEnable; /*!< Enable the DAC interval trigger. */
+    bool intervalTriggerEnable; /*!< Enable the DAC interval trigger. @internal gui name="Interval trigger" id="intervalTriggerEnable" */
     bool extTriggerInputEnable; /*!< Enable DAC external trigger input . @internal gui name="External trigger" id="DacExternalTrigger" */
 } pdb_dac_interval_config_t;
+#endif
 
 /*! @brief Table of base addresses for PDB instances. */
 extern PDB_Type * const g_pdbBase[];
 
-/*! @brief Table to save PDB IRQ enumeration numbers defined in CMSIS header file. */
+/*! @brief Table to save PDB IRQ enumeration numbers defined in the CMSIS header file. */
 extern const IRQn_Type g_pdbIrqId[PDB_INSTANCE_COUNT];
 
 #if defined(__cplusplus)
@@ -91,9 +93,9 @@ extern "C" {
 pdb_status_t PDB_DRV_Init(uint32_t instance, const pdb_timer_config_t *userConfigPtr);
 
 /*!
- * @brief De-initializes the PDB module.
+ * @brief Deinitializes the PDB module.
  *
- * This function de-initializes the PDB module.
+ * This function deinitializes the PDB module.
  * Calling this function shuts down the PDB module and reduces the power consumption.
  *
  * @param instance PDB instance ID.
@@ -241,6 +243,7 @@ void PDB_DRV_ClearAdcPreTriggerSeqErrFlags(uint32_t instance, uint32_t chn, uint
  */
 void PDB_DRV_SetAdcPreTriggerDelayValue(uint32_t instance, uint32_t chn, uint32_t preChn, uint32_t value);
 
+#if FSL_FEATURE_PDB_HAS_DAC
 /*!
  * @brief Configures the DAC interval in the PDB module.
  *
@@ -263,6 +266,7 @@ pdb_status_t PDB_DRV_ConfigDacInterval(uint32_t instance, uint32_t dacChn, const
  * @param value Setting value.
  */
 void PDB_DRV_SetDacIntervalValue(uint32_t instance, uint32_t dacChn, uint32_t value);
+#endif
 
 /*!
  * @brief Switches on/off the CMP pulse out in the PDB module.

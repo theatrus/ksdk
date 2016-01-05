@@ -309,7 +309,42 @@ void I2C_HAL_SetAddress10bit(I2C_Type * base, uint16_t address)
     /* Set top 3 bits of slave address.*/
     I2C_BWR_C2_AD(base, (address & 0x0380U) >> 7U);
 }
-
+#if FSL_FEATURE_I2C_HAS_SMBUS
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : I2C_HAL_ClearTimeoutStatus
+ * Description   : Clear SMBus timeout status.
+ *
+ *END**************************************************************************/
+void I2C_HAL_ClearTimeoutStatus(I2C_Type *base, smb_timeout_status_flag_t status)
+{
+    uint8_t val =  I2C_RD_SMB(base);
+    I2C_WR_SMB(base, val|status);
+}
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : I2C_HAL_SetSMBusAddressCmd
+ * Description   : Enables/Disables SMBus device default address.
+ *
+ *END**************************************************************************/
+void I2C_HAL_SetSMBusAddressCmd(I2C_Type *base, bool enable, uint8_t address)
+{
+    I2C_BWR_SMB_SIICAEN(base, enable);
+    I2C_BWR_A2_SAD(base, address);
+}
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : I2C_HAL_ConfigSMBCLKLowTimeout
+ * Description   : Config SMBCLK low timeout period.
+ *
+ *END**************************************************************************/
+void I2C_HAL_ConfigSMBCLKLowTimeout(I2C_Type *base, uint16_t timeout)
+{
+    uint16_t highVal = timeout&0xFF00;
+    I2C_WR_SLTH(base, highVal>>8);
+    I2C_WR_SLTL(base,(timeout&0xFF));
+}
+#endif
 /*FUNCTION**********************************************************************
  *
  * Function Name : I2C_HAL_ReadByteBlocking

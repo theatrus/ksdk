@@ -61,7 +61,7 @@ int main(void)
     hardware_init();
 
     PRINTF("RNGA Peripheral Driver Example\r\n");
-    PRINTF("Generate 10 random numbers\n\r");
+    PRINTF("Generate 10 random numbers\r\n");
 
     // Initialize RNGA
     rngaConfig.isIntMasked         = true;
@@ -84,7 +84,7 @@ int main(void)
         // Generate 10 random numbers.
         for(i = 0; i < 10; i++)
         {
-            status = RNGA_DRV_GetRandomData(RNGA_INSTANCE, &randout);
+            status = RNGA_DRV_GetRandomData(RNGA_INSTANCE, &randout, sizeof(uint32_t));
             // Check if randomization is successful.
             if (kStatus_RNGA_Success == status)
             {

@@ -128,7 +128,7 @@ extern "C" {
 xbar_status_t XBAR_DRV_Init(xbar_state_t * xbarStatePtr);
 
 /*!
- * @brief De-initializes the XBAR module.
+ * @brief Deinitializes the XBAR module.
  * 
  * This function clears all configurations and shuts down the XBAR by disabling interrupt 
  * and the clock signal to the modules.
@@ -220,6 +220,7 @@ xbar_status_t XBAR_DRV_ClearEdgeDetectionStatus(uint32_t outIndex);
  * When the XBAR interrupt request is configured, the callback is executed
  * inside the ISR. 
  *
+ * @param outIndex XBAR output number.
  * @param userCallback User-defined callback function.
  * @param callbackParam The XBAR callback parameter pointer.
  * @return An error code or kStatus_XBAR_Success.
@@ -227,9 +228,9 @@ xbar_status_t XBAR_DRV_ClearEdgeDetectionStatus(uint32_t outIndex);
 xbar_status_t XBAR_DRV_InstallCallback(uint32_t outIndex, xbar_callback_t userCallback, void * callbackParam);
 
 /*!
- * @brief Driver-defined ISR in XBAR module.
+ * @brief Driver-defined ISR in the XBAR module.
  *
- * This function is the driver-defined ISR in XBAR module.
+ * This function is the driver-defined ISR in the XBAR module.
  * It includes the process for interrupt mode defined by the driver. Currently, it
  * is called inside the system-defined ISR.
  *

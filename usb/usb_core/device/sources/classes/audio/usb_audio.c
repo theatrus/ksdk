@@ -259,7 +259,7 @@ void USB_Service_Audio_Isochronous_IN(usb_event_struct_t* event, void* arg)
         event_type = USB_DEV_EVENT_SEND_COMPLETE;
         iso_in_recv.data_ptr = event->buffer_ptr;
         iso_in_recv.data_size = event->len;
-        audio_obj_ptr->class_specific_callback.callback(event_type, USB_REQ_VAL_INVALID, (uint8_t **)&iso_in_recv, NULL,
+        audio_obj_ptr->class_specific_callback.callback(event_type, USB_REQ_VAL_INVALID, (uint8_t **)&iso_in_recv, &event->len,
             audio_obj_ptr->class_specific_callback.arg);
     }
 
@@ -288,7 +288,7 @@ void USB_Service_Audio_Isochronous_OUT(usb_event_struct_t* event, void* arg)
     /* Callback to application */
     if (audio_obj_ptr->class_specific_callback.callback != NULL)
     {
-        audio_obj_ptr->class_specific_callback.callback(event_type, USB_REQ_VAL_INVALID, (uint8_t **)&iso_out_recv, NULL,
+        audio_obj_ptr->class_specific_callback.callback(event_type, USB_REQ_VAL_INVALID, (uint8_t **)&iso_out_recv, &event->len,
             audio_obj_ptr->class_specific_callback.arg);
     }
 }
@@ -311,12 +311,6 @@ void USB_Class_Audio_Event(uint8_t event, void* val, void* arg)
     audio_device_struct_t* devicePtr = (audio_device_struct_t*)arg;
     uint8_t index = 0;
     usb_ep_struct_t* ep_struct_ptr;
-#if USBCFG_DEV_COMPOSITE
-    usb_composite_info_struct_t* usb_composite_info;
-    uint32_t interface_index = 0xFF;
-#else
-    usb_class_struct_t* usbclass;
-#endif
 
     if (devicePtr == NULL)
     {
@@ -328,57 +322,63 @@ void USB_Class_Audio_Event(uint8_t event, void* val, void* arg)
 
     if (event == USB_DEV_EVENT_CONFIG_CHANGED)
     {
-#if USBCFG_DEV_COMPOSITE
         uint8_t count = 0;
-        //uint8_t component;
-        uint8_t type_sel;
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
-        USB_COMPOSITE_INFO, (uint32_t *)&usb_composite_info);
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
-        USB_CLASS_INTERFACE_INDEX_INFO, (uint32_t *)&interface_index);
-
-        if(interface_index == 0xFF)
+        if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(devicePtr->controller_id))
         {
-            USB_PRINTF("not find interface index\n");
-            return;
-        }
+            usb_composite_info_struct_t* usb_composite_info;
+            uint32_t interface_index = 0xFF;
+            //uint8_t component;
+            uint8_t type_sel;
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
+            USB_COMPOSITE_INFO, (uint32_t *)&usb_composite_info);
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
+            USB_CLASS_INTERFACE_INDEX_INFO, (uint32_t *)&interface_index);
 
-        for(type_sel = 0;type_sel < usb_composite_info->count;type_sel++)
-        {
-            if ((usb_composite_info->class_handle[type_sel].type == USB_CLASS_AUDIO) && (type_sel == interface_index))
+            if(interface_index == 0xFF)
             {
-                break;
+                USB_PRINTF("not find interface index\n");
+                return;
             }
+
+            for(type_sel = 0;type_sel < usb_composite_info->count;type_sel++)
+            {
+                if ((usb_composite_info->class_handle[type_sel].type == USB_CLASS_AUDIO) && (type_sel == interface_index))
+                {
+                    break;
+                }
+            }
+            if(type_sel >= usb_composite_info->count)
+            {
+                USB_PRINTF("not find audio interface\n");
+                return;
+            }
+
+            devicePtr->usb_ep_data = (usb_endpoints_t *) &usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints;
+            if (usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.count > MAX_AUDIO_CLASS_EP_NUM)
+            {
+                USB_PRINTF("too many audio endpoint for the composite class driver\n");
+                return;
+            }
+            count = usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.count;
         }
-        if(type_sel >= usb_composite_info->count)
+        else
         {
-            USB_PRINTF("not find audio interface\n");
-            return;
+
+            //uint8_t component;
+            usb_class_struct_t* usbclass;
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
+                USB_CLASS_INFO, (uint32_t *)&usbclass);
+            devicePtr->usb_ep_data = (usb_endpoints_t *)&usbclass->interfaces.interface->endpoints;
+            if (usbclass->interfaces.interface->endpoints.count > MAX_AUDIO_CLASS_EP_NUM)
+            {
+                USB_PRINTF("too many audio endpoint for the class driver\n");
+                return;
+            }
+            count = usbclass->interfaces.interface->endpoints.count;
+
         }
 
-        devicePtr->usb_ep_data = (usb_endpoints_t *) &usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints;
-        if (usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.count > MAX_AUDIO_CLASS_EP_NUM)
-        {
-            USB_PRINTF("too many audio endpoint for the composite class driver\n");
-            return;
-        }
-
-        for(index = 0; index < usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.count; index++)
-#else
-        uint8_t count = 0;
-        //uint8_t component;
-
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
-            USB_CLASS_INFO, (uint32_t *)&usbclass);
-        devicePtr->usb_ep_data = (usb_endpoints_t *)&usbclass->interfaces.interface->endpoints;
-        if (usbclass->interfaces.interface->endpoints.count > MAX_AUDIO_CLASS_EP_NUM)
-        {
-            USB_PRINTF("too many audio endpoint for the class driver\n");
-            return;
-        }
-
-        for (index = 0; index < usbclass->interfaces.interface->endpoints.count; index++)
-        #endif
+        for (index = 0; index < count; index++)
         {
             devicePtr->audio_endpoint_data.ep[index].endpoint = devicePtr->usb_ep_data->ep[index].ep_num;
             devicePtr->audio_endpoint_data.ep[index].type = devicePtr->usb_ep_data->ep[index].type;
@@ -391,7 +391,7 @@ void USB_Class_Audio_Event(uint8_t event, void* val, void* arg)
 
         /* get the endpoints from the descriptor module */
         usb_endpoints_t *usb_ep_data = devicePtr->usb_ep_data;
-
+        count = 0;
         /* initialize all non control endpoints */
         while (count < usb_ep_data->count)
         {
@@ -1525,7 +1525,7 @@ usb_status USB_Audio_Requests
     uint8_t * *data,
     uint32_t* size,
     void* arg
-    )
+)
 {
     usb_status error;
 #if USBCFG_AUDIO_CLASS_2_0 
@@ -1681,8 +1681,7 @@ usb_status USB_Class_Audio_Init
     uint8_t controller_id,
     audio_config_struct_t* audio_config_ptr,
     audio_handle_t* audioHandle
-
-    )
+)
 {
     usb_status error;
 
@@ -1702,25 +1701,39 @@ usb_status USB_Class_Audio_Init
         return error;
     }
 
-#if USBCFG_DEV_COMPOSITE
-    devicePtr->class_handle = (class_handle_t)USB_Class_Get_Class_Handle();
-    devicePtr->handle = (usb_device_handle)USB_Class_Get_Ctrler_Handle(devicePtr->class_handle);
-    if(NULL == devicePtr->handle)
+    devicePtr->controller_id = controller_id;
+    if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(devicePtr->controller_id))
     {
-        return USBERR_INIT_FAILED;
+        devicePtr->class_handle = (class_handle_t)USB_Class_Get_Class_Handle(devicePtr->controller_id);
+        devicePtr->handle = (usb_device_handle)USB_Class_Get_Ctrler_Handle(devicePtr->class_handle);
+        if(NULL == devicePtr->handle)
+        {
+            USB_Audio_Free_Handle(devicePtr);
+            return USBERR_INIT_FAILED;
+        }
     }
-#else
-    /* Initialize the device layer*/
-    error = usb_device_init(controller_id, &devicePtr->handle);
-    if (error != USB_OK)
+    else
     {
-        devicePtr = NULL;
-        return USBERR_INIT_FAILED;
+        /* Initialize the device layer*/
+        error = usb_device_init(controller_id, (void *)&audio_config_ptr->board_init_callback, &devicePtr->handle);
+        if (error != USB_OK)
+        {
+            USB_Audio_Free_Handle(devicePtr);
+            devicePtr = NULL;
+            return USBERR_INIT_FAILED;
+        }
+        devicePtr->class_handle = USB_Class_Init(devicePtr->handle,
+            USB_Class_Audio_Event, USB_Audio_Requests, (void *)devicePtr,
+            audio_config_ptr->desc_callback_ptr);
+        if ((class_handle_t)NULL == devicePtr->class_handle)
+        {
+            /* De-initialize the device layer*/
+            usb_device_deinit(devicePtr->handle);
+            USB_Audio_Free_Handle(devicePtr);
+            devicePtr = NULL;
+            return USBERR_INIT_FAILED;
+        }
     }
-    devicePtr->class_handle = USB_Class_Init(devicePtr->handle,
-        USB_Class_Audio_Event, USB_Audio_Requests, (void *)devicePtr,
-        audio_config_ptr->desc_callback_ptr);
-#endif
     /* save the callback pointer */
     OS_Mem_copy(&audio_config_ptr->audio_application_callback,
         &devicePtr->audio_application_callback, sizeof(usb_application_callback_struct_t));
@@ -1749,9 +1762,10 @@ usb_status USB_Class_Audio_Init
 
     *audioHandle = (uint32_t)devicePtr;
     devicePtr->user_handle = *audioHandle;
-#if !USBCFG_DEV_COMPOSITE 
-    usb_device_postinit(controller_id, devicePtr->handle);
-#endif
+    if(USB_UNINITIALIZED_VAL_32 == USB_Class_Get_Class_Handle(devicePtr->controller_id))
+    {
+        usb_device_postinit(controller_id, devicePtr->handle);
+    }
     return USB_OK;
 }
 
@@ -1770,11 +1784,10 @@ usb_status USB_Class_Audio_Init
 usb_status USB_Class_Audio_Deinit
 (
     audio_handle_t handle
-    )
+)
 {
-#if !USBCFG_DEV_COMPOSITE
-    usb_status error = USB_OK;
-#endif
+    usb_status error;
+
     audio_device_struct_t* devicePtr;
 
     devicePtr = (audio_device_struct_t*)handle;
@@ -1783,19 +1796,18 @@ usb_status USB_Class_Audio_Deinit
     {
         return USBERR_NO_DEVICE_CLASS;
     }
-#if !USBCFG_DEV_COMPOSITE
-    if (error == USB_OK)
+    
+    if(USB_UNINITIALIZED_VAL_32 == USB_Class_Get_Class_Handle(devicePtr->controller_id))
     {
         /* De-initialize the generic class functions */
         error = USB_Class_Deinit(devicePtr->handle, devicePtr->class_handle);
+        
+        if (error == USB_OK)
+        {
+            /* De-initialize the device layer*/
+            error = usb_device_deinit(devicePtr->handle);
+        }
     }
-    if (error == USB_OK)
-    {
-        /* De-initialize the device layer*/
-        error = usb_device_deinit(devicePtr->handle);
-    }
-#endif
-
     USB_Audio_Free_Handle(devicePtr);
     return USB_OK;
 }
@@ -1821,7 +1833,7 @@ usb_status USB_Class_Audio_Cancel
     audio_handle_t handle,/*[IN]*/
     uint8_t ep_num,/*[IN]*/
     uint8_t direction
-    )
+)
 {
     usb_status error = USB_OK;
     audio_device_struct_t* devicePtr;
@@ -1860,7 +1872,7 @@ usb_status USB_Class_Audio_Send_Data(
     uint8_t ep_num,/*[IN]*/
     uint8_t * app_buff,/*[IN]*/
     uint32_t size /*[IN]*/
-    )
+)
 {
 #if AUDIO_IMPLEMENT_QUEUING
     uint8_t index;
@@ -1947,7 +1959,7 @@ usb_status USB_Class_Audio_Recv_Data
     uint8_t ep_num,
     uint8_t * buff_ptr, /* [IN] buffer to recv */
     uint32_t size /* [IN] length of the transfer */
-    )
+)
 {
     audio_device_struct_t* audio_obj_ptr;
     usb_status error = USB_OK;
@@ -1976,7 +1988,7 @@ usb_status USB_Class_Audio_Get_Speed
 (
     audio_handle_t audio_handle,
     uint16_t * speed/* [OUT] the requested error */
-    )
+)
 {
     audio_device_struct_t* audio_obj_ptr;
     usb_status error = USB_OK;

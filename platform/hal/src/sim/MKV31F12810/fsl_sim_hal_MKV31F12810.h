@@ -970,6 +970,7 @@ void SIM_HAL_SetFtmSyncCmd(SIM_Type * base, uint32_t instance, bool sync);
  *
  * @param base     Base address for current SIM instance.
  * @param instance     device instance.
+ * @return The synchronization value.
  */
 static inline bool SIM_HAL_GetFtmSyncCmd(SIM_Type * base, uint32_t instance)
 {

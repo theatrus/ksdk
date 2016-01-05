@@ -109,32 +109,32 @@ int main(void)
     /****************************************/
     /* print welcome message for flash demo */
     /****************************************/
-    PRINTF("\n\n\n\r*****************************************************************");
-    PRINTF("\n\r*\t\tWelcome to the Flash Demo!");
-    PRINTF("\n\r*");
-    PRINTF("\n\r*  This demo will erase and program different regions of ");
-    PRINTF("\n\r*  flash memory, and perform flash swap if it is supported. ");
-    PRINTF("\n\r*");
+    PRINTF("\r\n\r\n\r\n*****************************************************************");
+    PRINTF("\r\n*\t\tWelcome to the Flash Demo!");
+    PRINTF("\r\n*");
+    PRINTF("\r\n*  This demo will erase and program different regions of ");
+    PRINTF("\r\n*  flash memory, and perform flash swap if it is supported. ");
+    PRINTF("\r\n*");
 
     /***************************************************************/
     /* Print flash information - PFlash, DFlash, EEE if they exist */
     /***************************************************************/
-    PRINTF("\n\r*\tFlash Information: \n\r-----------------------------------------------------------------");
-    PRINTF("\n\r*\tTotal Flash Size:\t%d KB, Hex: (0x%x)", (P_FLASH_SIZE/ONE_KB), P_FLASH_SIZE);
-    PRINTF("\n\r*\tFlash Sector Size:\t%d KB, Hex: (0x%x)", (FTFx_PSECTOR_SIZE/ONE_KB), FTFx_PSECTOR_SIZE);
-    PRINTF("\n\r*");
+    PRINTF("\r\n*\tFlash Information: \r\n-----------------------------------------------------------------");
+    PRINTF("\r\n*\tTotal Flash Size:\t%d KB, Hex: (0x%x)", (P_FLASH_SIZE/ONE_KB), P_FLASH_SIZE);
+    PRINTF("\r\n*\tFlash Sector Size:\t%d KB, Hex: (0x%x)", (FTFx_PSECTOR_SIZE/ONE_KB), FTFx_PSECTOR_SIZE);
+    PRINTF("\r\n*");
 
     /*************************************/
     /* Does DFlash exist on this device? */
     /*************************************/
     if (flashSSDConfig.DFlashSize)
     {
-        PRINTF("\n\r*\tData Flash Size:\t%d KB,\tHex: (0x%x)", (int)(flashSSDConfig.DFlashSize/ONE_KB), (unsigned int)flashSSDConfig.DFlashSize);
-        PRINTF("\n\r*\tData Flash Base Address:\t0x%x", (unsigned int)flashSSDConfig.DFlashBase);
+        PRINTF("\r\n*\tData Flash Size:\t%d KB,\tHex: (0x%x)", (int)(flashSSDConfig.DFlashSize/ONE_KB), (unsigned int)flashSSDConfig.DFlashSize);
+        PRINTF("\r\n*\tData Flash Base Address:\t0x%x", (unsigned int)flashSSDConfig.DFlashBase);
     }
     else
     {
-      PRINTF("\n\r*\tNo D-Flash (FlexNVM) Present on this Device...");
+      PRINTF("\r\n*\tNo D-Flash (FlexNVM) Present on this Device...");
     }
 
     /******************************************/
@@ -142,12 +142,12 @@ int main(void)
     /******************************************/
     if (flashSSDConfig.EEESize)
     {
-        PRINTF("\n\r*\tEnhanced EEPROM (EEE) Block Size:\t%d KB,\tHex: (0x%x)", (int)(flashSSDConfig.EEESize/ONE_KB), (unsigned int)flashSSDConfig.EEESize);
-        PRINTF("\n\r*\tEnhanced EEPROM (EEE) Base Address:\t0x%x", (unsigned int)flashSSDConfig.EERAMBase);
+        PRINTF("\r\n*\tEnhanced EEPROM (EEE) Block Size:\t%d KB,\tHex: (0x%x)", (int)(flashSSDConfig.EEESize/ONE_KB), (unsigned int)flashSSDConfig.EEESize);
+        PRINTF("\r\n*\tEnhanced EEPROM (EEE) Base Address:\t0x%x", (unsigned int)flashSSDConfig.EERAMBase);
     }
     else
     {
-      PRINTF("\n\r*\tNo Enhanced EEPROM (EEE) Present on this Device...");
+      PRINTF("\r\n*\tNo Enhanced EEPROM (EEE) Present on this Device...");
     }
 
     /**************************************/
@@ -155,17 +155,17 @@ int main(void)
     /**************************************/
 #if (defined(SWAP_M))
 
-    PRINTF("\n\r*\tSwap is Supported on this Device...");
+    PRINTF("\r\n*\tSwap is Supported on this Device...");
 
 #else
 
-    PRINTF("\n\r*\tSwap is NOT Supported on this Device...");
+    PRINTF("\r\n*\tSwap is NOT Supported on this Device...");
 
 #endif
 
-    PRINTF("\n\r*****************************************************************");
+    PRINTF("\r\n*****************************************************************");
 
-    PRINTF("\n\n\r....................Now Running Demo.............................\n");
+    PRINTF("\r\n\r\n....................Now Running Demo.............................\r\n");
 
     /*********************************************/
     /* END: print welcome message for flash demo */
@@ -187,7 +187,7 @@ int main(void)
     ***************************************************************************
     ***************************************************************************/
     /* Debug message for user */
-    PRINTF("\n\n\r---->Demo: Running FlashEraseSector() and FlashVerifySection()...");
+    PRINTF("\r\n\r\n---->Demo: Running FlashEraseSector() and FlashVerifySection()...");
 
     /************************************************************************/
     /* Erase several sectors on upper pflash block where there is no code */
@@ -215,7 +215,7 @@ int main(void)
         }
 
         /* print message for user */
-        PRINTF("\n\r\tDemo:  Successfully Erased Sector 0x%x -> 0x%x", (unsigned int)destination, (unsigned int)(destination+size));
+        PRINTF("\r\n\tDemo:  Successfully Erased Sector 0x%x -> 0x%x", (unsigned int)destination, (unsigned int)(destination+size));
 
         destination += (size);
     }
@@ -241,13 +241,13 @@ int main(void)
     {
       case FLASH_NOT_SECURE:
       default:
-          PRINTF("\n\n\r---->Flash is UNSECURE!");
+          PRINTF("\r\n\r\n---->Flash is UNSECURE!");
           break;
       case FLASH_SECURE_BACKDOOR_ENABLED:
-          PRINTF("\n\n\r---->Flash is SECURE, BACKDOOR is ENABLED!");
+          PRINTF("\r\n\r\n---->Flash is SECURE, BACKDOOR is ENABLED!");
           break;
       case FLASH_SECURE_BACKDOOR_DISABLED:
-            PRINTF("\n\n\r---->Flash is SECURE, BACKDOOR is DISABLED!");
+            PRINTF("\r\n\r\n---->Flash is SECURE, BACKDOOR is DISABLED!");
             break;
     }
 
@@ -265,7 +265,7 @@ int main(void)
 
       /* Message to user */
       p_data = (uint32_t *)&DataArray;
-      PRINTF("\n\n\r---->Reading flash IFR @ location 0x%x: 0x%x", (unsigned int)destination, (unsigned int)(*p_data));
+      PRINTF("\r\n\r\n---->Reading flash IFR @ location 0x%x: 0x%x", (unsigned int)destination, (unsigned int)(*p_data));
 
 #if (defined(SWAP_M))
 
@@ -293,20 +293,20 @@ int main(void)
       */
       /************************************************************************/
     /* Message to user */
-    PRINTF("\n\n\r................ Swapping Flash Blocks! ..........................\n");
-    PRINTF("\n\n\r---->Application after the last reset...");
+    PRINTF("\r\n\r\n................ Swapping Flash Blocks! ..........................\r\n");
+    PRINTF("\r\n\r\n---->Application after the last reset...");
     print_swap_application_data();
     /* Run Swap */
     ret = flash_swap();
     if (FTFx_OK == ret)
     {
-    PRINTF("\n\n\r---->Flash Swap Demo Success!<----");
+    PRINTF("\r\n\r\n---->Flash Swap Demo Success!<----");
     print_swap_application_data();
-    PRINTF("\n\n\r---->Application data will swap locations after next reset...");
+    PRINTF("\r\n\r\n---->Application data will swap locations after next reset...");
     }
     else
     {
-          PRINTF("\n\n\r....Flash Swap Demo Failed!  Check hardware and/or software!....");
+          PRINTF("\r\n\r\n....Flash Swap Demo Failed!  Check hardware and/or software!....");
           ErrorTrap(ret);
     }
 #else  /* defined(SWAP_M) */
@@ -324,7 +324,7 @@ int main(void)
     size = BUFFER_SIZE_BYTE;
 
     /* message for user */
-    PRINTF("\n\n\r---->Running FlashProgram() and FlashProgramCheck()...");
+    PRINTF("\r\n\r\n---->Running FlashProgram() and FlashProgramCheck()...");
 
     while ((destination + (size)) < end)
     {
@@ -346,7 +346,7 @@ int main(void)
             }
         }
 
-        PRINTF("\n\r\tSuccessfully Programmed and Verified Location 0x%x -> 0x%x", (unsigned int)destination, (unsigned int)(destination + size));
+        PRINTF("\r\n\tSuccessfully Programmed and Verified Location 0x%x -> 0x%x", (unsigned int)destination, (unsigned int)(destination + size));
 
         destination += (BUFFER_SIZE_BYTE);
     }
@@ -354,9 +354,9 @@ int main(void)
 #endif /* defined(SWAP) */
 
     /* Message to user */
-    PRINTF("\n\n\n\r*****************************************************************");
-    PRINTF("\n\r            Flash Demo Complete!            ");
-    PRINTF("\n\r*****************************************************************");
+    PRINTF("\r\n\r\n\r\n*****************************************************************");
+    PRINTF("\r\n            Flash Demo Complete!            ");
+    PRINTF("\r\n*****************************************************************");
 
     while(1);
 }
@@ -371,7 +371,7 @@ int main(void)
 *********************************************************************/
 void ErrorTrap(uint32_t ret)
 {
-    PRINTF("\n\n\n\r\t---- HALTED DUE TO FLASH ERROR! ----");
+    PRINTF("\r\n\r\n\r\n\t---- HALTED DUE TO FLASH ERROR! ----");
     while (1)
     {
         ;

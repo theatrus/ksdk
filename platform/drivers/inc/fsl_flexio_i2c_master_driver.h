@@ -158,7 +158,7 @@ extern "C" {
  * @return An error code or kStatus_FlexIO_I2C_Success.
  */
 flexio_i2c_status_t FLEXIO_I2C_DRV_MasterInit(uint32_t instance, flexio_i2c_state_t * i2cState,
-                               flexio_i2c_userconfig_t * i2cMasterConfig);
+                               const flexio_i2c_userconfig_t * i2cMasterConfig);
 /*!
  * @brief Shuts down the FlexIO I2C.
  *

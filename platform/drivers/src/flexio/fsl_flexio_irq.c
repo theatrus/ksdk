@@ -28,15 +28,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "fsl_flexio_driver.h"
+#if FSL_FEATURE_SOC_FLEXIO_COUNT
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
 
+#if defined (KL17Z4_SERIES) || defined (KL17Z644_SERIES) || defined (KL27Z4_SERIES) || \
+defined (KL27Z644_SERIES) || defined (KL33Z4_SERIES)|| defined (KL43Z4_SERIES)
 void UART2_FLEXIO_IRQHandler(void)
+#elif defined (K80F25615_SERIES) || defined (K81F25615_SERIES)
+void FLEXIO0_IRQHandler(void)
+#else
+    #error "No valid CPU defined!"
+#endif
 {
-    FLEXIO_DRV_IRQHandler(FLEXIO_IDX);
+    FLEXIO_DRV_IRQHandler(0);
 }
+#endif
 
 /*******************************************************************************
  * EOF

@@ -297,8 +297,6 @@ static void app_low_level_init(void)
 {
     // Open UART module for debug
     hardware_init();
-    configure_enet_pins(BOARD_ENET_INSTANCE);
-    dbg_uart_init();
 
     // Open ENET clock gate
     CLOCK_SYS_EnableEnetClock(0);

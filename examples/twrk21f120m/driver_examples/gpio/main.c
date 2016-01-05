@@ -51,7 +51,7 @@ volatile bool isButtonPress = false;
 /*!
  * @brief Uses a switch to controll a LED.
  *
- * This function toogles LED1 when press SW.
+ * This function toogles LED1 when press the switch.
  */
 int main(void)
 {
@@ -98,9 +98,9 @@ int main(void)
 
     // Print a note to terminal.
     PRINTF("\r\n GPIO PD Driver example\r\n");
-    PRINTF("\r\n Press SW to turn on/off a LED1\r\n");
+    PRINTF("\r\n Press %s to turn on/off a LED1\r\n",BOARD_SW_NAME);
 
-    // Init LED1, SW1.
+    // Init LED1, Switch.
     GPIO_DRV_Init(inputPin, outputPin);
     // Turn LED1 on.
     GPIO_DRV_ClearPinOutput(kGpioLED1);
@@ -109,7 +109,7 @@ int main(void)
     {
         if(isButtonPress)
         {
-            PRINTF(" SW is pressed \r\n");
+            PRINTF(" %s is pressed \r\n",BOARD_SW_NAME);
             // Reset state of button.
             isButtonPress=false;
         }

@@ -145,7 +145,8 @@ uint32_t TSI_HAL_Recalibrate(TSI_Type * base, tsi_config_t *config, const uint32
       
       
       /* get first enabled electrode */
-      for (uint32_t i = 0U; i < 16U; i++) 
+      elec = FSL_FEATURE_TSI_CHANNEL_COUNT;/* Initialize to be an invalid value */
+      for (uint32_t i = 0U; i < FSL_FEATURE_TSI_CHANNEL_COUNT; i++)
       {
         if ((uint32_t)(1 << i) & electrodes)
         {
@@ -175,7 +176,7 @@ uint32_t TSI_HAL_Recalibrate(TSI_Type * base, tsi_config_t *config, const uint32
           /*5. Reduce value of Rs. go to step 2 */
           if(config->extchrg != kTsiExtOscChargeCurrent_500nA)
           {
-            config->extchrg--;
+            config->extchrg = (tsi_external_osc_charge_current_t)((uint32_t)(config->extchrg) - 1);
           }
         }
         
@@ -187,7 +188,7 @@ uint32_t TSI_HAL_Recalibrate(TSI_Type * base, tsi_config_t *config, const uint32
         /*7. Increase value of Dvolt. Set Rs = maxrs. go to step 2 */
         if(config->dvolt == kTsiOscVolRails_Dv_103)
         {
-          config->dvolt--;
+          config->dvolt = ((tsi_oscilator_voltage_rails_t)((uint32_t)config->dvolt - 1));
         }
       }
       /*8. Rs = maxrs, reduce value of Dvolt. */
@@ -195,14 +196,14 @@ uint32_t TSI_HAL_Recalibrate(TSI_Type * base, tsi_config_t *config, const uint32
       {
         if(config->dvolt != kTsiOscVolRails_Dv_029)
         { 
-          config->dvolt++;
+          config->dvolt = ((tsi_oscilator_voltage_rails_t)((uint32_t)config->dvolt + 1));
         }
       }
       
       /*9. If Rs > minrs, (Reduce value of Rs, go to END) */
       if(config->extchrg > kTsiExtOscChargeCurrent_500nA)
       {
-        config->extchrg--;
+        config->extchrg = (tsi_external_osc_charge_current_t)((uint32_t)(config->extchrg) - 1);
       }
       
       /*10. END Get value of Rs and Dvolt. */

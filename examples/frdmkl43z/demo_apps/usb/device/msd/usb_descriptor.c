@@ -77,7 +77,7 @@ static usb_if_struct_t usb_if[1];
 static device_lba_info_struct_t usb_msc_lba_info_struct;
 static const usb_class_struct_t usb_dec_class =
 {
-    USB_CLASS_MSC,
+    USB_CLASS_MASS_STORAGE,
     {
         1, /* Count */
         usb_if
@@ -113,7 +113,7 @@ uint8_t g_device_descriptor[DEVICE_DESCRIPTOR_SIZE] =
     /*  Serial number string index */
     0x03,
     /*  Number of configurations */
-    DEVICE_DESC_NUM_CONFIG_SUPPOTED
+    DEVICE_DESC_NUM_CONFIG_SUPPORTED
 };
 
 uint8_t g_config_descriptor[CONFIG_DESC_SIZE] =
@@ -125,7 +125,7 @@ uint8_t g_config_descriptor[CONFIG_DESC_SIZE] =
     /*  Total length of the Configuration descriptor */
     USB_uint_16_low(CONFIG_DESC_SIZE), USB_uint_16_high(CONFIG_DESC_SIZE),
     /*  NumInterfaces */
-    CONFIG_DESC_NUM_INTERFACES_SUPPOTED,
+    CONFIG_DESC_NUM_INTERFACES_SUPPORTED,
     /*  Configuration Value */
     1,
     /* Configuration Description String Index */
@@ -189,7 +189,7 @@ uint8_t g_device_qualifier_descriptor[DEVICE_QUALIFIER_DESCRIPTOR_SIZE] =
     /* bMaxPacketSize0 */
     CONTROL_MAX_PACKET_SIZE,
     /* bNumConfigurations */
-    DEVICE_OTHER_DESC_NUM_CONFIG_SUPPOTED,
+    DEVICE_OTHER_DESC_NUM_CONFIG_SUPPORTED,
     /* Reserved : must be zero */
     0x00
 };
@@ -201,7 +201,7 @@ uint8_t g_other_speed_config_descriptor[OTHER_SPEED_CONFIG_DESCRIPTOR_SIZE] =
     USB_OTHER_SPEED_DESCRIPTOR,
     /*  Total length of the Configuration descriptor */
     USB_uint_16_low(CONFIG_DESC_SIZE), USB_uint_16_high(CONFIG_DESC_SIZE),
-    CONFIG_DESC_NUM_INTERFACES_SUPPOTED,
+    CONFIG_DESC_NUM_INTERFACES_SUPPORTED,
     /*value used to select this configuration : Configuration Value */
     1,
     /*  Configuration Description String Index*/

@@ -8,7 +8,7 @@
 **     Compiler:            GNU C Compiler
 **     Reference manual:    MK26P169M180SF5RM, Rev. 1, Mar 2015
 **     Version:             rev. 2.0, 2015-03-25
-**     Build:               b150325
+**     Build:               b150629
 **
 **     Abstract:
 **         Linker file for the GNU C Compiler
@@ -178,6 +178,8 @@ SECTIONS
   } > m_data
 
   __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
+  text_end = ORIGIN(m_text) + LENGTH(m_text);
+  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   /* Uninitialized data section */
   .bss :

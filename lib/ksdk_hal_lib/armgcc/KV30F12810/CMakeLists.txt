@@ -22,16 +22,16 @@ SET(CMAKE_EXECUTABLE_LIBRARY_SUFFIX)
 SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99 ")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99 ")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mtune=cortex-m4  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -71,6 +71,8 @@ ADD_LIBRARY(KsdkHalLib STATIC
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_adc16_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/cmp/fsl_cmp_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_cmp_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/crc/fsl_crc_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_crc_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/dac/fsl_dac_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_dac_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/dmamux/fsl_dmamux_hal.c"
@@ -79,6 +81,8 @@ ADD_LIBRARY(KsdkHalLib STATIC
     "${ProjDirPath}/../../../../platform/hal/src/edma/fsl_edma_hal.c"
     "${ProjDirPath}/../../../../platform/hal/src/dspi/fsl_dspi_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_dspi_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/ewm/fsl_ewm_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_ewm_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/ftm/fsl_ftm_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_ftm_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/gpio/fsl_gpio_hal.c"

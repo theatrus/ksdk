@@ -4,7 +4,7 @@
 ; *            MK66F18
 ; *  @version: 3.0
 ; *  @date:    2015-3-25
-; *  @build:   b150325
+; *  @build:   b150602
 ; * ---------------------------------------------------------------------------------------
 ; *
 ; * Copyright (c) 1997 - 2015 , Freescale Semiconductor, Inc.
@@ -478,7 +478,7 @@ Reset_Handler   PROC
                 IMPORT  __main
 
                 IF      :LNOT::DEF:RAM_TARGET
-                LDR R0, =FlashConfig    ; dummy read, workaround for flashConfig
+                REQUIRE FlashConfig
                 ENDIF
 
                 CPSID   I               ; Mask interrupts

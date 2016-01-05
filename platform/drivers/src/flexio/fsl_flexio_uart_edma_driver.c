@@ -32,7 +32,7 @@
 #include "fsl_clock_manager.h"
 #include "fsl_interrupt_manager.h"
 #include "fsl_edma_request.h"
-#if FSL_FEATURE_SOC_DMA_COUNT
+#if FSL_FEATURE_SOC_EDMA_COUNT
 
 static void FLEXIO_UART_DRV_EdmaCompleteSendData(flexio_uart_edmastate_t *uartEdmaState);
 static void FLEXIO_UART_DRV_EdmaTxCallback(void *param, edma_chn_status_t status);
@@ -46,35 +46,33 @@ static flexio_uart_status_t FLEXIO_UART_DRV_EdmaStartReceiveData(flexio_uart_edm
                                                    uint32_t rxSize);
 /*FUNCTION**********************************************************************
  *
- * Function Name : FLEXIO_UART_DRV_Init
- * Description   : This function initializes a UART instance for operation.
+ * Function Name : FLEXIO_UART_DRV_EdmaInit
+ * Description   : This function initializes a UART device for operation.
  * This function will initialize the run-time state structure to keep track of
  * the on-going transfers, ungate the clock to the UART module, initialize the
  * module to user defined settings and default settings, configure the IRQ state
  * structure and enable the module-level interrupt to the core, and enable the
  * UART module transmitter and receiver.
- * The following is an example of how to set up the uart_state_t and the
- * uart_user_config_t parameters and how to call the UART_DRV_Init function by
+ * The following is an example of how to set up the flexio_uart_edmastate_t and the
+ * flexio_uartedma_userconfig_t parameters and how to call the flexio_uart_edmastate_t function by
  * passing in these parameters:
- *    flexio_uart_user_config_t uartEdmaConfig;
+ *    flexio_uartedma_userconfig_t uartEdmaConfig;
  *    uartEdmaConfig.baudRate = 9600;
  *    uartEdmaConfig.bitCountPerChar = kUart8BitsPerChar;
- *    uart_state_t uartEdmaState;
- *    UART_DRV_Init(instance, &uartEdmaState, &uartEdmaConfig);
+ *    flexio_uart_edmastate_t uartEdmaState;
+ *    FLEXIO_UART_DRV_EdmaInit(instance, &uartEdmaState, &uartEdmaConfig);
  *
  *END**************************************************************************/
-flexio_uart_status_t FLEXIO_UART_DRV_EdmaInit(instance,flexio_uart_edmastate_t *uartEdmaState, flexio_uartedma_userconfig_t *uartEdmaConfig)
+flexio_uart_status_t FLEXIO_UART_DRV_EdmaInit(uint32_t instance,flexio_uart_edmastate_t *uartEdmaState, const flexio_uartedma_userconfig_t *uartEdmaConfig)
 {
-    if(!(instance<HW_FlexIO_INSTANCE_COUNT)||(uartEdmaState == NULL)||(uartEdmaConfig == NULL))
+    if((uartEdmaState == NULL)||(uartEdmaConfig == NULL))
     {
         return kStatus_FlexIO_UART_InvalidParam;
     }
+
     FLEXIO_Type* base = g_flexioBase[instance];
     uint32_t flexioSourceClock;
-    flexio_uart_dev_config_t devConfig;
-    dma_request_source_t uartTxEdmaRequest = kDmaRequestMux0Disable;
-    dma_request_source_t uartRxEdmaRequest = kDmaRequestMux0Disable;
-
+    flexio_uart_config_t devConfig;
     /*Reset the uartEdmaState structure*/
     memset(uartEdmaState,0,sizeof(*uartEdmaState));
     /* Create Semaphore for txIrq and rxIrq. */
@@ -89,7 +87,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaInit(instance,flexio_uart_edmastate_t *
     /*Configure buadrate, bit count and hardware resource including pin, shifter and timer for Tx module*/
     if((uartEdmaConfig->uartMode == flexioUART_TxOnly)||(uartEdmaConfig->uartMode == flexioUART_TxRx))
     {
-        uartEdmaState->txDev.flexioBaseAddr = base;
+        uartEdmaState->txDev.flexioBase = base;
         uartEdmaState->txDev.txPinIdx = uartEdmaConfig->txConfig.pinIdx;
         uartEdmaState->txDev.shifterIdx = uartEdmaConfig->txConfig.shifterIdx;
         uartEdmaState->txDev.timerIdx = uartEdmaConfig->txConfig.timerIdx;
@@ -98,17 +96,20 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaInit(instance,flexio_uart_edmastate_t *
     /*Configure buadrate, bit count and hardware resource including pin, shifter and timer for Rx module*/
     if((uartEdmaConfig->uartMode == flexioUART_RxOnly)||(uartEdmaConfig->uartMode == flexioUART_TxRx))
     {
-        uartEdmaState->rxDev.flexioBaseAddr = base;
+        uartEdmaState->rxDev.flexioBase = base;
         uartEdmaState->rxDev.rxPinIdx = uartEdmaConfig->rxConfig.pinIdx;
         uartEdmaState->rxDev.shifterIdx = uartEdmaConfig->rxConfig.shifterIdx;
         uartEdmaState->rxDev.timerIdx = uartEdmaConfig->rxConfig.timerIdx;
         FLEXIO_UART_Rx_HAL_Configure(&(uartEdmaState->rxDev), &devConfig);
     }
+    dma_request_source_t uartTxEdmaRequest;
+    dma_request_source_t uartRxEdmaRequest;
+    dma_request_source_t dmaRequestBase = kDmaRequestMux0Group1FlexIO0Channel0;
     switch (instance)
     {
         case 0:
-            uartRxEdmaRequest = kDmaRequestMux0FLEXIOShifter0 + rxConfig.shifterIdx;
-            uartTxEdmaRequest = kDmaRequestMux0FLEXIOShifter0 + txConfig.shifterIdx;
+            uartRxEdmaRequest = (dma_request_source_t)(dmaRequestBase + uartEdmaState->rxDev.shifterIdx);
+            uartTxEdmaRequest = (dma_request_source_t)(dmaRequestBase + uartEdmaState->txDev.shifterIdx);
             break;
         default :
             break;
@@ -129,18 +130,18 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaInit(instance,flexio_uart_edmastate_t *
     /* Finally, enable the UART transmitter and receiver.
      * Enable DMA trigger when transmit data register empty, 
      * and receive data register full. */
-    FLEXIO_UART_Rx_HAL_SetTxDmaIntCmd(&(uartEdmaState->txDev), true);
-    FLEXIO_UART_Rx_HAL_SetRxDmaIntCmd(&(uartEdmaState->rxDev), true);
-    return kstatus_FlexIO_UART_Success;
+    FLEXIO_UART_Tx_HAL_SetTxDmaCmd(&(uartEdmaState->txDev), true);
+    FLEXIO_UART_Rx_HAL_SetRxDmaCmd(&(uartEdmaState->rxDev), true);
+    return kStatus_FlexIO_UART_Success;
 }
 void FLEXIO_UART_DRV_Deinit(flexio_uart_edmastate_t *uartEdmaState)
 {
     if(uartEdmaState == NULL)
     {
-        return kStatus_FlexIO_UART_InvalidParam;
+        return;
     }
-    FLEXIO_UART_Rx_HAL_SetTxDmaIntCmd(&(uartEdmaState->txDev), false);
-    FLEXIO_UART_Rx_HAL_SetRxDmaIntCmd(&(uartEdmaState->rxDev), false);
+    FLEXIO_UART_Tx_HAL_SetTxDmaCmd(&(uartEdmaState->txDev), false);
+    FLEXIO_UART_Rx_HAL_SetRxDmaCmd(&(uartEdmaState->rxDev), false);
      /* Release DMA channel. */
     EDMA_DRV_ReleaseChannel(&uartEdmaState->edmaUartRx);
     EDMA_DRV_ReleaseChannel(&uartEdmaState->edmaUartTx);
@@ -165,7 +166,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaSendDataBlocking(flexio_uart_edmastate_
         return kStatus_FlexIO_UART_InvalidParam;
     }
 
-    flexio_uart_status_t retVal = kstatus_FlexIO_UART_Success;
+    flexio_uart_status_t retVal = kStatus_FlexIO_UART_Success;
     osa_status_t syncStatus;
 
     /* Indicates current transaction is blocking. */
@@ -191,7 +192,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaSendDataBlocking(flexio_uart_edmastate_
             /* Update the information of the module driver state */
             uartEdmaState->isTxBusy = false; 
 
-            retVal = kstatus_FlexIO_UART_Timeout;
+            retVal = kStatus_FlexIO_UART_Timeout;
         }
     }
 
@@ -249,7 +250,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaGetTransmitStatus(flexio_uart_edmastate
     }
 
     flexio_uart_status_t retVal = kStatus_FlexIO_UART_Success;
-    uint32_t txSize = EDMA_DRV_GetUnFinishedBytes(&uartEdmaState->edmaUartTx);
+    uint32_t txSize = EDMA_DRV_GetUnfinishedBytes(&uartEdmaState->edmaUartTx);
 
     /* Fill in the bytes transferred. */
     if (bytesRemaining)
@@ -390,7 +391,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaGetReceiveStatus(flexio_uart_edmastate_
     }
 
     flexio_uart_status_t retVal = kStatus_FlexIO_UART_Success;
-    uint32_t rxSize = EDMA_DRV_GetUnFinishedBytes(&uartEdmaState->edmaUartRx);
+    uint32_t rxSize = EDMA_DRV_GetUnfinishedBytes(&uartEdmaState->edmaUartRx);
 
     /* Fill in the bytes transferred. */
     if (bytesRemaining)
@@ -443,7 +444,7 @@ static void FLEXIO_UART_DRV_EdmaCompleteSendData(flexio_uart_edmastate_t *uartEd
 {
     if(uartEdmaState == NULL)
     {
-        return kStatus_FlexIO_UART_InvalidParam;
+        return;
     }
     /* Stop DMA channel. */
     EDMA_DRV_StopChannel(&uartEdmaState->edmaUartTx);
@@ -486,17 +487,29 @@ static flexio_uart_status_t FLEXIO_UART_DRV_EdmaStartSendData(flexio_uart_edmast
     /* Check that we're not busy already transmitting data from a previous function call. */
     if (uartEdmaState->isTxBusy)
     {
-        return kStatus_UART_TxBusy;
+        return kStatus_FlexIO_UART_TxBusy;
     }
   
     /* Update UART DMA run-time structure. */
     uartEdmaState->isTxBusy = true;
-
-    /* Update txBuff and txSize. */
-    uint32_t  destAddr = FLEXIO_UART_Tx_HAL_GetTxBufferAddr(&(uartEdmaState->txDev));
-    EDMA_DRV_ConfigLoopTransfer(&uartEdmaState->edmaUartTx, &uartEdmaState->edmaTxTcd,
-    kEDMAMemoryToPeripheral, (uint32_t)(txBuff), destAddr, 1, 1, txSize, 1);
-    /* Start DMA channel */
+    /* Configure DMA module */
+    edma_software_tcd_t edmaTxTcd;
+    memset(&edmaTxTcd, 0, sizeof( edma_software_tcd_t));
+    edma_transfer_config_t txConfig;
+    txConfig.srcLastAddrAdjust = 0;
+    txConfig.destLastAddrAdjust = 0;
+    txConfig.srcModulo = kEDMAModuloDisable;
+    txConfig.destModulo = kEDMAModuloDisable;
+    txConfig.srcTransferSize = kEDMATransferSize_1Bytes;
+    txConfig.destTransferSize = kEDMATransferSize_1Bytes;
+    txConfig.minorLoopCount = 1;
+    txConfig.majorLoopCount = txSize;
+    txConfig.srcAddr = (uint32_t)(txBuff);
+    txConfig.srcOffset = 1;
+    txConfig.destAddr = FLEXIO_UART_Tx_HAL_GetTxBufferAddr(&(uartEdmaState->txDev));
+    txConfig.destOffset = 0;
+    EDMA_DRV_PrepareDescriptorTransfer(&uartEdmaState->edmaUartTx, &edmaTxTcd, &txConfig, true, true);
+    EDMA_DRV_PushDescriptorToReg(&uartEdmaState->edmaUartTx, &edmaTxTcd);
     EDMA_DRV_StartChannel(&uartEdmaState->edmaUartTx);
 
     return kStatus_FlexIO_UART_Success;
@@ -514,7 +527,7 @@ static void FLEXIO_UART_DRV_EdmaCompleteReceiveData(flexio_uart_edmastate_t *uar
 {
     if(uartEdmaState == NULL)
     {
-        return kStatus_FlexIO_UART_InvalidParam;
+        return;
     }
 
     /* Stop DMA channel. */
@@ -566,10 +579,24 @@ static flexio_uart_status_t FLEXIO_UART_DRV_EdmaStartReceiveData(flexio_uart_edm
     /* Update UART DMA run-time structure. */
     uartEdmaState->isRxBusy = true;
 
-    /* Update rxBuff and rxSize */
-    uint32_t srcAddr = FLEXIO_UART_Rx_HAL_GetRxBufferAddr(&(uartEdmaState->rxDev));
-    EDMA_DRV_ConfigLoopTransfer(&uartEdmaState->edmaUartTx, &uartEdmaState->edmaTxTcd,
-    kEDMAPeripheralToMemory, srcAddr, (uint32_t)rxBuff, 1, 1, rxSize, 1);
+    /* Configure DMA module */
+    edma_software_tcd_t edmaRxTcd;
+    memset(&edmaRxTcd, 0, sizeof( edma_software_tcd_t));
+    edma_transfer_config_t rxConfig;
+    rxConfig.srcLastAddrAdjust = 0;
+    rxConfig.destLastAddrAdjust = 0;
+    rxConfig.srcModulo = kEDMAModuloDisable;
+    rxConfig.destModulo = kEDMAModuloDisable;
+    rxConfig.srcTransferSize = kEDMATransferSize_1Bytes;
+    rxConfig.destTransferSize = kEDMATransferSize_1Bytes;
+    rxConfig.minorLoopCount = 1;
+    rxConfig.majorLoopCount = rxSize;
+    rxConfig.srcAddr = FLEXIO_UART_Rx_HAL_GetRxBufferAddr(&(uartEdmaState->rxDev));
+    rxConfig.srcOffset = 0;
+    rxConfig.destAddr = (uint32_t)(rxBuff);
+    rxConfig.destOffset = 1;
+    EDMA_DRV_PrepareDescriptorTransfer(&uartEdmaState->edmaUartRx, &edmaRxTcd, &rxConfig, true, true);
+    EDMA_DRV_PushDescriptorToReg(&uartEdmaState->edmaUartRx, &edmaRxTcd);
     EDMA_DRV_StartChannel(&uartEdmaState->edmaUartRx);
 
     return kStatus_FlexIO_UART_Success;

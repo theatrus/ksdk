@@ -1,12 +1,12 @@
 # Freescale Kinetis SDK
 
-This is a mirror of most of the Kinetis SDK version 1.2.0.
+This is a mirror of most of the Kinetis SDK version 1.3.0.
 
 The SDK sources are govered by the following license, as given in
 every source file:
 
     /*
-     * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+     * Copyright (c) 2015, Freescale Semiconductor, Inc.
      * All rights reserved.
      *
      * Redistribution and use in source and binary forms, with or without modification,

@@ -182,7 +182,6 @@ void FTM_HAL_Reset(FTM_Type *ftmBase)
     FTM_WR_FMS(ftmBase, 0);
     FTM_WR_FILTER(ftmBase, 0);
     FTM_WR_FLTCTRL(ftmBase, 0);
-    /*FTM_WR_QDCTRL(instance, 0);*/
     FTM_WR_CONF(ftmBase, 0);
     FTM_WR_FLTPOL(ftmBase, 0);
     FTM_WR_SYNCONF(ftmBase, 0);

@@ -176,7 +176,10 @@ spi_status_t SPI_DRV_DmaSlaveInit(uint32_t instance, spi_dma_slave_state_t * spi
     SPI_HAL_Init(base);
 
     /* Initialize the event structure */
-    OSA_EventCreate(&spiState->event, kEventAutoClear);
+    if (OSA_EventCreate(&spiState->event, kEventAutoClear) != kStatus_OSA_Success)
+    {
+        return kStatus_SPI_Error;
+    }
 
     /* Set SPI to slave mode */
     SPI_HAL_SetMasterSlave(base, kSpiSlave);
@@ -427,7 +430,6 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
     spi_dma_slave_state_t * spiState = (spi_dma_slave_state_t *)g_spiStatePtr[instance];
 
     /* For temporarily storing DMA register channel */
-    uint8_t txChannel, rxChannel;
     void * param;
     SPI_Type *base = g_spiBase[instance];
     uint32_t transferSizeInBytes;  /* DMA transfer size in bytes */
@@ -482,28 +484,9 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
 #endif /* FSL_FEATURE_SPI_16BIT_TRANSFERS */
 
     param = (void *)(instance);     /* For DMA callback, set "param" as the SPI instance number */
-    rxChannel = spiState->dmaReceive.channel;
-    txChannel = spiState->dmaTransmit.channel;
-    /* Only need to set the DMA reg base addr once since it should be the same for all code */
-    DMA_Type *dmabase = g_dmaBase[rxChannel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
-    DMAMUX_Type *dmamuxbase = g_dmamuxBase[txChannel/FSL_FEATURE_DMAMUX_MODULE_CHANNEL];
 
     /* Save information about the transfer for use by the ISR. */
     spiState->isTransferInProgress = true;
-
-    /* The DONE needs to be cleared before programming the channel's TCDs for the next transfer. */
-    DMA_HAL_ClearStatus(dmabase, rxChannel);
-    DMA_HAL_ClearStatus(dmabase, txChannel);
-
-    /* Disable and enable the TX DMA channel at the DMA mux. Doing so will prevent an
-     * inadvertent DMA transfer when the TX DMA channel ERQ bit is set after having been
-     * cleared from a previous DMA transfer (clearing of the ERQ bit is automatically performed
-     * at the end of a transfer when D_REQ is set).
-     */
-    DMAMUX_HAL_SetChannelCmd(dmamuxbase, txChannel, false);
-    DMAMUX_HAL_SetChannelCmd(dmamuxbase, txChannel, true);
-    DMAMUX_HAL_SetChannelCmd(dmamuxbase, rxChannel, false);
-    DMAMUX_HAL_SetChannelCmd(dmamuxbase, rxChannel, true);
 
     /************************************************************************************
      * Set up the RX DMA channel Transfer Control Descriptor (TCD)
@@ -525,14 +508,11 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
             }
             /* Set up this channel's control which includes enabling the DMA interrupt */
             DMA_DRV_ConfigTransfer(&spiState->dmaReceive,
-                                   kDmaPeripheralToMemory,
+                                   kDmaPeripheralToPeripheral,
                                    transferSizeInBytes,
                                    SPI_HAL_GetDataRegAddr(base), /* src is data register */
                                    (uint32_t)(&s_rxBuffIfNull), /* dest is temporary location */
                                    (uint32_t)(receiveSize));
-
-            /* Do not increment the destination address */
-            DMA_HAL_SetDestIncrementCmd(dmabase, rxChannel, false);
         }
         else
         {
@@ -544,18 +524,8 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
                                    (uint32_t)(spiState->receiveBuffer), /* dest is rx buffer */
                                    (uint32_t)(receiveSize));
         }
-
-        /* For SPI16 modules, if the bits/frame is 16, then we need to adjust the destination
-         * size to still be 8-bits since the DMA_DRV_ConfigTransfer sets this to 16-bits, but
-         * we always provide a 8-bit buffer.
-         */
-        if (transferSizeInBytes == 2)
-        {
-            DMA_HAL_SetDestTransferSize(dmabase, rxChannel, kDmaTransfersize8bits);
-        }
-
-        /* Enable the cycle steal mode which forces a single read/write transfer per request */
-        DMA_HAL_SetCycleStealCmd(dmabase, rxChannel, true);
+        /* Destination size is only one byte */
+        DMA_DRV_SetDestTransferSize(&spiState->dmaReceive, 1U);
 
         /* Enable the DMA peripheral request */
         DMA_DRV_StartChannel(&spiState->dmaReceive);
@@ -651,39 +621,23 @@ static spi_status_t SPI_DRV_DmaSlaveStartTransfer(uint32_t instance)
         else /* Configure TX DMA channel to send zeros */
         {
             /* Set up this channel's control which includes enabling the DMA interrupt */
-            DMA_DRV_ConfigTransfer(&spiState->dmaTransmit, kDmaMemoryToPeripheral,
+            DMA_DRV_ConfigTransfer(&spiState->dmaTransmit, kDmaPeripheralToPeripheral,
                                    transferSizeInBytes,
                                    (uint32_t)(&s_byteToSend),
                                    SPI_HAL_GetDataRegAddr(base),
                                    (uint32_t)(spiState->remainingSendByteCount));
-
-            /* Now clear SINC since we are only sending zeroes, don't increment source */
-            DMA_HAL_SetSourceIncrementCmd(dmabase, txChannel, false);
         }
-
-        /* For SPI16 modules, if the bits/frame is 16, then we need to adjust the source
-         * size to still be 8-bits since the DMA_DRV_ConfigTransfer sets this to 16-bits, but
-         * we always provide a 8-bit buffer.
-         */
-        if (transferSizeInBytes == 2)
-        {
-            DMA_HAL_SetSourceTransferSize(dmabase, txChannel, kDmaTransfersize8bits);
-        }
-
-        /* Enable the cycle steal mode which forces a single read/write transfer per request */
-        DMA_HAL_SetCycleStealCmd(dmabase, txChannel, true);
-
-        /* Now, disable the TX chan interrupt since we'll use the RX chan interrupt */
-        DMA_HAL_SetIntCmd(dmabase, txChannel, false);
-
-        /* Enable the DMA peripheral request */
-        DMA_DRV_StartChannel(&spiState->dmaTransmit);
+        /* Source size is only one byte */
+        DMA_DRV_SetSourceTransferSize(&spiState->dmaTransmit, 1U);
 
         /* Enable the SPI TX DMA Request */
         SPI_HAL_SetTxDmaCmd(base, true);
 
         /* Enable the SPI RX DMA request also. */
         SPI_HAL_SetRxDmaCmd(base, true);
+
+        /* Enable the DMA peripheral request */
+        DMA_DRV_StartChannel(&spiState->dmaTransmit);
     }
 
     return kStatus_SPI_Success;

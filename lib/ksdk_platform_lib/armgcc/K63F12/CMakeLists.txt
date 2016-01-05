@@ -22,16 +22,16 @@ SET(CMAKE_EXECUTABLE_LIBRARY_SUFFIX)
 SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft ")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft ")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft  -MMD  -MP")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft  -MMD  -MP")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft ")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft ")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft  -MMD  -MP")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft  -MMD  -MP")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -82,6 +82,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_cmp_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/cmt/fsl_cmt_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_cmt_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/cmt/fsl_cmt_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_cmt_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/cmt/fsl_cmt_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/crc/fsl_crc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_crc_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/crc/fsl_crc_driver.c"
@@ -125,6 +130,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_ewm_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/ewm/fsl_ewm_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/src/ewm/fsl_ewm_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/flexbus/fsl_flexbus_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_flexbus_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/flexbus/fsl_flexbus_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_flexbus_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/flexbus/fsl_flexbus_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/flexcan/fsl_flexcan_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_flexcan_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/flexcan/fsl_flexcan_driver.c"
@@ -216,6 +226,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_uart_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/uart/fsl_uart_edma_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_uart_edma_driver.h"
+    "${ProjDirPath}/../../../../platform/hal/src/vref/fsl_vref_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_vref_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_vref_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/vref/fsl_vref_common.c"
+    "${ProjDirPath}/../../../../platform/drivers/src/vref/fsl_vref_driver.c"
     "${ProjDirPath}/../../../../platform/hal/src/wdog/fsl_wdog_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_wdog_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/wdog/fsl_wdog_driver.c"

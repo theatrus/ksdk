@@ -127,7 +127,7 @@ IF(CMAKE_BUILD_TYPE MATCHES "int flash debug")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../rtos/mqx/lib/twrk22f120m.armgcc/debug/mqx_stdlib")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/include")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/include")
-    INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/include/twrk22f120m")
+    INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/include/MK22F51212")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/sources/classes/msd")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/sources/classes/hub")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/adapter/sources")
@@ -185,7 +185,7 @@ IF(CMAKE_BUILD_TYPE MATCHES "int flash release")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../rtos/mqx/lib/twrk22f120m.armgcc/release/mqx_stdlib")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/include")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/include")
-    INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/include/twrk22f120m")
+    INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/include/MK22F51212")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/sources/classes/msd")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/sources/classes/hub")
     INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/adapter/sources")
@@ -243,7 +243,7 @@ IF(CMAKE_BUILD_TYPE MATCHES "int flash debug")
         -l_mqx
         -L"${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../rtos/mqx/lib/twrk22f120m.armgcc/debug/mqx_stdlib"
         -l_mqx_stdlib
-        -L"${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/build/armgcc/usbh_sdk_twrk22f120m_mqx/debug"
+        -L"${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/lib/mqx/armgcc/MK22F51212/debug"
         -lusbh_mqx
         -lgcc
         -lc
@@ -266,7 +266,7 @@ IF(CMAKE_BUILD_TYPE MATCHES "int flash release")
         -l_mqx
         -L"${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../rtos/mqx/lib/twrk22f120m.armgcc/release/mqx_stdlib"
         -l_mqx_stdlib
-        -L"${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/build/armgcc/usbh_sdk_twrk22f120m_mqx/release"
+        -L"${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../../../usb/usb_core/host/lib/mqx/armgcc/MK22F51212/release"
         -lusbh_mqx
         -lgcc
         -lc

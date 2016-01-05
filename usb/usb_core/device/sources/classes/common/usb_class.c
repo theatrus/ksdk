@@ -53,9 +53,8 @@
  * Global Variables
  ****************************************************************************/
 static usb_class_object_struct_t usb_class_object[USBCFG_DEV_MAX_CLASS_OBJECT];
-#if USBCFG_DEV_COMPOSITE
-static class_handle_t s_class_handle = USB_UNINITIALIZED_VAL_32;
-#endif
+usb_class_handle_struct_t g_class_handle[USBCFG_DEV_MAX_CLASS_OBJECT];
+
 /*****************************************************************************
  * Local Types - None
  *****************************************************************************/
@@ -138,6 +137,8 @@ static usb_status USB_Class_Free_Handle(usb_class_object_struct_t* handle)
  * @param class_callback     :event callback      
  * @param other_req_callback :call back for class/vendor specific requests on 
  *                            CONTROL ENDPOINT
+ * @param user_arg           :up layer handle
+ * @param desc_callback_ptr  :descriptor callback list
  *
  * @return status       
  *         USB_OK           : When Successfully
@@ -146,11 +147,11 @@ static usb_status USB_Class_Free_Handle(usb_class_object_struct_t* handle)
  *****************************************************************************/
 class_handle_t USB_Class_Init
 (
-usb_device_handle handle, /* [IN] the USB device controller to initialize */
-usb_device_notify_t class_callback,/*[IN]*/
-usb_request_notify_t other_req_callback,/*[IN]*/
-void* user_arg,/*[IN]*/
-usb_desc_request_notify_struct_t* desc_callback_ptr/*[IN]*/
+    usb_device_handle                 handle, /* [IN] the USB device controller to initialize */
+    usb_device_notify_t               class_callback,/*[IN]*/
+    usb_request_notify_t              other_req_callback,/*[IN]*/
+    void*                             user_arg,/*[IN]*/
+    usb_desc_request_notify_struct_t* desc_callback_ptr/*[IN]*/
 )
 {
     usb_class_object_struct_t* class_object_ptr = NULL;
@@ -159,7 +160,7 @@ usb_desc_request_notify_struct_t* desc_callback_ptr/*[IN]*/
     ret = USB_Class_Allocate_Handle(&class_object_ptr);
     if (USBERR_DEVICE_BUSY == ret)
     {
-        return USBERR_DEVICE_BUSY;
+        return (class_handle_t)NULL;
     }
 
     class_object_ptr->controller_handle = handle;
@@ -197,10 +198,6 @@ usb_desc_request_notify_struct_t* desc_callback_ptr/*[IN]*/
         }
         usb_device_otg_init(handle, bm_attributes);
     }
-#endif    
-#if USBCFG_DEV_COMPOSITE
-    /* Suppose only one class handle can be assigned */
-    s_class_handle = (class_handle_t)class_object_ptr;
 #endif
     return (class_handle_t)class_object_ptr;
 }
@@ -221,18 +218,13 @@ usb_desc_request_notify_struct_t* desc_callback_ptr/*[IN]*/
  *****************************************************************************/
 usb_status USB_Class_Deinit
 (
-usb_device_handle handle, /* [IN] the USB device controller to initialize */
-class_handle_t class_handle
+    usb_device_handle handle, /* [IN] the USB device controller to initialize */
+    class_handle_t class_handle
 )
 {
     usb_status error = USB_OK;
 
     error = USB_Class_Free_Handle((usb_class_object_struct_t*)class_handle);
-
-#if USBCFG_DEV_COMPOSITE
-    /* Suppose only one class handle can be assigned */
-    s_class_handle = USB_UNINITIALIZED_VAL_32;
-#endif
 
     return error;
 }
@@ -255,10 +247,10 @@ class_handle_t class_handle
  *****************************************************************************/
 usb_status USB_Class_Send_Data
 (
-class_handle_t handle, /*[IN]*/
-uint8_t ep_num, /* [IN] the Endpoint number */
-uint8_t * buff_ptr, /* [IN] buffer to send */
-uint32_t size /* [IN] length of the transfer */
+    class_handle_t handle, /*[IN]*/
+    uint8_t ep_num, /* [IN] the Endpoint number */
+    uint8_t * buff_ptr, /* [IN] buffer to send */
+    uint32_t size /* [IN] length of the transfer */
 )
 {
     usb_status error = USB_OK;
@@ -293,9 +285,9 @@ uint32_t size /* [IN] length of the transfer */
  *****************************************************************************/
 usb_status USB_Class_Get_Status
 (
-class_handle_t handle, /* [IN] */
-uint8_t component, /* [IN] component code */
-uint16_t * error_code /* [OUT] the requested error */
+    class_handle_t handle, /* [IN] */
+    uint8_t component, /* [IN] component code */
+    uint16_t * error_code /* [OUT] the requested error */
 )
 {
     usb_status error = USB_OK;
@@ -330,20 +322,28 @@ void USB_Class_Periodic_Task(void)
 #endif  
 }
 
-#if USBCFG_DEV_COMPOSITE
 /**************************************************************************//*!
  *
  * @name  USB_Class_Get_Class_Handle
  *
  * @brief  This function is called to return class handle.
  *
+ * @param controller_id:               controller id
+ * 
  * @return value:
  *                        class handle
  *
  *****************************************************************************/
-class_handle_t USB_Class_Get_Class_Handle(void)
+class_handle_t USB_Class_Get_Class_Handle(uint8_t controller_id)
 {
-    return s_class_handle;
+    for (uint32_t cnt = 0;cnt < USBCFG_DEV_MAX_CLASS_OBJECT;cnt++)
+    {
+        if (((class_handle_t)NULL != g_class_handle[cnt].class_handle) && (g_class_handle[cnt].controller_id == controller_id))
+        {
+            return g_class_handle[cnt].class_handle;
+        }
+    }
+    return (class_handle_t)USB_UNINITIALIZED_VAL_32;
 }
 
 /**************************************************************************//*!
@@ -369,7 +369,7 @@ usb_device_handle USB_Class_Get_Ctrler_Handle(class_handle_t class_handle)
     }
     return ret;
 }
-#endif
+
 
 #endif
 /* EOF */

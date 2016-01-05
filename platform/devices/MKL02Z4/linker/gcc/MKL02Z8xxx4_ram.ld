@@ -3,13 +3,13 @@
 **     Processor:           MKL02Z8VFG4
 **     Compiler:            GNU C Compiler
 **     Reference manual:    KL02P32M48SF0RM Rev3.1, July 2013
-**     Version:             rev. 1.2, 2014-10-14
-**     Build:               b141113
+**     Version:             rev. 1.4, 2015-01-23
+**     Build:               b150624
 **
 **     Abstract:
 **         Linker file for the GNU C Compiler
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -53,8 +53,8 @@ STACK_SIZE = DEFINED(__stack_size__) ? __stack_size__ : 0x0050;
 MEMORY
 {
   m_interrupts          (RX)  : ORIGIN = 0x1FFFFF00, LENGTH = 0x00000100
-  m_data                (RW)  : ORIGIN = 0x20000000, LENGTH = 0x00000180
-  m_text                (RX)  : ORIGIN = 0x20000180, LENGTH = 0x00000180
+  m_text                (RX)  : ORIGIN = 0x20000000, LENGTH = 0x00000180
+  m_data                (RW)  : ORIGIN = 0x20000180, LENGTH = 0x00000180
 }
 
 /* Define output sections */
@@ -184,6 +184,8 @@ SECTIONS
   } > m_data
 
   __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
+  text_end = ORIGIN(m_text) + LENGTH(m_text);
+  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   /* Uninitialized data section */
   .bss :

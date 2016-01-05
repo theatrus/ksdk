@@ -289,6 +289,7 @@ void PDB_DRV_SetAdcPreTriggerDelayValue(uint32_t instance, uint32_t chn, uint32_
     PDB_HAL_SetAdcPreTriggerDelayValue(base, chn, preChn, value);
 }
 
+#if FSL_FEATURE_PDB_HAS_DAC
 /*FUNCTION*********************************************************************
  *
  * Function Name : PDB_DRV_ConfigDacInterval
@@ -324,6 +325,8 @@ void PDB_DRV_SetDacIntervalValue(uint32_t instance, uint32_t dacChn, uint32_t va
     
     PDB_HAL_SetDacIntervalValue(base, dacChn, value);
 }
+
+#endif
 
 /*FUNCTION*********************************************************************
  *

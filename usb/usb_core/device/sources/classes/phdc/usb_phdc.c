@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
  * 
- * Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
+ * Copyright (c) 2008, 2013 - 2015 Freescale Semiconductor;
  * All Rights Reserved
  *
  * Copyright (c) 1989 - 2008 ARC International;
@@ -167,12 +167,7 @@ void* arg
     usb_ep_struct_t* ep_struct_ptr;
     phdc_device_struct_t* devicePtr;
     uint8_t * phdc_qos;
-#if USBCFG_DEV_COMPOSITE
-    usb_composite_info_struct_t* usb_composite_info;
-    uint32_t interface_index = 0xFF;
-#else
-    usb_class_struct_t* usbclass = NULL;
-#endif
+    usb_interfaces_struct_t usb_interfaces;
 
     devicePtr = (phdc_device_struct_t *)arg;
 
@@ -180,136 +175,89 @@ void* arg
     if (event == USB_DEV_EVENT_CONFIG_CHANGED)
     {
         uint8_t count = 0;
-#if USBCFG_DEV_COMPOSITE
-        uint8_t type_sel;
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
-        USB_COMPOSITE_INFO,
-        (uint32_t *)&usb_composite_info);
-
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
-        USB_PHDC_QOS_INFO,
-        (uint32_t *)&phdc_qos);
-
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
-        USB_CLASS_INTERFACE_INDEX_INFO, (uint32_t *)&interface_index);
-        if(interface_index == 0xFF)
+        if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(devicePtr->controller_id))
         {
+            uint8_t type_sel;
+            usb_composite_info_struct_t* usb_composite_info;
+            uint32_t interface_index = 0xFF;
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
+            USB_COMPOSITE_INFO,
+            (uint32_t *)&usb_composite_info);
+
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
+            USB_PHDC_QOS_INFO,
+            (uint32_t *)&phdc_qos);
+
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
+            USB_CLASS_INTERFACE_INDEX_INFO, (uint32_t *)&interface_index);
+            if(interface_index == 0xFF)
+            {
 #if _DEBUG
-            USB_PRINTF("not find interface index\n");
+                USB_PRINTF("not find interface index\n");
 #endif  
-            return;
-        }
-
-        for (type_sel = 0;type_sel < usb_composite_info->count;type_sel++)
-        {
-            if ((usb_composite_info->class_handle[type_sel].type == USB_CLASS_PHDC) && (type_sel == interface_index))
-            {
-                break;
+                return;
             }
-        }
-        if(type_sel >= usb_composite_info->count)
-        {
+
+            for (type_sel = 0;type_sel < usb_composite_info->count;type_sel++)
+            {
+                if ((usb_composite_info->class_handle[type_sel].type == USB_CLASS_PHDC) && (type_sel == interface_index))
+                {
+                    break;
+                }
+            }
+            if(type_sel >= usb_composite_info->count)
+            {
 #if _DEBUG
-            USB_PRINTF("not find phdc interface\n");
+                USB_PRINTF("not find phdc interface\n");
 #endif 
-            return;
+                return;
+            }
+
+            devicePtr->ep_desc_data = (usb_endpoints_t *) &usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints;
+            usb_interfaces = usb_composite_info->class_handle[type_sel].interfaces;
+
+          } 
+        else
+        {
+            usb_class_struct_t* usbclass = NULL;
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
+            USB_CLASS_INFO, (uint32_t *)&usbclass);
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
+            USB_PHDC_QOS_INFO, (uint32_t *)&phdc_qos);
+            devicePtr->ep_desc_data = (usb_endpoints_t *) &usbclass->interfaces.interface->endpoints;
+            usb_interfaces = usbclass->interfaces;
         }
 
-        devicePtr->ep_desc_data = (usb_endpoints_t *) &usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints;
         devicePtr->phdc_endpoint_data.count_rx = 0; /* init the count_rx */
         devicePtr->phdc_endpoint_data.count_tx = 0; /* init the count_tx */
-
         /* calculate the rx and tx endpoint counts */
-        for (index = 0; index < usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.count; index++)
+        for (index = 0; index < usb_interfaces.interface->endpoints.count; index++)
         {
-            if ((usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].direction == USB_RECV) &
+            if ((usb_interfaces.interface->endpoints.ep[index].direction == USB_RECV) &
             (devicePtr->phdc_endpoint_data.count_rx < PHDC_RX_ENDPOINTS))
             {
                 devicePtr->phdc_endpoint_data.count_rx++;
             }
-            else if ((usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].direction == USB_SEND) &
+            else if ((usb_interfaces.interface->endpoints.ep[index].direction == USB_SEND) &
             (devicePtr->phdc_endpoint_data.count_tx < PHDC_TX_ENDPOINTS))
             {
                 devicePtr->phdc_endpoint_data.count_tx++;
             }
         }
-
+        
         /* initialize endpoint data structure for all endpoints */
-        for (index = 0; index <usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.count; index++)
+        for (index = 0; index < usb_interfaces.interface->endpoints.count; index++)
         {
-            if ((usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].direction == USB_RECV) &
+            if ((usb_interfaces.interface->endpoints.ep[index].direction == USB_RECV) &
             (count_rx < PHDC_RX_ENDPOINTS))
             {
                 /* initialize endpoint data structure for recv endpoint */
                 devicePtr->phdc_endpoint_data.ep_rx[count_rx].endpoint =
-                usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].ep_num;
+                usb_interfaces.interface->endpoints.ep[index].ep_num;
                 devicePtr->phdc_endpoint_data.ep_rx[count_rx].type =
-                usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].type;
+                usb_interfaces.interface->endpoints.ep[index].type;
                 devicePtr->phdc_endpoint_data.ep_rx[count_rx].size =
-                usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].size;
-                devicePtr->phdc_endpoint_data.ep_rx[count_rx].qos = phdc_qos[index];
-                devicePtr->phdc_endpoint_data.ep_rx[count_rx].current_qos =
-                INVALID_VAL;
-                devicePtr->phdc_endpoint_data.ep_rx[count_rx].buff_ptr = NULL;
-                devicePtr->phdc_endpoint_data.ep_rx[count_rx].buffer_size = 0;
-                /* increment count_rx by 1 */
-                count_rx++;
-            }
-            else if ((usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].direction == USB_SEND) &
-            (count_tx < PHDC_TX_ENDPOINTS))
-            {
-                /* initialize endpoint data structure for send endpoint */
-                devicePtr->phdc_endpoint_data.ep_tx[count_tx].endpoint =
-                usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].ep_num;
-                devicePtr->phdc_endpoint_data.ep_tx[count_tx].type =
-                usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].type;
-                devicePtr->phdc_endpoint_data.ep_tx[count_tx].size =
-                usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.ep[index].size;
-                devicePtr->phdc_endpoint_data.ep_tx[count_tx].qos = phdc_qos[index];
-                devicePtr->phdc_endpoint_data.ep_tx[count_tx].current_qos = INVALID_VAL;
-                devicePtr->phdc_endpoint_data.ep_tx[count_tx].bin_consumer = 0x00;
-                devicePtr->phdc_endpoint_data.ep_tx[count_tx].bin_producer = 0x00;
-                /* increment count_tx by 1 */
-                count_tx++;
-            }
-        }
-#else
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
-        USB_CLASS_INFO, (uint32_t *)&usbclass);
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
-        USB_PHDC_QOS_INFO, (uint32_t *)&phdc_qos);
-        devicePtr->ep_desc_data = (usb_endpoints_t *) &usbclass->interfaces.interface->endpoints;
-        devicePtr->phdc_endpoint_data.count_rx = 0; /* init the count_rx */
-        devicePtr->phdc_endpoint_data.count_tx = 0; /* init the count_tx */
-
-        /* calculate the rx and tx endpoint counts */
-        for (index = 0; index < usbclass->interfaces.interface->endpoints.count; index++)
-        {
-            if ((usbclass->interfaces.interface->endpoints.ep[index].direction == USB_RECV) &
-            (devicePtr->phdc_endpoint_data.count_rx < PHDC_RX_ENDPOINTS))
-            {
-                devicePtr->phdc_endpoint_data.count_rx++;
-            }
-            else if ((usbclass->interfaces.interface->endpoints.ep[index].direction == USB_SEND) &
-            (devicePtr->phdc_endpoint_data.count_tx < PHDC_TX_ENDPOINTS))
-            {
-                devicePtr->phdc_endpoint_data.count_tx++;
-            }
-        }
-
-        /* initialize endpoint data structure for all endpoints */
-        for (index = 0; index < usbclass->interfaces.interface->endpoints.count; index++)
-        {
-            if ((usbclass->interfaces.interface->endpoints.ep[index].direction == USB_RECV) &
-            (count_rx < PHDC_RX_ENDPOINTS))
-            {
-                /* initialize endpoint data structure for recv endpoint */
-                devicePtr->phdc_endpoint_data.ep_rx[count_rx].endpoint =
-                usbclass->interfaces.interface->endpoints.ep[index].ep_num;
-                devicePtr->phdc_endpoint_data.ep_rx[count_rx].type =
-                usbclass->interfaces.interface->endpoints.ep[index].type;
-                devicePtr->phdc_endpoint_data.ep_rx[count_rx].size =
-                usbclass->interfaces.interface->endpoints.ep[index].size;
+                usb_interfaces.interface->endpoints.ep[index].size;
                 devicePtr->phdc_endpoint_data.ep_rx[count_rx].qos = phdc_qos[index];
                 devicePtr->phdc_endpoint_data.ep_rx[count_rx].current_qos = INVALID_VAL;
                 devicePtr->phdc_endpoint_data.ep_rx[count_rx].buff_ptr = NULL;
@@ -317,16 +265,16 @@ void* arg
                 /* increment count_rx by 1 */
                 count_rx++;
             }
-            else if ((usbclass->interfaces.interface->endpoints.ep[index].direction == USB_SEND) &
+            else if ((usb_interfaces.interface->endpoints.ep[index].direction == USB_SEND) &
             (count_tx < PHDC_TX_ENDPOINTS))
             {
                 /* initialize endpoint data structure for send endpoint */
                 devicePtr->phdc_endpoint_data.ep_tx[count_tx].endpoint =
-                usbclass->interfaces.interface->endpoints.ep[index].ep_num;
+                usb_interfaces.interface->endpoints.ep[index].ep_num;
                 devicePtr->phdc_endpoint_data.ep_tx[count_tx].type =
-                usbclass->interfaces.interface->endpoints.ep[index].type;
+                usb_interfaces.interface->endpoints.ep[index].type;
                 devicePtr->phdc_endpoint_data.ep_tx[count_tx].size =
-                usbclass->interfaces.interface->endpoints.ep[index].size;
+                usb_interfaces.interface->endpoints.ep[index].size;
                 devicePtr->phdc_endpoint_data.ep_tx[count_tx].qos = phdc_qos[index];
                 devicePtr->phdc_endpoint_data.ep_tx[count_tx].current_qos = INVALID_VAL;
                 devicePtr->phdc_endpoint_data.ep_tx[count_tx].bin_consumer = 0x00;
@@ -336,7 +284,7 @@ void* arg
             }
         }
 
-#endif
+        
         usb_endpoints_t *ep_desc_data = devicePtr->ep_desc_data;
         /* initialize all non control endpoints */
         count = 0;
@@ -570,7 +518,7 @@ void* arg
     }
     else /* direction is USB_RECV */
     {
-        if (!event->len)
+        if ((!event->len) || (0xFFFFFFFF == event->len))
         {/* indicates there was call of zero byte recv */
             return;
         }
@@ -864,37 +812,40 @@ phdc_handle_t * phdcHandle /*[OUT]*/
     }
 
     devicePtr->mutex = OS_Mutex_create();
+    devicePtr->controller_id = controller_id;
 
-#if USBCFG_DEV_COMPOSITE
-    devicePtr->class_handle = USB_Class_Get_Class_Handle();
-    devicePtr->handle =(usb_device_handle)USB_Class_Get_Ctrler_Handle(devicePtr->class_handle);
-    if (NULL == devicePtr->handle)
+    if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(devicePtr->controller_id))
     {
-        devicePtr = NULL;
-        return error;
+        devicePtr->class_handle = USB_Class_Get_Class_Handle(devicePtr->controller_id);
+        devicePtr->handle =(usb_device_handle)USB_Class_Get_Ctrler_Handle(devicePtr->class_handle);
+        if (NULL == devicePtr->handle)
+        {
+            devicePtr = NULL;
+            return error;
+        }
     }
-#else
-    /* Initialize the device layer*/
-    error = usb_device_init(controller_id,(&devicePtr->handle));
-    if(error != USB_OK)
+    else
     {
-        devicePtr = NULL;
-        return error;
+        /* Initialize the device layer*/
+        error = usb_device_init(controller_id, (void *)&phdc_config_ptr->board_init_callback, (&devicePtr->handle));
+        if(error != USB_OK)
+        {
+            devicePtr = NULL;
+            return error;
+        }
+
+        /* Initialize the generic class functions */
+        devicePtr->class_handle = USB_Class_Init(devicePtr->handle,
+        USB_Class_PHDC_Event,USB_PHDC_Requests,
+        (void *)devicePtr,
+        phdc_config_ptr->desc_callback_ptr);
+
+        if (error != USB_OK)
+        {
+            devicePtr = NULL;
+            return error;
+        }
     }
-
-    /* Initialize the generic class functions */
-    devicePtr->class_handle = USB_Class_Init(devicePtr->handle,
-    USB_Class_PHDC_Event,USB_PHDC_Requests,
-    (void *)devicePtr,
-    phdc_config_ptr->desc_callback_ptr);
-
-    if (error != USB_OK)
-    {
-        devicePtr = NULL;
-        return error;
-    }
-
-#endif
     /* save the callback pointer */
     OS_Mem_copy(&phdc_config_ptr->phdc_application_callback,
     &devicePtr->phdc_application_callback,
@@ -926,9 +877,10 @@ phdc_handle_t * phdcHandle /*[OUT]*/
     devicePtr->phdc_metadata = FALSE; /* metadata feature disabled */
 #endif
     *phdcHandle =(unsigned long)devicePtr;
-#if !USBCFG_DEV_COMPOSITE 
-    usb_device_postinit(controller_id,devicePtr->handle);
-#endif
+    if(USB_UNINITIALIZED_VAL_32 == USB_Class_Get_Class_Handle(devicePtr->controller_id))
+    {
+        usb_device_postinit(controller_id,devicePtr->handle);
+    }
     return USB_OK;
 }
 /**************************************************************************//*!
@@ -948,9 +900,9 @@ usb_status USB_Class_PHDC_Deinit
 phdc_handle_t handle
 )
 {
-#if !USBCFG_DEV_COMPOSITE
+
     usb_status error = USB_OK;
-#endif
+
     phdc_device_struct_t* devicePtr;
 
     if (handle == 0)
@@ -965,15 +917,16 @@ phdc_handle_t handle
         return USBERR_NO_DEVICE_CLASS;
     }
 
-#if !USBCFG_DEV_COMPOSITE   
-    /* De-initialize the generic class functions */
-    error = USB_Class_Deinit(devicePtr->handle,devicePtr->class_handle);
-    if (error == USB_OK)
+    if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(devicePtr->controller_id)) 
     {
-        /* De-initialize the device layer*/
-        error = usb_device_deinit(devicePtr->handle);
+         /* De-initialize the generic class functions */
+        error = USB_Class_Deinit(devicePtr->handle,devicePtr->class_handle);
+        if (error == USB_OK)
+        {
+            /* De-initialize the device layer*/
+            error = usb_device_deinit(devicePtr->handle);
+        }
     }
-#endif
     if (devicePtr->mutex != NULL)
     {
         OS_Mutex_destroy(devicePtr->mutex);

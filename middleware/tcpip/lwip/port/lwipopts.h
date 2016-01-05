@@ -257,4 +257,3 @@ Some MCU allow computing and verifying the IP, UDP, TCP and ICMP checksums by ha
 
 #endif /* __LWIPOPTS_H__ */
 
-/******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/

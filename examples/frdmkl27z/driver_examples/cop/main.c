@@ -38,6 +38,7 @@
 #include "board.h"
 #include "fsl_gpio_driver.h"
 #include "fsl_cop_driver.h"
+#include "fsl_rcm_hal.h"
 #include "fsl_os_abstraction.h"
 #include "fsl_debug_console.h"
 
@@ -76,7 +77,7 @@ static uint32_t is_key_pressed(void)
  *
  * Run a simple application which enables watchdog, then
  * continuously refreshes the watchdog to prevent CPU reset
- * Upon SW1 button push, the watchdog will expire after
+ * Upon SW button push, the watchdog will expire after
  * approximately 1 seconds and chip will reset.
  */
 int main(void)
@@ -104,7 +105,7 @@ int main(void)
     GPIO_DRV_Init(switchPins, ledPins);
 
     // Check if WDOG reset occurred , turn off LED1, wait to press any key to continue.
-    if ((RCM->SRS0) & RCM_SRS0_WDOG_MASK)
+    if (RCM_HAL_GetSrcStatus(RCM, kRcmWatchDog) == kRcmWatchDog)
     {
         PRINTF("\r\n COP reset the chip successfully\r\n");
     }
@@ -121,10 +122,10 @@ int main(void)
     // Turn on LED1
     LED1_ON;
     // Print a message
-    PRINTF("Press SW to begin expiring COP \r\n");
+    PRINTF("Press %s to begin expiring COP \r\n",BOARD_SW_NAME);
     while (1)
     {
-        // COP keep refreshing until SW1 is pressed.
+        // COP keep refreshing until SW is pressed.
         if (is_key_pressed())
         {
             PRINTF("Board will reset after 1 seconds.\r\n");

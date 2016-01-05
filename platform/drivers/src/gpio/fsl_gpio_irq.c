@@ -30,11 +30,30 @@
 
 #include <assert.h>
 #include "fsl_gpio_driver.h"
+#include "fsl_clock_manager.h"
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
 
+#if defined (KM34Z7_SERIES)
+
+extern PORT_Type * const g_portBase[PORT_INSTANCE_COUNT];
+
+void PTx_IRQHandler(void)
+{
+    for(uint32_t i=0; i < PORT_INSTANCE_COUNT; i++)
+    {
+        if (CLOCK_SYS_GetPortGateCmd(i))
+        {
+            /* Add user-defined ISR for PORT. */
+
+            /* Clear interrupt flag.*/
+            PORT_HAL_ClearPortIntFlag(g_portBase[i]);
+        }
+    }
+}
+#else
 /* gpio IRQ handler with the same name in startup code. */
 void PORTA_IRQHandler(void)
 {
@@ -57,7 +76,8 @@ void PORTC_PORTD_IRQHandler(void)
     defined (KV31F12810_SERIES) || defined (KV31F25612_SERIES) || defined (KV31F51212_SERIES) || \
     defined (K64F12_SERIES) || defined (K24F12_SERIES) || defined (K63F12_SERIES) || \
     defined (K24F25612_SERIES) || defined (KV30F12810_SERIES) || defined (K02F12810_SERIES) || \
-    defined (K26F18_SERIES) || defined (K65F18_SERIES) || defined (K66F18_SERIES)
+    defined (K26F18_SERIES) || defined (K65F18_SERIES) || defined (K66F18_SERIES) || \
+    defined (K80F25615_SERIES) || defined (K81F25615_SERIES) || defined (K82F25615_SERIES)
 /* gpio IRQ handler with the same name in startup code. */
 void PORTD_IRQHandler(void)
 {
@@ -71,7 +91,8 @@ void PORTD_IRQHandler(void)
     defined (K22F12810_SERIES) || defined (K22F25612_SERIES) || defined (K22F51212_SERIES) || \
     defined (KV31F12810_SERIES) || defined (KV31F25612_SERIES) || defined (KV31F51212_SERIES) || \
     defined (K24F25612_SERIES) || \
-    defined (K26F18_SERIES) || defined (K65F18_SERIES) || defined (K66F18_SERIES)
+    defined (K26F18_SERIES) || defined (K65F18_SERIES) || defined (K66F18_SERIES) || \
+    defined (K80F25615_SERIES) || defined (K81F25615_SERIES)
 /* gpio IRQ handler with the same name in startup code. */
 void PORTB_IRQHandler(void)
 {
@@ -109,6 +130,16 @@ void PORTB_IRQHandler(void)
 {
     /* Clear interrupt flag.*/
     PORT_HAL_ClearPortIntFlag(PORTB_BASE_PTR);
+}
+#endif
+
+#if defined (KW40Z4_SERIES)
+/* gpio IRQ handler with the same name in startup code. */
+void PORTBC_IRQHandler(void)
+{
+    /* Clear interrupt flag.*/
+    if(PORT_HAL_GetPortIntFlag(PORTB_BASE))  PORT_HAL_ClearPortIntFlag(PORTB_BASE);
+    if(PORT_HAL_GetPortIntFlag(PORTC_BASE))  PORT_HAL_ClearPortIntFlag(PORTC_BASE);
 }
 #endif
 /*******************************************************************************

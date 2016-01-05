@@ -43,27 +43,16 @@
 #include "usb_host_config.h"
 #include "usb.h"
 #include "usb_host_stack_interface.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "derivative.h"
-#include "hidef.h"
-#include "mem_util.h"
-#endif
 #include "usb_host_hub_sm.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "board.h"
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
 #include "fsl_debug_console.h"
 #include <stdio.h>
 #include <stdlib.h>
-#endif
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
 #define ticks_per_second (1000)
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#define ticks_per_second (1000)
-#endif
 
 /**************************************************************************
  Local header files for this application
@@ -76,17 +65,6 @@
 #include <usb_host_msd_bo.h>
 #include <usb_host_msd_ufi.h>
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-
-#endif
 /**************************************************************************
  A driver info table defines the devices that are supported and handled
  by file system application. This table defines the PID, VID, class and
@@ -182,23 +160,40 @@ uint32_t                                  g_cpu_core_clk_khz = 120000000 / ticks
 uint8_t                                   g_test_buffer[EACH_TRANSFOR_SECTORS * 512];
 #endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/**************************************************************************
- The following is the way to define a multi tasking system in MQX RTOS.
- Remove this code and use your own RTOS way of defining tasks (or threads).
- **************************************************************************/
-#define MAIN_TASK          (10)
-void Main_Task(uint32_t param);
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
+
+static void update_state(void)
 {
-    #if TEST_SECTOR_READ_WRITE_SPEED
-    {   MAIN_TASK, Main_Task, 30000L, 9L, "Main", MQX_AUTO_START_TASK},
-#else
-    { MAIN_TASK, Main_Task, 3000L, 9L, "Main", MQX_AUTO_START_TASK },
-    #endif
-    { 0L, 0L, 0L, 0L, 0L, 0L }
-};
-#endif
+    if (g_mass_device.state_change != 0)
+    {
+        if (g_mass_device.state_change & USB_STATE_CHANGE_ATTACHED)
+        {
+            if (g_mass_device.dev_state == USB_DEVICE_IDLE)
+            {
+                g_mass_device.dev_state = USB_DEVICE_ATTACHED;
+            }
+            g_mass_device.state_change &= ~(USB_STATE_CHANGE_ATTACHED);
+        }
+        if (g_mass_device.state_change & USB_STATE_CHANGE_OPENED)
+        {
+            if (g_mass_device.dev_state != USB_DEVICE_DETACHED)
+            {
+                g_mass_device.dev_state = USB_DEVICE_INTERFACE_OPENED;
+            }
+            g_mass_device.state_change &= ~(USB_STATE_CHANGE_OPENED);
+        }
+        if (g_mass_device.state_change & USB_STATE_CHANGE_DETACHED)
+        {
+            g_mass_device.dev_state = USB_DEVICE_DETACHED;
+            g_mass_device.state_change &= ~(USB_STATE_CHANGE_DETACHED);
+        }
+        if (g_mass_device.state_change & USB_STATE_CHANGE_IDLE)
+        {
+            g_mass_device.dev_state = USB_DEVICE_IDLE;
+            g_mass_device.state_change &= ~(USB_STATE_CHANGE_IDLE);
+        }
+    }
+}
+
 
 usb_interface_descriptor_handle mass_get_interface(void)
 {
@@ -247,16 +242,11 @@ void APP_init(void)
 #endif 
 
 #if TEST_SECTOR_READ_WRITE_SPEED
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    extern const TCpuClockConfiguration PE_CpuClockConfigurations[];
-    g_cpu_core_clk_khz = PE_CpuClockConfigurations[Cpu_GetClockConfiguration()].cpu_core_clk_hz / ticks_per_second;
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     CLOCK_SYS_GetFreq(kCoreClock, &g_cpu_core_clk_khz);
     g_cpu_core_clk_khz /= ticks_per_second;
 #endif
-#endif
 
-    status = usb_host_init(CONTROLLER_ID, &g_host_handle);
+    status = usb_host_init(CONTROLLER_ID, usb_host_board_init, &g_host_handle);
     if (status != USB_OK)
     {
         USB_PRINTF("\r\nUSB Host Initialization failed! STATUS: 0x%x", status);
@@ -310,7 +300,10 @@ void APP_task(void)
     usb_status status = USB_OK;
     uint16_t pid = 0;
     uint16_t vid = 0;
-
+    
+    /* update state for not app_task context */
+    update_state();
+    
     /*----------------------------------------------------**
      ** Infinite loop, waiting for events requiring action **
      **----------------------------------------------------*/
@@ -324,14 +317,14 @@ void APP_task(void)
         if (1 == g_mass_device_open_flag)
         {
             g_mass_device_open_flag = 0;
-            status = usb_host_open_dev_interface(g_host_handle, g_mass_device.dev_handle, g_mass_device.intf_handle, (usb_class_handle*) &g_mass_device.CLASS_HANDLE);
+            status = usb_host_open_dev_interface(g_host_handle, g_mass_device.dev_handle, g_mass_device.intf_handle, (usb_class_handle*) &g_mass_device.class_handle);
             if (status != USB_OK)
             {
                 USB_PRINTF("\r\nError in _usb_hostdev_open_interface: %x\r\n", status);
                 return;
             } /* Endif */
 
-            if (usb_class_mass_getvidpid(g_mass_device.CLASS_HANDLE, &vid, &pid) == USB_OK)
+            if (usb_class_mass_getvidpid(g_mass_device.class_handle, &vid, &pid) == USB_OK)
             {
                 USB_PRINTF("vid = 0x%04X, pid = 0x%04X\r\n", vid, pid);
             }
@@ -359,13 +352,13 @@ void APP_task(void)
 
     case USB_DEVICE_DETACHED:
         USB_PRINTF("\r\nMass Storage Device Detached\r\n");
-        status = usb_host_close_dev_interface(g_host_handle, g_mass_device.dev_handle, g_mass_device.intf_handle, g_mass_device.CLASS_HANDLE);
+        status = usb_host_close_dev_interface(g_host_handle, g_mass_device.dev_handle, g_mass_device.intf_handle, g_mass_device.class_handle);
         if (status != USB_OK)
         {
             USB_PRINTF("error in _usb_hostdev_close_interface %x\r\n", status);
         }
         g_mass_device.intf_handle = NULL;
-        g_mass_device.CLASS_HANDLE = NULL;
+        g_mass_device.class_handle = NULL;
         USB_PRINTF("Going to idle state\r\n");
         if (g_buff_in != NULL)
         {
@@ -390,29 +383,6 @@ void APP_task(void)
     } /* Endswitch */
 } /* Endbody */
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : main (Main_Task if using MQX)
- * Returned Value : none
- * Comments       :
- *     Execution starts here
- *
- *END*--------------------------------------------------------------------*/
-
-void Main_Task(uint32_t param)
-{
-    APP_init();
-
-    /*
-     ** Infinite loop, waiting for events requiring action
-     */
-    for (;;)
-    {
-        APP_task();
-    } /* Endfor */
-} /* Endbody */
-#endif
 
 /*FUNCTION*----------------------------------------------------------------
  *
@@ -457,7 +427,7 @@ usb_status usb_host_mass_device_event
 
             g_mass_device.dev_handle = dev_handle;
             g_mass_device.intf_handle = mass_get_interface();
-            g_mass_device.dev_state = USB_DEVICE_ATTACHED;
+            g_mass_device.state_change |= USB_STATE_CHANGE_ATTACHED;
             g_mass_device_open_flag = 1;
         }
         else
@@ -468,7 +438,7 @@ usb_status usb_host_mass_device_event
 
     case USB_INTF_OPENED_EVENT:
         USB_PRINTF("----- Interface opened Event -----\r\n");
-        g_mass_device.dev_state = USB_DEVICE_INTERFACE_OPENED;
+        g_mass_device.state_change |= USB_STATE_CHANGE_OPENED;
         g_mass_device_test_flag = 1;
         break;
 
@@ -482,12 +452,12 @@ usb_status usb_host_mass_device_event
         USB_PRINTF("  SubClass = %d", intf_ptr->bInterfaceSubClass);
         USB_PRINTF("  Protocol = %d\r\n", intf_ptr->bInterfaceProtocol);
         g_interface_number = 0;
-        g_mass_device.dev_state = USB_DEVICE_DETACHED;
+        g_mass_device.state_change |= USB_STATE_CHANGE_DETACHED;
         break;
 
     default:
         USB_PRINTF("Mass Storage Device state = %d??\r\n", g_mass_device.dev_state);
-        g_mass_device.dev_state = USB_DEVICE_IDLE;
+        g_mass_device.state_change |= USB_STATE_CHANGE_IDLE;
         break;
     } /* EndSwitch */
 
@@ -586,7 +556,7 @@ static void usb_host_mass_test_storage
     g_pCmd.CBW_PTR = cbw_ptr;
     g_pCmd.CSW_PTR = csw_ptr;
     g_pCmd.LUN = bLun;
-    g_pCmd.CLASS_PTR = (void *) g_mass_device.CLASS_HANDLE;
+    g_pCmd.CLASS_PTR = (void *) g_mass_device.class_handle;
     g_pCmd.CALLBACK = callback_bulk_pipe;
 
     USB_PRINTF("\r\n ================ START OF A NEW SESSION ================\r\n");
@@ -596,8 +566,8 @@ static void usb_host_mass_test_storage
     g_bCallBack = FALSE;
 
     status = usb_class_mass_getmaxlun_bulkonly(
-        (void *) g_mass_device.CLASS_HANDLE, &bLun,
-        usb_host_mass_ctrl_callback, (void *) g_mass_device.CLASS_HANDLE);
+        (void *) g_mass_device.class_handle, &bLun,
+        usb_host_mass_ctrl_callback, (void *) g_mass_device.class_handle);
 
     if ((status != USB_OK))
     {
@@ -609,9 +579,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
 
@@ -643,9 +611,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -676,9 +642,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -709,9 +673,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -742,9 +704,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -774,9 +734,7 @@ static void usb_host_mass_test_storage
     {
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -811,9 +769,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -852,9 +808,7 @@ static void usb_host_mass_test_storage
                 /* Wait till command comes back */
                 while (!g_bCallBack)
                 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                    Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                     OSA_PollAllOtherTasks();
 #endif
                 }
@@ -871,9 +825,7 @@ static void usb_host_mass_test_storage
             DWT_CR &= ~((uint32_t)DWT_CR_CYCCNTENA);
         }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        g_time_count = g_time_count / (g_cpu_core_clk_khz);
-#else
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
         g_time_count = g_time_count / (g_cpu_core_clk_khz);
 #endif
         temp = (uint64_t)((uint64_t)512*(uint64_t)ticks_per_second*(uint64_t)sector_count);
@@ -898,9 +850,7 @@ static void usb_host_mass_test_storage
             /* Wait till command comes back */
             while (!g_bCallBack)
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                 OSA_PollAllOtherTasks();
 #endif
             }
@@ -936,9 +886,7 @@ static void usb_host_mass_test_storage
                 /* Wait till command comes back */
                 while (!g_bCallBack)
                 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                    Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                     OSA_PollAllOtherTasks();
 #endif
                 }
@@ -955,9 +903,7 @@ static void usb_host_mass_test_storage
             DWT_CR &= ~((uint32_t)DWT_CR_CYCCNTENA);
         }
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS)))
-        g_time_count = g_time_count / (g_cpu_core_clk_khz);
-#else
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
         g_time_count = g_time_count / (g_cpu_core_clk_khz);
 #endif
         temp = (uint64_t)((uint64_t)512*(uint64_t)ticks_per_second*(uint64_t)sector_count);
@@ -983,9 +929,7 @@ static void usb_host_mass_test_storage
             /* Wait till command comes back */
             while (!g_bCallBack)
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                 OSA_PollAllOtherTasks();
 #endif
             }
@@ -1021,9 +965,7 @@ static void usb_host_mass_test_storage
                 /* Wait till command comes back */
                 while (!g_bCallBack)
                 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                    Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                     OSA_PollAllOtherTasks();
 #endif
                 }
@@ -1040,9 +982,7 @@ static void usb_host_mass_test_storage
             DWT_CR &= ~((uint32_t)DWT_CR_CYCCNTENA);
         }
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS)))
-        g_time_count = g_time_count / (g_cpu_core_clk_khz);
-#else
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
         g_time_count = g_time_count / (g_cpu_core_clk_khz);
 #endif
         temp = (uint64_t)((uint64_t)512*(uint64_t)ticks_per_second*(uint64_t)sector_count);
@@ -1068,9 +1008,7 @@ static void usb_host_mass_test_storage
             /* Wait till command comes back */
             while (!g_bCallBack)
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                 OSA_PollAllOtherTasks();
 #endif
             }
@@ -1108,9 +1046,7 @@ static void usb_host_mass_test_storage
                 /* Wait till command comes back */
                 while (!g_bCallBack)
                 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                    Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                     OSA_PollAllOtherTasks();
 #endif
                 }
@@ -1127,9 +1063,7 @@ static void usb_host_mass_test_storage
             DWT_CR &= ~((uint32_t)DWT_CR_CYCCNTENA);
         }
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS)))
-        g_time_count = g_time_count / (g_cpu_core_clk_khz);
-#else
+#if  ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
         g_time_count = g_time_count / (g_cpu_core_clk_khz);
 #endif
         temp = (uint64_t)((uint64_t)512*(uint64_t)ticks_per_second*(uint64_t)sector_count);
@@ -1156,9 +1090,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1190,9 +1122,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1223,9 +1153,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1256,9 +1184,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1289,9 +1215,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1322,9 +1246,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1359,9 +1281,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
 
@@ -1402,9 +1322,7 @@ static void usb_host_mass_test_storage
                 /* Wait till command comes back */
                 while (!g_bCallBack)
                 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                    Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                     OSA_PollAllOtherTasks();
 #endif
                 }
@@ -1421,9 +1339,7 @@ static void usb_host_mass_test_storage
             DWT_CR &= ~((uint32_t)DWT_CR_CYCCNTENA);
         }
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS)))
-        g_time_count = g_time_count / (g_cpu_core_clk_khz);
-#else
+#if  ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
         g_time_count = g_time_count / (g_cpu_core_clk_khz);
 #endif
         temp = (uint64_t)((uint64_t)512*(uint64_t)ticks_per_second*(uint64_t)sector_count);
@@ -1449,9 +1365,7 @@ static void usb_host_mass_test_storage
             /* Wait till command comes back */
             while (!g_bCallBack)
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                 OSA_PollAllOtherTasks();
 #endif
 
@@ -1488,9 +1402,8 @@ static void usb_host_mass_test_storage
                 /* Wait till command comes back */
                 while (!g_bCallBack)
                 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                    Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                     OSA_PollAllOtherTasks();
 #endif
 
@@ -1508,9 +1421,7 @@ static void usb_host_mass_test_storage
             DWT_CR &= ~((uint32_t)DWT_CR_CYCCNTENA);
         }
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS)))
-        g_time_count = g_time_count / (g_cpu_core_clk_khz);
-#else
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
         g_time_count = g_time_count / (g_cpu_core_clk_khz);
 #endif
         temp = (uint64_t)((uint64_t)512*(uint64_t)ticks_per_second*(uint64_t)sector_count);
@@ -1536,9 +1447,7 @@ static void usb_host_mass_test_storage
             /* Wait till command comes back */
             while (!g_bCallBack)
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                 OSA_PollAllOtherTasks();
 #endif
 
@@ -1575,9 +1484,7 @@ static void usb_host_mass_test_storage
                 /* Wait till command comes back */
                 while (!g_bCallBack)
                 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                    Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                     OSA_PollAllOtherTasks();
 #endif
 
@@ -1595,9 +1502,7 @@ static void usb_host_mass_test_storage
             DWT_CR &= ~((uint32_t)DWT_CR_CYCCNTENA);
         }
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS)))
-        g_time_count = g_time_count / (g_cpu_core_clk_khz);
-#else
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
         g_time_count = g_time_count / (g_cpu_core_clk_khz);
 #endif
         temp = (uint64_t)((uint64_t)512*(uint64_t)ticks_per_second*(uint64_t)sector_count);
@@ -1623,9 +1528,7 @@ static void usb_host_mass_test_storage
             /* Wait till command comes back */
             while (!g_bCallBack)
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                 OSA_PollAllOtherTasks();
 #endif
 
@@ -1664,9 +1567,7 @@ static void usb_host_mass_test_storage
                 /* Wait till command comes back */
                 while (!g_bCallBack)
                 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                    Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                     OSA_PollAllOtherTasks();
 #endif
 
@@ -1684,9 +1585,7 @@ static void usb_host_mass_test_storage
             DWT_CR &= ~((uint32_t)DWT_CR_CYCCNTENA);
         }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        g_time_count = g_time_count / (g_cpu_core_clk_khz);
-#else
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
         g_time_count = g_time_count / (g_cpu_core_clk_khz);
 #endif
         temp = (uint64_t)((uint64_t)512*(uint64_t)ticks_per_second*(uint64_t)sector_count);
@@ -1714,9 +1613,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1748,9 +1645,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1781,9 +1676,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1814,9 +1707,7 @@ static void usb_host_mass_test_storage
         /* Wait till command comes back */
         while (!g_bCallBack)
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
         }
@@ -1832,7 +1723,6 @@ static void usb_host_mass_test_storage
 
     USB_PRINTF("\r\nTest done!");
 } /* Endbody */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
 TASK_TEMPLATE_STRUCT MQX_template_list[] =
@@ -1870,10 +1760,9 @@ int main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
     OSA_Start();
 #if !defined(FSL_RTOS_MQX)
     return 1;
 #endif
 }
-#endif

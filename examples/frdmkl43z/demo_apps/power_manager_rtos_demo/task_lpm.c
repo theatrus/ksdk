@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -36,19 +36,6 @@
 
 // SDK Included Files
 #include "board.h"
-#include "lpm_rtos.h"
-#include "fsl_uart_driver.h"
-#include "fsl_os_abstraction.h"
-#include "fsl_interrupt_manager.h"
-#include "fsl_gpio_driver.h"
-#include "fsl_llwu_hal.h"
-#include "fsl_smc_hal.h"
-#include "fsl_power_manager.h"
-#include "fsl_clock_manager.h"
-#include "fsl_debug_console.h"
-#include "fsl_sim_hal.h"
-#include "fsl_misc_utilities.h"
-
 // Project Included Files
 #include "task_lpm.h"
 
@@ -57,17 +44,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 extern const clock_manager_user_config_t g_defaultClockConfigRun;
 extern const clock_manager_user_config_t g_defaultClockConfigVlpr;
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-extern const clock_manager_user_config_t g_defaultClockConfigHsrun;
-#endif
 
 const clock_manager_user_config_t * g_defaultClockConfigurations[] = {
     NULL,
     &g_defaultClockConfigVlpr,
     &g_defaultClockConfigRun,
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-    &g_defaultClockConfigHsrun,
-#endif
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -81,6 +62,61 @@ const clock_manager_user_config_t * g_defaultClockConfigurations[] = {
  * function
  ******************************************************************************/
 /*!
+ * task to blink led rtos between 1 seconds.
+ */
+void task_led_rtos(task_param_t param)
+{
+    LED_RTOS_EN;
+    while(1)
+    {
+        LED_RTOS_TOGGLE;
+        OSA_TimeDelay(1000);
+    }
+}
+/*!
+ * task to blink led clock after delay loop.
+ */
+void task_led_clock(task_param_t param)
+{
+    LED_CLOCK_EN;
+    while(1)
+    {
+        LED_CLOCK_TOGGLE;
+        delay(DELAY_COUNT);
+    }
+}
+/*!
+ * @brief wait uart finished.
+ *
+ */
+void wait_finish_uart(void)
+{
+    uint32_t bytesRemaining = 0;
+    volatile bool isLastByteTranmistComplete = false;
+    do
+    {
+        LPUART_DRV_GetTransmitStatus(BOARD_DEBUG_UART_INSTANCE, &bytesRemaining);
+        isLastByteTranmistComplete = LPUART_HAL_GetStatusFlag(BOARD_DEBUG_UART_BASEADDR,kLpuartTxComplete);
+    } while ((bytesRemaining != 0) || (!isLastByteTranmistComplete));
+}
+
+/*!
+ * @brief get input charater.
+ *
+ */
+char getInput()
+{
+    char ch;
+    /* We use GETCHAR() for BM and UART Blocking technic for other RTOS. */
+#if (defined FSL_RTOS_BM) || ((defined FSL_RTOS_MQX)&&(MQX_COMMON_CONFIG != MQX_LITE_CONFIG))
+    ch = GETCHAR();
+#else
+    LPUART_DRV_ReceiveDataBlocking(BOARD_DEBUG_UART_INSTANCE,(uint8_t*)(&ch),1,OSA_WAIT_FOREVER);
+#endif // FSL_RTOS_BM
+    return ch;
+}
+
+ /*!
  * @brief set alarm command.
  *
  * This function set the alarm which will be
@@ -91,9 +127,7 @@ void cmdAlarm(wakeUpSource_t wus, uint8_t offsetSec)
 {
     if((wus & wakeUpSourceRtc) != 0)
     {
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
         rtcSetAlarm(PM_RTOS_DEMO_RTC_FUNC_INSTANCE, offsetSec);
-#endif
     }
     else
     {
@@ -107,44 +141,23 @@ void cmdAlarm(wakeUpSource_t wus, uint8_t offsetSec)
 wakeUpSource_t getWakeupSource(uint8_t val, demo_power_modes_t mode)
 {
     wakeUpSource_t ret = wakeUpSourceErr;
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
     if(val == 'T' || val == 't')
     {
         ret = wakeUpSourceRtc;
     }
-#endif
     if(val == 'L' || val == 'l')
     {
         ret = wakeUpSourceLptmr;
     }
-#if BOARD_SW_HAS_LLWU_PIN
     if(val == 'S' || val == 's')
     {
         ret =  wakeUpSourceSwBtn;
     }
-#else
-    if(val == 'S' || val == 's')
-    {
-        switch (mode)
-        {
-            case kDemoWait:
-            case kDemoVlpr:
-            case kDemoVlpw:
-            case kDemoStop:
-            case kDemoVlps:
-                ret = wakeUpSourceSwBtn;
-                break;
-            default:
-                ret = wakeUpSourceErr;
-                break;
-        }
-    }
-#endif
     return ret;
 }
 
 /* LLW_IRQHandler that would cover the same name's APIs in startup code */
-void MODULE_IRQ_HANDLER(LLWU)(void)
+void LLWU_IRQHandler(void)
 {
     // The LLWU wakeup interrup is LPTMR source
     if (LLWU_HAL_GetInternalModuleWakeupFlag(LLWU_BASE_PTR, PM_RTOS_DEMO_LPTMR_LLWU_WAKEUP_MODULE))
@@ -153,20 +166,16 @@ void MODULE_IRQ_HANDLER(LLWU)(void)
     }
 
     // The LLWU wakeup interrup is RTC source
-#if (FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE) && (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
     if (LLWU_HAL_GetInternalModuleWakeupFlag(LLWU_BASE_PTR, PM_RTOS_DEMO_RTC_LLWU_WAKEUP_MODULE))
     {
         RTC_DRV_SetAlarmIntCmd(PM_RTOS_DEMO_RTC_FUNC_INSTANCE, false);
     }
-#endif
 
     // The LLWU wakeup interrup is Switch/Button source
-#if BOARD_SW_HAS_LLWU_PIN
     if (LLWU_HAL_GetExternalPinWakeupFlag(LLWU_BASE_PTR,(llwu_wakeup_pin_t)BOARD_SW_LLWU_EXT_PIN))
     {
          LLWU_HAL_ClearExternalPinWakeupFlag(LLWU_BASE_PTR, (llwu_wakeup_pin_t)BOARD_SW_LLWU_EXT_PIN);
     }
-#endif
 }
 
 /* IRQ handler for switch/button. */
@@ -183,7 +192,7 @@ uint8_t setWakeUpTimeOut(wakeUpSource_t wus)
     while(1)
     {
         PRINTF("Select the wake up timeout in format DD. Possible decimal value is from range 01 - 60 seconds. Eg. 05 means 5 seconds delay");
-        PRINTF("\n\rWaiting for key press..\n\r\n\r");
+        PRINTF("\r\nWaiting for key press..\r\n\r\n");
         val0 = getInput();
         PRINTF("You pressed: '%c", val0);
         if( (val0 >= '0') && (val0 <= '6') )
@@ -195,54 +204,45 @@ uint8_t setWakeUpTimeOut(wakeUpSource_t wus)
                 val0 = (val0-'0')*10 + (val1-'0');
                 if( (val0!=0) && (val0<=60) )
                 {
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE
                     OSA_EnterCritical(kCriticalDisableInt);
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
                     if((wus & wakeUpSourceRtc) != 0)
                     {
                         LLWU_HAL_SetInternalModuleCmd(LLWU_BASE_PTR,PM_RTOS_DEMO_RTC_LLWU_WAKEUP_MODULE,true);
                     }
-#endif
                     if((wus & wakeUpSourceLptmr) != 0)
                     {
                         LLWU_HAL_SetInternalModuleCmd(LLWU_BASE_PTR,PM_RTOS_DEMO_LPTMR_LLWU_WAKEUP_MODULE,true);
                     }
                     OSA_ExitCritical(kCriticalDisableInt);
-#endif
                     cmdAlarm(wus, val0);
                     return val0;
                 }
             }
         }
 
-        PRINTF("Wrong value!\n\r");
+        PRINTF("Wrong value!\r\n");
     }
 }
 
 void printWakeUpSourceText(wakeUpSource_t wus)
 {
-    PRINTF("Select the wake up source:\n\r");
+    PRINTF("Select the wake up source:\r\n");
     if((wus & wakeUpSourceRtc) != 0)
     {
-        PRINTF("Press T for RTC - RTC Timer\n\r");
+        PRINTF("Press T for RTC - RTC Timer\r\n");
     }
     if((wus & wakeUpSourceLptmr) != 0)
     {
-        PRINTF("Press L for LPTMR - LPTMR Timer\n\r");
+        PRINTF("Press L for LPTMR - LPTMR Timer\r\n");
     }
     if((wus & wakeUpSourceSwBtn) != 0)
     {
         PRINTF("Press S for switch/button ");
         PRINT_LLWU_SW_NUM;
-        PRINTF("\n\r");
+        PRINTF("\r\n");
     }
 }
 
-/* TWR_K60D100M doesn't have switch pins connected to LLWU.
- * It's not possible to wake up by SWx buttons from some modes.
- * returns 0 when RTC is selected as wake up source
- * returns 1 when sw pins are selected as wake up source
- */
 wakeUpSource_t selectWakeUpSource(demo_power_modes_t mode)
 {
     uint8_t val = 0;
@@ -259,37 +259,19 @@ wakeUpSource_t selectWakeUpSource(demo_power_modes_t mode)
             case kDemoStop:
             case kDemoVlps:
               break;
-#if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE
             case kDemoLls:
-#endif
             case kDemoVlls1:
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE2
-            case kDemoVlls2:
-#endif
             case kDemoVlls3:
-#if BOARD_SW_HAS_LLWU_PIN
                 break;
-#else
-                // switch is not connected to LLWU, we can use only RTC wake up
-                PRINTF("The board does not support wake up from this mode by switch/button. Timer is used as wake up source:\n\r");
-                wus &= ~wakeUpSourceSwBtn;
-                break;
-#endif
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE0 & BOARD_SW_HAS_LLWU_PIN
             case kDemoVlls0:
                 // in VLLS0 LPO oscillator is disabled.
-                PRINTF("The board does not support wake up from this mode by Timer due to disabled LPO.\n\r");
+                PRINTF("The board does not support wake up from this mode by Timer due to disabled LPO.\r\n");
                 wus &= ~(wakeUpSourceRtc | wakeUpSourceLptmr);
                 break;
-#endif
             default:
                 break;
         }
-        PRINTF("\n\rWaiting for key press..\n\r\n\r");
-#if (!defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
-        // Clear RTC option.
-        wus &= (~wakeUpSourceRtc);
-#endif
+        PRINTF("\r\nWaiting for key press..\r\n\r\n");
         if(wus == wakeUpSourceRtc || wus == wakeUpSourceLptmr || wus == wakeUpSourceSwBtn)
         {
             return wus;
@@ -304,15 +286,11 @@ wakeUpSource_t selectWakeUpSource(demo_power_modes_t mode)
     return retval;
 }
 
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE
 void llwuDisableWakeUp(void)
 {
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
     LLWU_HAL_SetInternalModuleCmd(LLWU_BASE_PTR, PM_RTOS_DEMO_RTC_LLWU_WAKEUP_MODULE, false);
-#endif
     LLWU_HAL_SetInternalModuleCmd(LLWU_BASE_PTR, PM_RTOS_DEMO_LPTMR_LLWU_WAKEUP_MODULE, false);
 }
-#endif
 
 void gpioDisableWakeUp(void)
 {
@@ -320,10 +298,8 @@ void gpioDisableWakeUp(void)
     PORT_HAL_SetPinIntMode(BOARD_SW_LLWU_BASE, BOARD_SW_LLWU_PIN, kPortIntDisabled);
     INT_SYS_DisableIRQ(BOARD_SW_LLWU_IRQ_NUM);
 
-#if BOARD_SW_HAS_LLWU_PIN
     LLWU_HAL_ClearExternalPinWakeupFlag(LLWU_BASE_PTR, (llwu_wakeup_pin_t)BOARD_SW_LLWU_EXT_PIN);
     LLWU_HAL_SetExternalInputPinMode(LLWU_BASE_PTR,kLlwuExternalPinDisabled, (llwu_wakeup_pin_t)BOARD_SW_LLWU_EXT_PIN);
-#endif
 }
 
 void gpioEnableWakeUp(void)
@@ -332,10 +308,8 @@ void gpioEnableWakeUp(void)
     PORT_HAL_SetPinIntMode(BOARD_SW_LLWU_BASE, BOARD_SW_LLWU_PIN, kPortIntFallingEdge);
     INT_SYS_EnableIRQ(BOARD_SW_LLWU_IRQ_NUM);
 
-#if BOARD_SW_HAS_LLWU_PIN
     LLWU_HAL_ClearExternalPinWakeupFlag(LLWU_BASE_PTR, (llwu_wakeup_pin_t)BOARD_SW_LLWU_EXT_PIN);
     LLWU_HAL_SetExternalInputPinMode(LLWU_BASE_PTR,kLlwuExternalPinFallingEdge, (llwu_wakeup_pin_t)BOARD_SW_LLWU_EXT_PIN);
-#endif
 }
 
 void setWakeUpSource(wakeUpSource_t wus,char *textMode)
@@ -347,22 +321,20 @@ void setWakeUpSource(wakeUpSource_t wus,char *textMode)
         gpioDisableWakeUp();
         // Wake up on timer's interrupt
         timeout = setWakeUpTimeOut(wus);
-        PRINTF("Entering %s, will wake up after %u seconds\n\r",textMode,timeout);
+        PRINTF("Entering %s, will wake up after %u seconds\r\n",textMode,timeout);
     }
     else if((wus & wakeUpSourceSwBtn) != 0)
     {
-#if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE
         llwuDisableWakeUp();
-#endif
         // Wake up on gpio interrupt from button(s)
         gpioEnableWakeUp();
         PRINTF("Entering %s, press the ",textMode);
         PRINT_LLWU_SW_NUM;
-        PRINTF(" button to wake up.\n\r");
+        PRINTF(" button to wake up.\r\n");
     }
     else
     {
-        PRINTF("Unknown error.\n\r");
+        PRINTF("Unknown error.\r\n");
     }
 }
 
@@ -373,69 +345,21 @@ void displayPowerMode(void)
     switch (smcMode)
     {
     case kStatRun:
-        PRINTF("    SMC mode = kPowerModeRun\n\r");
+        PRINTF("    SMC mode = kPowerModeRun\r\n");
         break;
     case kStatVlpr:
-        PRINTF("    SMC mode = kPowerModeVlpr\n\r");
+        PRINTF("    SMC mode = kPowerModeVlpr\r\n");
         break;
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-    case kStatHsrun:
-        PRINTF("    SMC mode = kPowerModeHsrun\n\r");
-        break;
-#endif
     default:
-        PRINTF("    SMC mode = Unknown!\n\r");
+        PRINTF("    SMC mode = Unknown!\r\n");
         break;
     }
 }
 
-void updateClockManagerToRunMode(uint8_t cmConfigMode)
+/* Update clock.*/
+void update_clock_mode(uint8_t cmConfigMode)
 {
-    // if current config mode is RUN but CM is not, need to re-config it to RUN
-    if ((cmConfigMode == CLOCK_RUN) &&
-        (CLOCK_SYS_GetCurrentConfiguration() != CLOCK_RUN))
-    {
-        CLOCK_SYS_UpdateConfiguration(CLOCK_RUN, kClockManagerPolicyForcible);
-    }
-}
-
-void updateClockManagerToVlprMode(uint8_t cmConfigMode)
-{
-    // if current config mode and CM are both RUN, need to re-config it to VLPR
-    if ((cmConfigMode == CLOCK_RUN) &&
-        (CLOCK_SYS_GetCurrentConfiguration() == CLOCK_RUN))
-    {
-        CLOCK_SYS_UpdateConfiguration(CLOCK_VLPR, kClockManagerPolicyForcible);
-    }
-}
-
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-void updateClockManagerToHsRunMode(uint8_t cmConfigMode)
-{
-    // if current config mode and CM are both RUN, need to re-config it to HSRUN
-    if ((cmConfigMode == CLOCK_RUN) &&
-        (CLOCK_SYS_GetCurrentConfiguration() == CLOCK_RUN))
-    {
-        CLOCK_SYS_UpdateConfiguration(CLOCK_HSRUN, kClockManagerPolicyForcible);
-    }
-}
-#endif
-
-/* Update clock to compatible with RUN mode. */
-void updateClockMode(uint8_t cmConfigMode)
-{
-#if (defined(FSL_FEATURE_MCGLITE_MCGLITE))
-    if (g_defaultClockConfigurations[cmConfigMode]->mcgliteConfig.mcglite_mode == kMcgliteModeHirc48M)
-#else
-    if (g_defaultClockConfigurations[cmConfigMode]->mcgConfig.mcg_mode == kMcgModePEE)
-#endif
-    {
-        CLOCK_SYS_UpdateConfiguration(CLOCK_RUN, kClockManagerPolicyForcible);
-    }
-    else
-    {
-        updateClockManagerToRunMode(cmConfigMode);
-    }
+    CLOCK_SYS_UpdateConfiguration(cmConfigMode, kClockManagerPolicyForcible);
 }
 
 /******************************************************************************
@@ -459,10 +383,8 @@ void task_lpm(task_param_t param)
     power_manager_error_code_t ret;
     uint32_t freq = 0;
 
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
     rtc_datetime_t date;
     memset(&date, 0, sizeof(rtc_datetime_t));
-#endif
     memset(&cmCallbackData, 0, sizeof(lptmrStructure_t));
     cmCallbackData.instance = PM_RTOS_DEMO_LPTMR_FUNC_INSTANCE;
     lptmr_user_config_t *lptmrUserConfig = &(cmCallbackData.lptmrUserConfig);
@@ -475,16 +397,14 @@ void task_lpm(task_param_t param)
 
     CLOCK_SYS_UpdateConfiguration(cmConfigMode, kClockManagerPolicyForcible);
 
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
     // Set a start date time and start RTC
-    date.year = 2014U;
+    date.year = 2014;
     date.month = 4U;
     date.day = 30U;
     date.hour = 14U;
     date.minute = 0U;
     date.second = 0U;
     rtcInit(PM_RTOS_DEMO_RTC_FUNC_INSTANCE, &date);
-#endif
     lptmrUserConfig->timerMode = kLptmrTimerModeTimeCounter; // Use LPTMR in Time Counter mode
     lptmrUserConfig->freeRunningEnable = false; // When hit compare value, set counter back to zero
     lptmrUserConfig->prescalerEnable = false; // bypass prescaler
@@ -494,79 +414,52 @@ void task_lpm(task_param_t param)
 
     // initialize power manager driver
     POWER_SYS_Init(powerConfigs,
-    powerConfigsSize,
-    pm_callback_tbl,
-    pm_callback_tbl_size);
+                   powerConfigsSize,
+                   pm_callback_tbl,
+                   pm_callback_tbl_size);
 
     // Enables LLWU interrupt
     INT_SYS_EnableIRQ(LLWU_IRQn);
 
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-    mode = kDemoRun - kDemoMin - 1;
-    ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
-    if (ret != kPowerManagerSuccess)
-    {
-        PRINTF("POWER_SYS_SetMode(%u) returned unexpected status : %u\n\r",mode,ret);
-    }
-    else
-    {
-        updateClockManagerToRunMode(cmConfigMode);
-    }
-#endif
 #if (defined FSL_RTOS_BM)
-    PRINTF("\n\r####################  Power Manager BM Demo ####################\n\n\r");
+    PRINTF("\r\n####################  Power Manager BM Demo ####################\r\n\r\n");
 #elif (defined FSL_RTOS_FREE_RTOS)
-    PRINTF("\n\r####################  Power Manager FreeRTOS Demo ####################\n\n\r");
+    PRINTF("\r\n####################  Power Manager FreeRTOS Demo ####################\r\n\r\n");
 #elif (defined FSL_RTOS_MQX)
-    PRINTF("\n\r####################  Power Manager MQX Demo ####################\n\n\r");
+    PRINTF("\r\n####################  Power Manager MQX Demo ####################\r\n\r\n");
 #elif (defined FSL_RTOS_UCOSII)
-    PRINTF("\n\r####################  Power Manager Ucos2 Demo ####################\n\n\r");
+    PRINTF("\r\n####################  Power Manager Ucosii Demo ####################\r\n\r\n");
 #elif (defined FSL_RTOS_UCOSIII)
-    PRINTF("\n\r####################  Power Manager Ucos3 Demo ####################\n\n\r");
+    PRINTF("\r\n####################  Power Manager Ucosiii Demo ####################\r\n\r\n");
 #else
-    PRINTF("\n\rUnknown RTOS\n\n\r");
+    PRINTF("\r\nUnknown RTOS\r\n\r\n");
 #endif
 
     while (1)
     {
         mode = 0;
         CLOCK_SYS_GetFreq(kCoreClock, &freq);
-        PRINTF("    Core Clock = %luHz \n\r", freq);
+        PRINTF("    Core Clock = %luHz \r\n", freq);
         displayPowerMode();
-        PRINTF("\n\rSelect the desired operation \n\n\r");
-        PRINTF("Press  %c for enter: RUN   - Normal RUN mode\n\r",kDemoRun);
-        PRINTF("Press  %c for enter: Wait  - Wait mode\n\r",kDemoWait);
-        PRINTF("Press  %c for enter: Stop  - Stop mode\n\r",kDemoStop);
-        PRINTF("Press  %c for enter: VLPR  - Very Low Power Run mode\n\r",kDemoVlpr);
-        PRINTF("Press  %c for enter: VLPW  - Very Low Power Wait mode\n\r",kDemoVlpw);
-        PRINTF("Press  %c for enter: VLPS  - Very Low Power Stop mode\n\r",kDemoVlps);
+        PRINTF("\r\nSelect the desired operation \r\n\r\n");
+        PRINTF("Press  %c for enter: RUN   - Normal RUN mode\r\n",kDemoRun);
+        PRINTF("Press  %c for enter: Wait  - Wait mode\r\n",kDemoWait);
+        PRINTF("Press  %c for enter: Stop  - Stop mode\r\n",kDemoStop);
+        PRINTF("Press  %c for enter: VLPR  - Very Low Power Run mode\r\n",kDemoVlpr);
+        PRINTF("Press  %c for enter: VLPW  - Very Low Power Wait mode\r\n",kDemoVlpw);
+        PRINTF("Press  %c for enter: VLPS  - Very Low Power Stop mode\r\n",kDemoVlps);
 
-#if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE
-#if FSL_FEATURE_SMC_HAS_LLS_SUBMODE
-        PRINTF("Press  %c for enter: LLS3  - Low Leakage Stop mode\n\r",kDemoLls);
-#else
-        PRINTF("Press  %c for enter: LLS   - Low Leakage Stop mode\n\r",kDemoLls);
-#endif
-#endif
+        PRINTF("Press  %c for enter: LLS   - Low Leakage Stop mode\r\n",kDemoLls);
 
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE0 & BOARD_SW_HAS_LLWU_PIN
-        PRINTF("Press  %c for enter: VLLS0 - Very Low Leakage Stop 0 mode\n\r",kDemoVlls0);
-#endif
+        PRINTF("Press  %c for enter: VLLS0 - Very Low Leakage Stop 0 mode\r\n",kDemoVlls0);
 
-        PRINTF("Press  %c for enter: VLLS1 - Very Low Leakage Stop 1 mode\n\r",kDemoVlls1);
+        PRINTF("Press  %c for enter: VLLS1 - Very Low Leakage Stop 1 mode\r\n",kDemoVlls1);
 
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE2
-        PRINTF("Press  %c for enter: VLLS2 - Very Low Leakage Stop 2 mode\n\r",kDemoVlls2);
-#endif
+        PRINTF("Press  %c for enter: VLLS3 - Very Low Leakage Stop 3 mode\r\n",kDemoVlls3);
+        PRINTF("Press  %c to get current chip temperature\r\n",KDemoADC);
 
-        PRINTF("Press  %c for enter: VLLS3 - Very Low Leakage Stop 3 mode\n\r",kDemoVlls3);
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-        PRINTF("Press  %c for enter: HSRUN   - High Speed RUN mode\n\r",kDemoHsRun);
-#endif
-        PRINTF("Press  %c to get current chip temperature\n\r",KDemoADC);
-
-        PRINTF("------------------------------------------------------------\n\r");
-        PRINTF("\n\rWaiting for key press..\n\r\n\r");
+        PRINTF("------------------------------------------------------------\r\n");
+        PRINTF("\r\nWaiting for key press..\r\n\r\n");
 
         // Wait for user response
         testVal = (demo_power_modes_t)getInput();
@@ -585,63 +478,39 @@ void task_lpm(task_param_t param)
             case kDemoWait:
                 if (POWER_SYS_GetCurrentMode() == kPowerManagerVlpr)
                 {
-                    PRINTF("Can not go from VLPR to WAIT directly\n\r");
+                    PRINTF("Can not go from VLPR to WAIT directly\r\n");
                     break;
                 }
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to WAIT directly\n\r");
-                    break;
-                }
-#endif
                 setWakeUpSource(selectWakeUpSource(testVal),"Wait mode");
 
                 ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
                 CHECK_RET_VAL(ret, mode);
-
-                // update Clock Mode
-                updateClockManagerToRunMode(cmConfigMode);
                 break;
 
             case kDemoStop:
                 if (POWER_SYS_GetCurrentMode() == kPowerManagerVlpr)
                 {
-                    PRINTF("Can not go from VLPR to STOP directly\n\r");
+                    PRINTF("Can not go from VLPR to STOP directly\r\n");
                     break;
                 }
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to STOP directly\n\r");
-                    break;
-                }
-#endif
                 setWakeUpSource(selectWakeUpSource(testVal),"Stop mode");
 
                 ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
                 CHECK_RET_VAL(ret, mode);
 
                 // update Clock Mode
-                updateClockMode(cmConfigMode);
+                update_clock_mode(CLOCK_RUN);
                 break;
 
             case kDemoVlpr:
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to VLPR directly\n\r");
-                    break;
-                }
-#endif
                 if(kPowerManagerVlpr != POWER_SYS_GetCurrentMode())
                 {
                     /*
                      If apps default CM config mode is not VLPR, but needs to enter VLPR, and real CM config
                      is not VLPR, then we need to update it to VLPR mode here. Otherwise pass through.
                      */
-                    updateClockManagerToVlprMode(cmConfigMode);
-                    PRINTF("Entering Very Low Power Run mode\n\r");
+                    update_clock_mode(CLOCK_VLPR);
+                    PRINTF("Entering Very Low Power Run mode\r\n");
 
                     ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
 
@@ -649,24 +518,16 @@ void task_lpm(task_param_t param)
                 }
                 else
                 {
-                    PRINTF("Very Low Power Run mode already active\n\r");
+                    PRINTF("Very Low Power Run mode already active\r\n");
                 }
                 break;
 
             case kDemoVlpw:
                 if (POWER_SYS_GetCurrentMode() == kPowerManagerRun)
                 {
-                    PRINTF("Can not go from RUN to VLPW directly\n\r");
+                    PRINTF("Can not go from RUN to VLPW directly\r\n");
                     break;
                 }
-
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to VLPW directly\n\r");
-                    break;
-                }
-#endif
 
                 setWakeUpSource(selectWakeUpSource(testVal),"Very Low Wait mode");
 
@@ -675,20 +536,13 @@ void task_lpm(task_param_t param)
                 if (POWER_SYS_GetCurrentMode() == kPowerManagerRun)
                 {
                     // update Clock Mode to Run
-                    updateClockManagerToRunMode(cmConfigMode);
+                    update_clock_mode(CLOCK_RUN);
                 }
 
                 CHECK_RET_VAL(ret, mode);
                 break;
 
             case kDemoVlps:
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to VLPS directly\n\r");
-                    break;
-                }
-#endif
                 setWakeUpSource(selectWakeUpSource(testVal),"Very Low Power Stop mode");
 
                 ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
@@ -696,97 +550,43 @@ void task_lpm(task_param_t param)
                 if (POWER_SYS_GetCurrentMode() == kPowerManagerRun)
                 {
                     // update Clock Mode to Run
-                    updateClockMode(cmConfigMode);
+                    update_clock_mode(CLOCK_RUN);
                 }
 
                 CHECK_RET_VAL(ret, mode);
                 break;
-#if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE
             case kDemoLls:
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to LLSx directly\n\r");
-                    break;
-                }
-#endif
-#if FSL_FEATURE_SMC_HAS_LLS_SUBMODE
-                setWakeUpSource(selectWakeUpSource(testVal),"Low Leakage Stop mode 3");
-#else
                 setWakeUpSource(selectWakeUpSource(testVal),"Low Leakage Stop mode");
-#endif
                 ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
 
                 // Check the mode LLS was entered
                 if(kPowerManagerVlpr != POWER_SYS_GetCurrentMode())
                 {
-                    updateClockMode(cmConfigMode);
+                    update_clock_mode(CLOCK_RUN);
                 }
 
                 CHECK_RET_VAL(ret, mode);
                 break;
-#endif
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE0 & BOARD_SW_HAS_LLWU_PIN
             case kDemoVlls0:
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to VLLS0 directly\n\r");
-                    break;
-                }
-#endif
                 setWakeUpSource(selectWakeUpSource(testVal),"Very Low Leakage Stop 0 mode");
-                PRINTF("Wake up goes through Reset sequence.\n\r");
+                PRINTF("Wake up goes through Reset sequence.\r\n");
 
                 ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
                 CHECK_RET_VAL(ret, mode);
 
                 break;
-#endif
             case kDemoVlls1:
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to VLLS1 directly\n\r");
-                    break;
-                }
-#endif
                 setWakeUpSource(selectWakeUpSource(testVal),"Very Low Leakage Stop 1 mode");
-                PRINTF("Wake up goes through Reset sequence.\n\r");
-
-                ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
-                CHECK_RET_VAL(ret, mode);
-
-
-                break;
-
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE2
-            case kDemoVlls2:
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to VLLS2 directly\n\r");
-                    break;
-                }
-#endif
-                setWakeUpSource(selectWakeUpSource(testVal),"Very Low Leakage Stop 2 mode");
-                PRINTF("Wake up goes through Reset sequence.\n\r");
+                PRINTF("Wake up goes through Reset sequence.\r\n");
 
                 ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
                 CHECK_RET_VAL(ret, mode);
 
                 break;
-#endif
+
             case kDemoVlls3:
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerHsrun)
-                {
-                    PRINTF("Can not go from HSRUN to VLLS3 directly\n\r");
-                    break;
-                }
-#endif
                 setWakeUpSource(selectWakeUpSource(testVal),"Very Low Leakage Stop 3 mode");
-                PRINTF("Wake up goes through Reset sequence.\n\r");
+                PRINTF("Wake up goes through Reset sequence.\r\n");
 
                 ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
                 CHECK_RET_VAL(ret, mode);
@@ -798,31 +598,13 @@ void task_lpm(task_param_t param)
                 ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
                 if (ret != kPowerManagerSuccess)
                 {
-                    PRINTF("POWER_SYS_SetMode(%u) returned unexpected status : %u\n\r",mode,ret);
+                    PRINTF("POWER_SYS_SetMode(%u) returned unexpected status : %u\r\n",mode,ret);
                 }
                 else
                 {
-                    updateClockManagerToRunMode(cmConfigMode);
+                    update_clock_mode(CLOCK_RUN);
                 }
                 break;
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-            case kDemoHsRun:
-                if (POWER_SYS_GetCurrentMode() == kPowerManagerVlpr)
-                {
-                    PRINTF("Can not go from HSRUN to VLPR directly\n\r");
-                    break;
-                }
-                ret = POWER_SYS_SetMode(mode, kPowerManagerPolicyAgreement);
-                if (ret != kPowerManagerSuccess)
-                {
-                    PRINTF("POWER_SYS_SetMode(%u) returned unexpected status : %u\n\r",mode,ret);
-                }
-                else
-                {
-                    updateClockManagerToHsRunMode(cmConfigMode);
-                }
-                break;
-#endif
             case KDemoADC:
                 adc16PrintTemperature();
             break;
@@ -830,8 +612,161 @@ void task_lpm(task_param_t param)
             default:
                 break;
         }
-        PRINTF("\n\rNext loop\n\r\n\r");
+        PRINTF("\r\nNext loop\r\n\r\n");
     }
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : dbg_console_cm_callback
+ * Description   : debug console callback for change event from power manager
+ *
+ *END*************************************************************************/
+clock_manager_error_code_t dbg_console_cm_callback(clock_notify_struct_t *notify,
+     void* callbackData)
+{
+    clock_manager_error_code_t result = kClockManagerSuccess;
+
+    switch (notify->notifyType)
+    {
+        case kClockManagerNotifyBefore:     // Received "pre" message
+            DbgConsole_DeInit();
+        break;
+
+        case kClockManagerNotifyRecover: // Received "recover" message
+        case kClockManagerNotifyAfter:    // Received "post" message
+            if (CLOCK_VLPR == CLOCK_SYS_GetCurrentConfiguration())
+            {
+                CLOCK_SYS_SetLpuartSrc(BOARD_DEBUG_UART_INSTANCE, kClockLpuartSrcMcgIrClk);
+            }
+            else
+            {
+                CLOCK_SYS_SetLpuartSrc(BOARD_DEBUG_UART_INSTANCE, kClockLpuartSrcIrc48M);
+            }
+            DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, BOARD_LOW_POWER_UART_BAUD, kDebugConsoleLPUART);
+        break;
+
+        default:
+            result = kClockManagerError;
+            break;
+    }
+    return result;
+}
+
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : rtos_cm_callback
+ * Description   : rtos callback for change event from clock manager
+ *
+ *END*************************************************************************/
+clock_manager_error_code_t rtos_cm_callback(clock_notify_struct_t *notify,
+     void* callbackData)
+{
+    clock_manager_error_code_t result = kClockManagerSuccess;
+    lptmrStructure_t *lptmrStr = (lptmrStructure_t*)callbackData;
+
+    switch (notify->notifyType)
+    {
+        case kClockManagerNotifyBefore:     // Received "pre" message
+          wait_finish_uart();
+          SYSTICK_DISABLE();
+        break;
+
+        case kClockManagerNotifyRecover: // Received "recover" message
+            SYSTICK_DISABLE();
+            SYSTICK_RELOAD((CLOCK_SYS_GetCoreClockFreq()/TICK_PER_SEC)-1UL);
+            SYSTICK_ENABLE();
+        break;
+        case kClockManagerNotifyAfter:    // Received "post" message
+            /* Caculate prescaler clock frequency */
+            if ( kLptmrTimerModeTimeCounter == lptmrStr->lptmrUserConfig.timerMode)
+            {
+                lptmrStr->lptmrState.prescalerClockHz = CLOCK_SYS_GetLptmrFreq(lptmrStr->instance,
+                        lptmrStr->lptmrUserConfig.prescalerClockSource);
+
+                if (lptmrStr->lptmrUserConfig.prescalerEnable)
+                {
+                    lptmrStr->lptmrState.prescalerClockHz = (lptmrStr->lptmrState.prescalerClockHz >> ((uint32_t)(lptmrStr->lptmrUserConfig.prescalerValue+1)));
+                }
+            }
+
+            SYSTICK_RELOAD((CLOCK_SYS_GetCoreClockFreq()/TICK_PER_SEC)-1UL);
+            SYSTICK_ENABLE();
+        break;
+
+        default:
+            result = kClockManagerError;
+            break;
+    }
+    return result;
+}
+/*FUNCTION*********************************************************************
+ *
+ * Function Name : rtos_pm_callback
+ * Description   : rtos callback for change event from power manager
+ *
+ *END*************************************************************************/
+power_manager_error_code_t rtos_pm_callback(power_manager_notify_struct_t * notify,
+    power_manager_callback_data_t * dataPtr)
+{
+    power_manager_error_code_t result = kPowerManagerSuccess;
+    power_manager_modes_t crr_mode = POWER_SYS_GetCurrentMode();
+    switch (notify->notifyType)
+    {
+        case kPowerManagerNotifyRecover:
+        /* TODO */
+        /* Add code here. */
+        break;
+
+        case kPowerManagerNotifyBefore:
+        /* TODO */
+        /* Add code here. */
+        if(notify->targetPowerConfigPtr->mode == kPowerManagerRun
+        || notify->targetPowerConfigPtr->mode == kPowerManagerVlpr
+        )
+        {
+            /* if in run mode, do nothing. */
+        }
+        else
+        {
+            wait_finish_uart();
+            disable_unused_pins();
+            /* Disable systick in all other mode. */
+            SYSTICK_DISABLE();
+        }
+        break;
+
+        case kPowerManagerNotifyAfter:
+        /* TODO */
+        /* Add code here. */
+        if( crr_mode == kPowerManagerRun
+         || crr_mode == kPowerManagerVlpr
+         )
+        {
+#if (defined FSL_RTOS_BM)
+            // With BM, we must let LPTMR continues counting for OSA_GetMsec function work.
+            // Disable interrupt.
+            LPTMR_HAL_SetIntCmd(g_lptmrBase[PM_RTOS_DEMO_LPTMR_FUNC_INSTANCE],false);
+#else
+            /* Stop lptmr. */
+            LPTMR_DRV_Stop(PM_RTOS_DEMO_LPTMR_FUNC_INSTANCE);
+#endif
+            enable_unused_pins();
+            /* Enable systick in all run mode. */
+            SYSTICK_ENABLE();
+        }
+        else
+        {
+            /* if in other mode, do nothing. */
+        }
+        break;
+
+        default:
+            result = kPowerManagerError;
+        break;
+    }
+
+    return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

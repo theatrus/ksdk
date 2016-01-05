@@ -112,25 +112,39 @@ static void adc_chn1_isr_callback(void)
  */
 static int32_t init_adc(uint32_t instance)
 {
-#if FSL_FEATURE_ADC16_HAS_CALIBRATION
-    adc16_calibration_param_t adcCalibraitionParam;
-#endif
     adc16_converter_config_t adcUserConfig;
     adc16_chn_config_t adcChnConfig;
-
+#if FSL_FEATURE_ADC16_HAS_CALIBRATION
+    // Initialization ADC for calibration purposes
+    adc16_calibration_param_t adcCalibrationParam;
+    adc16_chn_config_t adcCalibrationChnConfig;
+    const adc16_hw_average_config_t adcAverageConfig = {
+      .hwAverageEnable = true,
+      .hwAverageCountMode = kAdc16HwAverageCountOf32
+    };
+    
     ADC16_DRV_StructInitUserConfigDefault(&adcUserConfig);
-#if (  defined(FRDM_KL43Z)   /* CPU_MKL43Z256VLH4 */ \
-    || defined(TWR_KL43Z48M) /* CPU_MKL43Z256VLH4 */ \
-    || defined(FRDM_KL27Z)   /* CPU_MKL27Z64VLH4  */ \
-    )
+#if BOARD_ADC_USE_ALT_VREF
     adcUserConfig.refVoltSrc = kAdc16RefVoltSrcOfValt;
 #endif
     ADC16_DRV_Init(instance, &adcUserConfig);
+    ADC16_DRV_ConfigHwAverage(instance, &adcAverageConfig);
 
-#if FSL_FEATURE_ADC16_HAS_CALIBRATION
-    // Auto calibraion.
-    ADC16_DRV_GetAutoCalibrationParam(instance, &adcCalibraitionParam);
-    ADC16_DRV_SetCalibrationParam(instance, &adcCalibraitionParam);
+    adcChnConfig.chnIdx = kAdc16Chn31;
+#if FSL_FEATURE_ADC16_HAS_DIFF_MODE
+    adcCalibrationChnConfig.diffConvEnable = false;
+#endif /* FSL_FEATURE_ADC16_HAS_DIFF_MODE */
+    adcCalibrationChnConfig.convCompletedIntEnable = false;
+
+    // Configure channel0
+    ADC16_DRV_ConfigConvChn(instance, 0U, &adcCalibrationChnConfig);
+
+    // Configure channel1, which is used in PDB trigger case
+    ADC16_DRV_ConfigConvChn(instance, 1U, &adcCalibrationChnConfig);
+    
+    // Auto calibration.
+    ADC16_DRV_GetAutoCalibrationParam(instance, &adcCalibrationParam);
+    ADC16_DRV_SetCalibrationParam(instance, &adcCalibrationParam);
 #endif
 
     // Initialization ADC for
@@ -140,10 +154,7 @@ static int32_t init_adc(uint32_t instance)
     ADC16_DRV_StructInitUserConfigDefault(&adcUserConfig);
     adcUserConfig.hwTriggerEnable = true;
     adcUserConfig.continuousConvEnable = false;
-#if (  defined(FRDM_KL43Z)   /* CPU_MKL43Z256VLH4 */ \
-    || defined(TWR_KL43Z48M) /* CPU_MKL43Z256VLH4 */ \
-    || defined(FRDM_KL27Z)   /* CPU_MKL27Z64VLH4  */ \
-    )
+#if BOARD_ADC_USE_ALT_VREF
     adcUserConfig.refVoltSrc = kAdc16RefVoltSrcOfValt;
 #endif
     ADC16_DRV_Init(instance, &adcUserConfig);
@@ -229,7 +240,7 @@ int main(void)
     // initialize the ADC
     if (init_adc(ADC_INST))
     {
-        PRINTF("Failed to do the ADC init\n");
+        PRINTF("Failed to do the ADC init\r\n");
         return -1;
     }
 

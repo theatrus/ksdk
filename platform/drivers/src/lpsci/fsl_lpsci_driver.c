@@ -396,11 +396,11 @@ lpsci_status_t LPSCI_DRV_ReceiveDataBlocking(uint32_t instance,
         if (syncStatus != kStatus_OSA_Success)
         {
             /* Disable the receive data full and overrun interrupt */
-            UART0_BWR_C2_TIE(base, 0U);
+            UART0_BWR_C2_RIE(base, 0U);
             LPSCI_HAL_SetIntMode(base, kLpsciIntRxOverrun, false);
 
             /* Update the information of the module driver state */
-            lpsciState->isTxBusy = false;
+            lpsciState->isRxBusy = false;
 
             retVal = kStatus_LPSCI_Timeout;
         }

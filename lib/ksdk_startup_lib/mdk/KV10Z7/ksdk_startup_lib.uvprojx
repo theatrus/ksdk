@@ -365,8 +365,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>DEBUG, CPU_MKV10Z32VLF7, TWR_KV10Z32, TWR</Define>
+              <Define>DEBUG, CPU_MKV10Z32VLF7, FRDM_KV10Z, FREEDOM</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MKV10Z7/include;../../../../platform/devices/MKV10Z7/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>
@@ -767,8 +768,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>NDEBUG, CPU_MKV10Z32VLF7, TWR_KV10Z32, TWR</Define>
+              <Define>NDEBUG, CPU_MKV10Z32VLF7, FRDM_KV10Z, FREEDOM</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MKV10Z7/include;../../../../platform/devices/MKV10Z7/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>

@@ -64,6 +64,32 @@ void DMA3_IRQHandler(void)
     EDMA_DRV_IRQHandler(3);
 }
 
+#elif (FSL_FEATURE_EDMA_MODULE_CHANNEL == 8)
+
+/*! @brief EDMA IRQ handler with the same name in the startup code*/
+void DMA0_DMA4_IRQHandler(void)
+{
+    EDMA_DRV_IRQHandler(0);
+}
+
+/*! @brief EDMA IRQ handler with the same name in the startup code*/
+void DMA1_DMA5_IRQHandler(void)
+{
+    EDMA_DRV_IRQHandler(1);
+}
+
+/*! @brief EDMA IRQ handler with the same name in the startup code*/
+void DMA2_DMA6_IRQHandler(void)
+{
+    EDMA_DRV_IRQHandler(2);
+}
+
+/*! @brief EDMA IRQ handler with the same name in the startup code*/
+void DMA3_DMA7_IRQHandler(void)
+{
+    EDMA_DRV_IRQHandler(3);
+}
+
 #elif (FSL_FEATURE_EDMA_MODULE_CHANNEL <= 16)
 /*! @brief EDMA IRQ handler with the same name in the startup code*/
 void DMA0_IRQHandler(void)

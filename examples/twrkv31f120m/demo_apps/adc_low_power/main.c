@@ -151,10 +151,7 @@ void calibrateParams(void)
     adcUserConfig.resolution = kAdc16ResolutionBitOf16;
     adcUserConfig.continuousConvEnable = false;
     adcUserConfig.clkSrc = kAdc16ClkSrcOfAsynClk;
-#if (  defined(FRDM_KL43Z)   /* CPU_MKL43Z256VLH4 */ \
-    || defined(TWR_KL43Z48M) /* CPU_MKL43Z256VLH4 */ \
-    || defined(FRDM_KL27Z)   /* CPU_MKL27Z64VLH4  */ \
-    )
+#if BOARD_ADC_USE_ALT_VREF
     adcUserConfig.refVoltSrc = kAdc16RefVoltSrcOfValt;
 #endif
     ADC16_DRV_Init(ADC_0, &adcUserConfig);
@@ -177,7 +174,9 @@ void calibrateParams(void)
 #endif // FSL_FEATURE_ADC16_HAS_HW_AVERAGE
     
     adcChnConfig.chnIdx                  = kAdcChannelBandgap;
+#if FSL_FEATURE_ADC16_HAS_DIFF_MODE
     adcChnConfig.diffConvEnable          = false;
+#endif
     adcChnConfig.convCompletedIntEnable  = false;
     ADC16_DRV_ConfigConvChn(ADC_0, CHANNEL_0, &adcChnConfig);
 
@@ -229,10 +228,7 @@ static int32_t init_adc(uint32_t instance)
     adcUserConfig.hwTriggerEnable = true;
     adcUserConfig.continuousConvEnable = false;
     adcUserConfig.clkSrc = kAdc16ClkSrcOfAsynClk;
-#if (  defined(FRDM_KL43Z)   /* CPU_MKL43Z256VLH4 */ \
-    || defined(TWR_KL43Z48M) /* CPU_MKL43Z256VLH4 */ \
-    || defined(FRDM_KL27Z)   /* CPU_MKL27Z64VLH4  */ \
-    )
+#if BOARD_ADC_USE_ALT_VREF
     adcUserConfig.refVoltSrc = kAdc16RefVoltSrcOfValt;
 #endif
     ADC16_DRV_Init(instance, &adcUserConfig);
@@ -241,7 +237,9 @@ static int32_t init_adc(uint32_t instance)
     ADC_TEST_InstallCallback(instance, CHANNEL_0, ADC1IRQHandler);
     
     adcChnConfig.chnIdx                  = kAdcChannelTemperature;
+#if FSL_FEATURE_ADC16_HAS_DIFF_MODE    
     adcChnConfig.diffConvEnable          = false;
+#endif    
     adcChnConfig.convCompletedIntEnable  = true;
     // Configure channel0
     ADC16_DRV_ConfigConvChn(instance, CHANNEL_0, &adcChnConfig);
@@ -308,20 +306,20 @@ int main(void)
     // Initialize ADC
     if (init_adc(ADC_0))
     {
-        PRINTF("Failed to do the ADC init\n");
+        PRINTF("Failed to do the ADC init\r\n");
         return -1;
     }
 
     // Show the currentTemperature value
-    PRINTF("\r\n ADC LOW POWER DEMO \r\n\n\n");
-    PRINTF("\r\nThe Low Power ADC project is designed to work with the Tower System or in a stand alone setting. \n\n");
-    PRINTF("\r 1. Set your target board in a place where the temperature is constant.  \n");
+    PRINTF("\r\n ADC LOW POWER DEMO \r\n\r\n\r\n");
+    PRINTF("\r\nThe Low Power ADC project is designed to work with the Tower System or in a stand alone setting. \r\n\r\n");
+    PRINTF("\r 1. Set your target board in a place where the temperature is constant.  \r\n");
 #ifndef FREEDOM
-    PRINTF("\r 2. Wait until the green LED light turns on. \n");
+    PRINTF("\r 2. Wait until the green LED light turns on. \r\n");
 #else
-    PRINTF("\r 2. Wait until the white LED light turns on. \n");
+    PRINTF("\r 2. Wait until the white LED light turns on. \r\n");
 #endif
-    PRINTF("\r 3. Increment or decrement the temperature to see the changes. \n");
+    PRINTF("\r 3. Increment or decrement the temperature to see the changes. \r\n");
 
     // setup the HW trigger source
     init_trigger_source(ADC_0);
@@ -346,7 +344,7 @@ int main(void)
 #endif
     
     // Wait for user input before beginning demo
-    PRINTF("\n\n\rEnter any character to begin...\n\n\r");
+    PRINTF("\r\n\r\nEnter any character to begin...\r\n\r\n");
     GETCHAR();
     
     ///////////////////////////////////////////////////////////////////////////

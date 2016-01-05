@@ -77,6 +77,18 @@ flexcan_time_segment_t bitRateTable48Mhz[] = {
     { 6, 3, 3,  2, 3},  /* 1   MHz */
 };
 
+/*
+ * The table contains propseg, pseg1, pseg2, pre_divider, and rjw. The values are calculated for
+ * a protocol engine clock of 75MHz
+ */
+flexcan_time_segment_t bitRateTable75Mhz[] = {
+    { 6, 7, 7, 25, 3},  /* 125 kHz */
+    { 6, 7, 7, 12, 3},  /* 250 kHz */
+    { 6, 6, 6,  6, 3},  /* 500 kHz */
+    { 6, 4, 4,  5, 3},  /* 750 kHz */
+    { 6, 3, 3,  4, 3},  /* 1   MHz */
+};
+
 void send_data(void)
 {
     uint8_t data[8];
@@ -96,7 +108,7 @@ void send_data(void)
     result = FLEXCAN_DRV_ConfigTxMb(instance, txMailboxNum, &txInfo, txIdentifier);
     if (result)
     {
-        PRINTF("\nTransmit MB config error. Error Code: 0x%lx", result);
+        PRINTF("\r\nTransmit MB config error. Error Code: 0x%lx", result);
     }
     else
     {
@@ -192,7 +204,7 @@ int main()
     PRINTF("\r\n   Message buffer 9 used for Tx.");
     PRINTF("\r\n   Interrupt Mode: Enabled");
     PRINTF("\r\n   Operation Mode: TX and RX --> Normal");
-    PRINTF("\r\n***************************************\n");
+    PRINTF("\r\n***************************************\r\n");
 
     // Select mailbox number
     rxMailboxNum = 8;
@@ -232,8 +244,15 @@ int main()
             result = FLEXCAN_DRV_SetBitrate(instance, &bitRateTable48Mhz[0]); // 125kbps
             break;
         default:
-            PRINTF("\r\nFLEXCAN bitrate table not available for PE clock: %d", canPeClk);
-            return kStatus_FLEXCAN_Fail;
+            if ((canPeClk > 74990000) && (canPeClk <= 75000000))
+            {
+            result = FLEXCAN_DRV_SetBitrate(instance, &bitRateTable75Mhz[0]); // 125kbps
+            }
+            else
+            {
+              PRINTF("\r\nFLEXCAN bitrate table not available for PE clock: %d", canPeClk);
+              return kStatus_FLEXCAN_Fail;
+            }
     }
     if (result)
     {

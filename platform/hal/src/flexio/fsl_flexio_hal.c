@@ -103,7 +103,11 @@ void FLEXIO_HAL_ConfigureShifter(FLEXIO_Type * base, uint32_t shifterIdx, const 
 
     cfg = FLEXIO_SHIFTCFG_INSRC(shifterConfigPtr->insrc)
         | FLEXIO_SHIFTCFG_SSTOP(shifterConfigPtr->sstop)
-        | FLEXIO_SHIFTCFG_SSTART(shifterConfigPtr->sstart);
+        | FLEXIO_SHIFTCFG_SSTART(shifterConfigPtr->sstart)
+#if FSL_FEATURE_FLEXIO_HAS_PARALLEL_WIDTH
+        | FLEXIO_SHIFTCFG_PWIDTH(shifterConfigPtr->pwidth)
+#endif /* FSL_FEATURE_FLEXIO_HAS_PARALLEL_WIDTH */
+        ;
 
     FLEXIO_WR_SHIFTCFG(base, shifterIdx, cfg);
     FLEXIO_WR_SHIFTCTL(base, shifterIdx, ctl);

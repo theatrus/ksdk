@@ -39,10 +39,6 @@
 #include "usb_device_stack_interface.h"
 #include "virtual_com.h"
 
-#if USBCFG_DEV_COMPOSITE
-#error This application requires USBCFG_DEV_COMPOSITE defined zero in usb_device_config.h. Please recompile usbd with this option.
-#endif
-
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
@@ -63,16 +59,6 @@
 #endif
 #endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-extern void Main_Task(uint32_t param);
-#define MAIN_TASK       10
-
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    { MAIN_TASK, Main_Task, 2 * 3000L, 7L, "Main", MQX_AUTO_START_TASK, 0, 0 },
-    { 0L, 0L, 0L, 0L, 0L, 0L, 0, 0 }
-};
-#endif
 #if USBCFG_DEV_KEEP_ALIVE_MODE
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 static uint8_t waitfordatareceive =0;
@@ -171,13 +157,10 @@ uint8_t g_country_code[COMM_FEATURE_DATA_SIZE] =
 };
 static bool start_app = FALSE;
 static bool start_transactions = FALSE;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-static uint8_t * g_curr_recv_buf;
-static uint8_t * g_curr_send_buf;
-#else
+
 static uint8_t g_curr_recv_buf[DATA_BUFF_SIZE];
 static uint8_t g_curr_send_buf[DATA_BUFF_SIZE];
-#endif
+
 static uint32_t g_recv_size;
 static uint32_t g_send_size;
 
@@ -395,13 +378,11 @@ void APP_init(void)
     cdc_config.vendor_req_callback.arg = NULL;
     cdc_config.class_specific_callback.callback = USB_App_Class_Callback;
     cdc_config.class_specific_callback.arg = &g_app_handle;
+    cdc_config.board_init_callback.callback = usb_device_board_init;
+    cdc_config.board_init_callback.arg = CONTROLLER_ID;
     cdc_config.desc_callback_ptr = &desc_callback;
     /* Always happen in control endpoint hence hard coded in Class layer*/
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    g_curr_recv_buf = OS_Mem_alloc_uncached_align(DATA_BUFF_SIZE, 32);
-    g_curr_send_buf = OS_Mem_alloc_uncached_align(DATA_BUFF_SIZE, 32);
-#endif
+    
     g_cdc_device_speed = USB_SPEED_FULL;
     g_bulk_out_max_packet_size = FS_DIC_BULK_OUT_ENDP_PACKET_SIZE;
     g_bulk_in_max_packet_size = FS_DIC_BULK_IN_ENDP_PACKET_SIZE;
@@ -714,26 +695,6 @@ uint8_t USB_App_Class_Callback
     return error;
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- * 
- * Function Name  : Main_Task
- * Returned Value : None
- * Comments       :
- *     First function called.  Calls the Test_App
- *     callback functions.
- * 
- *END*--------------------------------------------------------------------*/
-void Main_Task
-(
-    uint32_t param
-    )
-{
-    UNUSED_ARGUMENT (param)
-    APP_init();
-    APP_task();
-}
-#endif
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 #if defined(FSL_RTOS_MQX)
@@ -786,7 +747,7 @@ void main(void)
 #endif
     
 
-    OS_Task_create(Task_Start, NULL, 9L, 1000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 1000L, "task_start", NULL);
 
     OSA_Start();
 #if (!defined(FSL_RTOS_MQX))&(defined(__CC_ARM) || defined(__GNUC__))

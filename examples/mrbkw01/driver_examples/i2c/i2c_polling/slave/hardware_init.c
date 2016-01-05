@@ -37,7 +37,7 @@ void hardware_init(void) {
 
   /* enable clock for PORTs */
   CLOCK_SYS_EnablePortClock(PORTA_IDX);
-  CLOCK_SYS_EnablePortClock(PORTE_IDX);
+  CLOCK_SYS_EnablePortClock(PORTC_IDX);
 
   configure_i2c_pins(1U);
   /* Init board clock */

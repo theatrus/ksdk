@@ -40,19 +40,20 @@
  ******************************************************************************/
 /* Table of base addresses for instances. */
 SIM_Type * const g_simBase[] = SIM_BASE_PTRS;
-#if (defined(CLOCK_USE_MCG) || defined(CLOCK_USE_MCG_LITE))
+#if FSL_FEATURE_SOC_MCGLITE_COUNT || FSL_FEATURE_SOC_MCG_COUNT
 MCG_Type * const g_mcgBase[] = MCG_BASE_PTRS;
 #endif
 
-#if (defined(CLOCK_USE_SCG))
+#if (defined(FSL_FEATURE_SOC_SCG_COUNT) && FSL_FEATURE_SOC_SCG_COUNT)
 const uint32_t g_scgBase[] = SCG_BASE_PTRS;
 #endif
 
-#if (!defined(CLOCK_USE_SCG))
+#if ((!(defined(FSL_FEATURE_SOC_SCG_COUNT) && FSL_FEATURE_SOC_SCG_COUNT)) \
+       && FSL_FEATURE_SOC_OSC_COUNT)
 OSC_Type * const g_oscBase[] = OSC_BASE_PTRS; 
 #endif
 
-#if (defined(PCC_INSTANCE_COUNT))
+#if (defined(FSL_FEATURE_SOC_PCC_COUNT) && FSL_FEATURE_SOC_PCC_COUNT)
 PCC_Type * const g_pccBase[] = PCC_BASE_PTRS; 
 #endif
 

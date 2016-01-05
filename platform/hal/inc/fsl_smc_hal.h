@@ -142,8 +142,8 @@ typedef enum _smc_stop_submode {
 
 /*! @brief Low Power Wake Up on Interrupt option*/
 typedef enum _smc_lpwui_option {
-    kSmcLpwuiEnabled,                        /*!< Low Power Wake Up on Interrupt enabled. @internal gui name="Enabled" */
-    kSmcLpwuiDisabled                        /*!< Low Power Wake Up on Interrupt disabled. @internal gui name="Disabled" */
+    kSmcLpwuiDisabled,                        /*!< Low Power Wake Up on Interrupt disabled. @internal gui name="Disabled" */
+    kSmcLpwuiEnabled                          /*!< Low Power Wake Up on Interrupt enabled. @internal gui name="Enabled" */
 } smc_lpwui_option_t;
 
 /*! @brief Partial STOP option*/
@@ -207,9 +207,9 @@ extern "C" {
 /*!
  * @brief Configures the power mode.
  *
- * This function configures the power mode base on configuration structure, if
- * could not switch to the target mode directly, this function could check
- * internally and choose the right path.
+ * This function configures the power mode base on configuration structure. If
+ * it not possible to switch to the target mode directly, this function checks
+ * internally and chooses the right path.
  *
  * @param base  Base address for current SMC instance.
  * @param powerModeConfig Power mode configuration structure smc_power_mode_config_t 
@@ -228,8 +228,8 @@ smc_hal_error_code_t SMC_HAL_SetMode(SMC_Type * base,
  * This register can only write once after the power reset.
  *
  * The allowed modes are passed as bit map, for example, to allow LLS and VLLS,
- * plase use SMC_HAL_SetProtection(SMC, kAllowPowerModeLls | kAllowPowerModeVlls).
- * To allow all modes, please use SMC_HAL_SetProtection(SMC, kAllowPowerModeAll).
+ * use SMC_HAL_SetProtection(SMC, kAllowPowerModeLls | kAllowPowerModeVlls).
+ * To allow all modes, use SMC_HAL_SetProtection(SMC, kAllowPowerModeAll).
  * 
  * @param base  Base address for current SMC instance.
  * @param allowedModes Bitmap of the allowed power modes.
@@ -240,12 +240,12 @@ static inline void SMC_HAL_SetProtection(SMC_Type * base, uint8_t allowedModes)
 }
 
 /*!
- * @brief Get the power mode protection setting.
+ * @brief Gets the power mode protection setting.
  *
  * This function checks whether the power modes are allowed. The modes to check
- * are passed as bit map, for example, to check LLS and VLLS,
- * plase use SMC_HAL_GetProtection(SMC, kAllowPowerModeLls | kAllowPowerModeVlls).
- * To test all modes, please use SMC_HAL_GetProtection(SMC, kAllowPowerModeAll).
+ * are passed as a bit map, for example, to check LLS and VLLS,
+ * use SMC_HAL_GetProtection(SMC, kAllowPowerModeLls | kAllowPowerModeVlls).
+ * To test all modes, use SMC_HAL_GetProtection(SMC, kAllowPowerModeAll).
  * 
  * @param base  Base address for current SMC instance.
  * @param modes Bitmap of the power modes to check.
@@ -264,8 +264,8 @@ static inline uint8_t SMC_HAL_GetProtection(SMC_Type * base, uint8_t modes)
  * to normal RUN mode when any active interrupt occurs while in a specific lower
  * power mode. See the  smc_lpwui_option_t for supported options and the  
  * reference manual for more details about this option.
- * The function SMC_HAL_SetMode does not affect this bit, to configure it,
- * please make sure current power mode is normal RUN mode.
+ * The function SMC_HAL_SetMode does not affect this bit. To configure it,
+ * make sure current power mode is a normal RUN mode.
  *
  * @param base  Base address for current SMC instance.
  * @param option LPWUI option setting defined in smc_lpwui_option_t
@@ -277,11 +277,12 @@ static inline void SMC_HAL_SetLpwuiMode(SMC_Type * base, smc_lpwui_option_t opti
 #endif
 
 /*!
- * @brief Check whether previous stop mode entry was successsful.
+ * @brief Checks whether the previous stop mode entry was successful.
  *
  * @param base  Base address for current SMC instance.
+ * @return The previous stop mode entry status.
  * @retval true  The previous stop mode entry was aborted.
- * @retval false The previous stop mode entry was successsful.
+ * @retval false The previous stop mode entry was successful.
  */
 static inline bool SMC_HAL_IsStopAbort(SMC_Type * base)
 {

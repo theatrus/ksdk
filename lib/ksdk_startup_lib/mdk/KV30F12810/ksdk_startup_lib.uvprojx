@@ -341,6 +341,7 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
               <Define>DEBUG, CPU_MKV30F128VLH10, TWR_KV30F100M, TOWER</Define>
               <Undefine/>
@@ -719,6 +720,7 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
               <Define>NDEBUG, CPU_MKV30F128VLH10, TWR_KV30F100M, TOWER</Define>
               <Undefine/>

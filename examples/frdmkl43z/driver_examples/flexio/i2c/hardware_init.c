@@ -44,9 +44,9 @@ void hardware_init(void) {
   /* Init board clock */
   BOARD_ClockInit();
   dbg_uart_init();
-  //Configure flexio clock src and pin mux
+  /*Configure flexio clock src and pin mux*/
   CLOCK_SYS_SetFlexioSrc(0,(clock_flexio_src_t)1);
-  configure_flexio_pins(0,2);    /*FLEXIO pin 2 simulated as I2C_SDA*/
+  configure_flexio_pins(0,5);    /*FLEXIO pin 5 simulated as I2C_SDA*/
   configure_flexio_pins(0,4);    /*FLEXIO pin 4 simulated as I2C_SCL*/
   configure_i2c_pins(1);
 }

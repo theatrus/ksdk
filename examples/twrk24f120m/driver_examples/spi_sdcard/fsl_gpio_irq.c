@@ -32,85 +32,26 @@
 #include "fsl_gpio_driver.h"
 #include "board.h"
 
-extern void sdhc_cd_irqhandler(void);
-
-/*******************************************************************************
- * Code
- ******************************************************************************/
-#if defined (KL25Z4_SERIES) || defined (K64F12_SERIES) || defined (K22F51212_SERIES)|| \
-    defined (KV31F51212_SERIES) || defined (K22F25612_SERIES) || defined (K60D10_SERIES) || \
-    defined (K22F12810_SERIES) || defined (KV31F25612_SERIES) || defined (KV31F12810_SERIES)
+///////////////////////////////////////////////////////////////////////////////
+// Code
+///////////////////////////////////////////////////////////////////////////////
+extern void spiSDcard_card_detection(void);
 /*!
  * @brief gpio IRQ handler with the same name in startup code
  */
-void PORTA_IRQHandler(void)
+void SDCARD_CD_GPIO_IRQ_HANDLER(void)
 {
-    /* Clear interrupt flag.*/
-    if(PORT_HAL_GetPortIntFlag(PORTA) == (1<<SDCARD_CARD_DETECTION_GPIO_PIN))
-    {
-        sdhc_cd_irqhandler();
-    }
-    PORT_HAL_ClearPortIntFlag(PORTA);
-}
+    PORT_Type * gpioBase = g_portBase[GPIO_EXTRACT_PORT(kGpioSdcardCardDetection)];
+    uint32_t pin = GPIO_EXTRACT_PIN(kGpioSdcardCardDetection);
 
-/*!
- * @brief gpio IRQ handler with the same name in startup code
- */
-void PORTD_IRQHandler(void)
-{
-    if(PORT_HAL_GetPortIntFlag(PORTD) == (1<<SDCARD_CARD_DETECTION_GPIO_PIN))
+    if(PORT_HAL_GetPortIntFlag(gpioBase) == (1 << pin))
     {
-        sdhc_cd_irqhandler();
+        spiSDcard_card_detection();
     }
     /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTD);
+    PORT_HAL_ClearPortIntFlag(gpioBase);
 }
 
-#if defined (K64F12_SERIES) || defined (K22F51212_SERIES) || defined (K60D10_SERIES) ||\
-    defined (KV31F51212_SERIES) || defined (K22F25612_SERIES) || defined (K22F12810_SERIES) || \
-    defined (KV31F25612_SERIES) || defined (KV31F12810_SERIES)
-/*!
- * @brief gpio IRQ handler with the same name in startup code
- */
-void PORTB_IRQHandler(void)
-{
-    if(PORT_HAL_GetPortIntFlag(PORTB) == (1<<SDCARD_CARD_DETECTION_GPIO_PIN))
-    {
-        sdhc_cd_irqhandler();
-    }
-    /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTB);
-}
-
-/*!
- * @brief gpio IRQ handler with the same name in startup code
- */
-void PORTC_IRQHandler(void)
-{
-    if(PORT_HAL_GetPortIntFlag(PORTC) == (1 << SDCARD_CARD_DETECTION_GPIO_PIN))
-    {
-        sdhc_cd_irqhandler();
-    }
-  /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTC);
-}
-
-/*!
- * @brief gpio IRQ handler with the same name in startup code
- */
-void PORTE_IRQHandler(void)
-{
-    if(PORT_HAL_GetPortIntFlag(PORTE) == (1<<SDCARD_CARD_DETECTION_GPIO_PIN))
-    {
-        sdhc_cd_irqhandler();
-    }
-  /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTE);
-}
-
-#endif
-
-#endif
 
 /*! @} */
 

@@ -42,6 +42,9 @@ void hardware_init(void) {
   configure_tpm_pins(0);
   /* Init board clock */
   BOARD_ClockInit();
+
+  /* Select the clock source for the TPM counter */
+  CLOCK_SYS_SetTpmSrc(BOARD_TPM_INSTANCE, kClockTpmSrcFll);
   dbg_uart_init();
 }
 

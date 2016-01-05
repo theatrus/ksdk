@@ -319,11 +319,31 @@ void VirtualCom_Init()
     cdc_config.vendor_req_callback.arg = NULL;
     cdc_config.class_specific_callback.callback = USB_App_Class_Callback;
     cdc_config.class_specific_callback.arg = &g_app_handle;
+    cdc_config.board_init_callback.callback = usb_device_board_init;
+    cdc_config.board_init_callback.arg = CONTROLLER_ID;
     cdc_config.desc_callback_ptr =  &desc_callback;
     /* Always happen in control endpoint hence hard coded in Class layer*/
 
     /* Initialize the USB interface */
     USB_Class_CDC_Init(CONTROLLER_ID, &cdc_config, &g_app_handle);
+}
+
+/*****************************************************************************
+*
+*   @name       VirtualCom_Deinit()
+*
+*   @brief      This function do de-initialization for APP.
+*
+*   @param      None
+*
+*   @return     None
+**
+*****************************************************************************/
+
+void VirtualCom_Deinit()
+{
+
+  USB_Class_CDC_Deinit(g_app_handle);
 }
 
 /******************************************************************************
@@ -525,6 +545,5 @@ uint8_t USB_Check_Start_Transactions()
   if ((start_app == TRUE) && (start_transactions == TRUE)) return 1;
   else return 0;
 }
-
 /* EOF */
 

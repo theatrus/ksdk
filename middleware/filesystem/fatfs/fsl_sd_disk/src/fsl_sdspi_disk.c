@@ -37,6 +37,7 @@
 #include "fsl_dspi_master_driver.h"
 #include "fsl_dspi_edma_master_driver.h"
 #include "fsl_sdcard_spi.h"
+#include "fsl_debug_console.h"
 
 #define SDSPI_SPI_INSTANCE 0
 #define SDSPI_SPI_PCS   (1 << 0)
@@ -361,14 +362,14 @@ DSTATUS sdcard_disk_initialize(uint8_t pdrv)
 #if defined SPI_USING_DMA
     dspi_edma_master_user_config_t userConfig;
     edma_user_config_t edmaUserConfig;
-      
+
     memset(&g_dmaState, 0, sizeof(g_dmaState));
     memset(&edmaUserConfig, 0, sizeof(edmaUserConfig));
-    
+
     edmaUserConfig.chnArbitration = kEDMAChnArbitrationRoundrobin;
     edmaUserConfig.notHaltOnError = 0;
     EDMA_DRV_Init(&g_dmaState, &edmaUserConfig);
-    
+
    /* configure the members of the user config*/
     userConfig.isChipSelectContinuous = true;
     userConfig.isSckContinuous = false;
@@ -376,31 +377,31 @@ DSTATUS sdcard_disk_initialize(uint8_t pdrv)
     userConfig.whichCtar = kDspiCtar0;
     userConfig.whichPcs = kDspiPcs0;
     DSPI_DRV_EdmaMasterInit(g_spi.spiInstance, &g_edmaDspiMasterState, &userConfig, &g_tcd);
-    
+
     /* config member of the spi device config*/
     g_edmaDspiDevice.dataBusConfig.bitsPerFrame = 8;
     g_edmaDspiDevice.dataBusConfig.clkPhase = kDspiClockPhase_FirstEdge;
     g_edmaDspiDevice.dataBusConfig.clkPolarity = kDspiClockPolarity_ActiveHigh;
     g_edmaDspiDevice.dataBusConfig.direction = kDspiMsbFirst;
     g_edmaDspiDevice.bitsPerSec = 20000000;
-    
-       
+
+
     /* configure the spi bus*/
     if (DSPI_DRV_EdmaMasterConfigureBus(g_spi.spiInstance, &g_edmaDspiDevice, &calculatedBaudRate)
         != kStatus_DSPI_Success)
     {
-        printf("\r  edma configure bus failed\n");
-        
+        PRINTF("\r  edma configure bus failed\n");
+
     }
     g_spi.spiState = &g_edmaDspiMasterState;
     g_spi.spiDevice = &g_edmaDspiDevice;
     g_spi.busBaudRate = calculatedBaudRate;
-    
+
 #else    /* None DMA mode */
     dspi_master_user_config_t dspiConfig;
 
     memset(&dspiConfig, 0, sizeof(dspiConfig));
-    
+
     /* Dspi none DMA mode Init*/
     dspiConfig.isChipSelectContinuous = true;
     dspiConfig.isSckContinuous = false;
@@ -424,7 +425,7 @@ DSTATUS sdcard_disk_initialize(uint8_t pdrv)
         return STA_NOINIT;
     }
 
-    g_spi.spiState = &g_dspiState;    
+    g_spi.spiState = &g_dspiState;
     g_spi.spiDevice = &g_dspiDevice;
     g_spi.busBaudRate = calculatedBaudRate;
 #endif

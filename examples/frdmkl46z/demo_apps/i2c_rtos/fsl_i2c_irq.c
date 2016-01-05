@@ -59,6 +59,13 @@ void I2C2_IRQHandler(void)
 }
 #endif
 
+#if (I2C_INSTANCE_COUNT > 3U)
+/* Implementation of I2C3 handler named in startup code. */
+void I2C3_IRQHandler(void)
+{
+    I2C_DRV_IRQHandler(I2C3_IDX);
+}
+#endif
 /*******************************************************************************
  * EOF
  ******************************************************************************/

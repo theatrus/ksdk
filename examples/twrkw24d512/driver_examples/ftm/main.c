@@ -70,13 +70,8 @@ int main(void)
     OSA_Init();
 
     // Print a note to terminal.
-    PRINTF("\r\nWelcome to FTM example\n\r");
+    PRINTF("\r\nWelcome to FTM example\r\n");
     PRINTF("\r\nSee the change of LED brightness");
-
-#if defined (FRDM_K22F)
-    LED1_EN;
-    LED1_OFF;
-#endif
 
     // Initialize FTM module,
     // configure for software trigger.

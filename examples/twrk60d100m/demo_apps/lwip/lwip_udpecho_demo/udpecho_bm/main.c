@@ -82,13 +82,13 @@ void udp_echo_init(void)
     // get new pcb
     pcb = udp_new();
     if (pcb == NULL) {
-        LWIP_DEBUGF(UDP_DEBUG, ("udp_new failed!\n"));
+        LWIP_DEBUGF(UDP_DEBUG, ("udp_new failed!\r\n"));
         return;
     }
 
     // bind to any IP address on port 7
     if (udp_bind(pcb, IP_ADDR_ANY, 7) != ERR_OK) {
-        LWIP_DEBUGF(UDP_DEBUG, ("udp_bind failed!\n"));
+        LWIP_DEBUGF(UDP_DEBUG, ("udp_bind failed!\r\n"));
         return;
     }
 

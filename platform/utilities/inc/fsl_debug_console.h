@@ -49,6 +49,7 @@
 #define SCANF           scanf
 #define PUTCHAR         putchar
 #define GETCHAR         getchar
+#include <stdio.h>
 #else
 /*Configuration for toolchain's printf/scanf or KSDK version printf/scanf */
 #define PRINTF          debug_printf

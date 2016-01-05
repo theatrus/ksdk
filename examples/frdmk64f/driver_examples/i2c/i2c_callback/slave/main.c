@@ -165,11 +165,11 @@ int main(void)
     // Initialize hardware
     hardware_init();
 
-    PRINTF("==================== I2C SLAVE CALLBACK ===================\r\n\n");
+    PRINTF("==================== I2C SLAVE CALLBACK ===================\r\n\r\n");
     PRINTF("Slave is running ...");
 
     // Initialize slave
-    I2C_DRV_SlaveInit(BOARD_I2C_COMM_INSTANCE, &userConfig, &slave);
+    I2C_DRV_SlaveInit(BOARD_I2C_INSTANCE, &userConfig, &slave);
 
     // Loop transfer
     while(1)

@@ -36,9 +36,6 @@
 #include "usb.h"
 #include "usb_host_stack_interface.h"
 #include "usb_host_cdc.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "poll.h"
-#endif
 #include "usb_host_dev_mng.h"
 static void usb_class_cdc_cntrl_callback(void* tr_ptr, void* param, uint8_t* buffer, uint32_t len, usb_status status);
 static usb_status usb_class_cdc_cntrl_common
@@ -73,20 +70,13 @@ uint32_t usb_class_cdc_os_event_wait(os_event_handle handle, uint32_t bitmask, u
 {
     uint32_t ret;
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)            /* USB stack running on MQX */
-    ret = OS_Event_wait(handle, bitmask, flag, timeout);
-#else
     while(OS_EVENT_OK != (ret = OS_Event_wait(handle, bitmask, flag, timeout)))
     {
         /* Actually we want to run _usb_khci_task() */
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!(USE_RTOS))
         OSA_PollAllOtherTasks();
 #endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        Poll();
-#endif
     }
-#endif
     return ret;
 }
 

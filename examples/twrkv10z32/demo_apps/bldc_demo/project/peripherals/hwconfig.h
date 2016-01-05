@@ -22,9 +22,17 @@
 */
 
 #define ADC_CHANNEL_DCBI        4
+#if defined(KV10Z7_SERIES)
 #define ADC_CHANNEL_DCBV        5
+#elif (defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES))
+#define ADC_CHANNEL_DCBV        13
+#endif
 #define ADC_CHANNEL_PHASEA      6
+#if defined(KV10Z7_SERIES)
 #define ADC_CHANNEL_PHASEB      9
+#elif (defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES))
+#define ADC_CHANNEL_PHASEB      12
+#endif
 #define ADC_CHANNEL_PHASEC      7
 #define ADC_CHANNEL_DISABLED    31
 

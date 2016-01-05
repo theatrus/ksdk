@@ -119,7 +119,7 @@ void playback_set(uint8_t *menuData)
 #if __FPU_PRESENT
                 stream_audio(kFFT, menuData[2]);
 #else
-                PRINTF("No FPU, this feature do not support.!\n\r ");
+                PRINTF("No FPU, this feature do not support.!\r\n ");
 #endif
                 break;
 

@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PEComponents>
-  <Description>Processor Expert Board configuration for MKL43Z256LH4. Project created for SDK 1.2.0.</Description>
+  <Description>Processor Expert Board configuration for MKL43Z256LH4. Project created for SDK 1.3.0.</Description>
   <Options>
     <ActiveProcessor>MKL43Z256LH4</ActiveProcessor>
-    <SdkSourceFilesDirectory>D:\SDK\sdk-origin3</SdkSourceFilesDirectory>
-    <SdkVersionValue>1.2.0</SdkVersionValue>
+    <SdkSourceFilesDirectory>D:\SDK\sdk-originx</SdkSourceFilesDirectory>
+    <SdkVersionValue>1.3.0</SdkVersionValue>
+    <SdkRepositoryName>KSDK 1.3.0</SdkRepositoryName>
+    <SdkRepositoryId>KSDK130</SdkRepositoryId>
   </Options>
   <CPU>
-    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
     <ComponentUUID>com.freescale.processorexpert.processor.mkl43z256lh4</ComponentUUID>
     <BeanType>MKL43Z256LH4</BeanType>
     <Name>Cpu</Name>
-    <CompNumb>1</CompNumb>
+    <CompNumb>24</CompNumb>
     <CompEnabled>true</CompEnabled>
     <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
     <IconName>CPU_CHIP2</IconName>
@@ -1354,18 +1356,18 @@
     </Cpu_State>
   </CPU>
   <Bean>
-    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
     <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_clock_manager</ComponentUUID>
     <BeanType>fsl_clock_manager</BeanType>
     <Name>clockMan1</Name>
-    <CompNumb>2</CompNumb>
+    <CompNumb>25</CompNumb>
     <CompEnabled>true</CompEnabled>
     <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
     <IconName>CLOCKS_LDD</IconName>
     <UserFolderName></UserFolderName>
     <Comment lines_count="0" />
     <Template />
-    <BeanVersion>1.2.0</BeanVersion>
+    <BeanVersion>1.3.0</BeanVersion>
     <LightErrorsIgnored>false</LightErrorsIgnored>
     <Properties>
       <ItemState>
@@ -1375,8 +1377,15 @@
         <Value>clockMan1</Value>
       </ItemState>
       <ItemState>
+        <ItemSymbol>PeriphDevice</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <Value>MCG</Value>
+        <SharedPrphMode>false</SharedPrphMode>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CompVersion</ItemSymbol>
-        <Value>1.2.0</Value>
+        <Value>1.3.0</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -1588,6 +1597,8 @@
         <ItemSymbol>SpeedMode0</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Value>true</Value>
         <Expanded>false</Expanded>
       </ItemState>
       <ItemState>
@@ -1657,10 +1668,24 @@
         <Value>IRC_8MHz</Value>
       </ItemState>
       <ItemState>
+        <ItemSymbol>CLKModeNameSpeedMode0</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <Value>clockMan1_InitConfig0</Value>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CLKModeDescSpeedMode0</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <Value>LIRC 8 MHz (MCG_Lite), Low-frequency Internal Reference Clock 8 MHz mode</Value>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLKModeReadonlyConfiguration0</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Index>0</Index>
+        <Value>true</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>IRCLKGrp0</ItemSymbol>
@@ -1928,6 +1953,8 @@
         <ItemSymbol>SpeedMode1</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Value>true</Value>
         <Expanded>false</Expanded>
       </ItemState>
       <ItemState>
@@ -1997,10 +2024,24 @@
         <Value>IRC_48MHz</Value>
       </ItemState>
       <ItemState>
+        <ItemSymbol>CLKModeNameSpeedMode1</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <Value>clockMan1_InitConfig1</Value>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CLKModeDescSpeedMode1</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <Value>HIRC (MCG_Lite), High-frequency Internal Reference Clock  mode</Value>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLKModeReadonlyConfiguration1</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Index>0</Index>
+        <Value>true</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>IRCLKGrp1</ItemSymbol>
@@ -2268,6 +2309,8 @@
         <ItemSymbol>SpeedMode2</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Value>true</Value>
         <Expanded>false</Expanded>
       </ItemState>
       <ItemState>
@@ -2337,10 +2380,24 @@
         <Value>IRC_8MHz</Value>
       </ItemState>
       <ItemState>
+        <ItemSymbol>CLKModeNameSpeedMode2</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <Value>clockMan1_InitConfig2</Value>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CLKModeDescSpeedMode2</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <Value>LIRC 2 MHz (MCG_Lite), Low-frequency Internal Reference Clock 2 MHz mode</Value>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLKModeReadonlyConfiguration2</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Index>0</Index>
+        <Value>true</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>IRCLKGrp2</ItemSymbol>
@@ -2608,6 +2665,8 @@
         <ItemSymbol>SpeedMode3</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Value>true</Value>
         <Expanded>true</Expanded>
       </ItemState>
       <ItemState>
@@ -2677,10 +2736,24 @@
         <Value>IRC_48MHz</Value>
       </ItemState>
       <ItemState>
+        <ItemSymbol>CLKModeNameSpeedMode3</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <Value>clockMan1_InitConfig3</Value>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CLKModeDescSpeedMode3</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <Value>HIRC (MCG_Lite), High-frequency Internal Reference Clock mode with IRC48M</Value>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLKModeReadonlyConfiguration3</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Index>0</Index>
+        <Value>true</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>IRCLKGrp3</ItemSymbol>
@@ -2948,6 +3021,8 @@
         <ItemSymbol>SpeedMode4</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Value>true</Value>
         <Expanded>true</Expanded>
       </ItemState>
       <ItemState>
@@ -3017,10 +3092,24 @@
         <Value>MCG_ERCLK</Value>
       </ItemState>
       <ItemState>
+        <ItemSymbol>CLKModeNameSpeedMode4</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <Value>clockMan1_InitConfig4</Value>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CLKModeDescSpeedMode4</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <Value>EXT (MCG_Lite), External Oscillator mode</Value>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLKModeReadonlyConfiguration4</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Index>0</Index>
+        <Value>true</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>IRCLKGrp4</ItemSymbol>
@@ -3358,6 +3447,14 @@
         <Expanded>true</Expanded>
       </ItemState>
       <ItemState>
+        <ItemSymbol>ConfigStuctGenEn</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Index>0</Index>
+        <Value>true</Value>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>AutoInitializationType</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
@@ -3433,8 +3530,11 @@
         <ItemSymbol>HALMCG</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
-        <Value></Value>
+        <Value>fsl_mcg_hal</Value>
         <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
+        <RegCompType>fsl_mcg_hal</RegCompType>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
+        <InheritedComponentState />
       </ItemState>
       <ItemState>
         <ItemSymbol>MCGLiteCondFeatGrp</ItemSymbol>
@@ -3445,8 +3545,315 @@
         <ItemSymbol>HALMCGLITE</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
-        <Value></Value>
-        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
+        <Index>0</Index>
+        <RegCompType>fsl_mcglite_hal</RegCompType>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
+        <InheritedComponentState>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
+          <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_mcglite_hal</ComponentUUID>
+          <BeanType>fsl_mcglite_hal</BeanType>
+          <Name>fsl_mcg_hal2</Name>
+          <CompNumb>27</CompNumb>
+          <CompEnabled>true</CompEnabled>
+          <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
+          <IconName>HAL4</IconName>
+          <UserFolderName></UserFolderName>
+          <Comment lines_count="0" />
+          <Template />
+          <BeanVersion>1.3.0</BeanVersion>
+          <LightErrorsIgnored>false</LightErrorsIgnored>
+          <Properties>
+            <ItemState>
+              <ItemSymbol>DeviceName</ItemSymbol>
+              <ReadOnly>true</ReadOnly>
+              <UserReadOnly>true</UserReadOnly>
+              <Value>fsl_mcg_hal2</Value>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>PeriphDevice</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+              <Value>MCG</Value>
+              <SharedPrphMode>false</SharedPrphMode>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CompVersion</ItemSymbol>
+              <Value>1.3.0</Value>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>VersionSpecificItem</ItemSymbol>
+              <ListItemCount>1</ListItemCount>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>DefaultMainProperty</ItemSymbol>
+              <Value>load sdk verison failed</Value>
+            </ItemState>
+          </Properties>
+          <Methods>
+            <ItemState>
+              <ItemSymbol>SdkSpecificMethods</ItemSymbol>
+              <ListItemCount>1</ListItemCount>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>fsl_mcglite_halgroup</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetPeripheralClk</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetPeripheralClk</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLircClk</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetLircClk</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLircDiv1Clk</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetLircDiv1Clk</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetInternalRefClk</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetInternalRefClk</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetOutClk</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetOutClk</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetLircSelMode</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_SetLircSelMode</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetLircRefDiv</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_SetLircRefDiv</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetLircDiv2</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_SetLircDiv2</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetLircCmd</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_SetLircCmd</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetLircStopCmd</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_SetLircStopCmd</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetHircCmd</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_SetHircCmd</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetExtRefSelMode0</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_SetExtRefSelMode0</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetClkSrcStat</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetClkSrcStat</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_IsOscStable</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_IsOscStable</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetRange0Mode_FSL_HAS_RANGE0</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetRange0Mode</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_SetRange0Mode</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetHighGainOsc0Mode_FSL_HAS_HGO0</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_SetHighGainOsc0Mode</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_SetHighGainOsc0Mode</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetHircCoarseTrim_FSL_HAS_HCTRIM</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetHircCoarseTrim</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetHircCoarseTrim</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetHircTempcoTrim_FSL_HAS_HTTRIM</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetHircTempcoTrim</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetHircTempcoTrim</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetHircFineTrim_FSL_HAS_HFTRIM</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetHircFineTrim</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetHircFineTrim</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLirc8MTrimRange_FSL_HAS_LTRIMRNG</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLirc8MTrimRange</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetLirc8MTrimRange</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLirc2MTrimRange_FSL_HAS_LTRIMRNG</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLirc2MTrimRange</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetLirc2MTrimRange</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLirc8MTrim_FSL_HAS_LFTRIM</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLirc8MTrim</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetLirc8MTrim</UsrMethodName>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLirc2MTrim_FSL_HAS_LSTRIM</ItemSymbol>
+              <ReadOnly>false</ReadOnly>
+              <UserReadOnly>false</UserReadOnly>
+            </ItemState>
+            <ItemState>
+              <ItemSymbol>CLOCK_HAL_GetLirc2MTrim</ItemSymbol>
+              <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <Index>0</Index>
+              <Value>true</Value>
+              <LastSelection>true</LastSelection>
+              <LastUserSel>always</LastUserSel>
+              <UsrMethodName>CLOCK_HAL_GetLirc2MTrim</UsrMethodName>
+            </ItemState>
+          </Methods>
+          <Events />
+        </InheritedComponentState>
       </ItemState>
       <ItemState>
         <ItemSymbol>HAL1</ItemSymbol>
@@ -3454,27 +3861,27 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_sim_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_sim_hal</ComponentUUID>
           <BeanType>fsl_sim_hal</BeanType>
-          <Name>fsl_sim_hal2</Name>
-          <CompNumb>3</CompNumb>
+          <Name>fsl_sim_hal1</Name>
+          <CompNumb>54</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
               <ItemSymbol>DeviceName</ItemSymbol>
               <ReadOnly>true</ReadOnly>
               <UserReadOnly>true</UserReadOnly>
-              <Value>fsl_sim_hal2</Value>
+              <Value>fsl_sim_hal1</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>PeriphDevice</ItemSymbol>
@@ -3485,7 +3892,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -3515,7 +3922,7 @@
             <ItemState>
               <ItemSymbol>SdkSpecificMethodsCPU</ItemSymbol>
               <ListItemCount>1</ListItemCount>
-              <ItemsTypeState>Beans\fsl_sim_hal\Items\1.2.0\fsl_sim_hal_MKL43Z4_methods.item</ItemsTypeState>
+              <ItemsTypeState>Beans\fsl_sim_hal\fsl_sim_hal_MKL43Z4_methods.item</ItemsTypeState>
             </ItemState>
             <ItemState>
               <ItemSymbol>fsl_sim_halgroup</ItemSymbol>
@@ -4227,25 +4634,30 @@
         </InheritedComponentState>
       </ItemState>
       <ItemState>
+        <ItemSymbol>OSCCondFeatGrp2</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>HAL2</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_osc_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_osc_hal</ComponentUUID>
           <BeanType>fsl_osc_hal</BeanType>
           <Name>fsl_osc_hal1</Name>
-          <CompNumb>4</CompNumb>
+          <CompNumb>55</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
@@ -4263,7 +4675,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -4365,20 +4777,20 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_rtc_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_rtc_hal</ComponentUUID>
           <BeanType>fsl_rtc_hal</BeanType>
           <Name>fsl_rtc_hal1</Name>
-          <CompNumb>5</CompNumb>
+          <CompNumb>30</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
@@ -4396,7 +4808,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -5050,7 +5462,7 @@
       <ItemState>
         <ItemSymbol>SdkSpecificMethodsCPU</ItemSymbol>
         <ListItemCount>1</ListItemCount>
-        <ItemsTypeState>Beans\fsl_clock_manager\Items\1.2.0\fsl_clock_manager_MKL43Z4_methods.item</ItemsTypeState>
+        <ItemsTypeState>Beans\fsl_clock_manager\fsl_clock_manager_MKL43Z4_methods.item</ItemsTypeState>
       </ItemState>
       <ItemState>
         <ItemSymbol>fsl_clock_managergroup</ItemSymbol>
@@ -5379,13 +5791,14 @@
         <UsrMethodName>CLOCK_SYS_GetSaiFreq</UsrMethodName>
       </ItemState>
       <ItemState>
-        <ItemSymbol>CLOCK_SYS_GetSlcdDefaultFreq_FSL_LCD_COUNT</ItemSymbol>
+        <ItemSymbol>CLOCK_SYS_GetSlcdDefaultFreq_FSL_LCDC_COUNT</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>CLOCK_SYS_GetSlcdDefaultFreq</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
         <Index>0</Index>
         <Value>true</Value>
         <LastSelection>true</LastSelection>
@@ -5393,13 +5806,14 @@
         <UsrMethodName>CLOCK_SYS_GetSlcdDefaultFreq</UsrMethodName>
       </ItemState>
       <ItemState>
-        <ItemSymbol>CLOCK_SYS_GetSlcdAltFreq_FSL_LCD_COUNT</ItemSymbol>
+        <ItemSymbol>CLOCK_SYS_GetSlcdAltFreq_FSL_LCDC_COUNT</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>CLOCK_SYS_GetSlcdAltFreq</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
         <Index>0</Index>
         <Value>true</Value>
         <LastSelection>true</LastSelection>
@@ -5407,13 +5821,14 @@
         <UsrMethodName>CLOCK_SYS_GetSlcdAltFreq</UsrMethodName>
       </ItemState>
       <ItemState>
-        <ItemSymbol>CLOCK_SYS_GetSlcdAlt2Freq_FSL_LCD_COUNT</ItemSymbol>
+        <ItemSymbol>CLOCK_SYS_GetSlcdAlt2Freq_FSL_LCDC_COUNT</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>CLOCK_SYS_GetSlcdAlt2Freq</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
         <Index>0</Index>
         <Value>true</Value>
         <LastSelection>true</LastSelection>
@@ -5529,13 +5944,14 @@
         <UsrMethodName>CLOCK_SYS_GetPortGateCmd</UsrMethodName>
       </ItemState>
       <ItemState>
-        <ItemSymbol>CLOCK_SYS_EnableSlcdClock_FSL_LCD_COUNT</ItemSymbol>
+        <ItemSymbol>CLOCK_SYS_EnableSlcdClock_FSL_LCDC_COUNT</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>CLOCK_SYS_EnableSlcdClock</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
         <Index>0</Index>
         <Value>true</Value>
         <LastSelection>true</LastSelection>
@@ -5543,13 +5959,14 @@
         <UsrMethodName>CLOCK_SYS_EnableSlcdClock</UsrMethodName>
       </ItemState>
       <ItemState>
-        <ItemSymbol>CLOCK_SYS_DisableSlcdClock_FSL_LCD_COUNT</ItemSymbol>
+        <ItemSymbol>CLOCK_SYS_DisableSlcdClock_FSL_LCDC_COUNT</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>CLOCK_SYS_DisableSlcdClock</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
         <Index>0</Index>
         <Value>true</Value>
         <LastSelection>true</LastSelection>
@@ -5557,13 +5974,14 @@
         <UsrMethodName>CLOCK_SYS_DisableSlcdClock</UsrMethodName>
       </ItemState>
       <ItemState>
-        <ItemSymbol>CLOCK_SYS_GetSlcdGateCmd_FSL_LCD_COUNT</ItemSymbol>
+        <ItemSymbol>CLOCK_SYS_GetSlcdGateCmd_FSL_LCDC_COUNT</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>CLOCK_SYS_GetSlcdGateCmd</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
         <Index>0</Index>
         <Value>true</Value>
         <LastSelection>true</LastSelection>
@@ -6112,7 +6530,7 @@
       <ItemState>
         <ItemSymbol>SdkSpecificMethods_common</ItemSymbol>
         <ListItemCount>1</ListItemCount>
-        <ItemsTypeState>Beans\fsl_clock_manager\Items\1.2.0\fsl_clock_manager_common_methods.item</ItemsTypeState>
+        <ItemsTypeState>Beans\fsl_clock_manager\fsl_clock_manager_common_methods.item</ItemsTypeState>
       </ItemState>
       <ItemState>
         <ItemSymbol>fsl_clock_manager_commongroup</ItemSymbol>
@@ -6165,6 +6583,11 @@
         <UsrMethodName>CLOCK_SYS_GetErrorCallback</UsrMethodName>
       </ItemState>
       <ItemState>
+        <ItemSymbol>CLOCK_SYS_SetMcgliteMode_FSL_MCGLITE_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CLOCK_SYS_SetMcgliteMode</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <Index>0</Index>
@@ -6174,13 +6597,114 @@
         <UsrMethodName>CLOCK_SYS_SetMcgliteMode</UsrMethodName>
       </ItemState>
       <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToFee_FSL_MCGLITE_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToFee</ItemSymbol>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
+        <Index>0</Index>
+        <Value>true</Value>
+        <LastSelection>true</LastSelection>
+        <LastUserSel>always</LastUserSel>
+        <UsrMethodName>CLOCK_SYS_BootToFee</UsrMethodName>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToFei_FSL_MCGLITE_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToFei</ItemSymbol>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
+        <Index>0</Index>
+        <Value>true</Value>
+        <LastSelection>true</LastSelection>
+        <LastUserSel>always</LastUserSel>
+        <UsrMethodName>CLOCK_SYS_BootToFei</UsrMethodName>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToBlpi_FSL_MCGLITE_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToBlpi</ItemSymbol>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
+        <Index>0</Index>
+        <Value>true</Value>
+        <LastSelection>true</LastSelection>
+        <LastUserSel>always</LastUserSel>
+        <UsrMethodName>CLOCK_SYS_BootToBlpi</UsrMethodName>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToBlpe_FSL_MCGLITE_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToBlpe</ItemSymbol>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
+        <Index>0</Index>
+        <Value>true</Value>
+        <LastSelection>true</LastSelection>
+        <LastUserSel>always</LastUserSel>
+        <UsrMethodName>CLOCK_SYS_BootToBlpe</UsrMethodName>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToPee_FSL_MCGLITE_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToPee_FSL_HAS_PLL</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_BootToPee</ItemSymbol>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
+        <Index>0</Index>
+        <Value>true</Value>
+        <LastSelection>true</LastSelection>
+        <LastUserSel>always</LastUserSel>
+        <UsrMethodName>CLOCK_SYS_BootToPee</UsrMethodName>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_SetMcgMode_FSL_MCGLITE_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CLOCK_SYS_SetMcgMode</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
         <Index>0</Index>
         <Value>true</Value>
         <LastSelection>true</LastSelection>
         <LastUserSel>always</LastUserSel>
         <UsrMethodName>CLOCK_SYS_SetMcgMode</UsrMethodName>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_SetSimConfigration</ItemSymbol>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Index>0</Index>
+        <Value>true</Value>
+        <LastSelection>true</LastSelection>
+        <LastUserSel>always</LastUserSel>
+        <UsrMethodName>CLOCK_SYS_SetSimConfigration</UsrMethodName>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_OscInit_FSL_OSC_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>CLOCK_SYS_OscInit</ItemSymbol>
@@ -6192,6 +6716,11 @@
         <UsrMethodName>CLOCK_SYS_OscInit</UsrMethodName>
       </ItemState>
       <ItemState>
+        <ItemSymbol>CLOCK_SYS_OscDeinit_FSL_OSC_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CLOCK_SYS_OscDeinit</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <Index>0</Index>
@@ -6199,6 +6728,11 @@
         <LastSelection>true</LastSelection>
         <LastUserSel>always</LastUserSel>
         <UsrMethodName>CLOCK_SYS_OscDeinit</UsrMethodName>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_SetOscerConfigration_FSL_OSC_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>CLOCK_SYS_SetOscerConfigration</ItemSymbol>
@@ -6210,6 +6744,11 @@
         <UsrMethodName>CLOCK_SYS_SetOscerConfigration</UsrMethodName>
       </ItemState>
       <ItemState>
+        <ItemSymbol>CLOCK_SYS_RtcOscInit_FSL_RTC_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>CLOCK_SYS_RtcOscInit</ItemSymbol>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <Index>0</Index>
@@ -6217,6 +6756,11 @@
         <LastSelection>true</LastSelection>
         <LastUserSel>always</LastUserSel>
         <UsrMethodName>CLOCK_SYS_RtcOscInit</UsrMethodName>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>CLOCK_SYS_RtcOscDeinit_FSL_RTC_COUNT</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>CLOCK_SYS_RtcOscDeinit</ItemSymbol>
@@ -6447,11 +6991,11 @@
     </Events>
   </Bean>
   <Bean>
-    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
     <ComponentUUID>com.freescale.processorexpert.ksdk.pinsettings</ComponentUUID>
     <BeanType>PinSettings</BeanType>
     <Name>pin_mux</Name>
-    <CompNumb>6</CompNumb>
+    <CompNumb>35</CompNumb>
     <CompEnabled>true</CompEnabled>
     <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
     <IconName>PERIPHINSP</IconName>
@@ -7822,6 +8366,12 @@
         <UserReadOnly>false</UserReadOnly>
         <Value>&lt;Automatic&gt;</Value>
         <SharedPrphMode>false</SharedPrphMode>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>I2S0_i2s_mclk_Dir</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <Value>&lt;Automatic&gt;</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>I2S0_i2s_rclk</ItemSymbol>
@@ -12057,20 +12607,20 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_port_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_port_hal</ComponentUUID>
           <BeanType>fsl_port_hal</BeanType>
           <Name>fsl_port_hal1</Name>
-          <CompNumb>7</CompNumb>
+          <CompNumb>36</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
@@ -12088,7 +12638,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -12340,27 +12890,27 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_sim_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_sim_hal</ComponentUUID>
           <BeanType>fsl_sim_hal</BeanType>
-          <Name>fsl_sim_hal1</Name>
-          <CompNumb>8</CompNumb>
+          <Name>fsl_sim_hal2</Name>
+          <CompNumb>37</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
               <ItemSymbol>DeviceName</ItemSymbol>
               <ReadOnly>true</ReadOnly>
               <UserReadOnly>true</UserReadOnly>
-              <Value>fsl_sim_hal1</Value>
+              <Value>fsl_sim_hal2</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>PeriphDevice</ItemSymbol>
@@ -12371,7 +12921,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -12401,7 +12951,7 @@
             <ItemState>
               <ItemSymbol>SdkSpecificMethodsCPU</ItemSymbol>
               <ListItemCount>1</ListItemCount>
-              <ItemsTypeState>Beans\fsl_sim_hal\Items\1.2.0\fsl_sim_hal_MKL43Z4_methods.item</ItemsTypeState>
+              <ItemsTypeState>Beans\fsl_sim_hal\fsl_sim_hal_MKL43Z4_methods.item</ItemsTypeState>
             </ItemState>
             <ItemState>
               <ItemSymbol>fsl_sim_halgroup</ItemSymbol>
@@ -12479,6 +13029,7 @@
             <ItemState>
               <ItemSymbol>CLOCK_HAL_SetUsbfsSrc</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12493,6 +13044,7 @@
             <ItemState>
               <ItemSymbol>CLOCK_HAL_GetUsbfsSrc</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12669,6 +13221,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_SetUsbVoltRegulatorCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12683,6 +13236,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_GetUsbVoltRegulatorCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12697,6 +13251,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_SetUsbVoltRegulatorInStdbyDuringStopMode</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12711,6 +13266,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_GetUsbVoltRegulatorInStdbyDuringStopMode</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12725,6 +13281,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_SetUsbVoltRegulatorInStdbyDuringVlprwMode</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12739,6 +13296,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_GetUsbVoltRegulatorInStdbyDuringVlprwMode</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12753,6 +13311,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_SetUsbVoltRegulatorInStdbyDuringStopCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12767,6 +13326,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_GetUsbVoltRegulatorInStdbyDuringStopCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12781,6 +13341,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_SetUsbVoltRegulatorInStdbyDuringVlprwCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12795,6 +13356,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_GetUsbVoltRegulatorInStdbyDuringVlprwCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12809,6 +13371,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_SetUsbVoltRegulatorWriteCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -12823,6 +13386,7 @@
             <ItemState>
               <ItemSymbol>SIM_HAL_GetUsbVoltRegulatorWriteCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+              <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
               <Index>0</Index>
               <Value>true</Value>
               <LastSelection>true</LastSelection>
@@ -13135,20 +13699,20 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_mcglite_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_mcglite_hal</ComponentUUID>
           <BeanType>fsl_mcglite_hal</BeanType>
           <Name>fsl_mcglite_hal1</Name>
-          <CompNumb>9</CompNumb>
+          <CompNumb>38</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
@@ -13166,7 +13730,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -13188,11 +13752,6 @@
               <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetPeripheralClk_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_GetPeripheralClk</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
               <Index>0</Index>
@@ -13200,11 +13759,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_GetPeripheralClk</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetLircClk_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_GetLircClk</ItemSymbol>
@@ -13216,11 +13770,6 @@
               <UsrMethodName>CLOCK_HAL_GetLircClk</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetLircDiv1Clk_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_GetLircDiv1Clk</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
               <Index>0</Index>
@@ -13228,11 +13777,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_GetLircDiv1Clk</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetInternalRefClk_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_GetInternalRefClk</ItemSymbol>
@@ -13244,11 +13788,6 @@
               <UsrMethodName>CLOCK_HAL_GetInternalRefClk</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetOutClk_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_GetOutClk</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
               <Index>0</Index>
@@ -13256,11 +13795,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_GetOutClk</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_SetLircSelMode_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_SetLircSelMode</ItemSymbol>
@@ -13272,11 +13806,6 @@
               <UsrMethodName>CLOCK_HAL_SetLircSelMode</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_SetLircRefDiv_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_SetLircRefDiv</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
               <Index>0</Index>
@@ -13284,11 +13813,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_SetLircRefDiv</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_SetLircDiv2_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_SetLircDiv2</ItemSymbol>
@@ -13300,11 +13824,6 @@
               <UsrMethodName>CLOCK_HAL_SetLircDiv2</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_SetLircCmd_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_SetLircCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
               <Index>0</Index>
@@ -13312,11 +13831,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_SetLircCmd</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_SetLircStopCmd_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_SetLircStopCmd</ItemSymbol>
@@ -13328,11 +13842,6 @@
               <UsrMethodName>CLOCK_HAL_SetLircStopCmd</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_SetHircCmd_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_SetHircCmd</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
               <Index>0</Index>
@@ -13340,11 +13849,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_SetHircCmd</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_SetExtRefSelMode0_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_SetExtRefSelMode0</ItemSymbol>
@@ -13356,11 +13860,6 @@
               <UsrMethodName>CLOCK_HAL_SetExtRefSelMode0</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetClkSrcStat_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_GetClkSrcStat</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
               <Index>0</Index>
@@ -13370,11 +13869,6 @@
               <UsrMethodName>CLOCK_HAL_GetClkSrcStat</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_IsOscStable_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_IsOscStable</ItemSymbol>
               <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
               <Index>0</Index>
@@ -13382,11 +13876,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_IsOscStable</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_SetRange0Mode_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_SetRange0Mode_FSL_HAS_RANGE0</ItemSymbol>
@@ -13403,11 +13892,6 @@
               <UsrMethodName>CLOCK_HAL_SetRange0Mode</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_SetHighGainOsc0Mode_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_SetHighGainOsc0Mode_FSL_HAS_HGO0</ItemSymbol>
               <ReadOnly>false</ReadOnly>
               <UserReadOnly>false</UserReadOnly>
@@ -13420,11 +13904,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_SetHighGainOsc0Mode</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetHircCoarseTrim_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_GetHircCoarseTrim_FSL_HAS_HCTRIM</ItemSymbol>
@@ -13441,11 +13920,6 @@
               <UsrMethodName>CLOCK_HAL_GetHircCoarseTrim</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetHircTempcoTrim_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_GetHircTempcoTrim_FSL_HAS_HTTRIM</ItemSymbol>
               <ReadOnly>false</ReadOnly>
               <UserReadOnly>false</UserReadOnly>
@@ -13458,11 +13932,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_GetHircTempcoTrim</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetHircFineTrim_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_GetHircFineTrim_FSL_HAS_HFTRIM</ItemSymbol>
@@ -13479,11 +13948,6 @@
               <UsrMethodName>CLOCK_HAL_GetHircFineTrim</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetLirc8MTrimRange_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_GetLirc8MTrimRange_FSL_HAS_LTRIMRNG</ItemSymbol>
               <ReadOnly>false</ReadOnly>
               <UserReadOnly>false</UserReadOnly>
@@ -13496,11 +13960,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_GetLirc8MTrimRange</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetLirc2MTrimRange_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_GetLirc2MTrimRange_FSL_HAS_LTRIMRNG</ItemSymbol>
@@ -13517,11 +13976,6 @@
               <UsrMethodName>CLOCK_HAL_GetLirc2MTrimRange</UsrMethodName>
             </ItemState>
             <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetLirc8MTrim_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
-            </ItemState>
-            <ItemState>
               <ItemSymbol>CLOCK_HAL_GetLirc8MTrim_FSL_HAS_LFTRIM</ItemSymbol>
               <ReadOnly>false</ReadOnly>
               <UserReadOnly>false</UserReadOnly>
@@ -13534,11 +13988,6 @@
               <LastSelection>true</LastSelection>
               <LastUserSel>always</LastUserSel>
               <UsrMethodName>CLOCK_HAL_GetLirc8MTrim</UsrMethodName>
-            </ItemState>
-            <ItemState>
-              <ItemSymbol>CLOCK_HAL_GetLirc2MTrim_FSL_MCGLITE</ItemSymbol>
-              <ReadOnly>false</ReadOnly>
-              <UserReadOnly>false</UserReadOnly>
             </ItemState>
             <ItemState>
               <ItemSymbol>CLOCK_HAL_GetLirc2MTrim_FSL_HAS_LSTRIM</ItemSymbol>
@@ -13572,6 +14021,18 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>inhr_item_fsl_dmamux_hal</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <Value></Value>
+        <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>FlexbusCondFeatGrp</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>HALFLEXBUS</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <Value></Value>
@@ -14086,18 +14547,18 @@
     <Events />
   </Bean>
   <Bean>
-    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
     <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_os_abstraction</ComponentUUID>
     <BeanType>fsl_os_abstraction</BeanType>
     <Name>osa1</Name>
-    <CompNumb>10</CompNumb>
+    <CompNumb>39</CompNumb>
     <CompEnabled>true</CompEnabled>
     <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
     <IconName>OS_LDD</IconName>
     <UserFolderName></UserFolderName>
     <Comment lines_count="0" />
     <Template />
-    <BeanVersion>1.2.0</BeanVersion>
+    <BeanVersion>1.3.0</BeanVersion>
     <LightErrorsIgnored>false</LightErrorsIgnored>
     <Properties>
       <ItemState>
@@ -14108,7 +14569,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>CompVersion</ItemSymbol>
-        <Value>1.2.0</Value>
+        <Value>1.3.0</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -14118,6 +14579,22 @@
         <ItemSymbol>Settings</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>IsMqxSwitched</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Index>1</Index>
+        <Value>false</Value>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>ChangeLinkerOptions</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
+        <Index>1</Index>
+        <Value>false</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>OsSel</ItemSymbol>
@@ -14247,20 +14724,20 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_lptmr_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_lptmr_hal</ComponentUUID>
           <BeanType>fsl_lptmr_hal</BeanType>
           <Name>fsl_lptmr_hal1</Name>
-          <CompNumb>11</CompNumb>
+          <CompNumb>40</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
@@ -14278,7 +14755,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -14564,7 +15041,7 @@
         <ListItemCount>1</ListItemCount>
       </ItemState>
       <ItemState>
-        <ItemSymbol>fsl_sim_halgroup</ItemSymbol>
+        <ItemSymbol>fsl_os_abstraction_group</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
       </ItemState>
@@ -14577,7 +15054,7 @@
       <ItemState>
         <ItemSymbol>SdkOSASpecificMethods</ItemSymbol>
         <ListItemCount>1</ListItemCount>
-        <ItemsTypeState>Beans\fsl_os_abstraction\Items\1.2.0\fsl_os_abstraction_bm_methods.item</ItemsTypeState>
+        <ItemsTypeState>Beans\fsl_os_abstraction\fsl_os_abstraction_bm_methods.item</ItemsTypeState>
       </ItemState>
       <ItemState>
         <ItemSymbol>fsl_os_abstraction_bmgroup</ItemSymbol>
@@ -14605,7 +15082,6 @@
       <ItemState>
         <ItemSymbol>SdkOSACommonMethods</ItemSymbol>
         <ListItemCount>1</ListItemCount>
-        <ItemsTypeState>Beans\fsl_os_abstraction\Items\1.2.0\fsl_os_abstraction_methods_common.item</ItemsTypeState>
       </ItemState>
       <ItemState>
         <ItemSymbol>fsl_os_abstraction_commongroup</ItemSymbol>
@@ -14922,18 +15398,18 @@
     <Events />
   </Bean>
   <Bean>
-    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
     <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_interrupt_manager</ComponentUUID>
     <BeanType>fsl_interrupt_manager</BeanType>
     <Name>intMan1</Name>
-    <CompNumb>12</CompNumb>
+    <CompNumb>41</CompNumb>
     <CompEnabled>true</CompEnabled>
     <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
     <IconName>TRIGGER</IconName>
     <UserFolderName>Referenced_Components</UserFolderName>
     <Comment lines_count="0" />
     <Template />
-    <BeanVersion>1.2.0</BeanVersion>
+    <BeanVersion>1.3.0</BeanVersion>
     <LightErrorsIgnored>false</LightErrorsIgnored>
     <Properties>
       <ItemState>
@@ -14944,16 +15420,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>CompVersion</ItemSymbol>
-        <Value>1.2.0</Value>
-      </ItemState>
-      <ItemState>
-        <ItemSymbol>VersionSpecificItem</ItemSymbol>
-        <ListItemCount>1</ListItemCount>
-      </ItemState>
-      <ItemState>
-        <ItemSymbol>Settings</ItemSymbol>
-        <ReadOnly>false</ReadOnly>
-        <UserReadOnly>false</UserReadOnly>
+        <Value>1.3.0</Value>
       </ItemState>
     </Properties>
     <Methods>
@@ -15012,49 +15479,21 @@
         <UsrMethodName>INT_SYS_DisableIRQGlobal</UsrMethodName>
       </ItemState>
     </Methods>
-    <Events>
-      <ItemState>
-        <ItemSymbol>SdkSpecificEvents</ItemSymbol>
-        <ListItemCount>1</ListItemCount>
-      </ItemState>
-      <ItemState>
-        <ItemSymbol>eventgroup</ItemSymbol>
-        <ReadOnly>false</ReadOnly>
-        <UserReadOnly>false</UserReadOnly>
-      </ItemState>
-      <ItemState>
-        <ItemSymbol>EventModule</ItemSymbol>
-        <ReadOnly>false</ReadOnly>
-        <UserReadOnly>false</UserReadOnly>
-        <Value>Events</Value>
-      </ItemState>
-      <ItemState>
-        <ItemSymbol>DefaultEvent</ItemSymbol>
-        <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
-        <Value>false</Value>
-        <Expanded>false</Expanded>
-        <LastSelection>false</LastSelection>
-        <LastUserSel>never</LastUserSel>
-      </ItemState>
-      <ItemState>
-        <ItemSymbol>DefaultEventName</ItemSymbol>
-        <Value>intMan1_DefaultEvent</Value>
-      </ItemState>
-    </Events>
+    <Events />
   </Bean>
   <Bean>
-    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
     <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_gpio</ComponentUUID>
     <BeanType>fsl_gpio</BeanType>
     <Name>gpio_pins</Name>
-    <CompNumb>13</CompNumb>
+    <CompNumb>42</CompNumb>
     <CompEnabled>true</CompEnabled>
     <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
     <IconName>PORT_LDD</IconName>
     <UserFolderName></UserFolderName>
     <Comment lines_count="0" />
     <Template />
-    <BeanVersion>1.2.0</BeanVersion>
+    <BeanVersion>1.3.0</BeanVersion>
     <LightErrorsIgnored>false</LightErrorsIgnored>
     <Properties>
       <ItemState>
@@ -15072,7 +15511,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>CompVersion</ItemSymbol>
-        <Value>1.2.0</Value>
+        <Value>1.3.0</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -15406,6 +15845,11 @@
         <Expanded>true</Expanded>
       </ItemState>
       <ItemState>
+        <ItemSymbol>FSL_HAS_SLEW_RATEGrp0_0</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>slewRateOut0_0</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
@@ -15487,6 +15931,11 @@
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <Expanded>true</Expanded>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>FSL_HAS_SLEW_RATEGrp0_1</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>slewRateOut0_1</ItemSymbol>
@@ -15572,6 +16021,11 @@
         <Expanded>true</Expanded>
       </ItemState>
       <ItemState>
+        <ItemSymbol>FSL_HAS_SLEW_RATEGrp0_2</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
+      </ItemState>
+      <ItemState>
         <ItemSymbol>slewRateOut0_2</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
@@ -15653,6 +16107,11 @@
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <Expanded>true</Expanded>
+      </ItemState>
+      <ItemState>
+        <ItemSymbol>FSL_HAS_SLEW_RATEGrp0_3</ItemSymbol>
+        <ReadOnly>false</ReadOnly>
+        <UserReadOnly>false</UserReadOnly>
       </ItemState>
       <ItemState>
         <ItemSymbol>slewRateOut0_3</ItemSymbol>
@@ -16002,20 +16461,20 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_gpio_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_gpio_hal</ComponentUUID>
           <BeanType>fsl_gpio_hal</BeanType>
           <Name>fsl_gpio_hal1</Name>
-          <CompNumb>14</CompNumb>
+          <CompNumb>43</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
@@ -16033,7 +16492,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -16448,20 +16907,20 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_port_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_port_hal</ComponentUUID>
           <BeanType>fsl_port_hal</BeanType>
           <Name>fsl_port_hal2</Name>
-          <CompNumb>15</CompNumb>
+          <CompNumb>44</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
@@ -16479,7 +16938,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -16963,18 +17422,18 @@
     </Events>
   </Bean>
   <Bean>
-    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+    <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
     <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_debug_console</ComponentUUID>
     <BeanType>fsl_debug_console</BeanType>
     <Name>DbgCs1</Name>
-    <CompNumb>16</CompNumb>
+    <CompNumb>45</CompNumb>
     <CompEnabled>true</CompEnabled>
     <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
     <IconName>MONITOR</IconName>
     <UserFolderName></UserFolderName>
     <Comment lines_count="0" />
     <Template />
-    <BeanVersion>1.2.0</BeanVersion>
+    <BeanVersion>1.3.0</BeanVersion>
     <LightErrorsIgnored>false</LightErrorsIgnored>
     <Properties>
       <ItemState>
@@ -16992,7 +17451,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>CompVersion</ItemSymbol>
-        <Value>1.2.0</Value>
+        <Value>1.3.0</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -17121,7 +17580,7 @@
         <ReadOnly>true</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
-        <TypeSpecNameState>1_2_0_type_debugconsole_lpuart_clock_source</TypeSpecNameState>
+        <TypeSpecNameState>type_debugconsole_lpuart_clock_source</TypeSpecNameState>
         <Index>0</Index>
         <EnumSymbVal>kClockLpuartSrcNone</EnumSymbVal>
       </ItemState>
@@ -17164,7 +17623,7 @@
       <ItemState>
         <ItemSymbol>InhrItem_uart</ItemSymbol>
         <ListItemCount>1</ListItemCount>
-        <ItemsTypeState>Beans\fsl_debug_console\Items\1.2.0\fsl_debug_console_uart_inhr.item</ItemsTypeState>
+        <ItemsTypeState>Beans\fsl_debug_console\fsl_debug_console_uart_inhr.item</ItemsTypeState>
       </ItemState>
       <ItemState>
         <ItemSymbol>fsl_uart</ItemSymbol>
@@ -17172,20 +17631,20 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_uart_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_uart_hal</ComponentUUID>
           <BeanType>fsl_uart_hal</BeanType>
           <Name>fsl_uart_hal1</Name>
-          <CompNumb>17</CompNumb>
+          <CompNumb>48</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
@@ -17203,7 +17662,7 @@
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>
@@ -18699,7 +19158,7 @@
       <ItemState>
         <ItemSymbol>InhrItem_lpsci</ItemSymbol>
         <ListItemCount>1</ListItemCount>
-        <ItemsTypeState>Beans\fsl_debug_console\Items\1.2.0\fsl_debug_console_empty_lpsci_inhr.item</ItemsTypeState>
+        <ItemsTypeState>Beans\fsl_debug_console\fsl_debug_console_empty_lpsci_inhr.item</ItemsTypeState>
       </ItemState>
       <ItemState>
         <ItemSymbol>empty_lpsci</ItemSymbol>
@@ -18708,7 +19167,7 @@
       <ItemState>
         <ItemSymbol>InhrItem_lpuart</ItemSymbol>
         <ListItemCount>1</ListItemCount>
-        <ItemsTypeState>Beans\fsl_debug_console\Items\1.2.0\fsl_debug_console_lpuart_inhr.item</ItemsTypeState>
+        <ItemsTypeState>Beans\fsl_debug_console\fsl_debug_console_lpuart_inhr.item</ItemsTypeState>
       </ItemState>
       <ItemState>
         <ItemSymbol>fsl_lpuart</ItemSymbol>
@@ -18716,20 +19175,20 @@
         <UserReadOnly>false</UserReadOnly>
         <Index>0</Index>
         <RegCompType>fsl_lpuart_hal</RegCompType>
-        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</RegCompRepository>
+        <RegCompRepository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</RegCompRepository>
         <InheritedComponentState>
-          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK120_Repository</Repository>
+          <Repository>file:/${ProcessorExpert_loc}/Repositories/KSDK130_Repository</Repository>
           <ComponentUUID>com.freescale.processorexpert.ksdk.fsl_lpuart_hal</ComponentUUID>
           <BeanType>fsl_lpuart_hal</BeanType>
           <Name>fsl_lpuart_hal1</Name>
-          <CompNumb>18</CompNumb>
+          <CompNumb>49</CompNumb>
           <CompEnabled>true</CompEnabled>
           <GenCodeMode>ALWAYS_WRITE</GenCodeMode>
           <IconName>HAL4</IconName>
           <UserFolderName></UserFolderName>
           <Comment lines_count="0" />
           <Template />
-          <BeanVersion>1.2.0</BeanVersion>
+          <BeanVersion>1.3.0</BeanVersion>
           <LightErrorsIgnored>false</LightErrorsIgnored>
           <Properties>
             <ItemState>
@@ -18742,12 +19201,12 @@
               <ItemSymbol>PeriphDevice</ItemSymbol>
               <ReadOnly>false</ReadOnly>
               <UserReadOnly>false</UserReadOnly>
-              <Value>LPUART1</Value>
+              <Value>LPUART0</Value>
               <SharedPrphMode>false</SharedPrphMode>
             </ItemState>
             <ItemState>
               <ItemSymbol>CompVersion</ItemSymbol>
-              <Value>1.2.0</Value>
+              <Value>1.3.0</Value>
             </ItemState>
             <ItemState>
               <ItemSymbol>VersionSpecificItem</ItemSymbol>

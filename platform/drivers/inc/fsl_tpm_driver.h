@@ -49,19 +49,7 @@ extern TPM_Type * const g_tpmBase[TPM_INSTANCE_COUNT];
 /*! @brief Table to save TPM IRQ numbers for TPM instances. */
 extern const IRQn_Type g_tpmIrqId[TPM_INSTANCE_COUNT];
 
-/*! @brief TPM clock source selection.*/
-typedef enum _tpm_clock_source
-{
-    kTpmClockSourcNone = 0,          /*!< TPM clock source, None */
-    kTpmClockSourceModuleHighFreq,   /*!< TPM clock source, IRC48MHz or FLL/PLL depending on SoC */
-    kTpmClockSourceModuleOSCERCLK,   /*!< TPM clock source, OSCERCLK */
-    kTpmClockSourceModuleMCGIRCLK,   /*!< TPM clock source, MCGIRCLK */
-    kTpmClockSourceExternalCLKIN0,   /*!< TPM clock source, TPM_CLKIN0 */
-    kTpmClockSourceExternalCLKIN1,   /*!< TPM clock source, TPM_CLKIN1 */
-    kTpmClockSourceReserved          /*!< TPM clock source, Reserved */
-}tpm_clock_source_t;
-
-/*! @brief Internal driver state information grouped by naming. User  needs to set the relevant ones.
+/*! @brief Internal driver state information grouped by names. User  needs to set the relevant ones.
  * @internal gui name="Basic configuration" id="tpmCfg"
  */
 typedef struct TpmGeneralConfig {
@@ -86,7 +74,7 @@ extern "C" {
  *
  * @param instance The TPM peripheral instance number.
  * @param info Pointer to the TPM user configuration structure, see #tpm_general_config_t.
- * @return kStatusTpmSuccess means succees, otherwise means failed.
+ * @return kStatusTpmSuccess means success; Otherwise means failure.
  */
 tpm_status_t TPM_DRV_Init(uint32_t instance, const tpm_general_config_t * info);
 
@@ -100,13 +88,13 @@ tpm_status_t TPM_DRV_Init(uint32_t instance, const tpm_general_config_t * info);
 void TPM_DRV_PwmStop(uint32_t instance, tpm_pwm_param_t *param, uint8_t channel);
 
 /*!
- * @brief Configures duty cycle and frequency, and starts outputting PWM on a specified channel.
+ * @brief Configures the duty cycle and frequency and starts outputting PWM on a specified channel.
  *
  * @param instance The TPM peripheral instance number.
  * @param param PWM parameter to configure PWM options, see #tpm_pwm_param_t.
  * @param channel The channel number.
  *
- * @return kStatusTpmSuccess means succees, otherwise means failed.
+ * @return kStatusTpmSuccess means success; Otherwise means failure.
  */
 tpm_status_t TPM_DRV_PwmStart(uint32_t instance, tpm_pwm_param_t *param, uint8_t channel);
 
@@ -131,10 +119,10 @@ void TPM_DRV_SetChnIntCmd(uint32_t instance, uint8_t channelNum, bool enable);
  * @brief Sets the TPM clock source.
  *
  * @param instance The TPM peripheral instance number.
- * @param clock The TPM peripheral clock selection, see #tpm_clock_source_t.
+ * @param clock The TPM peripheral clock selection, see #tpm_clock_mode_t.
  * @param clockPs The TPM peripheral clock prescale factor, see #tpm_clock_ps_t.
  */
-void TPM_DRV_SetClock(uint32_t instance, tpm_clock_source_t clock, tpm_clock_ps_t clockPs);
+void TPM_DRV_SetClock(uint32_t instance, tpm_clock_mode_t clock, tpm_clock_ps_t clockPs);
 
 /*!
  * @brief Gets the TPM clock frequency.
@@ -147,7 +135,7 @@ uint32_t TPM_DRV_GetClock(uint32_t instance);
 /*!
  * @brief Starts the TPM counter.
  *
- * This function provides access to the TPM counter. The counter can be run in
+ * This function provides access to the TPM counter. The counter can run in
  * up-counting and up-down counting modes.
  *
  * @param instance The TPM peripheral instance number.

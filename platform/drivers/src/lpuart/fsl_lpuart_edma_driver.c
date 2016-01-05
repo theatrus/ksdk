@@ -95,8 +95,6 @@ lpuart_status_t LPUART_DRV_EdmaInit(uint32_t instance,
     uint32_t lpuartSourceClock = 0;
     dma_request_source_t lpuartTxEdmaRequest = kDmaRequestMux0Disable;
     dma_request_source_t lpuartRxEdmaRequest = kDmaRequestMux0Disable;
-    DMA_Type * dmabase;
-    uint32_t dmaChannel;
 
     /* Exit if current instance is already initialized. */
     if (g_lpuartStatePtr[instance])
@@ -152,6 +150,18 @@ lpuart_status_t LPUART_DRV_EdmaInit(uint32_t instance,
             lpuartTxEdmaRequest = kDmaRequestMux0LPUART2Tx;
             break;
 #endif
+#if (FSL_FEATURE_LPUART_HAS_SEPARATE_DMA_RX_TX_REQn(3) == 1)
+        case 3:
+            lpuartRxEdmaRequest = kDmaRequestMux0LPUART3Rx;
+            lpuartTxEdmaRequest = kDmaRequestMux0LPUART3Tx;
+            break;
+#endif
+#if (FSL_FEATURE_LPUART_HAS_SEPARATE_DMA_RX_TX_REQn(4) == 1)
+        case 4:
+            lpuartRxEdmaRequest = kDmaRequestMux0LPUART4Rx;
+            lpuartTxEdmaRequest = kDmaRequestMux0LPUART4Tx;
+            break;
+#endif
         default :
             break;
     }
@@ -162,25 +172,6 @@ lpuart_status_t LPUART_DRV_EdmaInit(uint32_t instance,
                             &lpuartEdmaStatePtr->edmaLpuartRx);
     EDMA_DRV_InstallCallback(&lpuartEdmaStatePtr->edmaLpuartRx,
                     LPUART_DRV_EdmaRxCallback, (void *)instance);
-    dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaStatePtr->edmaLpuartRx.channel);
-    dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaStatePtr->edmaLpuartRx.channel);
-
-    /* Setup destination */
-    EDMA_HAL_HTCDSetDestOffset(dmabase, dmaChannel, 1);
-    EDMA_HAL_HTCDSetDestLastAdjust(dmabase, dmaChannel, 0);
-
-    /* Setup source */
-    EDMA_HAL_HTCDSetSrcAddr(dmabase, dmaChannel, LPUART_HAL_GetDataRegAddr(base));
-    EDMA_HAL_HTCDSetSrcOffset(dmabase, dmaChannel, 0);
-    EDMA_HAL_HTCDSetSrcLastAdjust(dmabase, dmaChannel, 0);
-
-    /* Setup transfer properties */
-    EDMA_HAL_HTCDSetNbytes(dmabase, dmaChannel, 1);
-    EDMA_HAL_HTCDSetChannelMinorLink(dmabase, dmaChannel, 0, false);
-    EDMA_HAL_HTCDSetAttribute(dmabase, dmaChannel, kEDMAModuloDisable,
-        kEDMAModuloDisable, kEDMATransferSize_1Bytes, kEDMATransferSize_1Bytes);
-    EDMA_HAL_HTCDSetScatterGatherCmd(dmabase, dmaChannel, false);
-    EDMA_HAL_HTCDSetDisableDmaRequestAfterTCDDoneCmd(dmabase, dmaChannel, true);
 
     /*--------------- Setup TX ------------------*/
     /* Request DMA channels for TX FIFO. */
@@ -188,26 +179,6 @@ lpuart_status_t LPUART_DRV_EdmaInit(uint32_t instance,
                             &lpuartEdmaStatePtr->edmaLpuartTx);
     EDMA_DRV_InstallCallback(&lpuartEdmaStatePtr->edmaLpuartTx,
                     LPUART_DRV_EdmaTxCallback, (void *)instance);
-
-    dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaStatePtr->edmaLpuartTx.channel);
-    dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaStatePtr->edmaLpuartTx.channel);
-
-    /* Setup destination */
-    EDMA_HAL_HTCDSetDestAddr(dmabase, dmaChannel, LPUART_HAL_GetDataRegAddr(base));
-    EDMA_HAL_HTCDSetDestOffset(dmabase, dmaChannel, 0);
-    EDMA_HAL_HTCDSetDestLastAdjust(dmabase, dmaChannel, 0);
-
-    /* Setup source */
-    EDMA_HAL_HTCDSetSrcOffset(dmabase, dmaChannel, 1);
-    EDMA_HAL_HTCDSetSrcLastAdjust(dmabase, dmaChannel, 0);
-
-    /* Setup transfer properties */
-    EDMA_HAL_HTCDSetNbytes(dmabase, dmaChannel, 1);
-    EDMA_HAL_HTCDSetChannelMinorLink(dmabase, dmaChannel, 0, false);
-    EDMA_HAL_HTCDSetAttribute(dmabase, dmaChannel, kEDMAModuloDisable,
-        kEDMAModuloDisable, kEDMATransferSize_1Bytes, kEDMATransferSize_1Bytes);
-    EDMA_HAL_HTCDSetScatterGatherCmd(dmabase, dmaChannel, false);
-    EDMA_HAL_HTCDSetDisableDmaRequestAfterTCDDoneCmd(dmabase, dmaChannel, true);
 
     /* Finally, enable the LPUART transmitter and receiver.
      * Enable DMA trigger when transmit data register empty,
@@ -283,8 +254,6 @@ lpuart_status_t LPUART_DRV_EdmaSendDataBlocking(uint32_t instance,
     assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_edma_state_t * lpuartEdmaState = (lpuart_edma_state_t *)g_lpuartStatePtr[instance];
-    DMA_Type *dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaState->edmaLpuartTx.channel);
-    uint32_t dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaState->edmaLpuartTx.channel);
     lpuart_status_t retVal = kStatus_LPUART_Success;
     osa_status_t syncStatus;
 
@@ -304,11 +273,9 @@ lpuart_status_t LPUART_DRV_EdmaSendDataBlocking(uint32_t instance,
 
         if (syncStatus != kStatus_OSA_Success)
         {
-            /* Disable DMA major loop interrupt */
-            EDMA_HAL_HTCDSetIntCmd(dmabase, dmaChannel, false);
 
             /* Stop DMA channel. */
-            EDMA_HAL_SetDmaRequestCmd(dmabase, (edma_channel_indicator_t)dmaChannel, false);
+            EDMA_DRV_StopChannel(&lpuartEdmaState->edmaLpuartTx);
 
             /* Update the information of the module driver state */
             lpuartEdmaState->isTxBusy = false;
@@ -370,8 +337,6 @@ lpuart_status_t LPUART_DRV_EdmaGetTransmitStatus(uint32_t instance,
     assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_edma_state_t * lpuartEdmaState = (lpuart_edma_state_t *)g_lpuartStatePtr[instance];
-    DMA_Type *dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaState->edmaLpuartTx.channel);
-    uint32_t dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaState->edmaLpuartTx.channel);
     lpuart_status_t retVal = kStatus_LPUART_Success;
     uint32_t txSize = 0;
 
@@ -379,7 +344,7 @@ lpuart_status_t LPUART_DRV_EdmaGetTransmitStatus(uint32_t instance,
      * the count to 0 manually. */
     if (lpuartEdmaState->isTxBusy)
     {
-        txSize = EDMA_HAL_HTCDGetUnfinishedBytes(dmabase, dmaChannel);
+        txSize = EDMA_DRV_GetUnfinishedBytes(&lpuartEdmaState->edmaLpuartTx);
         retVal = kStatus_LPUART_TxBusy;
     }
 
@@ -436,8 +401,6 @@ lpuart_status_t LPUART_DRV_EdmaReceiveDataBlocking(uint32_t instance,
     assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_edma_state_t * lpuartEdmaState = (lpuart_edma_state_t *)g_lpuartStatePtr[instance];
-    DMA_Type *dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaState->edmaLpuartRx.channel);
-    uint32_t dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaState->edmaLpuartRx.channel);
     lpuart_status_t retVal = kStatus_LPUART_Success;
     osa_status_t syncStatus;
 
@@ -456,11 +419,9 @@ lpuart_status_t LPUART_DRV_EdmaReceiveDataBlocking(uint32_t instance,
 
         if (syncStatus != kStatus_OSA_Success)
         {
-            /* Disable DMA major loop interrupt */
-            EDMA_HAL_HTCDSetIntCmd(dmabase, dmaChannel, false);
 
             /* Stop DMA channel. */
-            EDMA_HAL_SetDmaRequestCmd(dmabase, (edma_channel_indicator_t)dmaChannel, false);
+            EDMA_DRV_StopChannel(&lpuartEdmaState->edmaLpuartRx);
 
             /* Update the information of the module driver state */
             lpuartEdmaState->isRxBusy = false;
@@ -518,8 +479,6 @@ lpuart_status_t LPUART_DRV_EdmaGetReceiveStatus(uint32_t instance,
 {
     assert(instance < LPUART_INSTANCE_COUNT);
     lpuart_edma_state_t * lpuartEdmaState = (lpuart_edma_state_t *)g_lpuartStatePtr[instance];
-    DMA_Type *dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaState->edmaLpuartRx.channel);
-    uint32_t dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaState->edmaLpuartRx.channel);
     lpuart_status_t retVal = kStatus_LPUART_Success;
     uint32_t rxSize = 0;
 
@@ -527,7 +486,7 @@ lpuart_status_t LPUART_DRV_EdmaGetReceiveStatus(uint32_t instance,
      * the count to 0 manually. */
     if (lpuartEdmaState->isRxBusy)
     {
-        rxSize = EDMA_HAL_HTCDGetUnfinishedBytes(dmabase, dmaChannel);
+        rxSize = EDMA_DRV_GetUnfinishedBytes(&lpuartEdmaState->edmaLpuartRx);
         retVal = kStatus_LPUART_RxBusy;
     }
 
@@ -577,14 +536,9 @@ static void LPUART_DRV_EdmaCompleteSendData(uint32_t instance)
     assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_edma_state_t * lpuartEdmaState = (lpuart_edma_state_t *)g_lpuartStatePtr[instance];
-    DMA_Type *dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaState->edmaLpuartTx.channel);
-    uint32_t dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaState->edmaLpuartTx.channel);
-
-    /* Disable DMA major loop interrupt */
-    EDMA_HAL_HTCDSetIntCmd(dmabase, dmaChannel, false);
 
     /* Stop DMA channel. */
-    EDMA_HAL_SetDmaRequestCmd(dmabase, (edma_channel_indicator_t)dmaChannel, false);
+    EDMA_DRV_StopChannel(&lpuartEdmaState->edmaLpuartTx);
 
     /* Signal the synchronous completion object. */
     if (lpuartEdmaState->isTxBlocking)
@@ -619,10 +573,26 @@ static lpuart_status_t LPUART_DRV_EdmaStartSendData(uint32_t instance,
 {
     assert(instance < LPUART_INSTANCE_COUNT);
 
+    LPUART_Type * base = g_lpuartBase[instance];
+
+    edma_transfer_config_t edmaTxConfig;
+    edmaTxConfig.srcAddr            = (uint32_t)txBuff;
+    edmaTxConfig.destAddr           = LPUART_HAL_GetDataRegAddr(base);
+    edmaTxConfig.srcTransferSize    = kEDMATransferSize_1Bytes;
+    edmaTxConfig.destTransferSize   = kEDMATransferSize_1Bytes;
+    edmaTxConfig.srcOffset          = 1U;
+    edmaTxConfig.destOffset         = 0U;
+    edmaTxConfig.srcLastAddrAdjust  = 0U;
+    edmaTxConfig.destLastAddrAdjust = 0U;
+    edmaTxConfig.srcModulo          = kEDMAModuloDisable;
+    edmaTxConfig.destModulo         = kEDMAModuloDisable;
+    edmaTxConfig.minorLoopCount     = 1U;
+    edmaTxConfig.majorLoopCount     = txSize;
+
+    edma_software_tcd_t   stcd;
+
     /* Get current runtime structure. */
     lpuart_edma_state_t * lpuartEdmaState = (lpuart_edma_state_t *)g_lpuartStatePtr[instance];
-    DMA_Type *dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaState->edmaLpuartTx.channel);
-    uint32_t dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaState->edmaLpuartTx.channel);
 
     /* Check that we're not busy already transmitting data from a previous function call. */
     if (lpuartEdmaState->isTxBusy)
@@ -633,15 +603,16 @@ static lpuart_status_t LPUART_DRV_EdmaStartSendData(uint32_t instance,
     /* Update LPUART DMA run-time structure. */
     lpuartEdmaState->isTxBusy = true;
 
-    /* Update txBuff and txSize */
-    EDMA_HAL_HTCDSetSrcAddr(dmabase, dmaChannel, (uint32_t)txBuff);
-    EDMA_HAL_HTCDSetMajorCount(dmabase, dmaChannel, txSize);
+    memset(&stcd, 0, sizeof(edma_software_tcd_t));
 
-    /* Enable DMA major loop interrupt */
-    EDMA_HAL_HTCDSetIntCmd(dmabase, dmaChannel, true);
+    /* Sets the descriptor basic transfer for the descriptor. */
+    EDMA_DRV_PrepareDescriptorTransfer(&lpuartEdmaState->edmaLpuartTx, &stcd, &edmaTxConfig, true, true);
+
+    /* Copies the software TCD configuration to the hardware TCD */
+    EDMA_DRV_PushDescriptorToReg(&lpuartEdmaState->edmaLpuartTx, &stcd);
 
     /* Start DMA channel */
-    EDMA_HAL_SetDmaRequestCmd(dmabase, (edma_channel_indicator_t)dmaChannel, true);
+    EDMA_DRV_StartChannel(&lpuartEdmaState->edmaLpuartTx);
 
     return kStatus_LPUART_Success;
 }
@@ -659,14 +630,9 @@ static void LPUART_DRV_EdmaCompleteReceiveData(uint32_t instance)
     assert(instance < LPUART_INSTANCE_COUNT);
 
     lpuart_edma_state_t * lpuartEdmaState = (lpuart_edma_state_t *)g_lpuartStatePtr[instance];
-    DMA_Type *dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaState->edmaLpuartRx.channel);
-    uint32_t dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaState->edmaLpuartRx.channel);
-
-    /* Disable DMA major loop interrupt */
-    EDMA_HAL_HTCDSetIntCmd(dmabase, dmaChannel, false);
 
     /* Stop DMA channel. */
-    EDMA_HAL_SetDmaRequestCmd(dmabase, (edma_channel_indicator_t)dmaChannel, false);
+    EDMA_DRV_StopChannel(&lpuartEdmaState->edmaLpuartRx);
 
     /* Signal the synchronous completion object. */
     if (lpuartEdmaState->isRxBlocking)
@@ -703,10 +669,26 @@ static lpuart_status_t LPUART_DRV_EdmaStartReceiveData(uint32_t instance,
 {
     assert(instance < LPUART_INSTANCE_COUNT);
 
+    LPUART_Type * base = g_lpuartBase[instance];
+
+    edma_transfer_config_t edmaRxConfig;
+    edmaRxConfig.srcAddr            = LPUART_HAL_GetDataRegAddr(base);
+    edmaRxConfig.destAddr           = (uint32_t)rxBuff;
+    edmaRxConfig.srcTransferSize    = kEDMATransferSize_1Bytes;
+    edmaRxConfig.destTransferSize   = kEDMATransferSize_1Bytes;
+    edmaRxConfig.srcOffset          = 0U;
+    edmaRxConfig.destOffset         = 1U;
+    edmaRxConfig.srcLastAddrAdjust  = 0U;
+    edmaRxConfig.destLastAddrAdjust = 0U;
+    edmaRxConfig.srcModulo          = kEDMAModuloDisable;
+    edmaRxConfig.destModulo         = kEDMAModuloDisable;
+    edmaRxConfig.minorLoopCount     = 1U;
+    edmaRxConfig.majorLoopCount     = rxSize;
+
+    edma_software_tcd_t   stcd;
+
     /* Get current runtime structure. */
     lpuart_edma_state_t * lpuartEdmaState = (lpuart_edma_state_t *)g_lpuartStatePtr[instance];
-    DMA_Type *dmabase = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(lpuartEdmaState->edmaLpuartRx.channel);
-    uint32_t dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(lpuartEdmaState->edmaLpuartRx.channel);
 
     /* Check that we're not busy already receiving data from a previous function call. */
     if (lpuartEdmaState->isRxBusy)
@@ -717,15 +699,16 @@ static lpuart_status_t LPUART_DRV_EdmaStartReceiveData(uint32_t instance,
     /* Update LPUART DMA run-time structure. */
     lpuartEdmaState->isRxBusy = true;
 
-    /* Update rxBuff and rxSize */
-    EDMA_HAL_HTCDSetDestAddr(dmabase, dmaChannel, (uint32_t)rxBuff);
-    EDMA_HAL_HTCDSetMajorCount(dmabase, dmaChannel, rxSize);
+    memset(&stcd, 0, sizeof(edma_software_tcd_t));
 
-    /* Enable DMA major loop interrupt */
-    EDMA_HAL_HTCDSetIntCmd(dmabase, dmaChannel, true);
+    /* Sets the descriptor basic transfer for the descriptor. */
+    EDMA_DRV_PrepareDescriptorTransfer(&lpuartEdmaState->edmaLpuartRx, &stcd, &edmaRxConfig, true, true);
+
+    /* Copies the software TCD configuration to the hardware TCD */
+    EDMA_DRV_PushDescriptorToReg(&lpuartEdmaState->edmaLpuartRx, &stcd);
 
     /* Start DMA channel */
-    EDMA_HAL_SetDmaRequestCmd(dmabase, (edma_channel_indicator_t)dmaChannel, true);
+    EDMA_DRV_StartChannel(&lpuartEdmaState->edmaLpuartRx);
 
     return kStatus_LPUART_Success;
 }

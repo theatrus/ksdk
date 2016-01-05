@@ -44,7 +44,7 @@
 /*!
  * @file
  *
- * Some devices count the UART instances with LPUART(e.g, KL27) or UART0(e.g,
+ * Some devices count the UART instances with LPUART(e.g., KL27) or UART0(e.g.,
  * KL25) together. However, they are  different IPs with separate drivers:
  * LPSCI for UART0, LPUART for LPUART. In such cases, this UART driver 
  * only works with specific UART instances.

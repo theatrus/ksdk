@@ -42,17 +42,6 @@
 #include "usb_host_hub_sm.h"
 #include "mouse_keyboard.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-
-#endif
 /************************************************************************************
  **
  ** Globals
@@ -72,90 +61,68 @@ usb_device_interface_struct_t* mouse_interface_info[USBCFG_HOST_MAX_INTERFACE_PE
 #define USB_EVENT_CTRL           (0x01)
 #define USB_EVENT_DATA           (0x02)
 #define USB_EVENT_DATA_CORRUPTED (0x04)
+#define USB_EVENT_STATE_CHANGE   (0x08)
 
 void process_mouse_buffer(uint8_t * buffer);
 static void usb_host_hid_mouse_ctrl_callback(void* unused, void* user_parm, uint8_t *buffer, uint32_t buflen, usb_status status);
 
-static void update_state(uint32_t next_state)
+static void update_state(void)
 {
-    if (mouse_hid_device.STATE_MUTEX != NULL)
+    if (mouse_hid_device.state_change != 0)
     {
-        OS_Mutex_lock(mouse_hid_device.STATE_MUTEX);
-    }
-    else
-    {
-        printf("mouse state mutex is NULL\r\n");
-    }
-    switch(next_state)
-    {
-    case USB_DEVICE_ATTACHED:
-        if (mouse_hid_device.DEV_STATE == USB_DEVICE_IDLE)
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_ATTACHED)
         {
-            mouse_hid_device.DEV_STATE = next_state;
+            if (mouse_hid_device.DEV_STATE == USB_DEVICE_IDLE)
+            {
+                mouse_hid_device.DEV_STATE = USB_DEVICE_ATTACHED;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_ATTACHED);
         }
-        break;
-    case USB_DEVICE_SET_INTERFACE_STARTED:
-        if (mouse_hid_device.DEV_STATE == USB_DEVICE_ATTACHED)
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_OPENED)
         {
-            mouse_hid_device.DEV_STATE = next_state;
+            if (mouse_hid_device.DEV_STATE != USB_DEVICE_DETACHED)
+            {
+                mouse_hid_device.DEV_STATE = USB_DEVICE_INTERFACE_OPENED;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_OPENED);
         }
-        break;
-    case USB_DEVICE_INTERFACE_OPENED:
-        if (mouse_hid_device.DEV_STATE == USB_DEVICE_SET_INTERFACE_STARTED)
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_DETACHED)
         {
-            mouse_hid_device.DEV_STATE = next_state;
+            mouse_hid_device.DEV_STATE = USB_DEVICE_DETACHED;
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_DETACHED);
         }
-        break;
-    case USB_DEVICE_GET_REPORT_DESCRIPTOR:
-        if (mouse_hid_device.DEV_STATE == USB_DEVICE_INTERFACE_OPENED)
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_IDLE)
         {
-            mouse_hid_device.DEV_STATE = next_state;
+            mouse_hid_device.DEV_STATE = USB_DEVICE_IDLE;
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_IDLE);
         }
-        break;
-    case USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE:
-        if (mouse_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR)
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_SET_IDLE)
         {
-            mouse_hid_device.DEV_STATE = next_state;
+            if (mouse_hid_device.DEV_STATE == USB_DEVICE_SETTING_PROTOCOL)
+            {
+                mouse_hid_device.DEV_STATE = USB_DEVICE_SET_IDLE;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_SET_IDLE);
         }
-        break;
-    case USB_DEVICE_SETTING_PROTOCOL:
-        if (mouse_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE)
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_DESCRIPTOR_DONE)
         {
-            mouse_hid_device.DEV_STATE = next_state;
+            if (mouse_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR)
+            {
+                mouse_hid_device.DEV_STATE = USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_DESCRIPTOR_DONE);
         }
-        break;
-    case USB_DEVICE_SET_IDLE:
-        if (mouse_hid_device.DEV_STATE == USB_DEVICE_SETTING_PROTOCOL)
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_INUSE)
         {
-            mouse_hid_device.DEV_STATE = next_state;
+            if (mouse_hid_device.DEV_STATE == USB_DEVICE_SETTING_IDLE)
+            {
+                mouse_hid_device.DEV_STATE = USB_DEVICE_INUSE;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_INUSE);
         }
-        break;
-    case USB_DEVICE_SETTING_IDLE:
-        if (mouse_hid_device.DEV_STATE == USB_DEVICE_SET_IDLE)
-        {
-            mouse_hid_device.DEV_STATE = next_state;
-        }
-        break;
-    case USB_DEVICE_INUSE:
-        if (mouse_hid_device.DEV_STATE == USB_DEVICE_SETTING_IDLE)
-        {
-            mouse_hid_device.DEV_STATE = next_state;
-        }
-        break;
-    case USB_DEVICE_DETACHED:
-        mouse_hid_device.DEV_STATE = next_state;
-        break;
-    case USB_DEVICE_IDLE:
-        mouse_hid_device.DEV_STATE = next_state;
-        break;
-    default:
-        break;
-    }
-    if (mouse_hid_device.STATE_MUTEX != NULL)
-    {
-        OS_Mutex_unlock(mouse_hid_device.STATE_MUTEX);
     }
 }
+
 /*FUNCTION*----------------------------------------------------------------
  *
  * Function Name  : mouse_hid_get_interface
@@ -263,7 +230,7 @@ void mouse_hid_get_report_descriptor(void)
                 return;
             }
 
-            update_state (USB_DEVICE_GET_REPORT_DESCRIPTOR);
+            mouse_hid_device.DEV_STATE = USB_DEVICE_GET_REPORT_DESCRIPTOR;
             mouse_hid_com->class_ptr = mouse_hid_device.CLASS_HANDLE;
             mouse_hid_com->callback_fn = usb_host_hid_mouse_ctrl_callback;
             mouse_hid_com->callback_param = 0;
@@ -320,17 +287,10 @@ usb_status usb_host_hid_mouse_event
     case USB_CONFIG_EVENT:
         if (mouse_hid_device.DEV_STATE == USB_DEVICE_IDLE)
         {
-            if (mouse_hid_device.STATE_MUTEX == NULL)
-            {
-                mouse_hid_device.STATE_MUTEX = OS_Mutex_create();
-                if (mouse_hid_device.STATE_MUTEX == NULL)
-                {
-                    USB_PRINTF("mouse state mutex create fail\r\n");
-                }
-            }
             mouse_hid_device.DEV_HANDLE = dev_handle;
             mouse_hid_device.INTF_HANDLE = mouse_hid_get_interface();
-            update_state (USB_DEVICE_ATTACHED);
+            mouse_hid_device.state_change |= USB_STATE_CHANGE_ATTACHED;
+            OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         }
         else
         {
@@ -339,7 +299,8 @@ usb_status usb_host_hid_mouse_event
         break;
 
     case USB_INTF_OPENED_EVENT:
-        update_state (USB_DEVICE_INTERFACE_OPENED);
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_OPENED;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("----- Interfaced Event -----\r\n");
         break;
 
@@ -353,11 +314,13 @@ usb_status usb_host_hid_mouse_event
         USB_PRINTF("  SubClass = %d", intf_ptr->bInterfaceSubClass);
         USB_PRINTF("  Protocol = %d\r\n", intf_ptr->bInterfaceProtocol);
         mouse_interface_number = 0;
-        update_state (USB_DEVICE_DETACHED);
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_DETACHED;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         break;
     default:
         USB_PRINTF("HID Device state = %d??\r\n", mouse_hid_device.DEV_STATE);
-        update_state (USB_DEVICE_IDLE);
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_IDLE;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         break;
     }
 
@@ -403,17 +366,20 @@ static void usb_host_hid_mouse_ctrl_callback
 
     if (mouse_hid_device.DEV_STATE == USB_DEVICE_SETTING_PROTOCOL)
     {
-        update_state (USB_DEVICE_SET_IDLE);
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_SET_IDLE;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("setting protocol done\r\n");
     }
     else if (mouse_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR)
     {
-        update_state (USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE);
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_DESCRIPTOR_DONE;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("get report descriptor done\r\n");
     }
     else if (mouse_hid_device.DEV_STATE == USB_DEVICE_SETTING_IDLE)
     {
-        update_state (USB_DEVICE_INUSE);
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_INUSE;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("setting idle done\r\n");
     }
 
@@ -569,7 +535,12 @@ void Mouse_Task(void* param)
     usb_host_handle mouse_host_handle = (usb_host_handle) param;
 
     // Wait for insertion or removal event
-    OS_Event_wait(mouse_usb_event, USB_EVENT_CTRL | USB_EVENT_DATA | USB_EVENT_DATA_CORRUPTED, FALSE, 0);
+    OS_Event_wait(mouse_usb_event, USB_EVENT_CTRL | USB_EVENT_DATA | USB_EVENT_DATA_CORRUPTED | USB_EVENT_STATE_CHANGE, FALSE, 0);
+    if (OS_Event_check_bit(mouse_usb_event, USB_EVENT_STATE_CHANGE))
+    {
+        OS_Event_clear(mouse_usb_event, USB_EVENT_STATE_CHANGE);
+        update_state();
+    }
     if (OS_Event_check_bit(mouse_usb_event, USB_EVENT_CTRL))
     {
         OS_Event_clear(mouse_usb_event, USB_EVENT_CTRL);
@@ -582,7 +553,7 @@ void Mouse_Task(void* param)
 
     case USB_DEVICE_ATTACHED:
         USB_PRINTF("\r\nMouse device attached\n");
-        update_state (USB_DEVICE_SET_INTERFACE_STARTED);
+        mouse_hid_device.DEV_STATE = USB_DEVICE_SET_INTERFACE_STARTED;
         status = usb_host_open_dev_interface(mouse_host_handle, mouse_hid_device.DEV_HANDLE, mouse_hid_device.INTF_HANDLE, (usb_class_handle*) &mouse_hid_device.CLASS_HANDLE);
         if (status != USB_OK)
         {
@@ -599,7 +570,7 @@ void Mouse_Task(void* param)
         mouse_hid_get_buffer();
         USB_PRINTF("Mouse interfaced, setting protocol...\r\n");
         /* now we will set the USB Hid standard boot protocol */
-        update_state (USB_DEVICE_SETTING_PROTOCOL);
+        mouse_hid_device.DEV_STATE = USB_DEVICE_SETTING_PROTOCOL;
 
         mouse_hid_com->class_ptr = mouse_hid_device.CLASS_HANDLE;
         mouse_hid_com->callback_fn = usb_host_hid_mouse_ctrl_callback;
@@ -614,7 +585,7 @@ void Mouse_Task(void* param)
 
         break;
     case USB_DEVICE_SET_IDLE:
-        update_state (USB_DEVICE_SETTING_IDLE);
+        mouse_hid_device.DEV_STATE = USB_DEVICE_SETTING_IDLE;
         mouse_hid_com->class_ptr = mouse_hid_device.CLASS_HANDLE;
         mouse_hid_com->callback_fn = usb_host_hid_mouse_ctrl_callback;
         mouse_hid_com->callback_param = 0;
@@ -721,12 +692,8 @@ void Mouse_Task(void* param)
             mouse_hid_device.INTF_HANDLE = NULL;
             mouse_hid_device.CLASS_HANDLE = NULL;
             USB_PRINTF("Going to idle state\r\n");
-            update_state (USB_DEVICE_IDLE);
-            if (mouse_hid_device.STATE_MUTEX != NULL)
-            {
-                OS_Mutex_destroy(mouse_hid_device.STATE_MUTEX);
-                mouse_hid_device.STATE_MUTEX = NULL;
-            }
+            mouse_hid_device.DEV_STATE = USB_DEVICE_IDLE;
+
             if (mouse_reportDescriptor != NULL)
             {
                 OS_Mem_free(mouse_reportDescriptor);

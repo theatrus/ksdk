@@ -365,8 +365,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>DEBUG, CPU_MKL02Z32VFM4, FRDM_KL02Z, FREEDOM</Define>
+              <Define>DEBUG, CPU_MKL02Z32VFM4</Define>
               <Undefine/>
               <IncludePath>../../../../platform/CMSIS/Include;../../../../platform/devices;../../../../platform/devices/MKL02Z4/include;../../../../platform/devices/MKL02Z4/startup;../../../../platform/utilities/inc;../../../../platform/hal/inc</IncludePath>
             </VariousControls>
@@ -767,8 +768,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>NDEBUG, CPU_MKL02Z32VFM4, FRDM_KL02Z, FREEDOM</Define>
+              <Define>NDEBUG, CPU_MKL02Z32VFM4</Define>
               <Undefine/>
               <IncludePath>../../../../platform/CMSIS/Include;../../../../platform/devices;../../../../platform/devices/MKL02Z4/include;../../../../platform/devices/MKL02Z4/startup;../../../../platform/utilities/inc;../../../../platform/hal/inc</IncludePath>
             </VariousControls>

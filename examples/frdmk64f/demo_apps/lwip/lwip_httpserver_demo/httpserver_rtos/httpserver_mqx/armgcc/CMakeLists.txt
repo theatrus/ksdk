@@ -28,22 +28,22 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -T${ProjDirPat
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -T${ProjDirPath}/../../../../../../../../platform/devices/MK64F12/linker/gcc/MK64FN1M0xxx12_flash.ld  -static")
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x8000")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x8000")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x8000")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x8000")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -53,16 +53,16 @@ SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DDEBUG")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D_AEABI_LC_CTYPE=C")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D__STRICT_ANSI__=1")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MK64FN1M0VMD12")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_MQX")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFRDM_K64F")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFREEDOM")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_MQX")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DNDEBUG")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D_AEABI_LC_CTYPE=C")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D__STRICT_ANSI__=1")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MK64FN1M0VMD12")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_MQX")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFRDM_K64F")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFREEDOM")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_MQX")
 
 # CXX MACRO
 
@@ -72,6 +72,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/debug/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/debug/mqx)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/debug/mqx_stdlib)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/debug/nshell)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../platform/utilities/inc)
@@ -109,13 +110,13 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/config/common)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/mqx/source/bsp)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/mqx/source/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../..)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release/mqx)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release/mqx_stdlib)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release/nshell)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../platform/utilities/inc)
@@ -153,7 +154,6 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/config/common)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/mqx/source/bsp)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../rtos/mqx/mqx/source/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../..)
 ENDIF()
 
@@ -161,6 +161,19 @@ ENDIF()
 ADD_EXECUTABLE(lwip_httpserver_demo_mqx 
     "${ProjDirPath}/../../../../../../../../platform/utilities/src/fsl_misc_utilities.c"
     "${ProjDirPath}/../../fsl_phy_driver.c"
+    "${ProjDirPath}/../../main.c"
+    "${ProjDirPath}/../../httpserver-netconn.h"
+    "${ProjDirPath}/../../hardware_init.c"
+    "${ProjDirPath}/../../../../../../gpio_pins.c"
+    "${ProjDirPath}/../../../../../../gpio_pins.h"
+    "${ProjDirPath}/../../../../../../pin_mux.c"
+    "${ProjDirPath}/../../../../../../pin_mux.h"
+    "${ProjDirPath}/../../../../../../board.c"
+    "${ProjDirPath}/../../../../../../board.h"
+    "${ProjDirPath}/../../../../../../../../platform/utilities/src/fsl_debug_console.c"
+    "${ProjDirPath}/../../../../../../../../platform/utilities/inc/fsl_debug_console.h"
+    "${ProjDirPath}/../../../../../../../../platform/utilities/src/print_scan.c"
+    "${ProjDirPath}/../../../../../../../../platform/utilities/src/print_scan.h"
     "${ProjDirPath}/../../../../../../../../middleware/tcpip/lwip/port/arch/cc.h"
     "${ProjDirPath}/../../../../../../../../middleware/tcpip/lwip/port/arch/perf.h"
     "${ProjDirPath}/../../../../../../../../middleware/tcpip/lwip/port/ethernetif.c"
@@ -289,32 +302,21 @@ ADD_EXECUTABLE(lwip_httpserver_demo_mqx
     "${ProjDirPath}/../../../../../../../../rtos/mqx/config/common/verif_enabled_config.h"
     "${ProjDirPath}/../../../../../../../../rtos/mqx/config/mcu/MK64F12/mqx_sdk_config.h"
     "${ProjDirPath}/../../../../../../../../rtos/mqx/config/board/frdmk64f/user_config.h"
-    "${ProjDirPath}/../../../../../../../../platform/utilities/src/fsl_debug_console.c"
-    "${ProjDirPath}/../../../../../../../../platform/utilities/inc/fsl_debug_console.h"
-    "${ProjDirPath}/../../../../../../../../platform/utilities/src/print_scan.c"
-    "${ProjDirPath}/../../../../../../../../platform/utilities/src/print_scan.h"
-    "${ProjDirPath}/../../../../../../gpio_pins.c"
-    "${ProjDirPath}/../../../../../../gpio_pins.h"
-    "${ProjDirPath}/../../../../../../pin_mux.c"
-    "${ProjDirPath}/../../../../../../pin_mux.h"
-    "${ProjDirPath}/../../../../../../board.c"
-    "${ProjDirPath}/../../../../../../board.h"
-    "${ProjDirPath}/../../hardware_init.c"
-    "${ProjDirPath}/../../main.c"
-    "${ProjDirPath}/../../httpserver-netconn.h"
 )
 SET_TARGET_PROPERTIES(lwip_httpserver_demo_mqx PROPERTIES OUTPUT_NAME "lwip_httpserver_demo_mqx.elf")
 
 TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx -Wl,--start-group)
 # LIBRARIES
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
-    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/debug/mqx/lib_mqx.a)
-    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/debug/mqx_stdlib/lib_mqx_stdlib.a)
     TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../lib/ksdk_mqx_lib/armgcc/K64F12/debug/libksdk_platform_mqx.a)
+    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/debug/nshell/lib_nshell.a)
+    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/debug/mqx_stdlib/lib_mqx_stdlib.a)
+    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/debug/mqx/lib_mqx.a)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
-    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release/mqx/lib_mqx.a)
-    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release/mqx_stdlib/lib_mqx_stdlib.a)
     TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../lib/ksdk_mqx_lib/armgcc/K64F12/release/libksdk_platform_mqx.a)
+    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release/nshell/lib_nshell.a)
+    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release/mqx_stdlib/lib_mqx_stdlib.a)
+    TARGET_LINK_LIBRARIES(lwip_httpserver_demo_mqx ${ProjDirPath}/../../../../../../../../rtos/mqx/lib/frdmk64f.armgcc/release/mqx/lib_mqx.a)
 ENDIF()
 
 # SYSTEM LIBRARIES

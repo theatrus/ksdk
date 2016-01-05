@@ -38,7 +38,22 @@
 FLEXIO_Type * const g_flexioBase[] = FLEXIO_BASE_PTRS;
 
 /* Table to save FlexIO IRQ enum numbers defined in CMSIS header file. */
+#if defined (KL17Z4_SERIES) || defined (KL17Z644_SERIES) || defined (KL27Z4_SERIES) || \
+defined (KL27Z644_SERIES) || defined (KL33Z4_SERIES)|| defined (KL43Z4_SERIES) || defined (KL13Z644_SERIES) || defined (KL33Z644_SERIES)
+
 const IRQn_Type g_flexioIrqId[FLEXIO_INSTANCE_COUNT] = {UART2_FLEXIO_IRQn};
+
+#elif defined (KL28T7_SERIES)
+
+const IRQn_Type g_flexioIrqId[FLEXIO_INSTANCE_COUNT] = {FLEXIO_IRQn};
+
+#elif defined (K80F25615_SERIES) || defined (K81F25615_SERIES) || defined (K82F25615_SERIES)
+
+const IRQn_Type g_flexioIrqId[FLEXIO_INSTANCE_COUNT] = {FLEXIO0_IRQn};
+
+#else
+    #error "No valid CPU defined!"
+#endif
 
 /*******************************************************************************
  * EOF

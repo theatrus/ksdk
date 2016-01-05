@@ -661,6 +661,7 @@ void SIM_HAL_SetUartOpenDrainMode(SIM_Type * base,
  *
  * @param base     Base address for current SIM instance.
  * @param instance     device instance.
+ * @return enabled True if UARTx Open Drain is enabled.
  */
 bool SIM_HAL_GetUartOpenDrainMode(SIM_Type * base, uint32_t instance);
 
@@ -834,8 +835,8 @@ sim_ftm_ch_src_t SIM_HAL_GetFtmChSrcMode(SIM_Type * base,
  *
  * @param base     Base address for current SIM instance.
  * @param select       Carrier frequency source select.
- *          - 0 :      FTM1_CH1 output provides the carrier signal;
- *          - 1 :      LPTMR0 pre-scaler output provides the carrier signal;
+ *          - 0 :      FTM1_CH1 output provides the carrier signal
+ *          - 1 :      LPTMR0 pre-scaler output provides the carrier signal
  */
 static inline void SIM_HAL_SetFtmCarrierFreqMode(SIM_Type * base, 
                                                  sim_ftm_flt_carrier_sel_t select)
@@ -849,7 +850,7 @@ static inline void SIM_HAL_SetFtmCarrierFreqMode(SIM_Type * base,
  * This function gets Carrier frequency selection setting for FTM0/2 output channel.
  *
  * @param base     Base address for current SIM instance.
- * @return             Carrier frequency selection; 
+ * @return             Carrier frequency selection 
  */
 static inline sim_ftm_flt_carrier_sel_t SIM_HAL_GetFtmCarrierFreqMode(SIM_Type * base)
 {
@@ -906,6 +907,7 @@ void SIM_HAL_SetFtmSyncCmd(SIM_Type * base, uint32_t instance, bool sync);
  *
  * @param base     Base address for current SIM instance.
  * @param instance     device instance.
+ * @return The synchronization value.
  */
 static inline bool SIM_HAL_GetFtmSyncCmd(SIM_Type * base, uint32_t instance)
 {

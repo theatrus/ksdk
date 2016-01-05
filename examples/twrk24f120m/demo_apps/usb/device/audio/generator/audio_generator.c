@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
  *
- * Copyright (c) 2010, 2013- 2014 Freescale Semiconductor;
+ * Copyright (c) 2010, 2013-2015 Freescale Semiconductor;
  * All Rights Reserved
  *
  *
@@ -39,7 +39,6 @@
 #include "audio_generator.h"
 #include "usb_request.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
 #include "board.h"
@@ -48,11 +47,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#endif
-
-#if USBCFG_DEV_COMPOSITE
-#error This application requires USBCFG_DEV_COMPOSITE defined zero in usb_device_config.h. Please recompile usbd with this option.
-#endif
 
 #if USBCFG_AUDIO_CLASS_2_0
 #error This application requires USBCFG_AUDIO_CLASS_2_0 defined zero in usb_device_config.h. Please recompile usbd with this option.
@@ -84,25 +78,13 @@ extern usb_desc_request_notify_struct_t desc_callback;
 
 extern const unsigned char wav_data[];
 extern const uint16_t wav_size;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-static uint8_t *wav_buff;
-#else
 static uint8_t wav_buff[AUDIO_ENDPOINT_MAX_PACKET_SIZE];
-#endif
 uint32_t audio_position = 0;
 
 audio_handle_t g_app_handle;
 
 uint16_t g_app_speed;
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-extern void Main_Task(uint32_t param);
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    {   MAIN_TASK, Main_Task, 2*3000L, 7L, "Main", MQX_AUTO_START_TASK, 0, 0},
-    {   0L, 0L, 0L, 0L, 0L, 0L, 0, 0}
-};
-#endif
 /*****************************************************************************
  * Local Types - None
  *****************************************************************************/
@@ -177,7 +159,7 @@ uint8_t USB_App_Class_Callback
     uint8_t error = USB_OK;
     uint8_t index;
 
-    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID))
+    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID) && (*size != 0xFFFFFFFF))
     {
         if (arg != NULL)
         {
@@ -221,18 +203,12 @@ void APP_init(void)
 {
     audio_config_struct_t audio_config;
     //  printf("audio_TestApp_Init\n");
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    wav_buff = OS_Mem_alloc_uncached_align(AUDIO_ENDPOINT_MAX_PACKET_SIZE, 32);
-    if(wav_buff == NULL)
-    {
-        USB_PRINTF("OS_Mem_alloc_uncached_align fail in audio generator example \r\n");
-        return;
-    }
-#endif
     audio_config.audio_application_callback.callback = USB_App_Device_Callback;
     audio_config.audio_application_callback.arg = &g_app_handle;
     audio_config.class_specific_callback.callback = USB_App_Class_Callback;
     audio_config.class_specific_callback.arg = &g_app_handle;
+    audio_config.board_init_callback.callback = usb_device_board_init;
+    audio_config.board_init_callback.arg = CONTROLLER_ID;
     audio_config.desc_callback_ptr = &desc_callback;
 
     g_app_speed = USB_SPEED_FULL;
@@ -291,33 +267,7 @@ void USB_App_Device_Callback(uint8_t event_type, void* val, void* arg)
     }
 
 }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
 
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : Main_Task
- * Returned Value : None
- * Comments       :
- *     First function called.  Calls the Test_App
- *     callback functions.
- *
- *END*--------------------------------------------------------------------*/
-void Main_Task
-(
-uint32_t param
-)
-{
-    UNUSED_ARGUMENT (param)
-    APP_init();
-    for (;; )
-    {
-        APP_task();
-
-    }
-}
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) 
 
 static void Task_Start(void* param)
 {
@@ -377,13 +327,12 @@ void main(void)
     OSA_Init();
     dbg_uart_init();
 
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
 
     OSA_Start();
 #if (!defined(FSL_RTOS_MQX))&(defined(__CC_ARM) || defined(__GNUC__))
     return 1;
 #endif
 }
-#endif
 
 /* EOF */

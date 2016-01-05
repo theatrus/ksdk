@@ -365,8 +365,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>DEBUG, CPU_MKW01Z128CHN4, FSL_RTOS_FREE_RTOS, MRB_KW01</Define>
+              <Define>DEBUG, CPU_MKW01Z128CHN4, FSL_RTOS_FREE_RTOS</Define>
               <Undefine/>
               <IncludePath>../../../../rtos/FreeRTOS/port/mdk;../../../../rtos/FreeRTOS/config/KW01Z4/mdk;../../../../rtos/FreeRTOS/include;../../../../rtos/FreeRTOS/src;../../../../platform/CMSIS/Include;../../../../platform/devices;../../../../platform/devices/MKW01Z4/include;../../../../platform/devices/MKW01Z4/startup;../../../../platform/utilities/inc;../../../../platform/hal/inc;../../../../platform/drivers/inc;../../../../platform/system/inc;../../../../platform/osa/inc</IncludePath>
             </VariousControls>
@@ -767,8 +768,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>NDEBUG, CPU_MKW01Z128CHN4, FSL_RTOS_FREE_RTOS, MRB_KW01</Define>
+              <Define>NDEBUG, CPU_MKW01Z128CHN4, FSL_RTOS_FREE_RTOS</Define>
               <Undefine/>
               <IncludePath>../../../../rtos/FreeRTOS/port/mdk;../../../../rtos/FreeRTOS/config/KW01Z4/mdk;../../../../rtos/FreeRTOS/include;../../../../rtos/FreeRTOS/src;../../../../platform/CMSIS/Include;../../../../platform/devices;../../../../platform/devices/MKW01Z4/include;../../../../platform/devices/MKW01Z4/startup;../../../../platform/utilities/inc;../../../../platform/hal/inc;../../../../platform/drivers/inc;../../../../platform/system/inc;../../../../platform/osa/inc</IncludePath>
             </VariousControls>

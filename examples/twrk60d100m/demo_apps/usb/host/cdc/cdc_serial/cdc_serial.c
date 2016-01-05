@@ -42,7 +42,6 @@
 #include "usb_host_cdc_io.h"
 #include "cdc_serial.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 //#include "MK70F12_port.h"
 //#include "fsl_usb_features.h"
@@ -54,24 +53,14 @@
 #include "fsl_port_hal.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "fsl_uart_driver.h"
 #include "board.h"
 #include "usb_uart_drv.h"
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "serial.h"
-#include "io_serl_int.h"
-#endif
 
 /***************************************
  **
  ** Macros
  */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#define FILE_PTR MQX_FILE_PTR
-#else
 #define FILE_PTR file_device_struct_t *
-#endif
 
 #define CDC_SERIAL_DELIMITER_CR '\r'
 #define CDC_SERIAL_DELIMITER_LF '\n'
@@ -84,13 +73,8 @@
 #define CDC_USB_RETRY_MAX 2
 
 /* CDC IO lock/unlock */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#define CDC_SERIAL_IO_lock()                OS_Mutex_lock(s_cdc_serial_io_mutex)
-#define CDC_SERIAL_IO_unlock()              OS_Mutex_unlock(s_cdc_serial_io_mutex)
-#else
 #define CDC_SERIAL_IO_lock()                OS_Lock()
 #define CDC_SERIAL_IO_unlock()              OS_Unlock()
-#endif
 /***************************************
  **
  ** Globals
@@ -104,9 +88,7 @@ extern "C"
 #if defined(__cplusplus)
 }
 #endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 extern void USB_UART_DRV_IRQHandler(uint32_t instance);
-#endif
 /* Table of driver capabilities this application wants to use */
 static usb_host_driver_info_t DriverInfoTable[] =
 {
@@ -165,13 +147,6 @@ usb_interface_descriptor_handle data_intf_handle = NULL;
 
 extern file_cdc_t * f_usb;
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    {10, Main_Task, 1000L, 10L, "Main", MQX_AUTO_START_TASK},
-    {0L, 0L, 0L, 0L, 0L, 0L}
-};
-#endif
 /***************************************
  **
  ** Locals
@@ -180,13 +155,8 @@ static f_usb_info_t s_f_usb_info = {NULL, 0, CDC_SERIAL_DETACHED};
 static char usb2uart_buffer[CDC_BUF_MAX];
 static char uart2usb_buffer[CDC_BUF_MAX];
 static char uart_rx_buf[CDC_UART_RX_MAX];
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-static char *usb_tx_buf;
-static char *usb_rx_buf;
-#else
 static char usb_tx_buf[CDC_USB_BUF_MAX];
 static char usb_rx_buf[CDC_USB_BUF_MAX];
-#endif
 static int usb_tx_remain_cnt = 0;
 static int usb_tx_done = 0;
 static char * uart2usb_buf_ptr_in = NULL;
@@ -198,9 +168,7 @@ static data_device_struct_t data_device;
 static uint32_t s_feed = 0;
 static uint8_t s_retry = CDC_USB_RETRY_MAX;
 static os_mutex_handle s_cdc_serial_io_mutex = NULL;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 static usb_uart_state_t s_uartState;
-#endif
 /*FUNCTION*----------------------------------------------------------------
  *
  * Function Name  : _cdc_serial_set_state
@@ -234,61 +202,10 @@ static usb_status _cdc_serial_set_state(CDC_SERIAL_STS_E sts)
 static uint32_t _cdc_serial_os_task_suspend(void)
 {
     uint32_t ret;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    ret = OS_Task_suspend(_task_get_id());
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-    ret = OS_Task_suspend(0);
-#else
     ret = 1;
-#endif
     return ret;
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
-#else
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : _cdc_serial_clear_io_flag
- * Returned Value : 
- * Comments       :
- *     Clear IO_SERIAL_NON_BLOCKING | IO_SERIAL_ECHO flags.
- *
- *END*--------------------------------------------------------------------*/
-static void _cdc_serial_clear_io_flag(FILE_PTR fptr, uint32_t flag)
-{
-    uint32_t flags;
-    if (IO_OK != ioctl(fptr, IO_IOCTL_SERIAL_GET_FLAGS, &flags))
-    {
-        USB_PRINTF("\nInternal error occurred");
-    }
-    flags &= ~flag;
-    if (IO_OK != ioctl(fptr, IO_IOCTL_SERIAL_SET_FLAGS, &flags))
-    {
-        USB_PRINTF("\nInternal error occurred");
-    }
-}
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : _cdc_serial_set_io_flag
- * Returned Value : 
- * Comments       :
- *     Set IO_SERIAL_NON_BLOCKING | IO_SERIAL_ECHO flags.
- *
- *END*--------------------------------------------------------------------*/
-static void _cdc_serial_set_io_flag(FILE_PTR fptr, uint32_t flag)
-{
-    uint32_t flags;
-    if (IO_OK != ioctl(fptr, IO_IOCTL_SERIAL_GET_FLAGS, &flags))
-    {
-        USB_PRINTF("\nInternal error occurred");
-    }
-    flags |= flag;
-    if (IO_OK != ioctl(fptr, IO_IOCTL_SERIAL_SET_FLAGS, &flags))
-    {
-        USB_PRINTF("\nInternal error occurred");
-    }
-}
-#endif
 #if CDC_ASYNC
 volatile static cdc_xfer_t s_cdc_xfer = {CDC_TX_IDLE, CDC_RX_IDLE, 0, 0};
 
@@ -331,19 +248,9 @@ void _cdc_serial_rx_callback(void *param)
  *END*--------------------------------------------------------------------*/
 static int32_t _cdc_serial_send_element(void)
 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     usb_uart_status_t ret;
     uint32_t sent_num = 0;
     uint32_t remained = 0;
-#else
-    int32_t ret = 0;
-    FILE_PTR f_stdout;
-    if (NULL == (f_stdout = stdout))
-    {
-        USB_PRINTF("\nInternal error occurred");
-        _cdc_serial_os_task_suspend(); /* internal error occurred */
-    }
-#endif
 
     while (usb2uart_buf_ptr_out != usb2uart_buf_ptr_in)
     {
@@ -351,7 +258,6 @@ static int32_t _cdc_serial_send_element(void)
         {
             usb2uart_buf_ptr_out = &usb2uart_buffer[0];
         }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
         sent_num = (usb2uart_buf_ptr_in > usb2uart_buf_ptr_out ? (usb2uart_buf_ptr_in - usb2uart_buf_ptr_out) : (&usb2uart_buffer[CDC_BUF_MAX] - usb2uart_buf_ptr_out));
         //sent_num = 1;
         if (kStatus_USB_UART_TxBusy != USB_UART_DRV_GetTransmitStatus(BOARD_DEBUG_UART_INSTANCE, &remained))
@@ -363,19 +269,6 @@ static int32_t _cdc_serial_send_element(void)
                 usb2uart_buf_ptr_out += sent_num;
             }
         }
-#else
-        CDC_SERIAL_IO_lock();
-        _cdc_serial_set_io_flag(f_stdout, IO_SERIAL_NON_BLOCKING);
-        ret = fwrite(usb2uart_buf_ptr_out, 1, 1, f_stdout);
-        _cdc_serial_clear_io_flag(f_stdout, IO_SERIAL_NON_BLOCKING);
-        CDC_SERIAL_IO_unlock();
-
-        if(ret == 1)
-        {
-            /* send out successfully */
-            usb2uart_buf_ptr_out++;
-        }
-#endif
         else
         {
             break;
@@ -421,9 +314,7 @@ static void _copy_to_usb2uart_buf(uint32_t num)
 void usb2uart_task(uint32_t param)
 { /* Body */
     int num_done = 0;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     uint32_t remained = 0;
-#endif
     num_done = 0;
     /* read data from USB */
 #if CDC_ASYNC
@@ -440,17 +331,10 @@ void usb2uart_task(uint32_t param)
             if(IO_OK != _io_cdc_serial_read_async(s_f_usb_info.f_usb, usb_rx_buf, CDC_USB_BUF_MAX, _cdc_serial_rx_callback))
             {
                 s_cdc_xfer.rx_sts = CDC_RX_IDLE;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
                 while(kStatus_USB_UART_TxBusy == USB_UART_DRV_GetTransmitStatus(BOARD_DEBUG_UART_INSTANCE, &remained))
                 {
                     ;
                 }
-#else
-                if (IO_OK != ioctl(stdout, IO_IOCTL_FLUSH_OUTPUT, NULL))
-                {
-                    USB_PRINTF("\nInternal error occurred");
-                }
-#endif
                 USB_PRINTF("\n_io_cdc_serial_read_async error");
             }
         }
@@ -535,10 +419,8 @@ static int32_t _cdc_serial_recv_element(void)
         {
             uart2usb_buf_ptr_out = &uart2usb_buffer[0];
         }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if CDC_SERIAL_ECHO_BACK
         USB_PRINTF("%c", *uart2usb_buf_ptr_out);
-#endif
 #endif
         usb_tx_buf[s_usb_tx_buf_i++] = *(uart2usb_buf_ptr_out++);
         if (CDC_MAX_PKT_SIZE == s_usb_tx_buf_i)
@@ -569,7 +451,6 @@ static int32_t _cdc_serial_recv_element(void)
     return ret;
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 /*FUNCTION*----------------------------------------------------------------
  *
  * Function Name  : uart_rx_cb
@@ -585,7 +466,6 @@ void uart_rx_cb(uint32_t instance, void * uartState)
         _copy_to_uart2usb_buf(1);
     }
 }
-#endif
 
 /*FUNCTION*----------------------------------------------------------------
  *
@@ -599,45 +479,7 @@ void uart2usb_task(uint32_t param)
 { /* Body */
     int num_done = 0;
     int send_cnt = 0;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     uint32_t remained = 0;
-#else
-    FILE_PTR f_stdin;
-    uint32_t flags;
-
-    if (NULL == (f_stdin = stdin))
-    {
-        USB_PRINTF("\nInternal error occurred");
-        _cdc_serial_os_task_suspend(); /* internal error occurred */
-    }
-    flags = IO_SERIAL_NON_BLOCKING | IO_SERIAL_ECHO;
-    if (IO_OK != ioctl(f_stdin, IO_IOCTL_SERIAL_SET_FLAGS, &flags))
-    {
-        USB_PRINTF("\nInternal error occurerd");
-        _cdc_serial_os_task_suspend(); /* internal error occurred */
-    }
-
-    /* read data from UART */
-    CDC_SERIAL_IO_lock();
-    _cdc_serial_set_io_flag(f_stdin, IO_SERIAL_NON_BLOCKING | IO_SERIAL_ECHO);
-#if !CDC_SERIAL_ECHO_BACK
-    _cdc_serial_clear_io_flag(f_stdin, IO_SERIAL_ECHO);
-#endif
-    num_done = fread(uart_rx_buf, 1, CDC_UART_RX_MAX, f_stdin);
-    _cdc_serial_clear_io_flag(f_stdin, IO_SERIAL_NON_BLOCKING | IO_SERIAL_ECHO);
-    CDC_SERIAL_IO_unlock();
-
-    if (IO_ERROR == num_done)
-    {
-        USB_PRINTF("\nUnexpected error occurred");
-        _cdc_serial_os_task_suspend(); /* unexpected error occurred */
-    }
-    else if(num_done)
-    {
-        /* buffer the data received from UART */
-        _copy_to_uart2usb_buf(num_done);
-    }
-#endif
 
     /* 
      ** The virtual com example on device side won't prime next OUT packet if it hasn't finished sending
@@ -671,17 +513,10 @@ void uart2usb_task(uint32_t param)
                 if(IO_OK != _io_cdc_serial_write_async(s_f_usb_info.f_usb, &usb_tx_buf[usb_tx_done], (send_cnt > CDC_MAX_PKT_SIZE? CDC_MAX_PKT_SIZE : send_cnt), _cdc_serial_tx_callback))
                 {
                     s_cdc_xfer.tx_sts = CDC_TX_IDLE;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
                     while(kStatus_USB_UART_TxBusy == USB_UART_DRV_GetTransmitStatus(BOARD_DEBUG_UART_INSTANCE, &remained))
                     {
                         ;
                     }
-#else
-                    if (IO_OK != ioctl(stdout, IO_IOCTL_FLUSH_OUTPUT, NULL))
-                    {
-                        USB_PRINTF("\nInternal error occured");
-                    }
-#endif
                     USB_PRINTF("\n_io_cdc_serial_write_async error");
                 }
                 num_done = 0;
@@ -922,7 +757,6 @@ usb_status usb_host_cdc_data_event
 
     return USB_OK;
 } /* Endbody */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 /*FUNCTION*----------------------------------------------------------------
  *
  * Function Name  : UART_RX_TX_IRQHandler
@@ -936,7 +770,6 @@ static void UART_RX_TX_IRQHandler(void)
 {
     USB_UART_DRV_IRQHandler (BOARD_DEBUG_UART_INSTANCE);
 }
-#endif
 
 /*FUNCTION*----------------------------------------------------------------
  *
@@ -950,15 +783,12 @@ void APP_init(void)
 {
     usb_status status = USB_OK;
     usb_host_handle host_handle;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    usb_tx_buf = OS_Mem_alloc_uncached_align(CDC_USB_BUF_MAX, 32);
-    usb_rx_buf = OS_Mem_alloc_uncached_align(CDC_USB_BUF_MAX, 32);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     usb_uart_user_config_t uartConfig;
 
-    uartConfig.bitCountPerChar = kUart8BitsPerChar;
-    uartConfig.parityMode = kUartParityDisabled;
-    uartConfig.stopBitCount = kUartOneStopBit;
+    uartConfig.bitCountPerChar = USB_UART_8BitsPerChar;
+    uartConfig.parityMode = USB_UART_ParityDisabled;
+    uartConfig.stopBitCount = USB_UART_OneStopBit;
+    uartConfig.clockSource = USB_UART_DEFAULT_CLOCK_SOURCE;
     uartConfig.baudRate = 115200;
     USB_UART_DRV_Init(BOARD_DEBUG_UART_INSTANCE, &s_uartState, &uartConfig);
 
@@ -968,9 +798,6 @@ void APP_init(void)
 #endif
     USB_UART_DRV_InstallRxCallback(BOARD_DEBUG_UART_INSTANCE, (usb_uart_rx_callback_t)uart_rx_cb,
     (uint8_t *)(&uart_rx_buf[0]), NULL, TRUE);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-    sci_init();
-#endif
     uart2usb_buf_ptr_in = uart2usb_buf_ptr_out = uart2usb_buffer;
     usb2uart_buf_ptr_in = usb2uart_buf_ptr_out = usb2uart_buffer;
     acm_device.acm_event = OS_Event_create(0);
@@ -985,7 +812,7 @@ void APP_init(void)
         _cdc_serial_os_task_suspend();
     }
     //_int_install_unexpected_isr();
-    status = usb_host_init(CONTROLLER_ID, &host_handle);
+    status = usb_host_init(CONTROLLER_ID, usb_host_board_init, &host_handle);
 
     /*
      ** It means that we are going to act like host, so we initialize the
@@ -1033,13 +860,7 @@ void APP_init(void)
  *END*--------------------------------------------------------------------*/
 void APP_task(void)
 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     uint32_t remained;
-#else
-    FILE_PTR f_stdin;
-    char dummy;
-    uint32_t flags;
-#endif
     usb_status status = USB_OK;
     /* process the state of cdc serial */
     switch(s_f_usb_info.state)
@@ -1081,20 +902,12 @@ void APP_task(void)
             usb_class_cdc_unbind_data_interfaces(acm_parser);
 
             /* Use only the interface with desired protocol */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
             /* Flush out data on UART TX */
             while (kStatus_USB_UART_TxBusy == USB_UART_DRV_GetTransmitStatus(BOARD_DEBUG_UART_INSTANCE, &remained))
             {
                 ;
             }
-#else
-            if (IO_OK != ioctl(stdout, IO_IOCTL_FLUSH_OUTPUT, NULL))
-            {
-                USB_PRINTF("\nInternal error occurred");
-            }
-            _cdc_serial_clear_io_flag(stdout, IO_SERIAL_NON_BLOCKING);
 
-#endif
             USB_PRINTF("----- CDC control interface detach event -----\r\n");
 
             /*
@@ -1122,10 +935,7 @@ void APP_task(void)
             }
 
             reg_device = 0;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
-#else
-            _cdc_serial_clear_io_flag(stdout, IO_SERIAL_NON_BLOCKING);
-#endif
+
             USB_PRINTF("----- CDC data interface detach Event -----\r\n");
         }
         break;
@@ -1153,30 +963,6 @@ void APP_task(void)
 
         USB_PRINTF("----- CDC data interface attach event -----\r\n");
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
-#else
-        if (NULL == (f_stdin = stdin))
-        {
-            USB_PRINTF("\nInternal error occurred");
-            _cdc_serial_os_task_suspend(); /* internal error occurred */
-        }
-
-        flags = IO_SERIAL_NON_BLOCKING | IO_SERIAL_ECHO;
-        if (IO_OK != ioctl(f_stdin, IO_IOCTL_SERIAL_SET_FLAGS, &flags))
-        {
-            USB_PRINTF("\nInternal error occurred");
-            _cdc_serial_os_task_suspend(); /* internal error occurred */
-        }
-        /* clear uart rx fifo when re-plugin device */
-        CDC_SERIAL_IO_lock();
-        _cdc_serial_set_io_flag(f_stdin, IO_SERIAL_NON_BLOCKING | IO_SERIAL_ECHO);
-#if !CDC_SERIAL_ECHO_BACK
-        _cdc_serial_clear_io_flag(f_stdin, IO_SERIAL_ECHO);
-#endif
-        while(fread(&dummy, 1, 1, f_stdin));
-        _cdc_serial_clear_io_flag(f_stdin, IO_SERIAL_NON_BLOCKING | IO_SERIAL_ECHO);
-        CDC_SERIAL_IO_unlock();
-#endif
         /*
          * The following describes the scenario that the usb device is detached but still with power on.
          *
@@ -1203,30 +989,7 @@ void APP_task(void)
 
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : main (Main_Task if using MQX)
- * Returned Value : none
- * Comments       :
- *     Execution starts here
- *
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    APP_init();
-    /*
-     ** Infinite loop, waiting for events requiring action
-     */
-    for (;;)
-    {
-        APP_task();
-    } /* Endfor */
-} /* Endbody */
 
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
@@ -1265,10 +1028,9 @@ int main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
     OSA_Start();
 #if !defined(FSL_RTOS_MQX)
     return 1;
 #endif
 }
-#endif

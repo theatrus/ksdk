@@ -1,7 +1,7 @@
 /*
 ** ###################################################################
-**     Version:             rev. 1.1, 2015-01-21
-**     Build:               b150310
+**     Version:             rev. 1.3, 2015-06-08
+**     Build:               b150715
 **
 **     Abstract:
 **         Chip specific module features.
@@ -42,6 +42,10 @@
 **         Initial version.
 **     - rev. 1.1 (2015-01-21)
 **         Added FSL_FEATURE_SOC_peripheral_COUNT with number of peripheral instances
+**     - rev. 1.2 (2015-05-25)
+**         Added FSL_FEATURE_FLASH_PFLASH_START_ADDRESS
+**     - rev. 1.3 (2015-06-08)
+**         FTM features BUS_CLOCK and FAST_CLOCK removed.
 **
 ** ###################################################################
 */
@@ -66,7 +70,7 @@
 /* @brief FIFO size if available (bitfield SC4[AFDEP]). */
 #define FSL_FEATURE_ADC16_FIFO_SIZE (0)
 /* @brief Has channel set a/b multiplexor (bitfield CFG2[MUXSEL]). */
-#define FSL_FEATURE_ADC16_HAS_MUX_SELECT (1)
+#define FSL_FEATURE_ADC16_HAS_MUX_SELECT (0)
 /* @brief Has HW trigger masking (bitfield SC5[HTRGMASKE]. */
 #define FSL_FEATURE_ADC16_HAS_HW_TRIGGER_MASK (0)
 /* @brief Has calibration feature (bit SC3[CAL] and registers CLPx, CLMx). */
@@ -132,8 +136,8 @@
 #define FSL_FEATURE_SOC_CADC_COUNT (0)
 /* @brief FLEXCAN availability on the SoC. */
 #define FSL_FEATURE_SOC_FLEXCAN_COUNT (1)
-/* @brief CAU availability on the SoC. */
-#define FSL_FEATURE_SOC_CAU_COUNT (0)
+/* @brief MMCAU availability on the SoC. */
+#define FSL_FEATURE_SOC_MMCAU_COUNT (0)
 /* @brief CMP availability on the SoC. */
 #define FSL_FEATURE_SOC_CMP_COUNT (2)
 /* @brief CMT availability on the SoC. */
@@ -192,6 +196,8 @@
 #define FSL_FEATURE_SOC_FTMRH_COUNT (0)
 /* @brief GPIO availability on the SoC. */
 #define FSL_FEATURE_SOC_GPIO_COUNT (5)
+/* @brief HSADC availability on the SoC. */
+#define FSL_FEATURE_SOC_HSADC_COUNT (0)
 /* @brief I2C availability on the SoC. */
 #define FSL_FEATURE_SOC_I2C_COUNT (1)
 /* @brief I2S availability on the SoC. */
@@ -202,8 +208,8 @@
 #define FSL_FEATURE_SOC_IRQ_COUNT (0)
 /* @brief KBI availability on the SoC. */
 #define FSL_FEATURE_SOC_KBI_COUNT (0)
-/* @brief LCD availability on the SoC. */
-#define FSL_FEATURE_SOC_LCD_COUNT (0)
+/* @brief SLCD availability on the SoC. */
+#define FSL_FEATURE_SOC_SLCD_COUNT (0)
 /* @brief LCDC availability on the SoC. */
 #define FSL_FEATURE_SOC_LCDC_COUNT (0)
 /* @brief LDO availability on the SoC. */
@@ -233,7 +239,7 @@
 /* @brief MMAU availability on the SoC. */
 #define FSL_FEATURE_SOC_MMAU_COUNT (0)
 /* @brief MMDVSQ availability on the SoC. */
-#define FSL_FEATURE_SOC_MMDVSQ_COUNT (0)
+#define FSL_FEATURE_SOC_MMDVSQ_COUNT (1)
 /* @brief MPU availability on the SoC. */
 #define FSL_FEATURE_SOC_MPU_COUNT (0)
 /* @brief MSCAN availability on the SoC. */
@@ -300,6 +306,8 @@
 #define FSL_FEATURE_SOC_TPM_COUNT (0)
 /* @brief TRIAMP availability on the SoC. */
 #define FSL_FEATURE_SOC_TRIAMP_COUNT (0)
+/* @brief TRNG availability on the SoC. */
+#define FSL_FEATURE_SOC_TRNG_COUNT (0)
 /* @brief TSI availability on the SoC. */
 #define FSL_FEATURE_SOC_TSI_COUNT (0)
 /* @brief UART availability on the SoC. */
@@ -326,16 +334,16 @@
 /* CRC module features */
 
 /* @brief Has data register with name CRC */
-#define FSL_FEATURE_CRC_HAS_CRC_REG (1)
+#define FSL_FEATURE_CRC_HAS_CRC_REG (0)
 
 /* DAC module features */
 
 /* @brief Define the size of hardware buffer */
 #define FSL_FEATURE_DAC_BUFFER_SIZE (2)
 /* @brief Define whether the buffer supports watermark event detection or not. */
-#define FSL_FEATURE_DAC_HAS_WATERMARK_DETECTION (0)
+#define FSL_FEATURE_DAC_HAS_WATERMARK_DETECTION (1)
 /* @brief Define whether the buffer supports watermark selection detection or not. */
-#define FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION (1)
+#define FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION (0)
 /* @brief Define whether the buffer supports watermark event 1 word before buffer upper limit. */
 #define FSL_FEATURE_DAC_HAS_WATERMARK_1_WORD (0)
 /* @brief Define whether the buffer supports watermark event 2 words before buffer upper limit. */
@@ -347,7 +355,7 @@
 /* @brief Define whether FIFO buffer mode is available or not. */
 #define FSL_FEATURE_DAC_HAS_BUFFER_FIFO_MODE (0)
 /* @brief Define whether swing buffer mode is available or not.. */
-#define FSL_FEATURE_DAC_HAS_BUFFER_SWING_MODE (1)
+#define FSL_FEATURE_DAC_HAS_BUFFER_SWING_MODE (0)
 
 /* EDMA module features */
 
@@ -358,14 +366,14 @@
 /* @brief Number of DMA channel groups (register bit fields CR[ERGA], CR[GRPnPRI], ES[GPE], DCHPRIn[GRPPRI]). (Valid only for eDMA modules.) */
 #define FSL_FEATURE_EDMA_CHANNEL_GROUP_COUNT (1)
 /* @brief Number of DMA channels with asynchronous request capability (register EARS). (Valid only for eDMA modules.) */
-#define FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT (4)
+#define FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT (8)
 
 /* DMAMUX module features */
 
 /* @brief Number of DMA channels (related to number of register CHCFGn). */
-#define FSL_FEATURE_DMAMUX_MODULE_CHANNEL (4)
+#define FSL_FEATURE_DMAMUX_MODULE_CHANNEL (8)
 /* @brief Total number of DMA channels on all modules. */
-#define FSL_FEATURE_DMAMUX_DMAMUX_CHANNELS (DMAMUX_INSTANCE_COUNT * 4)
+#define FSL_FEATURE_DMAMUX_DMAMUX_CHANNELS (DMAMUX_INSTANCE_COUNT * 8)
 /* @brief Has the periodic trigger capability for the triggered DMA channel 0 (register bit CHCFG0[TRIG]). */
 #define FSL_FEATURE_DMAMUX_HAS_TRIG (0)
 
@@ -397,20 +405,24 @@
     #define FSL_FEATURE_FLASH_HAS_FMC_FLASH_CACHE_CONTROLS (0)
     /* @brief Has flash cache control in MCM module. */
     #define FSL_FEATURE_FLASH_HAS_MCM_FLASH_CACHE_CONTROLS (1)
+    /* @brief P-Flash start address. */
+    #define FSL_FEATURE_FLASH_PFLASH_START_ADDRESS (0x00000000)
     /* @brief P-Flash block count. */
     #define FSL_FEATURE_FLASH_PFLASH_BLOCK_COUNT (1)
     /* @brief P-Flash block size. */
     #define FSL_FEATURE_FLASH_PFLASH_BLOCK_SIZE (131072)
     /* @brief P-Flash sector size. */
-    #define FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE (1024)
+    #define FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE (2048)
     /* @brief P-Flash write unit size. */
     #define FSL_FEATURE_FLASH_PFLASH_BLOCK_WRITE_UNIT_SIZE (4)
     /* @brief P-Flash data path width. */
-    #define FSL_FEATURE_FLASH_PFLASH_BLOCK_DATA_PATH_WIDTH (4)
+    #define FSL_FEATURE_FLASH_PFLASH_BLOCK_DATA_PATH_WIDTH (8)
     /* @brief P-Flash block swap feature. */
     #define FSL_FEATURE_FLASH_HAS_PFLASH_BLOCK_SWAP (0)
     /* @brief Has FlexNVM memory. */
     #define FSL_FEATURE_FLASH_HAS_FLEX_NVM (0)
+    /* @brief FlexNVM start address. (Valid only if FlexNVM is available.) */
+    #define FSL_FEATURE_FLASH_FLEX_NVM_START_ADDRESS (0x00000000)
     /* @brief FlexNVM block count. */
     #define FSL_FEATURE_FLASH_FLEX_NVM_BLOCK_COUNT (0)
     /* @brief FlexNVM block size. */
@@ -421,14 +433,12 @@
     #define FSL_FEATURE_FLASH_FLEX_NVM_BLOCK_WRITE_UNIT_SIZE (0)
     /* @brief FlexNVM data path width. */
     #define FSL_FEATURE_FLASH_FLEX_BLOCK_DATA_PATH_WIDTH (0)
-    /* @brief FlexNVM start address. (Valid only if FlexNVM is available.) */
-    #define FSL_FEATURE_FLASH_FLEX_NVM_START_ADDRESS (0x00000000)
     /* @brief Has FlexRAM memory. */
     #define FSL_FEATURE_FLASH_HAS_FLEX_RAM (0)
-    /* @brief FlexRAM size. */
-    #define FSL_FEATURE_FLASH_FLEX_RAM_SIZE (0)
     /* @brief FlexRAM start address. (Valid only if FlexRAM is available.) */
     #define FSL_FEATURE_FLASH_FLEX_RAM_START_ADDRESS (0x00000000)
+    /* @brief FlexRAM size. */
+    #define FSL_FEATURE_FLASH_FLEX_RAM_SIZE (0)
     /* @brief Has 0x00 Read 1s Block command. */
     #define FSL_FEATURE_FLASH_HAS_READ_1S_BLOCK_CMD (0)
     /* @brief Has 0x01 Read 1s Section command. */
@@ -466,9 +476,9 @@
     /* @brief P-Flash Erase/Read 1st all block command address alignment. */
     #define FSL_FEATURE_FLASH_PFLASH_BLOCK_CMD_ADDRESS_ALIGMENT (4)
     /* @brief P-Flash Erase sector command address alignment. */
-    #define FSL_FEATURE_FLASH_PFLASH_SECTOR_CMD_ADDRESS_ALIGMENT (4)
+    #define FSL_FEATURE_FLASH_PFLASH_SECTOR_CMD_ADDRESS_ALIGMENT (8)
     /* @brief P-Flash Rrogram/Verify section command address alignment. */
-    #define FSL_FEATURE_FLASH_PFLASH_SECTION_CMD_ADDRESS_ALIGMENT (4)
+    #define FSL_FEATURE_FLASH_PFLASH_SECTION_CMD_ADDRESS_ALIGMENT (8)
     /* @brief P-Flash Read resource command address alignment. */
     #define FSL_FEATURE_FLASH_PFLASH_RESOURCE_CMD_ADDRESS_ALIGMENT (4)
     /* @brief P-Flash Program check command address alignment. */
@@ -570,20 +580,24 @@
     #define FSL_FEATURE_FLASH_HAS_FMC_FLASH_CACHE_CONTROLS (0)
     /* @brief Has flash cache control in MCM module. */
     #define FSL_FEATURE_FLASH_HAS_MCM_FLASH_CACHE_CONTROLS (1)
+    /* @brief P-Flash start address. */
+    #define FSL_FEATURE_FLASH_PFLASH_START_ADDRESS (0x00000000)
     /* @brief P-Flash block count. */
     #define FSL_FEATURE_FLASH_PFLASH_BLOCK_COUNT (1)
     /* @brief P-Flash block size. */
     #define FSL_FEATURE_FLASH_PFLASH_BLOCK_SIZE (65536)
     /* @brief P-Flash sector size. */
-    #define FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE (1024)
+    #define FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE (2048)
     /* @brief P-Flash write unit size. */
     #define FSL_FEATURE_FLASH_PFLASH_BLOCK_WRITE_UNIT_SIZE (4)
     /* @brief P-Flash data path width. */
-    #define FSL_FEATURE_FLASH_PFLASH_BLOCK_DATA_PATH_WIDTH (4)
+    #define FSL_FEATURE_FLASH_PFLASH_BLOCK_DATA_PATH_WIDTH (8)
     /* @brief P-Flash block swap feature. */
     #define FSL_FEATURE_FLASH_HAS_PFLASH_BLOCK_SWAP (0)
     /* @brief Has FlexNVM memory. */
     #define FSL_FEATURE_FLASH_HAS_FLEX_NVM (0)
+    /* @brief FlexNVM start address. (Valid only if FlexNVM is available.) */
+    #define FSL_FEATURE_FLASH_FLEX_NVM_START_ADDRESS (0x00000000)
     /* @brief FlexNVM block count. */
     #define FSL_FEATURE_FLASH_FLEX_NVM_BLOCK_COUNT (0)
     /* @brief FlexNVM block size. */
@@ -594,14 +608,12 @@
     #define FSL_FEATURE_FLASH_FLEX_NVM_BLOCK_WRITE_UNIT_SIZE (0)
     /* @brief FlexNVM data path width. */
     #define FSL_FEATURE_FLASH_FLEX_BLOCK_DATA_PATH_WIDTH (0)
-    /* @brief FlexNVM start address. (Valid only if FlexNVM is available.) */
-    #define FSL_FEATURE_FLASH_FLEX_NVM_START_ADDRESS (0x00000000)
     /* @brief Has FlexRAM memory. */
     #define FSL_FEATURE_FLASH_HAS_FLEX_RAM (0)
-    /* @brief FlexRAM size. */
-    #define FSL_FEATURE_FLASH_FLEX_RAM_SIZE (0)
     /* @brief FlexRAM start address. (Valid only if FlexRAM is available.) */
     #define FSL_FEATURE_FLASH_FLEX_RAM_START_ADDRESS (0x00000000)
+    /* @brief FlexRAM size. */
+    #define FSL_FEATURE_FLASH_FLEX_RAM_SIZE (0)
     /* @brief Has 0x00 Read 1s Block command. */
     #define FSL_FEATURE_FLASH_HAS_READ_1S_BLOCK_CMD (0)
     /* @brief Has 0x01 Read 1s Section command. */
@@ -639,9 +651,9 @@
     /* @brief P-Flash Erase/Read 1st all block command address alignment. */
     #define FSL_FEATURE_FLASH_PFLASH_BLOCK_CMD_ADDRESS_ALIGMENT (4)
     /* @brief P-Flash Erase sector command address alignment. */
-    #define FSL_FEATURE_FLASH_PFLASH_SECTOR_CMD_ADDRESS_ALIGMENT (4)
+    #define FSL_FEATURE_FLASH_PFLASH_SECTOR_CMD_ADDRESS_ALIGMENT (8)
     /* @brief P-Flash Rrogram/Verify section command address alignment. */
-    #define FSL_FEATURE_FLASH_PFLASH_SECTION_CMD_ADDRESS_ALIGMENT (4)
+    #define FSL_FEATURE_FLASH_PFLASH_SECTION_CMD_ADDRESS_ALIGMENT (8)
     /* @brief P-Flash Read resource command address alignment. */
     #define FSL_FEATURE_FLASH_PFLASH_RESOURCE_CMD_ADDRESS_ALIGMENT (4)
     /* @brief P-Flash Program check command address alignment. */
@@ -726,20 +738,16 @@
 
 /* FTM module features */
 
-/* @brief Bus clock is the source clock for the module. */
-#define FSL_FEATURE_FTM_BUS_CLOCK (0)
 /* @brief Number of channels. */
 #define FSL_FEATURE_FTM_CHANNEL_COUNT (6)
 #define FSL_FEATURE_FTM_CHANNEL_COUNTx { 6, 2, 2, 6, 2, 2 }
 /* @brief Has counter reset by the selected input capture event (register bits C0SC[ICRST], C1SC[ICRST], ...). */
 #define FSL_FEATURE_FTM_HAS_COUNTER_RESET_BY_CAPTURE_EVENT (1)
-/* @brief Fast peripheral clock is the source clock for the module. */
-#define FSL_FEATURE_FTM_FAST_CLOCK (0)
 
 /* GPIO module features */
 
 /* @brief Has fast (single cycle) access capability via a dedicated memory region. */
-#define FSL_FEATURE_GPIO_HAS_FAST_GPIO (0)
+#define FSL_FEATURE_GPIO_HAS_FAST_GPIO (1)
 /* @brief Has port input disable register (PIDR). */
 #define FSL_FEATURE_GPIO_HAS_INPUT_DISABLE (0)
 /* @brief Has dedicated interrupt vector. */
@@ -1437,7 +1445,8 @@
 
 /* LPTMR module features */
 
-/* No feature definitions */
+/* @brief Has shared interrupt handler with another LPTMR module. */
+#define FSL_FEATURE_LPTMR_HAS_SHARED_IRQ_HANDLER (0)
 
 /* MCG module features */
 
@@ -1499,6 +1508,10 @@
 #define FSL_FEATURE_MCG_HAS_LOW_FREQ_IRC (0)
 /* @brief Has high frequency internal reference clock (IRC) (registers HCTRIM, HTTRIM, HFTRIM and bit MC[HIRCEN]). */
 #define FSL_FEATURE_MCG_HAS_HIGH_FREQ_IRC (0)
+/* @brief Has PEI mode or PBI mode. */
+#define FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE (0)
+/* @brief Reset clock mode is BLPI. */
+#define FSL_FEATURE_MCG_RESET_IS_BLPI (0)
 
 /* MMDVSQ module features */
 
@@ -1530,6 +1543,8 @@
 #define FSL_FEATURE_PDB_ADC_PRE_CHANNEL_COUNT (2)
 /* @brief Has DAC support. */
 #define FSL_FEATURE_PDB_HAS_DAC (1)
+/* @brief Has shared interrupt handler (has not individual interrupt handler for each channel). */
+#define FSL_FEATURE_PDB_HAS_SHARED_IRQ_HANDLER (1)
 
 /* PMC module features */
 
@@ -1553,7 +1568,7 @@
 /* @brief Has pull resistor enable (register bit PCR[PE]). */
 #define FSL_FEATURE_PORT_HAS_PULL_ENABLE (1)
 /* @brief Has slew rate control (register bit PCR[SRE]). */
-#define FSL_FEATURE_PORT_HAS_SLEW_RATE (0)
+#define FSL_FEATURE_PORT_HAS_SLEW_RATE (1)
 /* @brief Has passive filter (register bit field PCR[PFE]). */
 #define FSL_FEATURE_PORT_HAS_PASSIVE_FILTER (1)
 /* @brief Has drive strength control (register bit PCR[DSE]). */
@@ -1562,6 +1577,12 @@
 #define FSL_FEATURE_PORT_HAS_DRIVE_STRENGTH_REGISTER (0)
 /* @brief Has glitch filter (register IOFLT). */
 #define FSL_FEATURE_PORT_HAS_GLITCH_FILTER (0)
+/* @brief Defines width of PCR[MUX] field. */
+#define FSL_FEATURE_PORT_PCR_MUX_WIDTH (3)
+/* @brief Defines whether PCR[IRQC] bit-field has flag states. */
+#define FSL_FEATURE_PORT_HAS_IRQC_FLAG (0)
+/* @brief Defines whether PCR[IRQC] bit-field has trigger states. */
+#define FSL_FEATURE_PORT_HAS_IRQC_TRIGGER (0)
 
 /* RCM module features */
 
@@ -1810,7 +1831,7 @@
 /* @brief Has partial stop option (register bit STOPCTRL[PSTOPO]). */
 #define FSL_FEATURE_SMC_HAS_PSTOPO (1)
 /* @brief Has LPO power option (register bit STOPCTRL[LPOPO]). */
-#define FSL_FEATURE_SMC_HAS_LPOPO (1)
+#define FSL_FEATURE_SMC_HAS_LPOPO (0)
 /* @brief Has POR power option (register bit STOPCTRL[PORPO] or VLLSCTRL[PORPO]). */
 #define FSL_FEATURE_SMC_HAS_PORPO (1)
 /* @brief Has low power wakeup on interrupt (register bit PMCTRL[LPWUI]). */
@@ -1827,9 +1848,9 @@
 #define FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE (0)
 /* @brief Has low leakage stop mode (register bit PMPROT[ALLS]). */
 #define FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE (0)
-/* @brief Has stop submode 0(state VLLS0 of register bit STOPCTRL[VLLSM]). */
+/* @brief Has stop submode 0(VLLS0). */
 #define FSL_FEATURE_SMC_HAS_STOP_SUBMODE0 (1)
-/* @brief Has stop submode 2(state VLLS2 of register bit STOPCTRL[VLLSM]). */
+/* @brief Has stop submode 2(VLLS2). */
 #define FSL_FEATURE_SMC_HAS_STOP_SUBMODE2 (0)
 
 /* DSPI module features */
@@ -1937,8 +1958,8 @@
 #define FSL_FEATURE_UART_HAS_WAIT_MODE_OPERATION (1)
 /* @brief Has separate DMA RX and TX requests. */
 #define FSL_FEATURE_UART_HAS_SEPARATE_DMA_RX_TX_REQn(x) \
-    ((x) == 0 ? (0) : \
-    ((x) == 1 ? (0) : (-1)))
+    ((x) == 0 ? (1) : \
+    ((x) == 1 ? (1) : (-1)))
 
 /* WDOG module features */
 

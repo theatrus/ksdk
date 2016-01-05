@@ -117,7 +117,7 @@ typedef struct _audio_queue_struct
     usb_device_handle handle;
     uint8_t channel;
     audio_app_data_t app_data;
-}cdc_queue_struct_t;
+}audio_queue_struct_t;
 #endif
 
 /* USB class audio endpoint data */
@@ -170,6 +170,7 @@ typedef struct audio_device_struct
     usb_class_specific_callback_struct_t        class_specific_callback;
     usb_desc_request_notify_struct_t            desc_callback;
     uint8_t                                     current_interface;
+    uint8_t                                     controller_id;
 }audio_device_struct_t; 
 #endif
 

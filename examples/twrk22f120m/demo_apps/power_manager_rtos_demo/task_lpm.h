@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2014 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -27,7 +27,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef TASK_LPM_H
 #define TASK_LPM_H
 ///////////////////////////////////////////////////////////////////////////////
 // Includes
@@ -48,48 +47,63 @@
 #include "lpm_rtos.h"
 #include "adc16_temperature.h"
 #include "fsl_debug_console.h"
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
 #include "rtc_setup.h"
-#endif
 #include "lptmr_setup.h"
+#if (defined FSL_RTOS_MQX)
+#include "bsp.h"
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions
 ///////////////////////////////////////////////////////////////////////////////
 /* Checking return value then print out error message. */
+
+#define DELAY_COUNT           1000000
+
+#define SYSTICK_CM4_CSR_REG (*((volatile unsigned long *)0xE000E010))
+#define SYSTICK_CM4_RVR_REG (*((volatile unsigned long *)0xE000E014))
+#define SYSTICK_CM4_CVR_REG (*((volatile unsigned long *)0xE000E018))
+#define SYSTICK_CM4_CALIB_REG (*((volatile unsigned long *)0xE000E01C))
+
+#define SYSTICK_DISABLE()       (SYSTICK_CM4_CSR_REG &= (~1))
+#define SYSTICK_ENABLE()        (SYSTICK_CM4_CSR_REG |= 1)
+#define SYSTICK_RELOAD(tps)     (SYSTICK_CM4_RVR_REG = tps)
+
+#if (FSL_RTOS_FREE_RTOS)
+#define TICK_PER_SEC            configTICK_RATE_HZ
+#elif (FSL_RTOS_UCOSII)
+#define TICK_PER_SEC            OS_TICKS_PER_SEC
+#elif (FSL_RTOS_UCOSIII)
+#define TICK_PER_SEC            OSCfg_TickRate_Hz
+#elif (FSL_RTOS_MQX)
+#define TICK_PER_SEC            BSP_ALARM_FREQUENCY
+#else
+#define TICK_PER_SEC            1000
+#endif
+
 #define CHECK_RET_VAL(ret, mode) \
 if (ret != kPowerManagerSuccess) \
 { \
-    PRINTF("POWER_SYS_SetMode(%u) returned unexpected status : %u\n\r",mode,ret); \
+    PRINTF("POWER_SYS_SetMode(%u) returned unexpected status : %u\r\n",mode,ret); \
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Structures & enumerations
 ///////////////////////////////////////////////////////////////////////////////
 typedef enum demo_power_modes {
-    kDemoMin = 'A' -1,
+    kDemoMin  = 'A' -1,
     kDemoRun  = 'A',           // Normal RUN mode
     kDemoWait,
     kDemoStop,
     kDemoVlpr,
     kDemoVlpw,
     kDemoVlps,
-#if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE
     kDemoLls,
-#endif
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE0 & BOARD_SW_HAS_LLWU_PIN
     kDemoVlls0,
-#endif
     kDemoVlls1,
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE2
     kDemoVlls2,
-#endif
     kDemoVlls3,
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
     kDemoHsRun,           // HighSpeed RUN mode
-#endif
-    kDemoCM0,           // Clock Manager Mode configuration 0
-    kDemoCM1,           // Clock Manager Mode configuration 1
     KDemoADC,
     kDemoMax
 } demo_power_modes_t;
@@ -129,71 +143,136 @@ typedef struct lptmrStructure
 // Variables
 ///////////////////////////////////////////////////////////////////////////////
 
-extern lptmrStructure_t cmCallbackData;
+lptmrStructure_t cmCallbackData;
 
 /*--------------------------------MODE---------------------------------------*/
-extern power_manager_user_config_t const vlprConfig;
+power_manager_user_config_t const vlprConfig =
+{
+    .mode = kPowerManagerVlpr,
+    .sleepOnExitValue = false,
+};
 
-extern power_manager_user_config_t const vlpwConfig;
+power_manager_user_config_t const vlpwConfig =
+{
+    .mode = kPowerManagerVlpw,
+};
 
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE0 & BOARD_SW_HAS_LLWU_PIN
-extern power_manager_user_config_t const vlls0Config;
-#endif
-extern power_manager_user_config_t const vlls1Config;
-#if FSL_FEATURE_SMC_HAS_STOP_SUBMODE2
-extern power_manager_user_config_t const vlls2Config;
-#endif
-extern power_manager_user_config_t const vlls3Config;
-#if FSL_FEATURE_SMC_HAS_LOW_LEAKAGE_STOP_MODE
-extern power_manager_user_config_t const llsConfig;
-#endif
-extern power_manager_user_config_t const vlpsConfig;
-extern power_manager_user_config_t const waitConfig;
-extern power_manager_user_config_t const stopConfig;
-extern power_manager_user_config_t const runConfig;
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
-extern power_manager_user_config_t const hsrunConfig;
-#endif
+power_manager_user_config_t const vlls0Config =
+{
+    .mode = kPowerManagerVlls0,
+    .sleepOnExitValue = false,
+};
+power_manager_user_config_t const vlls1Config =
+{
+    .mode = kPowerManagerVlls1,
+    .sleepOnExitValue = false,
+};
+power_manager_user_config_t const vlls2Config =
+{
+    .mode = kPowerManagerVlls2,
+    .sleepOnExitValue = false,
+};
+power_manager_user_config_t const vlls3Config =
+{
+    .mode = kPowerManagerVlls3,
+    .sleepOnExitValue = false,
+};
+power_manager_user_config_t const llsConfig =
+{
+    // LLS3 mode retains all ram content so CPU wake up doesn't go through restart sequence
+    .mode = kPowerManagerLls3,
 
-extern power_manager_user_config_t const *powerConfigs[];
+    .sleepOnExitValue = false,
+};
+power_manager_user_config_t const vlpsConfig =
+{
+    .mode = kPowerManagerVlps,
+    .sleepOnExitValue = false,
+};
+power_manager_user_config_t const waitConfig =
+{
+    .mode = kPowerManagerWait,
+    .sleepOnExitValue = false,
+};
+power_manager_user_config_t const stopConfig =
+{
+    .mode = kPowerManagerStop,
+    .sleepOnExitValue = false,
+};
+power_manager_user_config_t const runConfig =
+{
+    .mode = kPowerManagerRun
+};
+power_manager_user_config_t const hsrunConfig =
+{
+    .mode = kPowerManagerHsrun
+};
 
-/*---------------------------------------------------------------------------*/
-extern power_manager_error_code_t rtos_pm_callback(power_manager_notify_struct_t * notify,
- power_manager_callback_data_t * dataPtr);
+power_manager_user_config_t const *powerConfigs[] =
+{
+    &runConfig,
+    &waitConfig,
+    &stopConfig,
+    &vlprConfig,
+    &vlpwConfig,
+    &vlpsConfig,
+    &llsConfig,
+    &vlls0Config,
+    &vlls1Config,
+    &vlls2Config,
+    &vlls3Config,
+    &hsrunConfig
+};
 
-extern clock_manager_error_code_t rtos_cm_callback(clock_notify_struct_t *notify,
-                                    void* callbackData);
-extern clock_manager_error_code_t dbg_console_cm_callback(clock_notify_struct_t *notify,
-                                    void* callbackData);
-extern power_manager_error_code_t adc16_pm_callback(power_manager_notify_struct_t * notify,
- power_manager_callback_data_t * dataPtr);
+/*--------------------------------Callback---------------------------------------*/
+clock_manager_callback_user_config_t dbg_console_cm_callback_tbl_data =
+{
+    .callback     = dbg_console_cm_callback,
+    .callbackType = kClockManagerCallbackBeforeAfter,
+    .callbackData = NULL
+};
 
-extern clock_manager_error_code_t adc16_cm_callback(clock_notify_struct_t * notify, void* callbackData);
+clock_manager_callback_user_config_t rtos_cm_callback_tbl_data =
+{
+    .callback     = rtos_cm_callback,
+    .callbackType = kClockManagerCallbackBeforeAfter,
+    .callbackData = &cmCallbackData,
+};
 
-extern clock_manager_callback_user_config_t dbg_console_cm_callback_data;
+clock_manager_callback_user_config_t *cm_callback_tbl[] =
+{
+    &rtos_cm_callback_tbl_data,
+    &dbg_console_cm_callback_tbl_data,
+};
 
-extern clock_manager_callback_user_config_t rtos_cm_callback_data;
+power_manager_callback_user_config_t adc16_pm_callback_tbl_data =
+{
+    .callback     = adc16_pm_callback,
+    .callbackType = kPowerManagerCallbackBeforeAfter,
+    .callbackData = NULL
+};
 
-extern clock_manager_callback_user_config_t adc16_cm_callback_data;
+power_manager_callback_user_config_t rtos_pm_callback_tbl_data =
+{
+    .callback     = rtos_pm_callback,
+    .callbackType = kPowerManagerCallbackBeforeAfter,
+    .callbackData = NULL,
+};
 
-extern clock_manager_callback_user_config_t *cm_callback_tbl[];
+power_manager_callback_user_config_t *pm_callback_tbl[] =
+{
+    &adc16_pm_callback_tbl_data,
+    &rtos_pm_callback_tbl_data
+};
 
-extern power_manager_callback_user_config_t const adc16_pm_callback_data;
-
-extern power_manager_callback_user_config_t const rtos_pm_callback_data;
-
-extern power_manager_callback_user_config_t *pm_callback_tbl[];
-
-extern size_t const cm_callback_tbl_size;
-extern size_t const powerConfigsSize;
-extern size_t const pm_callback_tbl_size;
+size_t const cm_callback_tbl_size = sizeof(cm_callback_tbl)/sizeof(clock_manager_callback_user_config_t *);
+size_t const powerConfigsSize = sizeof(powerConfigs)/sizeof(power_manager_user_config_t *);
+size_t const pm_callback_tbl_size = sizeof(pm_callback_tbl)/sizeof(power_manager_callback_user_config_t *);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Prototypes
 ///////////////////////////////////////////////////////////////////////////////
 
-/* LLW_IRQHandler that would cover the same name's APIs in startup code */
-void MODULE_IRQ_HANDLER(LLWU)(void);
 /*!
  * @brief set alarm command.
  *
@@ -228,14 +307,6 @@ void BOARD_SW_LLWU_IRQ_HANDLER(void);
  */
 uint8_t setWakeUpTimeOut(wakeUpSource_t wus);
 
-/*!
- * @brief select wakeup source.
- *
- * TWR_K60D100M doesn't have switch pins connected to LLWU.
- * It's not possible to wake up by SWx buttons from some modes.
- * returns 0 when RTC is selected as wake up source
- * returns 1 when sw pins are selected as wake up source
- */
 wakeUpSource_t selectWakeUpSource(demo_power_modes_t mode);
 
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE
@@ -270,12 +341,10 @@ void updateClockManagerToRunMode(uint8_t cmConfigMode);
  */
 void updateClockManagerToVlprMode(uint8_t cmConfigMode);
 
-#if FSL_FEATURE_SMC_HAS_HIGH_SPEED_RUN_MODE
 /*!
  * @brief update clock manager to hsrun mode.
  */
 void updateClockManagerToHsRunMode(uint8_t cmConfigMode);
-#endif
 
 /*!
  * @brief Update clock to compatible with RUN mode.
@@ -292,7 +361,26 @@ void delay(uint32_t delay_time);
  */
 void task_lpm(task_param_t param);
 
-#endif
+void wait_finish_uart(void);
+
+void task_led_rtos(task_param_t param);
+
+void task_led_clock(task_param_t param);
+
+/*----------------------Callback handler-------------------------*/
+/*!
+ * @brief task low power management.
+ * Function Name : dbg_console_cm_callback
+ * Description   : debug console callback for change event from power manager
+ */
+clock_manager_error_code_t dbg_console_cm_callback(clock_notify_struct_t *notify, void* callbackData);
+
+power_manager_error_code_t rtos_pm_callback(power_manager_notify_struct_t * notify,  power_manager_callback_data_t * dataPtr);
+
+clock_manager_error_code_t rtos_cm_callback(clock_notify_struct_t *notify, void* callbackData);
+
+/*----------------------------------------------------------------*/
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // EOF

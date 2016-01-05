@@ -4,7 +4,7 @@
 (cd  ../../../../../../../../rtos/mqx/nshell/build/armgcc/nshell_twrk60d100m && source build_debug.sh nopause) 
 (cd  ../../../../../../../../rtos/mqx/mqx_stdlib/build/armgcc/mqx_stdlib_twrk60d100m && source build_debug.sh nopause) 
 (cd  ../../../../../../../../lib/ksdk_mqx_lib/armgcc/K60D10 && source build_debug.sh nopause) 
-(cd  ../../../../../../../../usb/usb_core/host/build/armgcc/usbh_sdk_twrk60d100m_mqx && source build_debug.sh nopause) 
+(cd  ../../../../../../../../usb/usb_core/host/lib/mqx/armgcc/MK60D10 && source build_debug.sh nopause) 
 cmake -DCMAKE_TOOLCHAIN_FILE=armgcc.cmake -DCMAKE_BUILD_TYPE="int flash debug" -G "Unix Makefiles" 
 make all 
 if [ "${1}" != "nopause" ]; then

@@ -37,16 +37,7 @@
  *
  *END************************************************************************/
 #include "osadapter_cfg.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#include <mqx.h>
-#include <lwevent.h>
-#include <bsp.h>
-#else
-#include <types.h>
-#include "derivative.h"
-#include "hidef.h"
-#include "mem_util.h"
-#endif
+
 
 #include <usb_types.h> 
 #include <usb_desc.h>  

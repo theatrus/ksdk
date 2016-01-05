@@ -42,10 +42,6 @@
 #include "mouse.h"
 #include "usb_descriptor.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "user_config.h"
-#endif
-
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
@@ -57,20 +53,6 @@
 
 #endif
 
-#if USBCFG_DEV_COMPOSITE
-#error This application requires USBCFG_DEV_COMPOSITE defined zero in usb_device_config.h. Please recompile usbd with this option.
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-static void Main_Task(uint32_t param);
-#define MAIN_TASK       10
-
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    { MAIN_TASK, Main_Task, 2000L, 7L, "Main", MQX_AUTO_START_TASK, 0, 0 },
-    { 0L, 0L, 0L, 0L, 0L, 0L, 0, 0 }
-};
-#endif
 /*****************************************************************************
  * Constant and Macro's - None
  *****************************************************************************/
@@ -236,7 +218,7 @@ uint8_t USB_App_Class_Callback
     uint8_t error = USB_OK;
     uint8_t index = (uint8_t)((request - 2) & USB_HID_REQUEST_TYPE_MASK);
 
-    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID))
+    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID) && (*size != 0xFFFFFFFF))
     {
         if ((g_mouse.mouse_init) && (arg != NULL))
         {
@@ -314,21 +296,14 @@ void APP_init(void)
     OS_Mem_zero(&g_mouse, sizeof(mouse_global_variable_struct_t));
     OS_Mem_zero(&config_struct, sizeof(hid_config_struct_t));
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    g_mouse.rpt_buf = (uint8_t*) OS_Mem_alloc_uncached_align(MOUSE_BUFF_SIZE, 32);
-    if (NULL == g_mouse.rpt_buf)
-    {
-        USB_PRINTF("\nMalloc error in APP_init\n");
-        return;
-    }
-    OS_Mem_zero(g_mouse.rpt_buf, MOUSE_BUFF_SIZE);
-#endif
     /* Initialize the USB interface */
     USB_PRINTF("begin to test mouse\r\n");
     config_struct.hid_application_callback.callback = USB_App_Device_Callback;
     config_struct.hid_application_callback.arg = &g_mouse.app_handle;
     config_struct.class_specific_callback.callback = USB_App_Class_Callback;
     config_struct.class_specific_callback.arg = &g_mouse.app_handle;
+    config_struct.board_init_callback.callback = usb_device_board_init;
+    config_struct.board_init_callback.arg = CONTROLLER_ID;
     config_struct.desc_callback_ptr = &g_desc_callback;
 
     g_mouse.app_speed = USB_SPEED_FULL;
@@ -339,24 +314,6 @@ void APP_task()
 {
     USB_HID_Periodic_Task();
 }
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-/*FUNCTION*----------------------------------------------------------------
- * 
- * Function Name  : Main_Task
- * Returned Value : None
- * Comments       :
- *     First function called.  Calls Test_App
- *     callback functions.
- * 
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    UNUSED_ARGUMENT (param)
-    APP_init();
-}
-#endif
 
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
@@ -399,7 +356,7 @@ void main(void)
 #if !(USE_RTOS)
     APP_init();
 #else
-    OS_Task_create(Task_Start, NULL, 9L, 1000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 1000L, "task_start", NULL);
 #endif
 
     OSA_Start();

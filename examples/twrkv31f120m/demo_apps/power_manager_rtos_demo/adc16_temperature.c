@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2014 - 2015 Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -44,6 +44,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions
 ///////////////////////////////////////////////////////////////////////////////
+
+#define BOARD_PIT_INSTANCE  0
 
 ///////////////////////////////////////////////////////////////////////////////
 // Structures & enumerations
@@ -116,10 +118,7 @@ void adc16CalibrateParams(void)
     adcUserConfig.resolution = kAdc16ResolutionBitOf16;
     adcUserConfig.continuousConvEnable = false;
     adcUserConfig.clkSrc = kAdc16ClkSrcOfAsynClk;
-#if (  defined(FRDM_KL43Z)   /* CPU_MKL43Z256VLH4 */ \
-    || defined(TWR_KL43Z48M) /* CPU_MKL43Z256VLH4 */ \
-    || defined(FRDM_KL27Z)   /* CPU_MKL27Z64VLH4  */ \
-    )
+#if BOARD_ADC_USE_ALT_VREF
     adcUserConfig.refVoltSrc = kAdc16RefVoltSrcOfValt;
 #endif
     ADC16_DRV_Init(HWADC_INSTANCE, &adcUserConfig);
@@ -135,14 +134,14 @@ void adc16CalibrateParams(void)
     ADC16_DRV_GetAutoCalibrationParam(HWADC_INSTANCE, &adcCalibraitionParam);
     ADC16_DRV_SetCalibrationParam(HWADC_INSTANCE, &adcCalibraitionParam);
 #endif
-    
+
     adcChnConfig.chnIdx = ADC16_BANDGAP_CHN;
 #if FSL_FEATURE_ADC16_HAS_DIFF_MODE
     adcChnConfig.diffConvEnable = false;
 #endif
     adcChnConfig.convCompletedIntEnable = false;
     ADC16_DRV_ConfigConvChn(HWADC_INSTANCE, CHANNEL_0, &adcChnConfig);
-    
+
     // Wait for the conversion to be done
     ADC16_DRV_WaitConvDone(HWADC_INSTANCE, CHANNEL_0);
 
@@ -214,10 +213,7 @@ int adc16Init(adc16_converter_config_t *adcUserConfig, adc16_chn_config_t *adcCh
     adcUserConfig->hwTriggerEnable = true;
     adcUserConfig->continuousConvEnable = false;
     adcUserConfig->clkSrc = kAdc16ClkSrcOfAsynClk;
-#if (  defined(FRDM_KL43Z)   /* CPU_MKL43Z256VLH4 */ \
-    || defined(TWR_KL43Z48M) /* CPU_MKL43Z256VLH4 */ \
-    || defined(FRDM_KL27Z)   /* CPU_MKL27Z64VLH4  */ \
-    )
+#if BOARD_ADC_USE_ALT_VREF
     adcUserConfig->refVoltSrc = kAdc16RefVoltSrcOfValt;
 #endif
     ADC16_DRV_Init(HWADC_INSTANCE, adcUserConfig);
@@ -248,11 +244,11 @@ void adc16PrintTemperature(void)
 {
     if(0 == gConversionCompleteFlag)
     {
-        PRINTF("\n\rWarning: Conversion has not completed");
+        PRINTF("\r\nWarning: Conversion has not completed");
     }
     else
     {
-        PRINTF("\n\rTemperature: %d C ", (int)adc16GetCurrentTempValue());
+        PRINTF("\r\nTemperature: %d C ", (int)adc16GetCurrentTempValue());
         gConversionCompleteFlag = 0;
     }
 }
@@ -266,7 +262,7 @@ void adc16InitPitTriggerSource(uint32_t adcInstance)
 {
     /* Change the timer period here in unit of microseconds.*/
     uint32_t timerPeriod = 500;
-    uint32_t pitInstance = PIT_IDX;
+    uint32_t pitInstance = BOARD_PIT_INSTANCE;
     uint32_t pitChannel = 0;
 
     if(sPdbInitialized)
@@ -302,7 +298,7 @@ void adc16DeinitPitTriggerSource(uint32_t adcInstance)
 {
     if(sPdbInitialized == 1)
     {
-        PIT_DRV_Deinit(PIT_IDX);
+        PIT_DRV_Deinit(BOARD_PIT_INSTANCE);
         sPdbInitialized = 0;
     }
 }

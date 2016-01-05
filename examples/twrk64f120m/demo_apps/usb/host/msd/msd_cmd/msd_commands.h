@@ -52,7 +52,16 @@
 #define  USB_DEVICE_OTHER                  (8)
 #define  USB_DEVICE_INTERFACE_CLOSED       (9)
 
+
+#define  USB_STATE_CHANGE_ATTACHED         (0x01)
+#define  USB_STATE_CHANGE_OPENED           (0x02)
+#define  USB_STATE_CHANGE_DETACHED         (0x04)
+#define  USB_STATE_CHANGE_IDLE             (0x08)
+
+
+#ifndef HIGH_SPEED
 #define  HIGH_SPEED                        (0)
+#endif
 
 #if HIGH_SPEED
 #define CONTROLLER_ID                      USB_CONTROLLER_EHCI_0
@@ -115,7 +124,8 @@ typedef struct _device_struct
     uint32_t dev_state; /* Attach/detach state */
     usb_device_instance_handle dev_handle;
     usb_interface_descriptor_handle intf_handle;
-    usb_class_handle CLASS_HANDLE; /* Class-specific info */
+    usb_class_handle class_handle; /* Class-specific info */
+    volatile uint32_t state_change;
 } device_struct_t;
 
 /* Alphabetical list of Function Prototypes */

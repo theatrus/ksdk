@@ -254,7 +254,7 @@ void SPI_HAL_ClearMatchFlag(SPI_Type * base)
          * defined as a read-only register, even though the SPI_S.SPMF bitfield documentation
          * states you must write a 1 to the bitfield to clear it.
          */
-/*        SPI_S_REG(base) = SPI_S_SPMF_MASK; */
+        *((uint8_t*)(base)) |= SPI_S_SPMF_MASK;
     }
 }
 

@@ -365,8 +365,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>DEBUG, CPU_MKL26Z128VLH4, FSL_RTOS_UCOSIII, FRDM_KL26Z, FREEDOM</Define>
+              <Define>DEBUG, CPU_MKL26Z128VLH4, FSL_RTOS_UCOSIII</Define>
               <Undefine/>
               <IncludePath>../../../../rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M0/Generic/RealView;../../../../rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M0/RealView;../../../../rtos;../../../../rtos/uCOSIII/src/config;../../../../rtos/uCOSIII/src/uCOS-III/Source;../../../../rtos/uCOSIII/src/uC-LIB;../../../../rtos/uCOSIII/src/uC-CPU;../../../../platform/CMSIS/Include;../../../../platform/devices;../../../../platform/devices/MKL26Z4/include;../../../../platform/devices/MKL26Z4/startup;../../../../platform/utilities/inc;../../../../platform/hal/inc;../../../../platform/drivers/inc;../../../../platform/system/inc;../../../../platform/osa/inc</IncludePath>
             </VariousControls>
@@ -767,8 +768,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>NDEBUG, CPU_MKL26Z128VLH4, FSL_RTOS_UCOSIII, FRDM_KL26Z, FREEDOM</Define>
+              <Define>NDEBUG, CPU_MKL26Z128VLH4, FSL_RTOS_UCOSIII</Define>
               <Undefine/>
               <IncludePath>../../../../rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M0/Generic/RealView;../../../../rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M0/RealView;../../../../rtos;../../../../rtos/uCOSIII/src/config;../../../../rtos/uCOSIII/src/uCOS-III/Source;../../../../rtos/uCOSIII/src/uC-LIB;../../../../rtos/uCOSIII/src/uC-CPU;../../../../platform/CMSIS/Include;../../../../platform/devices;../../../../platform/devices/MKL26Z4/include;../../../../platform/devices/MKL26Z4/startup;../../../../platform/utilities/inc;../../../../platform/hal/inc;../../../../platform/drivers/inc;../../../../platform/system/inc;../../../../platform/osa/inc</IncludePath>
             </VariousControls>

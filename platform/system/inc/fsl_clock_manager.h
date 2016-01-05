@@ -46,49 +46,41 @@
  * Definitions
  ******************************************************************************/
 
-/* Macro to determine which clock module is used. */
-#if (defined(SCG_INSTANCE_COUNT))
-#define CLOCK_USE_SCG                /* SCG is used.      */
-#elif (defined(FSL_FEATURE_MCGLITE_MCGLITE))
-#define CLOCK_USE_MCG_LITE           /* MCG_LITE is used. */
-#else
-#define CLOCK_USE_MCG                /* MCG is used.      */
-#endif
-
-/*! @brief The register base of SIM module. */
+/*! @brief The register base of the SIM module. */
 extern SIM_Type * const g_simBase[];
 
-#if (defined(CLOCK_USE_MCG) || defined(CLOCK_USE_MCG_LITE))
-/*! @brief The register base of MCG/MCG_LITE module. */
+#if FSL_FEATURE_SOC_MCGLITE_COUNT || FSL_FEATURE_SOC_MCG_COUNT
+/*! @brief The register base of the MCG/MCG_LITE module. */
 extern MCG_Type * const g_mcgBase[];
 #endif
 
-#if (defined(CLOCK_USE_SCG))
-/*! @brief The register base of SCG module. */
+#if (defined(FSL_FEATURE_SOC_SCG_COUNT) && FSL_FEATURE_SOC_SCG_COUNT)
+/*! @brief The register base of the SCG module. */
 extern const uint32_t g_scgBase[];
 #endif
 
-#if (!defined(CLOCK_USE_SCG))
-/*! @brief The register base of OSC module. */
+#if ((!(defined(FSL_FEATURE_SOC_SCG_COUNT) && FSL_FEATURE_SOC_SCG_COUNT)) \
+       && FSL_FEATURE_SOC_OSC_COUNT)
+/*! @brief The register base of the OSC module. */
 extern OSC_Type * const g_oscBase[];
 #endif
 
-#if (defined(PCC_INSTANCE_COUNT))
-/*! @brief The register base of PCC module. */
+#if (defined(FSL_FEATURE_SOC_PCC_COUNT) && FSL_FEATURE_SOC_PCC_COUNT)
+/*! @brief The register base of the PCC module. */
 extern PCC_Type * const g_pccBase[];
 #endif
 
-/*! @brief Frequency of LPO. */
+/*! @brief Frequency of the LPO. */
 #define CPU_LPO_CLK_HZ           1000U
 
 /*! @brief Systick clock source selection. */
 typedef enum _clock_systick_src
 {
     kClockSystickSrcExtRef = 0U, /*!< Use external reference clock.     */
-    kClockSystickSrcCore   = 1U, /*!< Use processer clock (Core clock). */
+    kClockSystickSrcCore   = 1U, /*!< Use processor clock (Core clock). */
 } clock_systick_src_t;
 
-/*! @brief Clock name used to get clock frequency. */
+/*! @brief A clock name used to get the clock frequency. */
 typedef enum _clock_names {
 
    /* default clocks*/
@@ -99,7 +91,7 @@ typedef enum _clock_names {
    kFlexBusClock,                   /*!< FlexBus clock */
    kFlashClock,                     /*!< Flash clock */
    kFastPeripheralClock,            /*!< Flash peripheral clock */
-   kSystickClock,                   /*!< Clock for systick. */
+   kSystickClock,                   /*!< Clock for Systick. */
 
    /* other internal clocks used by peripherals*/
    /* osc clock*/
@@ -171,7 +163,7 @@ clock_manager_error_code_t CLOCK_SYS_GetFreq(clock_names_t clockName,
                                                  uint32_t *frequency);
 
 /*!
- * @brief Get core clock frequency.
+ * @brief Gets the core clock frequency.
  *
  * This function gets the core clock frequency.
  *
@@ -180,7 +172,7 @@ clock_manager_error_code_t CLOCK_SYS_GetFreq(clock_names_t clockName,
 uint32_t CLOCK_SYS_GetCoreClockFreq(void);
 
 /*!
- * @brief Get system clock frequency.
+ * @brief Gets the system clock frequency.
  *
  * This function gets the system clock frequency.
  *
@@ -189,7 +181,7 @@ uint32_t CLOCK_SYS_GetCoreClockFreq(void);
 uint32_t CLOCK_SYS_GetSystemClockFreq(void);
 
 /*!
- * @brief Get bus clock frequency.
+ * @brief Gets the bus clock frequency.
  *
  * This function gets the bus clock frequency.
  *
@@ -198,7 +190,7 @@ uint32_t CLOCK_SYS_GetSystemClockFreq(void);
 uint32_t CLOCK_SYS_GetBusClockFreq(void);
 
 /*!
- * @brief Get flash clock frequency.
+ * @brief Gets the flash clock frequency.
  *
  * This function gets the flash clock frequency.
  *
@@ -207,7 +199,7 @@ uint32_t CLOCK_SYS_GetBusClockFreq(void);
 uint32_t CLOCK_SYS_GetFlashClockFreq(void);
 
 /*!
- * @brief Get LPO clock frequency.
+ * @brief Gets the LPO clock frequency.
  *
  * This function gets the LPO clock frequency.
  *
@@ -219,13 +211,13 @@ static inline uint32_t CLOCK_SYS_GetLpoClockFreq(void)
 }
 
 /*!
- * @brief Set Systick clock source SYST_CSR[CLKSOURCE].
+ * @brief Sets the Systick clock source SYST_CSR[CLKSOURCE].
  *
- * This function selects the clock source for systick, systick clock source
- * could be external reference clock or processor clock. Please check
+ * This function selects the clock source for Systick. The Systick clock source
+ * can be an external reference clock or a processor clock. See a
  * reference manual for details.
  *
- * @param src Clock source for systick.
+ * @param src Clock source for Systick.
  */
 static inline void CLOCK_SYS_SetSystickSrc(clock_systick_src_t src)
 {
@@ -234,13 +226,13 @@ static inline void CLOCK_SYS_SetSystickSrc(clock_systick_src_t src)
 }
 
 /*!
- * @brief Get Systick clock frequency.
+ * @brief Gets the Systick clock frequency.
  *
- * This function gets the clock frequency for systick. Systick clock source
- * could be external reference clock or processor clock. Please check
+ * This function gets the clock frequency for Systick. The Systick clock source
+ * can be an external reference clock or a processor clock. See a
  * reference manual for details.
  *
- * @return Clock frequency for systick.
+ * @return Clock frequency for Systick.
  */
 #if FSL_FEATURE_SYSTICK_HAS_EXT_REF
 uint32_t CLOCK_SYS_GetSystickFreq(void);
@@ -256,7 +248,7 @@ static inline uint32_t CLOCK_SYS_GetSystickFreq(void)
 #endif /* __cplusplus*/
 
 /*
- * Include the cpu specific clock API header files.
+ * Include the CPU-specific clock API header files.
  */
 #if (defined(K02F12810_SERIES))
     /* Clock System Level API header file */
@@ -351,6 +343,20 @@ static inline uint32_t CLOCK_SYS_GetSystickFreq(void)
 
 #elif (defined(K70F15_SERIES))
 
+#elif (defined(K80F25615_SERIES))
+
+    /* Clock System Level API header file */
+    #include "../src/clock/MK80F25615/fsl_clock_MK80F25615.h"
+
+#elif (defined(K81F25615_SERIES))
+
+    /* Clock System Level API header file */
+    #include "../src/clock/MK81F25615/fsl_clock_MK81F25615.h"
+
+#elif (defined(K82F25615_SERIES))
+
+    /* Clock System Level API header file */
+    #include "../src/clock/MK82F25615/fsl_clock_MK82F25615.h"
 
 #elif (defined(KL02Z4_SERIES))
 /* Clock System Level API header file */
@@ -399,6 +405,12 @@ static inline uint32_t CLOCK_SYS_GetSystickFreq(void)
 #elif (defined(KL17Z4_SERIES))
 #include "../src/clock/MKL17Z4/fsl_clock_MKL17Z4.h"
 
+#elif (defined (KL13Z644_SERIES))
+#include "../src/clock/MKL13Z644/fsl_clock_MKL13Z644.h"
+
+#elif (defined (KL33Z644_SERIES))
+#include "../src/clock/MKL33Z644/fsl_clock_MKL33Z644.h"
+
 #elif (defined(KL27Z4_SERIES))
 #include "../src/clock/MKL27Z4/fsl_clock_MKL27Z4.h"
 
@@ -424,6 +436,11 @@ static inline uint32_t CLOCK_SYS_GetSystickFreq(void)
 
     /* Clock System Level API header file */
     #include "../src/clock/MKL46Z4/fsl_clock_MKL46Z4.h"
+
+#elif (defined(KM34Z7_SERIES))
+
+    /* Clock System Level API header file */
+    #include "../src/clock/MKM34Z7/fsl_clock_MKM34Z7.h"
 
 #elif (defined(KV30F12810_SERIES))
     /* Clock System Level API header file */
@@ -468,11 +485,19 @@ static inline uint32_t CLOCK_SYS_GetSystickFreq(void)
 #elif (defined(KV10Z7_SERIES))
 
     #include "../src/clock/MKV10Z7/fsl_clock_MKV10Z7.h"
-    
+
+#elif (defined(KV10Z1287_SERIES))
+
+    #include "../src/clock/MKV10Z1287/fsl_clock_MKV10Z1287.h"
+
+#elif (defined(KV11Z7_SERIES))
+
+    #include "../src/clock/MKV11Z7/fsl_clock_MKV11Z7.h"
+
 #elif (defined(KW01Z4_SERIES))
 
     /* Clock System Level API header file */
-    #include "../src/clock/MKW01Z4/fsl_clock_MKW01Z4.h"    
+    #include "../src/clock/MKW01Z4/fsl_clock_MKW01Z4.h"
 
 #elif (defined(K11DA5_SERIES))
 
@@ -482,11 +507,18 @@ static inline uint32_t CLOCK_SYS_GetSystickFreq(void)
 
     #include "../src/clock/MK21DA5/fsl_clock_MK21DA5.h"
 
+#elif (defined(KW20Z4_SERIES))
+
+    #include "../src/clock/MKW20Z4/fsl_clock_MKW20Z4.h"
 
 #elif (defined(KW21D5_SERIES))
     #include "../src/clock/MKW21D5/fsl_clock_MKW21D5.h"
+
 #elif (defined(K21FA12_SERIES))
     #include "../src/clock/MK21FA12/fsl_clock_MK21FA12.h"
+
+#elif (defined(K22FA12_SERIES))
+    #include "../src/clock/MK22FA12/fsl_clock_MK22FA12.h"
 
 #elif (defined(KW22D5_SERIES))
 
@@ -496,19 +528,29 @@ static inline uint32_t CLOCK_SYS_GetSystickFreq(void)
 
     #include "../src/clock/MKW24D5/fsl_clock_MKW24D5.h"
 
+#elif (defined(KW30Z4_SERIES))
+
+    #include "../src/clock/MKW30Z4/fsl_clock_MKW30Z4.h"
+
+#elif (defined(KW40Z4_SERIES))
+
+    #include "../src/clock/MKW40Z4/fsl_clock_MKW40Z4.h"
+
 #else
     #error "No valid CPU defined!"
 #endif
 
-#if (defined(CLOCK_USE_SCG)) // If SCG is used.
+#if (defined(FSL_FEATURE_SOC_SCG_COUNT) && FSL_FEATURE_SOC_SCG_COUNT) // If SCG used.
+
+#elif (FSL_FEATURE_SOC_OSC_COUNT == 0) // If OSC is not used
 
 #else
 
 /*! @brief OSC configuration for OSCERCLK. */
 typedef struct OscerConfig
 {
-    bool    enable;       /*!< OSCERCLK enable or not.              */
-    bool    enableInStop; /*!< OSCERCLK enable or not in stop mode. */
+    bool    enable;       /*!< OSCERCLK enabled or not.              */
+    bool    enableInStop; /*!< OSCERCLK enabled or not in stop mode. */
 #if FSL_FEATURE_OSC_HAS_EXT_REF_CLOCK_DIVIDER
     uint8_t erclkDiv;     /*!< Divider for OSCERCLK.                */
 #endif
@@ -518,31 +560,27 @@ typedef struct OscerConfig
  * @brief OSC Initialization Configuration Structure
  *
  * Defines the configuration data structure to initialize the OSC.
- * When porting to a new board, please set the following members
- * according to board setting:
+ * When porting to a new board, set the following members
+ * according to the board setting:
  * 1. freq: The external frequency.
- * 2. hgo/range/erefs: These members should be set base on the board setting.
+ * 2. hgo/range/erefs: These members should be set based on the board setting.
  */
 typedef struct OscUserConfig
 {
     uint32_t freq;                          /*!< External clock frequency.    */
 
     /*------------------- Configuration for oscillator. ----------------------*/
-    bool enableCapacitor2p;                 /*!< Enable 2pF capacitor load.   */
-    bool enableCapacitor4p;                 /*!< Enable 4pF capacitor load.   */
-    bool enableCapacitor8p;                 /*!< Enable 8pF capacitor load.   */
-    bool enableCapacitor16p;                /*!< Enable 16pF capacitor load.  */
+    bool enableCapacitor2p;                 /*!< Enable 2 pF capacitor load.   */
+    bool enableCapacitor4p;                 /*!< Enable 4 pF capacitor load.   */
+    bool enableCapacitor8p;                 /*!< Enable 8 pF capacitor load.   */
+    bool enableCapacitor16p;                /*!< Enable 16 pF capacitor load.  */
 #if !(defined(FSL_FEATURE_MCGLITE_HAS_HGO0) && (!FSL_FEATURE_MCGLITE_HAS_HGO0))
-    osc_gain_t hgo;         /*!< High gain oscillator select. */
+    osc_gain_t hgo;         /*!< High-gain oscillator select. */
 #endif
 #if !(defined(FSL_FEATURE_MCGLITE_HAS_RANGE0) && (!FSL_FEATURE_MCGLITE_HAS_RANGE0))
     osc_range_t range;          /*!< Oscillator range setting.    */
 #endif
-#if defined(CLOCK_USE_MCG)
-    osc_src_t erefs;  /*!< External reference select.   */
-#else
     osc_src_t erefs;             /*!< External reference select.   */
-#endif
 
     /*------------------- Configuration for OSCERCLK. ------------------------*/
     oscer_config_t oscerConfig;             /*!< Configuration for OSCERCLK.  */
@@ -553,27 +591,26 @@ typedef struct OscUserConfig
  * @brief RTC OSC Initialization Configuration Structure
  *
  * Defines the configuration data structure to initialize the RTC OSC.
- * When porting to a new board, please set the following members
- * according to board setting:
+ * When porting to a new board, set the following members
+ * according to the board settings:
  * 1. freq: The external frequency for RTC.
- * 2. enableOSC: RTC could use its dedicate OSC, or override the OSC0 setting
- *    and use OSC0, or use external input clock directly. This is different by
- *    SOC and board setting, please set this correctly.
+ * 2. enableOSC: RTC can either use its dedicate OSC or override the OSC0 setting
+ *    and use OSC0, or use external input clock directly. This is different for each
+ *    SoC and board setting.
  */
 typedef struct RtcOscUserConfig
 {
     uint32_t freq;             /*!< External clock frequency.                 */
-    bool enableCapacitor2p;    /*!< Enable 2pF capacitor load.                */
-    bool enableCapacitor4p;    /*!< Enable 4pF capacitor load.                */
-    bool enableCapacitor8p;    /*!< Enable 8pF capacitor load.                */
-    bool enableCapacitor16p;   /*!< Enable 16pF capacitor load.               */
+    bool enableCapacitor2p;    /*!< Enable 2 pF capacitor load.                */
+    bool enableCapacitor4p;    /*!< Enable 4 pF capacitor load.                */
+    bool enableCapacitor8p;    /*!< Enable 8 pF capacitor load.                */
+    bool enableCapacitor16p;   /*!< Enable 16 pF capacitor load.               */
     bool enableOsc;            /*!< Enable OSC or use external clock directly.*/
-    bool enableClockOutput;    /*!< Output clock to other peripherals or not. */
 } rtc_osc_user_config_t;
 
-#if (defined(CLOCK_USE_SCG)) // If SCG is used.
+#if (defined(FSL_FEATURE_SOC_SCG_COUNT) && FSL_FEATURE_SOC_SCG_COUNT) // If SCG used.
 
-#elif (defined(CLOCK_USE_MCG_LITE))
+#elif FSL_FEATURE_SOC_MCGLITE_COUNT
 /*! @brief MCG_LITE configure structure for mode change. */
 typedef struct McgliteConfig
 {
@@ -587,14 +624,14 @@ typedef struct McgliteConfig
     bool hircEnableInNotHircMode;  /*!< HIRC enable when not in HIRC mode. */
 } mcglite_config_t;
 #else
-/*! @brief MCG configure structure for mode change.
+/*! @brief MCG configuration structure for mode change.
  *
- * When porting to a new board, please set the following members
- * according to board setting:
- * 1. frdiv: If FLL uses the external reference clock, please set this
- *    value to make sure external reference clock divided by frdiv is
- *    in the range 31.25kHz to 39.0625kHz.
- * 2. prdiv0/vdiv0/prdiv1/vdiv1: Please set these values for PLL, the
+ * When porting to a new board,  set the following members
+ * according to the board settings:
+ * 1. frdiv: If FLL uses the external reference clock, set this
+ *    value to ensure that the external reference clock divided by frdiv is
+ *    in the range 31.25 kHz to 39.0625 kHz.
+ * 2. prdiv0/vdiv0/prdiv1/vdiv1: Set these values for PLL, the
  *    PLL reference clock frequency after prdiv should be in the range
  *    of FSL_FEATURE_MCG_PLL_REF_MIN to FSL_FEATURE_MCG_PLL_REF_MAX.
  */
@@ -620,8 +657,12 @@ typedef struct McgConfig
 #if FSL_FEATURE_MCG_HAS_PLL
     bool pll0EnableInFllMode;    /*!< PLL0 enable in FLL mode.      */
     bool pll0EnableInStop;       /*!< PLL0 enable in stop mode.     */
+#if FSL_FEATURE_MCG_HAS_PLL_PRDIV
     uint8_t prdiv0;              /*!< PRDIV0.                       */
+#endif
+#if FSL_FEATURE_MCG_HAS_PLL_VDIV
     uint8_t vdiv0;               /*!< VDIV0.                        */
+#endif
 #if FSL_FEATURE_MCG_HAS_PLL1
     bool pll1EnableInFllMode;    /*!< PLL1 enable in FLL mode.      */
     bool pll2EnableInStop;       /*!< PLL1 enable in stop mode.     */
@@ -631,6 +672,11 @@ typedef struct McgConfig
 #if (FSL_FEATURE_MCG_HAS_PLL1 || FSL_FEATURE_MCG_HAS_EXTERNAL_PLL)
     mcg_pll_clk_select_t pllcs;  /*!< MCG_C11[PLLCS].               */
 #endif
+
+#if (defined(FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE) && FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE)
+    mcg_pll_ref_clock_source_t  pllRef; /*!< MCG_C7[PLL32KREFSEL].  */
+#endif
+
 #endif
 } mcg_config_t;
 #endif
@@ -638,15 +684,17 @@ typedef struct McgConfig
 /*! @brief Clock configuration structure. */
 typedef struct ClockUserConfig
 {
-#if (defined(CLOCK_USE_SCG))  // If use SCG, then OSC is also controled by SCG.
+#if (defined(FSL_FEATURE_SOC_SCG_COUNT) && FSL_FEATURE_SOC_SCG_COUNT) // If SCG used.
 
 #else // Not use SCG.
-#if (defined(CLOCK_USE_MCG_LITE))  // USE MCG_LITE.
+#if FSL_FEATURE_SOC_MCGLITE_COUNT  // USE MCG_LITE
     mcglite_config_t mcgliteConfig;  /*!< MCGLite configuration.  */
 #else
     mcg_config_t     mcgConfig;      /*!< MCG configuration.      */
 #endif
+#if FSL_FEATURE_SOC_OSC_COUNT
     oscer_config_t   oscerConfig;    /*!< OSCERCLK configuration. */
+#endif
 #endif
 
     sim_config_t     simConfig;      /*!< SIM configuration.      */
@@ -660,7 +708,7 @@ typedef enum _clock_manager_notify
     kClockManagerNotifyAfter   = 0x02U,  /*!< Notify IP that have changed to new clock setting. */
 } clock_manager_notify_t;
 
-/*! @brief The callback type, indicates what kinds of notification this callback handles. */
+/*! @brief The callback type, which indicates the kinds of notification this callback handles. */
 typedef enum _clock_manager_callback_type
 {
     kClockManagerCallbackBefore      = 0x01U, /*!< Callback handles BEFORE notification.          */
@@ -683,11 +731,11 @@ typedef struct ClockNotifyStruct
     clock_manager_notify_t notifyType; /*!< Clock notification type.          */
 } clock_notify_struct_t;
 
-/*! @brief Type of clock callback functions. */
+/*! @brief Type of the clock callback functions. */
 typedef clock_manager_error_code_t (*clock_manager_callback_t)(clock_notify_struct_t *notify,
                                                                void* callbackData);
 
-/*! @brief Structure for callback function and its parameter. */
+/*! @brief The structure for callback function and its parameter. */
 typedef struct ClockManagerCallbackUserConfig
 {
     clock_manager_callback_t      callback;      /*!< Entry of callback function.     */
@@ -698,10 +746,10 @@ typedef struct ClockManagerCallbackUserConfig
 /*! @brief Clock manager state structure. */
 typedef struct ClockManagerState
 {
-    clock_manager_user_config_t const **configTable;/*!< Pointer to clock configure table.*/
+    clock_manager_user_config_t const **configTable;/*!< Pointer to the clock configuration table.*/
     uint8_t clockConfigNum;                         /*!< Number of clock configurations.  */
-    uint8_t curConfigIndex;                         /*!< Index of current configuration.  */
-    clock_manager_callback_user_config_t **callbackConfig; /*!< Pointer to callback table. */
+    uint8_t curConfigIndex;                         /*!< Index of the current configuration.  */
+    clock_manager_callback_user_config_t **callbackConfig; /*!< Pointer to the callback table. */
     uint8_t callbackNum;                            /*!< Number of clock callbacks.       */
     uint8_t errorCallbackIndex;                     /*!< Index of callback returns error. */
 } clock_manager_state_t;
@@ -716,10 +764,10 @@ extern "C" {
  */
 
 /*!
- * @brief Install pre-defined clock configurations.
+ * @brief Installs pre-defined clock configurations.
  *
  * This function installs the pre-defined clock configuration table to
- * clock manager.
+ * the Clock Manager.
  *
  * @param clockConfigsPtr    Pointer to the clock configuration table.
  * @param configsNumber      Number of clock configurations in table.
@@ -734,70 +782,68 @@ clock_manager_error_code_t CLOCK_SYS_Init(clock_manager_user_config_t const **cl
                               uint8_t callbacksNumber);
 
 /*!
- * @brief Set system clock configuration according to pre-defined structure.
+ * @brief Sets the system clock configuration according to a pre-defined structure.
  *
- * This function sets system to target clock configuration, before transition,
- * clock manager will send notifications to all drivers registered to the
- * callback table.  When graceful policy is used, if some drivers are not ready
- * to change, clock transition will not occur, all drivers still work in
- * previous configuration and error is returned. When forceful policy is used,
- * all drivers should stop work and system changes to new clock configuration.
+ * This function sets the system to the target clock configuration. Before transition,
+ * the Clock Manager sends notifications to all drivers registered to the
+ * callback table.  When the graceful policy is used, if some drivers are not ready
+ * to change, the clock transition does not occur, all drivers still work in the
+ * previous configuration, and error is returned. When the forceful policy is used,
+ * all drivers should stop work and the system changes to the new clock configuration.
  *
  * @param targetConfigIndex Index of the clock configuration.
  * @param policy            Transaction policy, graceful or forceful.
  *
  * @return Error code.
  *
- * @note If external clock is used in the target mode, please make sure it is
- * enabled, for example, if the external oscillator is used, please setup
- * EREFS/HGO correctly and make sure OSCINIT is set.
+ * @note If the external clock is used in the target mode, make sure it is
+ * enabled, for example, if the external oscillator is used,  set up the
+ * EREFS/HGO correctly and make sure that OSCINIT is set.
  */
 clock_manager_error_code_t CLOCK_SYS_UpdateConfiguration(uint8_t targetConfigIndex,
                                                    clock_manager_policy_t policy);
 
 /*!
- * @brief Set system clock configuration.
+ * @brief Sets the system clock configuration.
  *
- * This funtion sets the system to target configuration, it only sets the
- * clock modules registers for clock mode change, but not send notifications
- * to drivers. This function is different by different SoCs.
+ * This function sets the system to the target configuration. It only sets the
+ * clock module registers for clock mode change, but does not send notifications
+ * to drivers. This function is different for each SoC.
  *
  * @param config Target configuration.
  *
  * @return Error code.
  *
- * @note If external clock is used in the target mode, please make sure it is
- * enabled, for example, if the external oscillator is used, please setup
- * EREFS/HGO correctly and make sure OSCINIT is set.
+ * @note If an external clock is used in the target mode, make sure it is
+ * enabled, for example, if the external oscillator is used, set up the
+ * EREFS/HGO correctly and make sure that OSCINIT is set.
  */
 clock_manager_error_code_t CLOCK_SYS_SetConfiguration(clock_manager_user_config_t const * config);
 
 /*!
- * @brief Get current system clock configuration.
+ * @brief Gets the current system clock configuration.
  *
  * @return Current clock configuration index.
  */
 uint8_t CLOCK_SYS_GetCurrentConfiguration(void);
 
 /*!
- * @brief Get the callback which returns error in last clock switch.
+ * @brief Gets the callback which returns an error in the last clock switch.
  *
- * When graceful policy is used, if some IP is not ready to change clock
- * setting, the callback will return error and system stay in current
+ * When the graceful policy is used, if an IP is not ready to change the clock
+ * setting, the callback returns an error and the system stays in the current
  * configuration. Applications can use this function to check which
- * IP callback returns error.
+ * IP callback returns an error.
  *
  * @return Pointer to the callback which returns error.
  */
 clock_manager_callback_user_config_t* CLOCK_SYS_GetErrorCallback(void);
 
-#if (defined(CLOCK_USE_SCG))
-
-#elif (defined(CLOCK_USE_MCG_LITE))
+#if FSL_FEATURE_SOC_MCGLITE_COUNT
 /*!
- * @brief Sets the MCG_Lite to some specific mode.
+ * @brief Sets the MCGLite to a specific mode.
  *
- * This function sets the MCG_lite to some mode according to configuration
+ * This function sets the MCGLite to a mode according to the configuration
  * parameter.
  *
  * @param targetConfig Pointer to the configure structure.
@@ -806,23 +852,106 @@ clock_manager_callback_user_config_t* CLOCK_SYS_GetErrorCallback(void);
  */
 mcglite_mode_error_t CLOCK_SYS_SetMcgliteMode(mcglite_config_t const *targetConfig);
 #else
+
 /*!
- * @brief Set MCG to some target mode.
+ * @brief Sets MCG to FEE mode during startup.
  *
- * This function sets MCG to some target mode defined by the configure
- * structure, if cannot switch to target mode directly, this function will
- * choose the proper path.
+ * This function sets the MCG to FEE mode during startup based on the configuration.
+ * It can be used during system initialization. This function also sets other
+ * MCG parameters, such as the MCGIRCLK, or enables the PLL.
+ *
+ * @param config Pointer to the configure structure.
+ * @return Error code.
+ */
+mcg_mode_error_t CLOCK_SYS_BootToFee(const mcg_config_t * config);
+
+/*!
+ * @brief Sets MCG to FEI mode during startup.
+ *
+ * This function sets the MCG to FEI mode during startup based on the configuration.
+ * It can be used during system initialization. This function also sets other
+ * MCG parameters, such as the MCGIRCLK, or enables the PLL.
+ *
+ * @param config Pointer to the configure structure.
+ * @return Error code.
+ */
+mcg_mode_error_t CLOCK_SYS_BootToFei(const mcg_config_t * config);
+
+/*!
+ * @brief Sets MCG to BLPI mode during startup.
+ *
+ * This function sets the MCG to BLPI mode during startup based on the configuration.
+ * It can be used during system initialization. This function also sets other
+ * MCG parameters, such as the MCGIRCLK.
+ *
+ * @param config Pointer to the configure structure.
+ * @return Error code.
+ */
+mcg_mode_error_t CLOCK_SYS_BootToBlpi(const mcg_config_t * config);
+
+/*!
+ * @brief Sets MCG to BLPE mode during startup.
+ *
+ * This function sets the MCG to BLPE mode during startup based on the configuration.
+ * It can be used during system initialization. This function also sets other
+ * MCG parameters such as the MCGIRCLK.
+ *
+ * @param config Pointer to the configure structure.
+ * @return Error code.
+ */
+mcg_mode_error_t CLOCK_SYS_BootToBlpe(const mcg_config_t * config);
+
+#if FSL_FEATURE_MCG_HAS_PLL
+/*!
+ * @brief Sets MCG to PEE mode during startup.
+ *
+ * This function sets the MCG to PEE mode during startup based on the configuration.
+ * It can be used during system initialization. This function also sets other
+ * MCG parameters, such as the MCGIRCLK.
+ *
+ * @param config Pointer to the configure structure.
+ * @return Error code.
+ */
+mcg_mode_error_t CLOCK_SYS_BootToPee(const mcg_config_t * config);
+
+#if FSL_FEATURE_MCG_HAS_PLL_INTERNAL_MODE
+/*!
+ * @brief Sets MCG to PEI mode during startup.
+ *
+ * This function sets the MCG to PEI mode during startup based on the configuration.
+ * It can be used during system initialization. This function also sets other
+ * MCG parameters, such as the MCGIRCLK.
+ *
+ * @param config Pointer to the configure structure.
+ * @return Error code.
+ */
+mcg_mode_error_t CLOCK_SYS_BootToPei(const mcg_config_t * config);
+#endif
+
+#endif
+
+/*!
+ * @brief Sets MCG to a target mode.
+ *
+ * This function sets MCG to a target mode defined by the configuration
+ * structure. If the mode cannot be switched to directly, this function 
+ * chooses the proper path.
  * @param  targetConfig Pointer to the target MCG mode configuration structure.
- * @param  fllStableDelay Delay function to make sure FLL is stable.
  * @return Error code.
  *
- * @note If external clock is used in the target mode, please make sure it is
- * enabled, for example, if the external oscillator is used, please setup
- * EREFS/HGO correctly and make sure OSCINIT is set.
+ * @note If the external clock is used in the target mode, make sure it is
+ * enabled, for example, if the external oscillator is used, setup
+ * EREFS/HGO correctly and make sure that OSCINIT is set.
  */
-mcg_mode_error_t CLOCK_SYS_SetMcgMode(mcg_config_t const *targetConfig,
-                                   void (* fllStableDelay)(void));
+mcg_mode_error_t CLOCK_SYS_SetMcgMode(mcg_config_t const *targetConfig);
 #endif
+
+/*!
+ * @brief Sets the clock configuration in SIM module.
+ *
+ * @param  simConfig Pointer to the target SIM configuration structure.
+ */
+void CLOCK_SYS_SetSimConfigration(sim_config_t const *simConfig);
 
 /* @} */
 
@@ -830,11 +959,11 @@ mcg_mode_error_t CLOCK_SYS_SetMcgMode(mcg_config_t const *targetConfig,
  * @name OSC configuration
  * @{
  */
-
+#if FSL_FEATURE_SOC_OSC_COUNT
 /*!
- * @brief Initialize OSC.
+ * @brief Initializes the OSC.
  *
- * This function initializes OSC according to board configuration.
+ * This function initializes the OSC according to the board configuration.
  *
  * @param  instance Instance of the OSC.
  * @param  config Pointer to the OSC configuration structure.
@@ -844,18 +973,18 @@ clock_manager_error_code_t CLOCK_SYS_OscInit(uint32_t instance,
                                              osc_user_config_t *config);
 
 /*!
- * @brief Deinitialize OSC.
+ * @brief Deinitializes the OSC.
  *
- * This function deinitializes OSC.
+ * This function deinitializes the OSC.
  * @param  instance Instance of the OSC.
  */
 void CLOCK_SYS_OscDeinit(uint32_t instance);
 
 /*!
- * @brief Configure the OSCERCLK.
+ * @brief Configures the OSCERCLK.
  *
- * This function configures the OSCERCLK, including whether OSCERCLK is enable
- * or not in normal mode and stop mode.
+ * This function configures the OSCERCLK, including whether OSCERCLK is enabled
+ * in normal mode and stop mode or not.
  *
  * @param  instance Instance of the OSC.
  * @param  config Pointer to the OSCERCLK configuration structure.
@@ -863,17 +992,18 @@ void CLOCK_SYS_OscDeinit(uint32_t instance);
 void CLOCK_SYS_SetOscerConfigration(uint32_t instance, oscer_config_t const *config);
 
 /* @} */
+#endif
 
-#if defined(RTC_INSTANCE_COUNT)
+#if FSL_FEATURE_SOC_RTC_COUNT
 /*!
  * @name RTC OSC configuration
  * @{
  */
 
 /*!
- * @brief Initialize the RTC OSC.
+ * @brief Initializes the RTC OSC.
  *
- * This function initializes the RTC OSC according to board configuration.
+ * This function initializes the RTC OSC according to the board configuration.
  *
  * @param  instance Instance of the RTC OSC.
  * @param  config Pointer to the configuration structure.
@@ -883,9 +1013,9 @@ clock_manager_error_code_t CLOCK_SYS_RtcOscInit(uint32_t instance,
                                                 rtc_osc_user_config_t *config);
 
 /*!
- * @brief Deinitialize RTC OSC.
+ * @brief Deinitializes the RTC OSC.
  *
- * This function deinitializes RTC OSC.
+ * This function deinitializes the RTC OSC.
  * @param  instance Instance of the RTC OSC.
  */
 void CLOCK_SYS_RtcOscDeinit(uint32_t instance);

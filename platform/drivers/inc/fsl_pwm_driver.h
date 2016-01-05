@@ -47,14 +47,14 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-/*! Used to indicate a particular pin in the submodule does NOT  output a PWM signal */
+/*! Used to indicate that a particular pin in the submodule does NOT  output a PWM signal */
 #define FLEXPWM_NO_PWM_OUT_SIGNAL      (0)
 
 /*! @brief PWM Signal Type options */
 typedef enum _pwm_signal_type
 {
-    kFlexPwmSignedCenterAligned = 0U,   /*!< Signed centered. @internal gui name="Signed center-aligned PWM" */
-    kFlexPwmCenterAligned,              /*!< Unsigned centered. @internal gui name="Center-aligned PWM" */
+    kFlexPwmSignedCenterAligned = 0U,   /*!< Signed center-aligned. @internal gui name="Signed center-aligned PWM" */
+    kFlexPwmCenterAligned,              /*!< Unsigned cente-aligned. @internal gui name="Center-aligned PWM" */
     kFlexPwmSignedEdgeAligned,          /*!< Signed edge-aligned. @internal gui name="Signed edge-aligned PWM" */
     kFlexPwmEdgeAligned                 /*!< Unsigned edge-aligned. @internal gui name="Edge-aligned PWM" */
 } pwm_signal_type_t;
@@ -66,7 +66,7 @@ typedef enum _pwm_signal_type
  */
 typedef struct PwmModuleSignalSetup {
     uint32_t pwmPeriod;        /*!< PWM period specified in microseconds. @internal gui name="PWM period" id="pwm_pwmPeriod" */
-    pwm_signal_type_t pwmType; /*!< PWM type, edge or center; signed or unsigned. @internal gui name="PWM signal type" id="pwm_pwmType" */
+    pwm_signal_type_t pwmType; /*!< PWM type, edge or center, signed or unsigned. @internal gui name="PWM signal type" id="pwm_pwmType" */
     uint32_t pwmAPulseWidth;   /*!< PWM A pulse width specified in microseconds. Specify FLEXPWM_NO_PWM_OUT_SIGNAL if no PWM output on this pin. @internal gui name="PWM-A pulse width" id="pwm_pwmAPulseWidth" */
     uint32_t pwmBPulseWidth;   /*!< PWM B pulse width specified in microseconds. Specify FLEXPWM_NO_PWM_OUT_SIGNAL if no PWM output on this pin. @internal gui name="PWM-B pulse width" id="pwm_pwmBPulseWidth" */
     bool pwmAPolarity;         /*!< true: if output is to be inverted; false: if no output inversion. @internal gui name="PWM-A signal polarity" id="pwm_pwmAPolarity" */
@@ -97,7 +97,7 @@ extern "C" {
  * Enables the module clocks and interrupts in the interrupt controller.
  *
  * @param instance      Instance number of the PWM module.
- * @return kStatusPwmSuccess means succees, otherwise means failed.
+ * @return kStatusPwmSuccess means success. Otherwise, means failure.
  */
 pwm_status_t PWM_DRV_Init(uint32_t instance);
 
@@ -105,7 +105,7 @@ pwm_status_t PWM_DRV_Init(uint32_t instance);
  * @brief Shuts down the PWM driver.
  *
  * This function de-initializes the EflexPWM module and disables the clock for the submodules.
- * Function disables the module-level interrupts.
+ * It also disables the module-level interrupts.
  *
  * @param instance      Instance number of the PWM module.
  */
@@ -114,18 +114,18 @@ void PWM_DRV_Deinit(uint32_t instance);
 /*!
  * @brief Sets up the PWM signals from the FlewPWM module.
  *
- * The function initializes the submodule per the parameters passed in by the user. The function
+ * The function initializes the submodule according to the parameters passed in by the user. The function
  * also sets up the value compare registers to match the PWM signal requirements.
- * NOTE: If the deadtime insertion logic is enabled, the pulse period is reduced by the
- * deadtime period specified by the user.
+ * If the dead time insertion logic is enabled, the pulse period is reduced by the
+ * dead time period specified by the user.
  *
  * @param instance      Instance number of the PWM module.
  * @param subModule     The FlexPWM submodule that is configured
  * @param moduleSetupParams  The initialization values used to set up the submodule
  * @param signalParams  Signal parameters which generate the submodules PWM signals
- * @return Returns an error if the requested submodule clock is wrong i.e request for kFlexPwmModule0
+ * @return Returns an error if the requested submodule clock is incorrect, i.e., the request for kFlexPwmModule0
  *         for submodule 0 or request for external clock without informing the driver of the external
- *         clock freqency by calling PWM_DVR_SetExternalClkFreq(). Success otherwise
+ *         clock frequency by calling PWM_DVR_SetExternalClkFreq(). Success otherwise.
  */
 pwm_status_t PWM_DRV_SetupPwm(uint32_t instance, pwm_module_t subModule, pwm_module_setup_t *moduleSetupParams,
                                        pwm_module_signal_setup_t *signalParams);
@@ -134,8 +134,8 @@ pwm_status_t PWM_DRV_SetupPwm(uint32_t instance, pwm_module_t subModule, pwm_mod
  * @brief Updates the PWM signal settings.
  *
  * The function updates the PWM signal to the new value that is passed in.
- * NOTE: If the deadtime insertion logic is enabled then the pulse period is reduced by the
- * deadtime period specified by the user.
+ * If the dead time insertion logic is enabled then the pulse period is reduced by the
+ * dead time period specified by the user.
  *
  * @param instance      Instance number of the PWM module.
  * @param subModule     The FlexPWM submodule that is configured
@@ -162,7 +162,7 @@ void PWM_DRV_SetTriggerCmd(uint32_t instance, pwm_module_t subModule, pwm_val_re
  * @brief Sets the PWM trigger value.
  *
  * This function sets the value in the compare register that generates a trigger.
- * NOTE: User must make sure the value register being modified is not currently used to generate
+ * Note that the user must make sure that the value of the register being modified is not currently used to generate
  * a PWM signal.
  *
  * @param instance      Instance number of the PWM module.

@@ -44,16 +44,17 @@
 #include "host_mouse.h"
 #include "pin_detect_mouse.h"
 #include "host_mouse_api.h"
+#include "board.h"
 /*****************************************************************************
 * Constant and Macro's 
 *****************************************************************************/
 /* KHCI task parameters */
 #define USB_HOST_HID_TASK_TEMPLATE_INDEX       0
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS))  
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS)
 /* USB stack running on OS */
 #define USB_HOST_HID_TASK_ADDRESS              HOST_APP_task_stun
 /* USB stack running on BM  */
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)||(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))
+#else
 #define USB_HOST_HID_TASK_ADDRESS              HOST_APP_task
 #endif
 #define USB_HOST_HID_TASK_STACKSIZE            3000
@@ -602,7 +603,7 @@ usb_status usb_host_hid_unsupported_device_event
 usb_status HOST_APP_init(void)
 {
     usb_status              status = USB_OK;
-    status = usb_host_init(USB_CONTROLLER_EHCI_0, &g_host_handle);
+    status = usb_host_init(USB_CONTROLLER_EHCI_0, usb_host_board_init, &g_host_handle);
     if (status != USB_OK) 
     {
         USB_PRINTF("\n\r USB Host Initialization failed! STATUS: 0x%x", status);
@@ -882,7 +883,7 @@ void HOST_APP_task()
     } /* Endswitch */
 }
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS))  
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS)
 /*FUNCTION*----------------------------------------------------------------
 *
 * Function Name  : HOST_task

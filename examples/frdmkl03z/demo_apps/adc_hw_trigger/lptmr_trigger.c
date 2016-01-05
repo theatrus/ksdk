@@ -35,7 +35,10 @@
 // SDK Included Files
 #include "adc_hw_trigger.h"
 #include "fsl_lptmr_driver.h"
-
+#include "fsl_sim_hal.h"
+#if defined(KM34Z7_SERIES)
+#include "fsl_xbar_driver.h"
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 // Variables
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,12 +66,8 @@ void init_trigger_source(uint32_t adcInstance)
         // use MCGIRCCLK, 4M or 32KHz
         .prescalerClockSource = kClockLptmrSrcMcgIrClk,
 #else
-#if defined(FRDM_KL02Z) || defined(FRDM_KL03Z) || defined(TWR_KL43Z48M) || defined(FRDM_KL27Z)|| defined(FRDM_KL43Z)
         // Use LPO clock 1KHz
         .prescalerClockSource = kClockLptmrSrcLpoClk,
-#else
-        .prescalerClockSource = kClockLptmrSrcMcgIrClk,
-#endif
 #endif
         .isInterruptEnabled = false
     };
@@ -84,9 +83,15 @@ void init_trigger_source(uint32_t adcInstance)
     LPTMR_DRV_Start(0);
 
     // Configure SIM for ADC hw trigger source selection
+#if defined(KM34Z7_SERIES)
+    SIM_HAL_EnableClock(gSimBase[0], kSimClockGateXbar0);
+    SIM_HAL_SetAdcTrgSelMode(gSimBase[0], kSimAdcTrgSelXbar);
+    XBAR_DRV_ConfigSignalConnection(kXbaraInputLPTMR0_Output, kXbaraOutputADC_TRGA);
+#else
     SIM_HAL_SetAdcAlternativeTriggerCmd(gSimBase[0], adcInstance, true);
     SIM_HAL_SetAdcPreTriggerMode(gSimBase[0], adcInstance, kSimAdcPretrgselA);
     SIM_HAL_SetAdcTriggerMode(gSimBase[0], adcInstance, kSimAdcTrgSelLptimer);
+#endif
 }
 
 /*!

@@ -580,7 +580,6 @@ void LMEM_DRV_SystemCacheInvalidateLine(uint32_t instance, uint32_t addr)
  *END**************************************************************************/
 void LMEM_DRV_SystemCacheInvalidateMultiLines(uint32_t instance, uint32_t addr, uint32_t length)
 {
-    LMEM_Type *base = g_lmemBase[instance];
     uint32_t endAddr = addr + length;
     addr = addr & ~(LMEM_CACHE_LINE_SIZE - 1U);  /* Align address to cache line size */
 
@@ -655,7 +654,6 @@ void LMEM_DRV_SystemCachePushLine(uint32_t instance, uint32_t addr)
  *END**************************************************************************/
 void LMEM_DRV_SystemCachePushMultiLines(uint32_t instance, uint32_t addr, uint32_t length)
 {
-    LMEM_Type *base = g_lmemBase[instance];
     uint32_t endAddr = addr + length;
     addr = addr & ~(LMEM_CACHE_LINE_SIZE - 1U);  /* Align address to cache line size */
 
@@ -727,7 +725,6 @@ void LMEM_DRV_SystemCacheClearLine(uint32_t instance, uint32_t addr)
  *END**************************************************************************/
 void LMEM_DRV_SystemCacheClearMultiLines(uint32_t instance, uint32_t addr, uint32_t length)
 {
-    LMEM_Type *base = g_lmemBase[instance];
     uint32_t endAddr = addr + length;
     addr = addr & ~(LMEM_CACHE_LINE_SIZE - 1U);  /* Align address to cache line size */
 

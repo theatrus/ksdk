@@ -51,15 +51,15 @@
 */
 typedef struct
 {
-    bool useInt;           /*!< Enables supporting interrupt. @internal gui name="Interrupt" */
-    bool onDozeEnable;     /*!< Controls the FlexIO operation in Doze modes. @internal gui name="Operation in Doze modes" */
-    bool onDebugEnable;    /*!< Enables FlexIO operation when in Debug mode. @internal gui name="Operation in Debug modes" */
+    bool useInt;           /*!< Enables supporting interrupts. @internal gui name="Interrupt" */
+    bool onDozeEnable;     /*!< Controls the FlexIO operation in doze modes. @internal gui name="Operation in Doze modes" */
+    bool onDebugEnable;    /*!< Enables FlexIO operation when in debug mode. @internal gui name="Operation in Debug modes" */
     bool fastAccessEnable; /*!< Enables fast register accesses to FlexIO registers. @internal gui name="Fast register access" */
 } flexio_user_config_t;
 /*! @brief Shifter interrupt handler function type */
 typedef void (* flexio_shifter_int_handler_t)(void * param);
 /*!
-* @brief Defines the structure to register shifter callback and parameter.
+* @brief Defines the structure to register the shifter callback and parameter.
 */
 typedef struct
 {
@@ -126,7 +126,7 @@ void FLEXIO_DRV_RegisterCallback(uint32_t instance, uint32_t shifterId,
                            void *param);
 
 /*!
- * @brief De-initializes the FlexIO module.
+ * @brief Deinitializes the FlexIO module.
  *
  * @param instance FlexIO instance ID.
  * @return Execution status.
@@ -134,9 +134,9 @@ void FLEXIO_DRV_RegisterCallback(uint32_t instance, uint32_t shifterId,
 flexio_status_t FLEXIO_DRV_Deinit(uint32_t instance);
 
 /*!
- * @brief IRQ hanlder for FLEXIO.
+ * @brief IRQ handler for FlexIO.
  *
- * @param instance FlexIO instance ID..
+ * @param instance FlexIO instance ID.
  */
 void FLEXIO_DRV_IRQHandler(uint32_t instance);
 

@@ -37,7 +37,10 @@
 #define __ehci_dev_main_h__ 1
 
 #include "ehci_usbprv.h"
-
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 void _usb_dci_usbhs_free_dTD(usb_ehci_dev_state_struct_t* handle, usb_ehci_dev_dtd_struct_t*  dTD_ptr);
 void _usb_dci_usbhs_free_dTD_in_transfer(usb_ehci_dev_state_struct_t* handle, usb_ehci_dev_dtd_struct_t*  dTD_ptr);
 uint8_t _usb_dci_usbhs_add_dTD(usb_device_handle handle, xd_struct_t* xd_ptr);
@@ -51,11 +54,13 @@ usb_status usb_dci_usbhs_set_test_mode(usb_device_handle handle, uint16_t test_m
 void _usb_dci_usbhs_chip_initialize(usb_ehci_dev_state_struct_t *       handle);
 
 
+
+
 usb_status usb_dci_usbhs_preinit(usb_device_handle upper_layer_handle, usb_device_handle *handle_ptr);
 usb_status usb_dci_usbhs_init(uint8_t controller_id, usb_device_handle handle);
 usb_status usb_dci_usbhs_send_data(usb_device_handle handle, xd_struct_t* xd_ptr);
 usb_status usb_dci_usbhs_recv_data(usb_device_handle handle, xd_struct_t* xd_ptr);
-usb_status usb_dci_usbhs_cancel_transfer(usb_device_handle handle, uint8_t ep_num, uint8_t direction);
+usb_status usb_dci_usbhs_cancel(usb_device_handle handle, uint8_t ep_num, uint8_t direction);
 usb_status usb_dci_usbhs_set_address(usb_device_handle handle, uint8_t address);
 usb_status usb_dci_usbhs_shutdown(usb_device_handle handle);
 usb_status usb_dci_usbhs_get_setup_data(usb_device_handle handle, uint8_t ep_num, uint8_t *buffer_ptr);
@@ -72,6 +77,9 @@ usb_status usb_dci_usbhs_set_status(usb_device_handle handle, uint8_t component,
 usb_status  usb_dci_usbhs_alloc_xd(usb_device_handle handle, xd_struct_t** xd_ptr_ptr);
 
 
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

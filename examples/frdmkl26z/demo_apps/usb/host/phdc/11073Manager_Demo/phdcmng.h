@@ -42,7 +42,9 @@
 #define USB_EVENT_DATA_CORRUPTED      0x08
 
 /* USB controller */
-#define HIGH_SPEED                          (0)
+#ifndef HIGH_SPEED
+#define  HIGH_SPEED                         (0)
+#endif
 #if HIGH_SPEED
 #define CONTROLLER_ID                       USB_CONTROLLER_EHCI_0
 #else
@@ -61,6 +63,11 @@
 #define  USB_DEVICE_INUSE                  (6)
 #define  USB_DEVICE_DETACHED               (7)
 #define  USB_DEVICE_OTHER                  (8)
+
+/* for changing state  */
+#define  USB_STATE_CHANGE_ATTACHED         (0x01)
+#define  USB_STATE_CHANGE_OPENED           (0x02)
+#define  USB_STATE_CHANGE_DETACHED         (0x04)
 
 #define  PHD_MNG_UNASSOCIATED              (0)
 #define  PHD_MNG_WAIT_CONFIG               (1)
@@ -100,6 +107,7 @@
 typedef struct device_struct
 {
     uint32_t dev_state; /* Attach/detach state */
+    uint32_t state_change;
     usb_device_instance_handle dev_handle;
     usb_interface_descriptor_handle intf_handle;
     usb_class_handle class_handle; /* Class-specific info */

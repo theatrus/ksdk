@@ -37,10 +37,6 @@
 #include "usb_device_config.h"
 #include "usb.h"
 #include "usb_device_stack_interface.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#include <fio.h>
-#else
-#endif
 
 #include "disk.h"
 #include "usb_class_msc.h"
@@ -87,11 +83,6 @@ void Disk_App(void);
  * Local Variables 
  *****************************************************************************/
 #if SD_CARD_APP
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-uint32_t g_msc_bulk_out_buff_temp[MSD_RECV_BUFFER_SIZE >> 2];
-uint32_t g_msc_bulk_in_buff_temp[MSD_SEND_BUFFER_SIZE >> 2];
-#endif
 uint8_t *g_msc_bulk_out_buff;
 uint8_t *g_msc_bulk_in_buff;
 #endif
@@ -314,17 +305,6 @@ uint8_t Disk_USB_App_Class_Callback
 
 void msc_disk_preinit(void)
 {
-#if SD_CARD_APP
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-    g_msc_bulk_in_buff = (uint8_t*)g_msc_bulk_in_buff_temp;
-    g_msc_bulk_out_buff = (uint8_t*)g_msc_bulk_out_buff_temp;
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    g_msc_bulk_in_buff = (uint8_t*)OS_Mem_alloc_uncached_align(MSD_SEND_BUFFER_SIZE, 32);
-    g_msc_bulk_out_buff = (uint8_t*)OS_Mem_alloc_uncached_align(MSD_SEND_BUFFER_SIZE, 32);
-#endif
-
-#endif
 
 #if SD_CARD_APP
 #if (defined _MK_xxx_H_)
@@ -333,7 +313,8 @@ void msc_disk_preinit(void)
     PORTE_PCR28 |= PORT_PCR_MUX(1);
     GPIOE_PDDR &= ~((uint32_t)1 << 28);
     PORTE_PCR28 |= PORT_PCR_PE_MASK|PORT_PCR_PS_MASK;
-#endif // USE_SDHC_PROTOCOL
+#endif // USE_SDHC_PROTOCOL
+
     _SD_DE; /* Card detection */
 #endif
 #if (defined _MK_xxx_H_) ||  defined(MCU_mcf51jf128)

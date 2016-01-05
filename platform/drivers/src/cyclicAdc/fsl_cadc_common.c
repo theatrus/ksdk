@@ -35,7 +35,6 @@
  ******************************************************************************/
 
 /* Table of base addresses for ADC instances. */
-/* const uint32_t g_cadcBaseAddr[] = ADC_BASES; */
 const uint32_t g_cadcBaseAddr[] = ADC_BASE_ADDRS;
 
 /* Table to save ADC IRQ enum numbers defined in CMSIS header file. */

@@ -86,7 +86,7 @@ static void FLEXIO_SPI_DRV_DmaRxCallback(void *param, dma_channel_status_t statu
  *
  *END**************************************************************************/
 flexio_spi_status_t FLEXIO_SPI_DRV_Init(uint32_t instance, flexio_spi_state_t *spiState, 
-                                        flexio_spi_userconfig_t *spiConfig)
+                                        const flexio_spi_userconfig_t *spiConfig)
 {
     if((spiState == NULL)||(spiConfig == NULL))
     {
@@ -585,11 +585,11 @@ flexio_spi_status_t FLEXIO_SPI_DRV_AbortTransferData(flexio_spi_state_t *spiStat
  * Description   : This is not a public interface, called when dma tx ends.
  *
  *END**************************************************************************/
-static void FLEXIO_SPI_DRV_EdmaTxCallback(void *param, dma_channel_status_t status)
+static void FLEXIO_SPI_DRV_EdmaTxCallback(void *param, edma_chn_status_t status)
 {
     flexio_spi_state_t *spiState = (flexio_spi_state_t *)param;
     /* Stop DMA channel. */
-    DMA_DRV_StopChannel(&spiState->dmaSpiTx);
+    EDMA_DRV_StopChannel(&spiState->edmaSpiTx);
     FLEXIO_SPI_HAL_SetTxDmaCmd(&(spiState->spiDev), false);
     if(spiState->isTxBusy)
     {
@@ -602,11 +602,11 @@ static void FLEXIO_SPI_DRV_EdmaTxCallback(void *param, dma_channel_status_t stat
  * Description   : This is not a public interface, called when dma rx ends.
  *
  *END**************************************************************************/
-static void FLEXIO_SPI_DRV_EdmaRxCallback(void *param, dma_channel_status_t status)
+static void FLEXIO_SPI_DRV_EdmaRxCallback(void *param, edma_chn_status_t status)
 {
     flexio_spi_state_t *spiState = (flexio_spi_state_t *)param;
     /* Stop DMA channel. */
-    DMA_DRV_StopChannel(&spiState->dmaSpiRx);
+    EDMA_DRV_StopChannel(&spiState->edmaSpiRx);
     FLEXIO_SPI_HAL_SetRxDmaCmd(&(spiState->spiDev), false);
     if(spiState->isRxBusy)
     {
@@ -628,71 +628,8 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaSendDataBlocking(flexio_spi_state_t *spiS
                                                         uint32_t txSize,
                                                         uint32_t timeout)
 {
-    if((spiState == NULL)||(txBuff == NULL))
-    {
-        return kStatus_FlexIO_SPI_InvalidParam;
-    }
-    /* Check that we're not busy already transmitting data from a previous
-     * function call. */
-    if ((spiState->isTxBusy)||(spiState->isXBusy))
-    {
-        return kStatus_FlexIO_SPI_TxBusy;
-    }
-
-    if (txSize == 0U)
-    {
-        return kStatus_FlexIO_SPI_NoDataToDeal;
-    }
-    /* Have not configure DMA. */
-    if (!spiState->isTxUseDma)
-    {
-        FLEXIO_SPI_DRV_TxConfigDMA(spiState);
-    }
-    /* Configure DMA module */
-    uint32_t  destAddr;
-    if(spiState->bitDirection == kFlexIOSpiMsbFirst)
-    {
-        destAddr = FLEXIO_SPI_HAL_GetTxBufferMSBAddr(&spiState->spiDev) + 
-           (4 - spiState->dataSize/8);
-    }
-    else
-    {
-        destAddr = FLEXIO_SPI_HAL_GetTxBufferLSBAddr(&spiState->spiDev);
-    }
-    EDMA_DRV_ConfigLoopTransfer(&spiState->edmaSpiTx, &spiState->edmaTxTcd,
-        kEDMAMemoryToPeripheral, (uint32_t)(txBuff + spiState->dataSize/8), 
-        destAddr, spiState->dataSize/8, spiState->dataSize/8,
-        (txSize - spiState->dataSize/8), 1);
-    EDMA_DRV_StartChannel(&spiState->edmaSpiTx);
-    /* Put the first data in shifter to start the transmission */
-    uint32_t tmp;
-    if(spiState->bitDirection == kFlexIOSpiMsbFirst)
-    {
-      if(spiState->dataSize == kFlexIOSpi8BitMode)
-      {
-          tmp = *txBuff;
-          FLEXIO_SPI_HAL_PutDataMSB(&(spiState->spiDev), tmp<<24);
-      }else
-      {
-          tmp = *((const uint16_t *)txBuff);
-          FLEXIO_SPI_HAL_PutDataMSB(&(spiState->spiDev), tmp<<16);   
-      }
-    }
-    else
-    {
-      if(spiState->dataSize == kFlexIOSpi8BitMode)
-      {
-          FLEXIO_SPI_HAL_PutDataLSB(&(spiState->spiDev), *(spiState->txBuff));
-      }else
-      {
-          FLEXIO_SPI_HAL_PutDataLSB(&(spiState->spiDev), *((const uint16_t *)(spiState->txBuff)));   
-      }
-    }
-    /* Indicates current transaction is non-blocking */
+    FLEXIO_SPI_DRV_EdmaSendData(spiState, txBuff, txSize);
     spiState->isTxBlocking = true;
-    spiState->isTxBusy =  true;
-    /*enable dma request interrupt*/
-    FLEXIO_SPI_HAL_SetTxDmaCmd(&(spiState->spiDev), true);
 	FLEXIO_DRV_Start(0);
     /* Wait until the transmit is complete. */
     osa_status_t syncStatus;
@@ -700,7 +637,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaSendDataBlocking(flexio_spi_state_t *spiS
     {
         syncStatus = OSA_SemaWait(&spiState->txIrqSync, timeout);
     }while(syncStatus == kStatus_OSA_Idle);
-
+    spiState->isTxBlocking = false;
     if (syncStatus != kStatus_OSA_Success)
     {
         /* Stop DMA channel. */
@@ -751,10 +688,44 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaSendData(flexio_spi_state_t *spiState,
     {
         destAddr = FLEXIO_SPI_HAL_GetTxBufferLSBAddr(&spiState->spiDev);
     }
-    EDMA_DRV_ConfigLoopTransfer(&spiState->edmaSpiTx, &spiState->edmaTxTcd,
-        kEDMAMemoryToPeripheral, (uint32_t)(txBuff + spiState->dataSize/8), 
-        destAddr, spiState->dataSize/8, spiState->dataSize/8,
-        (txSize - spiState->dataSize/8), 1);
+    /* Configure DMA module */
+    edma_transfer_size_t transfersize;
+    switch(spiState->dataSize/8)
+    {
+        case 1:
+            transfersize = kEDMATransferSize_1Bytes;
+            break;
+        case 2:
+            transfersize = kEDMATransferSize_2Bytes;
+            break;
+        case 4:
+            transfersize = kEDMATransferSize_4Bytes;
+            break;
+        case 16:
+            transfersize = kEDMATransferSize_16Bytes;
+            break;
+        case 32:
+            transfersize = kEDMATransferSize_32Bytes;
+            break;
+        default:
+            break;
+    }
+    edma_software_tcd_t edmaTxTcd;
+    edma_transfer_config_t txConfig;
+    txConfig.srcLastAddrAdjust = 0;
+    txConfig.destLastAddrAdjust = 0;
+    txConfig.srcModulo = kEDMAModuloDisable;
+    txConfig.destModulo = kEDMAModuloDisable;
+    txConfig.srcTransferSize = transfersize;
+    txConfig.destTransferSize = transfersize;
+    txConfig.minorLoopCount = spiState->dataSize/8;
+    txConfig.majorLoopCount = (txSize - spiState->dataSize/8) / (spiState->dataSize/8);
+    txConfig.srcAddr = (uint32_t)(txBuff + spiState->dataSize/8);
+    txConfig.srcOffset = spiState->dataSize/8;
+    txConfig.destAddr = destAddr;
+    txConfig.destOffset = 0;
+    EDMA_DRV_PrepareDescriptorTransfer(&spiState->edmaSpiTx, &edmaTxTcd, &txConfig, true, true);
+    EDMA_DRV_PushDescriptorToReg(&spiState->edmaSpiTx, &edmaTxTcd);
     EDMA_DRV_StartChannel(&spiState->edmaSpiTx);
     /* Put the first data in shifter to start the transmission */
     uint32_t tmp;
@@ -836,7 +807,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaAbortSendingData(flexio_spi_state_t * spi
         return kStatus_FlexIO_SPI_NoTransmitInProgress;
     }
     /* Stop DMA channel. */
-    DMA_DRV_StopChannel(&spiState->edmaSpiTx);
+    EDMA_DRV_StopChannel(&spiState->edmaSpiTx);
     /* Disable SPI Tx DMA interrupt*/
     FLEXIO_SPI_HAL_SetTxDmaCmd(&(spiState->spiDev), false);
     /* Stop the running transfer. */
@@ -856,35 +827,8 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaReceiveDataBlocking(flexio_spi_state_t *s
                                                            uint32_t rxSize,
                                                            uint32_t timeout)
 {
-    if ((spiState == NULL) || (rxBuff == NULL))
-    {
-        return kStatus_FlexIO_SPI_InvalidParam;
-    }
-    if ((spiState->isRxBusy)||(spiState->isXBusy))
-    {
-        return kStatus_FlexIO_SPI_RxBusy;
-    }
-
-    if (rxSize == 0U)
-    {
-        return kStatus_FlexIO_SPI_NoDataToDeal;
-    }
-    /* Have not configure DMA. */
-    if (!spiState->isRxUseDma)
-    {
-        FLEXIO_SPI_DRV_RxConfigDMA(spiState);
-    }
-    /* Configure DMA module */
-    uint32_t srcAddr = FLEXIO_SPI_HAL_GetRxBufferMSBAddr(&spiState->spiDev);
-    EDMA_DRV_ConfigLoopTransfer(&spiState->edmaSpiRx, &spiState->edmaRxTcd,
-        kEDMAPeripheralToMemory, srcAddr, (uint32_t)rxBuff, spiState->dataSize/8, 
-        spiState->dataSize/8,rxSize, 1);
-    EDMA_DRV_StartChannel(&spiState->edmaSpiRx);
-    /* Indicates current transaction is non-blocking */
+    FLEXIO_SPI_DRV_EdmaReceiveData(spiState, rxBuff, rxSize);
     spiState->isRxBlocking = true;
-    spiState->isRxBusy =  true;
-    /*enable dma request interrupt*/
-    FLEXIO_SPI_HAL_SetRxDmaCmd(&(spiState->spiDev), true);
     FLEXIO_DRV_Start(0);
     /* Wait until the transmit is complete. */
     osa_status_t syncStatus;
@@ -892,7 +836,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaReceiveDataBlocking(flexio_spi_state_t *s
     {
         syncStatus = OSA_SemaWait(&spiState->rxIrqSync, timeout);
     }while(syncStatus == kStatus_OSA_Idle);
-
+    spiState->isRxBlocking = false;
     if (syncStatus != kStatus_OSA_Success)
     {
         /* Stop DMA channel. */
@@ -933,10 +877,43 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaReceiveData(flexio_spi_state_t *spiState,
         FLEXIO_SPI_DRV_RxConfigDMA(spiState);
     }
     /* Configure DMA module */
-    uint32_t srcAddr = FLEXIO_SPI_HAL_GetRxBufferMSBAddr(&spiState->spiDev);
-    EDMA_DRV_ConfigLoopTransfer(&spiState->edmaSpiRx, &spiState->edmaRxTcd,
-        kEDMAPeripheralToMemory, srcAddr, (uint32_t)rxBuff, spiState->dataSize/8, 
-        spiState->dataSize/8, rxSize, 1);
+    edma_transfer_size_t transfersize;
+    switch(spiState->dataSize/8)
+    {
+        case 1:
+            transfersize = kEDMATransferSize_1Bytes;
+            break;
+        case 2:
+            transfersize = kEDMATransferSize_2Bytes;
+            break;
+        case 4:
+            transfersize = kEDMATransferSize_4Bytes;
+            break;
+        case 16:
+            transfersize = kEDMATransferSize_16Bytes;
+            break;
+        case 32:
+            transfersize = kEDMATransferSize_32Bytes;
+            break;
+        default:
+            break;
+    }
+    edma_software_tcd_t edmaRxTcd;
+    edma_transfer_config_t rxConfig;
+    rxConfig.srcLastAddrAdjust = 0;
+    rxConfig.destLastAddrAdjust = 0;
+    rxConfig.srcModulo = kEDMAModuloDisable;
+    rxConfig.destModulo = kEDMAModuloDisable;
+    rxConfig.srcTransferSize = transfersize;
+    rxConfig.destTransferSize = transfersize;
+    rxConfig.minorLoopCount = spiState->dataSize/8;
+    rxConfig.majorLoopCount = rxSize / (spiState->dataSize/8);
+    rxConfig.srcAddr = FLEXIO_SPI_HAL_GetRxBufferMSBAddr(&spiState->spiDev);
+    rxConfig.srcOffset = 0;
+    rxConfig.destAddr = (uint32_t)(rxBuff);
+    rxConfig.destOffset = spiState->dataSize/8;
+    EDMA_DRV_PrepareDescriptorTransfer(&spiState->edmaSpiRx, &edmaRxTcd, &rxConfig, true, true);
+    EDMA_DRV_PushDescriptorToReg(&spiState->edmaSpiRx, &edmaRxTcd);
     EDMA_DRV_StartChannel(&spiState->edmaSpiRx);
     /* Indicates current transaction is non-blocking */
     spiState->isRxBlocking = false;
@@ -993,7 +970,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaAbortReceivingData(flexio_spi_state_t * s
     }
 
     /* Stop DMA channel. */
-    DMA_DRV_StopChannel(&spiState->edmaSpiRx);
+    EDMA_DRV_StopChannel(&spiState->edmaSpiRx);
     /* Disable SPI Rx DMA interrupt*/
     FLEXIO_SPI_HAL_SetRxDmaCmd(&(spiState->spiDev), false);
     /* Stop the running transfer. */
@@ -1014,81 +991,8 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaTransferDataBlocking(flexio_spi_state_t *
                                                            uint32_t xSize,
                                                            uint32_t timeout)
 {
-    if ((spiState == NULL) || (txBuff == NULL) || (rxBuff == NULL))
-    {
-        return kStatus_FlexIO_SPI_InvalidParam;
-    }
-    if ((spiState->isTxBusy)||(spiState->isRxBusy)||(spiState->isXBusy))
-    {
-        return kStatus_FlexIO_SPI_XBusy;
-    }
-
-    if (xSize == 0U)
-    {
-        return kStatus_FlexIO_SPI_NoDataToDeal;
-    }
-    /* Have not configure DMA. */
-    if (!spiState->isTxUseDma)
-    {
-        FLEXIO_SPI_DRV_TxConfigDMA(spiState);
-    }
-
-    if (!spiState->isRxUseDma)
-    {
-        FLEXIO_SPI_DRV_RxConfigDMA(spiState);
-    }
-    /* Configure DMA module */
-    uint32_t  destAddr;
-    if(spiState->bitDirection == kFlexIOSpiMsbFirst)
-    {
-        destAddr = FLEXIO_SPI_HAL_GetTxBufferMSBAddr(&spiState->spiDev) + 
-           (4 - spiState->dataSize/8);
-    }
-    else
-    {
-        destAddr = FLEXIO_SPI_HAL_GetTxBufferLSBAddr(&spiState->spiDev);
-    }
-    EDMA_DRV_ConfigLoopTransfer(&spiState->edmaSpiTx, &spiState->edmaTxTcd,
-        kEDMAMemoryToPeripheral, (uint32_t)(txBuff + spiState->dataSize/8), 
-        destAddr, spiState->dataSize/8, spiState->dataSize/8,
-        (xSize - spiState->dataSize/8), 1);
-    EDMA_DRV_StartChannel(&spiState->edmaSpiTx);
-    /* Put the first data in shifter to start the transmission */
-    uint32_t tmp;
-    if(spiState->bitDirection == kFlexIOSpiMsbFirst)
-    {
-      if(spiState->dataSize == kFlexIOSpi8BitMode)
-      {
-          tmp = *txBuff;
-          FLEXIO_SPI_HAL_PutDataMSB(&(spiState->spiDev), tmp<<24);
-      }else
-      {
-          tmp = *((const uint16_t *)txBuff);
-          FLEXIO_SPI_HAL_PutDataMSB(&(spiState->spiDev), tmp<<16);   
-      }
-    }
-    else
-    {
-      if(spiState->dataSize == kFlexIOSpi8BitMode)
-      {
-          FLEXIO_SPI_HAL_PutDataLSB(&(spiState->spiDev), *(spiState->txBuff));
-      }else
-      {
-          FLEXIO_SPI_HAL_PutDataLSB(&(spiState->spiDev), *((const uint16_t *)(spiState->txBuff)));   
-      }
-    }
-
-    uint32_t srcAddr = FLEXIO_SPI_HAL_GetRxBufferMSBAddr(&spiState->spiDev);
-    EDMA_DRV_ConfigLoopTransfer(&spiState->edmaSpiRx, &spiState->edmaRxTcd,
-        kEDMAPeripheralToMemory, srcAddr, (uint32_t)rxBuff, 
-        spiState->dataSize/8, spiState->dataSize/8, xSize, 1);
-    EDMA_DRV_StartChannel(&spiState->edmaSpiRx);
-    /* Indicates current transaction is non-blocking */
     spiState->isXBlocking = true;
-    spiState->isXBusy =  true;
-    /*enable dma request interrupt*/
-    FLEXIO_SPI_HAL_SetTxDmaCmd(&(spiState->spiDev), true);
-    FLEXIO_SPI_HAL_SetRxDmaCmd(&(spiState->spiDev), true);
+    FLEXIO_SPI_DRV_EdmaTransferData(spiState, txBuff, rxBuff, xSize);
     FLEXIO_DRV_Start(0);
     /* Wait until the transmit is complete. */
     osa_status_t syncStatus;
@@ -1096,7 +1000,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaTransferDataBlocking(flexio_spi_state_t *
     {
         syncStatus = OSA_SemaWait(&spiState->rxIrqSync, timeout);
     }while(syncStatus == kStatus_OSA_Idle);
-
+    spiState->isXBlocking = false;
     if (syncStatus != kStatus_OSA_Success)
     {
         /* Stop DMA channel. */
@@ -1154,10 +1058,45 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaTransferData(flexio_spi_state_t *spiState
     {
         destAddr = FLEXIO_SPI_HAL_GetTxBufferLSBAddr(&spiState->spiDev);
     }
-    EDMA_DRV_ConfigLoopTransfer(&spiState->edmaSpiTx, &spiState->edmaTxTcd,
-        kEDMAMemoryToPeripheral, (uint32_t)(txBuff + spiState->dataSize/8), 
-        destAddr, spiState->dataSize/8, spiState->dataSize/8,
-        (xSize - spiState->dataSize/8), 1);
+    /* Configure DMA module */
+    edma_transfer_size_t transfersize;
+    switch(spiState->dataSize/8)
+    {
+        case 1:
+            transfersize = kEDMATransferSize_1Bytes;
+            break;
+        case 2:
+            transfersize = kEDMATransferSize_2Bytes;
+            break;
+        case 4:
+            transfersize = kEDMATransferSize_4Bytes;
+            break;
+        case 16:
+            transfersize = kEDMATransferSize_16Bytes;
+            break;
+        case 32:
+            transfersize = kEDMATransferSize_32Bytes;
+            break;
+        default:
+            break;
+    }
+    edma_software_tcd_t edmaTxTcd;
+    memset(&edmaTxTcd, 0, sizeof(edmaTxTcd));
+    edma_transfer_config_t txConfig;
+    txConfig.srcLastAddrAdjust = 0;
+    txConfig.destLastAddrAdjust = 0;
+    txConfig.srcModulo = kEDMAModuloDisable;
+    txConfig.destModulo = kEDMAModuloDisable;
+    txConfig.srcTransferSize = transfersize;
+    txConfig.destTransferSize = transfersize;
+    txConfig.minorLoopCount = spiState->dataSize/8;
+    txConfig.majorLoopCount = (xSize - spiState->dataSize/8) / (spiState->dataSize/8);
+    txConfig.srcAddr = (uint32_t)(txBuff + spiState->dataSize/8);
+    txConfig.srcOffset = spiState->dataSize/8;
+    txConfig.destAddr = destAddr;
+    txConfig.destOffset = 0;
+    EDMA_DRV_PrepareDescriptorTransfer(&spiState->edmaSpiTx, &edmaTxTcd, &txConfig, true, true);
+    EDMA_DRV_PushDescriptorToReg(&spiState->edmaSpiTx, &edmaTxTcd);
     EDMA_DRV_StartChannel(&spiState->edmaSpiTx);
     /* Put the first data in shifter to start the transmission */
     uint32_t tmp;
@@ -1183,11 +1122,24 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaTransferData(flexio_spi_state_t *spiState
           FLEXIO_SPI_HAL_PutDataLSB(&(spiState->spiDev), *((const uint16_t *)(spiState->txBuff)));   
       }
     }
-
-    uint32_t srcAddr = FLEXIO_SPI_HAL_GetRxBufferMSBAddr(&spiState->spiDev);
-    EDMA_DRV_ConfigLoopTransfer(&spiState->edmaSpiRx, &spiState->edmaRxTcd,
-        kEDMAPeripheralToMemory, srcAddr, (uint32_t)rxBuff, 
-        spiState->dataSize/8, spiState->dataSize/8,xSize, 1);
+    /* Configure DMA module */
+    edma_software_tcd_t edmaRxTcd;
+    memset(&edmaRxTcd, 0, sizeof(edmaRxTcd));
+    edma_transfer_config_t rxConfig;
+    rxConfig.srcLastAddrAdjust = 0;
+    rxConfig.destLastAddrAdjust = 0;
+    rxConfig.srcModulo = kEDMAModuloDisable;
+    rxConfig.destModulo = kEDMAModuloDisable;
+    rxConfig.srcTransferSize = transfersize;
+    rxConfig.destTransferSize = transfersize;
+    rxConfig.minorLoopCount = spiState->dataSize/8;
+    rxConfig.majorLoopCount = xSize / (spiState->dataSize/8);
+    rxConfig.srcAddr = FLEXIO_SPI_HAL_GetRxBufferMSBAddr(&spiState->spiDev);
+    rxConfig.srcOffset = 0;
+    rxConfig.destAddr = (uint32_t)(rxBuff);
+    rxConfig.destOffset = spiState->dataSize/8;
+    EDMA_DRV_PrepareDescriptorTransfer(&spiState->edmaSpiRx, &edmaRxTcd, &rxConfig, true, true);
+    EDMA_DRV_PushDescriptorToReg(&spiState->edmaSpiRx, &edmaRxTcd);
     EDMA_DRV_StartChannel(&spiState->edmaSpiRx);
     /* Indicates current transaction is non-blocking */
     spiState->isXBlocking = false;
@@ -1959,10 +1911,15 @@ static flexio_spi_status_t FLEXIO_SPI_DRV_TxConfigDMA(flexio_spi_state_t *spiSta
 {
     uint32_t ret;
     /* Request channel for Tx DMA */
-    dma_request_source_t baseSource= kDmaRequestMux0FlexIOChannel0;
+    dma_request_source_t baseSource;
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+    baseSource = kDmaRequestMux0Group1FlexIO0Channel0;
+#else
+    baseSource =kDmaRequestMux0FlexIOChannel0;
+#endif
     dma_request_source_t source = (dma_request_source_t)((uint32_t)baseSource + spiState->spiDev.shifterIdx[0]);
 #if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
-    ret = EDMA_DRV_RequestChannel(kDmaAnyChannel, source, &spiState->edmaSpiTx);
+    ret = EDMA_DRV_RequestChannel(kEDMAAnyChannel, source, &spiState->edmaSpiTx);
     if (ret == kEDMAInvalidChannel)
     {
         return kStatus_FlexIO_SPI_DmaRequestFail ;
@@ -1990,10 +1947,15 @@ static flexio_spi_status_t FLEXIO_SPI_DRV_RxConfigDMA(flexio_spi_state_t *spiSta
 {
     uint32_t ret;
     /* Request channel for Tx DMA */
-    dma_request_source_t baseSource= kDmaRequestMux0FlexIOChannel0;
+    dma_request_source_t baseSource;
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+    baseSource = kDmaRequestMux0Group1FlexIO0Channel0;
+#else
+    baseSource =kDmaRequestMux0FlexIOChannel0;
+#endif
     dma_request_source_t source = (dma_request_source_t)((uint32_t)baseSource + spiState->spiDev.shifterIdx[1]);
 #if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
-    ret = EDMA_DRV_RequestChannel(kDmaAnyChannel, source, &spiState->edmaSpiRx);
+    ret = EDMA_DRV_RequestChannel(kEDMAAnyChannel, source, &spiState->edmaSpiRx);
     if (ret == kEDMAInvalidChannel)
     {
         return kStatus_FlexIO_SPI_DmaRequestFail;

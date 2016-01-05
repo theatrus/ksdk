@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 -2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 -2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -39,7 +39,6 @@
 void (* volatile g_AdcCallback[ADC_INSTANCE_COUNT][ADC_SC1_COUNT])(void);
 volatile uint16_t g_AdcValueInt[ADC_INSTANCE_COUNT][ADC_SC1_COUNT];
 
-
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -78,7 +77,7 @@ static void ADC16_IRQHandler(uint32_t instance)
 
 #if (ADC_INSTANCE_COUNT > 0)
 /* ADC IRQ handler that would cover the same name's APIs in startup code */
-void MODULE_IRQ_HANDLER(ADC0)(void)
+void ADC0_IRQHandler(void)
 {
     // Add user-defined ISR for ADC0
     ADC16_IRQHandler(0U);
@@ -86,7 +85,7 @@ void MODULE_IRQ_HANDLER(ADC0)(void)
 #endif
 
 #if (ADC_INSTANCE_COUNT > 1U)
-void MODULE_IRQ_HANDLER(ADC1)(void)
+void ADC1_IRQHandler(void)
 {
     // Add user-defined ISR for ADC1
     ADC16_IRQHandler(1U);
@@ -94,7 +93,7 @@ void MODULE_IRQ_HANDLER(ADC1)(void)
 #endif
 
 #if (ADC_INSTANCE_COUNT > 2U)
-void MODULE_IRQ_HANDLER(ADC2)(void)
+void ADC2_IRQHandler(void)
 {
     // Add user-defined ISR for ADC2. */
     ADC16_IRQHandler(2U);
@@ -102,7 +101,7 @@ void MODULE_IRQ_HANDLER(ADC2)(void)
 #endif
 
 #if (ADC_INSTANCE_COUNT > 3U)
-void MODULE_IRQ_HANDLER(ADC3)(void)
+void ADC3_IRQHandler (void)
 {
     // Add user-defined ISR for ADC3
     ADC16_IRQHandler(3U);

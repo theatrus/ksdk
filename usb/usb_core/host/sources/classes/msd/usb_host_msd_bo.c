@@ -116,7 +116,7 @@ usb_status usb_class_mass_init
                return USBERR_ERROR;
            }
        }
-       else if ((!(ep_desc->bEndpointAddress & OUT_ENDPOINT)) && ((ep_desc->bmAttributes & EP_TYPE_MASK) == BULK_ENDPOINT))
+       else if ((!(ep_desc->bEndpointAddress & IN_ENDPOINT)) && ((ep_desc->bmAttributes & EP_TYPE_MASK) == BULK_ENDPOINT))
        {
            pipe_init.endpoint_number  = (ep_desc->bEndpointAddress & ENDPOINT_MASK);
            pipe_init.direction        = USB_SEND;
@@ -154,8 +154,6 @@ usb_status usb_class_mass_init
 
    *class_handle_ptr = (usb_class_handle)mass_class;
 
-   /* USB_PRINTF("MSD class driver initialized\n"); */
-   
    return USB_OK;
 } /* Endbody */
 
@@ -207,7 +205,6 @@ usb_status usb_class_mass_deinit
     }
     
     OS_Mem_free(handle);
-    /* USB_PRINTF("MSD class driver de-initialized\n"); */
     return USB_OK;
 } /* Endbody */
 
@@ -252,7 +249,6 @@ usb_status usb_class_mass_pre_deinit
         }
     }
     
-    /* USB_PRINTF("mass class driver pre_deinit\n"); */
     return USB_OK;
 } /* Endbody */
 
@@ -436,7 +432,6 @@ static void usb_class_mass_call_back_cbw
          } 
          else 
          {
-            /* status = STATUS_CANCELLED; */ /* cannot keep repeating */
             cmd_ptr->PREV_STATUS = STATUS_FAILED_IN_CBW; /* preserve the status */
             status = usb_class_mass_reset_recovery_on_usb(mass_class);
          } /* Endif */
@@ -469,7 +464,6 @@ static void usb_class_mass_call_back_cbw
       }
       else
       {
-         /* status = STATUS_CANCELLED; */ /* cannot keep repeating */
          cmd_ptr->PREV_STATUS = STATUS_FAILED_IN_CBW; /* preserve the status */
          status = usb_class_mass_reset_recovery_on_usb(mass_class);
       } /* Endif */
@@ -582,7 +576,6 @@ static void usb_class_mass_call_back_dphase
       {
          cmd_ptr->DPHASE_RETRY_COUNT++;
          cmd_ptr->RETRY_COUNT++;
-         /* cmd_ptr->STATUS = STATUS_QUEUED_IN_DRIVER; */ /* this is redundant as clearing pipe will change the status */
          cmd_ptr->PREV_STATUS = STATUS_QUEUED_IN_DRIVER; /* preserve the status */
 
          return_code = usb_class_mass_clear_bulk_pipe_on_usb(mass_class);
@@ -599,7 +592,6 @@ static void usb_class_mass_call_back_dphase
       } 
       else 
       {
-         /* cmd_ptr->STATUS = STATUS_FINISHED_DPHASE_ON_USB; */ /* this is redundant as clearing pipe will change the status */
          cmd_ptr->PREV_STATUS =  STATUS_FINISHED_DPHASE_ON_USB; /* preserve the status */
 
          return_code = usb_class_mass_clear_bulk_pipe_on_usb(mass_class);
@@ -708,14 +700,12 @@ static void usb_class_mass_call_back_csw
          {
             cmd_ptr->CSW_RETRY_COUNT++;
             cmd_ptr->RETRY_COUNT++;
-            /* cmd_ptr->STATUS = STATUS_FINISHED_DPHASE_ON_USB; */ /* this is redundant as reseting will change the status */
             cmd_ptr->PREV_STATUS = STATUS_FINISHED_DPHASE_ON_USB; /* preserve the status */
 
             status = usb_class_mass_reset_recovery_on_usb(mass_class);
          } 
          else 
          {
-            /* status = STATUS_CANCELLED; */ /* cannot keep repeating */
             cmd_ptr->PREV_STATUS = STATUS_FAILED_IN_CSW; /* preserve the status */
             status = usb_class_mass_reset_recovery_on_usb(mass_class);
          } /* Endif */
@@ -787,7 +777,6 @@ static void usb_class_mass_call_back_csw
       } 
       else 
       {
-         /* status = STATUS_CANCELLED; */ /* cannot keep repeating */
          cmd_ptr->PREV_STATUS = STATUS_FAILED_IN_CSW; /* preserve the status */
          status = usb_class_mass_reset_recovery_on_usb(mass_class);
       } /* Endif */
@@ -889,7 +878,6 @@ static usb_status usb_class_mass_pass_on_usb
          status = usb_host_send_data(mass_class->host_handle, mass_class->bulk_out_pipe, tr_ptr);
          if (status != USB_OK)
          {
-             /* USB_PRINTF("\nError in usb_class_mass_pass_on_usb: %x", status); */
              usb_host_release_tr(mass_class->host_handle, tr_ptr);
              usb_class_mass_deleteq(mass_class);
              return status;
@@ -920,7 +908,6 @@ static usb_status usb_class_mass_pass_on_usb
                   status = usb_host_send_data(mass_class->host_handle, mass_class->bulk_out_pipe, tr_ptr);
                   if (status != USB_OK)
                   {
-                      /* USB_PRINTF("\nError in usb_class_mass_pass_on_usb: %x", status); */
                       usb_host_release_tr(mass_class->host_handle, tr_ptr);
                       usb_class_mass_deleteq(mass_class);
                       return status;
@@ -935,7 +922,6 @@ static usb_status usb_class_mass_pass_on_usb
                   status = usb_host_recv_data(mass_class->host_handle, mass_class->bulk_in_pipe, tr_ptr);
                   if (status != USB_OK)
                   {
-                      /* USB_PRINTF("\nError in usb_class_mass_pass_on_usb: %x", status); */
                       usb_host_release_tr(mass_class->host_handle, tr_ptr);
                       usb_class_mass_deleteq(mass_class);
                       return status;
@@ -967,7 +953,6 @@ static usb_status usb_class_mass_pass_on_usb
          status = usb_host_recv_data(mass_class->host_handle, mass_class->bulk_in_pipe, tr_ptr);
          if (status != USB_OK)
          {
-             /* USB_PRINTF("\nError in usb_class_mass_pass_on_usb: %x", status); */
              usb_host_release_tr(mass_class->host_handle, tr_ptr);
              usb_class_mass_deleteq(mass_class);
              return status;
@@ -1020,7 +1005,7 @@ usb_status usb_class_mass_getmaxlun_bulkonly
       void*                      callback_param
    )
 { /* Body */
-   usb_status                       status = USB_OK; /* USBERR_NO_INTERFACE; */
+   usb_status                       status = USB_OK;
    usb_mass_class_struct_t *        mass_class = (usb_mass_class_struct_t *)handle;
    tr_struct_t*                     tr_ptr;
 
@@ -1109,7 +1094,7 @@ usb_status usb_class_mass_getvidpid
       uint16_t * pid
    )
 { /* Body */
-   usb_status                       status = USB_OK;/* USBERR_NO_INTERFACE; */
+   usb_status                       status = USB_OK;
    usb_mass_class_struct_t *        mass_class = (usb_mass_class_struct_t *)handle;
    
    #ifdef _HOST_DEBUG_
@@ -1219,8 +1204,15 @@ static usb_status usb_class_mass_clear_bulk_pipe_on_usb
    
    if (status == USB_OK) 
    {
+       if (direction == REQ_TYPE_IN)
+       {
+           cmd_ptr->STATUS = STATUS_CLEAR_BULK_IN_PIPE;
+       }
+       else
+       {
+           cmd_ptr->STATUS = STATUS_CLEAR_BULK_OUT_PIPE;
+       }
        /* Send a CLEAR PIPE command */
-       cmd_ptr->STATUS = STATUS_CLEAR_BULK_PIPE;
        status = _usb_host_ch9_clear_feature(mass_class->dev_handle,
           REQ_TYPE_ENDPOINT, (uint8_t)(pBulk_pipe->endpoint_number | direction), ENDPOINT_HALT);
    }
@@ -1441,14 +1433,18 @@ static void usb_class_mass_reset_callback
             usb_class_mass_reset_in_pipe(mass_class);
             usb_class_mass_reset_out_pipe(mass_class);
             
-            /* this has no significance, just for fixing misra error */
-            if (cmd_ptr->STATUS != STATUS_RESET_BULK_OUT)
-            {
-                break;
-            }
-         case STATUS_CLEAR_BULK_PIPE:
-            /* pPipe = (pipe_struct_t*)mass_class->bulk_in_pipe; */
-            /* pPipe->nextdata01 = 0; */ /* reset the NEXTDATA toggle bit */
+            cmd_ptr->STATUS = cmd_ptr->PREV_STATUS; /* restore status set prior to call reset function */
+            status = usb_class_mass_pass_on_usb(mass_class);
+            break;
+            
+         case STATUS_CLEAR_BULK_IN_PIPE:
+            usb_class_mass_reset_in_pipe(mass_class);
+            cmd_ptr->STATUS = cmd_ptr->PREV_STATUS; /* restore status set prior to call reset function */
+            status = usb_class_mass_pass_on_usb(mass_class);
+            break;
+            
+         case STATUS_CLEAR_BULK_OUT_PIPE:
+            usb_class_mass_reset_out_pipe(mass_class);
             cmd_ptr->STATUS = cmd_ptr->PREV_STATUS; /* restore status set prior to call reset function */
             status = usb_class_mass_pass_on_usb(mass_class);
             break;
@@ -1592,7 +1588,7 @@ static usb_status usb_class_mass_reset_out_pipe
     for (ep_num = 0; ep_num < pDeviceIntf->ep_count; ep_num++)
     {
         ep_desc = pDeviceIntf->ep[ep_num].lpEndpointDesc;
-        if ((!(ep_desc->bEndpointAddress & OUT_ENDPOINT)) && ((ep_desc->bmAttributes & EP_TYPE_MASK) == BULK_ENDPOINT))
+        if ((!(ep_desc->bEndpointAddress & IN_ENDPOINT)) && ((ep_desc->bmAttributes & EP_TYPE_MASK) == BULK_ENDPOINT))
         {
             pipe_init.endpoint_number  = (ep_desc->bEndpointAddress & ENDPOINT_MASK);
             pipe_init.direction        = USB_SEND;

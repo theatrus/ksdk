@@ -72,7 +72,7 @@ extern "C" {
  *
  * @param instance The FTM peripheral instance number.
  * @param info The FTM user configuration structure, see #ftm_user_config_t.
- * @return kStatusFtmSuccess means succees, otherwise means failed.
+ * @return kStatusFtmSuccess means success. Otherwise means failure.
  */
 ftm_status_t FTM_DRV_Init(uint32_t instance, const ftm_user_config_t *info);
 
@@ -117,7 +117,7 @@ void FTM_DRV_QuadDecodeStart(uint32_t instance, ftm_phase_params_t *phaseAParams
                                       ftm_phase_params_t *phaseBParams, ftm_quad_decode_mode_t quadMode);
 
 /*!
- * @brief De-activates the quadrature decode mode.
+ * @brief Deactivates the quadrature decode mode.
  *
  * @param instance  Instance number of the FTM module.
  */
@@ -151,15 +151,16 @@ void FTM_DRV_CounterStop(uint32_t instance);
  * @brief Reads back the current value of the FTM counter.
  *
  * @param instance The FTM peripheral instance number.
+ * @return The counter value.
  */
 uint32_t FTM_DRV_CounterRead(uint32_t instance);
 
 /*!
- * @brief Set FTM clock source.
+ * @brief Sets the FTM clock source.
  *
- * This function will save the users clock source selection in the driver and
- * uses this to set the clock source whenever the user decides to use features provided
- * by this driver like counter, PWM generation etc. It will also set the clock divider.
+ * This function saves the user's clock source selection in the driver
+ * to set the clock source  and use features provided
+ * by the driver-like counter, PWM generation, and so on. This function also sets the clock divider.
  *
  * @param instance The FTM peripheral instance number.
  * @param clock The clock source to use, cannot pick None.
@@ -170,7 +171,7 @@ void FTM_DRV_SetClock(uint8_t instance, ftm_clock_source_t clock, ftm_clock_ps_t
 /*!
  * @brief Retrieves the frequency of the clock source feeding the FTM counter.
  *
- * Function will return a 0 if no clock source is selected and the FTM counter is disabled
+ * This function returns zero if no clock source is selected and the FTM counter is disabled.
  *
  * @param instance The FTM peripheral instance number.
  * @return The frequency of the clock source running the FTM counter, returns 0 if counter is disabled
@@ -194,9 +195,9 @@ void FTM_DRV_SetTimeOverflowIntCmd(uint32_t instance, bool overflowEnable);
 void FTM_DRV_SetFaultIntCmd(uint32_t instance, bool faultEnable);
 
 /*!
- * @brief Enables capture of an input signal on the channel using the function parameters.
+ * @brief Enables capturing an input signal on the channel using the function parameters.
  *
- * When the edge specified in the captureMode argument occurs on the channel the FTM counter is captured into
+ * When the edge specified in the captureMode argument occurs on the channel, the FTM counter is captured into
  * the CnV register. The user has to read the CnV register separately to get this value. The filter
  * function is disabled if the filterVal argument passed in is 0. The filter function is available only for
  *  0, 1, 2, 3 channels.
@@ -228,7 +229,7 @@ void FTM_DRV_SetupChnOutputCompare(uint32_t instance, ftm_output_compare_edge_mo
  *
  * This function sets up the dual edge capture mode on a channel pair. The capture edge for the channel
  * pair and the capture mode (one-shot or continuous) is specified in the parameter argument. The filter function
- * is disabled if the filterVal argument passed in is 0. The filter function is available only on
+ * is disabled if the filterVal argument passed is zero. The filter function is available only on
  * channels 0 and 2. The user has to read the channel CnV registers separately to get the capture values.
  *
  * @param instance    The FTM peripheral instance number.

@@ -106,14 +106,14 @@ usb_device_instance_handle device_handle
     }
     usb_host_ptr = (usb_host_state_struct_t*)dev_ptr->host;
 
-    USB_Host_lock();
+    OS_Lock();
     /* usb_host_ptr is valid host state structure, check for list of attached device instances */
     test_ptr = (dev_instance_t*)usb_host_ptr->device_list_ptr;
     while ((test_ptr != dev_ptr) && (test_ptr != NULL))
     {
         test_ptr = test_ptr->next;
     }
-    USB_Host_unlock();
+    OS_Unlock();
 
 #ifdef _HOST_DEBUG_
     if (test_ptr == NULL)
@@ -171,15 +171,7 @@ usb_host_driver_info_t* info_ptr
 
     /* If vendor and product are listed in table (non-zero) */
     if ((info_Vendor | info_Product) != 0)
-    {
-        if ((info_Vendor == dev_Vendor) &&
-        (info_Product == dev_Product))
-        {
-#ifdef _HOST_DEBUG_
-            DEBUG_LOG_TRACE("usb_host_driver_info_match PID, VID match");
-#endif
-            return TRUE;
-        } /* Endif */
+    {   
 #if USBCFG_HOST_COMPLIANCE_TEST
         if (USBIF_VENDOR == dev_Vendor)
         {

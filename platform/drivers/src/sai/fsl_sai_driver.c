@@ -741,9 +741,9 @@ uint32_t SAI_DRV_SendDataDma(uint32_t instance, uint8_t *addr, uint32_t len)
     /* Enable DMA request */
     SAI_HAL_TxSetIntCmd(base, kSaiIntrequestFIFOError, true);
 #if FSL_FEATURE_SAI_FIFO_COUNT > 1
-    SAI_HAL_TxSetIntCmd(base, kSaiDmaReqFIFORequest, true);
+    SAI_HAL_TxSetDmaCmd(base, kSaiDmaReqFIFORequest, true);
 #else
-    SAI_HAL_TxSetIntCmd(base, kSaiDmaReqFIFOWarning, true);
+    SAI_HAL_TxSetDmaCmd(base, kSaiDmaReqFIFOWarning, true);
 #endif
     SAI_DRV_TxStartModule(instance);
     return len;
@@ -816,12 +816,112 @@ uint32_t SAI_DRV_ReceiveDataDma(uint32_t instance, uint8_t *addr, uint32_t len)
     /* Enable DMA request */
     SAI_HAL_RxSetIntCmd(base, kSaiIntrequestFIFOError, true);
 #if FSL_FEATURE_SAI_FIFO_COUNT > 1
-    SAI_HAL_RxSetIntCmd(base, kSaiDmaReqFIFORequest, true);
+    SAI_HAL_RxSetDmaCmd(base, kSaiDmaReqFIFORequest, true);
 #else
-    SAI_HAL_RxSetIntCmd(base, kSaiDmaReqFIFOWarning, true);
+    SAI_HAL_RxSetDmaCmd(base, kSaiDmaReqFIFOWarning, true);
 #endif
     SAI_DRV_RxStartModule(instance);
     return len;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SAI_DRV_TxStopModule
+ * Description   : The function stops transfer of tx, including closing interrupt
+ request or dma request.
+ *END**************************************************************************/
+void SAI_DRV_TxStopModule(uint32_t instance)
+{
+    I2S_Type * reg_base = g_saiBase[instance];
+#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
+    SAI_HAL_TxSetIntCmd(reg_base,kSaiIntrequestFIFORequest,false);
+    SAI_HAL_TxSetDmaCmd(reg_base,kSaiDmaReqFIFORequest, false);
+#else
+    SAI_HAL_TxSetIntCmd(reg_base,kSaiIntrequestFIFOWarning,false);
+    SAI_HAL_TxSetDmaCmd(reg_base,kSaiDmaReqFIFOWarning, false);
+#endif
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SAI_DRV_RxStopModule
+ * Description   : The function stops receiving, including closing interrupt
+ request or dma request.
+ *END**************************************************************************/
+void SAI_DRV_RxStopModule(uint32_t instance)
+{
+    I2S_Type * reg_base = g_saiBase[instance];
+#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
+    SAI_HAL_RxSetIntCmd(reg_base,kSaiIntrequestFIFORequest,false);
+    SAI_HAL_RxSetDmaCmd(reg_base,kSaiDmaReqFIFORequest, false);
+#else
+    SAI_HAL_RxSetIntCmd(reg_base,kSaiIntrequestFIFOWarning,false);
+    SAI_HAL_RxSetDmaCmd(reg_base,kSaiDmaReqFIFOWarning, false);
+#endif
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SAI_DRV_TxSetIntCmd
+ * Description   : The function enables interrupt request source for tx.
+ *END**************************************************************************/
+void SAI_DRV_TxSetIntCmd(uint32_t instance, bool enable)
+{
+    I2S_Type * reg_base = g_saiBase[instance];
+#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
+    SAI_HAL_TxSetIntCmd(reg_base,kSaiIntrequestFIFORequest,enable);
+#else
+    SAI_HAL_TxSetIntCmd(reg_base,kSaiIntrequestFIFOWarning,enable);
+#endif
+    SAI_HAL_TxSetIntCmd(reg_base, kSaiIntrequestFIFOError, enable);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SAI_DRV_RxSetIntCmd
+ * Description   : The function enables interrupt request source for rx.
+ *END**************************************************************************/
+void SAI_DRV_RxSetIntCmd(uint32_t instance, bool enable)
+{
+    I2S_Type * reg_base = g_saiBase[instance];
+#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
+    SAI_HAL_RxSetIntCmd(reg_base,kSaiIntrequestFIFORequest,enable);
+#else
+    SAI_HAL_RxSetIntCmd(reg_base,kSaiIntrequestFIFOWarning,enable);
+#endif
+    SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError,enable);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SAI_DRV_TxSetDmaCmd
+ * Description   : The function enables dma request source for tx.
+ *END**************************************************************************/
+void SAI_DRV_TxSetDmaCmd(uint32_t instance,  bool enable)
+{
+    I2S_Type * reg_base = g_saiBase[instance];
+#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
+    SAI_HAL_TxSetDmaCmd(reg_base, kSaiDmaReqFIFORequest,enable);
+#else
+    SAI_HAL_TxSetDmaCmd(reg_base,kSaiIntrequestFIFOWarning,enable);
+#endif
+    SAI_HAL_TxSetIntCmd(reg_base, kSaiIntrequestFIFOError,enable);
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : SAI_DRV_RxSetDmaCmd
+ * Description   : The function enables dma request source for rx.
+ *END**************************************************************************/
+void SAI_DRV_RxSetDmaCmd(uint32_t instance, bool enable)
+{
+    I2S_Type * reg_base = g_saiBase[instance];
+#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
+    SAI_HAL_RxSetDmaCmd(reg_base, kSaiDmaReqFIFORequest,enable);
+#else
+    SAI_HAL_RxSetDmaCmd(reg_base,kSaiIntrequestFIFOWarning,enable);
+#endif
+    SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError,enable);    
 }
 
 #if defined FSL_FEATURE_EDMA_MODULE_CHANNEL

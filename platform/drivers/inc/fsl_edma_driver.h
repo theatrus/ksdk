@@ -395,6 +395,37 @@ static inline edma_status_t EDMA_DRV_PrepareDescriptorChannelLink(
 }
 
 /*!
+ * @brief Configures the minor channel link the software TCD.
+ *
+ * If the minor link is enabled, after the minor loop counter is exhausted, the eDMA engine initiates a
+ * channel service request at the channel defined by these six bits by setting that channel start
+ * bits.
+ *
+ * @param stcd The pointer to the software TCD. The address need to be aligned to 32 bytes.
+ * @param linkChn Channel number for minor link
+ * @return An eDMA error codes or kStatus_EDMA_Success.
+ */
+static inline edma_status_t EDMA_DRV_PrepareDescriptorMinorLink(
+                                edma_software_tcd_t *stcd, uint32_t linkChn)
+{
+    EDMA_HAL_STCDSetChannelMinorLink(stcd, linkChn, true);
+    return kStatus_EDMA_Success;
+}
+
+/*!
+ * @brief Triggers the eDMA channel.
+ *
+ * @param chn The pointer to the channel state structure.
+ * @return kStatus_EDMA_Success.
+ */
+static inline edma_status_t EDMA_DRV_TriggerChannelStart(edma_chn_state_t *chn)
+{
+    EDMA_HAL_TriggerChannelStart(VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(chn->channel),
+                                            (edma_channel_indicator_t)chn->channel);
+    return kStatus_EDMA_Success;
+}
+
+/*!
  * @brief Copies the software TCD configuration to the hardware TCD.
  *
  * @param chn The pointer to the channel state structure.

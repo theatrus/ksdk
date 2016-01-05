@@ -209,68 +209,67 @@ void * arg
 )
 {
     uint8_t index;
-#if USBCFG_DEV_COMPOSITE
-    usb_composite_info_struct_t* usb_composite_info;
-    uint32_t interface_index = 0xFF;
-#else
-    usb_class_struct_t* usbclass;
-#endif
+
     usb_ep_struct_t* ep_struct_ptr;
     hid_device_struct_t* devicePtr;
-
+    usb_interfaces_struct_t usb_interfaces;
+    
     devicePtr = (hid_device_struct_t*)arg;
     if (event == USB_DEV_EVENT_CONFIG_CHANGED)
-    {
-#if USBCFG_DEV_COMPOSITE
-        uint8_t count = 0;
-        uint8_t type_sel;
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
-        USB_COMPOSITE_INFO, (uint32_t *)&usb_composite_info);
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
-        USB_CLASS_INTERFACE_INDEX_INFO, (uint32_t *)&interface_index);
+    {   
+        if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(devicePtr->controller_id))
+        {
+            usb_composite_info_struct_t* usb_composite_info;
+            uint32_t interface_index = 0xFF;
+            uint8_t type_sel;
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
+            USB_COMPOSITE_INFO, (uint32_t *)&usb_composite_info);
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
+            USB_CLASS_INTERFACE_INDEX_INFO, (uint32_t *)&interface_index);
 
-        if(interface_index == 0xFF)
-        {
-            USB_PRINTF("not find interface index\n");
-            return;
-        }
-        for (type_sel = 0;type_sel < usb_composite_info->count;type_sel++)
-        {
-            if ((usb_composite_info->class_handle[type_sel].type == USB_CLASS_HID) && (type_sel == interface_index))
+            if(interface_index == 0xFF)
             {
-                break;
+                USB_PRINTF("not find interface index\n");
+                return;
             }
-        }
-        if(type_sel >= usb_composite_info->count)
-        {
-            USB_PRINTF("not find hid interface\n");
-            return;
-        }
-        devicePtr->ep_desc_data = (usb_endpoints_t *) &usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints;
+            for (type_sel = 0;type_sel < usb_composite_info->count;type_sel++)
+            {
+                if ((usb_composite_info->class_handle[type_sel].type == USB_CLASS_HID) && (type_sel == interface_index))
+                {
+                    break;
+                }
+            }
+            if(type_sel >= usb_composite_info->count)
+            {
+                USB_PRINTF("not find hid interface\n");
+                return;
+            }
+            devicePtr->ep_desc_data = (usb_endpoints_t *) &usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints;
 
-        if (usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.count > MAX_HID_CLASS_EP_NUM)
-        {
-            USB_PRINTF("too many hid endpoint for the class driver\n");
-            return;
+            if (usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.count > MAX_HID_CLASS_EP_NUM)
+            {
+                USB_PRINTF("too many hid endpoint for the class driver\n");
+                return;
+            }
+            usb_interfaces = usb_composite_info->class_handle[type_sel].interfaces;
         }
-
-        for (index = 0; index < usb_composite_info->class_handle[type_sel].interfaces.interface->endpoints.count; index++)
-#else
-        uint8_t count = 0;
-        devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr->handle,
-        USB_CLASS_INFO, (uint32_t *)&usbclass);
-        devicePtr->ep_desc_data = (usb_endpoints_t *) &usbclass->interfaces.interface->endpoints;
-
-        if (usbclass->interfaces.interface->endpoints.count > MAX_HID_CLASS_EP_NUM)
+        else
         {
+            usb_class_struct_t* usbclass;
+            devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,
+            USB_CLASS_INFO, (uint32_t *)&usbclass);
+            devicePtr->ep_desc_data = (usb_endpoints_t *) &usbclass->interfaces.interface->endpoints;
+
+            if (usbclass->interfaces.interface->endpoints.count > MAX_HID_CLASS_EP_NUM)
+            {
 #if _DEBUG
-            USB_PRINTF("too many hid endpoint for the class driver\n");
+                USB_PRINTF("too many hid endpoint for the class driver\n");
 #endif
-            return;
+                return;
+            }
+            usb_interfaces = usbclass->interfaces;
         }
-
-        for (index = 0; index < usbclass->interfaces.interface->endpoints.count; index++)
-#endif
+        for (index = 0; index < usb_interfaces.interface->endpoints.count; index++)
         {
             devicePtr->hid_endpoint_data.ep[index].endpoint =
             devicePtr->ep_desc_data->ep[index].ep_num + ((uint8_t)((uint8_t)(devicePtr->ep_desc_data->ep[index].direction & 0x01) << 0x07));
@@ -278,7 +277,7 @@ void * arg
             devicePtr->ep_desc_data->ep[index].type;
         }
         usb_endpoints_t *ep_desc_data = devicePtr->ep_desc_data;
-
+        uint8_t count = 0;
         /* Initialize all non control endpoints */
         while (count < ep_desc_data->count)
         {
@@ -389,6 +388,12 @@ void* arg
     if((setup_packet->request_type & USB_DEV_REQ_STD_REQUEST_TYPE_TYPE_POS) ==
     USB_DEV_REQ_STD_REQUEST_TYPE_TYPE_CLASS)
     {
+        if((setup_packet->request_type & USB_DEV_REQ_STD_REQUEST_TYPE_DIR_OUT) ==
+            USB_DEV_REQ_STD_REQUEST_TYPE_DIR_OUT)
+        {
+            *data = ((uint8_t*)setup_packet)+USB_SETUP_PKT_SIZE;
+        }
+        
         if(devicePtr->class_specific_callback.callback != NULL)
         {
             /* handle callback if the application has supplied it */
@@ -444,9 +449,9 @@ void* arg
  *****************************************************************************/
 usb_status USB_Class_HID_Init
 (
-uint8_t controller_id,
-hid_config_struct_t* hid_config_ptr,
-hid_handle_t * hidHandle
+    uint8_t controller_id,
+    hid_config_struct_t* hid_config_ptr,
+    hid_handle_t * hidHandle
 )
 {
     //uint8_t index;
@@ -457,42 +462,45 @@ hid_handle_t * hidHandle
     {
         return USBERR_ERROR;
     }
-    error = USB_Hid_Allocate_Handle(&devicePtr);/*(hid_device_struct_t*)OS_Mem_alloc_zero(sizeof(hid_device_struct_t));*/
+    error = USB_Hid_Allocate_Handle(&devicePtr);
     if (USB_OK != error)
     {
         return error;
     }
 
     //devicePtr->hid_endpoint_data.ep = NULL;
-#if USBCFG_DEV_COMPOSITE
-    devicePtr->class_handle = USB_Class_Get_Class_Handle();
-    devicePtr->handle = (usb_device_handle)USB_Class_Get_Ctrler_Handle(devicePtr->class_handle);
-    if (NULL == devicePtr->handle)
+    devicePtr->controller_id = controller_id;
+    if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(devicePtr->controller_id))
     {
-        USB_Hid_Free_Handle(devicePtr);
-        devicePtr = NULL;
-        return error;
+        devicePtr->class_handle = USB_Class_Get_Class_Handle(devicePtr->controller_id);
+        devicePtr->handle = (usb_device_handle)USB_Class_Get_Ctrler_Handle(devicePtr->class_handle);
+        if (NULL == devicePtr->handle)
+        {
+            USB_Hid_Free_Handle(devicePtr);
+            devicePtr = NULL;
+            return error;
+        }
     }
-#else
-    /* Initialize the device layer*/
-    error = usb_device_init(controller_id,(&devicePtr->handle));
-    if (error != USB_OK)
+    else
     {
-        USB_Hid_Free_Handle(devicePtr);
-        devicePtr = NULL;
-        return error;
+         /* Initialize the device layer*/
+        error = usb_device_init(controller_id, (void* )&hid_config_ptr->board_init_callback, (&devicePtr->handle));
+        if (error != USB_OK)
+        {
+         USB_Hid_Free_Handle(devicePtr);
+            devicePtr = NULL;
+            return error;
+        }
+        /* Initialize the generic class functions */
+        devicePtr->class_handle = USB_Class_Init(devicePtr->handle,
+        USB_Class_Hid_Event,USB_HID_Requests,(void *)devicePtr,hid_config_ptr->desc_callback_ptr);
+        if (error != USB_OK)
+        {
+            USB_Hid_Free_Handle(devicePtr);
+            devicePtr = NULL;
+            return error;
+        }
     }
-    /* Initialize the generic class functions */
-    devicePtr->class_handle = USB_Class_Init(devicePtr->handle,
-    USB_Class_Hid_Event,USB_HID_Requests,(void *)devicePtr,hid_config_ptr->desc_callback_ptr);
-    if (error != USB_OK)
-    {
-        USB_Hid_Free_Handle(devicePtr);
-        devicePtr = NULL;
-        return error;
-    }
-
-#endif
 
     /* save the callback pointer */
     OS_Mem_copy(&hid_config_ptr->hid_application_callback,
@@ -512,9 +520,11 @@ hid_handle_t * hidHandle
 
     *hidHandle =(unsigned long)devicePtr;
     //devicePtr->user_handle = *hidHandle;
-#if !USBCFG_DEV_COMPOSITE 
-    usb_device_postinit(controller_id,devicePtr->handle);
-#endif
+    if(USB_UNINITIALIZED_VAL_32 == USB_Class_Get_Class_Handle(devicePtr->controller_id))
+    {
+        usb_device_postinit(controller_id, devicePtr->handle);
+    }
+
     return USB_OK;
 }
 
@@ -532,7 +542,7 @@ hid_handle_t * hidHandle
  *****************************************************************************/
 usb_status USB_Class_HID_Deinit
 (
-hid_handle_t handle
+    hid_handle_t handle
 )
 {
     usb_status error = USB_OK;
@@ -549,15 +559,16 @@ hid_handle_t handle
     {
         return USBERR_NO_DEVICE_CLASS;
     }
-#if !USBCFG_DEV_COMPOSITE  
-    /* De-initialize the generic class functions */
-    error = USB_Class_Deinit(devicePtr->handle,devicePtr->class_handle);
-    if(error == USB_OK)
+    if(USB_UNINITIALIZED_VAL_32 == USB_Class_Get_Class_Handle(devicePtr->controller_id))
     {
-        /* De-initialize the device layer*/
-        error = usb_device_deinit(devicePtr->handle);
+        /* De-initialize the generic class functions */
+        error = USB_Class_Deinit(devicePtr->handle,devicePtr->class_handle);
+        if(error == USB_OK)
+        {
+            /* De-initialize the device layer*/
+            error = usb_device_deinit(devicePtr->handle);
+        }
     }
-#endif 
 
     USB_Hid_Free_Handle(devicePtr);
     devicePtr = NULL;

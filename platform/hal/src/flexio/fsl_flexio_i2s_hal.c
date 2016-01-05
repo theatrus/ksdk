@@ -29,6 +29,7 @@
  */
 
 #include "fsl_flexio_i2s_hal.h"
+#include <string.h>
 #if FSL_FEATURE_SOC_FLEXIO_COUNT
 
 /*------------------------------------------------------------------------
@@ -52,7 +53,7 @@ flexio_status_t FLEXIO_I2S_HAL_Configure_Master(
     {
         return kStatus_FLEXIO_InvalidArgument;
     }
-
+    memset(&mFlexioShifterConfigStruct, 0, sizeof(mFlexioShifterConfigStruct));
     /* 1. Configure the shifter 0 for tx. */
     mFlexioShifterConfigStruct.timsel = devPtr->timerIdx[0];
     mFlexioShifterConfigStruct.timpol = kFlexioShifterTimerPolarityOnPositive;
@@ -68,7 +69,8 @@ flexio_status_t FLEXIO_I2S_HAL_Configure_Master(
     /* Clear the status flag immediately after setting shifter the work mode. */
     FLEXIO_HAL_ClearShifterStatusFlags(
         devPtr->flexioBase, 1U << (devPtr->shifterIdx[0]) );
-
+    
+    memset(&mFlexioShifterConfigStruct, 0, sizeof(mFlexioShifterConfigStruct));
     /* 2. Configure the shifter 1 for rx. */
     mFlexioShifterConfigStruct.timsel = devPtr->timerIdx[0];
     mFlexioShifterConfigStruct.timpol = kFlexioShifterTimerPolarityOnNegitive;
@@ -84,7 +86,8 @@ flexio_status_t FLEXIO_I2S_HAL_Configure_Master(
     /* Clear the status flag immediately after setting shifter the work mode. */
     FLEXIO_HAL_ClearShifterStatusFlags(
         devPtr->flexioBase, 1U << (devPtr->shifterIdx[1]) );
-
+    
+    memset(&mFlexioTimerConfigStruct, 0, sizeof(mFlexioTimerConfigStruct));
     /* 3. Confiugre the timer 1 as sync frame clock. */
     mFlexioTimerConfigStruct.trgsel = FLEXIO_HAL_TIMER_TRIGGER_SEL_PININPUT(devPtr->txPinIdx);
     mFlexioTimerConfigStruct.trgpol = kFlexioTimerTriggerPolarityActiveHigh;
@@ -106,6 +109,7 @@ flexio_status_t FLEXIO_I2S_HAL_Configure_Master(
     FLEXIO_HAL_ConfigureTimer(
         devPtr->flexioBase, devPtr->timerIdx[1], &mFlexioTimerConfigStruct);
 
+    memset(&mFlexioTimerConfigStruct, 0, sizeof(mFlexioTimerConfigStruct));
     /* 4. Configure the timer 0 as bit clock trigger by shifter 0. */
     mFlexioTimerConfigStruct.trgsel = FLEXIO_HAL_TIMER_TRIGGER_SEL_SHIFTnSTAT(devPtr->shifterIdx[0]);
     mFlexioTimerConfigStruct.trgpol = kFlexioTimerTriggerPolarityActiveLow;
@@ -150,6 +154,7 @@ flexio_status_t FLEXIO_I2S_HAL_Configure_Slave(
         return kStatus_FLEXIO_InvalidArgument;
     }
 
+    memset(&mFlexioShifterConfigStruct, 0, sizeof(mFlexioShifterConfigStruct));
     /* 1. Configure the shifter 0 for tx. */
     mFlexioShifterConfigStruct.timsel = devPtr->timerIdx[1];
     mFlexioShifterConfigStruct.timpol = kFlexioShifterTimerPolarityOnPositive;
@@ -166,6 +171,7 @@ flexio_status_t FLEXIO_I2S_HAL_Configure_Slave(
     FLEXIO_HAL_ClearShifterStatusFlags(
         devPtr->flexioBase, 1U << (devPtr->shifterIdx[0]) );
 
+    memset(&mFlexioShifterConfigStruct, 0, sizeof(mFlexioShifterConfigStruct));
     /* 2. Configure the shifter 1 for rx. */
     mFlexioShifterConfigStruct.timsel = devPtr->timerIdx[1];
     mFlexioShifterConfigStruct.timpol = kFlexioShifterTimerPolarityOnNegitive;
@@ -182,6 +188,7 @@ flexio_status_t FLEXIO_I2S_HAL_Configure_Slave(
     FLEXIO_HAL_ClearShifterStatusFlags(
         devPtr->flexioBase, 1U << (devPtr->shifterIdx[1]) );
 
+    memset(&mFlexioTimerConfigStruct, 0, sizeof(mFlexioTimerConfigStruct));
     /* 3. Configure the timer 1 as bit clock trigger by shifter 0. */
     mFlexioTimerConfigStruct.trgsel = FLEXIO_HAL_TIMER_TRIGGER_SEL_TIMn(devPtr->timerIdx[0]); /* timer0. */
     mFlexioTimerConfigStruct.trgpol = kFlexioTimerTriggerPolarityActiveHigh;
@@ -203,6 +210,7 @@ flexio_status_t FLEXIO_I2S_HAL_Configure_Slave(
     FLEXIO_HAL_ConfigureTimer(
         devPtr->flexioBase, devPtr->timerIdx[1], &mFlexioTimerConfigStruct);
 
+    memset(&mFlexioTimerConfigStruct, 0, sizeof(mFlexioTimerConfigStruct));
     /* 4. Configure the timer 0 as sync frame clock. */
     mFlexioTimerConfigStruct.trgsel = FLEXIO_HAL_TIMER_TRIGGER_SEL_PININPUT(devPtr->sckPinIdx); /* Pin2. */
     mFlexioTimerConfigStruct.trgpol = kFlexioTimerTriggerPolarityActiveHigh;

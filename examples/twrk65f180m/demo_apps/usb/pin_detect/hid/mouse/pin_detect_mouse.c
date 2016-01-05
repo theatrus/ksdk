@@ -46,7 +46,6 @@
 #include "host_mouse.h"
 
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
 #include "fsl_debug_console.h"
@@ -55,12 +54,6 @@
 #include <stdlib.h>
 #include "board.h"
 #include "fsl_uart_driver.h"
-#endif 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "sci.h"
-#include "adapter_bm.h"
-#include "rtc_kinetis.h"
-#endif
 
 
 /*****************************************************************************
@@ -75,9 +68,7 @@
 #error This application requires USBCFG_EHCI_PIN_DETECT_ENABLE defined non-zero in usb_host_config.h and USBCFG_DEV_EHCI_PIN_DETECT_ENABLE defined non-zero in usb_device_config.h. Please recompile usbd with this option.
 #endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
 #define MAIN_TASK                       (10)
-#endif
 /*****************************************************************************
 * Local Types 
 *****************************************************************************/
@@ -87,23 +78,13 @@
 *****************************************************************************/
 
 extern uint8_t usb_pin_detector_get_id_status( uint8_t controller_id);
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (FSL_RTOS_MQX)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (FSL_RTOS_MQX)))
 void            Main_Task(uint32_t param);
 #endif
 /****************************************************************************
 * Global Variables
 ****************************************************************************/
 os_event_handle         g_pin_detector_app_event_handle;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-TASK_TEMPLATE_STRUCT    MQX_template_list[] =
-{
-    /* { TASK_TEMPLATE_INDEX, TASK_ADDRESS, TASK_STACKSIZE, TASK_PRIORITY, TASK_NAME, TASK_ATTRIBUTES}, */    
-    { MAIN_TASK,           (TASK_FPTR)Main_Task,         3000L,           12L,            "Main",    MQX_AUTO_START_TASK },
-    { DEV_APP_TASK_INDEX,  (TASK_FPTR)DEV_APP_task_stun, 2000L,           11L,            "Device", 0},
-    { HOST_APP_TASK_INDEX, (TASK_FPTR)HOST_APP_task_stun,3000L,           11L,            "Host",   0},
-    { 0L,                   0L,                          0L,              0L,             0L,       0L }
-};
-#endif
 
 /*****************************************************************************
 * Local Functions Prototypes
@@ -133,7 +114,7 @@ TASK_TEMPLATE_STRUCT    MQX_template_list[] =
 *END*--------------------------------------------------------------------*/
 void APP_task()
 {
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS))  
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS)
     OS_Event_wait(g_pin_detector_app_event_handle,ID_CHANGE_EVENT_MARK, FALSE, 10);
 #endif  
 
@@ -183,29 +164,6 @@ void APP_init()
 
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
-*
-* Function Name  : main (Main_Task if using MQX)
-* Returned Value : none
-* Comments       :
-*     Execution starts here
-*
-*END*--------------------------------------------------------------------*/
-void Main_Task ( uint32_t param )
-{
-    APP_init();
-    /*
-    ** Infinite loop, waiting for events requiring action
-    */
-    for ( ; ; ) {
-        APP_task();
-    } /* Endfor */
-} /* Endbody */
-
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
 TASK_TEMPLATE_STRUCT  MQX_template_list[] =
@@ -248,6 +206,5 @@ int main(void)
     return 1;
 #endif
 }
-#endif
 
 

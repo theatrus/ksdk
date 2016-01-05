@@ -39,7 +39,7 @@
 **
 */
 
-/* 
+/*
 ** IPv6 Protocol
 ** MGCT: <option type="bool"/>
 */
@@ -47,7 +47,7 @@
    #define RTCSCFG_ENABLE_IP6		0
 #endif
 
-/* 
+/*
 ** IPv4 Protocol
 ** MGCT: <option type="bool"/>
 */
@@ -55,7 +55,7 @@
    #define RTCSCFG_ENABLE_IP4		1
 #endif
 
-/* 
+/*
 ** ICMPv4 Protocol
 ** MGCT: <option type="bool"/>
 */
@@ -74,7 +74,7 @@
 ** MGCT: <option type="bool"/>
 */
 #ifndef RTCSCFG_ENABLE_NAT
-   #define RTCSCFG_ENABLE_NAT       0 
+   #define RTCSCFG_ENABLE_NAT       0
 #endif
 
 /*
@@ -169,7 +169,7 @@
 /*
 ** MGCT: <option type="bool"/>
 */
-#ifndef RTCSCFG_USE_KISS_RNG 
+#ifndef RTCSCFG_USE_KISS_RNG
    #define RTCSCFG_USE_KISS_RNG 0
 #endif
 
@@ -178,16 +178,16 @@
 ** Only for debug usage.
 ** MGCT: <option type="bool"/>
 */
-#ifndef RTCSCFG_ENABLE_ASSERT 
+#ifndef RTCSCFG_ENABLE_ASSERT
    #define RTCSCFG_ENABLE_ASSERT 0
 #endif
 
 /*
-** Enable RTCS Assert, which prints an error message. 
+** Enable RTCS Assert, which prints an error message.
 ** Only for debug usage.
 ** MGCT: <option type="bool"/>
 */
-#ifndef RTCSCFG_ENABLE_ASSERT_PRINT 
+#ifndef RTCSCFG_ENABLE_ASSERT_PRINT
    #define RTCSCFG_ENABLE_ASSERT_PRINT 0
 #endif
 
@@ -215,7 +215,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** PCB Configuration options
 **
 ** MGCT: <category name="PCB Configuration Options">
@@ -235,7 +235,7 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_PCBS_GROW
-   #define RTCSCFG_PCBS_GROW 0 
+   #define RTCSCFG_PCBS_GROW 0
 #endif
 
 /*
@@ -243,13 +243,13 @@
 ** MGCT: <option type="string" maxsize="256" quoted="false" allowempty="false"/>
 */
 #ifndef RTCSCFG_PCBS_MAX
-   #define RTCSCFG_PCBS_MAX RTCSCFG_PCBS_INIT 
+   #define RTCSCFG_PCBS_MAX RTCSCFG_PCBS_INIT
 #endif
 
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** Socket Configuration options
 **
 ** MGCT: <category name="Socket Configuration Options">
@@ -264,7 +264,7 @@
 #endif
 
 /*
-** Set to TRUE to add RTCS_selectset and RTCS_selectall 
+** Set to TRUE to add RTCS_selectset and RTCS_selectall
 ** MGCT: <option type="bool"/>
 */
 #ifndef RTCSCFG_BACKWARD_COMPATIBILITY_RTCSSELECT
@@ -272,8 +272,8 @@
 #endif
 
 /*
-** Maximum number of socket handles in each fd_set. 
-** Used by select(). 
+** Maximum number of socket handles in each fd_set.
+** Used by select().
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_FD_SETSIZE
@@ -286,7 +286,7 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_SOCKET_PART_INIT
-  #define RTCSCFG_SOCKET_PART_INIT 6 
+  #define RTCSCFG_SOCKET_PART_INIT 6
 #endif
 
 /*
@@ -302,7 +302,7 @@
 ** MGCT: <option type="string" maxsize="256" quoted="false" allowempty="false"/>
 */
 #ifndef RTCSCFG_SOCKET_PART_MAX
-   #define RTCSCFG_SOCKET_PART_MAX RTCSCFG_SOCKET_PART_INIT 
+   #define RTCSCFG_SOCKET_PART_MAX RTCSCFG_SOCKET_PART_INIT
 #endif
 
 /*
@@ -316,7 +316,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** RTCS Message Configuration options
 **
 ** MGCT: <category name="RTCS Task and Message Options">
@@ -336,7 +336,7 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_MSGPOOL_GROW
-    #define RTCSCFG_MSGPOOL_GROW 2 
+    #define RTCSCFG_MSGPOOL_GROW 2
 #endif
 
 /*
@@ -344,7 +344,7 @@
 ** MGCT: <option type="string" maxsize="256" quoted="false" allowempty="false"/>
 */
 #ifndef RTCSCFG_MSGPOOL_MAX
-    #define RTCSCFG_MSGPOOL_MAX RTCSCFG_MSGPOOL_INIT 
+    #define RTCSCFG_MSGPOOL_MAX RTCSCFG_MSGPOOL_INIT
 #endif
 
 /* MGCT: </category> */
@@ -375,12 +375,12 @@
    #define RTCSCFG_ENABLE_8021Q 0
 #endif
 
-/* 
-** RTCSCFG_DISCARD_SELF_BCASTS controls whether or not to discard all 
-** broadcast pkts that we sent, as they are likely echoes from older 
+/*
+** RTCSCFG_DISCARD_SELF_BCASTS controls whether or not to discard all
+** broadcast pkts that we sent, as they are likely echoes from older
 ** hubs
 ** MGCT: <option type="bool"/>
-*/ 
+*/
 #ifndef RTCSCFG_DISCARD_SELF_BCASTS
    #define RTCSCFG_DISCARD_SELF_BCASTS 1
 #endif
@@ -389,7 +389,7 @@
 
 
 /***************************************************************************
-** 
+**
 ** ARP Configuration options
 **
 ** MGCT: <category name="ARP Configuration Options">
@@ -415,7 +415,7 @@
 /*
 ** MGCT: <option type="number"/>
 */
-#ifndef RTCSCFG_ARPTIME_RESEND_MAX  
+#ifndef RTCSCFG_ARPTIME_RESEND_MAX
     #define RTCSCFG_ARPTIME_RESEND_MAX            30000     /* 30 sec */
 #endif
 
@@ -436,13 +436,13 @@
 /*
 ** Number of PCBs queued on an outstanding ARP
 ** Per RFC, Minimum recommended is 1.
-** When sending large UDP packets, which will result 
-** in IP fragmentations, set to at least the largest number of 
+** When sending large UDP packets, which will result
+** in IP fragmentations, set to at least the largest number of
 ** fragments
 ** MGCT: <option type="number"/>
 */
 #ifndef ARP_ENTRY_MAX_QUEUED_PCBS
-    #define ARP_ENTRY_MAX_QUEUED_PCBS 1 
+    #define ARP_ENTRY_MAX_QUEUED_PCBS 1
 #endif
 
 /*
@@ -459,7 +459,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** IPv4 Configuration options
 **
 ** MGCT: <category name="IPv4 Configuration Options">
@@ -470,28 +470,28 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef IPROUTEALLOC_SIZE
-    #define IPROUTEALLOC_SIZE 2 
+    #define IPROUTEALLOC_SIZE 2
 #endif
 
 /*
 ** MGCT: <option type="number"/>
 */
 #ifndef IPGATEALLOC_SIZE
-    #define IPGATEALLOC_SIZE 1 
+    #define IPGATEALLOC_SIZE 1
 #endif
 
 /*
 ** MGCT: <option type="number"/>
 */
 #ifndef IPMCBALLOC_SIZE
-    #define IPMCBALLOC_SIZE 1 
+    #define IPMCBALLOC_SIZE 1
 #endif
 
 /*
 ** MGCT: <option type="number"/>
 */
 #ifndef RADIXALLOC_SIZE
-    #define RADIXALLOC_SIZE 2 
+    #define RADIXALLOC_SIZE 2
 #endif
 
 /*
@@ -499,7 +499,7 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_IP_IF_DNS_MAX
-    #define RTCSCFG_IP_IF_DNS_MAX              (2) 
+    #define RTCSCFG_IP_IF_DNS_MAX              (2)
 #endif
 
 /*
@@ -539,7 +539,7 @@
 
 
 /***************************************************************************
-** 
+**
 ** IGMP Configuration options
 **
 ** MGCT: <category name="IGMP Configuration Options">
@@ -560,7 +560,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** UDP Configuration options
 **
 ** MGCT: <category name="UDP Configuration Options">
@@ -590,7 +590,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** TCP Configuration options
 **
 ** MGCT: <category name="TCP Configuration Options">
@@ -613,20 +613,20 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_TCP_MAX_CONNECTIONS
-   #define RTCSCFG_TCP_MAX_CONNECTIONS      0  
+   #define RTCSCFG_TCP_MAX_CONNECTIONS      0
 #endif
 
 /*
 ** Maximum number of simultaneoushalf open connections allowed.
-** Define as 0 to disable the SYN attack recovery feature. 
+** Define as 0 to disable the SYN attack recovery feature.
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_TCP_MAX_HALF_OPEN
-   #define RTCSCFG_TCP_MAX_HALF_OPEN        0  
+   #define RTCSCFG_TCP_MAX_HALF_OPEN        0
 #endif
 
 #ifndef RTCSCFG_TCP_ACKDELAY
-    #define TCP_ACKDELAY                    1 
+    #define TCP_ACKDELAY                    1
 #else
     #if RTCSCFG_TCP_ACKDELAY > 500   /* Max ack delay, as per RFC1122 */
         #define TCP_ACKDELAY                500
@@ -639,7 +639,7 @@
 
 
 /***************************************************************************
-** 
+**
 ** RIP Configuration options
 **
 ** MGCT: <category name="RIP Configuration options">
@@ -658,7 +658,7 @@
 #endif
 
 #if RTCSCFG_ENABLE_RIP
-   #if !(RTCSCFG_ENABLE_IGMP && RTCSCFG_ENABLE_IP4) 
+   #if !(RTCSCFG_ENABLE_IGMP && RTCSCFG_ENABLE_IP4)
       #error RIP uses IGMP.  Enable RTCSCFG_ENABLE_IGMP or disable RTCSCFG_ENABLE_RIP in user_config.h
    #endif
 #endif
@@ -706,7 +706,7 @@
 
 
 /***************************************************************************
-** 
+**
 ** RTCS Configuration options
 **
 ** MGCT: <category name="RTCS Configuration Options">
@@ -719,7 +719,7 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_QUEUE_BASE
-    #define RTCSCFG_QUEUE_BASE 2 
+    #define RTCSCFG_QUEUE_BASE 2
 #endif
 
 /*
@@ -727,7 +727,7 @@
 ** MGCT: <option type="string" maxsize="256" quoted="false" allowempty="false"/>
 */
 #ifndef RTCSCFG_STACK_SIZE
-    #define RTCSCFG_STACK_SIZE (750*sizeof(uint32_t)) 
+    #define RTCSCFG_STACK_SIZE (750*sizeof(uint32_t))
 #endif
 
 /* MGCT: </category> */
@@ -769,7 +769,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** IPCFG Configuration options
 **
 ** MGCT: <category name="IPCFG API Configuration Options">
@@ -826,7 +826,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** SMTP Client Configuration options
 **
 ** MGCT: <category name="SMTP Client Configuration options">
@@ -844,7 +844,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** FTP Client Configuration options
 **
 ** MGCT: <category name="FTP Client Configuration Options">
@@ -856,7 +856,7 @@
 ** MGCT: <option type="bool"/>
 */
 #ifndef FTPCCFG_SMALL_FILE_PERFORMANCE_ENHANCEMENT
-   #define FTPCCFG_SMALL_FILE_PERFORMANCE_ENHANCEMENT 1 
+   #define FTPCCFG_SMALL_FILE_PERFORMANCE_ENHANCEMENT 1
 #endif
 
 /*
@@ -868,7 +868,7 @@
 ** MGCT: <option type="string" maxsize="256" quoted="false" allowempty="false"/>
 */
 #ifndef FTPCCFG_WINDOW_SIZE
-    #define FTPCCFG_WINDOW_SIZE 536 
+    #define FTPCCFG_WINDOW_SIZE 536
 #endif
 
 /*
@@ -881,7 +881,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** Telnet Configuration options
 **
 ** MGCT: <category name="Telnet Configuration Options">
@@ -892,35 +892,35 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_TELNETSRV_CONNECT_TIMEOUT
-   #define RTCSCFG_TELNETSRV_CONNECT_TIMEOUT 1000 
+   #define RTCSCFG_TELNETSRV_CONNECT_TIMEOUT 1000
 #endif
 
 /*
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_TELNETSRV_SEND_TIMEOUT
-   #define RTCSCFG_TELNETSRV_SEND_TIMEOUT 5000 
+   #define RTCSCFG_TELNETSRV_SEND_TIMEOUT 5000
 #endif
 
 /*
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_TELNETSRV_TIMEWAIT_TIMEOUT
-   #define RTCSCFG_TELNETSRV_TIMEWAIT_TIMEOUT 1000 
+   #define RTCSCFG_TELNETSRV_TIMEWAIT_TIMEOUT 1000
 #endif
 
 /*
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_TELNETSRV_TX_BUFFER_SIZE
-   #define RTCSCFG_TELNETSRV_TX_BUFFER_SIZE 1460 
+   #define RTCSCFG_TELNETSRV_TX_BUFFER_SIZE 1460
 #endif
 
 /*
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_TELNETSRV_RX_BUFFER_SIZE
-   #define RTCSCFG_TELNETSRV_RX_BUFFER_SIZE 1460 
+   #define RTCSCFG_TELNETSRV_RX_BUFFER_SIZE 1460
 #endif
 
 /*
@@ -934,7 +934,7 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_TELNETSRV_DEF_SES_CNT
-  #define RTCSCFG_TELNETSRV_SES_CNT     (2) 
+  #define RTCSCFG_TELNETSRV_SES_CNT     (2)
 #endif
 
 /*
@@ -947,7 +947,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** SNMP Configuration options
 **
 ** MGCT: <category name="SNMP Configuration Options">
@@ -968,7 +968,7 @@
 /* MGCT: </category> */
 
 /***************************************************************************
-** 
+**
 ** PPPHDLC Message Configuration options
 **
 ** MGCT: <category name="PPPHDLC Message Configuration Options">
@@ -979,21 +979,21 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef PPPHDLC_INIT
-    #define PPPHDLC_INIT 6 
+    #define PPPHDLC_INIT 6
 #endif
 
 /*
 ** MGCT: <option type="number"/>
 */
 #ifndef PPPHDLC_GROW
-    #define PPPHDLC_GROW 1 
+    #define PPPHDLC_GROW 1
 #endif
 
 /*
 ** MGCT: <option type="number"/>
 */
 #ifndef PPPHDLC_MAX
-    #define PPPHDLC_MAX PPPHDLC_INIT 
+    #define PPPHDLC_MAX PPPHDLC_INIT
 #endif
 
 /* MGCT: </category> */
@@ -1137,7 +1137,7 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef HTTPSRVCFG_DEF_SES_CNT
-#define HTTPSRVCFG_DEF_SES_CNT            (2) 
+#define HTTPSRVCFG_DEF_SES_CNT            (2)
 #endif
 
 /*
@@ -1191,20 +1191,20 @@
 #define HTTPSRVCFG_SES_TO                 (20000)
 #endif
 
-/* 
+/*
 ** Socket transmit buffer size
 ** MGCT: <option type="number"/>
 */
 #ifndef HTTPSRVCFG_TX_BUFFER_SIZE
-  #define HTTPSRVCFG_TX_BUFFER_SIZE    (1460) 
+  #define HTTPSRVCFG_TX_BUFFER_SIZE    (1460)
 #endif
 
-/* 
+/*
 ** Socket receive buffer size
 ** MGCT: <option type="number"/>
 */
 #ifndef HTTPSRVCFG_RX_BUFFER_SIZE
-  #define HTTPSRVCFG_RX_BUFFER_SIZE    (1460) 
+  #define HTTPSRVCFG_RX_BUFFER_SIZE    (1460)
 #endif
 
 /*
@@ -1239,7 +1239,7 @@
    #define HTTPSRVCFG_RECEIVE_TIMEOUT      (50)
 #endif
 
-/* 
+/*
 ** Default inet family configuration
 ** MGCT: <option type="string"/>
 */
@@ -1247,7 +1247,7 @@
    #define HTTPSRVCFG_AF                (AF_INET)
 #endif
 
-/* 
+/*
 ** WebSocket protocol support
 ** MGCT: <option type="bool"/>
 */
@@ -1271,7 +1271,7 @@
 
 /*
 ** Default size of data buffer for echoed data.
-** One instance of ECHOSRV allocates one buffer of this size. 
+** One instance of ECHOSRV allocates one buffer of this size.
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_ECHOSRV_DEFAULT_BUFLEN
@@ -1296,7 +1296,7 @@
 /*
 ** Default size of data buffer for echoed data.
 ** ECHOCLN allocates two buffers of this size:
-** for outbound/inbound data. 
+** for outbound/inbound data.
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_ECHOCLN_DEFAULT_BUFLEN
@@ -1339,7 +1339,7 @@
 
 /*
 ** Default listen port.
-** RFC 4795: Responders MUST listen on UDP port 5355. 
+** RFC 4795: Responders MUST listen on UDP port 5355.
 ** It is not recommended to change it.
 ** MGCT: <option type="number"/>
 */
@@ -1349,7 +1349,7 @@
 
 /*
 ** Default listen port.
-** Default TTL value that indicates for how many seconds link-local 
+** Default TTL value that indicates for how many seconds link-local
 ** host name is valid for LLMNR querier.
 ** A default is 30 seconds (recommended by RFC4795).
 ** In highly dynamic environments (such as mobile ad-hoc
@@ -1398,7 +1398,7 @@
 ** MGCT: <category name="Websocket Specific Options">
 */
 
-/* 
+/*
 ** Websocket ping period.
 ** MGCT: <option type="number"/>
 */
@@ -1419,7 +1419,7 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_ND6_NEIGHBOR_CACHE_SIZE
-   #define RTCSCFG_ND6_NEIGHBOR_CACHE_SIZE      (5) 
+   #define RTCSCFG_ND6_NEIGHBOR_CACHE_SIZE      (5)
 #endif
 
 /*
@@ -1427,7 +1427,7 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_ND6_PREFIX_LIST_SIZE
-    #define RTCSCFG_ND6_PREFIX_LIST_SIZE        (4) 
+    #define RTCSCFG_ND6_PREFIX_LIST_SIZE        (4)
 #endif
 
 /*
@@ -1452,10 +1452,10 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_IP6_IF_ADDRESSES_MAX
-    #define RTCSCFG_IP6_IF_ADDRESSES_MAX        (5) 
+    #define RTCSCFG_IP6_IF_ADDRESSES_MAX        (5)
 #endif
 /* Check minimum value.*/
-#if RTCSCFG_IP6_IF_ADDRESSES_MAX < 2   
+#if RTCSCFG_IP6_IF_ADDRESSES_MAX < 2
     #undef RTCSCFG_IP6_IF_ADDRESSES_MAX
     #define RTCSCFG_IP6_IF_ADDRESSES_MAX        (2)
 #endif
@@ -1465,11 +1465,11 @@
 ** MGCT: <option type="number"/>
 */
 #ifndef RTCSCFG_IP6_IF_DNS_MAX
-    #define RTCSCFG_IP6_IF_DNS_MAX              (2) 
+    #define RTCSCFG_IP6_IF_DNS_MAX              (2)
 #endif
 
 
-/**  Maximum number of unique IPv6 multicast memberships that may exist at 
+/**  Maximum number of unique IPv6 multicast memberships that may exist at
 **  the same time in the whole system.
 ** MGCT: <option type="number"/>
 */
@@ -1482,7 +1482,7 @@
     #define RTCSCFG_IP6_MULTICAST_MAX        (RTCSCFG_IP6_IF_ADDRESSES_MAX+1)
 #endif
 
-/** Maximum number of IPv6 multicast memberships that may exist at 
+/** Maximum number of IPv6 multicast memberships that may exist at
  *  the same time per one socket.
 ** MGCT: <option type="number"/>
 */
@@ -1490,7 +1490,7 @@
     #define RTCSCFG_IP6_MULTICAST_SOCKET_MAX    (1)
 #endif
 
-/* 
+/*
 ** Multicast Listener Discovery (MLDv1) Protocol.
 ** MGCT: <option type="bool"/>
 */
@@ -1516,13 +1516,13 @@
 
 
 /* Check minimum values.*/
-#if RTCSCFG_ND6_ROUTER_LIST_SIZE < 1 
+#if RTCSCFG_ND6_ROUTER_LIST_SIZE < 1
     #error RTCSCFG_ND6_ROUTER_LIST_SIZE should be > 0
 #endif
 #if RTCSCFG_ND6_NEIGHBOR_CACHE_SIZE  < 1
     #error RTCSCFG_ND6_NEIGHBOR_CACHE_SIZE should be > 0
 #endif
-#if RTCSCFG_ND6_PREFIX_LIST_SIZE < 1 
+#if RTCSCFG_ND6_PREFIX_LIST_SIZE < 1
     #error RTCSCFG_ND6_PREFIX_LIST_SIZE should be > 0
 #endif
 
@@ -1535,9 +1535,9 @@
 ** follow-up retransmissions.
 ** MGCT: <option type="number"/>
 */
-#ifndef RTCSCFG_ND6_DAD_TRANSMITS 
+#ifndef RTCSCFG_ND6_DAD_TRANSMITS
     #define RTCSCFG_ND6_DAD_TRANSMITS           (1) /* If RTCSCFG_ND6_DAD_TRANSMITS = 0, the DAD is disabled.*/
-#endif  
+#endif
 
 /*
 ** Recursive DNS Server Option (RFC6106) support.
@@ -1569,7 +1569,7 @@
     #undef RTCSCFG_ND6_RDNSS_LIST_SIZE
     #define RTCSCFG__ND6_RDNSS_LIST_SIZE        (1)
 #endif
-  
+
 
 /*
 ** MGCT: <option type="bool"/>

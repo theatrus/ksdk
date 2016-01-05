@@ -35,14 +35,41 @@
  * IRQ Handlers
  *****************************************************************************/
 /* PDB IRQ handler that would cover the same name's APIs in startup code. */
+#if FSL_FEATURE_PDB_HAS_SHARED_IRQ_HANDLER
+#include "fsl_clock_manager.h"
+
+void PDB0_PDB1_IRQHandler(void)
+{
+    if (CLOCK_SYS_GetPdbGateCmd(0U))
+    {
+      if ( PDB_DRV_GetTimerIntFlag(0U))
+      {
+        /* Add user-defined ISR for PDB0. */
+
+        /* Clear Flag */
+        PDB_DRV_ClearTimerIntFlag(0U);
+      }
+    }
+    if (CLOCK_SYS_GetPdbGateCmd(1U))
+    {
+      if ( PDB_DRV_GetTimerIntFlag(1U))
+      {
+        /* Add user-defined ISR for PDB1. */
+      
+        /* Clear Flag */
+         PDB_DRV_ClearTimerIntFlag(1U);
+      }
+    }
+}
+#else
 void PDB0_IRQHandler(void)
 {
     /* Add user-defined ISR for PDB0. */
 
     /* Clear Flags. */
-    if ( PDB_DRV_GetPdbCounterIntFlag(0U))
+    if ( PDB_DRV_GetTimerIntFlag(0U))
     {
-        PDB_DRV_ClearPdbCounterIntFlag(0U);
+        PDB_DRV_ClearTimerIntFlag(0U);
     }
 }
 
@@ -52,12 +79,13 @@ void PDB1_IRQHandler(void)
     /* Add user-defined ISR for PDB1. */
 
     /* Clear Flags. */
-    if ( PDB_DRV_GetPdbCounterIntFlag(1U))
+    if ( PDB_DRV_GetTimerIntFlag(1U))
     {
-        PDB_DRV_ClearPdbCounterIntFlag(1U);
+        PDB_DRV_ClearTimerIntFlag(1U);
     }
 }
 #endif
+#endif /* FSL_FEATURE_PDB_HAS_SHARED_IRQ_HANDLER */
 #endif
 
 /*******************************************************************************

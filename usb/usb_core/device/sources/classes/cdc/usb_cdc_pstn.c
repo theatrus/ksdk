@@ -41,6 +41,7 @@
 #include "usb_class_internal.h"
 
 #if USBCFG_DEV_CDC
+#include "usb_cdc_config.h"
 #include "usb_class_cdc.h"
 #include "usb_cdc_pstn.h"
 #include "usb_cdc.h"
@@ -242,7 +243,7 @@ usb_status PSTN_Get_Line_Coding
     //UNUSED_ARGUMENT (size)
     cdc_pstn_ptr = (cdc_pstn_struct_t *)cdc_obj_ptr->pstn_obj_ptr;
 
-    /*  *size is equal to LINE_CODING_SIZE; */
+    /*  *size is equal to LINE_CODING_SIZE */
     error = cdc_obj_ptr->class_specific_callback.callback(GET_LINE_CODING,
             cdc_pstn_ptr->current_interface,
             data,
@@ -614,8 +615,8 @@ usb_status PSTN_Rndis_Message_Set
 {
     uint32_t message_type;
     cdc_pstn_struct_t * cdc_pstn_ptr;
-    UNUSED_ARGUMENT(data)
-    UNUSED_ARGUMENT(size)
+    //UNUSED_ARGUMENT(data)
+    //UNUSED_ARGUMENT(size)
     cdc_pstn_ptr = (cdc_pstn_struct_t *)cdc_obj_ptr->pstn_obj_ptr;
 
     cdc_pstn_ptr->current_interface =  (uint8_t)setup_packet->index ;
@@ -640,10 +641,10 @@ usb_status PSTN_Rndis_Message_Set
     /* Command data has been appended at the end of setup token in framework.c
        Copy data from that buffer to buffer in pstn.c memory for that buffer
        will be freed on completion of setup transfer*/
-    OS_Mem_copy(setup_packet+1, cdc_pstn_ptr->rndis_command_ptr,
+    OS_Mem_copy(setup_packet+1, &cdc_pstn_ptr->rndis_command_ptr[0],
                 setup_packet->length);
 
-    message_type = USB_LONG_LE_TO_HOST(*((uint32_t*)(cdc_pstn_ptr->rndis_command_ptr)));
+    message_type = USB_LONG_LE_TO_HOST(*((uint32_t*)(&cdc_pstn_ptr->rndis_command_ptr[0])));
 
     if(message_type == REMOTE_NDIS_HALT_MSG)
     {
@@ -695,7 +696,7 @@ usb_status PSTN_Rndis_Message_Get
 
     *size = 0;
 
-    message_type_ptr = (uint32_t*)(cdc_pstn_ptr->rndis_command_ptr);
+    message_type_ptr = (uint32_t*)(&cdc_pstn_ptr->rndis_command_ptr[0]);
     /* we can avoid one swap operation by using message_type_ptr in
        PSTN_Rndis_Message_Set instead of message_type, but this gives
        cleaner implementation as all manipulations and parsing on command
@@ -713,7 +714,7 @@ usb_status PSTN_Rndis_Message_Get
         /* Preparing for response to REMOTE_NDIS_QUERY_MSG command
            i.e. REMOTE_NDIS_QUERY_CMPLT data */
         /* correct the endianness of OID */
-        *((uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 3) = USB_LONG_LE_TO_HOST(*((uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 3));
+        *((uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 3) = USB_LONG_LE_TO_HOST(*((uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 3));
         RNDIS_Query_Command(cdc_obj_ptr,data,size);
         break;
     case REMOTE_NDIS_SET_MSG :
@@ -721,9 +722,9 @@ usb_status PSTN_Rndis_Message_Get
            i.e. REMOTE_NDIS_SET_CMPLT data */
         /* Correct the endianness of OID and InformationBufferLength
            and InformationBufferOffset*/
-        *((uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 3) = USB_LONG_LE_TO_HOST(*((uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 3));
-        *((uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 4) = USB_LONG_LE_TO_HOST(*((uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 4));
-        *((uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 5) = USB_LONG_LE_TO_HOST(*((uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 5));
+        *((uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 3) = USB_LONG_LE_TO_HOST(*((uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 3));
+        *((uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 4) = USB_LONG_LE_TO_HOST(*((uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 4));
+        *((uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 5) = USB_LONG_LE_TO_HOST(*((uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 5));
         RNDIS_Set_Command(cdc_obj_ptr,data,size);
         break;
     case REMOTE_NDIS_RESET_MSG :
@@ -792,64 +793,64 @@ void RNDIS_Initialize_Command
     cdc_pstn_ptr = (cdc_pstn_struct_t *)cdc_obj_ptr->pstn_obj_ptr;
 
     /* preparing for Byte 0-3 : MessageType*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_INITIALIZE_CMPLT);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0]) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_INITIALIZE_CMPLT);
 
     /* preparing for Byte 4-7 : MessageLength*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 1) = USB_LONG_LE_TO_HOST_CONST(RESPONSE_RNDIS_INITIALIZE_MSG_SIZE);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 1) = USB_LONG_LE_TO_HOST_CONST(RESPONSE_RNDIS_INITIALIZE_MSG_SIZE);
 
     /* preparing for Byte 8-11 : RequestID*/
-    OS_Mem_copy(((uint32_t*)(cdc_pstn_ptr->rndis_command_ptr) + 2),
-                ((uint32_t*)cdc_pstn_ptr->response_data_ptr + 2),sizeof(uint32_t));
+    OS_Mem_copy(((uint32_t*)(&cdc_pstn_ptr->rndis_command_ptr[0]) + 2),
+                ((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 2),sizeof(uint32_t));
 
     /* preparing for Byte 12-15 : Status*/
     if(cdc_pstn_ptr->rndis_device_state == RNDIS_UNINITIALIZED)
     {
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 3) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_SUCCESS);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 3) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_SUCCESS);
     }
     else
     {
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 3) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_FAILURE);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 3) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_FAILURE);
     }
 
     /* preparing for Byte 16-19 ; MajorVersion*/
     /* We are currently returning the same driver version to host in
        response to initialization command as reported by host driver */
-    OS_Mem_copy(((uint32_t*)(cdc_pstn_ptr->rndis_command_ptr) + 3),
-                ((uint32_t*)cdc_pstn_ptr->response_data_ptr + 4),sizeof(uint32_t));
+    OS_Mem_copy(((uint32_t*)(&cdc_pstn_ptr->rndis_command_ptr[0]) + 3),
+                ((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 4),sizeof(uint32_t));
 
     /* preparing for Byte 20-23 : MinorVersion*/
-    OS_Mem_copy(((uint32_t*)(cdc_pstn_ptr->rndis_command_ptr) + 4),
-                ((uint32_t*)cdc_pstn_ptr->response_data_ptr + 5),sizeof(uint32_t));
+    OS_Mem_copy(((uint32_t*)(&cdc_pstn_ptr->rndis_command_ptr[0]) + 4),
+                ((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 5),sizeof(uint32_t));
 
     /* preparing for Byte 24-27 : DeviceFlags*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST_CONST(RNDIS_DF_CONNECTIONLESS);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST_CONST(RNDIS_DF_CONNECTIONLESS);
 
     /* preparing for Byte 28-31 : Medium*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 7) = USB_LONG_LE_TO_HOST(NdisMedium802_3);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 7) = USB_LONG_LE_TO_HOST(NdisMedium802_3);
 
     /* preparing for Byte 32-35 : MaxPacketsPerTransfer*/
     /* We are not implementing multiple packet transfer support in our RNDIS */
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 8) = USB_LONG_LE_TO_HOST_CONST(RNDIS_SINGLE_PACKET_TRANSFER);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 8) = USB_LONG_LE_TO_HOST_CONST(RNDIS_SINGLE_PACKET_TRANSFER);
 
     /* preparing for Byte 36-39 : MaxTransferSize*/
     /* We are currently returning the same max transfer size to host
        as it send to device in its corresponding filed in
        initialization command */
-    cdc_pstn_ptr->rndis_host_max_tx_size = USB_LONG_LE_TO_HOST(*((uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 5));
+    cdc_pstn_ptr->rndis_host_max_tx_size = USB_LONG_LE_TO_HOST(*((uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 5));
     max_tx_size = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->rndis_dev_max_tx_size);
     OS_Mem_copy(&max_tx_size,
-                ((uint32_t*)cdc_pstn_ptr->response_data_ptr + 9),sizeof(uint32_t));
+                ((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 9),sizeof(uint32_t));
 
     /* preparing for Byte 40-43 : PacketAlignmentFactor*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 10) = USB_LONG_LE_TO_HOST_CONST(PACKET_ALIGNMENT_FACTOR);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 10) = USB_LONG_LE_TO_HOST_CONST(PACKET_ALIGNMENT_FACTOR);
 
     /* preparing for Byte 44-47 : PacketAlignmentFactor*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 11) = AF_LIST_OFFSET;
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 11) = AF_LIST_OFFSET;
 
     /* preparing for Byte 48-51 : PacketAlignmentFactor*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 12) = AF_LIST_SIZE;
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 12) = AF_LIST_SIZE;
 
-    *data = cdc_pstn_ptr->response_data_ptr;
+    *data = &cdc_pstn_ptr->response_data_ptr[0];
     *size = RESPONSE_RNDIS_INITIALIZE_MSG_SIZE;
 
     /* initializing RNDIS variables */
@@ -892,28 +893,28 @@ void RNDIS_Keepalive_Command
     cdc_pstn_ptr = (cdc_pstn_struct_t *)cdc_obj_ptr->pstn_obj_ptr;
 
     /* preparing for Byte 0-3 : MessageType*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_KEEPALIVE_CMPLT);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0]) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_KEEPALIVE_CMPLT);
 
     /* preparing for Byte 4-7 : MessageLength*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 1) = USB_LONG_LE_TO_HOST_CONST(RESPONSE_RNDIS_KEEPALIVE_MSG_SIZE);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 1) = USB_LONG_LE_TO_HOST_CONST(RESPONSE_RNDIS_KEEPALIVE_MSG_SIZE);
 
     /* preparing for Byte 8-11 : RequestID*/
-    OS_Mem_copy(((uint32_t*)(cdc_pstn_ptr->rndis_command_ptr) + 2),
-                ((uint32_t*)cdc_pstn_ptr->response_data_ptr + 2),sizeof(uint32_t));
+    OS_Mem_copy(((uint32_t*)(&cdc_pstn_ptr->rndis_command_ptr[0]) + 2),
+                ((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 2),sizeof(uint32_t));
 
     /* preparing for Byte 12-15 : Status*/
     USB_Cdc_Mutex_Lock(cdc_pstn_ptr->status_mutex);
     if(cdc_pstn_ptr->rndis_device_state == RNDIS_DATA_INITIALIZED)
     {
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 3) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_SUCCESS);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 3) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_SUCCESS);
     }
     else
     {
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 3) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_FAILURE);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 3) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_FAILURE);
     }
     USB_Cdc_Mutex_Unlock(cdc_pstn_ptr->status_mutex);
 
-    *data = cdc_pstn_ptr->response_data_ptr;
+    *data = &cdc_pstn_ptr->response_data_ptr[0];
     *size = RESPONSE_RNDIS_KEEPALIVE_MSG_SIZE;
 }
 
@@ -947,18 +948,18 @@ void RNDIS_Query_Command
 
     cdc_pstn_ptr = (cdc_pstn_struct_t *)cdc_obj_ptr->pstn_obj_ptr;
 
-    oid_ptr = (uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 3;
+    oid_ptr = (uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 3;
 
     /* preparing for Byte 0-3 : MessageType*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_QUERY_CMPLT);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0]) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_QUERY_CMPLT);
 
     /* preparing for Byte 8-11 : RequestID*/
-    OS_Mem_copy(((uint32_t*)(cdc_pstn_ptr->rndis_command_ptr) + 2),
-                ((uint32_t*)cdc_pstn_ptr->response_data_ptr + 2),sizeof(uint32_t));
+    OS_Mem_copy(((uint32_t*)(&cdc_pstn_ptr->rndis_command_ptr[0]) + 2),
+                ((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 2),sizeof(uint32_t));
 
 
     /* preparing for Byte 20-23 : InformationBufferOffset*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 5) = USB_LONG_LE_TO_HOST_CONST(0x00000010);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 5) = USB_LONG_LE_TO_HOST_CONST(0x00000010);
 
     switch(*oid_ptr)
     {
@@ -971,27 +972,27 @@ void RNDIS_Query_Command
         }
         info_buf_len = sizeof(g_list_supp_oid);
         OS_Mem_copy(g_list_supp_oid,
-                    (uint32_t*)cdc_pstn_ptr->response_data_ptr + 6, info_buf_len);
+                    (uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6, info_buf_len);
         break;
     case OID_GEN_HARDWARE_STATUS :
         /* Hardware status  - Query Mandatory - General Operational Characteristic*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->rndis_hw_state);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->rndis_hw_state);
         break;
     case OID_GEN_MEDIA_SUPPORTED :
         /* Media types supported (encoded) - Query Mandatory - General Operational Characteristic*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(NdisMedium802_3);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(NdisMedium802_3);
         break;
     case OID_GEN_MEDIA_IN_USE :
         /* Media types in use (encoded) - Query Mandatory - General Operational Characteristic*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(NdisMedium802_3);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(NdisMedium802_3);
         break;
     case OID_GEN_MAXIMUM_FRAME_SIZE :
         /* Maximum in bytes, frame size - Query Mandatory - General Operational Characteristic*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_obj_ptr->rndis_info.rndis_max_frame_size);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_obj_ptr->rndis_info.rndis_max_frame_size);
         break;
     case OID_GEN_LINK_SPEED :
         /* Link speed in units of 100 bps - Query Mandatory - General Operational Characteristic*/
@@ -1001,24 +1002,24 @@ void RNDIS_Query_Command
             cdc_obj_ptr->class_specific_callback.callback(USB_APP_GET_LINK_SPEED,
                     USB_REQ_VAL_INVALID,
                     NULL,
-                    ((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6),
+                    ((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6),
                     cdc_obj_ptr->class_specific_callback.arg);
         }
 
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(*((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6));
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(*((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6));
         break;
     case OID_GEN_TRANSMIT_BLOCK_SIZE :
         /* Minimum amount of storage, in bytes, that a single packet
            occupies in the transmit buffer space of the NIC -
            Query Mandatory - General Operational Characteristic*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST((uint32_t)cdc_obj_ptr->dic_send_pkt_size);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST((uint32_t)cdc_obj_ptr->dic_send_pkt_size);
         break;
     case OID_GEN_RECEIVE_BLOCK_SIZE :
         /* Amount of storage, in bytes, that a single packet occupies in
            the receive buffer space of the NIC - Query Mandatory - General Operational Characteristic*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST((uint32_t)cdc_obj_ptr->dic_recv_pkt_size);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST((uint32_t)cdc_obj_ptr->dic_recv_pkt_size);
         break;
     case OID_GEN_VENDOR_ID :
         /* Vendor NIC code - Query Mandatory - General Operational Characteristic*/
@@ -1030,23 +1031,23 @@ void RNDIS_Query_Command
            code should use the value 0xFFFFFF. */
         info_buf_len = sizeof(uint32_t);
 
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST_CONST(
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST_CONST(
                     (uint32_t) (((uint32_t) RNDIS_VENDOR_ID << 8) | (uint32_t) NIC_IDENTIFIER_VENDOR));
         break;
     case OID_GEN_VENDOR_DESCRIPTION :
         /* Vendor network card description - Query Mandatory - General Operational Characteristic*/
         info_buf_len = VENDOR_INFO_SIZE;
-        OS_Mem_copy(g_vendor_info, (uint32_t*)cdc_pstn_ptr->response_data_ptr + 6, info_buf_len);
+        OS_Mem_copy(g_vendor_info, (uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6, info_buf_len);
         break;
     case OID_GEN_CURRENT_PACKET_FILTER :
         /* Current packet filter (encoded) - Query and Set Mandatory - General Operational Characteristic*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->rndis_packet_filter);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->rndis_packet_filter);
         break;
     case OID_GEN_MAXIMUM_TOTAL_SIZE :
         /* Maximum total packet length in bytes - Query Mandatory - General Operational Characteristic*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->rndis_dev_max_tx_size);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->rndis_dev_max_tx_size);
         break;
     case OID_GEN_MEDIA_CONNECT_STATUS :
         /* Whether the NIC is connected to the network - Query Mandatory - General Operational Characteristic*/
@@ -1070,39 +1071,39 @@ void RNDIS_Query_Command
         {
             cdc_pstn_ptr->rndis_media_connect_status = NdisMediaStateDisconnected;
         }
-        *((uint32_t *)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->rndis_media_connect_status);
+        *((uint32_t *)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->rndis_media_connect_status);
     }
     break;
     case OID_GEN_XMIT_OK :
         /* Frames transmitted without errors - Query Mandatory - General Statistics*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_tx_ok);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_tx_ok);
         break;
     case OID_GEN_RCV_OK :
         /* Frames received without errors - Query Mandatory - General Statistics*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_rx_ok);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_rx_ok);
         break;
     case OID_GEN_XMIT_ERROR :
         /* Frames not transmitted or transmitted with errors - Query Mandatory - General Statistics*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_tx_error);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_tx_error);
         break;
     case OID_GEN_RCV_ERROR :
         /* Frames received with errors - Query Mandatory - General Statistics*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_rx_error);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_rx_error);
         break;
     case OID_GEN_RCV_NO_BUFFER :
         /* Frame missed, no buffers - Query Mandatory - General Statistics*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_recv_frames_missed);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_recv_frames_missed);
         break;
     case OID_802_3_PERMANENT_ADDRESS :
         /* Permanent station address - Query Mandatory - Ethernet Operational Characteristic*/
         info_buf_len = RNDIS_ETHER_ADDR_SIZE;
         OS_Mem_copy(cdc_obj_ptr->rndis_info.mac_address,
-                    (uint8_t *)((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6),
+                    (uint8_t *)((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6),
                     info_buf_len);
 
         break;
@@ -1110,7 +1111,7 @@ void RNDIS_Query_Command
         /* Current station address - Query Mandatory - Ethernet Operational Characteristic*/
         info_buf_len = RNDIS_ETHER_ADDR_SIZE;
         OS_Mem_copy(cdc_obj_ptr->rndis_info.mac_address,
-                    (uint8_t *)((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6),
+                    (uint8_t *)((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6),
                     info_buf_len);
 
         break;
@@ -1118,29 +1119,34 @@ void RNDIS_Query_Command
         /* Current multicast address list - Query and Set Mandatory - Ethernet Operational Characteristic*/
         info_buf_len = RNDIS_ETHER_ADDR_SIZE;
         /* Currently Our RNDIS driver does not support multicast addressing */
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST_CONST(0x00000000);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 7) = USB_LONG_LE_TO_HOST_CONST(0x00000000);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST_CONST(0x00000000);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 7) = USB_LONG_LE_TO_HOST_CONST(0x00000000);
         break;
     case OID_802_3_MAXIMUM_LIST_SIZE :
         /* Maximum size of multicast address list - Query Mandatory - Ethernet Operational Characteristic*/
         info_buf_len = sizeof(uint32_t);
         /* Currently Our RNDIS driver does not support multicast addressing */
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST_CONST(RNDIS_MULTICAST_LIST_SIZE);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST_CONST(RNDIS_MULTICAST_LIST_SIZE);
         break;
     case OID_802_3_RCV_ERROR_ALIGNMENT :
         /* Frames received with alignment error - Query Mandatory - Ethernet Statistics*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_recv_frames_alignment_error);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_recv_frames_alignment_error);
         break;
     case OID_802_3_XMIT_ONE_COLLISION :
         /* Frames transmitted with one collision - Query Mandatory - Ethernet Statistics*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_tx_one_collision);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_tx_one_collision);
         break;
     case OID_802_3_XMIT_MORE_COLLISIONS :
         /* Frames transmitted with more than one collision - Query Mandatory - Ethernet Statistics*/
         info_buf_len = sizeof(uint32_t);
-        *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_tx_many_collision);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(cdc_pstn_ptr->num_frames_tx_many_collision);
+        break;
+    case OID_GEN_PHYSICAL_MEDIUM:
+        /* Physical media supported by the miniport (encoded)*/
+        info_buf_len = sizeof(uint32_t);
+        *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 6) = USB_LONG_LE_TO_HOST(NdisPhysicalMediumPowerLine);
         break;
     default :
 #if _DEBUG
@@ -1151,14 +1157,14 @@ void RNDIS_Query_Command
     }
 
     /* preparing for Byte 12-15 : Status*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 3) = USB_LONG_LE_TO_HOST(return_status);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 3) = USB_LONG_LE_TO_HOST(return_status);
 
     *size = RESPONSE_RNDIS_QUERY_MSG_SIZE + info_buf_len;
     /* preparing for Byte 4-7 : MessageLength*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 1) = USB_LONG_LE_TO_HOST(*size);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 1) = USB_LONG_LE_TO_HOST(*size);
     /* preparing for Byte 16-19 : InformationBufferLength*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 4) = USB_LONG_LE_TO_HOST(info_buf_len);
-    *data = cdc_pstn_ptr->response_data_ptr;
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 4) = USB_LONG_LE_TO_HOST(info_buf_len);
+    *data = &cdc_pstn_ptr->response_data_ptr[0];
 }
 
 /**************************************************************************//*!
@@ -1190,20 +1196,20 @@ void RNDIS_Set_Command
 
     cdc_pstn_ptr = (cdc_pstn_struct_t *)cdc_obj_ptr->pstn_obj_ptr;
 
-    oid_ptr = (uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 3;
-    info_buf_len_ptr = (uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 4;
-    info_buf_offset_ptr = (uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 5;
+    oid_ptr = (uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 3;
+    info_buf_len_ptr = (uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 4;
+    info_buf_offset_ptr = (uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 5;
 
     /* preparing for Byte 0-3 : MessageType*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_SET_CMPLT);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0]) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_SET_CMPLT);
 
     *size = RESPONSE_RNDIS_SET_MSG_SIZE;
     /* preparing for Byte 4-7 : MessageLength*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 1) = USB_LONG_LE_TO_HOST(*size);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 1) = USB_LONG_LE_TO_HOST(*size);
 
     /* preparing for Byte 8-11 : RequestID*/
-    OS_Mem_copy(((uint32_t*)(cdc_pstn_ptr->rndis_command_ptr) + 2),
-                ((uint32_t*)cdc_pstn_ptr->response_data_ptr + 2),sizeof(uint32_t));
+    OS_Mem_copy(((uint32_t*)(&cdc_pstn_ptr->rndis_command_ptr[0]) + 2),
+                ((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 2),sizeof(uint32_t));
 
     switch(*oid_ptr)
     {
@@ -1218,7 +1224,7 @@ void RNDIS_Set_Command
             uint32_t media_connected = 0;
 
             cdc_pstn_ptr->rndis_packet_filter = USB_LONG_LE_TO_HOST( *((uint32_t*)((uint8_t *)((uint32_t*)
-                                                cdc_pstn_ptr->rndis_command_ptr + 2) + *info_buf_offset_ptr)));
+                                                &cdc_pstn_ptr->rndis_command_ptr[0] + 2) + *info_buf_offset_ptr)));
             if(cdc_obj_ptr->class_specific_callback.callback != NULL)
             {
                 cdc_obj_ptr->class_specific_callback.callback(USB_APP_GET_LINK_STATUS,
@@ -1252,7 +1258,7 @@ void RNDIS_Set_Command
         {
             uint64_t multi_cast_list;
             multi_cast_list = *((uint64_t *)((uint8_t *)((uint32_t*)
-                                             cdc_pstn_ptr->rndis_command_ptr + 2) + *info_buf_offset_ptr));
+                                             &cdc_pstn_ptr->rndis_command_ptr[0] + 2) + *info_buf_offset_ptr));
             if(multi_cast_list)
             {
                 /* Currently Our RNDIS driver does not support multicast addressing */
@@ -1269,8 +1275,8 @@ void RNDIS_Set_Command
         break;
     }
     /* preparing for Byte 12-15 : Status*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 3) = USB_LONG_LE_TO_HOST(return_status);
-    *data = cdc_pstn_ptr->response_data_ptr;
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 3) = USB_LONG_LE_TO_HOST(return_status);
+    *data = &cdc_pstn_ptr->response_data_ptr[0];
 }
 
 /**************************************************************************//*!
@@ -1298,23 +1304,23 @@ void RNDIS_Reset_Command
 
     cdc_pstn_ptr = (cdc_pstn_struct_t *)cdc_obj_ptr->pstn_obj_ptr;
 
-//    oid_ptr = (uint32_t*)cdc_pstn_ptr->rndis_command_ptr + 3;
+//    oid_ptr = (uint32_t*)&cdc_pstn_ptr->rndis_command_ptr[0] + 3;
 
     /* preparing for Byte 0-3 : MessageType*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_RESET_CMPLT);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0]) = USB_LONG_LE_TO_HOST_CONST(REMOTE_NDIS_RESET_CMPLT);
 
     *size = RESPONSE_RNDIS_RESET_MSG_SIZE;
     /* preparing for Byte 4-7 : MessageLength*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 1) = USB_LONG_LE_TO_HOST(*size);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 1) = USB_LONG_LE_TO_HOST(*size);
 
     /* preparing for Byte 8-11 : Status*/
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 2) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_SUCCESS);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 2) = USB_LONG_LE_TO_HOST_CONST(RNDIS_STATUS_SUCCESS);
 
     /* preparing for Byte 12-15 : AddressingReset*/
     /* No need for host to resend addressing information */
-    *((uint32_t*)cdc_pstn_ptr->response_data_ptr + 3) = USB_LONG_LE_TO_HOST_CONST(0x00000000);
+    *((uint32_t*)&cdc_pstn_ptr->response_data_ptr[0] + 3) = USB_LONG_LE_TO_HOST_CONST(0x00000000);
 
-    *data = cdc_pstn_ptr->response_data_ptr;
+    *data = &cdc_pstn_ptr->response_data_ptr[0];
     USB_Cdc_Mutex_Lock(cdc_pstn_ptr->status_mutex);
     cdc_pstn_ptr->rndis_hw_state = NdisHardwareStatusReset;
     cdc_pstn_ptr->rndis_device_state = RNDIS_UNINITIALIZED;
@@ -1342,9 +1348,9 @@ void RNDIS_Indicate_Status_Command
     uint32_t *size
 )
 {
-    UNUSED_ARGUMENT(cdc_obj_ptr)
-    UNUSED_ARGUMENT(data)
-    UNUSED_ARGUMENT(size)
+    //UNUSED_ARGUMENT(cdc_obj_ptr)
+    //UNUSED_ARGUMENT(data)
+    //UNUSED_ARGUMENT(size)
     return;
 }
 
@@ -1414,6 +1420,30 @@ uint8_t RNDIS_Get_Device_Status
     status = cdc_pstn_ptr->rndis_device_state;
 
     USB_Cdc_Mutex_Unlock(cdc_pstn_ptr->status_mutex);
+
+    return status;
+}
+
+/**************************************************************************//*!
+ *
+ * @name  USB_Class_CDC_RNDIS_Get_Device_Status
+ *
+ * @brief The function returns the RNDIS device status
+ *
+ * @param handle :   handle returned by USB_Class_CDC_Init.
+ *
+ * @return status
+ *         USB_OK           : When Successfully
+ *         Others           : Errors
+ *****************************************************************************/
+uint8_t USB_Class_CDC_RNDIS_Get_Device_Status
+(
+    cdc_handle_t handle
+)
+{
+    uint8_t status;
+
+    status = RNDIS_Get_Device_Status((cdc_device_struct_t*)handle);
 
     return status;
 }

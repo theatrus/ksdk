@@ -142,7 +142,9 @@ osa_status_t OSA_SemaCreate(semaphore_t *pSem, uint8_t initValue)
  *END**************************************************************************/
 osa_status_t OSA_SemaWait(semaphore_t *pSem, uint32_t timeout)
 {
+#if (FSL_OSA_BM_TIMER_CONFIG != FSL_OSA_BM_TIMER_NONE)
     uint32_t currentTime;
+#endif
 
     assert(pSem);
 
@@ -265,7 +267,9 @@ osa_status_t OSA_MutexCreate(mutex_t *pMutex)
  *END**************************************************************************/
 osa_status_t OSA_MutexLock(mutex_t *pMutex, uint32_t timeout)
 {
+#if (FSL_OSA_BM_TIMER_CONFIG != FSL_OSA_BM_TIMER_NONE)
     uint32_t currentTime;
+#endif
 
     assert(pMutex);
 
@@ -389,7 +393,9 @@ osa_status_t OSA_EventWait(event_t       *pEvent,
                         uint32_t       timeout,
                         event_flags_t *setFlags)
 {
+#if (FSL_OSA_BM_TIMER_CONFIG != FSL_OSA_BM_TIMER_NONE)
     uint32_t currentTime;
+#endif
 
     assert(pEvent);
     assert(setFlags);

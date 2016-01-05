@@ -160,398 +160,398 @@ extern "C" {
 #endif
 
 /*!
- * @brief reset tpm registers
+ * @brief Resets the TPM registers.
  *
- * @param tpmBase TPM module base address pointer
+ * @param base TPM module base address pointer
  * @param instance The TPM peripheral instance number.
  */
-void TPM_HAL_Reset(TPM_Type *tpmBase, uint32_t instance);
+void TPM_HAL_Reset(TPM_Type *base, uint32_t instance);
 
 /*!
  * @brief Enables the TPM PWM output mode.
  *
- * @param tpmBase TPM module base address pointer
+ * @param base TPM module base address pointer
  * @param config PWM configuration parameter
  * @param channel The TPM channel number.
  */
-void TPM_HAL_EnablePwmMode(TPM_Type *tpmBase, tpm_pwm_param_t *config, uint8_t channel);
+void TPM_HAL_EnablePwmMode(TPM_Type *base, tpm_pwm_param_t *config, uint8_t channel);
 
 /*!
  * @brief Disables the TPM channel.
  *
- * @param tpmBase TPM module base address pointer
+ * @param base TPM module base address pointer
  * @param channel The TPM channel number.
  */
-void TPM_HAL_DisableChn(TPM_Type *tpmBase, uint8_t channel);
+void TPM_HAL_DisableChn(TPM_Type *base, uint8_t channel);
 
 /*!
- * @brief Set TPM clock mode.
+ * @brief Sets the TPM clock mode.
  *
- * When disabling the TPM counter, the function will wait till it receives an acknowledge from the
- * TPM clock domain
+ * When disabling the TPM counter, the function waits till it receives an acknowledge from the
+ * TPM clock domain.
  *
- * @param tpmBase TPM module base address pointer
+ * @param base TPM module base address pointer
  * @param mode The TPM counter clock mode (source).
  */
-void TPM_HAL_SetClockMode(TPM_Type *tpmBase, tpm_clock_mode_t mode);
+void TPM_HAL_SetClockMode(TPM_Type *base, tpm_clock_mode_t mode);
 
 /*!
  * @brief get TPM clock mode.
- * @param tpmBase TPM module base address pointer
+ * @param base TPM module base address pointer
  * @return The TPM counter clock mode (source).
  */
-static inline tpm_clock_mode_t TPM_HAL_GetClockMode(TPM_Type *tpmBase)
+static inline tpm_clock_mode_t TPM_HAL_GetClockMode(TPM_Type *base)
 {
-    return (tpm_clock_mode_t) TPM_BRD_SC_CMOD(tpmBase);
+    return (tpm_clock_mode_t) TPM_BRD_SC_CMOD(base);
 }
 
 /*!
- * @brief set TPM clock divider.
- * @param tpmBase TPM module base address pointer
+ * @brief Sets the TPM clock divider.
+ * @param base TPM module base address pointer
  * @param ps  The TPM peripheral clock prescale divider
  */
-static inline void TPM_HAL_SetClockDiv(TPM_Type *tpmBase, tpm_clock_ps_t ps)
+static inline void TPM_HAL_SetClockDiv(TPM_Type *base, tpm_clock_ps_t ps)
 {
-    TPM_BWR_SC_PS(tpmBase, ps);
+    TPM_BWR_SC_PS(base, ps);
 }
 
 /*!
- * @brief get TPM clock divider.
- * @param tpmBase TPM module base address pointer
+ * @brief Gets the TPM clock divider.
+ * @param base TPM module base address pointer
  * @return The TPM peripheral clock prescale divider.
  */
-static inline tpm_clock_ps_t TPM_HAL_GetClockDiv(TPM_Type *tpmBase)
+static inline tpm_clock_ps_t TPM_HAL_GetClockDiv(TPM_Type *base)
 {
-    return (tpm_clock_ps_t)TPM_BRD_SC_PS(tpmBase);
+    return (tpm_clock_ps_t)TPM_BRD_SC_PS(base);
 }
 
 /*!
- * @brief Enable the TPM peripheral timer overflow interrupt.
+ * @brief Enables the TPM peripheral timer overflow interrupt.
  *
- * @param tpmBase TPM module base address pointer
+ * @param base TPM module base address pointer
  */
-static inline void TPM_HAL_EnableTimerOverflowInt(TPM_Type *tpmBase)
+static inline void TPM_HAL_EnableTimerOverflowInt(TPM_Type *base)
 {
-    TPM_BWR_SC_TOIE(tpmBase, 1);
+    TPM_BWR_SC_TOIE(base, 1);
 }
 
 /*!
- * @brief Disable the TPM peripheral timer overflow interrupt.
+ * @brief Disables the TPM peripheral timer overflow interrupt.
  *
- * @param tpmBase TPM module base address pointer
+ * @param base TPM module base address pointer
  */
-static inline void TPM_HAL_DisableTimerOverflowInt(TPM_Type *tpmBase)
+static inline void TPM_HAL_DisableTimerOverflowInt(TPM_Type *base)
 {
-    TPM_BWR_SC_TOIE(tpmBase, 0);
+    TPM_BWR_SC_TOIE(base, 0);
 }
 
 /*!
- * @brief Read the bit that controls TPM timer overflow interrupt enablement.
+ * @brief Reads the bit that controls TPM timer overflow interrupt enablement.
  *
- * @param tpmBase TPM module base address pointer
+ * @param base TPM module base address pointer
  * @return true if overflow interrupt is enabled, false if not
  */
-static inline bool TPM_HAL_IsOverflowIntEnabled(TPM_Type *tpmBase)
+static inline bool TPM_HAL_IsOverflowIntEnabled(TPM_Type *base)
 {
-    return (bool)(TPM_BRD_SC_TOIE(tpmBase));
+    return (bool)(TPM_BRD_SC_TOIE(base));
 }
 
 /*!
- * @brief return TPM peripheral timer overflow interrupt flag.
- * @param tpmBase TPM module base address pointer
+ * @brief Returns the TPM peripheral timer overflow interrupt flag.
+ * @param base TPM module base address pointer
  * @return true if overflow, false if not
  */
-static inline bool TPM_HAL_GetTimerOverflowStatus(TPM_Type *tpmBase)
+static inline bool TPM_HAL_GetTimerOverflowStatus(TPM_Type *base)
 {
-    return (bool)(TPM_BRD_SC_TOF(tpmBase));
+    return (bool)(TPM_BRD_SC_TOF(base));
 }
 
 /*!
- * @brief Clear the TPM timer overflow interrupt flag.
- * @param tpmBase TPM module base address pointer
+ * @brief Clears the TPM timer overflow interrupt flag.
+ * @param base TPM module base address pointer
  */
-static inline void TPM_HAL_ClearTimerOverflowFlag(TPM_Type *tpmBase)
+static inline void TPM_HAL_ClearTimerOverflowFlag(TPM_Type *base)
 {
-    TPM_BWR_SC_TOF(tpmBase, 1);
+    TPM_BWR_SC_TOF(base, 1);
 }
 
 /*!
  * @brief set TPM center-aligned PWM select.
- * @param tpmBase TPM module base address pointer
- * @param mode 1:upcounting mode 0:up_down counting mode.
+ * @param base TPM module base address pointer
+ * @param mode 1 : upcounting mode 0:up_down counting mode.
  */
-static inline void TPM_HAL_SetCpwms(TPM_Type *tpmBase, uint8_t mode)
+static inline void TPM_HAL_SetCpwms(TPM_Type *base, uint8_t mode)
 {
     assert(mode < 2);
-    TPM_BWR_SC_CPWMS(tpmBase, mode);
+    TPM_BWR_SC_CPWMS(base, mode);
 }
 
 /*!
- * @brief get TPM center-aligned PWM selection value.
- * @param tpmBase TPM module base address pointer
+ * @brief Gets the TPM center-aligned PWM selection value.
+ * @param base TPM module base address pointer
  * @return Whether the TPM center-aligned PWM is selected or not.
  */
-static inline bool TPM_HAL_GetCpwms(TPM_Type *tpmBase)
+static inline bool TPM_HAL_GetCpwms(TPM_Type *base)
 {
-    return (bool)TPM_BRD_SC_CPWMS(tpmBase);
+    return (bool)TPM_BRD_SC_CPWMS(base);
 }
 
 /*!
- * @brief clear TPM peripheral current counter value.
- * @param tpmBase TPM module base address pointer
+ * @brief Clears the TPM peripheral current counter value.
+ * @param base TPM module base address pointer
  */
-static inline void  TPM_HAL_ClearCounter(TPM_Type *tpmBase)
+static inline void  TPM_HAL_ClearCounter(TPM_Type *base)
 {
-    TPM_BWR_CNT_COUNT(tpmBase, 0);
+    TPM_BWR_CNT_COUNT(base, 0);
 }
 
 /*!
- * @brief return TPM peripheral current counter value.
- * @param tpmBase TPM module base address pointer
+ * @brief Returns the TPM peripheral current counter value.
+ * @param base TPM module base address pointer
  * @return current TPM timer counter value
  */
-static inline uint16_t  TPM_HAL_GetCounterVal(TPM_Type *tpmBase)
+static inline uint16_t  TPM_HAL_GetCounterVal(TPM_Type *base)
 {
-    return TPM_BRD_CNT_COUNT(tpmBase);
+    return TPM_BRD_CNT_COUNT(base);
 }
 
 /*!
- * @brief set TPM peripheral timer modulo value.
- * @param tpmBase TPM module base address pointer
+ * @brief Sets the TPM peripheral timer modulo value.
+ * @param base TPM module base address pointer
  * @param val The value to be set to the timer modulo
  */
-static inline void TPM_HAL_SetMod(TPM_Type *tpmBase, uint16_t val)
+static inline void TPM_HAL_SetMod(TPM_Type *base, uint16_t val)
 {
     /*As RM mentioned, first clear TPM_CNT then write value to TPM_MOD*/
-    TPM_BWR_CNT_COUNT(tpmBase, 0);
-    TPM_BWR_MOD_MOD(tpmBase, val);
+    TPM_BWR_CNT_COUNT(base, 0);
+    TPM_BWR_MOD_MOD(base, val);
 }
 
 /*!
- * @brief return TPM peripheral counter modulo value.
- * @param tpmBase TPM module base address pointer
+ * @brief Returns the TPM peripheral counter modulo value.
+ * @param base TPM module base address pointer
  * @return TPM timer modula value
  */
-static inline uint16_t  TPM_HAL_GetMod(TPM_Type *tpmBase)
+static inline uint16_t  TPM_HAL_GetMod(TPM_Type *base)
 {
-    return TPM_BRD_MOD_MOD(tpmBase);
+    return TPM_BRD_MOD_MOD(base);
 }
 
-/*TPM channel operate mode(Mode, edge and level selection) for capture, output, pwm*/
+/*TPM channel operating mode (mode, edge, and level selection) for capture, output, and PWM*/
 
 /*!
- * @brief Set TPM peripheral timer channel mode and edge level,
+ * @brief Sets the TPM peripheral timer channel mode and edge level,
  *
- * TPM channel operate mode, MSnBA and ELSnBA shoud be set at the same time.
+ * TPM channel operate mode, MSnB, and ELSnBA should be set at the same time.
  *
- * @param tpmBase The TPM base address
+ * @param base The TPM base address
  * @param channel  The TPM peripheral channel number
  * @param value    The value to set for MSnBA and ELSnBA
  */
-static inline void TPM_HAL_SetChnMsnbaElsnbaVal(TPM_Type *tpmBase, uint8_t channel, uint8_t value)
+static inline void TPM_HAL_SetChnMsnbaElsnbaVal(TPM_Type *base, uint8_t channel, uint8_t value)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
 
     /* Keep CHIE bit value not changed by this function, so read it first and or with value*/
-    value |= TPM_RD_CnSC(tpmBase, channel) & TPM_CnSC_CHIE_MASK;
+    value |= TPM_RD_CnSC(base, channel) & TPM_CnSC_CHIE_MASK;
 
-    TPM_WR_CnSC(tpmBase, channel, value);
+    TPM_WR_CnSC(base, channel, value);
 }
 
 /*!
- * @brief get TPM peripheral timer channel mode.
- * @param tpmBase TPM module base address pointer
+ * @brief Gets the TPM peripheral timer channel mode.
+ * @param base TPM module base address pointer
  * @param channel  The TPM peripheral channel number
  * @return The MSnB:MSnA mode value, will be 00,01, 10, 11
  */
-static inline uint8_t TPM_HAL_GetChnMsnbaVal(TPM_Type *tpmBase, uint8_t channel)
+static inline uint8_t TPM_HAL_GetChnMsnbaVal(TPM_Type *base, uint8_t channel)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
-    return (TPM_RD_CnSC(tpmBase, channel) & (TPM_CnSC_MSA_MASK | TPM_CnSC_MSB_MASK)) >> TPM_CnSC_MSA_SHIFT;
+    return (TPM_RD_CnSC(base, channel) & (TPM_CnSC_MSA_MASK | TPM_CnSC_MSB_MASK)) >> TPM_CnSC_MSA_SHIFT;
 }
 
 /*!
- * @brief get TPM peripheral timer channel edge level.
- * @param tpmBase TPM module base address pointer
+ * @brief Gets the TPM peripheral timer channel edge level.
+ * @param base TPM module base address pointer
  * @param channel  The TPM peripheral channel number
  * @return The ELSnB:ELSnA mode value, will be 00,01, 10, 11
  */
-static inline uint8_t TPM_HAL_GetChnElsnbaVal(TPM_Type *tpmBase, uint8_t channel)
+static inline uint8_t TPM_HAL_GetChnElsnbaVal(TPM_Type *base, uint8_t channel)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
-    return (TPM_RD_CnSC(tpmBase, channel) & (TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK)) >> TPM_CnSC_ELSA_SHIFT;
+    return (TPM_RD_CnSC(base, channel) & (TPM_CnSC_ELSA_MASK | TPM_CnSC_ELSB_MASK)) >> TPM_CnSC_ELSA_SHIFT;
 }
 
 /*!
- * @brief enable TPM peripheral timer channel(n) interrupt.
- * @param tpmBase TPM module base address pointer
+ * @brief Enables the TPM peripheral timer channel(n) interrupt.
+ * @param base TPM module base address pointer
  * @param channel  The TPM peripheral channel number
  */
-static inline void TPM_HAL_EnableChnInt(TPM_Type *tpmBase, uint8_t channel)
+static inline void TPM_HAL_EnableChnInt(TPM_Type *base, uint8_t channel)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
-    TPM_BWR_CnSC_CHIE(tpmBase, channel, 1);
+    TPM_BWR_CnSC_CHIE(base, channel, 1);
 }
 
 /*!
- * @brief disable TPM peripheral timer channel(n) interrupt.
- * @param tpmBase TPM module base address pointer
+ * @brief Disables the TPM peripheral timer channel(n) interrupt.
+ * @param base TPM module base address pointer
  * @param channel  The TPM peripheral channel number
  */
-static inline void TPM_HAL_DisableChnInt(TPM_Type *tpmBase, uint8_t channel)
+static inline void TPM_HAL_DisableChnInt(TPM_Type *base, uint8_t channel)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
-    TPM_BWR_CnSC_CHIE(tpmBase, channel, 0);
+    TPM_BWR_CnSC_CHIE(base, channel, 0);
 }
 
 /*!
- * @brief get TPM peripheral timer channel(n) interrupt enabled or not.
- * @param tpmBase TPM module base address pointer
+ * @brief Gets the TPM peripheral timer channel(n) interrupt enabled or not.
+ * @param base TPM module base address pointer
  * @param channel  The TPM peripheral channel number
  * @return Whether the TPM peripheral timer channel(n) interrupt is enabled or not.
  */
-static inline bool TPM_HAL_IsChnIntEnabled(TPM_Type *tpmBase, uint8_t channel)
+static inline bool TPM_HAL_IsChnIntEnabled(TPM_Type *base, uint8_t channel)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
-    return (bool)(TPM_BRD_CnSC_CHIE(tpmBase, channel));
+    return (bool)(TPM_BRD_CnSC_CHIE(base, channel));
 }
 
 /*!
- * @brief return if any event for TPM peripheral timer channel has occourred ,
- * @param tpmBase TPM module base address pointer
+ * @brief Returns whether any event for TPM peripheral timer channel has occurred.
+ * @param base TPM module base address pointer
  * @param channel  The TPM peripheral channel number.
- * @return true if event occourred, false otherwise
+ * @return true if event occurred, false otherwise
  */
-static inline bool TPM_HAL_GetChnStatus(TPM_Type *tpmBase, uint8_t channel)
+static inline bool TPM_HAL_GetChnStatus(TPM_Type *base, uint8_t channel)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
-    return (bool)(TPM_BRD_CnSC_CHF(tpmBase, channel));
+    return (bool)(TPM_BRD_CnSC_CHF(base, channel));
 }
 
 /*!
- * @brief return if any event for TPM peripheral timer channel has occourred ,
- * @param tpmBase TPM module base address pointer
+ * @brief Returns whether any event for the TPM peripheral timer channel has occurred.
+ * @param base TPM module base address pointer
  * @param channel  The TPM peripheral channel number.
  */
-static inline void TPM_HAL_ClearChnInt(TPM_Type *tpmBase, uint8_t channel)
+static inline void TPM_HAL_ClearChnInt(TPM_Type *base, uint8_t channel)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
-    TPM_BWR_CnSC_CHF(tpmBase, channel, 0x1);
+    TPM_BWR_CnSC_CHF(base, channel, 0x1);
 }
 
 /*TPM Channel control*/
 /*!
- * @brief set TPM peripheral timer channel counter value,
- * @param tpmBase TPM module base address pointer
+ * @brief Sets the TPM peripheral timer channel counter value.
+ * @param base TPM module base address pointer
  * @param channel  The TPM peripheral channel number.
  * @param val counter value to be set
  */
-static inline void TPM_HAL_SetChnCountVal(TPM_Type *tpmBase, uint8_t channel, uint16_t val)
+static inline void TPM_HAL_SetChnCountVal(TPM_Type *base, uint8_t channel, uint16_t val)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
-    TPM_BWR_CnV_VAL(tpmBase, channel, val);
+    TPM_BWR_CnV_VAL(base, channel, val);
 }
 
 /*!
- * @brief get TPM peripheral timer channel counter value.
- * @param tpmBase TPM module base address pointer
+ * @brief Gets the TPM peripheral timer channel counter value.
+ * @param base TPM module base address pointer
  * @param channel  The TPM peripheral channel number.
  * @return The TPM timer channel counter value.
  */
-static inline uint16_t TPM_HAL_GetChnCountVal(TPM_Type *tpmBase, uint8_t channel)
+static inline uint16_t TPM_HAL_GetChnCountVal(TPM_Type *base, uint8_t channel)
 {
     assert(channel < FSL_FEATURE_TPM_CHANNEL_COUNT);
-    return TPM_BRD_CnV_VAL(tpmBase, channel);
+    return TPM_BRD_CnV_VAL(base, channel);
 }
 
 /*!
- * @brief get TPM peripheral timer channel event status.
- * @param tpmBase TPM module base address pointer
+ * @brief Gets the TPM peripheral timer channel event status.
+ * @param base TPM module base address pointer
  * @return The TPM timer channel event status.
  */
-static inline uint32_t TPM_HAL_GetStatusRegVal(TPM_Type *tpmBase)
+static inline uint32_t TPM_HAL_GetStatusRegVal(TPM_Type *base)
 {
-    return TPM_RD_STATUS(tpmBase);
+    return TPM_RD_STATUS(base);
 }
 
 /*!
- * @brief clear TPM peripheral timer clear status register value,
- * @param tpmBase TPM module base address pointer
- * @param tpm_status tpm channel or overflow flag to clear
+ * @brief Clears the TPM peripheral timer clear status register value,
+ * @param base TPM module base address pointer
+ * @param tpm_status TPM channel or overflow flag to clear
  */
-static inline void TPM_HAL_ClearStatusReg(TPM_Type *tpmBase, uint16_t tpm_status)
+static inline void TPM_HAL_ClearStatusReg(TPM_Type *base, uint16_t tpm_status)
 {
-    TPM_WR_STATUS(tpmBase, tpm_status);
+    TPM_WR_STATUS(base, tpm_status);
 }
 
 /*!
- * @brief set TPM peripheral timer trigger.
- * @param tpmBase TPM module base address pointer
+ * @brief Sets the TPM peripheral timer trigger.
+ * @param base TPM module base address pointer
  * @param trigger_num  0-15
  */
-static inline void TPM_HAL_SetTriggerSrc(TPM_Type *tpmBase, tpm_trigger_source_t trigger_num)
+static inline void TPM_HAL_SetTriggerSrc(TPM_Type *base, tpm_trigger_source_t trigger_num)
 {
-    TPM_BWR_CONF_TRGSEL(tpmBase, trigger_num);
+    TPM_BWR_CONF_TRGSEL(base, trigger_num);
 }
 
 /*!
- * @brief set TPM peripheral timer running on trigger or not .
- * @param tpmBase TPM module base address pointer
+ * @brief Sets the TPM peripheral timer running on trigger or not.
+ * @param base TPM module base address pointer
  * @param enable true to enable, 1 to enable
  */
-static inline void TPM_HAL_SetTriggerMode(TPM_Type *tpmBase, bool enable)
+static inline void TPM_HAL_SetTriggerMode(TPM_Type *base, bool enable)
 {
-    TPM_BWR_CONF_CSOT (tpmBase, enable);
+    TPM_BWR_CONF_CSOT (base, enable);
 }
 
 /*!
- * @brief enable TPM timer counter reload on selected trigger or not.
- * @param tpmBase TPM module base address pointer
+ * @brief Enables the TPM timer counter reload on selected trigger or not.
+ * @param base TPM module base address pointer
  * @param enable  true to enable, false to disable.
  */
-static inline void TPM_HAL_SetReloadOnTriggerMode(TPM_Type *tpmBase, bool enable)
+static inline void TPM_HAL_SetReloadOnTriggerMode(TPM_Type *base, bool enable)
 {
-    TPM_BWR_CONF_CROT(tpmBase, enable);
+    TPM_BWR_CONF_CROT(base, enable);
 }
 
 /*!
- * @brief enable TPM timer counter sotp on selected trigger or not.
- * @param tpmBase TPM module base address pointer
+ * @brief Enables the TPM timer counter stop on selected trigger or not.
+ * @param base TPM module base address pointer
  * @param enable  true to enable, false to disable.
  */
-static inline void TPM_HAL_SetStopOnOverflowMode(TPM_Type *tpmBase, bool enable)
+static inline void TPM_HAL_SetStopOnOverflowMode(TPM_Type *base, bool enable)
 {
-    TPM_BWR_CONF_CSOO(tpmBase, enable);
+    TPM_BWR_CONF_CSOO(base, enable);
 }
 
 /*!
- * @brief enable TPM timer global time base.
- * @param tpmBase TPM module base address pointer
+ * @brief Enables the TPM timer global time base.
+ * @param base TPM module base address pointer
  * @param enable  true to enable, false to disable.
  */
-static inline void TPM_HAL_EnableGlobalTimeBase(TPM_Type *tpmBase, bool enable)
+static inline void TPM_HAL_EnableGlobalTimeBase(TPM_Type *base, bool enable)
 {
-    TPM_BWR_CONF_GTBEEN(tpmBase, enable);
+    TPM_BWR_CONF_GTBEEN(base, enable);
 }
 
 /*!
- * @brief set BDM mode.
- * @param tpmBase TPM module base address pointer
+ * @brief Sets BDM mode.
+ * @param base TPM module base address pointer
  * @param enable  false pause, true continue work
  */
-static inline void TPM_HAL_SetDbgMode(TPM_Type *tpmBase, bool enable)
+static inline void TPM_HAL_SetDbgMode(TPM_Type *base, bool enable)
 {
-    TPM_BWR_CONF_DBGMODE(tpmBase, enable ? 3 : 0);
+    TPM_BWR_CONF_DBGMODE(base, enable ? 3 : 0);
 }
 
 /*!
- * @brief set WAIT mode behavior.
- * @param tpmBase TPM module base address pointer
+ * @brief Sets the WAIT mode behavior.
+ * @param base TPM module base address pointer
  * @param enable  0 continue running, 1 stop running
  */
-static inline void TPM_HAL_SetWaitMode(TPM_Type *tpmBase, bool enable)
+static inline void TPM_HAL_SetWaitMode(TPM_Type *base, bool enable)
 {
-    TPM_BWR_CONF_DOZEEN(tpmBase, enable ? 0 : 1);
+    TPM_BWR_CONF_DOZEEN(base, enable ? 0 : 1);
 }
 
 #if defined(__cplusplus)

@@ -82,20 +82,20 @@ int main(void)
     // Initialize OSA
     OSA_Init();
 
-    PRINTF("\r\n================== I2C SLAVE NON-BLOCKING =================\r\n\n");
+    PRINTF("\r\n================== I2C SLAVE NON-BLOCKING =================\r\n\r\n");
     PRINTF("Slave is running ...");
 
     // Initialize slave
-    I2C_DRV_SlaveInit(BOARD_I2C_COMM_INSTANCE, &userConfig, &slave);
+    I2C_DRV_SlaveInit(BOARD_I2C_INSTANCE, &userConfig, &slave);
 
     // Loop transfer
     while(1)
     {
         // Slave receive buffer from master
-        I2C_DRV_SlaveReceiveData(BOARD_I2C_COMM_INSTANCE, (uint8_t*)&count, 1);
+        I2C_DRV_SlaveReceiveData(BOARD_I2C_INSTANCE, (uint8_t*)&count, 1);
 
         /* Wait until transfer is successful */
-        while (I2C_DRV_SlaveGetReceiveStatus(BOARD_I2C_COMM_INSTANCE, NULL) != kStatus_I2C_Success);
+        while (I2C_DRV_SlaveGetReceiveStatus(BOARD_I2C_INSTANCE, NULL) != kStatus_I2C_Success);
 
         // Clear receive buffer
         for(i = 0; i < count; i++)
@@ -104,10 +104,10 @@ int main(void)
         }
 
         // Slave receive buffer from master
-        I2C_DRV_SlaveReceiveData(BOARD_I2C_COMM_INSTANCE, dataBuff, count);
+        I2C_DRV_SlaveReceiveData(BOARD_I2C_INSTANCE, dataBuff, count);
 
         /* Wait until transfer is successful */
-        while (I2C_DRV_SlaveGetReceiveStatus(BOARD_I2C_COMM_INSTANCE, NULL) != kStatus_I2C_Success);
+        while (I2C_DRV_SlaveGetReceiveStatus(BOARD_I2C_INSTANCE, NULL) != kStatus_I2C_Success);
 
         // Print receive data
         PRINTF("\r\nSlave received:\r\n");
@@ -122,10 +122,10 @@ int main(void)
         }
 
         // Slave send buffer received from master
-        I2C_DRV_SlaveSendData(BOARD_I2C_COMM_INSTANCE, dataBuff, count);
+        I2C_DRV_SlaveSendData(BOARD_I2C_INSTANCE, dataBuff, count);
 
         /* Wait until transfer is successful */
-        while (I2C_DRV_SlaveGetTransmitStatus(BOARD_I2C_COMM_INSTANCE, NULL) != kStatus_I2C_Success);
+        while (I2C_DRV_SlaveGetTransmitStatus(BOARD_I2C_INSTANCE, NULL) != kStatus_I2C_Success);
 
         OSA_TimeDelay(1);
     }

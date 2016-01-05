@@ -341,8 +341,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>DEBUG, CPU_MK24FN256VDC12, TWR_K24F120M, TOWER</Define>
+              <Define>DEBUG, CPU_MK24FN256VDC12</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MK24F25612/include;../../../../platform/devices/MK24F25612/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>
@@ -719,8 +720,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>NDEBUG, CPU_MK24FN256VDC12, TWR_K24F120M, TOWER</Define>
+              <Define>NDEBUG, CPU_MK24FN256VDC12</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MK24F25612/include;../../../../platform/devices/MK24F25612/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>

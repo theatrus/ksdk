@@ -46,7 +46,7 @@ void hardware_init(void) {
   dbg_uart_init();
   //Configure flexio clock src and pin mux
   CLOCK_SYS_SetFlexioSrc(0,(clock_flexio_src_t)1);
-  configure_flexio_pins(0,2);  /*FLEXIO pin 2 simulated as UART TX*/
+  configure_flexio_pins(0,5);  /*FLEXIO pin 5 simulated as UART TX*/
   configure_flexio_pins(0,4);  /*FLEXIO pin 4 simulated as UART RX*/
   //Configure lpuart pin mux
   configure_lpuart_pins(1);

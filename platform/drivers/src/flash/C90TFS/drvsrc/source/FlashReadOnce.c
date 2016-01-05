@@ -1,5 +1,5 @@
 /*****************************************************************************
- (c) Copyright 2010-2014 Freescale Semiconductor, Inc.
+ (c) Copyright 2010-2015 Freescale Semiconductor, Inc.
  ALL RIGHTS RESERVED.
 
  Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 1.1.GA      09.25.2014      FPT Team      First version of SDK C90TFS flash driver
                                           inherited from BM C90TFS flash driver v1.02
                                           (08.04.2014, FPT Team)
+1.3.GA      06.23.2015      ROM Team      Support programming FAC IFR
 *************************************************************************/
 /* include the header files */
 #include "SSD_FTFx.h"
@@ -63,6 +64,7 @@
 uint32_t SIZE_OPTIMIZATION FlashReadOnce(PFLASH_SSD_CONFIG pSSDConfig, \
                                                 uint8_t recordIndex,\
                                                 uint8_t* pDataArray, \
+                                                uint32_t size,\
                                                 pFLASHCOMMANDSEQUENCE pFlashCommandSequence)
 {
     uint8_t i;
@@ -85,7 +87,7 @@ uint32_t SIZE_OPTIMIZATION FlashReadOnce(PFLASH_SSD_CONFIG pSSDConfig, \
     if(FTFx_OK == ret)
     {
         /* Read the data from the FCCOB registers into the pDataArray */
-        for (i = 0x0U; i < PGM_SIZE_BYTE; i ++)
+        for (i = 0x0U; i < size; i ++)
         {
             temp = pSSDConfig->ftfxRegBase + i + 0x08U;
             pDataArray[i] = REG_READ(temp);

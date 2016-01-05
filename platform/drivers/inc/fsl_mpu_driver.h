@@ -52,7 +52,7 @@ extern MPU_Type * const g_mpuBase[];
 extern const IRQn_Type g_mpuIrqId[MPU_INSTANCE_COUNT];
 
 /*! 
- * @brief Data The section describes the programming interface of the for MPU region initialization
+ * @brief Data The section describes the programming interface of the for MPU region initialization.
  *
  * This structure is used when calling the MPU_DRV_Init function.
  * 
@@ -63,7 +63,7 @@ typedef struct MpuUserConfig{
 }mpu_user_config_t;
 
 /*!
- * @brief MPU driver user call back function.
+ * @brief MPU driver user callback function.
  *
  * The contents of this structure provides a callback function.
  */
@@ -93,10 +93,9 @@ extern "C" {
  mpu_status_t MPU_DRV_Init(uint32_t instance, const mpu_user_config_t *userConfigPtr);
 
 /*!
- * @brief De-initializes the MPU region.
+ * @brief Deinitializes the MPU region.
  *
  * @param instance The MPU peripheral instance number.  
- * @return kStatus_MPU_Success means success. Otherwise, means failure.
  */
 void MPU_DRV_Deinit(uint32_t instance);
 
@@ -110,7 +109,7 @@ void MPU_DRV_Deinit(uint32_t instance);
 mpu_status_t MPU_DRV_SetRegionConfig(uint32_t instance, const mpu_region_config_t *regionConfigPtr);
 
 /*!
- * @brief Sets region start address.
+ * @brief Sets the region start address.
  *
  * @param instance The MPU peripheral instance number.
  * @param regionNum The region number.
@@ -120,7 +119,7 @@ mpu_status_t MPU_DRV_SetRegionConfig(uint32_t instance, const mpu_region_config_
 void MPU_DRV_SetRegionAddr(uint32_t instance, mpu_region_num_t regionNum, uint32_t startAddr, uint32_t endAddr);
 
 /*!
- * @brief Configures low master access permission.
+ * @brief Configures the low master access permission.
  *
  * @param instance The MPU peripheral instance number.
  * @param regionNum The MPU region number.
@@ -131,7 +130,7 @@ void MPU_DRV_SetRegionAddr(uint32_t instance, mpu_region_num_t regionNum, uint32
 mpu_status_t MPU_DRV_SetLowMasterAccessRights(uint32_t instance, mpu_region_num_t regionNum, mpu_master_t masterNum, const mpu_low_masters_access_rights_t *accessRightsPtr);
 
 /*!
- * @brief Configures high master access permission.
+ * @brief Configures the high master access permission.
  *
  * @param instance The MPU peripheral instance number.
  * @param regionNum The MPU region number.
@@ -155,6 +154,7 @@ void MPU_DRV_SetRegionValidCmd(uint32_t instance, mpu_region_num_t regionNum, bo
  *
  * @param instance The MPU peripheral instance number.
  * @param errInfoArrayPtr A pointer to access error info structure.
+ * @return kStatus_MPU_Success means success. Otherwise, means failure.
  */
 mpu_status_t MPU_DRV_GetDetailErrorAccessInfo(uint32_t instance,  mpu_access_err_info_t *errInfoArrayPtr);
 

@@ -105,7 +105,7 @@ uint32_t OS_Task_create(task_start_t pstart, void* param, uint32_t pri, uint32_t
      * For uC/OS, we should allocate memory for task stack.
      */
 #if ((defined (FSL_RTOS_UCOSII)) || (defined (FSL_RTOS_UCOSIII)))
-    usb_adapter_task_struct* task_struct = OSA_MemAllocZero(sizeof(usb_adapter_task_struct));
+    usb_adapter_task_struct* task_struct = (usb_adapter_task_struct* )OSA_MemAllocZero(sizeof(usb_adapter_task_struct));
     if (!task_struct)
     {
         return (uint32_t)OS_TASK_ERROR;
@@ -119,7 +119,7 @@ uint32_t OS_Task_create(task_start_t pstart, void* param, uint32_t pri, uint32_t
     }
 
 #if defined (FSL_RTOS_UCOSIII)
-    task_struct->handler = OSA_MemAllocZero(sizeof(OS_TCB));
+    task_struct->handler = (task_handler_t)OSA_MemAllocZero(sizeof(OS_TCB));
     if(!task_struct->handler)
     {
         OSA_MemFree(task_struct->stack_mem);
@@ -128,7 +128,7 @@ uint32_t OS_Task_create(task_start_t pstart, void* param, uint32_t pri, uint32_t
     }
 #endif
     status = OSA_TaskCreate((task_t)pstart, (uint8_t*)task_name, stack_size,
-    task_struct->stack_mem, pri, (task_param_t)param, false, &task_struct->handler);
+    (task_stack_t*)task_struct->stack_mem, pri, (task_param_t)param, false, &task_struct->handler);
     if (kStatus_OSA_Success == status)
     {
         return (uint32_t)task_struct;

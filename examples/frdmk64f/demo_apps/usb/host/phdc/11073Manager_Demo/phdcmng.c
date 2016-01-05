@@ -32,13 +32,7 @@
 #include "usb_host_config.h"
 #include "usb.h"
 #include "usb_host_stack_interface.h"
-#if(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "derivative.h"
-#include "hidef.h"
-#include "mem_util.h"
-#endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
 #include "fsl_port_hal.h"
@@ -46,14 +40,11 @@
 #include "fsl_debug_console.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "fsl_uart_driver.h"
-#endif
+//#include "fsl_uart_driver.h"
 
 #include "usb_host_phdc.h"
 #include "usb_host_hub_sm.h"
-#if (OS_ADAPTER_ACTIVE_OS != OS_ADAPTER_SDK)
-//#include "rtc.h"
-#endif
+
 #include "ieee11073_phd_types.h"
 #include "ieee11073_nom_codes.h"
 #include "phdcmng.h"
@@ -66,9 +57,9 @@ device_struct_t g_phdc_device = { 0 };
 usb_host_handle g_host_handle;
 uint8_t g_phdc_interface_number = 0;
 usb_device_interface_struct_t* g_phdc_interface_info[USBCFG_HOST_MAX_INTERFACE_PER_CONFIGURATION] = { NULL };
-usb_phdc_param_t g_phdc_call_param;
+usb_phdc_param_t g_phdc_call_param_recv;
+usb_phdc_param_t g_phdc_call_param_send;
 os_event_handle g_phdc_usb_event;
-
 /* Application function prototypes */
 void APP_init(void);
 void APP_task(void);
@@ -98,9 +89,9 @@ bool phdc_manager_print_partition(nom_partition_t partition);
 void phdc_manager_print_float_val(uint8_t *value);
 void phdc_manager_print_sfloat_val(uint8_t *value);
 void phdc_manager_print_abs_timestamp(uint8_t *value);
-void usb_host_phdc_send_callback(usb_phdc_param_t *call_param);
-void usb_host_phdc_recv_callback(usb_phdc_param_t *call_param);
-void usb_host_phdc_ctrl_callback(usb_phdc_param_t *call_param);
+void usb_host_phdc_send_callback(void* tr_ptr, void* param, uint8_t* buff_ptr, uint32_t buff_size, usb_status usb_sts);
+void usb_host_phdc_recv_callback(void* tr_ptr, void* param, uint8_t* buff_ptr, uint32_t buff_size, usb_status usb_sts);
+void usb_host_phdc_ctrl_callback(void* tr_ptr, void* param, uint8_t* buff_ptr, uint32_t buff_size, usb_status usb_sts);
 usb_status usb_host_phdc_unsupported_device_event(
     usb_device_instance_handle dev_handle,
     usb_interface_descriptor_handle intf_handle,
@@ -228,39 +219,34 @@ uint8_t g_phd_mng_abrt_req[ABRT_SIZE] =
     0x00, 0x02 /* reason = normal */
 };
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#define MAIN_TASK                (10)
-void Main_Task(uint32_t param);
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
+static void update_state(void)
 {
-    { MAIN_TASK, Main_Task, 3000L, 9L, "Main", MQX_AUTO_START_TASK },
-    { 0L, 0L, 0L, 0L, 0L, 0L }
-};
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : main (Main_Task if using MQX)
- * Returned Value : none
- * Comments       :
- *     Execution starts here
- *
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    APP_init();
-    /*
-     ** Infinite loop, waiting for events requiring action
-     */
-    for (;;)
+    if (g_phdc_device.state_change != 0)
     {
-        APP_task();
-    } /* Endfor */
-} /* Endbody */
-#endif
+        if (g_phdc_device.state_change & USB_STATE_CHANGE_ATTACHED)
+        {
+            if (g_phdc_device.dev_state == USB_DEVICE_IDLE)
+            {
+                g_phdc_device.dev_state = USB_DEVICE_ATTACHED;
+            }
+            g_phdc_device.state_change &= ~(USB_STATE_CHANGE_ATTACHED);
+        }
+        if (g_phdc_device.state_change & USB_STATE_CHANGE_OPENED)
+        {
+            if (g_phdc_device.dev_state != USB_DEVICE_DETACHED)
+            {
+                g_phdc_device.dev_state = USB_DEVICE_INTERFACED;
+            }
+            g_phdc_device.state_change &= ~(USB_STATE_CHANGE_OPENED);
+        }
+        if (g_phdc_device.state_change & USB_STATE_CHANGE_DETACHED)
+        {
+            g_phdc_device.dev_state = USB_DEVICE_DETACHED;
+            g_phdc_device.state_change &= ~(USB_STATE_CHANGE_DETACHED);
+        }
+    }
+}
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
 TASK_TEMPLATE_STRUCT MQX_template_list[] =
@@ -297,13 +283,12 @@ int main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 10L, 4000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 5L, 4000L, "task_start", NULL);
     OSA_Start();
 #if !defined(FSL_RTOS_MQX)
     return 1;
 #endif
 }
-#endif
 
 /*FUNCTION*----------------------------------------------------------------
  *
@@ -376,7 +361,7 @@ void APP_init(void)
      */
     usb_status status = USB_OK;
 
-    status = usb_host_init(CONTROLLER_ID, /* Use value in header file */
+    status = usb_host_init(CONTROLLER_ID, usb_host_board_init,/* Use value in header file */
     &g_host_handle); /* Returned pointer */
 
     if (status != USB_OK)
@@ -425,16 +410,19 @@ void APP_init(void)
 void APP_task(void)
 {
     usb_status status = USB_OK;
-
-    if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_CTRL))
+    if (OS_Event_wait(g_phdc_usb_event, USB_EVENT_DATA_ERR | USB_EVENT_DATA_OK | USB_EVENT_DATA_CORRUPTED | USB_EVENT_CTRL, FALSE, 0) == OS_EVENT_OK)
     {
-        OS_Event_clear(g_phdc_usb_event, USB_EVENT_CTRL);
+        if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_CTRL))
+        {
+            /* update state for not app_task context */
+            update_state();
+            OS_Event_clear(g_phdc_usb_event, USB_EVENT_CTRL);
+        }
         switch(g_phdc_device.dev_state)
         {
         case USB_DEVICE_IDLE:
             break;
         case USB_DEVICE_ATTACHED:
-            {
             USB_PRINTF(" PHDC device attached");
             g_phdc_device.dev_state = USB_DEVICE_SET_INTERFACE_STARTED;
 
@@ -444,7 +432,6 @@ void APP_task(void)
                 USB_PRINTF("\n\rError in _usb_hostdev_select_interface: %x", (unsigned int) status);
                 return;
             }
-        }
             break;
         case USB_DEVICE_SET_INTERFACE_STARTED:
             break;
@@ -452,34 +439,25 @@ void APP_task(void)
         case USB_DEVICE_INTERFACED:
             USB_PRINTF("\n\rPHDC device interfaced and ready");
             /* Advance to the INUSE state to process the PHDC messages */
-            g_phdc_device.dev_state = USB_DEVICE_INUSE;
-            OS_Event_set(g_phdc_usb_event, USB_EVENT_CTRL);
+            if (phdc_manager_initialize_device())
+            {
+                g_phdc_device.dev_state = USB_DEVICE_INUSE;
+            }
             break;
 
         case USB_DEVICE_INUSE:
-            if (OS_Event_wait(g_phdc_usb_event, USB_EVENT_DATA_ERR | USB_EVENT_DATA_OK | USB_EVENT_DATA_CORRUPTED, FALSE, 0) == OS_EVENT_OK)
+            if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_DATA_CORRUPTED | USB_EVENT_DATA_ERR))
             {
-                if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_DATA_ERR))
-                {
-                    OS_Event_clear(g_phdc_usb_event, USB_EVENT_DATA_ERR);
-                    /* Schedule a new RX */
-                    g_phdc_call_param.class_ptr = (usb_class_handle*) g_phdc_device.class_handle;
-                    g_phdc_call_param.qos = 0xFE;
-                    g_phdc_call_param.buff_ptr = g_phdc_device.phd_buffer;
-                    g_phdc_call_param.buff_size = APDU_MAX_BUFFER_SIZE;
-                    usb_class_phdc_recv_data(&g_phdc_call_param);
-                }
-                if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_DATA_CORRUPTED))
-                {
-                    OS_Event_clear(g_phdc_usb_event, USB_EVENT_DATA_CORRUPTED);
-                }
-                if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_DATA_OK))
-                {
-                    OS_Event_clear(g_phdc_usb_event, USB_EVENT_DATA_OK);
-                    phdc_manager_inuse();
-                }
+                /* Schedule a new RX */
+                g_phdc_call_param_recv.class_ptr = (usb_class_handle*) g_phdc_device.class_handle;
+                g_phdc_call_param_recv.qos = 0xFE;
+                g_phdc_call_param_recv.callback_fn = usb_host_phdc_recv_callback;
+                (usb_status)usb_class_phdc_recv_data(&g_phdc_call_param_recv, (uint8_t*)g_phdc_device.phd_buffer, (uint32_t)APDU_MAX_BUFFER_SIZE);
             }
-            OS_Event_set(g_phdc_usb_event, USB_EVENT_CTRL);
+            if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_DATA_OK))
+            {
+                phdc_manager_inuse();
+            }
             break;
 
         case USB_DEVICE_DETACHED:
@@ -503,6 +481,18 @@ void APP_task(void)
             break;
         default:
             break;
+        }
+        if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_DATA_ERR))
+        {
+            OS_Event_clear(g_phdc_usb_event, USB_EVENT_DATA_ERR);
+        }
+        if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_DATA_CORRUPTED))
+        {
+            OS_Event_clear(g_phdc_usb_event, USB_EVENT_DATA_CORRUPTED);
+        }
+        if (OS_Event_check_bit(g_phdc_usb_event, USB_EVENT_DATA_OK))
+        {
+            OS_Event_clear(g_phdc_usb_event, USB_EVENT_DATA_OK);
         }
     }
 }
@@ -558,11 +548,10 @@ void phdc_manager_inuse(void)
         }
     }
     /* Schedule a new RX */
-    g_phdc_call_param.class_ptr = (usb_class_handle*) g_phdc_device.class_handle;
-    g_phdc_call_param.qos = 0xFE;
-    g_phdc_call_param.buff_ptr = g_phdc_device.phd_buffer;
-    g_phdc_call_param.buff_size = APDU_MAX_BUFFER_SIZE;
-    usb_class_phdc_recv_data(&g_phdc_call_param);
+    g_phdc_call_param_recv.class_ptr = (usb_class_handle*) g_phdc_device.class_handle;
+    g_phdc_call_param_recv.qos = 0xFE;
+    g_phdc_call_param_recv.callback_fn = usb_host_phdc_recv_callback;   
+    (usb_status)usb_class_phdc_recv_data(&g_phdc_call_param_recv, (uint8_t*)g_phdc_device.phd_buffer, (uint32_t)APDU_MAX_BUFFER_SIZE);
 }
 
 /*FUNCTION*----------------------------------------------------------------
@@ -580,8 +569,6 @@ void phdc_manager_aarq_handler
     apdu_t *apdu = (apdu_t *) buffer;
 
     aare_apdu_t *pAare;
-    usb_phdc_param_t *phdc_call_param_send;
-
     associate_result_t assocResult = REJECTED_UNKNOWN;
     aarq_apdu_t *pAarq = &(apdu->u.aarq);
 
@@ -613,21 +600,12 @@ void phdc_manager_aarq_handler
     pAare->result = USB_SHORT_BE_TO_HOST(assocResult);
 
     /* Send data */
-    phdc_call_param_send = (usb_phdc_param_t *) OS_Mem_alloc_uncached_zero(sizeof(usb_phdc_param_t));
-    if (phdc_call_param_send != NULL)
-    {
-        phdc_call_param_send->class_ptr = g_phdc_device.class_handle;
-        phdc_call_param_send->metadata = FALSE;
-        phdc_call_param_send->buff_ptr = &g_phd_mng_assoc_res[0];
-        phdc_call_param_send->buff_size = ASSOC_RES_SIZE;
+    g_phdc_call_param_send.class_ptr = g_phdc_device.class_handle;
+    g_phdc_call_param_send.metadata = FALSE;
+    g_phdc_call_param_send.callback_fn = usb_host_phdc_send_callback;
 
-        USB_PRINTF("\n\r11073 MNG Demo: Send back association response. Waiting for config...");
-        usb_class_phdc_send_data(phdc_call_param_send);
-    }
-    else
-    {
-        USB_PRINTF("\n\r11073 MNG Demo: Cannot allocate memory for the Association response parameter");
-    }
+    USB_PRINTF("\n\r11073 MNG Demo: Send back association response. Waiting for config...");
+    usb_class_phdc_send_data(&g_phdc_call_param_send, (uint8_t*)&g_phd_mng_assoc_res[0], (uint32_t)ASSOC_RES_SIZE);
 }
 
 /*FUNCTION*----------------------------------------------------------------
@@ -685,8 +663,6 @@ void phdc_manager_rlrq_handler
     )
 {
     apdu_t *apdu = (apdu_t *) buffer;
-    usb_phdc_param_t *phdc_call_param_send;
-
     rlrq_apdu_t *pRlrq = (rlrq_apdu_t *) &(apdu->u.prst);
 
     USB_PRINTF("\n\r11073 MNG Demo: Received a Release request. Reason = %d", pRlrq->reason);
@@ -707,19 +683,10 @@ void phdc_manager_rlrq_handler
     g_phdc_device.phd_manager_state = PHD_MNG_UNASSOCIATED;
 
     /* Send data -> Release Response */
-    phdc_call_param_send = (usb_phdc_param_t *) OS_Mem_alloc_uncached_zero(sizeof(usb_phdc_param_t));
-    if (phdc_call_param_send != NULL)
-    {
-        phdc_call_param_send->class_ptr = g_phdc_device.class_handle;
-        phdc_call_param_send->metadata = FALSE;
-        phdc_call_param_send->buff_ptr = (uint8_t*) &g_phd_wsl_rel_res[0];
-        phdc_call_param_send->buff_size = REL_RES_SIZE;
-        usb_class_phdc_send_data(phdc_call_param_send);
-    }
-    else
-    {
-        USB_PRINTF("\n\r11073 MNG Demo: Cannot allocate memory for the release response parameter");
-    }
+    g_phdc_call_param_send.class_ptr = g_phdc_device.class_handle;
+    g_phdc_call_param_send.metadata = FALSE;
+    g_phdc_call_param_send.callback_fn = usb_host_phdc_send_callback;
+    usb_class_phdc_send_data(&g_phdc_call_param_send, (uint8_t*) &g_phd_wsl_rel_res[0], (uint32_t)REL_RES_SIZE);
 }
 
 /*FUNCTION*----------------------------------------------------------------
@@ -874,60 +841,32 @@ void phdc_manager_prst_mdc_noti_config
     reportResp->config_result = configResult;
 
     /* Send data -> Configuration Response */
-    phdc_call_param_send = (usb_phdc_param_t *) OS_Mem_alloc_uncached_zero(sizeof(usb_phdc_param_t));
-    if (phdc_call_param_send != NULL)
+    g_phdc_call_param_send.class_ptr = g_phdc_device.class_handle;
+    g_phdc_call_param_send.metadata = FALSE;
+    g_phdc_call_param_send.callback_fn = usb_host_phdc_send_callback;
+    USB_PRINTF("\n\r11073 MNG Demo: Send back configuration response.");
+    usb_class_phdc_send_data(&g_phdc_call_param_send, (uint8_t*)&g_phd_mng_config_res[0], (uint32_t)CONFIG_RES_SIZE);
+
+    if (g_phdc_device.phd_manager_state == PHD_MNG_OPERATING)
     {
-        phdc_call_param_send->class_ptr = g_phdc_device.class_handle;
-        phdc_call_param_send->metadata = FALSE;
-        phdc_call_param_send->buff_ptr = &g_phd_mng_config_res[0];
-        phdc_call_param_send->buff_size = CONFIG_RES_SIZE;
-        USB_PRINTF("\n\r11073 MNG Demo: Send back configuration response.");
-        usb_class_phdc_send_data(phdc_call_param_send);
-
-        if (g_phdc_device.phd_manager_state == PHD_MNG_OPERATING)
-        {
-            USB_PRINTF("\n\r11073 MNG Demo: The MANAGER is now in the OPERATING state. Ready to receive measurements.");
-            /* Send data -> Get MDS Attributes */
-            phdc_call_param_send = (usb_phdc_param_t *) OS_Mem_alloc_uncached_zero(sizeof(usb_phdc_param_t));
-            if (phdc_call_param_send != NULL)
-            {
-                phdc_call_param_send->class_ptr = g_phdc_device.class_handle;
-                phdc_call_param_send->metadata = FALSE;
-                phdc_call_param_send->buff_ptr = &g_phd_mng_get_mds_attr[0];
-                phdc_call_param_send->buff_size = GET_MDS_ATTR_SIZE;
-                USB_PRINTF("\n\r11073 MNG Demo: Send ROIGET MDS Attributes(all) request.");
-                usb_class_phdc_send_data(phdc_call_param_send);
-            }
-            else
-            {
-                USB_PRINTF("\n\r11073 MNG Demo: Cannot allocate memory for the Get-MDS request parameter");
-            }
-        }
-        else
-        {
-            /* configuration was not accepted. The manager is in the UNASSOCIATED state */
-            USB_PRINTF("\n\r11073 MNG Demo: The MANAGER is now in the UNASSOCIATED state.");
-            /* Send abort */
-            phdc_call_param_send = (usb_phdc_param_t *) OS_Mem_alloc_uncached_zero(sizeof(usb_phdc_param_t));
-            if (phdc_call_param_send != NULL)
-            {
-                phdc_call_param_send->class_ptr = g_phdc_device.class_handle;
-                phdc_call_param_send->metadata = FALSE;
-                phdc_call_param_send->buff_ptr = &g_phd_mng_abrt_req[0];
-                phdc_call_param_send->buff_size = ABRT_SIZE;
-
-                USB_PRINTF("\n\r11073 MNG Demo: Send Abort message to the device.");
-                usb_class_phdc_send_data(phdc_call_param_send);
-            }
-            else
-            {
-                USB_PRINTF("\n\r11073 MNG Demo: Cannot allocate memory for the Abort request parameter");
-            }
-        }
+        USB_PRINTF("\n\r11073 MNG Demo: The MANAGER is now in the OPERATING state. Ready to receive measurements.");
+        /* Send data -> Get MDS Attributes */
+        g_phdc_call_param_send.class_ptr = g_phdc_device.class_handle;
+        g_phdc_call_param_send.metadata = FALSE;
+        g_phdc_call_param_send.callback_fn = usb_host_phdc_send_callback;
+        USB_PRINTF("\n\r11073 MNG Demo: Send ROIGET MDS Attributes(all) request.");
+        usb_class_phdc_send_data(&g_phdc_call_param_send, (uint8_t*)&g_phd_mng_get_mds_attr[0], (uint32_t)GET_MDS_ATTR_SIZE);
     }
     else
     {
-        USB_PRINTF("\n\r11073 MNG Demo: Cannot allocate memory for the Configuration response parameter");
+        /* configuration was not accepted. The manager is in the UNASSOCIATED state */
+        USB_PRINTF("\n\r11073 MNG Demo: The MANAGER is now in the UNASSOCIATED state.");
+        /* Send abort */
+        g_phdc_call_param_send.class_ptr = g_phdc_device.class_handle;
+        g_phdc_call_param_send.metadata = FALSE;
+        g_phdc_call_param_send.callback_fn = usb_host_phdc_send_callback;
+        USB_PRINTF("\n\r11073 MNG Demo: Send Abort message to the device.");
+        usb_class_phdc_send_data(&g_phdc_call_param_send, (uint8_t*)&g_phd_mng_abrt_req[0], (uint32_t)ABRT_SIZE);
     }
 }
 
@@ -966,22 +905,12 @@ void phdc_manager_prst_mdc_noti_scanrep_fixed
     respDataApdu->invoke_id = dataApdu->invoke_id;
 
     /* Send data -> Scan Response */
-    phdc_call_param_send = (usb_phdc_param_t *) OS_Mem_alloc_uncached_zero(sizeof(usb_phdc_param_t));
-    if (phdc_call_param_send != NULL)
-    {
-        phdc_call_param_send->class_ptr = g_phdc_device.class_handle;
-        phdc_call_param_send->metadata = FALSE;
-        phdc_call_param_send->buff_ptr = &g_phd_mng_scan_res[0];
-        phdc_call_param_send->buff_size = SCAN_RES_SIZE;
-
-        USB_PRINTF("\n\r11073 MNG Demo: -------------------------------------------");
-        USB_PRINTF("\n\r11073 MNG Demo: Send back measurements confirmation.");
-        usb_class_phdc_send_data(phdc_call_param_send);
-    }
-    else
-    {
-        USB_PRINTF("\n\r11073 MNG Demo: Cannot allocate memory for the Scan response parameter");
-    }
+    g_phdc_call_param_send.class_ptr = g_phdc_device.class_handle;
+    g_phdc_call_param_send.metadata = FALSE;
+    g_phdc_call_param_send.callback_fn = usb_host_phdc_send_callback;
+    USB_PRINTF("\n\r11073 MNG Demo: -------------------------------------------");
+    USB_PRINTF("\n\r11073 MNG Demo: Send back measurements confirmation.");
+    usb_class_phdc_send_data(&g_phdc_call_param_send, (uint8_t*)&g_phd_mng_scan_res[0], (uint32_t)SCAN_RES_SIZE);
 }
 
 /*FUNCTION*----------------------------------------------------------------
@@ -1469,7 +1398,10 @@ usb_status usb_host_phdc_manager_event
         {
             g_phdc_device.dev_handle = dev_handle;
             g_phdc_device.intf_handle = phdc_get_interface();
-            g_phdc_device.dev_state = USB_DEVICE_ATTACHED;
+            g_phdc_device.state_change |= USB_STATE_CHANGE_ATTACHED;
+
+            /* notify application that status has changed */
+            OS_Event_set(g_phdc_usb_event, USB_EVENT_CTRL);
         }
         else
         {
@@ -1479,15 +1411,13 @@ usb_status usb_host_phdc_manager_event
 
     case USB_INTF_OPENED_EVENT:
         USB_PRINTF("\n\r----- Interfaced Event -----");
+        g_phdc_device.state_change |= USB_STATE_CHANGE_OPENED;
 
-        if (phdc_manager_initialize_device())
-        {
-            g_phdc_device.dev_state = USB_DEVICE_INTERFACED;
-        }
+        /* notify application that status has changed */
+        OS_Event_set(g_phdc_usb_event, USB_EVENT_CTRL);
         break;
 
     case USB_DETACH_EVENT:
-        {
         /* Use only the interface with desired protocol */
         USB_PRINTF("\n\r----- Detach Event -----");
         USB_PRINTF("\n\rState = %d", (int32_t) g_phdc_device.dev_state);
@@ -1495,13 +1425,12 @@ usb_status usb_host_phdc_manager_event
         USB_PRINTF("\n\r  SubClass = %d", intf_ptr->bInterfaceSubClass);
         USB_PRINTF("\n\r  Protocol = %d\n", intf_ptr->bInterfaceProtocol);
         g_phdc_interface_number = 0;
-        g_phdc_device.dev_state = USB_DEVICE_DETACHED;
-    }
+        g_phdc_device.state_change |= USB_STATE_CHANGE_DETACHED;
+
+        /* notify application that status has changed */
+        OS_Event_set(g_phdc_usb_event, USB_EVENT_CTRL);
         break;
     }
-    /* notify application that status has changed */
-    OS_Event_set(g_phdc_usb_event, USB_EVENT_CTRL);
-    
     return USB_OK;
 }
 
@@ -1515,39 +1444,20 @@ usb_status usb_host_phdc_manager_event
  *END*--------------------------------------------------------------------*/
 bool phdc_manager_initialize_device(void)
 {
-    usb_status status;
-
-    status = usb_class_phdc_set_callbacks(g_phdc_device.class_handle,
-        usb_host_phdc_send_callback,
-        usb_host_phdc_recv_callback,
-        usb_host_phdc_ctrl_callback
-        );
-    USB_PRINTF("\n\rConfigure PHDC callbacks and initializing attached device: ... ");
-    if (status == USB_OK)
+    g_phdc_device.phd_buffer = (uint8_t*) OS_Mem_alloc_uncached_zero(APDU_MAX_BUFFER_SIZE);
+    g_phdc_device.phd_recv_size = 0; /* Expecting an association request */
+    g_phdc_device.phd_manager_state = PHD_MNG_UNASSOCIATED;
+    if (g_phdc_device.phd_buffer != NULL)
     {
-        g_phdc_device.phd_buffer = (uint8_t*) OS_Mem_alloc_uncached_zero(APDU_MAX_BUFFER_SIZE);
-        g_phdc_device.phd_recv_size = 0; /* Expecting an association request */
-        g_phdc_device.phd_manager_state = PHD_MNG_UNASSOCIATED;
-
-        if (g_phdc_device.phd_buffer != NULL)
-        {
-            USB_PRINTF(" DONE");
-            g_phdc_call_param.class_ptr = (usb_class_handle*) g_phdc_device.class_handle;
-            g_phdc_call_param.qos = 0xFE;
-            g_phdc_call_param.buff_ptr = g_phdc_device.phd_buffer;
-            g_phdc_call_param.buff_size = APDU_MAX_BUFFER_SIZE;
-            (usb_status) usb_class_phdc_recv_data(&g_phdc_call_param);
-            return TRUE;
-        }
-        else
-        {
-            USB_PRINTF(" ERROR allocating memory");
-            return FALSE;
-        }
+        g_phdc_call_param_recv.class_ptr = (usb_class_handle*) g_phdc_device.class_handle;
+        g_phdc_call_param_recv.qos = 0xFE;
+        g_phdc_call_param_recv.callback_fn = usb_host_phdc_recv_callback;   
+        (usb_status)usb_class_phdc_recv_data(&g_phdc_call_param_recv, (uint8_t*)g_phdc_device.phd_buffer, (uint32_t)APDU_MAX_BUFFER_SIZE);
+        return TRUE;
     }
     else
     {
-        USB_PRINTF(" ERROR (returned code = %d)", status);
+        USB_PRINTF(" ERROR allocating memory");
         return FALSE;
     }
 }
@@ -1561,11 +1471,20 @@ bool phdc_manager_initialize_device(void)
  *END*--------------------------------------------------------------------*/
 void usb_host_phdc_send_callback
 (
-    usb_phdc_param_t *call_param
-    )
+/* [IN] Unused */
+void* tr_ptr,
+/* [IN] parameter specified by higher level */
+void* param,
+/* [IN] pointer to buffer containing data (Rx) */
+uint8_t* buff_ptr,
+/* [IN] length of data transferred */
+uint32_t buff_size,
+/* [IN] status, preferably USB_OK or USB_DONE */
+usb_status usb_sts
+)
 {
     /* Free the memory allocated for call_param */
-    OS_Mem_free(call_param);
+    //OS_Mem_free(call_param);
 }
 
 /*FUNCTION*----------------------------------------------------------------
@@ -1577,16 +1496,25 @@ void usb_host_phdc_send_callback
  *END*--------------------------------------------------------------------*/
 void usb_host_phdc_recv_callback
 (
-    usb_phdc_param_t *call_param
-    )
+/* [IN] Unused */
+void* tr_ptr,
+/* [IN] parameter specified by higher level */
+void* param,
+/* [IN] pointer to buffer containing data (Rx) */
+uint8_t* buff_ptr,
+/* [IN] length of data transferred */
+uint32_t buff_size,
+/* [IN] status, preferably USB_OK or USB_DONE */
+usb_status usb_sts
+)
 {
-    g_phdc_device.phd_recv_size = (uint8_t) call_param->buff_size;
+    g_phdc_device.phd_recv_size = (uint8_t)buff_size;
 
-    if (call_param->status == USB_OK)
+    if (usb_sts == USB_OK)
     {
         OS_Event_set(g_phdc_usb_event, USB_EVENT_DATA_OK);
     }
-    else if (call_param->status == USBERR_TR_CANCEL)
+    else if (usb_sts == USBERR_TR_CANCEL)
     {
         OS_Event_set(g_phdc_usb_event, USB_EVENT_DATA_CORRUPTED);
     }
@@ -1605,10 +1533,19 @@ void usb_host_phdc_recv_callback
  *END*--------------------------------------------------------------------*/
 void usb_host_phdc_ctrl_callback
 (
-    usb_phdc_param_t *call_param
-    )
+/* [IN] Unused */
+void* tr_ptr,
+/* [IN] parameter specified by higher level */
+void* param,
+/* [IN] pointer to buffer containing data (Rx) */
+uint8_t* buff_ptr,
+/* [IN] length of data transferred */
+uint32_t buff_size,
+/* [IN] status, preferably USB_OK or USB_DONE */
+usb_status usb_sts
+)
 {
     /* Free the memory allocated for call_param */
-    OS_Mem_free(call_param);
+    //OS_Mem_free(call_param);
 }
 /* EOF */

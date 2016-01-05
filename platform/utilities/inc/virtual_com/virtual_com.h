@@ -78,6 +78,7 @@ typedef usb_status usb_status_t;
  *****************************************************************************/
 extern void VirtualCom_Init(void);
 extern void VirtualCom_SendDataBlocking(uint32_t, const uint8_t* , uint32_t );
+extern void VirtualCom_Deinit(void);
 extern usb_status VirtualCom_ReceiveDataBlocking(uint32_t, uint8_t* , uint32_t );
 extern uint8_t USB_Check_Start_Transactions(void);
 

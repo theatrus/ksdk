@@ -52,13 +52,36 @@ void LPUART0_IRQHandler(void)
 #endif
 
 #if (LPUART_INSTANCE_COUNT > 1)
-/* Implementation of LPUART0 handler named in startup code. */
+/* Implementation of LPUART1 handler named in startup code. */
 void LPUART1_IRQHandler(void)
 {
     LPUART_DRV_IRQHandler(1);
 }
 #endif
 
+#if (LPUART_INSTANCE_COUNT > 2)
+/* Implementation of LPUART2 handler named in startup code. */
+void LPUART2_IRQHandler(void)
+{
+    LPUART_DRV_IRQHandler(2);
+}
+#endif
+
+#if (LPUART_INSTANCE_COUNT > 3)
+/* Implementation of LPUART3 handler named in startup code. */
+void LPUART3_IRQHandler(void)
+{
+    LPUART_DRV_IRQHandler(3);
+}
+#endif
+
+#if (LPUART_INSTANCE_COUNT > 4)
+/* Implementation of LPUART4 handler named in startup code. */
+void LPUART4_IRQHandler(void)
+{
+    LPUART_DRV_IRQHandler(4);
+}
+#endif
 /*******************************************************************************
  * EOF
  ******************************************************************************/

@@ -72,7 +72,7 @@ int main(void)
     TPM_DRV_Init(BOARD_TPM_INSTANCE, &driverInfo);
 
     // Set clock for TPM.
-    TPM_DRV_SetClock(BOARD_TPM_INSTANCE, kTpmClockSourceModuleHighFreq, kTpmDividedBy2);
+    TPM_DRV_SetClock(BOARD_TPM_INSTANCE, kTpmClockSourceModuleClk, kTpmDividedBy2);
 
     while(1)
     {

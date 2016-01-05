@@ -5,7 +5,7 @@
 **     Compiler:            Keil ARM C/C++ Compiler
 **     Reference manual:    KL02P32M48SF0RM Rev3.1, July 2013
 **     Version:             rev. 1.4, 2015-01-23
-**     Build:               b150317
+**     Build:               b150602
 **
 **     Abstract:
 **         Linker file for the Keil ARM C/C++ Compiler
@@ -47,11 +47,11 @@
 #define m_interrupts_start             0x1FFFFF00
 #define m_interrupts_size              0x00000100
 
-#define m_data_start                   0x20000000
-#define m_data_size                    0x00000180
-
-#define m_text_start                   0x20000180
+#define m_text_start                   0x20000000
 #define m_text_size                    0x00000180
+
+#define m_data_start                   0x20000180
+#define m_data_size                    0x00000180
 
 /* Sizes */
 #if (defined(__stack_size__))

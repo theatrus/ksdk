@@ -88,13 +88,9 @@ static usb_interfaces_struct_t usb_configuration[USB_CDC_CFG_MAX] = {
 static usb_class_struct_t usb_dec_class[USB_CDC_CLASS_MAX] =
 {
     {
-        USB_CLASS_CDC,
+        USB_CLASS_COMMUNICATION,
         USB_DESC_CONFIGURATION(USB_CDC_IF_MAX, usb_if),
     },
-    {
-        USB_CLASS_INVALID,
-        USB_DESC_CONFIGURATION(0, NULL),
-    }
 };
 
 uint8_t g_device_descriptor[DEVICE_DESCRIPTOR_SIZE] =
@@ -126,7 +122,7 @@ uint8_t g_device_descriptor[DEVICE_DESCRIPTOR_SIZE] =
     /*  Serial number string index */
     0x00,
     /*  Number of configurations */
-    DEVICE_DESC_NUM_CONFIG_SUPPOTED
+    DEVICE_DESC_NUM_CONFIG_SUPPORTED
 };
 
 uint8_t g_config_descriptor[CONFIG_DESC_SIZE] =
@@ -136,7 +132,7 @@ uint8_t g_config_descriptor[CONFIG_DESC_SIZE] =
     USB_uint_16_low(CONFIG_DESC_SIZE),
     USB_uint_16_high(CONFIG_DESC_SIZE), /*  Total length of the Configuration descriptor */
     /*  NumInterfaces */
-    CONFIG_DESC_NUM_INTERFACES_SUPPOTED,
+    CONFIG_DESC_NUM_INTERFACES_SUPPORTED,
     0x01, /*  Configuration Value */
     0x00, /*  Configuration Description String Index*/
     /*  Attributes.support RemoteWakeup and self power */
@@ -242,7 +238,7 @@ uint8_t g_device_qualifier_descriptor[DEVICE_QUALIFIER_DESCRIPTOR_SIZE] =
     /* bMaxPacketSize0 */
     CONTROL_MAX_PACKET_SIZE,
     /* bNumConfigurations */
-    DEVICE_OTHER_DESC_NUM_CONFIG_SUPPOTED,
+    DEVICE_OTHER_DESC_NUM_CONFIG_SUPPORTED,
     /* Reserved : must be zero */
     0x00
 };
@@ -254,7 +250,7 @@ uint8_t g_other_speed_config_descriptor[OTHER_SPEED_CONFIG_DESCRIPTOR_SIZE] =
     USB_OTHER_SPEED_DESCRIPTOR,
     /*  Total length of the Configuration descriptor */
     USB_uint_16_low(CONFIG_DESC_SIZE), USB_uint_16_high(CONFIG_DESC_SIZE),
-    CONFIG_DESC_NUM_INTERFACES_SUPPOTED,
+    CONFIG_DESC_NUM_INTERFACES_SUPPORTED,
     /*value used to select this configuration : Configuration Value */
     1,
     /*  Configuration Description String Index*/
@@ -548,27 +544,34 @@ uint8_t USB_Desc_Get_Descriptor(
         }
         else
         {
-            uint8_t lang_id = 0;
-            uint8_t lang_index = USB_MAX_LANGUAGES_SUPPORTED;
+            uint8_t lang_id;
+            uint8_t lang_index = USB_MAX_STRING_DESCRIPTORS;
 
-            for (; lang_id < USB_MAX_LANGUAGES_SUPPORTED; lang_id++)
+            for (lang_id = 0; lang_id < USB_MAX_LANGUAGES_SUPPORTED; lang_id++)
             {
                 /* check whether we have a string for this language */
                 if (index == g_languages.usb_language[lang_id].language_id)
                 { /* check for max descriptors */
                     if (str_num < USB_MAX_STRING_DESCRIPTORS)
                     { /* setup index for the string to be returned */
-                        lang_index = str_num;
+                        lang_index = (str_num < USB_MAX_STRING_DESCRIPTORS) ? str_num : USB_MAX_STRING_DESCRIPTORS;
                     }
                     break;
                 }
             }
 
-            /* set return val for descriptor and size */
-            *descriptor =
-            (uint8_t *) g_languages.usb_language[lang_id].lang_desc[str_num];
-            *size =
-            g_languages.usb_language[lang_id].lang_desc_size[lang_index];
+            /* if a language match was found return the sring, otherwise stall the endpoint */
+            if(lang_id < USB_MAX_LANGUAGES_SUPPORTED)
+            {
+                /* set return val for descriptor and size */
+                *descriptor = (uint8_t *) g_languages.usb_language[lang_id].lang_desc[lang_index];
+                *size = g_languages.usb_language[lang_id].lang_desc_size[lang_index];
+            }
+            else
+            {
+                /* stall the endpoint in case of request error */ 
+                  return USBERR_INVALID_REQ_TYPE;
+            }
         }
     }
     else if (type < USB_MAX_STD_DESCRIPTORS + 1)
@@ -718,10 +721,9 @@ uint8_t USB_Set_Configuration
 )
 {
     //UNUSED_ARGUMENT (handle)
-    uint32_t i;
-    for (i = 0; USB_CLASS_INVALID != usb_dec_class[i].type; i++)
+    if(config)
     {
-        usb_dec_class[i].interfaces = usb_configuration[config - 1]; /*config num starts from 1*/
+        usb_dec_class[0].interfaces = usb_configuration[config - 1]; /*config num starts from 1*/
     }
     return USB_OK;
 }

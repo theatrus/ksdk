@@ -46,6 +46,12 @@
 #define CLOCK_INIT_CONFIG CLOCK_RUN
 #endif
 
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 48000000U
+#else
+#define CORE_CLOCK_FREQ 4000000U
+#endif
+
 /* OSC0 configuration. */
 #define OSC0_XTAL_FREQ 8000000U
 #define OSC0_SC2P_ENABLE_CONFIG  false
@@ -66,20 +72,6 @@
 #define XTAL0_PIN    19
 #define XTAL0_PINMUX kPortPinDisabled
 
-/* RTC external clock configuration. */
-#define RTC_XTAL_FREQ   0U
-#define RTC_SC2P_ENABLE_CONFIG       false
-#define RTC_SC4P_ENABLE_CONFIG       false
-#define RTC_SC8P_ENABLE_CONFIG       false
-#define RTC_SC16P_ENABLE_CONFIG      false
-#define RTC_OSC_ENABLE_CONFIG        false
-#define RTC_CLK_OUTPUT_ENABLE_CONFIG false
-
-/* RTC_CLKIN PTC1 */
-#define RTC_CLKIN_PORT   PORTC
-#define RTC_CLKIN_PIN    1
-#define RTC_CLKIN_PINMUX kPortMuxAsGpio
-
 /* The UART to use for debug messages. */
 #ifndef BOARD_DEBUG_UART_INSTANCE
     #define BOARD_DEBUG_UART_INSTANCE   0
@@ -93,13 +85,14 @@
 #define BOARD_LOW_POWER_UART_BAUD       9600
 
 #define BOARD_USE_LPSCI
-#define PM_DBG_UART_IRQ_HANDLER         MODULE_IRQ_HANDLER(UART0)
+#define PM_DBG_UART_IRQ_HANDLER         UART0_IRQHandler
 #define PM_DBG_UART_IRQn                UART0_IRQn
 
 /* Define the port interrupt number for the board switches */
 #define BOARD_SW_GPIO               kGpioSW1
 #define BOARD_SW_IRQ_NUM            PORTC_PORTD_IRQn
 #define BOARD_SW_IRQ_HANDLER        PORTC_PORTD_IRQHandler
+#define BOARD_SW_NAME               "SW1"
 /* Define print statement to inform user which switch to press for
  * low_power_demo
  */
@@ -123,9 +116,6 @@
 
 #define HWADC_INSTANCE               0
 #define ADC_IRQ_N                    ADC0_IRQn
-#if (defined FSL_RTOS_MQX)
-#define MQX_ADC_IRQHandler           MQX_ADC0_IRQHandler
-#endif
 
 /* The instances of peripherals used for dac_adc_demo */
 #define BOARD_DAC_DEMO_DAC_INSTANCE     0U
@@ -135,12 +125,24 @@
 /* The i2c instance used for i2c DAC demo */
 #define BOARD_DAC_I2C_INSTANCE          1
 
-/* The i2c instance used for i2c communication demo */
-#define BOARD_I2C_COMM_INSTANCE         1
+/* The i2c instance used for i2c connection by default */
+#define BOARD_I2C_INSTANCE              1
+
+/* The spi instance used for spi example */
+#define BOARD_SPI_INSTANCE              0
 
 /* The TPM instance/channel used for board */
 #define BOARD_TPM_INSTANCE              0
 #define BOARD_TPM_CHANNEL               5
+
+/* The bubble level demo information */
+#define BOARD_BUBBLE_TPM_INSTANCE       0
+#define BOARD_TPM_X_CHANNEL             2
+#define BOARD_TPM_Y_CHANNEL             5
+#define BOARD_FXOS8700_ADDR             0x1D
+#define BOARD_ACCEL_ADDR                BOARD_FXOS8700_ADDR
+#define BOARD_ACCEL_BAUDRATE            100
+#define BOARD_ACCEL_I2C_INSTANCE        0
 
 /* TSI electrodes mapping */
 #define BOARD_TSI_ELECTRODE_CNT         2
@@ -205,6 +207,11 @@ void BOARD_InitOsc0(void);
 
 /* Function to initialize RTC external clock base on board configuration. */
 void BOARD_InitRtcOsc(void);
+
+/*Function to handle board-specified initialization*/
+uint8_t usb_device_board_init(uint8_t controller_id);
+/*Function to handle board-specified initialization*/
+uint8_t usb_host_board_init(uint8_t controller_id);
 
 #if defined(__cplusplus)
 }

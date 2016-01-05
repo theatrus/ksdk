@@ -38,11 +38,16 @@
 // Standard C Included Files
 #include <stdint.h>
 // SDK Included Files
+#include "board.h"
 #include "fsl_dac_driver.h"
 #include "fsl_adc16_driver.h"
+#if defined(BOARD_USE_LPUART)
+#include "fsl_lpuart_driver.h"
+#else
 #include "fsl_uart_driver.h"
+#endif
 #include "fsl_debug_console.h"
-#include "board.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions

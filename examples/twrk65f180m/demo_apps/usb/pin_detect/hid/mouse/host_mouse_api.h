@@ -37,7 +37,7 @@
 **
 ** Application-specific definitions
 */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (USE_RTOS)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (USE_RTOS)))
 #define HOST_APP_TASK_INDEX (11)
 #endif
 
@@ -49,7 +49,7 @@ extern "C" {
 
 extern usb_status HOST_APP_init(void);
 extern void       HOST_APP_uninit(void);
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (USE_RTOS)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (USE_RTOS)))
 extern void       HOST_APP_task_stun( uint32_t param );
 #endif
 

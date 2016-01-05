@@ -143,8 +143,7 @@ extern "C" {
 */
 
 /* Define clock source values */
-
-#define CPU_XTAL_CLK_HZ                16000000U           /* Value of the external crystal or oscillator clock frequency of the system oscillator (OSC) in Hz */
+#define CPU_XTAL_CLK_HZ                12000000U           /* Value of the external crystal or oscillator clock frequency of the system oscillator (OSC) in Hz */
 #define CPU_XTAL32k_CLK_HZ             32768U              /* Value of the external 32k crystal or oscillator clock frequency of the RTC in Hz */
 #define CPU_INT_SLOW_CLK_HZ            32768U              /* Value of the slow internal oscillator clock frequency in Hz */
 #define CPU_INT_FAST_CLK_HZ            4000000U            /* Value of the fast internal oscillator clock frequency in Hz */
@@ -192,8 +191,8 @@ extern "C" {
   #define SYSTEM_SMC_PMCTRL_VALUE      0x00U               /* SMC_PMCTRL */
   /* SIM_CLKDIV1: OUTDIV1=0,OUTDIV2=0,OUTDIV3=1,OUTDIV4=1 */
   #define SYSTEM_SIM_CLKDIV1_VALUE     0x00110000U         /* SIM_CLKDIV1 */
-  /* SIM_CLKDIV2: USBDIV=1,USBFRAC=0 */
-  #define SYSTEM_SIM_CLKDIV2_VALUE     0x02U               /* SIM_CLKDIV2 */
+  /* SIM_CLKDIV2: USBDIV=0,USBFRAC=1 */
+  #define SYSTEM_SIM_CLKDIV2_VALUE     0x01U               /* SIM_CLKDIV2 */
   /* SIM_CLKDIV3: PLLFLLDIV=0,PLLFLLFRAC=0 */
   #define SYSTEM_SIM_CLKDIV3_VALUE     0x00U               /* SIM_CLKDIV3 */
   /* SIM_SOPT1: USBREGEN=0,USBSSTBY=0,USBVSTBY=0,OSC32KSEL=2,RAMSIZE=0 */
@@ -211,14 +210,14 @@ extern "C" {
   #define SYSTEM_MCG_C4_VALUE          0x00U               /* MCG_C4 */
   /* MCG_SC: ATME=0,ATMS=0,ATMF=0,FLTPRSRV=0,FCRDIV=0,LOCS0=0 */
   #define SYSTEM_MCG_SC_VALUE          0x00U               /* MCG_SC */
-  /* MCG_C5: PLLCLKEN=0,PLLSTEN=0,PRDIV=1 */
-  #define SYSTEM_MCG_C5_VALUE          0x01U               /* MCG_C5 */
-  /* MCG_C6: LOLIE0=0,PLLS=1,CME0=0,VDIV=0x1D */
-  #define SYSTEM_MCG_C6_VALUE          0x5DU               /* MCG_C6 */
+  /* MCG_C5: PLLCLKEN=0,PLLSTEN=0,PRDIV=0 */
+  #define SYSTEM_MCG_C5_VALUE          0x00U               /* MCG_C5 */
+  /* MCG_C6: LOLIE0=0,PLLS=1,CME0=0,VDIV=0x0E */
+  #define SYSTEM_MCG_C6_VALUE          0x4EU               /* MCG_C6 */
   /* MCG_C7: OSCSEL=0 */
   #define SYSTEM_MCG_C7_VALUE          0x00U               /* MCG_C7 */
-  /* MCG_C9: PLL_CME=1,PLL_LOCRE=0,EXT_PLL_LOCS=0 */
-  #define SYSTEM_MCG_C9_VALUE          0x20U               /* MCG_C9 */
+  /* MCG_C9: PLL_CME=0,PLL_LOCRE=0,EXT_PLL_LOCS=0 */
+  #define SYSTEM_MCG_C9_VALUE          0x00U               /* MCG_C9 */
   /* MCG_C11: PLLCS=0 */
   #define SYSTEM_MCG_C11_VALUE         0x00U               /* MCG_C11 */
   /* OSC_CR: ERCLKEN=1,EREFSTEN=0,SC2P=0,SC4P=0,SC8P=0,SC16P=0 */
@@ -227,8 +226,6 @@ extern "C" {
   #define SYSTEM_SMC_PMCTRL_VALUE      0x60U               /* SMC_PMCTRL */
   /* SIM_CLKDIV1: OUTDIV1=0,OUTDIV2=2,OUTDIV3=2,OUTDIV4=6 */
   #define SYSTEM_SIM_CLKDIV1_VALUE     0x02260000U         /* SIM_CLKDIV1 */
-  /* SIM_CLKDIV2: USBDIV=6,USBFRAC=0 */
-  #define SYSTEM_SIM_CLKDIV2_VALUE     0x0CU               /* SIM_CLKDIV2 */
   /* SIM_CLKDIV3: PLLFLLDIV=0,PLLFLLFRAC=0 */
   #define SYSTEM_SIM_CLKDIV3_VALUE     0x00U               /* SIM_CLKDIV3 */
   /* SIM_SOPT1: USBREGEN=0,USBSSTBY=0,USBVSTBY=0,OSC32KSEL=2,RAMSIZE=0 */
@@ -262,14 +259,12 @@ extern "C" {
   #define SYSTEM_SMC_PMCTRL_VALUE      0x00U               /* SMC_PMCTRL */
   /* SIM_CLKDIV1: OUTDIV1=0,OUTDIV2=0,OUTDIV3=0,OUTDIV4=4 */
   #define SYSTEM_SIM_CLKDIV1_VALUE     0x00040000U         /* SIM_CLKDIV1 */
-  /* SIM_CLKDIV2: USBDIV=0,USBFRAC=0 */
-  #define SYSTEM_SIM_CLKDIV2_VALUE     0x00U               /* SIM_CLKDIV2 */
   /* SIM_CLKDIV3: PLLFLLDIV=0,PLLFLLFRAC=0 */
   #define SYSTEM_SIM_CLKDIV3_VALUE     0x00U               /* SIM_CLKDIV3 */
   /* SIM_SOPT1: USBREGEN=0,USBSSTBY=0,USBVSTBY=0,OSC32KSEL=2,RAMSIZE=0 */
   #define SYSTEM_SIM_SOPT1_VALUE       0x00080000U         /* SIM_SOPT1 */
-  /* SIM_SOPT2: SDHCSRC=0,LPUARTSRC=0,TPMSRC=1,TIMESRC=0,RMIISRC=0,USBSRC=0,PLLFLLSEL=3,TRACECLKSEL=0,FBSL=0,CLKOUTSEL=0,RTCCLKOUTSEL=0,USBREGEN=0,USBSLSRC=0 */
-  #define SYSTEM_SIM_SOPT2_VALUE       0x01030000U         /* SIM_SOPT2 */
+  /* SIM_SOPT2: SDHCSRC=0,LPUARTSRC=0,TPMSRC=2,TIMESRC=0,RMIISRC=0,USBSRC=0,PLLFLLSEL=2,TRACECLKSEL=0,FBSL=0,CLKOUTSEL=0,RTCCLKOUTSEL=0,USBREGEN=0,USBSLSRC=0 */
+  #define SYSTEM_SIM_SOPT2_VALUE       0x02020000U         /* SIM_SOPT2 */
 #elif (CLOCK_SETUP == 3)
   #define DEFAULT_SYSTEM_CLOCK         4000000U            /* Default System clock value */
   #define MCG_MODE                     MCG_MODE_BLPE /* Clock generator mode */
@@ -279,8 +274,8 @@ extern "C" {
   #define SYSTEM_MCG_C2_VALUE          0x27U               /* MCG_C2 */
   /* MCG_C4: DMX32=0,DRST_DRS=0,FCTRIM=0,SCFTRIM=0 */
   #define SYSTEM_MCG_C4_VALUE          0x00U               /* MCG_C4 */
-  /* MCG_SC: ATME=0,ATMS=0,ATMF=0,FLTPRSRV=0,FCRDIV=1,LOCS0=0 */
-  #define SYSTEM_MCG_SC_VALUE          0x02U               /* MCG_SC */
+  /* MCG_SC: ATME=0,ATMS=0,ATMF=0,FLTPRSRV=0,FCRDIV=0,LOCS0=0 */
+  #define SYSTEM_MCG_SC_VALUE          0x00U               /* MCG_SC */
   /* MCG_C5: PLLCLKEN=0,PLLSTEN=0,PRDIV=0 */
   #define SYSTEM_MCG_C5_VALUE          0x00U               /* MCG_C5 */
   /* MCG_C6: LOLIE0=0,PLLS=0,CME0=0,VDIV=0 */
@@ -295,16 +290,14 @@ extern "C" {
   #define SYSTEM_OSC_CR_VALUE          0x80U               /* OSC_CR */
   /* SMC_PMCTRL: RUNM=0,STOPA=0,STOPM=0 */
   #define SYSTEM_SMC_PMCTRL_VALUE      0x00U               /* SMC_PMCTRL */
-  /* SIM_CLKDIV1: OUTDIV1=3,OUTDIV2=3,OUTDIV3=3,OUTDIV4=0x0F */
-  #define SYSTEM_SIM_CLKDIV1_VALUE     0x333F0000U         /* SIM_CLKDIV1 */
-  /* SIM_CLKDIV2: USBDIV=0,USBFRAC=0 */
-  #define SYSTEM_SIM_CLKDIV2_VALUE     0x00U               /* SIM_CLKDIV2 */
+  /* SIM_CLKDIV1: OUTDIV1=2,OUTDIV2=2,OUTDIV3=2,OUTDIV4=0x0B */
+  #define SYSTEM_SIM_CLKDIV1_VALUE     0x222B0000U         /* SIM_CLKDIV1 */
   /* SIM_CLKDIV3: PLLFLLDIV=0,PLLFLLFRAC=0 */
   #define SYSTEM_SIM_CLKDIV3_VALUE     0x00U               /* SIM_CLKDIV3 */
   /* SIM_SOPT1: USBREGEN=0,USBSSTBY=0,USBVSTBY=0,OSC32KSEL=2,RAMSIZE=0 */
   #define SYSTEM_SIM_SOPT1_VALUE       0x00080000U         /* SIM_SOPT1 */
-  /* SIM_SOPT2: SDHCSRC=0,LPUARTSRC=0,TPMSRC=1,TIMESRC=0,RMIISRC=0,USBSRC=0,PLLFLLSEL=3,TRACECLKSEL=0,FBSL=0,CLKOUTSEL=0,RTCCLKOUTSEL=0,USBREGEN=0,USBSLSRC=0 */
-  #define SYSTEM_SIM_SOPT2_VALUE       0x01030000U         /* SIM_SOPT2 */
+  /* SIM_SOPT2: SDHCSRC=0,LPUARTSRC=0,TPMSRC=2,TIMESRC=0,RMIISRC=0,USBSRC=0,PLLFLLSEL=2,TRACECLKSEL=0,FBSL=0,CLKOUTSEL=0,RTCCLKOUTSEL=0,USBREGEN=0,USBSLSRC=0 */
+  #define SYSTEM_SIM_SOPT2_VALUE       0x02020000U         /* SIM_SOPT2 */
 #elif (CLOCK_SETUP == 4)
   #define DEFAULT_SYSTEM_CLOCK         120000000U          /* Default System clock value */
   #define MCG_MODE                     MCG_MODE_PEE /* Clock generator mode */
@@ -316,10 +309,10 @@ extern "C" {
   #define SYSTEM_MCG_C4_VALUE          0x00U               /* MCG_C4 */
   /* MCG_SC: ATME=0,ATMS=0,ATMF=0,FLTPRSRV=0,FCRDIV=0,LOCS0=0 */
   #define SYSTEM_MCG_SC_VALUE          0x00U               /* MCG_SC */
-  /* MCG_C5: PLLCLKEN=0,PLLSTEN=0,PRDIV=1 */
-  #define SYSTEM_MCG_C5_VALUE          0x01U               /* MCG_C5 */
-  /* MCG_C6: LOLIE0=0,PLLS=1,CME0=0,VDIV=0x0E */
-  #define SYSTEM_MCG_C6_VALUE          0x4EU               /* MCG_C6 */
+  /* MCG_C5: PLLCLKEN=0,PLLSTEN=0,PRDIV=0 */
+  #define SYSTEM_MCG_C5_VALUE          0x00U               /* MCG_C5 */
+  /* MCG_C6: LOLIE0=0,PLLS=1,CME0=0,VDIV=4 */
+  #define SYSTEM_MCG_C6_VALUE          0x44U               /* MCG_C6 */
   /* MCG_C7: OSCSEL=0 */
   #define SYSTEM_MCG_C7_VALUE          0x00U               /* MCG_C7 */
   /* MCG_C9: PLL_CME=0,PLL_LOCRE=0,EXT_PLL_LOCS=0 */
@@ -332,8 +325,8 @@ extern "C" {
   #define SYSTEM_SMC_PMCTRL_VALUE      0x00U               /* SMC_PMCTRL */
   /* SIM_CLKDIV1: OUTDIV1=0,OUTDIV2=1,OUTDIV3=1,OUTDIV4=4 */
   #define SYSTEM_SIM_CLKDIV1_VALUE     0x01140000U         /* SIM_CLKDIV1 */
-  /* SIM_CLKDIV2: USBDIV=1,USBFRAC=0 */
-  #define SYSTEM_SIM_CLKDIV2_VALUE     0x12U               /* SIM_CLKDIV2 */
+  /* SIM_CLKDIV2: USBDIV=4,USBFRAC=1 */
+  #define SYSTEM_SIM_CLKDIV2_VALUE     0x09U               /* SIM_CLKDIV2 */
   /* SIM_CLKDIV3: PLLFLLDIV=0,PLLFLLFRAC=0 */
   #define SYSTEM_SIM_CLKDIV3_VALUE     0x00U               /* SIM_CLKDIV3 */
   /* SIM_SOPT1: USBREGEN=0,USBSSTBY=0,USBVSTBY=0,OSC32KSEL=2,RAMSIZE=0 */
@@ -351,10 +344,10 @@ extern "C" {
   #define SYSTEM_MCG_C4_VALUE          0x00U               /* MCG_C4 */
   /* MCG_SC: ATME=0,ATMS=0,ATMF=0,FLTPRSRV=0,FCRDIV=0,LOCS0=0 */
   #define SYSTEM_MCG_SC_VALUE          0x00U               /* MCG_SC */
-  /* MCG_C5: PLLCLKEN=0,PLLSTEN=0,PRDIV=1 */
-  #define SYSTEM_MCG_C5_VALUE          0x01U               /* MCG_C5 */
-  /* MCG_C6: LOLIE0=0,PLLS=1,CME0=0,VDIV=0x0E */
-  #define SYSTEM_MCG_C6_VALUE          0x4EU               /* MCG_C6 */
+  /* MCG_C5: PLLCLKEN=0,PLLSTEN=0,PRDIV=0 */
+  #define SYSTEM_MCG_C5_VALUE          0x00U               /* MCG_C5 */
+  /* MCG_C6: LOLIE0=0,PLLS=1,CME0=0,VDIV=4 */
+  #define SYSTEM_MCG_C6_VALUE          0x44U               /* MCG_C6 */
   /* MCG_C7: OSCSEL=0 */
   #define SYSTEM_MCG_C7_VALUE          0x00U               /* MCG_C7 */
   /* MCG_C9: PLL_CME=0,PLL_LOCRE=0,EXT_PLL_LOCS=0 */
@@ -367,8 +360,8 @@ extern "C" {
   #define SYSTEM_SMC_PMCTRL_VALUE      0x00U               /* SMC_PMCTRL */
   /* SIM_CLKDIV1: OUTDIV1=0,OUTDIV2=1,OUTDIV3=1,OUTDIV4=4 */
   #define SYSTEM_SIM_CLKDIV1_VALUE     0x01140000U         /* SIM_CLKDIV1 */
-  /* SIM_CLKDIV2: USBDIV=1,USBFRAC=0 */
-  #define SYSTEM_SIM_CLKDIV2_VALUE     0x12U               /* SIM_CLKDIV2 */
+  /* SIM_CLKDIV2: USBDIV=4,USBFRAC=1 */
+  #define SYSTEM_SIM_CLKDIV2_VALUE     0x09U               /* SIM_CLKDIV2 */
   /* SIM_CLKDIV3: PLLFLLDIV=0,PLLFLLFRAC=0 */
   #define SYSTEM_SIM_CLKDIV3_VALUE     0x00U               /* SIM_CLKDIV3 */
   /* SIM_SOPT1: USBREGEN=0,USBSSTBY=0,USBVSTBY=0,OSC32KSEL=2,RAMSIZE=0 */

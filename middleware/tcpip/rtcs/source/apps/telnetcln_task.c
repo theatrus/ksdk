@@ -133,7 +133,7 @@ void telnetcln_out_task(void * v_context, void * creator)
             }
             if (c == '\n')
             {
-                fputc('\r', context->telnetfd);
+                c = '\r' ;
             }
             #endif
             if (fputc(c & 0x7F, context->telnetfd) == IO_EOF)  

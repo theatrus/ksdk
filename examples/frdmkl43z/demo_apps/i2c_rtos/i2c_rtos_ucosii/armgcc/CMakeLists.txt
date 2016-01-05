@@ -28,22 +28,22 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -T${ProjDirPat
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -T${ProjDirPath}/../../../../../../platform/devices/MKL43Z4/linker/gcc/MKL43Z256xxx4_flash.ld  -static")
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000  -Xlinker --defsym=__ram_vector_table__=1")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000  -Xlinker --defsym=__ram_vector_table__=1")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000  -Xlinker --defsym=__ram_vector_table__=1")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000  -Xlinker --defsym=__ram_vector_table__=1")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -75,14 +75,13 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/i2c)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Source)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uC-CPU)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uC-LIB)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../..)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/i2c)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Ports/ARM-Cortex-M0/Generic/GNU)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uC-CPU/ARM-Cortex-M0/GNU)
@@ -95,24 +94,40 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/system/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/i2c)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Source)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uC-CPU)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../rtos/uCOSII/src/uC-LIB)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../..)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../platform/drivers/src/i2c)
 ENDIF()
 
 # ADD_EXECUTABLE
 ADD_EXECUTABLE(i2c_rtos_ucosii 
+    "${ProjDirPath}/../../../../../../platform/utilities/src/fsl_misc_utilities.c"
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Ports/ARM-Cortex-M0/Generic/GNU/os_cpu.h"
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Ports/ARM-Cortex-M0/Generic/GNU/os_cpu_a.S"
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Ports/ARM-Cortex-M0/Generic/GNU/os_cpu_c.c"
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Ports/ARM-Cortex-M0/Generic/GNU/os_dbg.c"
-    "${ProjDirPath}/../../../../../../platform/utilities/src/fsl_misc_utilities.c"
     "${ProjDirPath}/../../../../../../platform/devices/MKL43Z4/startup/gcc/startup_MKL43Z4.S"
+    "${ProjDirPath}/../../fsl_i2c_irq.c"
+    "${ProjDirPath}/../../main.c"
+    "${ProjDirPath}/../../task_master.c"
+    "${ProjDirPath}/../../task_slave.c"
+    "${ProjDirPath}/../../task_sample.c"
+    "${ProjDirPath}/../../i2c_rtos.h"
+    "${ProjDirPath}/../../hardware_init.c"
+    "${ProjDirPath}/../../../../gpio_pins.c"
+    "${ProjDirPath}/../../../../gpio_pins.h"
+    "${ProjDirPath}/../../../../pin_mux.c"
+    "${ProjDirPath}/../../../../pin_mux.h"
+    "${ProjDirPath}/../../../../board.c"
+    "${ProjDirPath}/../../../../board.h"
+    "${ProjDirPath}/../../../../../../platform/utilities/src/fsl_debug_console.c"
+    "${ProjDirPath}/../../../../../../platform/utilities/inc/fsl_debug_console.h"
+    "${ProjDirPath}/../../../../../../platform/utilities/src/print_scan.c"
+    "${ProjDirPath}/../../../../../../platform/utilities/src/print_scan.h"
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/config/app_hooks.c"
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Source/os_core.c"
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Source/os_flag.c"
@@ -124,26 +139,9 @@ ADD_EXECUTABLE(i2c_rtos_ucosii
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Source/os_task.c"
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Source/os_time.c"
     "${ProjDirPath}/../../../../../../rtos/uCOSII/src/uCOS-II/Source/os_tmr.c"
-    "${ProjDirPath}/../../../../../../platform/utilities/src/fsl_debug_console.c"
-    "${ProjDirPath}/../../../../../../platform/utilities/inc/fsl_debug_console.h"
-    "${ProjDirPath}/../../../../../../platform/utilities/src/print_scan.c"
-    "${ProjDirPath}/../../../../../../platform/utilities/src/print_scan.h"
     "${ProjDirPath}/../../../../../../platform/devices/MKL43Z4/startup/system_MKL43Z4.c"
     "${ProjDirPath}/../../../../../../platform/devices/startup.c"
     "${ProjDirPath}/../../../../../../platform/devices/startup.h"
-    "${ProjDirPath}/../../../../gpio_pins.c"
-    "${ProjDirPath}/../../../../gpio_pins.h"
-    "${ProjDirPath}/../../../../pin_mux.c"
-    "${ProjDirPath}/../../../../pin_mux.h"
-    "${ProjDirPath}/../../../../board.c"
-    "${ProjDirPath}/../../../../board.h"
-    "${ProjDirPath}/../../hardware_init.c"
-    "${ProjDirPath}/../../fsl_i2c_irq.c"
-    "${ProjDirPath}/../../main.c"
-    "${ProjDirPath}/../../task_master.c"
-    "${ProjDirPath}/../../task_slave.c"
-    "${ProjDirPath}/../../task_sample.c"
-    "${ProjDirPath}/../../i2c_rtos.h"
 )
 SET_TARGET_PROPERTIES(i2c_rtos_ucosii PROPERTIES OUTPUT_NAME "i2c_rtos_ucosii.elf")
 

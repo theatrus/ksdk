@@ -29,6 +29,7 @@
  */
 
 #include "fsl_uart_driver.h"
+#include "fsl_clock_manager.h"
 
 /*******************************************************************************
  * Variables
@@ -43,7 +44,8 @@ extern void UART_DRV_IRQHandler(uint32_t instance);
  ******************************************************************************/
 
 #if defined (KL16Z4_SERIES) || defined (KL25Z4_SERIES) || defined (KL26Z4_SERIES) || \
-    defined (KL46Z4_SERIES) || defined (KV10Z7_SERIES) || defined (KW01Z4_SERIES)
+    defined (KL46Z4_SERIES) || defined (KV10Z7_SERIES) || defined (KW01Z4_SERIES) || \
+    defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES)
 /* NOTE: If a sub-family has UART0 separated as another IP, it will be handled by
  * LPSCI driver.
  */
@@ -136,6 +138,18 @@ void UART2_FLEXIO_IRQHandler(void)
 }
 #endif
 
+#elif defined (KM34Z7_SERIES)
+/* Implementation of UART5 handler named in startup code. */
+void UART0_UART1_UART2_UART3_IRQHandler(void)
+{
+    for(uint32_t i=0; i < UART_INSTANCE_COUNT; i++)
+    {
+        if (CLOCK_SYS_GetUartGateCmd(i))
+        {
+            UART_DRV_IRQHandler(i);
+        }
+    }
+}
 #else
     #error "No valid CPU defined!"
 #endif

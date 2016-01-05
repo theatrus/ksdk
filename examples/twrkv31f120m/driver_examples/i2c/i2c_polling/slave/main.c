@@ -64,16 +64,16 @@ int main(void)
     // slave address
     uint16_t address = 0x7FU;
     // i2c slave base address
-    I2C_Type * baseAddr = g_i2cBase[BOARD_I2C_COMM_INSTANCE];
+    I2C_Type * baseAddr = g_i2cBase[BOARD_I2C_INSTANCE];
 
     // Initialize hardware
     hardware_init();
 
-    PRINTF("\r\n================== I2C SLAVE POLLING =================\r\n\n");
+    PRINTF("\r\n================== I2C SLAVE POLLING =================\r\n\r\n");
     PRINTF("Slave is running ...");
 
     /* Enable clock for I2C.*/
-    CLOCK_SYS_EnableI2cClock(BOARD_I2C_COMM_INSTANCE);
+    CLOCK_SYS_EnableI2cClock(BOARD_I2C_INSTANCE);
 
     /* Init instance to known state. */
     I2C_HAL_Init(baseAddr);

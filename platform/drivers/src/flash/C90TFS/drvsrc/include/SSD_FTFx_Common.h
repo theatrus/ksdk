@@ -1,5 +1,5 @@
 /****************************************************************************
- (c) Copyright 2010-2014 Freescale Semiconductor, Inc.
+ (c) Copyright 2010-2015 Freescale Semiconductor, Inc.
  ALL RIGHTS RESERVED.
 
  Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 1.1.GA      09.25.2014      FPT Team      First version of SDK C90TFS flash driver
                                           inherited from BM C90TFS flash driver v1.02
                                           (08.04.2014, FPT Team)
+1.3.GA      06.23.2015      ROM Team      Added FAC Error Status 
 *************************************************************************/
 #ifndef _SSD_FTFx_COMMON_H_
 #define _SSD_FTFx_COMMON_H_
@@ -199,6 +200,19 @@
 *
 */
 #define FTFx_ERR_SIZE                      0x2000U
+
+/*! @breife No FAC feature
+* 
+* Possible causes:
+*
+* User invokes get FAC XA or SA protection command but there is not FAC on FTFA/FTFE/FTFL modules.
+* 
+* Solution:
+*
+* Do not invoke FAC related APIs when it is unavailable.
+* 
+*/
+#define FTFx_ERR_NOFAC                     0x4000U
 /*@}*/
 
 /*!

@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
  * 
- * Copyright (c) 2004 -2010, 2013 - 2014 Freescale Semiconductor;
+ * Copyright (c) 2004 -2010, 2013 - 2015 Freescale Semiconductor;
  * All Rights Reserved
  *
  *
@@ -43,7 +43,7 @@
 #include "usb_composite.h"
 #include "usb_class_internal.h"
 
-#if USBCFG_DEV_COMPOSITE
+
 #if USBCFG_DEV_HID
 #include "usb_hid_config.h"
 #include "usb_class_hid.h"
@@ -83,12 +83,76 @@
 #if ((defined USBCFG_DEV_DFU) && USBCFG_DEV_DFU)
 #include "usb_dfu.h"
 #endif
+
 /*****************************************************************************
  * Local variables
  *****************************************************************************/ 
-static composite_device_struct_t s_composite_device_struct = {0};
-static class_config_struct_t     s_composite_config_struct[CONFIG_MAX];
-static usb_composite_info_struct_t s_usb_composite_info_struct = {0};
+const device_class_map_t device_class_interface_map[] = 
+{
+#if USBCFG_DEV_HID
+    {
+        (device_class_init_call)((uint32_t)USB_Class_HID_Init),
+        USB_Class_HID_Deinit,
+        USB_Class_Hid_Event,
+        USB_HID_Requests,
+        USB_CLASS_HID
+    },
+#endif
+
+#if USBCFG_DEV_MSC
+    {
+        (device_class_init_call)((uint32_t)USB_Class_MSC_Init),
+        USB_Class_MSC_Deinit,
+        USB_Class_MSC_Event,
+        USB_MSC_Requests,
+        USB_CLASS_MASS_STORAGE
+    },
+#endif
+
+#if ((defined USBCFG_DEV_AUDIO) && USBCFG_DEV_AUDIO)
+    {
+        (device_class_init_call)((uint32_t)USB_Class_Audio_Init),
+        USB_Class_Audio_Deinit,
+        USB_Class_Audio_Event,
+        USB_Audio_Requests,
+        USB_CLASS_AUDIO
+    },
+#endif
+
+#if ((defined USBCFG_DEV_VIDEO) && (USBCFG_DEV_VIDEO))
+    {
+        (device_class_init_call)((uint32_t)USB_Class_Video_Init),
+        USB_Class_Video_Deinit,
+        USB_Class_Video_Event,
+        USB_Video_Requests,
+        USB_CLASS_VIDEO
+    },
+#endif
+
+#if USBCFG_DEV_PHDC
+    {
+        (device_class_init_call)((uint32_t)USB_Class_PHDC_Init),
+        USB_Class_PHDC_Deinit,
+        USB_Class_PHDC_Event,
+        USB_PHDC_Requests,
+        USB_CLASS_PHDC
+    },
+#endif
+
+#if USBCFG_DEV_CDC
+    {
+        (device_class_init_call)((uint32_t)USB_Class_CDC_Init),
+        USB_Class_CDC_Deinit,
+        USB_Class_CDC_Event,
+        USB_CDC_Other_Requests,
+        USB_CLASS_COMMUNICATION
+    },
+#endif
+};
+
+
+
+static composite_device_struct_t s_composite_device_struct[USBCFG_DEV_MAX_CLASS_OBJECT];
 
 /*****************************************************************************
  * Local functions prototypes
@@ -100,6 +164,59 @@ usb_setup_struct_t * setup_packet, /* [IN] Setup packet received */
 uint8_t * *data,
 uint32_t *size,
 void* arg );
+
+
+/*************************************************************************//*!
+ *
+ * @name  USB_Composite_Allocate_Handle
+ *
+ * @brief The function reserves entry in device array and returns the index.
+ *
+ * @param none.
+ * @return returns the reserved handle or if no entry found device busy.      
+ *
+ *****************************************************************************/
+static usb_status USB_Composite_Allocate_Handle(composite_device_struct_t** pclassobj)
+{
+    int32_t cnt = 0;
+    for (;cnt< USBCFG_DEV_MAX_CLASS_OBJECT;cnt++)
+    {
+        if (s_composite_device_struct[cnt].handle == NULL)
+        {
+            *pclassobj = &s_composite_device_struct[cnt];
+            return USB_OK;
+        }
+    }
+    return USBERR_DEVICE_BUSY;
+}
+
+/*************************************************************************//*!
+ *
+ * @name  USB_Class_Free_Handle
+ *
+ * @brief The function releases entry in device array .
+ *
+ * @param handle  index in device array to be released..
+ * @return returns and error code or USB_OK.      
+ *
+ *****************************************************************************/
+static usb_status USB_Composite_Free_Handle(composite_device_struct_t* handle)
+{
+    int32_t cnt = 0;
+    for (;cnt< USBCFG_DEV_MAX_CLASS_OBJECT;cnt++)
+    {
+        if (&s_composite_device_struct[cnt] == handle)
+        {
+            s_composite_device_struct[cnt].handle = NULL;
+            s_composite_device_struct[cnt].class_handle = 0;
+            s_composite_device_struct[cnt].user_handle = 0;
+            s_composite_device_struct[cnt].cl_count = 0;
+            return USB_OK;
+        }
+    }
+
+    return USBERR_INVALID_PARAM;
+}
 
 /*****************************************************************************
  * Global functions
@@ -121,23 +238,25 @@ void* arg );
  ******************************************************************************
  *This function initializes the Composite layer
  *****************************************************************************/
-usb_status USB_Composite_Init(
-uint8_t controller_id, /* [IN] Controller ID */
-composite_config_struct_t *composite_callback_ptr, /* [IN] Pointer to class info */
-composite_handle_t * compositeHandle
+usb_status USB_Composite_Init
+(
+    uint8_t controller_id, /* [IN] Controller ID */
+    composite_config_struct_t *composite_callback_ptr, /* [IN] Pointer to class info */
+    composite_handle_t * compositeHandle
 )
 {
-    uint8_t count;
-    usb_status status = USB_OK;
-    composite_device_struct_t *devicePtr;
-    usb_composite_info_struct_t *usb_composite_info;
+    uint32_t                     intf_map_count;
+    usb_status                   status = USB_OK;
+    composite_device_struct_t*   devicePtr;
+    usb_composite_info_struct_t* usb_composite_info;
+    uint8_t                      count;
 
     if (NULL == composite_callback_ptr)
     {
         return USBERR_ERROR;
     }
-    devicePtr = &s_composite_device_struct;
-    if (NULL == devicePtr)
+    
+    if (USB_OK != USB_Composite_Allocate_Handle(&devicePtr))
     {
 #if _DEBUG
         USB_PRINTF("USB_Class_COMPOSITE_Init: Memalloc devicePtr failed\n");
@@ -145,102 +264,63 @@ composite_handle_t * compositeHandle
         return USBERR_ALLOC;
     }
     devicePtr->cl_count = composite_callback_ptr->count;
-    devicePtr->class_app_callback = s_composite_config_struct;
-    if (NULL == devicePtr->class_app_callback)
+    if (CONFIG_MAX < devicePtr->cl_count)
     {
 #if _DEBUG
-        USB_PRINTF("USB_Class_COMPOSITE_Init: Memalloc class_app_callback failed\n");
+        USB_PRINTF("USB_Class_COMPOSITE_Init: Too many class\n");
 #endif  
-        //OS_Mem_free(devicePtr);  
-        return USBERR_ALLOC;
+        return USBERR_ERROR;
     }
+
 
     OS_Mem_copy(composite_callback_ptr->class_app_callback,
     devicePtr->class_app_callback,devicePtr->cl_count*sizeof(class_config_struct_t));
 
-    devicePtr->class_composite_info = &s_usb_composite_info_struct;
-    if (NULL == devicePtr->class_composite_info)
-    {
-#if _DEBUG
-        USB_PRINTF("USB_Class_COMPOSITE_Init: Memalloc class_composite_info failed\n");
-#endif  
-        //OS_Mem_free(devicePtr->class_app_callback);
-        //OS_Mem_free(devicePtr);
-        return USBERR_ALLOC;
-    }
-
-    //status = usb_device_preinit(controller_id,&devicePtr->handle);
-
-    status = usb_device_init(controller_id,&devicePtr->handle);
+    status = usb_device_init(controller_id, (void* )&composite_callback_ptr->class_app_callback[0].board_init_callback, &devicePtr->handle);
     devicePtr->class_app_callback->desc_callback_ptr->get_desc_entity((uint32_t)devicePtr->handle,
     USB_COMPOSITE_INFO,
     (uint32_t *)&usb_composite_info);
     OS_Mem_copy(usb_composite_info,
-    devicePtr->class_composite_info , sizeof(usb_composite_info_struct_t));
+    &devicePtr->class_composite_info , sizeof(usb_composite_info_struct_t));
     if(status == USB_OK)
     {
         /* Initialize the generic class functions */
-        //class_handle = 
         devicePtr->class_handle = USB_Class_Init(devicePtr->handle,USB_Composite_Event, USB_Composite_Requests,(void *)devicePtr,
         composite_callback_ptr->class_app_callback[0].desc_callback_ptr);
-
-        if(status == USB_OK)
+        
+        if ((class_handle_t)NULL == devicePtr->class_handle)
         {
-            for(count = 0; count < devicePtr->cl_count; count++)
+            USB_Composite_Free_Handle(devicePtr);
+            usb_device_deinit(devicePtr->handle);
+            return USBERR_INIT_FAILED;
+        }
+        
+        for(count = 0; count < USBCFG_DEV_MAX_CLASS_OBJECT; count++)
+        {
+            if (devicePtr->class_handle == g_class_handle[count].class_handle)
             {
-                /* Initializes sub_classes */
-                switch(composite_callback_ptr->class_app_callback[count].type)
-                {
-#if USBCFG_DEV_HID 
-                case USB_CLASS_HID:
-                    (void)USB_Class_HID_Init(
-                    controller_id,(struct hid_config_struct *)&devicePtr->class_app_callback[count],
-                    &devicePtr->class_app_callback[count].class_handle);
-                    composite_callback_ptr->class_app_callback[count].class_handle = devicePtr->class_app_callback[count].class_handle;
-                    break;
-#endif
-#if USBCFG_DEV_AUDIO
-                case USB_CLASS_AUDIO:
-                    (void)USB_Class_Audio_Init(
-                    controller_id,(struct audio_config_struct *)&devicePtr->class_app_callback[count],
-                    &devicePtr->class_app_callback[count].class_handle);
-                    composite_callback_ptr->class_app_callback[count].class_handle = devicePtr->class_app_callback[count].class_handle;
-                    break;
-#endif
+                USB_Composite_Free_Handle(devicePtr);
+                usb_device_deinit(devicePtr->handle);
+                return USBERR_DEVICE_BUSY;
+            }
+            if ((class_handle_t)NULL == g_class_handle[count].class_handle)
+            {
+                g_class_handle[count].class_handle = devicePtr->class_handle;
+                g_class_handle[count].controller_id = controller_id;
+                break;
+            }
+        }
 
-#if USBCFG_DEV_CDC
-                case USB_CLASS_CDC:
-                    (void)USB_Class_CDC_Init(
-                    controller_id, (cdc_config_struct_t *)&devicePtr->class_app_callback[count],
-                    &devicePtr->class_app_callback[count].class_handle);
+        for(count = 0; count < devicePtr->cl_count; count++)
+        {
+            /* Initializes sub_classes */
+            for (intf_map_count = 0; intf_map_count < (sizeof(device_class_interface_map)/sizeof(device_class_map_t));intf_map_count++)
+            {
+                if (device_class_interface_map[intf_map_count].type == devicePtr->class_app_callback[count].type)
+                {
+                    (void)device_class_interface_map[intf_map_count].class_init(controller_id,&devicePtr->class_app_callback[count],
+                                                                 &devicePtr->class_app_callback[count].class_handle);
                     composite_callback_ptr->class_app_callback[count].class_handle = devicePtr->class_app_callback[count].class_handle;
-                    break;
-#endif
-#if USBCFG_DEV_MSC
-                case USB_CLASS_MSC:
-                    (void)USB_Class_MSC_Init(
-                    controller_id, (msc_config_struct_t*)&devicePtr->class_app_callback[count],
-                    &devicePtr->class_app_callback[count].class_handle);
-                    composite_callback_ptr->class_app_callback[count].class_handle = devicePtr->class_app_callback[count].class_handle;
-                    break;
-#endif
-#if USBCFG_DEV_PHDC
-                case USB_CLASS_PHDC:
-                    (void)USB_Class_PHDC_Init(
-                    controller_id,(phdc_config_struct_t*)&devicePtr->class_app_callback[count],
-                    &devicePtr->class_app_callback[count].class_handle);
-                    composite_callback_ptr->class_app_callback[count].class_handle = devicePtr->class_app_callback[count].class_handle;
-                    break;
-#endif
-#if ((defined USBCFG_DEV_DFU) && (USBCFG_DEV_DFU))
-                case DFU_COMP_CC:
-                    (void)USB_Class_Dfu_Init(
-                    controller_id,(dfu_config_struct_t*)&devicePtr->class_app_callback[count],
-                    &devicePtr->class_app_callback[count].class_handle);
-                    composite_callback_ptr->class_app_callback[count].class_handle = devicePtr->class_app_callback[count].class_handle;
-                    break;
-#endif
-                default:
                     break;
                 }
             }
@@ -270,12 +350,14 @@ composite_handle_t * compositeHandle
  ******************************************************************************
  *This function De-initializes the Composite layer
  *****************************************************************************/
-usb_status USB_Composite_DeInit(
-composite_handle_t handle /* [IN] Controller ID */
+usb_status USB_Composite_DeInit
+(
+    composite_handle_t handle /* [IN] Controller ID */
 )
 {
     composite_device_struct_t *devicePtr;
-    uint8_t count;
+    uint32_t                   intf_map_count;
+    uint8_t                    count;
     usb_status status = USB_OK;
     if (handle == 0)
     {
@@ -291,40 +373,23 @@ composite_handle_t handle /* [IN] Controller ID */
 
     for(count = 0; count < devicePtr->cl_count; count++)
     {
-
-        switch(devicePtr->class_app_callback[count].type)
+        /* Deinitializes sub_classes */
+        for (intf_map_count = 0; intf_map_count < (sizeof(device_class_interface_map)/sizeof(device_class_map_t));intf_map_count++)
         {
-#if USBCFG_DEV_HID
-        case USB_CLASS_HID:
-            //status = 
-            USB_Class_HID_Deinit(devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-#if USBCFG_DEV_AUDIO   
-        case USB_CLASS_AUDIO:
-            //status = 
-            USB_Class_Audio_Deinit(devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-#if USBCFG_DEV_CDC
-        case USB_CLASS_CDC:
-            //status = 
-            USB_Class_CDC_Deinit(devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-#if USBCFG_DEV_MSC
-            case USB_CLASS_MSC:
-            //status = 
-            USB_Class_MSC_Deinit(devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-#if USBCFG_DEV_PHDC
-            case USB_CLASS_PHDC:
-            //status = 
-            USB_Class_PHDC_Deinit(devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-            default:
+            if (device_class_interface_map[intf_map_count].type == devicePtr->class_app_callback[count].type)
+            {
+                (void)device_class_interface_map[intf_map_count].class_deinit(devicePtr->class_app_callback[count].class_handle);
+                break;
+            }
+        }
+    }
+
+    for(count = 0; count < USBCFG_DEV_MAX_CLASS_OBJECT; count++)
+    {
+        if (devicePtr->class_handle == g_class_handle[count].class_handle)
+        {
+            g_class_handle[count].class_handle = 0;
+            g_class_handle[count].controller_id = 0;
             break;
         }
     }
@@ -339,11 +404,8 @@ composite_handle_t handle /* [IN] Controller ID */
         /* De-initialize the device layer*/
         status = usb_device_deinit(devicePtr->handle);
     }
-
-    //OS_Mem_free(devicePtr->class_app_callback);
-    //OS_Mem_free(devicePtr->class_composite_info);
-    //OS_Mem_free(devicePtr);
-    devicePtr = NULL;
+    
+    USB_Composite_Free_Handle(devicePtr);
 
     return USB_OK;
 }
@@ -365,8 +427,9 @@ composite_handle_t handle /* [IN] Controller ID */
  *****************************************************************************/
 void USB_Composite_Event (uint8_t event, void* val,void * arg)
 {
-    uint8_t count;
     composite_device_struct_t *devicePtr;
+    uint32_t                   intf_map_count;
+    uint8_t                    count;
 
     devicePtr = (composite_device_struct_t *)arg;
 
@@ -377,35 +440,14 @@ void USB_Composite_Event (uint8_t event, void* val,void * arg)
 
     for(count = 0; count < devicePtr->cl_count; count++)
     {
-        switch(devicePtr->class_app_callback[count].type)
+        /* Event callback */
+        for (intf_map_count = 0; intf_map_count < (sizeof(device_class_interface_map)/sizeof(device_class_map_t));intf_map_count++)
         {
-#if USBCFG_DEV_HID
-        case USB_CLASS_HID:
-            USB_Class_Hid_Event(event,val,(void *)devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-#if USBCFG_DEV_AUDIO    
-        case USB_CLASS_AUDIO:
-            USB_Class_Audio_Event(event,val,(void *)devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-#if USBCFG_DEV_CDC
-        case USB_CLASS_CDC:
-            USB_Class_CDC_Event(event,val,(void *)devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-#if USBCFG_DEV_MSC
-        case USB_CLASS_MSC:
-            USB_Class_MSC_Event(event,val,(void *)devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-#if USBCFG_DEV_PHDC
-        case USB_CLASS_PHDC:
-            USB_Class_PHDC_Event(event,val,(void *)devicePtr->class_app_callback[count].class_handle);
-            break;
-#endif
-        default:
-            break;
+            if (device_class_interface_map[intf_map_count].type == devicePtr->class_app_callback[count].type)
+            {
+                (void)device_class_interface_map[intf_map_count].class_event_callback(event,val,(void *)devicePtr->class_app_callback[count].class_handle);
+                break;
+            }
         }
     }
 }
@@ -436,11 +478,12 @@ uint8_t * *data,
 uint32_t *size,
 void* arg)
 {
-    uint8_t count;
-    usb_status status = USB_OK;
     composite_device_struct_t *devicePtr;
-    uint8_t itf_num = 0xFF;
-    uint8_t type_sel;
+    uint32_t                   intf_map_count;
+    usb_status                 status = USB_OK;
+    uint8_t                    count;
+    uint8_t                    itf_num = 0xFF;
+    uint8_t                    type_sel;
 
     devicePtr = (composite_device_struct_t *)arg;
 
@@ -454,89 +497,28 @@ void* arg)
         itf_num = (setup_packet->index);
     }
 
-    for(count = 0; count < devicePtr->cl_count; count++)
+    for (type_sel = 0;type_sel < devicePtr->class_composite_info.count;type_sel++)
     {
-        switch(devicePtr->class_app_callback[count].type)
+        if (itf_num == devicePtr->class_composite_info.class_handle[type_sel].interfaces.interface->index)
         {
-#if USBCFG_DEV_HID
-            /* Call Hid other request */
-        case USB_CLASS_HID:
-            for (type_sel = 0;type_sel < devicePtr->class_composite_info->count;type_sel++)
+            /* Request callback */
+            for (intf_map_count = 0; intf_map_count < (sizeof(device_class_interface_map)/sizeof(device_class_map_t));intf_map_count++)
             {
-                if (devicePtr->class_composite_info->class_handle[type_sel].type == USB_CLASS_HID)
+                if (device_class_interface_map[intf_map_count].type == devicePtr->class_composite_info.class_handle[type_sel].type)
                 {
-                    if (itf_num == devicePtr->class_composite_info->class_handle[type_sel].interfaces.interface->index)
+                    for(count = 0; count < devicePtr->cl_count; count++)
                     {
-                        status = USB_HID_Requests(setup_packet,data,size,(void *)devicePtr->class_app_callback[count].class_handle);
+                        if (device_class_interface_map[intf_map_count].type == devicePtr->class_app_callback[count].type)
+                        {
+                            status = device_class_interface_map[intf_map_count].class_request_callback(setup_packet,data,size,(void *)devicePtr->class_app_callback[count].class_handle);
+                        }
                     }
+                    break;
                 }
             }
-            break;
-#endif
-#if USBCFG_DEV_AUDIO  
-            /* Call Audio other request */
-        case USB_CLASS_AUDIO:
-            for(type_sel = 0;type_sel < devicePtr->class_composite_info->count;type_sel++)
-            {
-                if(devicePtr->class_composite_info->class_handle[type_sel].type == USB_CLASS_AUDIO)
-                {
-                    if (itf_num == devicePtr->class_composite_info->class_handle[type_sel].interfaces.interface->index)
-                    {
-                        status = USB_Audio_Requests(setup_packet,data,size,(void *)devicePtr->class_app_callback[count].class_handle);
-                    }
-                }
-            }
-            break;
-#endif
-#if USBCFG_DEV_CDC  
-            /* Call Cdc other request */
-        case USB_CLASS_CDC:
-            for (type_sel = 0;type_sel < devicePtr->class_composite_info->count;type_sel++)
-            {
-                if (devicePtr->class_composite_info->class_handle[type_sel].type == USB_CLASS_CDC)
-                {
-                    if (itf_num == devicePtr->class_composite_info->class_handle[type_sel].interfaces.interface->index)
-                    {
-                        status = USB_CDC_Other_Requests(setup_packet,data,size,(void *)devicePtr->class_app_callback[count].class_handle);
-                    }
-                }
-            }
-            break;
-#endif
-#if USBCFG_DEV_MSC
-            /* Call Msd other request */
-        case USB_CLASS_MSC:
-            for (type_sel = 0;type_sel < devicePtr->class_composite_info->count;type_sel++)
-            {
-                if (devicePtr->class_composite_info->class_handle[type_sel].type == USB_CLASS_MSC)
-                {
-                    if (itf_num == devicePtr->class_composite_info->class_handle[type_sel].interfaces.interface->index)
-                    {
-                        status = USB_MSC_Requests(setup_packet,data,size,(void *)devicePtr->class_app_callback[count].class_handle);
-                    }
-                }
-            }
-            break;
-#endif
-#if USBCFG_DEV_PHDC
-            /* Call Phdc other request */
-        case USB_CLASS_PHDC:
-            for(type_sel = 0;type_sel < devicePtr->class_composite_info->count;type_sel++)
-            {
-                if(devicePtr->class_composite_info->class_handle[type_sel].type == USB_CLASS_PHDC)
-                {
-                    if (itf_num == devicePtr->class_composite_info->class_handle[type_sel].interfaces.interface->index)
-                    {
-                        status = USB_PHDC_Requests(setup_packet,data,size,(void *)devicePtr->class_app_callback[count].class_handle);
-                    }
-                }
-            }
-            break;
-#endif
-        default:
-            break;
         }
     }
+    
     return status;
 }
 
@@ -572,5 +554,4 @@ uint16_t * speed/* [OUT] the requested error */
     return error;
 }
 
-#endif
 /* EOF */

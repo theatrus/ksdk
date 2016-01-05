@@ -50,27 +50,12 @@
 #include <stdlib.h>
 #endif
 
-#if USBCFG_DEV_COMPOSITE
-#error This application requires USBCFG_DEV_COMPOSITE defined zero in usb_device_config.h. Please recompile usbd with this option.
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-static void Main_Task(uint32_t param);
-#define MAIN_TASK       10
-
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    { MAIN_TASK, Main_Task, 2000L, 7L, "Main", MQX_AUTO_START_TASK, 0, 0 },
-    { 0L, 0L, 0L, 0L, 0L, 0L, 0, 0 }
-};
-#endif
-
 /****************************************************************************
  * Global Variables
  ****************************************************************************/
 /* Add all the variables needed for phd_com_model.c to this structure */
 weighscale_variable_struct_t g_weighscale;
-
+uint32_t iteration = 0;
 /*****************************************************************************
  * Local Functions Prototypes
  *****************************************************************************/
@@ -199,7 +184,6 @@ void APP_init(void)
 void APP_task()
 {
     static volatile uint32_t delay_count;
-    static uint32_t iteration = 0;
     switch(g_weighscale.event)
     {
     case APP_PHD_INITIALISED:
@@ -209,16 +193,14 @@ void APP_task()
          same file) */
         /* wait till the host is ready to receive the association
          request */
-        if (iteration < ITERATION_COUNT)
+        if(iteration == 0)
         {
-            iteration++;
-        }
-        else
-        {
-            iteration = 0;
-            PHD_Disconnect_from_Manager(g_weighscale.app_handle);
-            /* connect to the manager */
+            iteration = ITERATION_COUNT;
             PHD_Connect_to_Manager(g_weighscale.app_handle);
+        }
+        else if (iteration > 0)
+        {
+            iteration--;
         }
         break;
 
@@ -244,6 +226,7 @@ void APP_task()
         break;
 
     case USB_PHD_DISCONNECTED_FROM_HOST:
+        iteration = 0;
         break;
 
     case USB_PHD_MEASUREMENT_SENT:
@@ -258,29 +241,6 @@ void APP_task()
     }
     USB_PHDC_Periodic_Task();
 }
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-/*FUNCTION*----------------------------------------------------------------
- * 
- * Function Name  : Main_Task
- * Returned Value : None
- * Comments       :
- *     First function called.  Calls Test_App
- *     callback functions.
- * 
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    UNUSED_ARGUMENT (param)
-    APP_init();
-
-    for (;;)
-    {
-        APP_task();
-    }
-}
-#endif
 
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
@@ -330,7 +290,7 @@ void main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
     OSA_Start();
 #if (!defined(FSL_RTOS_MQX))&(defined(__CC_ARM) || defined(__GNUC__))
     return 1;

@@ -1226,6 +1226,8 @@ static inline bool CLOCK_SYS_GetCrcGateCmd(uint32_t instance)
 static inline void CLOCK_SYS_EnableRngaClock(uint32_t instance)
 {
     SIM_HAL_EnableClock(SIM, kSimClockGateRnga0);
+    SIM_HAL_DisableClock(SIM, kSimClockGateRnga0);
+    SIM_HAL_EnableClock(SIM, kSimClockGateRnga0);
 }
 
 /*!
@@ -1277,7 +1279,7 @@ void CLOCK_SYS_DisableAdcClock(uint32_t instance);
  */
 bool CLOCK_SYS_GetAdcGateCmd(uint32_t instance);
 
-#if FSL_FEATURE_SOC_LCD_COUNT
+#if FSL_FEATURE_SOC_SLCD_COUNT
 /*!
  * @brief Enable the clock for SLCD module.
  *

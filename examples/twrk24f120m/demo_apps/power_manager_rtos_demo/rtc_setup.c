@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2014 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -72,10 +72,19 @@
  */
 void rtcInit(uint32_t instance, rtc_datetime_t *date)
 {
+#if FSL_FEATURE_SIM_OPT_HAS_RTC_CLOCK_OUT_SELECTION
     // select the 1Hz for RTC_CLKOUT
     CLOCK_SYS_SetRtcOutSrc(kClockRtcoutSrc1Hz);
+#endif
 
     RTC_DRV_Init(instance);
+
+    /* Enable the RTC Clock output */
+    RTC_HAL_SetClockOutCmd(RTC_BASE_PTR, true);
+
+    /* Need to check this here as the RTC_DRV_Init() may have issued a software reset on the
+     * module clearing all prior RTC OSC related setup */
+    BOARD_InitRtcOsc();
 
     RTC_DRV_SetDatetime(instance, date);
 }

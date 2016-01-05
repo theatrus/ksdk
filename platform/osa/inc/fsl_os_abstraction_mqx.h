@@ -144,7 +144,9 @@ typedef void *msg_queue_handler_t;
 /*! @brief The default interrupt handler installed in vector table. */
 #define OSA_DEFAULT_INT_HANDLER  (OSA_DefaultIntHandler())
 
-/*! @brief The default interrupt handler installed in vector table. */
+/*! @brief The default interrupt handler installed in vector table.
+ * @return Default ISR.
+*/
 static inline osa_int_handler_t OSA_DefaultIntHandler(void)
 {
 #if defined ( __IAR_SYSTEMS_ICC__ )
@@ -183,7 +185,7 @@ _Pragma ("diag_remark = PM138")
     task_handler_t task##_task_handler;
 
 /*!
- * @brief To provide unified task priority for upper layer, OSA layer makes conversion.
+ * @brief To provide unified task priority for upper layer, OSA layer makes a conversion.
  * MQX RTOS highest 7 priorities are special priorities.
  */
 #define PRIORITY_OSA_TO_RTOS(osa_prio)   ((osa_prio)+7U)
@@ -203,14 +205,11 @@ _Pragma ("diag_remark = PM138")
  *
  * @param name Identifier for the memory region.
  * @param number Number of elements in the queue.
- * @param size Size of element in 4B units.
+ * @param size Size of element in 4 B units.
  */
 
 #define MSG_QUEUE_DECLARE(name, number, size) \
     _mqx_max_type name[SIZE_IN_MMT_UNITS(sizeof(LWMSGQ_STRUCT)) + SIZE_IN_MMT_UNITS(size * 4) * number]
-
-/*! @brief Allocates the block aligned at a specific boundary */
-void *OSA_MemoryAllocateAlign(size_t size, size_t align);
 
 /*@}*/
 

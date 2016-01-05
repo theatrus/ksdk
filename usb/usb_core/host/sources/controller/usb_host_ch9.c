@@ -120,8 +120,9 @@ usb_status status
 
     case USBERR_TR_FAILED:
     case USBERR_ENDPOINT_STALLED:
-
-        //USB_PRINTF("TR failed buffer : %x\n\r", buffer);
+#if USBCFG_HOST_COMPLIANCE_TEST
+        USB_PRINTF("Device No Response\n\r");
+#endif
         dev_inst_ptr->ctrl_retries--;
         dev_inst_ptr->stall_retries--;
         if ((status == USBERR_ENDPOINT_STALLED)&&(dev_inst_ptr->stall_retries))
@@ -317,7 +318,6 @@ usb_status status
 #ifdef USBCFG_OTG
         dev_inst_ptr->state = DEVSTATE_CHK_OTG;
 #else
-        /*dev_inst_ptr->state = DEVSTATE_SET_CFG;*/
         dev_inst_ptr->state = DEVSTATE_CFG_READ;
 #endif
         break;

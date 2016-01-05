@@ -39,7 +39,12 @@ void hardware_init(void) {
   CLOCK_SYS_EnablePortClock(PORTA_IDX);
   CLOCK_SYS_EnablePortClock(PORTC_IDX);
   CLOCK_SYS_EnablePortClock(PORTE_IDX);
-
+  /* Select the clock source for the TPM counter */
+#if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
+  CLOCK_SYS_SetTpmSrc(BOARD_TPM_INSTANCE, kClockTpmSrcMcgIrClk);
+#else
+  CLOCK_SYS_SetTpmSrc(BOARD_TPM_INSTANCE, kClockTpmSrcIrc48M);
+#endif
   /* Init board clock */
   BOARD_ClockInit();
   dbg_uart_init();

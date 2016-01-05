@@ -65,8 +65,6 @@ typedef struct
     uint8_t bpwron2pwrgood;
     uint8_t bhubcontrcurrent;
     uint8_t deviceremovable;
-    /* not used: */
-    /* uint8_t     PORTPOWERCTRLMASK; */
 } hub_descriptor_struct_t;
 
 typedef struct

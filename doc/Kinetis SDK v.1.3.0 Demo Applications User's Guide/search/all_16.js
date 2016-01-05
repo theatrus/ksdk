@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['v_5fbg',['V_BG',['../demo__apps_2adc__low__power_2main_8c.html#add266b4695ff28798e98c58017a068da',1,'V_BG():&#160;main.c'],['../main__bm__slave_8c.html#add266b4695ff28798e98c58017a068da',1,'V_BG():&#160;main_bm_slave.c'],['../task__sample_8c.html#add266b4695ff28798e98c58017a068da',1,'V_BG():&#160;task_sample.c'],['../adc16__temperature_8h.html#add266b4695ff28798e98c58017a068da',1,'V_BG():&#160;adc16_temperature.h'],['../adc__inf_8c.html#add266b4695ff28798e98c58017a068da',1,'V_BG():&#160;adc_inf.c'],['../hvac__io_8c.html#add266b4695ff28798e98c58017a068da',1,'V_BG():&#160;hvac_io.c'],['../driver__examples_2adc16_2main_8c.html#add266b4695ff28798e98c58017a068da',1,'V_BG():&#160;main.c']]],
+  ['v_5ftemp25',['V_TEMP25',['../demo__apps_2adc__low__power_2main_8c.html#a0411b168217e237bf124c69d80cb34da',1,'V_TEMP25():&#160;main.c'],['../main__bm__slave_8c.html#a0411b168217e237bf124c69d80cb34da',1,'V_TEMP25():&#160;main_bm_slave.c'],['../task__sample_8c.html#a0411b168217e237bf124c69d80cb34da',1,'V_TEMP25():&#160;task_sample.c'],['../adc16__temperature_8h.html#a0411b168217e237bf124c69d80cb34da',1,'V_TEMP25():&#160;adc16_temperature.h'],['../adc__inf_8c.html#a0411b168217e237bf124c69d80cb34da',1,'V_TEMP25():&#160;adc_inf.c'],['../hvac__io_8c.html#a0411b168217e237bf124c69d80cb34da',1,'V_TEMP25():&#160;hvac_io.c'],['../driver__examples_2adc16_2main_8c.html#a0411b168217e237bf124c69d80cb34da',1,'V_TEMP25():&#160;main.c']]],
+  ['va_5fnum_5fargs',['VA_NUM_ARGS',['../_s_w_l_i_b_s___macro_disp_8h.html#aea7004aa2c18587dfc65211777fb0426',1,'SWLIBS_MacroDisp.h']]],
+  ['value',['value',['../demo__apps_2adc__hw__trigger_2main_8c.html#a9badde2497b182bd3ebd863cb2afb2bc',1,'sparse_node_t']]],
+  ['value_5fch2',['value_ch2',['../demo__apps_2afe__qtimer__demo_2main_8c.html#a0fbe333325be12f44370e301868b3f8f',1,'main.c']]],
+  ['value_5fch3',['value_ch3',['../demo__apps_2afe__qtimer__demo_2main_8c.html#a43b1359bb77061dea7495e03536d171e',1,'main.c']]],
+  ['version',['version',['../group__qspi__driver.html#ga3dd1922cc6c81a38f435d39a64cd51c2',1,'standard_version_t::version()'],['../group__qspi__driver.html#ga0b551621e1a210f66ae181397991d4c6',1,'qspi_config_t::version()']]],
+  ['vint16',['vint16',['../arm__cm0_8h.html#af210709d21a1c5b93e6313ae2e3132a5',1,'arm_cm0.h']]],
+  ['vint32',['vint32',['../arm__cm0_8h.html#adf83762eea0b8a8c073aacab58cbcf9c',1,'arm_cm0.h']]],
+  ['vint8',['vint8',['../arm__cm0_8h.html#a86481a6d93b553c50d604c7309f5ef66',1,'arm_cm0.h']]],
+  ['vllsconfig',['vllsConfig',['../demo__apps_2slcd__low__power__demo_2main_8c.html#a1647d165a7b6eb380ae797cfabeffeda',1,'main.c']]],
+  ['vlpsconfig',['vlpsConfig',['../demo__apps_2slcd__low__power__demo_2main_8c.html#a7d9c7614957a99478e902d9fd6071ffc',1,'main.c']]],
+  ['vref_5fbrd',['VREF_BRD',['../demo__state__machine_8h.html#acbef54c26e90c6c15a12ff8f554aae52',1,'demo_state_machine.h']]],
+  ['vref_5fconfig',['VREF_Config',['../demo__apps_2afe__qtimer__demo_2main_8c.html#a3d72b9ea391004e8ece05eef945620a7',1,'main.c']]],
+  ['vuint16',['vuint16',['../arm__cm0_8h.html#a8170fa7d9071cf27ef5f9bd8baa60bcc',1,'arm_cm0.h']]],
+  ['vuint32',['vuint32',['../arm__cm0_8h.html#a922617de9890c61faf2354b09832141e',1,'arm_cm0.h']]],
+  ['vuint8',['vuint8',['../arm__cm0_8h.html#aa535537fa6c83a394c5f89640c423617',1,'arm_cm0.h']]]
+];

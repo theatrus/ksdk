@@ -201,7 +201,7 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
 
     else if (instance == 1)
     {
-#if (SPI_INSTANCE_COUNT > 1) /* Continue only if the MCU has another DSPI instance */
+#if (FSL_FEATURE_SOC_DSPI_COUNT > 1) /* Continue only if the MCU has another DSPI instance */
         /* Set up channels for separate RX/TX DMA requests */
 #if FSL_FEATURE_DSPI_HAS_SEPARATE_DMA_RX_TX_REQn(1)
         {
@@ -250,7 +250,7 @@ dspi_status_t DSPI_DRV_EdmaMasterInit(uint32_t instance,
 
     else
     {
-#if (SPI_INSTANCE_COUNT > 2) /* Continue only if the MCU has another DSPI instance */
+#if (FSL_FEATURE_SOC_DSPI_COUNT > 2) /* Continue only if the MCU has another DSPI instance */
         /* Set up channels for separate RX/TX DMA requests */
 #if (FSL_FEATURE_DSPI_HAS_SEPARATE_DMA_RX_TX_REQn(2))
         {
@@ -491,13 +491,13 @@ dspi_status_t DSPI_DRV_EdmaMasterTransferBlocking(uint32_t instance,
     SPI_Type *base = g_dspiBase[instance];
     dspi_status_t error = kStatus_DSPI_Success;
 
-    dspiEdmaState->isTransferBlocking = true; /* Indicates this is a blocking transfer */
-
     /* If the transfer count is zero, then return immediately.*/
     if (transferByteCount == 0)
     {
-        return error;
+        return kStatus_DSPI_InvalidParameter;
     }
+
+    dspiEdmaState->isTransferBlocking = true; /* Indicates this is a blocking transfer */
 
     /* If using a shared RX/TX DMA request, then this limits the amount of data we can transfer
      * due to the linked channel. The max bytes is 511 if 8-bit/frame or 1022 if 16-bit/frame
@@ -578,14 +578,13 @@ dspi_status_t DSPI_DRV_EdmaMasterTransfer(uint32_t instance,
     /* instantiate local variable of type dspi_edma_master_state_t and point to global state */
     dspi_edma_master_state_t * dspiEdmaState = (dspi_edma_master_state_t *)g_dspiStatePtr[instance];
 
-    dspiEdmaState->isTransferBlocking = false; /* Indicates this is not a blocking transfer */
-
     /* If the transfer count is zero, then return immediately.*/
     if (transferByteCount == 0)
     {
-        return kStatus_DSPI_Success;
+        return kStatus_DSPI_InvalidParameter;
     }
-
+    
+    dspiEdmaState->isTransferBlocking = false; /* Indicates this is not a blocking transfer */
     /* If using a shared RX/TX DMA request, then this limits the amount of data we can transfer
      * due to the linked channel. The max bytes is 511.
      */
@@ -682,15 +681,13 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
 {
     /* instantiate local variable of type dspi_edma_master_state_t and point to global state */
     dspi_edma_master_state_t * dspiEdmaState = (dspi_edma_master_state_t *)g_dspiStatePtr[instance];
-    /* For temporarily storing DMA instance and channel */
-    DMA_Type * dmaBaseAddr;
-    uint32_t dmaChannel;
     uint32_t calculatedBaudRate;
     dspi_command_config_t command;  /* create an instance of the data command struct*/
     SPI_Type *base = g_dspiBase[instance];
-    edma_transfer_config_t config;
     uint32_t txTransferByteCnt = 0;
     uint32_t rxTransferByteCnt = 0;
+    edma_software_tcd_t   stcd;
+    edma_transfer_config_t edmaConfig;
 
     /* Initialize s_wordToSend */
     s_wordToSend = 0;
@@ -762,26 +759,6 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
      */
     DSPI_HAL_SetIntMode(base, kDspiEndOfQueue, true);
 
-    /* Each DMA channel's CSR[DONE] bit may be set if a previous transfer occurred.  The DONE
-     * bit, as the name implies, sets when the channel is finished (completed it's MAJOR
-     * LOOP). The DONE needs to be cleared before programming the channel's TCDs for the next
-     * transfer.
-     */
-    dmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(dspiEdmaState->dmaCmdData2Fifo.channel);
-    dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaCmdData2Fifo.channel);
-    EDMA_HAL_ClearDoneStatusFlag(dmaBaseAddr, (edma_channel_indicator_t)dmaChannel);
-    EDMA_HAL_HTCDClearReg(dmaBaseAddr, dmaChannel);
-
-    dmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(dspiEdmaState->dmaSrc2CmdData.channel);
-    dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaSrc2CmdData.channel);
-    EDMA_HAL_ClearDoneStatusFlag(dmaBaseAddr, (edma_channel_indicator_t)dmaChannel);
-    EDMA_HAL_HTCDClearReg(dmaBaseAddr, dmaChannel);
-
-    dmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(dspiEdmaState->dmaFifo2Receive.channel);
-    dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaFifo2Receive.channel);
-    EDMA_HAL_ClearDoneStatusFlag(dmaBaseAddr, (edma_channel_indicator_t)dmaChannel);
-    EDMA_HAL_HTCDClearReg(dmaBaseAddr, dmaChannel);
-
     /************************************************************************************
      * Set up the RX DMA channel Transfer Control Descriptor (TCD)
      * Do this before filling the TX FIFO.
@@ -792,54 +769,51 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
     /* If a receive buffer is used and if rxTransferByteCnt > 0 */
     if (rxTransferByteCnt)
     {
-        /* For each transfer control descriptor set up, save off DMA instance and channel number
-         * to simplified variable names to make code cleaner
-         */
-        dmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(dspiEdmaState->dmaFifo2Receive.channel);
-        dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaFifo2Receive.channel);
+        /* Clear structure config */
+        memset(&edmaConfig, 0, sizeof(edma_transfer_config_t));
+        memset(&stcd, 0, sizeof(edma_software_tcd_t));
 
         /* Source addr, RX FIFO */
-        EDMA_HAL_HTCDSetSrcAddr(dmaBaseAddr,dmaChannel, DSPI_HAL_GetPoprRegAddr(base));
+        edmaConfig.srcAddr = DSPI_HAL_GetPoprRegAddr(base);
 
         /* Source addr offset is 0 as source addr never increments */
-        EDMA_HAL_HTCDSetSrcOffset(dmaBaseAddr, dmaChannel, 0);
+        edmaConfig.srcOffset = 0;
 
         /* The source and destination attributes (bit size) depends on bits/frame setting */
         if (dspiEdmaState->bitsPerFrame <= 8)
         {
             /* Source size is one byte, destination size is one byte */
-            EDMA_HAL_HTCDSetAttribute(
-                dmaBaseAddr, dmaChannel,
-                kEDMAModuloDisable, kEDMAModuloDisable,
-                kEDMATransferSize_1Bytes,kEDMATransferSize_1Bytes);
+            edmaConfig.srcTransferSize = kEDMATransferSize_1Bytes;
+            edmaConfig.destTransferSize = kEDMATransferSize_1Bytes;
 
             /* Transfer 1 byte from RX FIFO to receive buffer */
-            EDMA_HAL_HTCDSetNbytes(dmaBaseAddr, dmaChannel, 1);
+            edmaConfig.minorLoopCount   = 1;
 
             /* Set MAJOR count to remaining receive byte count. Configure both the
-             * CITER and BITER fields.
-             */
-            EDMA_HAL_HTCDSetMajorCount(dmaBaseAddr, dmaChannel, (uint32_t)rxTransferByteCnt);
+             * CITER and BITER fields. */
+            edmaConfig.majorLoopCount   = rxTransferByteCnt;
         }
         else /* For 16-bit words, but the receive buffer is still an 8-bit buffer */
         {
             /* Source size is 2 byte, destination size is one byte */
-            EDMA_HAL_HTCDSetAttribute(
-                dmaBaseAddr, dmaChannel,
-                kEDMAModuloDisable, kEDMAModuloDisable,
-                kEDMATransferSize_2Bytes,kEDMATransferSize_1Bytes);
+            edmaConfig.srcTransferSize = kEDMATransferSize_2Bytes;
+            edmaConfig.destTransferSize = kEDMATransferSize_1Bytes;
 
             /* Transfer 2 bytes from RX FIFO to receive buffer */
-            EDMA_HAL_HTCDSetNbytes(dmaBaseAddr, dmaChannel, 2);
+            edmaConfig.minorLoopCount   = 2;
 
             /* Set MAJOR count to remaining receive byte count. Configure both the
              * CITER and BITER fields.  Divide by 2 to account for minor loop of 2 bytes
              */
-            EDMA_HAL_HTCDSetMajorCount(dmaBaseAddr, dmaChannel, (uint32_t)rxTransferByteCnt/2);
+            edmaConfig.majorLoopCount   = rxTransferByteCnt/2;
         }
 
         /* Don't increment source address, it is constant */
-        EDMA_HAL_HTCDSetSrcLastAdjust(dmaBaseAddr, dmaChannel, 0);
+        edmaConfig.srcLastAddrAdjust = 0;
+
+        /* Disable source/destination modulo */
+        edmaConfig.srcModulo = kEDMAModuloDisable;
+        edmaConfig.destModulo = kEDMAModuloDisable;
 
         /* If no receive buffer then disable incrementing the destination and set the destination
          * to a temporary location. Always handle rx operations to avoid rx overrun.
@@ -847,52 +821,45 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
         if (!receiveBuffer)
         {
             /* Destination is the "throw away" receive buffer */
-            EDMA_HAL_HTCDSetDestAddr(dmaBaseAddr, dmaChannel, (uint32_t)(&s_rxBuffIfNull));
+            edmaConfig.destAddr   = (uint32_t)(&s_rxBuffIfNull);
+
             /* Dest addr offset, do not increment to the next byte */
-            EDMA_HAL_HTCDSetDestOffset(dmaBaseAddr, dmaChannel, 0);
+            edmaConfig.destOffset = 0;
         }
         else /* Receive buffer is used */
         {
             /* Destination is the receive buffer */
-            EDMA_HAL_HTCDSetDestAddr(dmaBaseAddr, dmaChannel, (uint32_t)(receiveBuffer));
+            edmaConfig.destAddr   = (uint32_t)(receiveBuffer);
             /* Dest addr offset, increment to the next byte */
-            EDMA_HAL_HTCDSetDestOffset(dmaBaseAddr, dmaChannel, 1);
+            edmaConfig.destOffset = 1;
         }
+
+        /* No adjustment needed for destination addr */
+        edmaConfig.destLastAddrAdjust = 0;
+
+        /* Sets the descriptor basic transfer for the descriptor. */
+        EDMA_DRV_PrepareDescriptorTransfer(&dspiEdmaState->dmaFifo2Receive, &stcd, &edmaConfig, false, true);
 
         /* For DSPI instances with shared RX/TX DMA requests, we'll use the RX DMA request to
          * trigger ongoing transfers and will link to the TX DMA channel from the RX DMA channel.
          */
-        if (FSL_FEATURE_DSPI_HAS_SEPARATE_DMA_RX_TX_REQn(instance))
-        {
-            /* Disable channel linking since we have separate RX and TX DMA requests */
-            EDMA_HAL_HTCDSetChannelMinorLink(dmaBaseAddr, dmaChannel, 0, false);
-        }
-        else /* For shared RX/TX DMA Requests */
+        if (!FSL_FEATURE_DSPI_HAS_SEPARATE_DMA_RX_TX_REQn(instance))
         {
             /* Enable channel linking to TX channel (at the end of each minor loop) */
-            EDMA_HAL_HTCDSetChannelMinorLink(
-                                    dmaBaseAddr,
-                                    dmaChannel,
-                                    VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaCmdData2Fifo.channel),
-                                    true);
+            EDMA_DRV_PrepareDescriptorMinorLink(&stcd,
+                                    VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaCmdData2Fifo.channel));
             /* Enable MAJOR link and link to TX DMA channel. This is needed to perform one more
              * channel link when the major loop is exhausted.
              */
-            EDMA_HAL_HTCDSetChannelMajorLink(
-                                    dmaBaseAddr,
-                                    dmaChannel,
-                                    VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaCmdData2Fifo.channel),
-                                    true);
+            EDMA_DRV_PrepareDescriptorChannelLink(&stcd,
+                                    VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaCmdData2Fifo.channel));
         }
 
-        /* No adjustment needed for destination addr */
-        EDMA_HAL_HTCDSetDestLastAdjust(dmaBaseAddr,dmaChannel, 0);
-
-        /* Disable ERQ request at end of major count so that we don't keep servicing requests */
-        EDMA_HAL_HTCDSetDisableDmaRequestAfterTCDDoneCmd(dmaBaseAddr, dmaChannel, true);
+        /* Push the contents of the SW TCD to the HW TCD registers */
+        EDMA_DRV_PushDescriptorToReg(&dspiEdmaState->dmaFifo2Receive, &stcd);
 
         /* Now that TCD was set up, enable the DSPI Peripheral Hardware request for the RX FIFO */
-        EDMA_HAL_SetDmaRequestCmd(dmaBaseAddr,(edma_channel_indicator_t)dmaChannel, true);
+        EDMA_DRV_StartChannel(&dspiEdmaState->dmaFifo2Receive);
 
         /* Enable the Receive FIFO Drain Request as a DMA request */
         DSPI_HAL_SetRxFifoDrainDmaIntMode(base, kDspiGenerateDmaReq, true);
@@ -1027,69 +994,6 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
     /* For each transfer control descriptor set up, save off DMA instance and channel number
      * to simplified variable names to make code cleaner
      */
-    dmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(dspiEdmaState->dmaCmdData2Fifo.channel);
-    dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaCmdData2Fifo.channel);
-
-    /* If txTransferByteCnt is 0, then send last command/data since this is the
-     * last data word to send
-     */
-    if (txTransferByteCnt == 0)
-    {
-        /* Source address is the last command/data intermediate buffer */
-        EDMA_HAL_HTCDSetSrcAddr(dmaBaseAddr, dmaChannel,(uint32_t)(&s_lastCmdData));
-
-        /* Disable ERQ request at end of major count */
-        EDMA_HAL_HTCDSetDisableDmaRequestAfterTCDDoneCmd(dmaBaseAddr, dmaChannel, true);
-
-        /* Disable majorlink request */
-        EDMA_HAL_HTCDSetChannelMajorLink(dmaBaseAddr, dmaChannel, 0, false);
-    }
-    /* Else, send the intermediate buffer  */
-    else
-    {
-        /* Source addr, intermediate command/data*/
-        EDMA_HAL_HTCDSetSrcAddr(dmaBaseAddr, dmaChannel,(uint32_t)(&s_cmdData));
-
-        /* Set the MAJOR link channel to link to the next channel that will pull data from
-         * the source buffer into the intermediate command/data buffer and enable MAJOR link
-         */
-        EDMA_HAL_HTCDSetChannelMajorLink(dmaBaseAddr, dmaChannel,
-                        VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaSrc2CmdData.channel), true);
-
-        /* Do not disable ERQ request at end of major count */
-        EDMA_HAL_HTCDSetDisableDmaRequestAfterTCDDoneCmd(dmaBaseAddr, dmaChannel, false);
-    }
-
-    /* Source addr offset is 0 as source addr never increments */
-    EDMA_HAL_HTCDSetSrcOffset(dmaBaseAddr, dmaChannel, 0);
-
-    /* source size 32-bits */
-    /* destination size 32bits*/
-    /* Clear the SMOD and DMOD fields */
-    EDMA_HAL_HTCDSetAttribute(dmaBaseAddr, dmaChannel,
-                              kEDMAModuloDisable, kEDMAModuloDisable,
-                              kEDMATransferSize_4Bytes, kEDMATransferSize_4Bytes);
-
-    /* Transfer 4 bytes or one word */
-    EDMA_HAL_HTCDSetNbytes(dmaBaseAddr, dmaChannel, 4);
-
-    /* Don't increment source address, it is constant */
-    EDMA_HAL_HTCDSetSrcLastAdjust(dmaBaseAddr, dmaChannel, 0);
-
-    /* Destination is SPI PUSHR TX FIFO */
-    EDMA_HAL_HTCDSetDestAddr(dmaBaseAddr, dmaChannel, DSPI_HAL_GetMasterPushrRegAddr(base));
-
-    /* No dest addr offset, since we never increment the dest addr */
-    EDMA_HAL_HTCDSetDestOffset(dmaBaseAddr, dmaChannel, 0);
-
-    /* We are only sending one 32-bit word, so MAJOR count is "1". Do not use "ELINK"
-     * to link channels, use MAJORLINK in CSR, therefore disable minor link (ELINK=0)
-     */
-    EDMA_HAL_HTCDSetChannelMinorLink(dmaBaseAddr, dmaChannel, 0, false);
-    EDMA_HAL_HTCDSetMajorCount(dmaBaseAddr, dmaChannel, 1);
-
-    /* No adjustment needed for destination addr or scatter/gather */
-    EDMA_HAL_HTCDSetScatterGatherCmd(dmaBaseAddr, dmaChannel, false);
 
     /* Implement the following DMA channel set up only if we still have data yet to send
      * Otherwise, bypass this and enable the DSPI Transmit DMA request.
@@ -1107,26 +1011,28 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
          *            aligned on 32-byte boundaries.
          ************************************************************************************/
         /* This channel should use scatter gather method, first configure the last STCD */
-        memset(&config, 0, sizeof(edma_transfer_config_t));
+        memset(&edmaConfig, 0, sizeof(edma_transfer_config_t));
         memset(dspiEdmaState->stcdSrc2CmdDataLast, 0, sizeof(edma_software_tcd_t));
 
-        /* Fill out members of the EDMA transfer config structure and then use this structure to
+        /* Fill out members of the EDMA transfer edmaConfig structure and then use this structure to
          * prepare the software transfer control descriptor stcdSrc2CmdDataLast
          */
-        config.srcAddr = (uint32_t)(&s_lastCmdData); /* Source addr is last data + last command */
-        config.srcOffset = 0;
-        config.srcTransferSize = kEDMATransferSize_4Bytes;
-        config.destTransferSize = kEDMATransferSize_4Bytes;
-        config.destAddr = (uint32_t)(&s_cmdData); /* Destination is the command/data buffer */
-        config.destOffset = 0;
-        config.destLastAddrAdjust = 0;
-        config.srcLastAddrAdjust = 0;
-        config.destModulo = kEDMAModuloDisable;
-        config.srcModulo = kEDMAModuloDisable;
-        config.majorLoopCount = 1; /* We are only sending one 32-bit word, so MAJOR count is "1" */
-        config.minorLoopCount = 4; /* Transfer 4 bytes or one word */
+        edmaConfig.srcAddr = (uint32_t)(&s_lastCmdData); /* Source addr is last data + last command */
+        edmaConfig.srcOffset = 0;
+        edmaConfig.srcTransferSize = kEDMATransferSize_4Bytes;
+        edmaConfig.destTransferSize = kEDMATransferSize_4Bytes;
+        edmaConfig.destAddr = (uint32_t)(&s_cmdData); /* Destination is the command/data buffer */
+        edmaConfig.destOffset = 0;
+        edmaConfig.destLastAddrAdjust = 0;
+        edmaConfig.srcLastAddrAdjust = 0;
+        edmaConfig.destModulo = kEDMAModuloDisable;
+        edmaConfig.srcModulo = kEDMAModuloDisable;
+        edmaConfig.majorLoopCount = 1; /* We are only sending one 32-bit word, so MAJOR count is "1" */
+        edmaConfig.minorLoopCount = 4; /* Transfer 4 bytes or one word */
+
+        /* Sets the descriptor basic transfer for the descriptor. */
         EDMA_DRV_PrepareDescriptorTransfer(&dspiEdmaState->dmaSrc2CmdData,
-                dspiEdmaState->stcdSrc2CmdDataLast, &config,false,true);
+                dspiEdmaState->stcdSrc2CmdDataLast, &edmaConfig,false,true);
 
         /* If at this point we are left with only sending one more data byte/word, then this
          * is the last command/data to send.  So the transfer control descriptor should move the
@@ -1136,7 +1042,7 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
         if (((dspiEdmaState->bitsPerFrame <= 8) && ((txTransferByteCnt-1) == 0)) ||
             ((dspiEdmaState->bitsPerFrame > 8) && ((txTransferByteCnt-2) == 0)))
         {
-            /* push the contents of the SW TCD to the HW TCD registers */
+            /* Push the contents of the SW TCD to the HW TCD registers */
             EDMA_DRV_PushDescriptorToReg(&dspiEdmaState->dmaSrc2CmdData,
                                          dspiEdmaState->stcdSrc2CmdDataLast);
         }
@@ -1146,6 +1052,10 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
          */
         else
         {
+            /* Clear structure config */
+            memset(&edmaConfig, 0, sizeof(edma_transfer_config_t));
+            memset(&stcd, 0, sizeof(edma_software_tcd_t));
+
             /************************************************************************************
              * Transfer Control Descriptor set up for Source buffer to intermediate
              * command/data (this is a linked channel). AKA "Channel 2"
@@ -1156,83 +1066,141 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
              * and triggers the scatter/gather (ESG = 1) and loads the STCD that is set up to
              * transfer the last command/data word to the PUSHR.
              ************************************************************************************/
-            dmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(dspiEdmaState->dmaSrc2CmdData.channel);
-            dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaSrc2CmdData.channel);
-
             /* If a send buffer was provided, the word comes from there. Otherwise we set
              * the source address to point to the s_wordToSend variable that was set to 0.
              */
             if (sendBuffer)
             {
                 /* Source addr is the "send" data buffer */
-                EDMA_HAL_HTCDSetSrcAddr(dmaBaseAddr, dmaChannel, (uint32_t)(sendBuffer));
+                edmaConfig.srcAddr = (uint32_t)(sendBuffer);
+
                 /* Increment the source address by one byte after every transfer */
-                EDMA_HAL_HTCDSetSrcOffset(dmaBaseAddr, dmaChannel, 1);
+                edmaConfig.srcOffset = 1;
             }
             else
             {
                 /* Source addr is the "send" data buffer */
-                EDMA_HAL_HTCDSetSrcAddr(dmaBaseAddr, dmaChannel,
-                                        (uint32_t)(&s_wordToSend));
+                edmaConfig.srcAddr = (uint32_t)(&s_wordToSend);
+
                 /* Don't increment the source address  */
-                EDMA_HAL_HTCDSetSrcOffset(dmaBaseAddr, dmaChannel, 0);
+                edmaConfig.srcOffset = 0;
             }
 
             if (dspiEdmaState->bitsPerFrame <= 8)
             {
                 /* Source and destination size: byte */
-                EDMA_HAL_HTCDSetAttribute(dmaBaseAddr, dmaChannel,
-                            kEDMAModuloDisable, kEDMAModuloDisable,
-                            kEDMATransferSize_1Bytes, kEDMATransferSize_1Bytes);
+                edmaConfig.srcModulo = kEDMAModuloDisable;
+                edmaConfig.destModulo = kEDMAModuloDisable;
+                edmaConfig.srcTransferSize = kEDMATransferSize_1Bytes;
+                edmaConfig.destTransferSize = kEDMATransferSize_1Bytes;
 
                 /* minor byte transfer: 1 byte (8-bit word) */
-                EDMA_HAL_HTCDSetNbytes(dmaBaseAddr, dmaChannel, 1);
+                edmaConfig.minorLoopCount = 1;
 
                 /* Major loop count is equal to remaining number of bytes to send minus 1.
                  * That is because the last data byte/word is written to the last command/data
                  * intermediate buffer.
                  */
-                EDMA_HAL_HTCDSetMajorCount(dmaBaseAddr, dmaChannel, (txTransferByteCnt-1));
+                edmaConfig.majorLoopCount = txTransferByteCnt-1;
             }
             else
             {
                 /* Source size: byte and destination size: halfword */
-                EDMA_HAL_HTCDSetAttribute(dmaBaseAddr, dmaChannel,
-                            kEDMAModuloDisable, kEDMAModuloDisable,
-                            kEDMATransferSize_1Bytes, kEDMATransferSize_2Bytes);
+                edmaConfig.srcModulo = kEDMAModuloDisable;
+                edmaConfig.destModulo = kEDMAModuloDisable;
+                edmaConfig.srcTransferSize = kEDMATransferSize_1Bytes;
+                edmaConfig.destTransferSize = kEDMATransferSize_2Bytes;
 
                 /* minor byte transfer: 2 bytes (16-bit word) */
-                EDMA_HAL_HTCDSetNbytes(dmaBaseAddr, dmaChannel, 2);
+                edmaConfig.minorLoopCount = 2;
 
                 /* Major loop count is equal to remaining number of 16-bit words to send
                  * hence need to convert remainingSendByteCount from byte to 16-bit word
                  */
-                EDMA_HAL_HTCDSetMajorCount(dmaBaseAddr, dmaChannel, (txTransferByteCnt-2)/2);
+                edmaConfig.majorLoopCount = (uint16_t)(txTransferByteCnt-2)/2;
             }
-
-            /* Diable minor loop linking */
-            EDMA_HAL_HTCDSetChannelMinorLink(dmaBaseAddr, dmaChannel, 0, false);
-
             /* Set SLAST to 0 */
-            EDMA_HAL_HTCDSetSrcLastAdjust(dmaBaseAddr, dmaChannel, 0);
+            edmaConfig.srcLastAddrAdjust = 0;
 
             /* Destination addr is the intermediate command/data buffer */
-            EDMA_HAL_HTCDSetDestAddr(dmaBaseAddr, dmaChannel,(uint32_t)(&s_cmdData));
+            edmaConfig.destAddr = (uint32_t)(&s_cmdData);
 
             /* No dest addr offset, since we never increment the dest addr */
-            EDMA_HAL_HTCDSetDestOffset(dmaBaseAddr, dmaChannel, 0);
+            edmaConfig.destOffset = 0;
+
+            /* Sets the descriptor basic transfer for the descriptor. */
+            EDMA_DRV_PrepareDescriptorTransfer(&dspiEdmaState->dmaSrc2CmdData, &stcd, &edmaConfig, false, false);
 
             /* Place the address of the scatter/gather in order to reload STCD for the final
              * last command/data word to be loaded to the intermediate buffer.
              * IMPORTANT: This address needs to be 32-byte aligned.
              */
-            EDMA_HAL_HTCDSetScatterGatherLink(dmaBaseAddr, dmaChannel,
+            EDMA_DRV_PrepareDescriptorScatterGather(&stcd,
                                     (edma_software_tcd_t *)(dspiEdmaState->stcdSrc2CmdDataLast));
+
+            /* Push the contents of the SW TCD to the HW TCD registers */
+            EDMA_DRV_PushDescriptorToReg(&dspiEdmaState->dmaSrc2CmdData, &stcd);
         }
     }
 
-    dmaBaseAddr = VIRTUAL_CHN_TO_EDMA_MODULE_REGBASE(dspiEdmaState->dmaCmdData2Fifo.channel);
-    dmaChannel = VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaCmdData2Fifo.channel);
+    /* Clear structure config */
+    memset(&edmaConfig, 0, sizeof(edma_transfer_config_t));
+    memset(&stcd, 0, sizeof(edma_software_tcd_t));
+
+    /* Source addr offset is 0 as source addr never increments */
+    edmaConfig.srcOffset = 0;
+
+    /* source size 32-bits */
+    /* destination size 32bits*/
+    /* Clear the SMOD and DMOD fields */
+    edmaConfig.srcModulo = kEDMAModuloDisable;
+    edmaConfig.destModulo = kEDMAModuloDisable;
+    edmaConfig.srcTransferSize = kEDMATransferSize_4Bytes;
+    edmaConfig.destTransferSize = kEDMATransferSize_4Bytes;
+
+    /* Transfer 4 bytes or one word */
+    edmaConfig.minorLoopCount = 4;
+
+    /* Don't increment source/destination address, it is constant */
+    edmaConfig.srcLastAddrAdjust = 0;
+    edmaConfig.destLastAddrAdjust = 0;
+
+    /* Destination is SPI PUSHR TX FIFO */
+    edmaConfig.destAddr = DSPI_HAL_GetMasterPushrRegAddr(base);
+
+    edmaConfig.majorLoopCount = 1;
+
+    /* No dest addr offset, since we never increment the dest addr */
+    edmaConfig.destOffset = 0;
+
+    /* If txTransferByteCnt is 0, then send last command/data since this is the
+     * last data word to send
+     */
+    if (txTransferByteCnt == 0)
+    {
+        /* Source address is the last command/data intermediate buffer */
+        edmaConfig.srcAddr = (uint32_t)(&s_lastCmdData);
+
+        /* Sets the descriptor basic transfer for the descriptor. */
+        EDMA_DRV_PrepareDescriptorTransfer(&dspiEdmaState->dmaCmdData2Fifo, &stcd, &edmaConfig, false, true);
+    }
+    /* Else, send the intermediate buffer  */
+    else
+    {
+        /* Source addr, intermediate command/data*/
+        edmaConfig.srcAddr = (uint32_t)(&s_cmdData);
+
+        /* Sets the descriptor basic transfer for the descriptor. */
+        EDMA_DRV_PrepareDescriptorTransfer(&dspiEdmaState->dmaCmdData2Fifo, &stcd, &edmaConfig, false, false);
+
+        /* Set the MAJOR link channel to link to the next channel that will pull data from
+         * the source buffer into the intermediate command/data buffer and enable MAJOR link
+         */
+        EDMA_DRV_PrepareDescriptorChannelLink(&stcd,
+                        VIRTUAL_CHN_TO_EDMA_CHN(dspiEdmaState->dmaSrc2CmdData.channel));
+    }
+    /* Push the contents of the SW TCD to the HW TCD registers */
+    EDMA_DRV_PushDescriptorToReg(&dspiEdmaState->dmaCmdData2Fifo, &stcd);
 
     /* For DSPI instances with separate RX/TX DMA requests, we'll use the TX DMA request to
      * trigger the TX DMA channel hence we'll enable the TX channel DMA request.
@@ -1242,7 +1210,7 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
         /* Now that the TCD was set up for each channel, enable the DSPI peripheral hardware request
          * for the first TX DMA channel.
          */
-        EDMA_HAL_SetDmaRequestCmd(dmaBaseAddr, (edma_channel_indicator_t)dmaChannel, true);
+        EDMA_DRV_StartChannel(&dspiEdmaState->dmaCmdData2Fifo);
 
         /* Enable TFFF request in the DSPI module */
         DSPI_HAL_SetTxFifoFillDmaIntMode(base, kDspiGenerateDmaReq, true);
@@ -1256,13 +1224,13 @@ static dspi_status_t DSPI_DRV_EdmaMasterStartTransfer(uint32_t instance,
     else /* For shared RX/TX DMA requests */
     {
         /* Disable the DSPI TX peripheral hardware request*/
-        EDMA_HAL_SetDmaRequestCmd(dmaBaseAddr, (edma_channel_indicator_t)dmaChannel, false);
+        EDMA_DRV_StopChannel(&dspiEdmaState->dmaCmdData2Fifo);
 
         /* Disable TFFF request in the DSPI module */
         DSPI_HAL_SetTxFifoFillDmaIntMode(base, kDspiGenerateDmaReq, false);
 
         /* Manually start the TX DMA channel to get the process going */
-        EDMA_HAL_TriggerChannelStart(dmaBaseAddr, (edma_channel_indicator_t)dmaChannel);
+        EDMA_DRV_TriggerChannelStart(&dspiEdmaState->dmaCmdData2Fifo);
     }
 
     return kStatus_DSPI_Success;

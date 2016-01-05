@@ -29,7 +29,7 @@
  */
 
 #include "fsl_flexio_spi_hal.h"
-
+#include <string.h>
 /*---------------------------------------------------------------------------
  * Configure.
  *-------------------------------------------------------------------------*/
@@ -45,6 +45,8 @@ flexio_status_t FLEXIO_SPI_HAL_ConfigMaster(flexio_spi_dev_t *devPtr,
 {
     flexio_shifter_config_t mFlexioShfiterConfigStruct;
     flexio_timer_config_t mFlexioTimerConfigStruct;
+    memset(&mFlexioShfiterConfigStruct, 0, sizeof(mFlexioShfiterConfigStruct));
+    memset(&mFlexioTimerConfigStruct, 0, sizeof(mFlexioTimerConfigStruct));
     uint32_t timdiv = 0U, timcmp = 0U;
     
     if ( (!devPtr) || (!configPtr) )
@@ -161,6 +163,8 @@ flexio_status_t FLEXIO_SPI_HAL_ConfigSlave(flexio_spi_dev_t *devPtr,
 {
     flexio_shifter_config_t mFlexioShfiterConfigStruct;
     flexio_timer_config_t mFlexioTimerConfigStruct;
+    memset(&mFlexioShfiterConfigStruct, 0, sizeof(mFlexioShfiterConfigStruct));
+    memset(&mFlexioTimerConfigStruct, 0, sizeof(mFlexioTimerConfigStruct));
 
     if ( (!devPtr) || (!configPtr) )
     {
@@ -410,8 +414,6 @@ uint32_t FLEXIO_SPI_HAL_GetTxBufferMSBAddr(flexio_spi_dev_t *devPtr)
  *END*********************************************************************/
 uint32_t FLEXIO_SPI_HAL_GetTxBufferLSBAddr(flexio_spi_dev_t *devPtr)
 {
-    /* return HW_FLEXIO_SHIFTBUFn_ADDR(
-            devPtr->flexioBase, devPtr->shifterIdx[0]); */
     return (uint32_t)(&(FLEXIO_SHIFTBUF_REG(devPtr->flexioBase, devPtr->shifterIdx[0])));
 }
 

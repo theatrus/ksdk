@@ -861,10 +861,14 @@ void ReadSwFaults(MCSTRUC_BLDC_SNLS_INT_T * sM_Drive)
     sM_Drive->uw16FaultStatus = 0;
 
     if (sM_Drive->f16DcbVoltage > U_DCB_OVERVOLTAGE)
-    sM_Drive->uw16FaultStatus |= FAULT_OVERVOLTAGE_F;
+    {
+      sM_Drive->uw16FaultStatus |= FAULT_OVERVOLTAGE_F;
+    }
 
     if (sM_Drive->f16DcbVoltage < U_DCB_UNDERVOLTAGE)
-    sM_Drive->uw16FaultStatus |= FAULT_UNDERVOLTAGE_F;
+    {
+      sM_Drive->uw16FaultStatus |= FAULT_UNDERVOLTAGE_F;
+    }
 
     if ((meM1_StateRun == ALIGN) || (meM1_StateRun == STARTUP) || (meM1_StateRun == SPIN))
     {

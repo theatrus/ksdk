@@ -24,7 +24,16 @@
 *END************************************************************************/
 
 #include "app_rtos.h"
-#include <rtcs.h>
+#include <bsp.h>
+#if FSL_FEATURE_SOC_LTC_COUNT
+#include "fsl_ltc_driver.h"
+#endif
+#if (FSL_FEATURE_SOC_RNG_COUNT > 0)
+    #include "fsl_rnga_driver.h"
+#endif
+#if (FSL_FEATURE_SOC_TRNG_COUNT > 0)
+    #include "fsl_trng_driver.h"
+#endif
 
 void hardware_init(void) {
     uint8_t i;
@@ -41,9 +50,34 @@ void hardware_init(void) {
 #if !BSPCFG_ENABLE_IO_SUBSYSTEM
     dbg_uart_init();
 #endif
+
+#if BSP_ENET_DEVICE_COUNT
     /* Set clock source for Ethernet */
     if (0 == strcmp("TWR-K65F180M", BOARD_NAME))
     {
         CLOCK_SYS_SetEnetRmiiSrc(ENET_IDX, kClockRmiiSrcExt);
     }
+#endif
+#if FSL_FEATURE_SOC_LTC_COUNT
+    LTC_DRV_Init(0);
+    LTC_DRV_SetDPAMaskSeed(0, SIM_RD_UIDL(SIM));
+#endif
+#if (FSL_FEATURE_SOC_RNG_COUNT > 0)
+    {
+        /* RNGA Initialize */
+        rnga_user_config_t rngaConfig;
+        rngaConfig.isIntMasked         = true;
+        rngaConfig.highAssuranceEnable = true;
+        RNGA_DRV_Init(0, &rngaConfig);
+    }
+#endif
+#if (FSL_FEATURE_SOC_TRNG_COUNT > 0)
+    {
+        /* TRNG Initialize */
+        trng_user_config_t  trngConfig;
+        /* Init TRNG configuration structure.*/
+        TRNG_DRV_InitUserConfigDefault(&trngConfig);
+        TRNG_DRV_Init(0, &trngConfig);
+    }
+#endif
 }

@@ -43,7 +43,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define DSPI_SLAVE_INSTANCE         (0)                 /*! User change define to choose DSPI instance */
+#define DSPI_SLAVE_INSTANCE         BOARD_DSPI_INSTANCE /*! User change define to choose DSPI instance */
 #define TRANSFER_SIZE               (32)                /*! Transfer size */
 #define TRANSFER_BAUDRATE           (500000U)           /*! Transfer baudrate - 500k */
 /*******************************************************************************
@@ -54,6 +54,8 @@
  * Variables
  ******************************************************************************/
 uint8_t receiveBuffer[TRANSFER_SIZE] = {0};
+// Table of base pointers for SPI instances.
+extern SPI_Type * const g_dspiBase[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Code
@@ -66,7 +68,7 @@ uint8_t receiveBuffer[TRANSFER_SIZE] = {0};
 int main(void)
 {
     uint32_t i;
-    SPI_Type * dspiBaseAddr = (SPI_Type*)SPI0_BASE;
+    SPI_Type * dspiBaseAddr = g_dspiBase[BOARD_DSPI_INSTANCE];
     dspi_slave_user_config_t slaveConfig;
 
     // Init hardware
@@ -76,8 +78,9 @@ int main(void)
 
     // Print a note.
     PRINTF("\r\n DSPI board to board polling example");
-    PRINTF("\r\n This example run on instance 0 ");
-    PRINTF("\r\n Be sure DSPI0-DSPI0 are connected \n");
+    PRINTF("\r\n This example run on instance %d ", (uint32_t)DSPI_SLAVE_INSTANCE);
+    PRINTF("\r\n Be sure DSPI%d-DSPI%d are connected \r\n",
+                    (uint32_t)DSPI_SLAVE_INSTANCE,(uint32_t)DSPI_SLAVE_INSTANCE);
 
     // Enable clock for DSPI
     CLOCK_SYS_EnableSpiClock(DSPI_SLAVE_INSTANCE);
@@ -97,7 +100,7 @@ int main(void)
 
     while(1)
     {
-         PRINTF("\r\n Slave example is running...\n");
+         PRINTF("\r\n Slave example is running...\r\n");
         // Reset the receive buffer.
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
@@ -121,13 +124,13 @@ int main(void)
         DSPI_HAL_StartTransfer(dspiBaseAddr);
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
-                // Check RFDR flag
-                while (DSPI_HAL_GetStatusFlag(dspiBaseAddr, kDspiRxFifoDrainRequest)== false)
-                {}
-                // Read data from POPR
-                receiveBuffer[i] = DSPI_HAL_ReadData(dspiBaseAddr);
-                // Clear RFDR flag
-                DSPI_HAL_ClearStatusFlag(dspiBaseAddr,kDspiRxFifoDrainRequest);
+            // Check RFDR flag
+            while (DSPI_HAL_GetStatusFlag(dspiBaseAddr, kDspiRxFifoDrainRequest)== false)
+            {}
+            // Read data from POPR
+            receiveBuffer[i] = DSPI_HAL_ReadData(dspiBaseAddr);
+            // Clear RFDR flag
+            DSPI_HAL_ClearStatusFlag(dspiBaseAddr,kDspiRxFifoDrainRequest);
         }
 
         // Restart the transfer by stop then start again, this will clear out the shift register
@@ -148,8 +151,13 @@ int main(void)
         // Send the data to slave.
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
+            // Check TFFF flag
+            while (DSPI_HAL_GetStatusFlag(dspiBaseAddr, kDspiTxFifoFillRequest)== false)
+            {}
             // Write data to PUSHR
-            DSPI_HAL_WriteDataSlavemodeBlocking(dspiBaseAddr, receiveBuffer[i]);
+            DSPI_HAL_WriteDataSlavemode(dspiBaseAddr, receiveBuffer[i]);
+            // Clear TFFF flag
+            DSPI_HAL_ClearStatusFlag(dspiBaseAddr,kDspiTxFifoFillRequest);
         }
 
         // Print out receive buffer.

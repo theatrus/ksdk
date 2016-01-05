@@ -163,6 +163,12 @@ void BOARD_InitOsc0(void)
     CLOCK_SYS_OscInit(0U, &osc0Config);
 }
 
+/* Function to initialize RTC external clock base on board configuration. */
+void BOARD_InitRtcOsc(void)
+{
+
+}
+
 /* Function to initialize wireless modem. */
 uint8_t ExtClk_Setup_HookUp(uint32_t clk_out_value)
 {
@@ -254,24 +260,21 @@ uint8_t ExtClk_Setup_HookUp(uint32_t clk_out_value)
     return result;
 }
 
-/* Function to initialize RTC external clock base on board configuration. */
-void BOARD_InitRtcOsc(void)
+static void CLOCK_SetBootConfig(clock_manager_user_config_t const* config)
 {
-#if ((OSC0_XTAL_FREQ != 32768U) && (RTC_OSC_ENABLE_CONFIG))
-#error Set RTC_OSC_ENABLE_CONFIG will override OSC0 configuration and OSC0 must be 32k.
-#endif
-    rtc_osc_user_config_t rtcOscConfig =
-    {
-        .freq                = RTC_XTAL_FREQ,
-        .enableCapacitor2p   = RTC_SC2P_ENABLE_CONFIG,
-        .enableCapacitor4p   = RTC_SC4P_ENABLE_CONFIG,
-        .enableCapacitor8p   = RTC_SC8P_ENABLE_CONFIG,
-        .enableCapacitor16p  = RTC_SC16P_ENABLE_CONFIG,
-        .enableOsc           = RTC_OSC_ENABLE_CONFIG,
-        .enableClockOutput   = RTC_CLK_OUTPUT_ENABLE_CONFIG,
-    };
+    CLOCK_SYS_SetSimConfigration(&config->simConfig);
 
-    CLOCK_SYS_RtcOscInit(0U, &rtcOscConfig);
+    CLOCK_SYS_SetOscerConfigration(0, &config->oscerConfig);
+
+#if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
+    CLOCK_SYS_BootToBlpi(&config->mcgConfig);
+#elif(CLOCK_INIT_CONFIG == CLOCK_RUN)
+    CLOCK_SYS_BootToPee(&config->mcgConfig);
+#else
+    CLOCK_SYS_BootToFee(&config->mcgConfig);
+#endif
+
+    SystemCoreClock = CORE_CLOCK_FREQ;
 }
 
 /* Initialize clock. */
@@ -296,22 +299,13 @@ void BOARD_ClockInit(void)
     PORT_HAL_SetMuxMode(XTAL0_PORT, XTAL0_PIN, XTAL0_PINMUX);
     BOARD_InitOsc0();
 
-    // Setup RTC external clock if used.
-#if RTC_XTAL_FREQ
-    // If RTC_CLKIN is connected, need to set pin mux. Another way for
-    // RTC clock is set RTC_OSC_ENABLE_CONFIG to use OSC0, please check
-    // reference manual for datails.
-    PORT_HAL_SetMuxMode(RTC_CLKIN_PORT, RTC_CLKIN_PIN, RTC_CLKIN_PINMUX);
-#endif
-    BOARD_InitRtcOsc();
-
     /* Set system clock configuration. */
 #if (CLOCK_INIT_CONFIG == CLOCK_XTAL)
-    CLOCK_SYS_SetConfiguration(&g_xtalClockConfig);
+    CLOCK_SetBootConfig(&g_xtalClockConfig);
 #elif (CLOCK_INIT_CONFIG == CLOCK_VLPR)
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigVlpr);
+    CLOCK_SetBootConfig(&g_defaultClockConfigVlpr);
 #else
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigRun);
+    CLOCK_SetBootConfig(&g_defaultClockConfigRun);
 #endif
 }
 

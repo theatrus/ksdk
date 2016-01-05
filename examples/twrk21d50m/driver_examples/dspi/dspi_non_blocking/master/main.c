@@ -42,7 +42,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define DSPI_MASTER_INSTANCE        (0)                 /*! User change define to choose DSPI instance */
+#define DSPI_MASTER_INSTANCE        BOARD_DSPI_INSTANCE /*! User change define to choose DSPI instance */
 #define TRANSFER_SIZE               (32)                /*! Transfer size */
 #define TRANSFER_BAUDRATE           (500000U)           /*! Transfer baudrate - 500k */
 
@@ -69,6 +69,7 @@ uint8_t sendBuffer[TRANSFER_SIZE] = {0};
 int main(void)
 {
     uint32_t i;
+    uint8_t errTransfer;
     uint8_t loopCount = 1;
     uint32_t wordsTransfer = 0;
     uint32_t calculatedBaudRate;
@@ -91,8 +92,9 @@ int main(void)
 
     // Print a note.
     PRINTF("\r\n DSPI board to board non-blocking example");
-    PRINTF("\r\n This example run on instance 0 ");
-    PRINTF("\r\n Be sure DSPI0-DSPI0 are connected \n");
+    PRINTF("\r\n This example run on instance %d ", (uint32_t)DSPI_MASTER_INSTANCE);
+    PRINTF("\r\n Be sure DSPI%d-DSPI%d are connected \r\n",
+                        (uint32_t)DSPI_MASTER_INSTANCE, (uint32_t)DSPI_MASTER_INSTANCE);
 
     // Setup the configuration.
     masterDevice.dataBusConfig.bitsPerFrame = 8;
@@ -106,7 +108,7 @@ int main(void)
                                      &masterUserConfig);
     if (dspiResult != kStatus_DSPI_Success)
     {
-        PRINTF("\r\nERROR: Can not initialize master driver \n\r");
+        PRINTF("\r\nERROR: Can not initialize master driver \r\n");
         return -1;
     }
 
@@ -117,7 +119,7 @@ int main(void)
                                              &calculatedBaudRate);
     if (dspiResult != kStatus_DSPI_Success)
     {
-        PRINTF("\r\nERROR: failure in configuration bus\n\r");
+        PRINTF("\r\nERROR: failure in configuration bus\r\n");
         return -1;
     }
     else
@@ -134,7 +136,7 @@ int main(void)
         }
 
         // Print out transmit buffer.
-        PRINTF("\r\n Master transmit:\n");
+        PRINTF("\r\n Master transmit:\r\n");
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
             // Print 16 numbers in a line.
@@ -159,7 +161,7 @@ int main(void)
                                              TRANSFER_SIZE);
         if (dspiResult != kStatus_DSPI_Success)
         {
-            PRINTF("\r\nERROR: send data error \n\r");
+            PRINTF("\r\nERROR: send data error \r\n");
             return -1;
         }
         // Wait until the transfer is complete.
@@ -176,7 +178,7 @@ int main(void)
                                              TRANSFER_SIZE);
         if (dspiResult != kStatus_DSPI_Success)
         {
-            PRINTF("\r\nERROR: receive data error \n\r");
+            PRINTF("\r\nERROR: receive data error \r\n");
             return -1;
         }
         // Wait until the transfer is complete.
@@ -184,7 +186,7 @@ int main(void)
         {}
 
         // Print out receive buffer.
-        PRINTF("\r\n Master receive:\n");
+        PRINTF("\r\n Master receive:\r\n");
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
             // Print 16 numbers in a line.
@@ -195,20 +197,27 @@ int main(void)
             PRINTF(" %02X", receiveBuffer[i]);
         }
 
+        errTransfer = false;
         // Check receiveBuffer.
         for (i = 0; i < TRANSFER_SIZE; ++i)
         {
             if (receiveBuffer[i] != sendBuffer[i])
             {
-                // Master received incorrect.
-                PRINTF("\r\n ERROR: master received incorrect \n\r");
-                return -1;
+                errTransfer = true;
+                break;
             }
         }
-
-        PRINTF("\r\n DSPI Master Sends/ Recevies Successfully");
+        if (errTransfer)
+        {
+            // Master received incorrect.
+            PRINTF("\r\n ERROR: master received incorrect at No.%d\r\n", i);
+        }
+        else
+        {
+            PRINTF("\r\n DSPI Master Sends/ Recevies Successfully");
+        }
         // Wait for press any key.
-        PRINTF("\r\n Press any key to run again\n");
+        PRINTF("\r\n Press any key to run again\r\n");
         GETCHAR();
         // Increase loop count to change transmit buffer.
         loopCount++;

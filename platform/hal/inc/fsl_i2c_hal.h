@@ -797,6 +797,106 @@ static inline void I2C_HAL_ClearStartFlag(I2C_Type * base)
 
 #endif /* FSL_FEATURE_I2C_HAS_START_STOP_DETECT */
 
+#if FSL_FEATURE_I2C_HAS_SMBUS
+/*! @brief SMBus timeout status flags. */
+typedef enum _smb_timeout_status_flag {
+    kSMBCLKLowTimeout    = I2C_SMB_SLTF_MASK,
+    kSMBCLKHighTimeout   = I2C_SMB_SHTF1_MASK,
+    kSMBDATLowTimeout    = I2C_SMB_SHTF2_MASK
+} smb_timeout_status_flag_t;
+/*! @brief SMBus timeout counter clock. */
+typedef enum _smb_timeout_counter_sel {
+    kSrcBusClockDividBy64   = 0,
+    kSrcBusClock            = 1
+} smb_timeout_counter_sel_t;
+/*!
+ * @brief Fast NACK/ACK enable, if disable, an ACK/NACK will be automatically sent.
+ * if enable, writing 0 to TXAK after receiving a data byte generates an ACK, writing 1
+ * to TXAK after receiving a data byte generates a NACK
+ *
+ * @param base The I2C peripheral base pointer
+ * @param enable Pass true to enable interrupt, false to disable.
+ */
+
+static inline void I2C_HAL_SetManualACKCmd(I2C_Type *base, bool enable)
+{
+    I2C_BWR_SMB_FACK(base,enable);
+}
+
+/*!
+ * @brief Enables or disables SMBus alert response address matching.
+ * After the host responds to a device that used the alert response address, you must use
+ * software to put the device's address on the bus.
+ *
+ * @param base The I2C peripheral base pointer
+ * @param enable Pass true to enable interrupt, false to disable.
+ */
+
+static inline void I2C_HAL_SetSMBusARACmd(I2C_Type *base, bool enable)
+{
+    I2C_BWR_SMB_ALERTEN(base, enable);
+}
+/*!
+ * @brief Selects the clock source of the timeout counter.
+ *
+ * @param base The I2C peripheral base pointer
+ * @param counterSel Counter value of smb_timeout_counter_sel_t.
+ */
+
+static inline void I2C_HAL_SelectSMBTimeoutCounter(I2C_Type *base, smb_timeout_counter_sel_t counterSel)
+{
+    I2C_BWR_SMB_TCKSEL(base, counterSel);
+}
+/*!
+ * @brief Enables/Disables SCL high and SDA low timeout interrupt.
+ *
+ * @param base The I2C peripheral base pointer
+ * @param enable   Pass true to enable interrupt, false to disable.
+ */
+
+static inline void I2C_HAL_SetSMBDATLowTimeoutIntCmd(I2C_Type *base, bool enable)
+{
+    I2C_BWR_SMB_SHTF2IE(base, enable);
+}
+/*!
+ * @brief Get SMBus timeout status.
+ *
+ * @param base The I2C peripheral base pointer
+ * @param status   Status value of smb_timeout_status_flag_t
+ * @return Whether the according timeout status is set.
+ */
+
+static inline bool I2C_HAL_GetTimeoutStatus(I2C_Type *base, smb_timeout_status_flag_t status)
+{
+    return (bool) I2C_RD_SMB(base) & status;
+}
+/*!
+ * @brief Clear SMBus timeout status.
+ *
+ * @param base The I2C peripheral base pointer
+ * @param status  Status value of smb_timeout_status_flag_t
+ */
+
+void I2C_HAL_ClearTimeoutStatus(I2C_Type *base, smb_timeout_status_flag_t status);
+/*!
+ * @brief Enables/Disables SMBus device default address.
+ *
+ * @param base The I2C peripheral base pointer
+ * @param enable  Pass true to enable interrupt, false to disable.
+ * @param address  Slave address used by the SMBus
+ */
+
+void I2C_HAL_SetSMBusAddressCmd(I2C_Type *base, bool enable, uint8_t address);
+/*!
+ * @brief Config SMBCLK low timeout period.
+ *
+ * @param base The I2C peripheral base pointer
+ * @param timeout  SCL low timeout value
+ */
+
+void I2C_HAL_ConfigSMBCLKLowTimeout(I2C_Type *base, uint16_t timeout);
+#endif
+
 #if defined(__cplusplus)
 }
 #endif

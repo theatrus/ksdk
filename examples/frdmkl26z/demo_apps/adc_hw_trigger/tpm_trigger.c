@@ -37,6 +37,7 @@
 #include "fsl_tpm_driver.h"
 #include "fsl_gpio_hal.h"
 #include "fsl_port_hal.h"
+#include "fsl_clock_manager.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -70,14 +71,15 @@ void init_trigger_source(uint32_t adcInstance)
     TPM_DRV_Init(0, &tpmConfig);
 #if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
     // set clock source to be IRC
-    TPM_DRV_SetClock(0, kTpmClockSourceModuleMCGIRCLK, kTpmDividedBy8);
+    TPM_DRV_SetClock(0, kTpmClockSourceModuleClk, kTpmDividedBy8);
+    // retrive the final TPM counting clock freq
+    freqTpm = CLOCK_SYS_GetTpmFreq(0) / (1 << kTpmDividedBy8);
 #else
     // set clock source to be IRC48MHz or from FLL/PLL source clock.
-    TPM_DRV_SetClock(0, kTpmClockSourceModuleHighFreq, kTpmDividedBy128);
-#endif
-
+    TPM_DRV_SetClock(0, kTpmClockSourceModuleClk, kTpmDividedBy128);
     // retrive the final TPM counting clock freq
-    freqTpm = TPM_DRV_GetClock(0);
+    freqTpm = CLOCK_SYS_GetTpmFreq(0) / (1 << kTpmDividedBy128);
+#endif
 
     // start TPM counter
     freqTpm *= freqUs; // convert to KHz

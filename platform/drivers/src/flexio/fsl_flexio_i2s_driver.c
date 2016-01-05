@@ -52,7 +52,7 @@ void FLEXIO_I2S_DRV_DmaRxCallback(void *param, dma_channel_status_t status);
   * This functionconfigure flexio and initialize the state handler.
   *END**************************************************************************/
 flexio_i2s_status_t FLEXIO_I2S_DRV_Init(uint32_t instance, flexio_i2s_handler_t *handler, 
-        flexio_i2s_config_t * userConfig)
+        const flexio_i2s_config_t * userConfig)
 {
     if ((handler == NULL) || (userConfig == NULL))
     {
@@ -70,6 +70,7 @@ flexio_i2s_status_t FLEXIO_I2S_DRV_Init(uint32_t instance, flexio_i2s_handler_t 
     handler->device.timerIdx[1] = userConfig->timerIdx[1];
     handler->sample_rate = userConfig->sample_rate;
     handler->bit_depth = userConfig->data_depth;
+    handler->baseSource = userConfig->baseSource;
     /* Initialize the statement of handler */
     handler->tx_buffer = NULL;
     handler->rx_buffer = NULL;
@@ -267,10 +268,10 @@ flexio_i2s_status_t FLEXIO_I2S_DRV_SendDataDma(flexio_i2s_handler_t *handler, ui
     {
         uint32_t ret;
         /* Request channel for Tx DMA */
-        dma_request_source_t baseSource= kDmaRequestMux0FlexIOChannel0;
+        dma_request_source_t baseSource=handler->baseSource;
         dma_request_source_t source = (dma_request_source_t)((uint32_t)baseSource + handler->device.shifterIdx[0]);
 #if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
-        ret = EDMA_DRV_RequestChannel(kDmaAnyChannel, source, &handler->tx_edma_state);
+        ret = EDMA_DRV_RequestChannel(kEDMAAnyChannel, source, &handler->tx_edma_state);
         if (ret == kEDMAInvalidChannel)
         {
             return kStatus_FlexioI2S_Fail;
@@ -321,10 +322,10 @@ flexio_i2s_status_t FLEXIO_I2S_DRV_ReceiveDataDma(flexio_i2s_handler_t *handler,
     {
         uint32_t ret;
         /* Request channel for Rx DMA */
-        dma_request_source_t baseSource= kDmaRequestMux0FlexIOChannel0;
+        dma_request_source_t baseSource= handler->baseSource;
         dma_request_source_t source = (dma_request_source_t)((uint32_t)baseSource + handler->device.shifterIdx[1]);
 #if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
-        ret = EDMA_DRV_RequestChannel(kDmaAnyChannel, source, &handler->rx_edma_state);
+        ret = EDMA_DRV_RequestChannel(kEDMAAnyChannel, source, &handler->rx_edma_state);
         if (ret == kEDMAInvalidChannel)
         {
             return kStatus_FlexioI2S_Fail;

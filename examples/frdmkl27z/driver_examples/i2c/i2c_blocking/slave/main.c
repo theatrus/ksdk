@@ -82,17 +82,17 @@ int main(void)
     // Initialize OSA
     OSA_Init();
 
-    PRINTF("==================== I2C SLAVE BLOCKING ===================\r\n\n");
+    PRINTF("==================== I2C SLAVE BLOCKING ===================\r\n\r\n");
     PRINTF("Slave is running ...");
 
     // Initialize slave
-    I2C_DRV_SlaveInit(BOARD_I2C_COMM_INSTANCE, &userConfig, &slave);
+    I2C_DRV_SlaveInit(BOARD_I2C_INSTANCE, &userConfig, &slave);
 
     // Loop transfer
     while(1)
     {
         // Slave receive 1 byte from master
-        I2C_DRV_SlaveReceiveDataBlocking(BOARD_I2C_COMM_INSTANCE, (uint8_t*)&count, 1, OSA_WAIT_FOREVER);
+        I2C_DRV_SlaveReceiveDataBlocking(BOARD_I2C_INSTANCE, (uint8_t*)&count, 1, OSA_WAIT_FOREVER);
 
         // Clear receive buffer
         for(i = 0; i < count; i++)
@@ -101,7 +101,7 @@ int main(void)
         }
 
         // Slave receive buffer from master
-        I2C_DRV_SlaveReceiveDataBlocking(BOARD_I2C_COMM_INSTANCE, dataBuff, count, 1000);
+        I2C_DRV_SlaveReceiveDataBlocking(BOARD_I2C_INSTANCE, dataBuff, count, 1000);
 
         // Print receive data
         PRINTF("\r\nSlave received:\r\n");
@@ -116,7 +116,7 @@ int main(void)
         }
 
         // Slave send buffer received from master
-        I2C_DRV_SlaveSendDataBlocking(BOARD_I2C_COMM_INSTANCE, dataBuff, count, 1000);
+        I2C_DRV_SlaveSendDataBlocking(BOARD_I2C_INSTANCE, dataBuff, count, 1000);
     }
 }
 /*******************************************************************************

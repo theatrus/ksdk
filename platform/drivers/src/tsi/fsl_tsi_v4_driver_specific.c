@@ -473,7 +473,7 @@ void TSI_DRV_IRQHandler(uint32_t instance)
         /* Am I in noise mode? */
         if(tsiState->opMode == tsi_OpModeNoise)
         {
-            tsiState->counters[curr_channel] = TSI_HAL_GetMode(base);
+            tsiState->counters[curr_channel] = TSI_HAL_GetNoiseResult(base);
         }
         else
         {

@@ -58,6 +58,7 @@ extern "C" {
  *
  * @param instance The FlexBus peripheral instance number.
  * @param fb_config FlexBus input user configuration
+ * @return Execution status.
  */
 flexbus_status_t FLEXBUS_DRV_Init(uint32_t instance, const flexbus_user_config_t *fb_config);
 
@@ -65,6 +66,7 @@ flexbus_status_t FLEXBUS_DRV_Init(uint32_t instance, const flexbus_user_config_t
  * @brief Shuts down the FlexBus driver.
  *
  * @param instance The FlexBus peripheral instance number.
+ * @return Execution status.
  */
 flexbus_status_t FLEXBUS_DRV_Deinit(uint32_t instance);
 

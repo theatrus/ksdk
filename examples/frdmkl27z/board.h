@@ -46,6 +46,12 @@
 #define CLOCK_INIT_CONFIG CLOCK_RUN
 #endif
 
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 48000000U
+#else
+#define CORE_CLOCK_FREQ 2000000U
+#endif
+
 /* OSC0 configuration. */
 #define OSC0_XTAL_FREQ 32768U
 #define OSC0_SC2P_ENABLE_CONFIG  false
@@ -66,20 +72,6 @@
 #define XTAL0_PIN    19
 #define XTAL0_PINMUX kPortPinDisabled
 
-/* RTC external clock configuration. */
-#define RTC_XTAL_FREQ   0U
-#define RTC_SC2P_ENABLE_CONFIG       false
-#define RTC_SC4P_ENABLE_CONFIG       false
-#define RTC_SC8P_ENABLE_CONFIG       false
-#define RTC_SC16P_ENABLE_CONFIG      false
-#define RTC_OSC_ENABLE_CONFIG        false
-#define RTC_CLK_OUTPUT_ENABLE_CONFIG false
-
-/* RTC_CLKIN PTC1 */
-#define RTC_CLKIN_PORT   PORTC
-#define RTC_CLKIN_PIN    1
-#define RTC_CLKIN_PINMUX kPortMuxAsGpio
-
 /* The UART to use for debug messages. */
 #ifndef BOARD_DEBUG_UART_INSTANCE
     #define BOARD_DEBUG_UART_INSTANCE   0
@@ -87,6 +79,13 @@
 #endif
 #ifndef BOARD_DEBUG_UART_BAUD
     #define BOARD_DEBUG_UART_BAUD       115200
+#endif
+#ifndef BOARD_LPUART_CLOCK_SOURCE
+  #define BOARD_LPUART_CLOCK_SOURCE   kClockLpuartSrcIrc48M
+#endif
+
+#ifndef USB_UART_CLOCK_SOURCE
+    #define USB_UART_CLOCK_SOURCE   BOARD_LPUART_CLOCK_SOURCE
 #endif
 
 /* This define to use for power manager demo */
@@ -99,7 +98,7 @@
 #define BOARD_SW_GPIO               kGpioSW3
 #define BOARD_SW_IRQ_NUM            PORTBCDE_IRQn
 #define BOARD_SW_IRQ_HANDLER        PORTBCDE_IRQHandler
-
+#define BOARD_SW_NAME               "SW3"
 /* Define print statement to inform user which switch to press for
  * power_manager_hal_demo and power_manager_rtos_demo
  */
@@ -117,7 +116,7 @@
 #define BOARD_SW_LLWU_IRQ_NUM        PORTBCDE_IRQn
 
 #define BOARD_USE_LPUART
-#define PM_DBG_UART_IRQ_HANDLER         MODULE_IRQ_HANDLER(LPUART0)
+#define PM_DBG_UART_IRQ_HANDLER         LPUART0_IRQHandler
 #define PM_DBG_UART_IRQn                LPUART0_IRQn
 
 #define BOARD_I2C_GPIO_SCL              GPIO_MAKE_PIN(GPIOD_IDX, 7)
@@ -125,21 +124,22 @@
 
 #define HWADC_INSTANCE               0
 #define ADC_IRQ_N                    ADC0_IRQn
-#if (defined FSL_RTOS_MQX)
-#define MQX_ADC_IRQHandler           MQX_ADC0_IRQHandler
-#endif
 
 /* The i2c instance used for i2c DAC demo */
 #define BOARD_DAC_I2C_INSTANCE          0
 
-/* The i2c instance used for i2c communication demo */
-#define BOARD_I2C_COMM_INSTANCE         1
+/* The i2c instance used for i2c connection by default */
+#define BOARD_I2C_INSTANCE              1
+
+/* The spi instance used for spi example */
+#define BOARD_SPI_INSTANCE              0
 
 /* The Flextimer instance/channel used for board */
 #define BOARD_FTM_INSTANCE              0
 #define BOARD_FTM_CHANNEL               0
 
 #define BOARD_ADC_HW_TRIGGER_CHAN       0
+#define BOARD_ADC_USE_ALT_VREF          1
 
 /* board led color mapping */
 #define BOARD_GPIO_LED_RED              kGpioLED2
@@ -190,6 +190,15 @@
 #define BOARD_TPM_INSTANCE              1
 #define BOARD_TPM_CHANNEL               1
 
+/* The bubble level demo information */
+#define BOARD_BUBBLE_TPM_INSTANCE       2
+#define BOARD_TPM_X_CHANNEL             0
+#define BOARD_TPM_Y_CHANNEL             1
+#define BOARD_MMA8451_ADDR              0x1D
+#define BOARD_ACCEL_ADDR                BOARD_MMA8451_ADDR
+#define BOARD_ACCEL_BAUDRATE            100
+#define BOARD_ACCEL_I2C_INSTANCE        1
+
 /* The CMP instance used for board. */
 #define BOARD_CMP_INSTANCE              0
 /* The CMP channel used for board. */
@@ -210,8 +219,11 @@ void BOARD_ClockInit(void);
 /* Function to initialize OSC0 base on board configuration. */
 void BOARD_InitOsc0(void);
 
-/* Function to initialize RTC external clock base on board configuration. */
+/* Function to initialize OSC0 using the RTC override feature */
 void BOARD_InitRtcOsc(void);
+
+/*Function to handle board-specified initialization*/
+uint8_t usb_device_board_init(uint8_t controller_id);
 
 #if defined(__cplusplus)
 }

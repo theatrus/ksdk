@@ -47,7 +47,7 @@
 #include "usb_otg_dev_api.h"
 #endif
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     #if defined( __ICCARM__ )
         #pragma data_alignment=32
         __no_init usb_dev_data_t g_usb_dev_data[USBCFG_DEV_NUM];
@@ -56,27 +56,15 @@
     #else
         #error Unsupported compiler, please use IAR, Keil or arm gcc compiler and rebuild the project.
     #endif
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        usb_dev_data_t* g_usb_dev_data_ptr[USBCFG_DEV_NUM] = {NULL};
 #endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#define OS_Mutex_lock(_M_) OS_Lock()
-#define OS_Mutex_unlock(_M_) OS_Unlock()
-#endif
 #define USB_DEV_HANDLE_OCCUPIED ((uint8_t)1)
 #define USB_DEV_HANDLE_FREE     ((uint8_t)0)
 
 #if USBCFG_DEV_USE_TASK
 #define USB_DEVICE_TASK_TEMPLATE_INDEX           0
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)            /* USB stack running on MQX */
-#define USB_DEVICE_TASK_ADDRESS                   _usb_dev_task_stun
-
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)        /* USB stack running on BM  */
-#define USB_DEVICE_TASK_ADDRESS                   _usb_dev_task
-
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if USE_RTOS
 #define USB_DEVICE_TASK_ADDRESS                   _usb_dev_task_stun
 #else
@@ -85,7 +73,6 @@
 
 #endif
 
-#define USB_DEVICE_TASK_PRIORITY                 (6)
 #define USB_DEVICE_TASK_STACKSIZE                (3500)
 #define USB_DEVICE_TASK_NAME                     "Device Task"
 #define USB_DEVICE_TASK_ATTRIBUTES               (0)
@@ -93,11 +80,11 @@
 #define USB_DEVICE_TASK_DEFAULT_TIME_SLICE       (0)
 
 #endif
-extern usb_status bsp_usb_dev_init(uint8_t controller_id);
+extern usb_status usb_dev_soc_init(uint8_t controller_id);
 #ifdef USBCFG_OTG
-extern usb_status bsp_usb_otg_dev_init(uint8_t controller_id);
+extern usb_status usb_otg_dev_soc_init(uint8_t controller_id);
 #endif
-#if USBCFG_DEV_KHCI && USBCFG_DEV_DETACH_ENABLE && USBCFG_DEV_IO_DETACH_ENABLE
+#if USBCFG_DEV_KHCI && USBCFG_DEV_VBUS_DETECT_ENABLE && USBCFG_DEV_IO_DETACH_ENABLE
 extern int32_t bsp_usb_detach_init(uint8_t controller_id);
 #endif
 extern void USB_Control_Service (void* handle, usb_event_struct_t* event,void* arg);
@@ -105,6 +92,10 @@ extern void USB_Reset_Service(void* handle, usb_event_struct_t* event, void* arg
 extern void USB_Error_Service(void* handle, usb_event_struct_t* event, void* arg);
 extern void USB_Suspend_Service(void* handle, usb_event_struct_t* event,void* arg);
 extern void USB_Resume_Service(void* handle,usb_event_struct_t* event,void* arg );
+#if USBCFG_DEV_VBUS_DETECT_ENABLE
+extern void USB_Detach_Service(void* handle,usb_event_struct_t* event,void* arg);
+#endif
+
 
 static usb_dev_state_struct_t g_usb_dev[USBCFG_DEV_NUM] = {{0}};
 #if USBCFG_DEV_KHCI
@@ -273,8 +264,8 @@ usb_status _usb_device_call_service_internal
         USB_Error_Service(&usb_dev_ptr->usb_framework, event, NULL);
         break;
 #endif
-#if USBCFG_DEV_DETACH_ENABLE
-    case USB_SERVICE_DETACH:
+#if USBCFG_DEV_VBUS_DETECT_ENABLE
+    case USB_DEV_SERVICE_DETACH:
         USB_Detach_Service(&usb_dev_ptr->usb_framework, event, NULL);
         break;
 #endif
@@ -321,7 +312,7 @@ static void _usb_dev_task
  *  Comments       :
  *        KHCI task
  *END*-----------------------------------------------------------------*/
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && USE_RTOS)
+#if  ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && USE_RTOS)
 static void _usb_dev_task_stun
 (
     void* dev_inst_ptr
@@ -351,7 +342,7 @@ static usb_status _usb_dev_task_create
     usb_dev_state_struct_t* usb_dev_ptr;
 
     usb_dev_ptr = (usb_dev_state_struct_t*)handle;
-    usb_dev_ptr->task_id = OS_Task_create(USB_DEVICE_TASK_ADDRESS, (void*)handle, (uint32_t)USB_DEVICE_TASK_PRIORITY, USB_DEVICE_TASK_STACKSIZE, USB_DEVICE_TASK_NAME, NULL);
+    usb_dev_ptr->task_id = OS_Task_create(USB_DEVICE_TASK_ADDRESS, (void*)handle, (uint32_t)USBCFG_DEV_TASK_PRIORITY, USB_DEVICE_TASK_STACKSIZE, USB_DEVICE_TASK_NAME, NULL);
 
     if (usb_dev_ptr->task_id == (uint32_t)OS_TASK_ERROR)
     {
@@ -552,6 +543,8 @@ usb_status usb_device_init
 (
       /* [IN] the USB device controller to initialize */
       uint8_t controller_id,
+      /* [IN] the usb_device_board_initialize state structure */
+      void *  board_init_callback,
       /* [OUT] the USB_USB_dev_initialize state structure */
       usb_device_handle *  handle
 )
@@ -561,19 +554,16 @@ usb_status usb_device_init
     usb_status error = USB_OK;
     const usb_dev_interface_functions_struct_t* dev_if = NULL;
     usb_class_fw_object_struct_t* usb_fw_ptr = NULL;
-
+#ifndef USBCFG_OTG
+    usb_board_init_callback_struct_t* usb_board_init = NULL;
+    usb_board_init = (usb_board_init_callback_struct_t *)board_init_callback;
+#endif
     //OS_Lock();
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    for(i = 0; i < USBCFG_DEV_NUM; i++)
+    if (handle == NULL)
     {
-        if(NULL == g_usb_dev_data_ptr[i])
-        {
-            g_usb_dev_data_ptr[i] = OS_Mem_alloc_uncached_align(sizeof(usb_dev_data_t), 32);
-        }
+        return USBERR_DEVICE_BUSY;
     }
-#endif
-
     usb_dev_ptr = _usb_device_get_handle();
 
     if(usb_dev_ptr == NULL)
@@ -585,10 +575,8 @@ usb_status usb_device_init
     usb_dev_ptr->controller_id = controller_id;
     usb_fw_ptr = &usb_dev_ptr->usb_framework;
     usb_dev_ptr->mutex = OS_Mutex_create();
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     usb_fw_ptr->ext_req_to_host = (uint8_t*)(&g_usb_dev_data[usb_dev_ptr->dev_index].control_out);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    usb_fw_ptr->ext_req_to_host = (uint8_t*)g_usb_dev_data_ptr[usb_dev_ptr->dev_index]->control_out;
 #endif
 
     for (i= 0; i < MAX_DEVICE_SERVICE_NUMBER; i++)
@@ -630,12 +618,23 @@ usb_status usb_device_init
     usb_fw_ptr->controller_handle = usb_dev_ptr->controller_handle;
     usb_fw_ptr->dev_handle = usb_dev_ptr;
 #ifndef USBCFG_OTG
-    error = bsp_usb_dev_init(controller_id);
-#if USBCFG_DEV_KHCI && USBCFG_DEV_DETACH_ENABLE && USBCFG_DEV_IO_DETACH_ENABLE
+    if ((NULL != board_init_callback) && (NULL != usb_board_init->callback))
+    {
+        error = (uint32_t)usb_board_init->callback(usb_board_init->arg);
+    }
+    else
+    {
+        error = USB_OK;
+    }
+    if(USB_OK == error)
+    {
+        error = usb_dev_soc_init(controller_id);
+    }
+#if USBCFG_DEV_KHCI && USBCFG_DEV_VBUS_DETECT_ENABLE && USBCFG_DEV_IO_DETACH_ENABLE
     error = bsp_usb_detach_init(controller_id);
 #endif
 #else
-    error = bsp_usb_otg_dev_init(controller_id);
+    error = usb_otg_dev_soc_init(controller_id);
 #endif
     if (error != USB_OK)
     {
@@ -715,9 +714,6 @@ usb_status usb_device_deinit
     usb_device_handle  handle
 )
 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    uint32_t i;
-#endif
     usb_dev_state_struct_t* usb_dev_ptr;
     //usb_class_fw_object_struct_t* usb_fw_ptr = NULL;
     if (handle == NULL)
@@ -734,17 +730,6 @@ usb_status usb_device_deinit
     _usb_device_shutdown(handle);
 
     _usb_device_release_handle(usb_dev_ptr);
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    for(i = 0; i < USBCFG_DEV_NUM; i++)
-    {
-        if(NULL != g_usb_dev_data_ptr[i])
-        {
-            OS_Mem_free(g_usb_dev_data_ptr[i]);
-            g_usb_dev_data_ptr[i] = NULL;
-        }
-    }
-#endif
 
     return USB_OK;
 } /* EndBody */

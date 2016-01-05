@@ -61,7 +61,7 @@ void PWM_HAL_Init(PWM_Type *base)
     PWM_WR_MASK(base, 0);
     PWM_WR_FCTRL(base, 0);
     PWM_WR_FCTRL2(base, 0);
-    PWM_WR_FSTS(base, 0);
+    PWM_WR_FSTS(base, 0xF);
 
     for (i = 0; i <= kFlexPwmModule3; i++)
     {
@@ -69,10 +69,11 @@ void PWM_HAL_Init(PWM_Type *base)
         PWM_WR_CTRL2(base, i, 0);
         PWM_WR_OCTRL(base, i, 0);
         PWM_WR_TCTRL(base, i, 0);
-        PWM_WR_DISMAP(base, i, 0, 0xFFF);
+        PWM_WR_DISMAP(base, i, 0, 0x0);
         PWM_WR_DTCNT0_DTCNT0(base, i, 0);
         PWM_WR_DTCNT1_DTCNT1(base, i, 0);
         PWM_WR_INTEN(base, i, 0);
+        PWM_WR_STS(base, i, 0x3FFF);
     }
 }
 
@@ -332,6 +333,60 @@ void PWM_HAL_SetupForceSignal(PWM_Type *base, pwm_module_t subModuleNum,
     mask = 0x3 << shift;
 
     PWM_WR_DTSRCSEL(base, (PWM_RD_DTSRCSEL(base) & ~mask) | (mode << shift));
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : PWM_HAL_EnableInterrupts
+ * Description   : Enables all PWM interrupts that the user is interested to use
+ * User can pass in an OR'ed list of PWM interrupts to enable. The list of available PWM interrupts
+ * is available in the enum pwm_event_t
+ *
+ *END**************************************************************************/
+void PWM_HAL_EnableInterrupts(PWM_Type *base, pwm_module_t subModuleNum, uint32_t eventmask)
+{
+    PWM_SET_INTEN(base, subModuleNum, eventmask & (kFlexPwmFault0Event - 1));
+    /* Check if we should enable Fault interrupts which are in a different register */
+    if ((eventmask >> 16) & PWM_FCTRL_FIE_MASK)
+    {
+        PWM_SET_FCTRL(base, (eventmask >> 16) & PWM_FCTRL_FIE_MASK);
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : PWM_HAL_DisableInterrupts
+ * Description   : Disables all PWM interrupts
+ * User can pass in an OR'ed list of PWM interrupts to disable. The list of available PWM interrupts
+ * is available in the enum pwm_event_t
+ *
+ *END**************************************************************************/
+void PWM_HAL_DisableInterrupts(PWM_Type *base, pwm_module_t subModuleNum, uint32_t eventmask)
+{
+    PWM_CLR_INTEN(base, subModuleNum, eventmask & (kFlexPwmFault0Event - 1));
+    /* Check if we should disable Fault interrupts which are in a different register */
+    if ((eventmask >> 16) & PWM_FCTRL_FIE_MASK)
+    {
+        PWM_CLR_FCTRL(base, (eventmask >> 16) & PWM_FCTRL_FIE_MASK);
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : PWM_HAL_ClearStatus
+ * Description   : Clear all PWM status flags
+ * User can pass in an OR'ed list of status flags to clear. The list of available PWM interrupts
+ * is available in the enum pwm_event_t
+ *
+ *END**************************************************************************/
+void PWM_HAL_ClearStatus(PWM_Type *base, pwm_module_t subModuleNum, uint32_t eventmask)
+{
+    PWM_SET_STS(base, subModuleNum, eventmask & (kFlexPwmFault0Event - 1));
+    /* Check if we should clear Fault status flags which are in a different register */
+    if ((eventmask >> 16) & PWM_FSTS_FFLAG_MASK)
+    {
+        PWM_SET_FSTS(base, (eventmask >> 16) & PWM_FSTS_FFLAG_MASK);
+    }
 }
 
 #endif /* FSL_FEATURE_SOC_PWM_COUNT */

@@ -62,11 +62,9 @@ extern void Main_Task (uint32_t param);
  ****************************************************************************/
 extern const unsigned char wav_data[];
 extern const uint16_t wav_size;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-static uint8_t *wav_buff;
-#else
+
 static uint8_t wav_buff[AUDIO_ENDPOINT_MAX_PACKET_SIZE];
-#endif
+
 uint32_t audio_position = 0;
 
 audio_handle_t* g_audio_handle;
@@ -128,14 +126,7 @@ void USB_Prepare_Data (void)
 void audio_init (void* param)
 {
     g_audio_handle = (audio_handle_t*) param;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    wav_buff = OS_Mem_alloc_uncached_align(AUDIO_ENDPOINT_MAX_PACKET_SIZE, 32);
-    if(wav_buff == NULL)
-    {
-        USB_PRINTF("OS_Mem_alloc_uncached_align fail in audio composite example \r\n");
-        return;
-    }
-#endif
+
     while (TRUE)
     {
         while (!start_app)
@@ -214,7 +205,7 @@ uint8_t Audio_USB_App_Class_Callback
 {
     uint8_t error = USB_OK;
 
-    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID))
+    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID) && (*size != 0xFFFFFFFF))
     {
         if (arg != NULL)
         {

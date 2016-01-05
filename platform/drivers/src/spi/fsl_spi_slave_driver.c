@@ -433,7 +433,10 @@ spi_status_t SPI_DRV_SlaveInit(uint32_t instance, spi_slave_state_t * spiState,
     SPI_HAL_Init(base);
 
     /* Initialize the event structure */
-    OSA_EventCreate(&spiState->event, kEventAutoClear);
+    if (OSA_EventCreate(&spiState->event, kEventAutoClear) != kStatus_OSA_Success)
+    {
+        return kStatus_SPI_Error;
+    }
 
     /* Set SPI to slave mode */
     SPI_HAL_SetMasterSlave(base, kSpiSlave);

@@ -183,7 +183,7 @@ typedef enum _sdhc_hal_endian {
     kSdhcHalEndianLittle = 2,
 } sdhc_hal_endian_t;
 
-/*! @brief SDHC dma mode */
+/*! @brief SDHC DMA mode */
 typedef enum _sdhc_hal_dma_mode {
     kSdhcHalDmaSimple = 0,
     kSdhcHalDmaAdma1 = 1,
@@ -283,7 +283,7 @@ typedef struct SdhcHalAdma2Descriptor {
 #define SDHC_HAL_RST_TYPE_CMD               SDHC_SYSCTL_RSTC_MASK
 #define SDHC_HAL_RST_TYPE_DATA              SDHC_SYSCTL_RSTD_MASK
 
-/* Max block length sdhc support */
+/* Maximum block length SDHC support */
 #define SDHC_HAL_MAX_BLKLEN_512B            (0U)
 #define SDHC_HAL_MAX_BLKLEN_1024B           (1U)
 #define SDHC_HAL_MAX_BLKLEN_2048B           (2U)
@@ -310,8 +310,8 @@ typedef struct SdhcHalAdma2Descriptor {
 typedef struct SdhcHalBasicInfo
 {
     uint8_t specVer;               /*!< Save the specification version */
-    uint8_t vendorVer;             /*!< Save the verdor version */
-    uint16_t maxBlkLen;             /*!< Save the max block length */
+    uint8_t vendorVer;             /*!< Save the vendor version */
+    uint16_t maxBlkLen;             /*!< Save the maximum block length */
     uint32_t capability;           /*!< The capability flags */
 }sdhc_hal_basic_info_t;
 
@@ -323,7 +323,7 @@ typedef struct SdhcHalSdClkConfig
     uint32_t destClk;
 }sdhc_hal_sdclk_config_t;
 
-/*! @brief Current sdhc status type */
+/*! @brief Current SDHC status type */
 typedef enum _sdhc_hal_curstat_type_t {
     kSdhcHalIsCmdInhibit,          /*!< Checks whether the command inhibit bit is set or not. */
     kSdhcHalIsDataInhibit,         /*!< Checks whether data inhibit bit is set or not. */
@@ -396,17 +396,17 @@ typedef struct SdhcHalInitConfig
     uint8_t writeWatermarkLevel;      /*!< Sets the watermark for writing. */
     uint8_t readWatermarkLevel;       /*!< Sets the watermark for reading. */
     uint32_t enFlags;                 /*!< Enable or disable corresponding feature */
-    sdhc_mmcboot_param_t bootParams;  /*!< Configture read MMC card boot data feature*/
+    sdhc_mmcboot_param_t bootParams;  /*!< Configuration read MMC card boot data feature*/
 }sdhc_hal_config_t;
 
 /*! @brief Command request structure */
 typedef struct SdhcHalCmdReq
 {
-    uint32_t dataBlkSize;                             /*!< Cmd data Block size */
-    uint32_t dataBlkCount;                            /*!< Cmd data Block count */
-    uint32_t arg;                                     /*!< Cmd argument */
-    uint32_t index;                                   /*!< Cmd index */
-    uint32_t flags;                                   /*!< Cmd Flags */
+    uint32_t dataBlkSize;                             /*!< Command data Block size */
+    uint32_t dataBlkCount;                            /*!< Command data Block count */
+    uint32_t arg;                                     /*!< Command argument */
+    uint32_t index;                                   /*!< Command index */
+    uint32_t flags;                                   /*!< Command Flags */
 }sdhc_hal_cmd_req_t;
 
 /*! @brief SDHC error type */
@@ -460,9 +460,10 @@ static inline uint32_t SDHC_HAL_GetData(SDHC_Type * base)
 }
 
 /*!
- * @brief Gets current card's status.
+ * @brief Gets the current card's status.
  *
  * @param base SDHC base address
+ * @param stateType The status type.
  * @return the status if happened corresponding to stateType
  *        - true: status flag has been set
  *        - false: status flag has not been set
@@ -499,10 +500,10 @@ static inline void SDHC_HAL_SetContinueRequest(SDHC_Type * base)
 void SDHC_HAL_Config(SDHC_Type * base, const sdhc_hal_config_t* initConfig);
 
 /*!
- * @brief Sets SDHC SD protol unit clock.
+ * @brief Sets SDHC SD protocol unit clock.
  *
  * @param base SDHC base address
- * @param clkConfItms SDHC SD protol unit clock configuration items. 
+ * @param clkConfItms SDHC SD protocol unit clock configuration items. 
  */
 void SDHC_HAL_ConfigSdClock(SDHC_Type * base, sdhc_hal_sdclk_config_t* clkConfItms);
 
@@ -529,10 +530,10 @@ static inline void SDHC_HAL_ClearIntFlags(SDHC_Type * base, uint32_t mask)
 }
 
 /*!
- * @brief Get the error status of SDHC .
+ * @brief Gets the error status of SDHC.
  *
  * @param base SDHC base address
- * @param sdhc_hal_err_type_t the error type
+ * @param errType the error type
  * @param errFlags the result error flags
 */
 void SDHC_HAL_GetAllErrStatus(SDHC_Type * base, sdhc_hal_err_type_t errType, uint32_t* errFlags);
@@ -566,6 +567,7 @@ static inline void SDHC_HAL_SetAdmaAddress(SDHC_Type * base, uint32_t address)
  *
  * @param base SDHC base address
  * @param index of response register, range from 0 to 3
+ * @return The command response value.
  */
 uint32_t SDHC_HAL_GetResponse(SDHC_Type * base, uint32_t index);
 
@@ -614,9 +616,10 @@ uint32_t SDHC_HAL_InitCard(SDHC_Type * base, uint32_t timeout);
 void SDHC_HAL_Init(SDHC_Type * base);
 
 /*!
- * @brief Get the capability of SDHC
+ * @brief Gets the capability of SDHC.
  *
  * @param base SDHC base address
+ * @param basicInfo Pointer to user data structure.
  */
 void SDHC_HAL_GetBasicInfo(SDHC_Type * base, sdhc_hal_basic_info_t* basicInfo);
 

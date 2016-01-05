@@ -31,17 +31,42 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_lptmr_driver.h"
-#if FSL_FEATURE_SOC_LPTMR_COUNT
 
 /******************************************************************************
  * Code
  *****************************************************************************/
+
+#if FSL_FEATURE_LPTMR_HAS_SHARED_IRQ_HANDLER
 /* LPTMR IRQ handler that would cover the same name's APIs in startup code */
+void LPTMR0_LPTMR1_IRQHandler(void)
+{
+    if (g_lptmrStatePtr[0] != NULL)
+    {
+        LPTMR_DRV_IRQHandler(0U);
+    }
+    if (g_lptmrStatePtr[1] != NULL)
+    {
+        LPTMR_DRV_IRQHandler(1U);
+    }
+}
+
+#else
+
+#if (FSL_FEATURE_SOC_LPTMR_COUNT > 0U)
 void LPTMR0_IRQHandler(void)
 {
     LPTMR_DRV_IRQHandler(0U);
 }
 #endif
+
+#if (FSL_FEATURE_SOC_LPTMR_COUNT > 1U)
+void LPTMR1_IRQHandler(void)
+{
+    LPTMR_DRV_IRQHandler(1U);
+}
+#endif
+
+#endif /* FSL_FEATURE_LPTMR_HAS_SHARED_IRQ_HANDLER */
 
 /******************************************************************************
  * EOF

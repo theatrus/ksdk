@@ -453,7 +453,7 @@ typedef enum _sim_clock_gate_name
     kSimClockGateSdhc0     = FSL_SIM_SCGC_BIT(3U, 17U),
     kSimClockGateFtm2      = FSL_SIM_SCGC_BIT(3U, 24U),
     kSimClockGateAdc1      = FSL_SIM_SCGC_BIT(3U, 27U),
-#if FSL_FEATURE_SOC_LCD_COUNT
+#if FSL_FEATURE_SOC_SLCD_COUNT
     kSimClockGateSlcd0     = FSL_SIM_SCGC_BIT(3U, 30U),
 #endif
     

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<ProjectWorkspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_mpw.xsd">
-  <SchemaVersion>1.0</SchemaVersion>
-  <Header>### uVision Project, (C) Keil Software</Header>
-  <WorkspaceName>WorkSpace</WorkspaceName>
-<project><PathAndName>../../../../../../../../../usb/usb_core/device/build/mdk/usbd_sdk_twrk21d50m_freertos/usbd_sdk_twrk21d50m_freertos.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../../lib/ksdk_freertos_lib/mdk/K21DA5/ksdk_freertos_lib.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>dev_hid_keyboard_twrk21d50m_freertos.uvprojx</PathAndName><NodeIsActive>1</NodeIsActive></project></ProjectWorkspace>

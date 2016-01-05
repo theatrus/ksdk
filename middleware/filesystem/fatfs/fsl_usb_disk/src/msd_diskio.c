@@ -121,7 +121,7 @@ DSTATUS msd_disk_initialize (
     g_pCmd.CBW_PTR  = cbw_ptr;
     g_pCmd.CSW_PTR  = csw_ptr;
     g_pCmd.LUN      = pdrv;
-    g_pCmd.CLASS_PTR = (void *)g_mass_device[g_mass_device_new_index].CLASS_HANDLE;
+    g_pCmd.CLASS_PTR = (void *)g_mass_device[g_mass_device_new_index].class_handle;
     g_pCmd.CALLBACK = command_callback;
     
     disk_ioctl(pdrv, UFI_TEST_UNIT_READY_CMD, NULL);      
@@ -193,9 +193,7 @@ DRESULT msd_disk_read (
         {
             while(!g_bCallBack)    /* Wait till command comes back */
             {
-              #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-                      Poll();
-              #elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+              #if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
                           OSA_PollAllOtherTasks();
               #endif
             }
@@ -266,9 +264,7 @@ DRESULT msd_disk_write (
         {
             while(!g_bCallBack)    /* Wait till command comes back */
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
             }
@@ -336,9 +332,7 @@ DRESULT msd_disk_ioctl (
             /* Wait till command comes back */
             while(!g_bCallBack)    
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
             }
@@ -367,9 +361,7 @@ DRESULT msd_disk_ioctl (
             /* Wait till command comes back */
             while(!g_bCallBack)    
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
             }     
@@ -398,9 +390,7 @@ DRESULT msd_disk_ioctl (
             /* Wait till command comes back */
             while(!g_bCallBack)    
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
             }
@@ -429,9 +419,7 @@ DRESULT msd_disk_ioctl (
             /* Wait till command comes back */
             while(!g_bCallBack)    
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
             }
@@ -492,9 +480,7 @@ DRESULT msd_disk_ioctl (
             /* Wait till command comes back */
             while(!g_bCallBack)
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
             }
@@ -524,9 +510,7 @@ DRESULT msd_disk_ioctl (
             /* Wait till command comes back */
             while(!g_bCallBack)
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        Poll();
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && !(USE_RTOS))
             OSA_PollAllOtherTasks();
 #endif
             }

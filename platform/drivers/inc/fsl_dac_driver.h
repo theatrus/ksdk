@@ -52,10 +52,10 @@
 typedef enum _dac_flag_t
 {
 #if FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION
-    kDacBuffIndexWatermarkFlag = 0U, /*!< Event for the buffer index hit the watermark. */
+    kDacBuffIndexWatermarkFlag = 0U, /*!< Event for the buffer index reaching the watermark. */
 #endif /* FSL_FEATURE_DAC_HAS_WATERMARK_SELECTION */
-    kDacBuffIndexStartFlag = 1U, /*!< Event for the buffer index hit the start (0). */
-    kDacBuffIndexUpperFlag = 2U /*!< Event for the buffer index hit the upper. */
+    kDacBuffIndexStartFlag = 1U, /*!< Event for the buffer index reaching  start (0). */
+    kDacBuffIndexUpperFlag = 2U /*!< Event for the buffer index reaching the upper section. */
 } dac_flag_t;
 
 /*! @brief Table of base addresses for DAC instances. */
@@ -76,8 +76,7 @@ extern "C" {
  * function with the populated parameter configures the DAC module to operate as
  * a simple converter. The settings are:\n
  *
- * \li.refVoltSrcMode = kDacRefVoltSrcOfVref2; // Vdda
- * \li.triggerMode = kDacTriggerBySoftware;
+ * \li.dacRefVoltSrc = kDacRefVoltSrcOfVref2; // Vdda
  * \li.lowPowerEnable = false;
  *
  * @param userConfigPtr Pointer to the user configuration structure. See the "dac_user_config_t".
@@ -138,7 +137,7 @@ dac_status_t DAC_DRV_ConfigBuffer(uint32_t instance, const dac_buffer_config_t *
  *
  * This function  sets values into the DAC internal buffer. Note that the buffer
  * size is defined by the  "FSL_FEATURE_DAC_BUFFER_SIZE" macro and the available
- * value is 12 bit.
+ * value is 12 bits.
  *
  * @param instance DAC instance ID.
  * @param start Start index of setting values.

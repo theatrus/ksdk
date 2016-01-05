@@ -251,10 +251,19 @@ int main(void)
 
     PRINTF("\r\nRTC Demo running...\r\n");
 
+#if FSL_FEATURE_SIM_OPT_HAS_RTC_CLOCK_OUT_SELECTION
     // select the 1Hz for RTC_CLKOUT
     CLOCK_SYS_SetRtcOutSrc(kClockRtcoutSrc1Hz);
+#endif
 
     RTC_DRV_Init(0);
+
+    /* Enable the RTC Clock output */
+    RTC_HAL_SetClockOutCmd(RTC_BASE_PTR, true);
+
+    /* Need to check this here as the RTC_DRV_Init() may have issued a software reset on the
+     * module clearing all prior RTC OSC related setup */
+    BOARD_InitRtcOsc();
 
     // Set a start date time and start RTC
     date.year = 2014U;

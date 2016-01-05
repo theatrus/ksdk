@@ -6,14 +6,14 @@
 **                          GNU C Compiler - CodeSourcery Sourcery G++
 **                          IAR ANSI C/C++ Compiler for ARM
 **
-**     Reference manual:    KV11P64M75RM Rev.0, November 2014
+**     Reference manual:    KV11P64M75RM Rev.2, April 2015
 **     Version:             rev. 1.0, 2014-12-14
-**     Build:               b150215
+**     Build:               b150616
 **
 **     Abstract:
 **         Extension to the CMSIS register access layer header.
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -61,6 +61,14 @@
 
 #include "MKV11Z7.h"
 #include "fsl_bitaccess.h"
+
+#if defined(__IAR_SYSTEMS_ICC__)
+  /*
+   * Suppress "Error[Pm008]: sections of code should not be 'commented out' (MISRA C 2004 rule 2.4)"
+   * as some register descriptions contain code examples
+   */
+  #pragma diag_suppress=pm008
+#endif
 
 /*
  * MKV11Z7 ADC
@@ -121,10 +129,11 @@
  * to this MCU. Writing SC1A while SC1A is actively controlling a conversion
  * aborts the current conversion. In Software Trigger mode, when SC2[ADTRG]=0,
  * writes to SC1A subsequently initiate a new conversion, if SC1[ADCH] contains a
- * value other than all 1s. Writing any of the SC1n registers while that specific
- * SC1n register is actively controlling a conversion aborts the current conversion.
- * None of the SC1B-SC1n registers are used for software trigger operation and
- * therefore writes to the SC1B-SC1n registers do not initiate a new conversion.
+ * value other than all 1s (module disabled). Writing any of the SC1n registers while
+ * that specific SC1n register is actively controlling a conversion aborts the
+ * current conversion. None of the SC1B-SC1n registers are used for software
+ * trigger operation and therefore writes to the SC1B-SC1n registers do not initiate a
+ * new conversion.
  */
 /*!
  * @name Constants and macros for entire ADC_SC1 register
@@ -159,47 +168,67 @@
  * enters a low-power state when a conversion completes.
  *
  * Values:
- * - 00000 - When DIFF=0, DADP0 is selected as input; when DIFF=1, DAD0 is
+ * - 0b00000 - When DIFF=0, DADP0 is selected as input; when DIFF=1, DAD0 is
  *     selected as input.
- * - 00001 - When DIFF=0, DADP1 is selected as input; when DIFF=1, DAD1 is
+ * - 0b00001 - When DIFF=0, DADP1 is selected as input; when DIFF=1, DAD1 is
  *     selected as input.
- * - 00010 - When DIFF=0, DADP2 is selected as input; when DIFF=1, DAD2 is
+ * - 0b00010 - When DIFF=0, DADP2 is selected as input; when DIFF=1, DAD2 is
  *     selected as input.
- * - 00011 - When DIFF=0, DADP3 is selected as input; when DIFF=1, DAD3 is
+ * - 0b00011 - When DIFF=0, DADP3 is selected as input; when DIFF=1, DAD3 is
  *     selected as input.
- * - 00100 - When DIFF=0, AD4 is selected as input; when DIFF=1, it is reserved.
- * - 00101 - When DIFF=0, AD5 is selected as input; when DIFF=1, it is reserved.
- * - 00110 - When DIFF=0, AD6 is selected as input; when DIFF=1, it is reserved.
- * - 00111 - When DIFF=0, AD7 is selected as input; when DIFF=1, it is reserved.
- * - 01000 - When DIFF=0, AD8 is selected as input; when DIFF=1, it is reserved.
- * - 01001 - When DIFF=0, AD9 is selected as input; when DIFF=1, it is reserved.
- * - 01010 - When DIFF=0, AD10 is selected as input; when DIFF=1, it is reserved.
- * - 01011 - When DIFF=0, AD11 is selected as input; when DIFF=1, it is reserved.
- * - 01100 - When DIFF=0, AD12 is selected as input; when DIFF=1, it is reserved.
- * - 01101 - When DIFF=0, AD13 is selected as input; when DIFF=1, it is reserved.
- * - 01110 - When DIFF=0, AD14 is selected as input; when DIFF=1, it is reserved.
- * - 01111 - When DIFF=0, AD15 is selected as input; when DIFF=1, it is reserved.
- * - 10000 - When DIFF=0, AD16 is selected as input; when DIFF=1, it is reserved.
- * - 10001 - When DIFF=0, AD17 is selected as input; when DIFF=1, it is reserved.
- * - 10010 - When DIFF=0, AD18 is selected as input; when DIFF=1, it is reserved.
- * - 10011 - When DIFF=0, AD19 is selected as input; when DIFF=1, it is reserved.
- * - 10100 - When DIFF=0, AD20 is selected as input; when DIFF=1, it is reserved.
- * - 10101 - When DIFF=0, AD21 is selected as input; when DIFF=1, it is reserved.
- * - 10110 - When DIFF=0, AD22 is selected as input; when DIFF=1, it is reserved.
- * - 10111 - When DIFF=0, AD23 is selected as input; when DIFF=1, it is reserved.
- * - 11000 - Reserved.
- * - 11001 - Reserved.
- * - 11010 - When DIFF=0, Temp Sensor (single-ended) is selected as input; when
- *     DIFF=1, Temp Sensor (differential) is selected as input.
- * - 11011 - When DIFF=0, Bandgap (single-ended) is selected as input; when
+ * - 0b00100 - When DIFF=0, AD4 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b00101 - When DIFF=0, AD5 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b00110 - When DIFF=0, AD6 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b00111 - When DIFF=0, AD7 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01000 - When DIFF=0, AD8 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01001 - When DIFF=0, AD9 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01010 - When DIFF=0, AD10 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01011 - When DIFF=0, AD11 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01100 - When DIFF=0, AD12 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01101 - When DIFF=0, AD13 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01110 - When DIFF=0, AD14 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b01111 - When DIFF=0, AD15 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10000 - When DIFF=0, AD16 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10001 - When DIFF=0, AD17 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10010 - When DIFF=0, AD18 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10011 - When DIFF=0, AD19 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10100 - When DIFF=0, AD20 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10101 - When DIFF=0, AD21 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10110 - When DIFF=0, AD22 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b10111 - When DIFF=0, AD23 is selected as input; when DIFF=1, it is
+ *     reserved.
+ * - 0b11000 - Reserved.
+ * - 0b11001 - Reserved.
+ * - 0b11010 - When DIFF=0, Temp Sensor (single-ended) is selected as input;
+ *     when DIFF=1, Temp Sensor (differential) is selected as input.
+ * - 0b11011 - When DIFF=0, Bandgap (single-ended) is selected as input; when
  *     DIFF=1, Bandgap (differential) is selected as input.
- * - 11100 - Reserved.
- * - 11101 - When DIFF=0,VREFSH is selected as input; when DIFF=1, -VREFSH
+ * - 0b11100 - Reserved.
+ * - 0b11101 - When DIFF=0,VREFSH is selected as input; when DIFF=1, -VREFSH
  *     (differential) is selected as input. Voltage reference selected is determined
  *     by SC2[REFSEL].
- * - 11110 - When DIFF=0,VREFSL is selected as input; when DIFF=1, it is
+ * - 0b11110 - When DIFF=0,VREFSL is selected as input; when DIFF=1, it is
  *     reserved. Voltage reference selected is determined by SC2[REFSEL].
- * - 11111 - Module is disabled.
+ * - 0b11111 - Module is disabled.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC1_ADCH field. */
@@ -219,8 +248,8 @@
  * conversion algorithm and the number of cycles to complete a conversion.
  *
  * Values:
- * - 0 - Single-ended conversions and input channels are selected.
- * - 1 - Differential conversions and input channels are selected.
+ * - 0b0 - Single-ended conversions and input channels are selected.
+ * - 0b1 - Differential conversions and input channels are selected.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC1_DIFF field. */
@@ -239,8 +268,8 @@
  * respective AIEN is high, an interrupt is asserted.
  *
  * Values:
- * - 0 - Conversion complete interrupt is disabled.
- * - 1 - Conversion complete interrupt is enabled.
+ * - 0b0 - Conversion complete interrupt is disabled.
+ * - 0b1 - Conversion complete interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC1_AIEN field. */
@@ -266,8 +295,8 @@
  * respective Rn register is read.
  *
  * Values:
- * - 0 - Conversion is not completed.
- * - 1 - Conversion is completed.
+ * - 0b0 - Conversion is not completed.
+ * - 0b1 - Conversion is completed.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC1_COCO field. */
@@ -315,10 +344,10 @@
  * source is re-activated.
  *
  * Values:
- * - 00 - Bus clock
- * - 01 - Bus clock divided by 2(BUSCLK/2)
- * - 10 - Alternate clock (ALTCLK)
- * - 11 - Asynchronous clock (ADACK)
+ * - 0b00 - Bus clock
+ * - 0b01 - Bus clock divided by 2(BUSCLK/2)
+ * - 0b10 - Alternate clock (ALTCLK)
+ * - 0b11 - Asynchronous clock (ADACK)
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_ADICLK field. */
@@ -336,14 +365,14 @@
  * Selects the ADC resolution mode.
  *
  * Values:
- * - 00 - When DIFF=0:It is single-ended 8-bit conversion; when DIFF=1, it is
+ * - 0b00 - When DIFF=0:It is single-ended 8-bit conversion; when DIFF=1, it is
  *     differential 9-bit conversion with 2's complement output.
- * - 01 - When DIFF=0:It is single-ended 12-bit conversion ; when DIFF=1, it is
- *     differential 13-bit conversion with 2's complement output.
- * - 10 - When DIFF=0:It is single-ended 10-bit conversion. ; when DIFF=1, it is
- *     differential 11-bit conversion with 2's complement output
- * - 11 - When DIFF=0:It is single-ended 16-bit conversion..; when DIFF=1, it is
- *     differential 16-bit conversion with 2's complement output
+ * - 0b01 - When DIFF=0:It is single-ended 12-bit conversion ; when DIFF=1, it
+ *     is differential 13-bit conversion with 2's complement output.
+ * - 0b10 - When DIFF=0:It is single-ended 10-bit conversion. ; when DIFF=1, it
+ *     is differential 11-bit conversion with 2's complement output
+ * - 0b11 - When DIFF=0:It is single-ended 16-bit conversion..; when DIFF=1, it
+ *     is differential 16-bit conversion with 2's complement output
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_MODE field. */
@@ -367,8 +396,8 @@
  * extent of the long sample time.
  *
  * Values:
- * - 0 - Short sample time.
- * - 1 - Long sample time.
+ * - 0b0 - Short sample time.
+ * - 0b1 - Long sample time.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_ADLSMP field. */
@@ -386,10 +415,10 @@
  * Selects the divide ratio used by the ADC to generate the internal clock ADCK.
  *
  * Values:
- * - 00 - The divide ratio is 1 and the clock rate is input clock.
- * - 01 - The divide ratio is 2 and the clock rate is (input clock)/2.
- * - 10 - The divide ratio is 4 and the clock rate is (input clock)/4.
- * - 11 - The divide ratio is 8 and the clock rate is (input clock)/8.
+ * - 0b00 - The divide ratio is 1 and the clock rate is input clock.
+ * - 0b01 - The divide ratio is 2 and the clock rate is (input clock)/2.
+ * - 0b10 - The divide ratio is 4 and the clock rate is (input clock)/4.
+ * - 0b11 - The divide ratio is 8 and the clock rate is (input clock)/8.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_ADIV field. */
@@ -408,9 +437,9 @@
  * This optimizes power consumption when higher sample rates are not required.
  *
  * Values:
- * - 0 - Normal power configuration.
- * - 1 - Low-power configuration. The power is reduced at the expense of maximum
- *     clock speed.
+ * - 0b0 - Normal power configuration.
+ * - 0b1 - Low-power configuration. The power is reduced at the expense of
+ *     maximum clock speed.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG1_ADLPC field. */
@@ -461,11 +490,11 @@
  * continuous conversions are enabled if high conversion rates are not required.
  *
  * Values:
- * - 00 - Default longest sample time; 20 extra ADCK cycles; 24 ADCK cycles
+ * - 0b00 - Default longest sample time; 20 extra ADCK cycles; 24 ADCK cycles
  *     total.
- * - 01 - 12 extra ADCK cycles; 16 ADCK cycles total sample time.
- * - 10 - 6 extra ADCK cycles; 10 ADCK cycles total sample time.
- * - 11 - 2 extra ADCK cycles; 6 ADCK cycles total sample time.
+ * - 0b01 - 12 extra ADCK cycles; 16 ADCK cycles total sample time.
+ * - 0b10 - 6 extra ADCK cycles; 10 ADCK cycles total sample time.
+ * - 0b11 - 2 extra ADCK cycles; 6 ADCK cycles total sample time.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG2_ADLSTS field. */
@@ -485,8 +514,8 @@
  * conversion clocks.
  *
  * Values:
- * - 0 - Normal conversion sequence selected.
- * - 1 - High-speed conversion sequence selected with 2 additional ADCK cycles
+ * - 0b0 - Normal conversion sequence selected.
+ * - 0b1 - High-speed conversion sequence selected with 2 additional ADCK cycles
  *     to total conversion time.
  */
 /*@{*/
@@ -511,10 +540,10 @@
  * reduced because the ADACK clock is already operational.
  *
  * Values:
- * - 0 - Asynchronous clock output disabled; Asynchronous clock is enabled only
- *     if selected by ADICLK and a conversion is active.
- * - 1 - Asynchronous clock and clock output is enabled regardless of the state
- *     of the ADC.
+ * - 0b0 - Asynchronous clock output disabled; Asynchronous clock is enabled
+ *     only if selected by ADICLK and a conversion is active.
+ * - 0b1 - Asynchronous clock and clock output is enabled regardless of the
+ *     state of the ADC.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_CFG2_ADACKEN field. */
@@ -524,25 +553,6 @@
 /*! @brief Set the ADACKEN field to a new value. */
 #define ADC_WR_CFG2_ADACKEN(base, value) (ADC_RMW_CFG2(base, ADC_CFG2_ADACKEN_MASK, ADC_CFG2_ADACKEN(value)))
 #define ADC_BWR_CFG2_ADACKEN(base, value) (BME_BFI32(&ADC_CFG2_REG(base), ((uint32_t)(value) << ADC_CFG2_ADACKEN_SHIFT), ADC_CFG2_ADACKEN_SHIFT, ADC_CFG2_ADACKEN_WIDTH))
-/*@}*/
-
-/*!
- * @name Register ADC_CFG2, field MUXSEL[4] (RW)
- *
- * Changes the ADC mux setting to select between alternate sets of ADC channels.
- *
- * Values:
- * - 0 - ADxxa channels are selected.
- * - 1 - ADxxb channels are selected.
- */
-/*@{*/
-/*! @brief Read current value of the ADC_CFG2_MUXSEL field. */
-#define ADC_RD_CFG2_MUXSEL(base) ((ADC_CFG2_REG(base) & ADC_CFG2_MUXSEL_MASK) >> ADC_CFG2_MUXSEL_SHIFT)
-#define ADC_BRD_CFG2_MUXSEL(base) (BME_UBFX32(&ADC_CFG2_REG(base), ADC_CFG2_MUXSEL_SHIFT, ADC_CFG2_MUXSEL_WIDTH))
-
-/*! @brief Set the MUXSEL field to a new value. */
-#define ADC_WR_CFG2_MUXSEL(base, value) (ADC_RMW_CFG2(base, ADC_CFG2_MUXSEL_MASK, ADC_CFG2_MUXSEL(value)))
-#define ADC_BWR_CFG2_MUXSEL(base, value) (BME_BFI32(&ADC_CFG2_REG(base), ((uint32_t)(value) << ADC_CFG2_MUXSEL_SHIFT), ADC_CFG2_MUXSEL_SHIFT, ADC_CFG2_MUXSEL_WIDTH))
 /*@}*/
 
 /*******************************************************************************
@@ -724,14 +734,14 @@
  * Selects the voltage reference source used for conversions.
  *
  * Values:
- * - 00 - Default voltage reference pin pair, that is, external pins VREFH and
+ * - 0b00 - Default voltage reference pin pair, that is, external pins VREFH and
  *     VREFL
- * - 01 - Alternate reference pair, that is, VALTH and VALTL . This pair may be
- *     additional external pins or internal sources depending on the MCU
- *     configuration. See the chip configuration information for details specific to this
- *     MCU
- * - 10 - Reserved
- * - 11 - Reserved
+ * - 0b01 - Alternate reference pair, that is, VALTH and VALTL . This pair may
+ *     be additional external pins or internal sources depending on the MCU
+ *     configuration. See the chip configuration information for details specific to
+ *     this MCU
+ * - 0b10 - Reserved
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_REFSEL field. */
@@ -747,8 +757,8 @@
  * @name Register ADC_SC2, field DMAEN[2] (RW)
  *
  * Values:
- * - 0 - DMA is disabled.
- * - 1 - DMA is enabled and will assert the ADC DMA request during an ADC
+ * - 0b0 - DMA is disabled.
+ * - 0b1 - DMA is enabled and will assert the ADC DMA request during an ADC
  *     conversion complete event noted when any of the SC1n[COCO] flags is asserted.
  */
 /*@{*/
@@ -770,8 +780,8 @@
  * effect.
  *
  * Values:
- * - 0 - Range function disabled. Only CV1 is compared.
- * - 1 - Range function enabled. Both CV1 and CV2 are compared.
+ * - 0b0 - Range function disabled. Only CV1 is compared.
+ * - 0b1 - Range function enabled. Both CV1 and CV2 are compared.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_ACREN field. */
@@ -791,10 +801,10 @@
  * have any effect.
  *
  * Values:
- * - 0 - Configures less than threshold, outside range not inclusive and inside
- *     range not inclusive; functionality based on the values placed in CV1 and
+ * - 0b0 - Configures less than threshold, outside range not inclusive and
+ *     inside range not inclusive; functionality based on the values placed in CV1 and
  *     CV2.
- * - 1 - Configures greater than or equal to threshold, outside and inside
+ * - 0b1 - Configures greater than or equal to threshold, outside and inside
  *     ranges inclusive; functionality based on the values placed in CV1 and CV2.
  */
 /*@{*/
@@ -813,8 +823,8 @@
  * Enables the compare function.
  *
  * Values:
- * - 0 - Compare function disabled.
- * - 1 - Compare function enabled.
+ * - 0b0 - Compare function disabled.
+ * - 0b1 - Compare function enabled.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_ACFE field. */
@@ -836,8 +846,8 @@
  * the ADHWT input after a pulse of the ADHWTSn input.
  *
  * Values:
- * - 0 - Software trigger selected.
- * - 1 - Hardware trigger selected.
+ * - 0b0 - Software trigger selected.
+ * - 0b1 - Hardware trigger selected.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_ADTRG field. */
@@ -857,8 +867,8 @@
  * aborted.
  *
  * Values:
- * - 0 - Conversion not in progress.
- * - 1 - Conversion in progress.
+ * - 0b0 - Conversion not in progress.
+ * - 0b1 - Conversion in progress.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC2_ADACT field. */
@@ -901,10 +911,10 @@
  * average result.
  *
  * Values:
- * - 00 - 4 samples averaged.
- * - 01 - 8 samples averaged.
- * - 10 - 16 samples averaged.
- * - 11 - 32 samples averaged.
+ * - 0b00 - 4 samples averaged.
+ * - 0b01 - 8 samples averaged.
+ * - 0b10 - 16 samples averaged.
+ * - 0b11 - 32 samples averaged.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC3_AVGS field. */
@@ -922,8 +932,8 @@
  * Enables the hardware average function of the ADC.
  *
  * Values:
- * - 0 - Hardware average function disabled.
- * - 1 - Hardware average function enabled.
+ * - 0b0 - Hardware average function disabled.
+ * - 0b1 - Hardware average function enabled.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC3_AVGE field. */
@@ -941,9 +951,9 @@
  * Enables continuous conversions.
  *
  * Values:
- * - 0 - One conversion or one set of conversions if the hardware average
+ * - 0b0 - One conversion or one set of conversions if the hardware average
  *     function is enabled, that is, AVGE=1, after initiating a conversion.
- * - 1 - Continuous conversions or sets of conversions if the hardware average
+ * - 0b1 - Continuous conversions or sets of conversions if the hardware average
  *     function is enabled, that is, AVGE=1, after initiating a conversion.
  */
 /*@{*/
@@ -964,8 +974,8 @@
  * entered before the calibration sequence completes. Writing 1 to CALF clears it.
  *
  * Values:
- * - 0 - Calibration completed normally.
- * - 1 - Calibration failed. ADC accuracy specifications are not guaranteed.
+ * - 0b0 - Calibration completed normally.
+ * - 0b1 - Calibration failed. ADC accuracy specifications are not guaranteed.
  */
 /*@{*/
 /*! @brief Read current value of the ADC_SC3_CALF field. */
@@ -1011,7 +1021,10 @@
  * complement, left-justified, 16-bit value . The value in OFS is subtracted from the
  * conversion and the result is transferred into the result registers, Rn. If the
  * result is greater than the maximum or less than the minimum result value, it is
- * forced to the appropriate limit for the current mode of operation.
+ * forced to the appropriate limit for the current mode of operation. For more
+ * information regarding the calibration procedure, please refer to the Calibration
+ * functionThe ADC contains a self-calibration function that is required to
+ * achieve the specified accuracy. section.
  */
 /*!
  * @name Constants and macros for entire ADC_OFS register
@@ -1056,7 +1069,10 @@
  * mode. PG, a 16-bit real number in binary format, is the gain adjustment
  * factor, with the radix point fixed between PG[15] and PG[14]. This register must be
  * written by the user with the value described in the calibration procedure.
- * Otherwise, the gain error specifications may not be met.
+ * Otherwise, the gain error specifications may not be met. For more information
+ * regarding the calibration procedure, please refer to the Calibration functionThe
+ * ADC contains a self-calibration function that is required to achieve the
+ * specified accuracy. section.
  */
 /*!
  * @name Constants and macros for entire ADC_PG register
@@ -1101,7 +1117,10 @@
  * single-ended mode. MG, a 16-bit real number in binary format, is the gain adjustment
  * factor, with the radix point fixed between MG[15] and MG[14]. This register must
  * be written by the user with the value described in the calibration procedure.
- * Otherwise, the gain error specifications may not be met.
+ * Otherwise, the gain error specifications may not be met. For more information
+ * regarding the calibration procedure, please refer to the Calibration
+ * functionThe ADC contains a self-calibration function that is required to achieve the
+ * specified accuracy. section.
  */
 /*!
  * @name Constants and macros for entire ADC_MG register
@@ -1147,7 +1166,9 @@
  * CLP2[7:0], CLP3[8:0], CLP4[9:0], CLPS[5:0], and CLPD[5:0]. CLPx are automatically set
  * when the self-calibration sequence is done, that is, CAL is cleared. If these
  * registers are written by the user after calibration, the linearity error
- * specifications may not be met.
+ * specifications may not be met. For more information regarding the calibration
+ * procedure, please refer to the Calibration functionThe ADC contains a
+ * self-calibration function that is required to achieve the specified accuracy. section.
  */
 /*!
  * @name Constants and macros for entire ADC_CLPD register
@@ -1447,7 +1468,9 @@
  * CLM2[7:0], CLM3[8:0], CLM4[9:0], CLMS[5:0], and CLMD[5:0]. CLMx are automatically
  * set when the self-calibration sequence is done, that is, CAL is cleared. If
  * these registers are written by the user after calibration, the linearity error
- * specifications may not be met.
+ * specifications may not be met. For more information regarding the calibration
+ * procedure, please refer to the Calibration functionThe ADC contains a
+ * self-calibration function that is required to achieve the specified accuracy. section.
  */
 /*!
  * @name Constants and macros for entire ADC_CLMD register
@@ -1801,7 +1824,7 @@
  * mode because it is blocked by hardware in other modes. Number of the last MB =
  * MAXMB MAXMB must be programmed with a value smaller than or equal to the number
  * of available Message Buffers. Additionally, the definition of MAXMB value
- * must take nto account the region of MBs occupied by Rx FIFO and its ID filters
+ * must take into account the region of MBs occupied by Rx FIFO and its ID filters
  * table space defined by RFFN bit in CAN_CTRL2 register. MAXMB also impacts the
  * definition of the minimum number of peripheral clocks per CAN bit as described
  * in Table "Minimum Ratio Between Peripheral Clock Frequency and CAN Bit Rate"
@@ -1827,12 +1850,13 @@
  * other modes.
  *
  * Values:
- * - 00 - Format A: One full ID (standard and extended) per ID Filter Table
+ * - 0b00 - Format A: One full ID (standard and extended) per ID Filter Table
  *     element.
- * - 01 - Format B: Two full standard IDs or two partial 14-bit (standard and
+ * - 0b01 - Format B: Two full standard IDs or two partial 14-bit (standard and
  *     extended) IDs per ID Filter Table element.
- * - 10 - Format C: Four partial 8-bit Standard IDs per ID Filter Table element.
- * - 11 - Format D: All frames rejected.
+ * - 0b10 - Format C: Four partial 8-bit Standard IDs per ID Filter Table
+ *     element.
+ * - 0b11 - Format D: All frames rejected.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_IDAM field. */
@@ -1857,8 +1881,8 @@
  * asserted.
  *
  * Values:
- * - 0 - Abort disabled.
- * - 1 - Abort enabled.
+ * - 0b0 - Abort disabled.
+ * - 0b1 - Abort enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_AEN field. */
@@ -1882,8 +1906,8 @@
  * hardware in other modes.
  *
  * Values:
- * - 0 - Local Priority disabled.
- * - 1 - Local Priority enabled.
+ * - 0b0 - Local Priority disabled.
+ * - 0b1 - Local Priority enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_LPRIOEN field. */
@@ -1905,8 +1929,8 @@
  * Freeze mode only as it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - DMA feature for RX FIFO disabled.
- * - 1 - DMA feature for RX FIFO enabled.
+ * - 0b0 - DMA feature for RX FIFO disabled.
+ * - 0b1 - DMA feature for RX FIFO enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_DMA field. */
@@ -1927,10 +1951,10 @@
  * because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - Individual Rx masking and queue feature are disabled. For backward
+ * - 0b0 - Individual Rx masking and queue feature are disabled. For backward
  *     compatibility with legacy applications, the reading of C/S word locks the MB
  *     even if it is EMPTY.
- * - 1 - Individual Rx masking and queue feature are enabled.
+ * - 0b1 - Individual Rx masking and queue feature are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_IRMQ field. */
@@ -1953,8 +1977,8 @@
  * because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - Self reception enabled.
- * - 1 - Self reception disabled.
+ * - 0b0 - Self reception enabled.
+ * - 0b1 - Self reception disabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_SRXDIS field. */
@@ -1975,9 +1999,10 @@
  * enabled).
  *
  * Values:
- * - 0 - FlexCAN is not enabled to enter low-power mode when Doze mode is
+ * - 0b0 - FlexCAN is not enabled to enter low-power mode when Doze mode is
  *     requested.
- * - 1 - FlexCAN is enabled to enter low-power mode when Doze mode is requested.
+ * - 0b1 - FlexCAN is enabled to enter low-power mode when Doze mode is
+ *     requested.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_DOZE field. */
@@ -1997,9 +2022,9 @@
  * Freeze mode because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - FlexCAN uses the unfiltered Rx input to detect recessive to dominant
+ * - 0b0 - FlexCAN uses the unfiltered Rx input to detect recessive to dominant
  *     edges on the CAN bus.
- * - 1 - FlexCAN uses the filtered Rx input to detect recessive to dominant
+ * - 0b1 - FlexCAN uses the filtered Rx input to detect recessive to dominant
  *     edges on the CAN bus.
  */
 /*@{*/
@@ -2016,16 +2041,16 @@
  * @name Register CAN_MCR, field LPMACK[20] (RO)
  *
  * This read-only bit indicates that FlexCAN is in a low-power mode (Disable
- * mode , Doze mode , Stop mode ). A low-power mode cannot be entered until all
+ * mode, Doze mode , Stop mode). A low-power mode cannot be entered until all
  * current transmission or reception processes have finished, so the CPU can poll the
- * LPMACK bit to know when FlexCAN has actually entered low power mode. LPMACK
- * will be asserted within 180 CAN bits from the low-power mode request by the
- * CPU, and negated within 2 CAN bits after the low-power mode request removal (see
- * Section "Protocol Timing").
+ * LPMACK bit to know when FlexCAN has actually entered low power mode. This bit
+ * is not affected by soft reset. LPMACK will be asserted within 180 CAN bits from
+ * the low-power mode request by the CPU, and negated within 2 CAN bits after
+ * the low-power mode request removal (see Section "Protocol Timing").
  *
  * Values:
- * - 0 - FlexCAN is not in a low-power mode.
- * - 1 - FlexCAN is in a low-power mode.
+ * - 0b0 - FlexCAN is not in a low-power mode.
+ * - 0b1 - FlexCAN is in a low-power mode.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_LPMACK field. */
@@ -2043,9 +2068,9 @@
  * written in Freeze mode only because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - TWRNINT and RWRNINT bits are zero, independent of the values in the
+ * - 0b0 - TWRNINT and RWRNINT bits are zero, independent of the values in the
  *     error counters.
- * - 1 - TWRNINT and RWRNINT bits are set when the respective error counter
+ * - 0b1 - TWRNINT and RWRNINT bits are set when the respective error counter
  *     transitions from less than 96 to greater than or equal to 96.
  */
 /*@{*/
@@ -2073,8 +2098,8 @@
  * blocked by hardware.
  *
  * Values:
- * - 0 - FlexCAN Self Wake Up feature is disabled.
- * - 1 - FlexCAN Self Wake Up feature is enabled.
+ * - 0b0 - FlexCAN Self Wake Up feature is disabled.
+ * - 0b1 - FlexCAN Self Wake Up feature is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_SLFWAK field. */
@@ -2092,15 +2117,15 @@
  * This bit configures the FlexCAN to be either in Supervisor or User mode. The
  * registers affected by this bit are marked as S/U in the Access Type column of
  * the module memory map. Reset value of this bit is 1, so the affected registers
- * start with Supervisor access allowance only . This bit can be written only in
+ * start with Supervisor access allowance only. This bit can be written only in
  * Freeze mode because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - FlexCAN is in User mode. Affected registers allow both Supervisor and
- *     Unrestricted accesses .
- * - 1 - FlexCAN is in Supervisor mode. Affected registers allow only Supervisor
- *     access. Unrestricted access behaves as though the access was done to an
- *     unimplemented register location .
+ * - 0b0 - FlexCAN is in User mode. Affected registers allow both Supervisor and
+ *     Unrestricted accesses.
+ * - 0b1 - FlexCAN is in Supervisor mode. Affected registers allow only
+ *     Supervisor access. Unrestricted access behaves as though the access was done to an
+ *     unimplemented register location.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_SUPV field. */
@@ -2122,13 +2147,14 @@
  * Mode request is negated, then this bit is negated after the FlexCAN prescaler is
  * running again. If Freeze mode is requested while FlexCAN is in a low power
  * mode, then the FRZACK bit will be set only when the low-power mode is exited.
- * See Section "Freeze Mode". FRZACK will be asserted within 178 CAN bits from the
- * freeze mode request by the CPU, and negated within 2 CAN bits after the freeze
- * mode request removal (see Section "Protocol Timing").
+ * See Section "Freeze Mode". This bit is not affected by soft reset. FRZACK will
+ * be asserted within 178 CAN bits from the freeze mode request by the CPU, and
+ * negated within 2 CAN bits after the freeze mode request removal (see Section
+ * "Protocol Timing").
  *
  * Values:
- * - 0 - FlexCAN not in Freeze mode, prescaler running.
- * - 1 - FlexCAN in Freeze mode, prescaler stopped.
+ * - 0b0 - FlexCAN not in Freeze mode, prescaler running.
+ * - 0b1 - FlexCAN in Freeze mode, prescaler stopped.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_FRZACK field. */
@@ -2149,11 +2175,11 @@
  * Therefore, software can poll this bit to know when the soft reset has completed.
  * Soft reset cannot be applied while clocks are shut down in a low power mode. The
  * module should be first removed from low power mode, and then soft reset can
- * be applied.
+ * be applied. This bit is not affected by soft reset.
  *
  * Values:
- * - 0 - No reset request.
- * - 1 - Resets the registers affected by soft reset.
+ * - 0b0 - No reset request.
+ * - 0b1 - Resets the registers affected by soft reset.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_SOFTRST field. */
@@ -2172,8 +2198,8 @@
  * mechanism.
  *
  * Values:
- * - 0 - Wake Up Interrupt is disabled.
- * - 1 - Wake Up Interrupt is enabled.
+ * - 0b0 - Wake Up Interrupt is disabled.
+ * - 0b1 - Wake Up Interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_WAKMSK field. */
@@ -2188,14 +2214,14 @@
 /*!
  * @name Register CAN_MCR, field NOTRDY[27] (RO)
  *
- * This read-only bit indicates that FlexCAN is either in Disable mode , Doze
+ * This read-only bit indicates that FlexCAN is either in Disable mode, Doze
  * mode , Stop mode or Freeze mode. It is negated once FlexCAN has exited these
- * modes.
+ * modes. This bit is not affected by soft reset.
  *
  * Values:
- * - 0 - FlexCAN module is either in Normal mode, Listen-Only mode or Loop-Back
- *     mode.
- * - 1 - FlexCAN module is either in Disable mode , Doze mode , Stop mode or
+ * - 0b0 - FlexCAN module is either in Normal mode, Listen-Only mode or
+ *     Loop-Back mode.
+ * - 0b1 - FlexCAN module is either in Disable mode, Doze mode , Stop mode or
  *     Freeze mode.
  */
 /*@{*/
@@ -2215,8 +2241,8 @@
  * is detected and NCEFAFRZ bit in CAN_MECR register is asserted.
  *
  * Values:
- * - 0 - No Freeze mode request.
- * - 1 - Enters Freeze mode if the FRZ bit is asserted.
+ * - 0b0 - No Freeze mode request.
+ * - 0b1 - Enters Freeze mode if the FRZ bit is asserted.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_HALT field. */
@@ -2242,8 +2268,8 @@
  * because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - Rx FIFO not enabled.
- * - 1 - Rx FIFO enabled.
+ * - 0b0 - Rx FIFO not enabled.
+ * - 0b1 - Rx FIFO enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_RFEN field. */
@@ -2265,8 +2291,8 @@
  * non-correctable error is detected and NCEFAFRZ bit in CAN_MECR register is asserted.
  *
  * Values:
- * - 0 - Not enabled to enter Freeze mode.
- * - 1 - Enabled to enter Freeze mode.
+ * - 0b0 - Not enabled to enter Freeze mode.
+ * - 0b1 - Enabled to enter Freeze mode.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_FRZ field. */
@@ -2283,12 +2309,11 @@
  *
  * This bit controls whether FlexCAN is enabled or not. When disabled, FlexCAN
  * disables the clocks to the CAN Protocol Engine and Controller Host Interface
- * sub-modules. This is the only bit within this register not affected by soft
- * reset.
+ * sub-modules. This bit is not affected by soft reset.
  *
  * Values:
- * - 0 - Enable the FlexCAN module.
- * - 1 - Disable the FlexCAN module.
+ * - 0b0 - Enable the FlexCAN module.
+ * - 0b1 - Disable the FlexCAN module.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_MCR_MDIS field. */
@@ -2369,8 +2394,8 @@
  * mode only because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - Listen-Only mode is deactivated.
- * - 1 - FlexCAN module operates in Listen-Only mode.
+ * - 0b0 - Listen-Only mode is deactivated.
+ * - 0b1 - FlexCAN module operates in Listen-Only mode.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_LOM field. */
@@ -2391,8 +2416,8 @@
  * in other modes.
  *
  * Values:
- * - 0 - Buffer with highest priority is transmitted first.
- * - 1 - Lowest number buffer is transmitted first.
+ * - 0b0 - Buffer with highest priority is transmitted first.
+ * - 0b1 - Lowest number buffer is transmitted first.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_LBUF field. */
@@ -2416,8 +2441,8 @@
  * because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - Timer Sync feature disabled
- * - 1 - Timer Sync feature enabled
+ * - 0b0 - Timer Sync feature disabled
+ * - 0b1 - Timer Sync feature enabled
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_TSYN field. */
@@ -2447,8 +2472,8 @@
  * Off recovery.
  *
  * Values:
- * - 0 - Automatic recovering from Bus Off state enabled.
- * - 1 - Automatic recovering from Bus Off state disabled.
+ * - 0b0 - Automatic recovering from Bus Off state enabled.
+ * - 0b1 - Automatic recovering from Bus Off state disabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_BOFFREC field. */
@@ -2469,9 +2494,9 @@
  * of 2 TQs in CAN_CTRL1[PSEG1] (or CAN_CBT[EPSEG1]).
  *
  * Values:
- * - 0 - Just one sample is used to determine the bit value.
- * - 1 - Three samples are used to determine the value of the received bit: the
- *     regular one (sample point) and 2 preceding samples; a majority rule is
+ * - 0b0 - Just one sample is used to determine the bit value.
+ * - 0b1 - Three samples are used to determine the value of the received bit:
+ *     the regular one (sample point) and 2 preceding samples; a majority rule is
  *     used.
  */
 /*@{*/
@@ -2493,8 +2518,8 @@
  * CAN_MCR[WRNEN] bit is asserted.
  *
  * Values:
- * - 0 - Rx Warning Interrupt disabled.
- * - 1 - Rx Warning Interrupt enabled.
+ * - 0b0 - Rx Warning Interrupt disabled.
+ * - 0b1 - Rx Warning Interrupt enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_RWRNMSK field. */
@@ -2515,8 +2540,8 @@
  * CAN_MCR[WRNEN] bit is asserted.
  *
  * Values:
- * - 0 - Tx Warning Interrupt disabled.
- * - 1 - Tx Warning Interrupt enabled.
+ * - 0b0 - Tx Warning Interrupt disabled.
+ * - 0b1 - Tx Warning Interrupt enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_TWRNMSK field. */
@@ -2545,8 +2570,8 @@
  * because this will impede the self reception of a transmitted message.
  *
  * Values:
- * - 0 - Loop Back disabled.
- * - 1 - Loop Back enabled.
+ * - 0b0 - Loop Back disabled.
+ * - 0b1 - Loop Back enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_LPB field. */
@@ -2568,9 +2593,9 @@
  * it is blocked by hardware in other modes. See Protocol timing".
  *
  * Values:
- * - 0 - The CAN engine clock source is the oscillator clock. Under this
+ * - 0b0 - The CAN engine clock source is the oscillator clock. Under this
  *     condition, the oscillator clock frequency must be lower than the bus clock.
- * - 1 - The CAN engine clock source is the peripheral clock.
+ * - 0b1 - The CAN engine clock source is the peripheral clock.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_CLKSRC field. */
@@ -2589,8 +2614,8 @@
  * register.
  *
  * Values:
- * - 0 - Error interrupt disabled.
- * - 1 - Error interrupt enabled.
+ * - 0b0 - Error interrupt disabled.
+ * - 0b1 - Error interrupt enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_ERRMSK field. */
@@ -2609,8 +2634,8 @@
  * register.
  *
  * Values:
- * - 0 - Bus Off interrupt disabled.
- * - 1 - Bus Off interrupt enabled.
+ * - 0b0 - Bus Off interrupt disabled.
+ * - 0b1 - Bus Off interrupt enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL1_BOFFMSK field. */
@@ -2714,12 +2739,12 @@
  * defines the baud rate on the CAN bus. During a message transmission/reception,
  * it increments by one for each bit that is received or transmitted. When there
  * is no message on the bus, it counts using the previously programmed baud
- * rate. The timer is not incremented during Disable , Doze , Stop and Freeze modes.
+ * rate. The timer is not incremented during Disable, Doze , Stop and Freeze modes.
  * The timer value is captured when the second bit of the identifier field of any
  * frame is on the CAN bus. This captured value is written into the Time Stamp
  * entry in a message buffer after a successful reception or transmission of a
- * message. If bit CAN_CTRL1[TSYN] is asserted, the Timer is reset whenever a
- * message is received in the first available Mailbox, according to CAN_CTRL2[RFFN]
+ * message. If bit CAN_CTRL1[TSYN] is asserted, the Timer is reset whenever a message
+ * is received in the first available Mailbox, according to CAN_CTRL2[RFFN]
  * setting. The CPU can write to this register anytime. However, if the write occurs
  * at the same time that the Timer is being reset by a reception in the first
  * Mailbox, then the write value is discarded. Reading this register affects the
@@ -2766,11 +2791,13 @@
  * Reset value: 0x00000000U
  *
  * This register is located in RAM. RXMGMASK is provided for legacy application
- * support. When the CAN_MCR[IRMQ] bit is negated, RXMGMASK is always in effect.
- * When the CAN_MCR[IRMQ] bit is asserted, RXMGMASK has no effect. RXMGMASK is
- * used to mask the filter fields of all Rx MBs, excluding MBs 14-15, which have
- * individual mask registers. This register can only be written in Freeze mode as
- * it is blocked by hardware in other modes.
+ * support. When the CAN_MCR[IRMQ] bit is negated, RXMGMASK is always in effect
+ * (the bits in the MG field will mask the Mailbox filter bits). When the
+ * CAN_MCR[IRMQ] bit is asserted, RXMGMASK has no effect (the bits in the MG field will
+ * not mask the Mailbox filter bits). RXMGMASK is used to mask the filter fields
+ * of all Rx MBs, excluding MBs 14-15, which have individual mask registers. This
+ * register can only be written in Freeze mode as it is blocked by hardware in
+ * other modes.
  */
 /*!
  * @name Constants and macros for entire CAN_RXMGMASK register
@@ -2953,12 +2980,12 @@
  * procedure when servicing interrupt requests generated by these bits: Read this
  * register to capture all error condition and status bits. This action clear the
  * respective bits that were set since the last read access. Write 1 to clear the
- * interrpt bit that has triggered the interrup request. Write 1 to clear the
- * ERR_OVR bit if it is set. Starting from all error flags cleared, a first error event
- * sets the ERRINT (provided the corresponding mask bit is asserted). If other
- * error events in subsequent frames happen before the CPU to serve the interrupt
- * request, the ERR_OVR bit is set to indicate that errors from different frames
- * had accumulated. SYNCH IDLE TX RX FlexCAN State 0 0 0 0 Not synchronized to
+ * interrupt bit that has triggered the interrupt request. Write 1 to clear the
+ * ERR_OVR bit if it is set. Starting from all error flags cleared, a first error
+ * event sets the ERRINT (provided the corresponding mask bit is asserted). If other
+ * error events in subsequent frames happen before the CPU to serve the
+ * interrupt request, the ERR_OVR bit is set to indicate that errors from different
+ * frames had accumulated. SYNCH IDLE TX RX FlexCAN State 0 0 0 0 Not synchronized to
  * CAN bus 1 1 x x Idle 1 0 1 0 Transmitting 1 0 0 1 Receiving
  */
 /*!
@@ -2989,8 +3016,8 @@
  * effect.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - Indicates a recessive to dominant transition was received on the CAN
+ * - 0b0 - No such occurrence.
+ * - 0b1 - Indicates a recessive to dominant transition was received on the CAN
  *     bus.
  */
 /*@{*/
@@ -3012,8 +3039,8 @@
  * writing it to 1. Writing 0 has no effect.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - Indicates setting of any Error Bit in the Error and Status Register.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - Indicates setting of any Error Bit in the Error and Status Register.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_ERRINT field. */
@@ -3034,8 +3061,8 @@
  * effect.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - FlexCAN module entered Bus Off state.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - FlexCAN module entered Bus Off state.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_BOFFINT field. */
@@ -3054,8 +3081,8 @@
  * overall CAN_ESR1 register description.
  *
  * Values:
- * - 0 - FlexCAN is not receiving a message.
- * - 1 - FlexCAN is receiving a message.
+ * - 0b0 - FlexCAN is not receiving a message.
+ * - 0b1 - FlexCAN is receiving a message.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_RX field. */
@@ -3076,9 +3103,9 @@
  * "Error Passive".
  *
  * Values:
- * - 00 - Error Active
- * - 01 - Error Passive
- * - 1x - Bus Off
+ * - 0b00 - Error Active
+ * - 0b01 - Error Passive
+ * - 0b1x - Bus Off
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_FLTCONF field. */
@@ -3093,8 +3120,8 @@
  * overall CAN_ESR1 register description.
  *
  * Values:
- * - 0 - FlexCAN is not transmitting a message.
- * - 1 - FlexCAN is transmitting a message.
+ * - 0b0 - FlexCAN is not transmitting a message.
+ * - 0b1 - FlexCAN is transmitting a message.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_TX field. */
@@ -3109,8 +3136,8 @@
  * overall CAN_ESR1 register description.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - CAN bus is now IDLE.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - CAN bus is now IDLE.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_IDLE field. */
@@ -3126,8 +3153,8 @@
  * bit is not updated during Freeze mode.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - RXERRCNT is greater than or equal to 96.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - RXERRCNT is greater than or equal to 96.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_RXWRN field. */
@@ -3143,8 +3170,8 @@
  * bit is not updated during Freeze mode.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - TXERRCNT is greater than or equal to 96.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - TXERRCNT is greater than or equal to 96.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_TXWRN field. */
@@ -3159,8 +3186,8 @@
  * node.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - A Stuffing Error occurred since last read of this register.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - A Stuffing Error occurred since last read of this register.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_STFERR field. */
@@ -3175,8 +3202,8 @@
  * that is, a fixed-form bit field contains at least one illegal bit.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - A Form Error occurred since last read of this register.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - A Form Error occurred since last read of this register.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_FRMERR field. */
@@ -3191,8 +3218,8 @@
  * that is, the calculated CRC is different from the received.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - A CRC error occurred since last read of this register.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - A CRC error occurred since last read of this register.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_CRCERR field. */
@@ -3207,8 +3234,8 @@
  * transmitter node, that is, a dominant bit has not been detected during the ACK SLOT.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - An ACK error occurred since last read of this register.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - An ACK error occurred since last read of this register.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_ACKERR field. */
@@ -3223,8 +3250,8 @@
  * the received bit in a message.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - At least one bit sent as dominant is received as recessive.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - At least one bit sent as dominant is received as recessive.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_BIT0ERR field. */
@@ -3241,8 +3268,8 @@
  * flag that detects dominant bits.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - At least one bit sent as recessive is received as dominant.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - At least one bit sent as recessive is received as dominant.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_BIT1ERR field. */
@@ -3262,9 +3289,9 @@
  * Writing 0 has no effect. This bit is not updated during Freeze mode.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - The Rx error counter transitioned from less than 96 to greater than or
- *     equal to 96.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - The Rx error counter transitioned from less than 96 to greater than
+ *     or equal to 96.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_RWRNINT field. */
@@ -3289,9 +3316,9 @@
  * bit is not updated during Freeze mode.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - The Tx error counter transitioned from less than 96 to greater than or
- *     equal to 96.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - The Tx error counter transitioned from less than 96 to greater than
+ *     or equal to 96.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_TWRNINT field. */
@@ -3311,8 +3338,8 @@
  * cleared by the FlexCAN. See the table in the overall CAN_ESR1 register description.
  *
  * Values:
- * - 0 - FlexCAN is not synchronized to the CAN bus.
- * - 1 - FlexCAN is synchronized to the CAN bus.
+ * - 0b0 - FlexCAN is not synchronized to the CAN bus.
+ * - 0b1 - FlexCAN is synchronized to the CAN bus.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_SYNCH field. */
@@ -3330,8 +3357,8 @@
  * writing it to 1. Writing 0 has no effect.
  *
  * Values:
- * - 0 - No such occurrence.
- * - 1 - FlexCAN module has completed Bus Off process.
+ * - 0b0 - No such occurrence.
+ * - 0b1 - FlexCAN module has completed Bus Off process.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_BOFFDONEINT field. */
@@ -3350,8 +3377,8 @@
  * already set. This bit is cleared by writing it to 1.
  *
  * Values:
- * - 0 - Overrun has not occurred.
- * - 1 - Overrun has occured.
+ * - 0b0 - Overrun has not occurred.
+ * - 0b1 - Overrun has occured.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR1_ERROVR field. */
@@ -3399,26 +3426,26 @@
  *
  * Reset value: 0x00000000U
  *
- * This register defines the flags for the16 Message Buffer interrupts for MB15
+ * This register defines the flags for the 16 Message Buffer interrupts for MB15
  * to MB0. It contains one interrupt flag bit per buffer. Each successful
- * transmission or reception sets the corresponding CAN_IFLAG1 bit. If the corresponding
- * CAN_IMASK1 bit is set, an interrupt will be generated. The interrupt flag
+ * transmission or reception sets the corresponding CAN_IFLAG1 bit. If the
+ * corresponding CAN_IMASK1 bit is set, an interrupt will be generated. The interrupt flag
  * must be cleared by writing 1 to it. Writing 0 has no effect. There is an
  * exception when DMA for Rx FIFO is enabled, as described below. The BUF7I to BUF5I
- * flags are also used to represent FIFO interrupts when the Rx FIFO is enabled. When
- * the bit CAN_MCR[RFEN] is setand the bit CAN_MCR[DMA] is negated, the function
- * of the 8 least significant interrupt flags changes: BUF7I, BUF6I and BUF5I
+ * flags are also used to represent FIFO interrupts when the Rx FIFO is enabled.
+ * When the bit CAN_MCR[RFEN] is set and the bit CAN_MCR[DMA] is negated, the
+ * function of the 8 least significant interrupt flags changes: BUF7I, BUF6I and BUF5I
  * indicate operating conditions of the FIFO, BUF0I is used to empty FIFO, and
- * BUF4I to BUF1I bits are reserved. Before enabling the CAN_MCR[RFEN], the CPU must
- * service the IFLAG bits asserted in the Rx FIFO region; see Section "Rx FIFO".
- * Otherwise, these IFLAG bits will mistakenly show the related MBs now belonging
- * to FIFO as having contents to be serviced. When the CAN_MCR[RFEN] bit is
+ * BUF4I to BUF1I bits are reserved. Before enabling the CAN_MCR[RFEN], the CPU
+ * must service the IFLAG bits asserted in the Rx FIFO region; see Section "Rx
+ * FIFO". Otherwise, these IFLAG bits will mistakenly show the related MBs now
+ * belonging to FIFO as having contents to be serviced. When the CAN_MCR[RFEN] bit is
  * negated, the FIFO flags must be cleared. The same care must be taken when an
  * CAN_CTRL2[RFFN] value is selected extending Rx FIFO filters beyond MB7. For
  * example, when RFFN is 0x8, the MB0-23 range is occupied by Rx FIFO filters and
  * related IFLAG bits must be cleared. When both the CAN_MCR[RFEN] and CAN_MCR[DMA]
- * bits are asserted (DMA feature for Rx FIFO enabled), the function of the 8 least
- * significant interrupt flags (BUF7I - BUF0I) are changed to support the DMA
+ * bits are asserted (DMA feature for Rx FIFO enabled), the function of the 8
+ * least significant interrupt flags (BUF7I - BUF0I) are changed to support the DMA
  * operation. BUF7I and BUF6I are not used, as well as, BUF4I to BUF1I. BUF5I
  * indicates operating condition of FIFO, and BUF0I is used to empty FIFO. Moreover,
  * BUF5I does not generate a CPU interrupt, but generates a DMA request. IMASK1
@@ -3427,8 +3454,8 @@
  * enabling the bit CAN_MCR[DMA], the CPU must service the IFLAGs asserted in the Rx
  * FIFO region. When the bit CAN_MCR[DMA] is negated, the FIFO must be empty.
  * Before updating CAN_MCR[MAXMB] field, CPU must service the CAN_IFLAG1 bits whose
- * MB value is greater than the CAN_MCR[MAXMB] to be updated; otherwise, they will
- * remain set and be inconsistent with the number of MBs available.
+ * MB value is greater than the CAN_MCR[MAXMB] to be updated; otherwise, they
+ * will remain set and be inconsistent with the number of MBs available.
  */
 /*!
  * @name Constants and macros for entire CAN_IFLAG1 register
@@ -3459,9 +3486,9 @@
  * conditions.
  *
  * Values:
- * - 0 - The corresponding buffer has no occurrence of successfully completed
+ * - 0b0 - The corresponding buffer has no occurrence of successfully completed
  *     transmission or reception when MCR[RFEN]=0.
- * - 1 - The corresponding buffer has successfully completed transmission or
+ * - 0b1 - The corresponding buffer has successfully completed transmission or
  *     reception when MCR[RFEN]=0.
  */
 /*@{*/
@@ -3483,10 +3510,10 @@
  * flags are reserved when CAN_MCR[RFEN] is set.
  *
  * Values:
- * - 0 - The corresponding buffer has no occurrence of successfully completed
- *     transmission or reception when MCR[RFEN]=0.
- * - 1 - The corresponding buffer has successfully completed transmission or
- *     reception when MCR[RFEN]=0.
+ * - 0b0000 - The corresponding buffer has no occurrence of successfully
+ *     completed transmission or reception when MCR[RFEN]=0.
+ * - 0b0001 - The corresponding buffer has successfully completed transmission
+ *     or reception when MCR[RFEN]=0.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_IFLAG1_BUF4TO1I field. */
@@ -3510,11 +3537,11 @@
  * by writing 1 in BUF5I.
  *
  * Values:
- * - 0 - No occurrence of MB5 completing transmission/reception when
+ * - 0b0 - No occurrence of MB5 completing transmission/reception when
  *     MCR[RFEN]=0, or of frame(s) available in the FIFO, when MCR[RFEN]=1
- * - 1 - MB5 completed transmission/reception when MCR[RFEN]=0, or frame(s)
- *     available in the Rx FIFO when MCR[RFEN]=1. It generates a DMA request in case
- *     of MCR[RFEN] and MCR[DMA] are enabled.
+ * - 0b1 - MB5 completed transmission/reception when MCR[RFEN]=0, or frame(s)
+ *     available in the Rx FIFO when MCR[RFEN]=1. It generates a DMA request in
+ *     case of MCR[RFEN] and MCR[DMA] are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_IFLAG1_BUF5I field. */
@@ -3540,9 +3567,9 @@
  * Rx FIFO is decreased to be equal to or less than 4.
  *
  * Values:
- * - 0 - No occurrence of MB6 completing transmission/reception when
+ * - 0b0 - No occurrence of MB6 completing transmission/reception when
  *     MCR[RFEN]=0, or of Rx FIFO almost full when MCR[RFEN]=1
- * - 1 - MB6 completed transmission/reception when MCR[RFEN]=0, or Rx FIFO
+ * - 0b1 - MB6 completed transmission/reception when MCR[RFEN]=0, or Rx FIFO
  *     almost full when MCR[RFEN]=1
  */
 /*@{*/
@@ -3567,9 +3594,9 @@
  * Mailbox.
  *
  * Values:
- * - 0 - No occurrence of MB7 completing transmission/reception when
+ * - 0b0 - No occurrence of MB7 completing transmission/reception when
  *     MCR[RFEN]=0, or of Rx FIFO overflow when MCR[RFEN]=1
- * - 1 - MB7 completed transmission/reception when MCR[RFEN]=0, or Rx FIFO
+ * - 0b1 - MB7 completed transmission/reception when MCR[RFEN]=0, or Rx FIFO
  *     overflow when MCR[RFEN]=1
  */
 /*@{*/
@@ -3585,14 +3612,14 @@
 /*!
  * @name Register CAN_IFLAG1, field BUF31TO8I[31:8] (W1C)
  *
- * Each bit flags the corresponding FlexCAN Message Buffer interrupt for MB31 to
+ * Each bit flags the corresponding FlexCAN Message Buffer interrupt for MB15 to
  * MB8.
  *
  * Values:
- * - 0 - The corresponding buffer has no occurrence of successfully completed
- *     transmission or reception.
- * - 1 - The corresponding buffer has successfully completed transmission or
- *     reception.
+ * - 0b000000000000000000000000 - The corresponding buffer has no occurrence of
+ *     successfully completed transmission or reception.
+ * - 0b000000000000000000000001 - The corresponding buffer has successfully
+ *     completed transmission or reception.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_IFLAG1_BUF31TO8I field. */
@@ -3643,10 +3670,10 @@
  * in Freeze mode because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - Rx Mailbox filter's IDE bit is always compared and RTR is never
+ * - 0b0 - Rx Mailbox filter's IDE bit is always compared and RTR is never
  *     compared despite mask bits.
- * - 1 - Enables the comparison of both Rx Mailbox filter's IDE and RTR bit with
- *     their corresponding bits within the incoming frame. Mask bits do apply.
+ * - 0b1 - Enables the comparison of both Rx Mailbox filter's IDE and RTR bit
+ *     with their corresponding bits within the incoming frame. Mask bits do apply.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL2_EACEN field. */
@@ -3670,8 +3697,8 @@
  * because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - Remote Response Frame is generated.
- * - 1 - Remote Request Frame is stored.
+ * - 0b0 - Remote Response Frame is generated.
+ * - 0b1 - Remote Request Frame is stored.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL2_RRS field. */
@@ -3691,8 +3718,8 @@
  * only in Freeze mode because it is blocked by hardware in other modes.
  *
  * Values:
- * - 0 - Matching starts from Rx FIFO and continues on Mailboxes.
- * - 1 - Matching starts from Mailboxes and continues on Rx FIFO.
+ * - 0b0 - Matching starts from Rx FIFO and continues on Mailboxes.
+ * - 0b1 - Matching starts from Mailboxes and continues on Rx FIFO.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL2_MRP field. */
@@ -3775,8 +3802,8 @@
  * This bit provides a mask for the Bus Off Done Interrupt in CAN_ESR1 register.
  *
  * Values:
- * - 0 - Bus Off Done interrupt disabled.
- * - 1 - Bus Off Done interrupt enabled.
+ * - 0b0 - Bus Off Done interrupt disabled.
+ * - 0b1 - Bus Off Done interrupt enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CTRL2_BOFFDONEMSK field. */
@@ -3824,9 +3851,9 @@
  * transmitted is loaded into CAN_ESR2[LPTM].
  *
  * Values:
- * - 0 - If ESR2[VPS] is asserted, the ESR2[LPTM] is not an inactive Mailbox.
- * - 1 - If ESR2[VPS] is asserted, there is at least one inactive Mailbox. LPTM
- *     content is the number of the first one.
+ * - 0b0 - If ESR2[VPS] is asserted, the ESR2[LPTM] is not an inactive Mailbox.
+ * - 0b1 - If ESR2[VPS] is asserted, there is at least one inactive Mailbox.
+ *     LPTM content is the number of the first one.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR2_IMB field. */
@@ -3850,8 +3877,8 @@
  * (pending abort), or any write attempt into a Tx MB with CAN_IFLAG set is blocked.
  *
  * Values:
- * - 0 - Contents of IMB and LPTM are invalid.
- * - 1 - Contents of IMB and LPTM are valid.
+ * - 0b0 - Contents of IMB and LPTM are invalid.
+ * - 0b1 - Contents of IMB and LPTM are valid.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_ESR2_VPS field. */
@@ -4130,8 +4157,8 @@
  * register. This field can be written in Freeze mode only.
  *
  * Values:
- * - 0 - Extended bit time definitions disabled.
- * - 1 - Extended bit time definitions enabled.
+ * - 0b0 - Extended bit time definitions disabled.
+ * - 0b1 - Extended bit time definitions enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CAN_CBT_BTF field. */
@@ -4550,10 +4577,10 @@
  * exact values.
  *
  * Values:
- * - 00 - Level 0
- * - 01 - Level 1
- * - 10 - Level 2
- * - 11 - Level 3
+ * - 0b00 - Level 0
+ * - 0b01 - Level 1
+ * - 0b10 - Level 2
+ * - 0b11 - Level 3
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR0_HYSTCTR field. */
@@ -4574,15 +4601,15 @@
  * can be used to compare two analog input voltages applied to INP and INM. .
  *
  * Values:
- * - 000 - Filter is disabled. If SE = 1, then COUT is a logic 0. This is not a
- *     legal state, and is not recommended. If SE = 0, COUT = COUTA.
- * - 001 - One sample must agree. The comparator output is simply sampled.
- * - 010 - 2 consecutive samples must agree.
- * - 011 - 3 consecutive samples must agree.
- * - 100 - 4 consecutive samples must agree.
- * - 101 - 5 consecutive samples must agree.
- * - 110 - 6 consecutive samples must agree.
- * - 111 - 7 consecutive samples must agree.
+ * - 0b000 - Filter is disabled. If SE = 1, then COUT is a logic 0. This is not
+ *     a legal state, and is not recommended. If SE = 0, COUT = COUTA.
+ * - 0b001 - One sample must agree. The comparator output is simply sampled.
+ * - 0b010 - 2 consecutive samples must agree.
+ * - 0b011 - 3 consecutive samples must agree.
+ * - 0b100 - 4 consecutive samples must agree.
+ * - 0b101 - 5 consecutive samples must agree.
+ * - 0b110 - 6 consecutive samples must agree.
+ * - 0b111 - 7 consecutive samples must agree.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR0_FILTER_CNT field. */
@@ -4628,8 +4655,8 @@
  * disabled automatically.
  *
  * Values:
- * - 0 - Analog Comparator is disabled.
- * - 1 - Analog Comparator is enabled.
+ * - 0b0 - Analog Comparator is disabled.
+ * - 0b1 - Analog Comparator is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_EN field. */
@@ -4645,12 +4672,12 @@
  * @name Register CMP_CR1, field OPE[1] (RW)
  *
  * Values:
- * - 0 - CMPO is not available on the associated CMPO output pin. If the
+ * - 0b0 - CMPO is not available on the associated CMPO output pin. If the
  *     comparator does not own the pin, this field has no effect.
- * - 1 - CMPO is available on the associated CMPO output pin. The comparator
+ * - 0b1 - CMPO is available on the associated CMPO output pin. The comparator
  *     output (CMPO) is driven out on the associated CMPO output pin if the
- *     comparator owns the pin. If the comparator does not own the field, this bit has no
- *     effect.
+ *     comparator owns the pin. If the comparator does not own the field, this bit has
+ *     no effect.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_OPE field. */
@@ -4666,8 +4693,8 @@
  * @name Register CMP_CR1, field COS[2] (RW)
  *
  * Values:
- * - 0 - Set the filtered comparator output (CMPO) to equal COUT.
- * - 1 - Set the unfiltered comparator output (CMPO) to equal COUTA.
+ * - 0b0 - Set the filtered comparator output (CMPO) to equal COUT.
+ * - 0b1 - Set the unfiltered comparator output (CMPO) to equal COUTA.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_COS field. */
@@ -4687,8 +4714,8 @@
  * OPE=0.
  *
  * Values:
- * - 0 - Does not invert the comparator output.
- * - 1 - Inverts the comparator output.
+ * - 0b0 - Does not invert the comparator output.
+ * - 0b1 - Inverts the comparator output.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_INV field. */
@@ -4706,10 +4733,10 @@
  * See the electrical specifications table in the device Data Sheet for details.
  *
  * Values:
- * - 0 - Low-Speed (LS) Comparison mode selected. In this mode, CMP has slower
+ * - 0b0 - Low-Speed (LS) Comparison mode selected. In this mode, CMP has slower
  *     output propagation delay and lower current consumption.
- * - 1 - High-Speed (HS) Comparison mode selected. In this mode, CMP has faster
- *     output propagation delay and higher current consumption.
+ * - 0b1 - High-Speed (HS) Comparison mode selected. In this mode, CMP has
+ *     faster output propagation delay and higher current consumption.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_PMODE field. */
@@ -4733,8 +4760,8 @@
  * the chip configuration for details about the external timer resource.
  *
  * Values:
- * - 0 - Trigger mode is disabled.
- * - 1 - Trigger mode is enabled.
+ * - 0b0 - Trigger mode is disabled.
+ * - 0b1 - Trigger mode is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_TRIGM field. */
@@ -4753,8 +4780,8 @@
  * set SE and WE both at a given time.
  *
  * Values:
- * - 0 - Windowing mode is not selected.
- * - 1 - Windowing mode is selected.
+ * - 0b0 - Windowing mode is not selected.
+ * - 0b1 - Windowing mode is selected.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_WE field. */
@@ -4773,8 +4800,8 @@
  * set SE and WE both at a given time.
  *
  * Values:
- * - 0 - Sampling mode is not selected.
- * - 1 - Sampling mode is selected.
+ * - 0b0 - Sampling mode is not selected.
+ * - 0b1 - Sampling mode is selected.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_CR1_SE field. */
@@ -4852,8 +4879,8 @@
  * cleared by writing 1 to it. During Stop modes, CFF is edge sensitive .
  *
  * Values:
- * - 0 - Falling-edge on COUT has not been detected.
- * - 1 - Falling-edge on COUT has occurred.
+ * - 0b0 - Falling-edge on COUT has not been detected.
+ * - 0b1 - Falling-edge on COUT has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_CFF field. */
@@ -4872,8 +4899,8 @@
  * cleared by writing 1 to it. During Stop modes, CFR is edge sensitive .
  *
  * Values:
- * - 0 - Rising-edge on COUT has not been detected.
- * - 1 - Rising-edge on COUT has occurred.
+ * - 0b0 - Rising-edge on COUT has not been detected.
+ * - 0b1 - Rising-edge on COUT has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_CFR field. */
@@ -4892,8 +4919,8 @@
  * will be asserted when CFF is set.
  *
  * Values:
- * - 0 - Interrupt is disabled.
- * - 1 - Interrupt is enabled.
+ * - 0b0 - Interrupt is disabled.
+ * - 0b1 - Interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_IEF field. */
@@ -4912,8 +4939,8 @@
  * will be asserted when CFR is set.
  *
  * Values:
- * - 0 - Interrupt is disabled.
- * - 1 - Interrupt is enabled.
+ * - 0b0 - Interrupt is disabled.
+ * - 0b1 - Interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_IER field. */
@@ -4932,8 +4959,8 @@
  * set, a DMA request is asserted when CFR or CFF is set.
  *
  * Values:
- * - 0 - DMA is disabled.
- * - 1 - DMA is enabled.
+ * - 0b0 - DMA is disabled.
+ * - 0b1 - DMA is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_SCR_DMAEN field. */
@@ -4990,8 +5017,8 @@
  * @name Register CMP_DACCR, field VRSEL[6] (RW)
  *
  * Values:
- * - 0 - Vin1 is selected as resistor ladder network supply reference.
- * - 1 - Vin2 is selected as resistor ladder network supply reference.
+ * - 0b0 - Vin1 is selected as resistor ladder network supply reference.
+ * - 0b1 - Vin2 is selected as resistor ladder network supply reference.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_DACCR_VRSEL field. */
@@ -5010,8 +5037,8 @@
  * power.
  *
  * Values:
- * - 0 - DAC is disabled.
- * - 1 - DAC is enabled.
+ * - 0b0 - DAC is disabled.
+ * - 0b1 - DAC is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the CMP_DACCR_DACEN field. */
@@ -5057,14 +5084,14 @@
  * shuts down to prevent itself from becoming a noise generator.
  *
  * Values:
- * - 000 - IN0
- * - 001 - IN1
- * - 010 - IN2
- * - 011 - IN3
- * - 100 - IN4
- * - 101 - IN5
- * - 110 - IN6
- * - 111 - IN7
+ * - 0b000 - IN0
+ * - 0b001 - IN1
+ * - 0b010 - IN2
+ * - 0b011 - IN3
+ * - 0b100 - IN4
+ * - 0b101 - IN5
+ * - 0b110 - IN6
+ * - 0b111 - IN7
  */
 /*@{*/
 /*! @brief Read current value of the CMP_MUXCR_MSEL field. */
@@ -5085,14 +5112,14 @@
  * shuts down to prevent itself from becoming a noise generator.
  *
  * Values:
- * - 000 - IN0
- * - 001 - IN1
- * - 010 - IN2
- * - 011 - IN3
- * - 100 - IN4
- * - 101 - IN5
- * - 110 - IN6
- * - 111 - IN7
+ * - 0b000 - IN0
+ * - 0b001 - IN1
+ * - 0b010 - IN2
+ * - 0b011 - IN3
+ * - 0b100 - IN4
+ * - 0b101 - IN5
+ * - 0b110 - IN6
+ * - 0b111 - IN7
  */
 /*@{*/
 /*! @brief Read current value of the CMP_MUXCR_PSEL field. */
@@ -5110,13 +5137,13 @@
  * Cyclic Redundancy Check
  *
  * Registers defined in this header file:
- * - CRC_CRCL - CRC_CRCL register.
- * - CRC_CRCH - CRC_CRCH register.
- * - CRC_CRCLL - CRC_CRCLL register.
- * - CRC_CRCLU - CRC_CRCLU register.
- * - CRC_CRCHL - CRC_CRCHL register.
- * - CRC_CRCHU - CRC_CRCHU register.
- * - CRC_CRC - CRC Data register
+ * - CRC_DATAL - CRC_DATAL register.
+ * - CRC_DATAH - CRC_DATAH register.
+ * - CRC_DATALL - CRC_DATALL register.
+ * - CRC_DATALU - CRC_DATALU register.
+ * - CRC_DATAHL - CRC_DATAHL register.
+ * - CRC_DATAHU - CRC_DATAHU register.
+ * - CRC_DATA - CRC Data register
  * - CRC_GPOLY - CRC Polynomial register
  * - CRC_GPOLYL - CRC_GPOLYL register.
  * - CRC_GPOLYH - CRC_GPOLYH register.
@@ -5132,53 +5159,53 @@
 #define CRC_IDX (0U) /*!< Instance number for CRC. */
 
 /*******************************************************************************
- * CRC_CRCLL - CRC_CRCLL register.
+ * CRC_DATALL - CRC_DATALL register.
  ******************************************************************************/
 
 /*!
- * @brief CRC_CRCLL - CRC_CRCLL register. (RW)
+ * @brief CRC_DATALL - CRC_DATALL register. (RW)
  *
  * Reset value: 0xFFU
  */
 /*!
- * @name Constants and macros for entire CRC_CRCLL register
+ * @name Constants and macros for entire CRC_DATALL register
  */
 /*@{*/
-#define CRC_RD_CRCLL(base)       (CRC_CRCLL_REG(base))
-#define CRC_WR_CRCLL(base, value) (CRC_CRCLL_REG(base) = (value))
-#define CRC_RMW_CRCLL(base, mask, value) (CRC_WR_CRCLL(base, (CRC_RD_CRCLL(base) & ~(mask)) | (value)))
-#define CRC_SET_CRCLL(base, value) (BME_OR8(&CRC_CRCLL_REG(base), (uint8_t)(value)))
-#define CRC_CLR_CRCLL(base, value) (BME_AND8(&CRC_CRCLL_REG(base), (uint8_t)(~(value))))
-#define CRC_TOG_CRCLL(base, value) (BME_XOR8(&CRC_CRCLL_REG(base), (uint8_t)(value)))
+#define CRC_RD_DATALL(base)      (CRC_DATALL_REG(base))
+#define CRC_WR_DATALL(base, value) (CRC_DATALL_REG(base) = (value))
+#define CRC_RMW_DATALL(base, mask, value) (CRC_WR_DATALL(base, (CRC_RD_DATALL(base) & ~(mask)) | (value)))
+#define CRC_SET_DATALL(base, value) (BME_OR8(&CRC_DATALL_REG(base), (uint8_t)(value)))
+#define CRC_CLR_DATALL(base, value) (BME_AND8(&CRC_DATALL_REG(base), (uint8_t)(~(value))))
+#define CRC_TOG_DATALL(base, value) (BME_XOR8(&CRC_DATALL_REG(base), (uint8_t)(value)))
 /*@}*/
 
 /*******************************************************************************
- * CRC_CRCL - CRC_CRCL register.
+ * CRC_DATAL - CRC_DATAL register.
  ******************************************************************************/
 
 /*!
- * @brief CRC_CRCL - CRC_CRCL register. (RW)
+ * @brief CRC_DATAL - CRC_DATAL register. (RW)
  *
  * Reset value: 0xFFFFU
  */
 /*!
- * @name Constants and macros for entire CRC_CRCL register
+ * @name Constants and macros for entire CRC_DATAL register
  */
 /*@{*/
-#define CRC_RD_CRCL(base)        (CRC_CRCL_REG(base))
-#define CRC_WR_CRCL(base, value) (CRC_CRCL_REG(base) = (value))
-#define CRC_RMW_CRCL(base, mask, value) (CRC_WR_CRCL(base, (CRC_RD_CRCL(base) & ~(mask)) | (value)))
-#define CRC_SET_CRCL(base, value) (BME_OR16(&CRC_CRCL_REG(base), (uint16_t)(value)))
-#define CRC_CLR_CRCL(base, value) (BME_AND16(&CRC_CRCL_REG(base), (uint16_t)(~(value))))
-#define CRC_TOG_CRCL(base, value) (BME_XOR16(&CRC_CRCL_REG(base), (uint16_t)(value)))
+#define CRC_RD_DATAL(base)       (CRC_DATAL_REG(base))
+#define CRC_WR_DATAL(base, value) (CRC_DATAL_REG(base) = (value))
+#define CRC_RMW_DATAL(base, mask, value) (CRC_WR_DATAL(base, (CRC_RD_DATAL(base) & ~(mask)) | (value)))
+#define CRC_SET_DATAL(base, value) (BME_OR16(&CRC_DATAL_REG(base), (uint16_t)(value)))
+#define CRC_CLR_DATAL(base, value) (BME_AND16(&CRC_DATAL_REG(base), (uint16_t)(~(value))))
+#define CRC_TOG_DATAL(base, value) (BME_XOR16(&CRC_DATAL_REG(base), (uint16_t)(value)))
 /*@}*/
 
 /*******************************************************************************
- * CRC_CRC - CRC Data register
+ * CRC_DATA - CRC Data register
  ******************************************************************************/
 
 /*!
- * @brief CRC_CRC - CRC Data register (RW)
+ * @brief CRC_DATA - CRC Data register (RW)
  *
  * Reset value: 0xFFFFFFFFU
  *
@@ -5197,57 +5224,57 @@
  * provided the CRC module is configured.
  */
 /*!
- * @name Constants and macros for entire CRC_CRC register
+ * @name Constants and macros for entire CRC_DATA register
  */
 /*@{*/
-#define CRC_RD_CRC(base)         (CRC_CRC_REG(base))
-#define CRC_WR_CRC(base, value)  (CRC_CRC_REG(base) = (value))
-#define CRC_RMW_CRC(base, mask, value) (CRC_WR_CRC(base, (CRC_RD_CRC(base) & ~(mask)) | (value)))
-#define CRC_SET_CRC(base, value) (BME_OR32(&CRC_CRC_REG(base), (uint32_t)(value)))
-#define CRC_CLR_CRC(base, value) (BME_AND32(&CRC_CRC_REG(base), (uint32_t)(~(value))))
-#define CRC_TOG_CRC(base, value) (BME_XOR32(&CRC_CRC_REG(base), (uint32_t)(value)))
+#define CRC_RD_DATA(base)        (CRC_DATA_REG(base))
+#define CRC_WR_DATA(base, value) (CRC_DATA_REG(base) = (value))
+#define CRC_RMW_DATA(base, mask, value) (CRC_WR_DATA(base, (CRC_RD_DATA(base) & ~(mask)) | (value)))
+#define CRC_SET_DATA(base, value) (BME_OR32(&CRC_DATA_REG(base), (uint32_t)(value)))
+#define CRC_CLR_DATA(base, value) (BME_AND32(&CRC_DATA_REG(base), (uint32_t)(~(value))))
+#define CRC_TOG_DATA(base, value) (BME_XOR32(&CRC_DATA_REG(base), (uint32_t)(value)))
 /*@}*/
 
 /*
- * Constants & macros for individual CRC_CRC bitfields
+ * Constants & macros for individual CRC_DATA bitfields
  */
 
 /*!
- * @name Register CRC_CRC, field LL[7:0] (RW)
+ * @name Register CRC_DATA, field LL[7:0] (RW)
  *
  * When CTRL[WAS] is 1, values written to this field are part of the seed value.
  * When CTRL[WAS] is 0, data written to this field is used for CRC checksum
  * generation.
  */
 /*@{*/
-/*! @brief Read current value of the CRC_CRC_LL field. */
-#define CRC_RD_CRC_LL(base)  ((CRC_CRC_REG(base) & CRC_CRC_LL_MASK) >> CRC_CRC_LL_SHIFT)
-#define CRC_BRD_CRC_LL(base) (BME_UBFX32(&CRC_CRC_REG(base), CRC_CRC_LL_SHIFT, CRC_CRC_LL_WIDTH))
+/*! @brief Read current value of the CRC_DATA_LL field. */
+#define CRC_RD_DATA_LL(base) ((CRC_DATA_REG(base) & CRC_DATA_LL_MASK) >> CRC_DATA_LL_SHIFT)
+#define CRC_BRD_DATA_LL(base) (BME_UBFX32(&CRC_DATA_REG(base), CRC_DATA_LL_SHIFT, CRC_DATA_LL_WIDTH))
 
 /*! @brief Set the LL field to a new value. */
-#define CRC_WR_CRC_LL(base, value) (CRC_RMW_CRC(base, CRC_CRC_LL_MASK, CRC_CRC_LL(value)))
-#define CRC_BWR_CRC_LL(base, value) (BME_BFI32(&CRC_CRC_REG(base), ((uint32_t)(value) << CRC_CRC_LL_SHIFT), CRC_CRC_LL_SHIFT, CRC_CRC_LL_WIDTH))
+#define CRC_WR_DATA_LL(base, value) (CRC_RMW_DATA(base, CRC_DATA_LL_MASK, CRC_DATA_LL(value)))
+#define CRC_BWR_DATA_LL(base, value) (BME_BFI32(&CRC_DATA_REG(base), ((uint32_t)(value) << CRC_DATA_LL_SHIFT), CRC_DATA_LL_SHIFT, CRC_DATA_LL_WIDTH))
 /*@}*/
 
 /*!
- * @name Register CRC_CRC, field LU[15:8] (RW)
+ * @name Register CRC_DATA, field LU[15:8] (RW)
  *
  * When CTRL[WAS] is 1, values written to this field are part of the seed value.
  * When CTRL[WAS] is 0, data written to this field is used for CRC checksum
  * generation.
  */
 /*@{*/
-/*! @brief Read current value of the CRC_CRC_LU field. */
-#define CRC_RD_CRC_LU(base)  ((CRC_CRC_REG(base) & CRC_CRC_LU_MASK) >> CRC_CRC_LU_SHIFT)
-#define CRC_BRD_CRC_LU(base) (BME_UBFX32(&CRC_CRC_REG(base), CRC_CRC_LU_SHIFT, CRC_CRC_LU_WIDTH))
+/*! @brief Read current value of the CRC_DATA_LU field. */
+#define CRC_RD_DATA_LU(base) ((CRC_DATA_REG(base) & CRC_DATA_LU_MASK) >> CRC_DATA_LU_SHIFT)
+#define CRC_BRD_DATA_LU(base) (BME_UBFX32(&CRC_DATA_REG(base), CRC_DATA_LU_SHIFT, CRC_DATA_LU_WIDTH))
 
 /*! @brief Set the LU field to a new value. */
-#define CRC_WR_CRC_LU(base, value) (CRC_RMW_CRC(base, CRC_CRC_LU_MASK, CRC_CRC_LU(value)))
-#define CRC_BWR_CRC_LU(base, value) (BME_BFI32(&CRC_CRC_REG(base), ((uint32_t)(value) << CRC_CRC_LU_SHIFT), CRC_CRC_LU_SHIFT, CRC_CRC_LU_WIDTH))
+#define CRC_WR_DATA_LU(base, value) (CRC_RMW_DATA(base, CRC_DATA_LU_MASK, CRC_DATA_LU(value)))
+#define CRC_BWR_DATA_LU(base, value) (BME_BFI32(&CRC_DATA_REG(base), ((uint32_t)(value) << CRC_DATA_LU_SHIFT), CRC_DATA_LU_SHIFT, CRC_DATA_LU_WIDTH))
 /*@}*/
 
 /*!
- * @name Register CRC_CRC, field HL[23:16] (RW)
+ * @name Register CRC_DATA, field HL[23:16] (RW)
  *
  * In 16-bit CRC mode (CTRL[TCRC] is 0), this field is not used for programming
  * a seed value. In 32-bit CRC mode (CTRL[TCRC] is 1), values written to this
@@ -5256,17 +5283,17 @@
  * 32-bit CRC modes.
  */
 /*@{*/
-/*! @brief Read current value of the CRC_CRC_HL field. */
-#define CRC_RD_CRC_HL(base)  ((CRC_CRC_REG(base) & CRC_CRC_HL_MASK) >> CRC_CRC_HL_SHIFT)
-#define CRC_BRD_CRC_HL(base) (BME_UBFX32(&CRC_CRC_REG(base), CRC_CRC_HL_SHIFT, CRC_CRC_HL_WIDTH))
+/*! @brief Read current value of the CRC_DATA_HL field. */
+#define CRC_RD_DATA_HL(base) ((CRC_DATA_REG(base) & CRC_DATA_HL_MASK) >> CRC_DATA_HL_SHIFT)
+#define CRC_BRD_DATA_HL(base) (BME_UBFX32(&CRC_DATA_REG(base), CRC_DATA_HL_SHIFT, CRC_DATA_HL_WIDTH))
 
 /*! @brief Set the HL field to a new value. */
-#define CRC_WR_CRC_HL(base, value) (CRC_RMW_CRC(base, CRC_CRC_HL_MASK, CRC_CRC_HL(value)))
-#define CRC_BWR_CRC_HL(base, value) (BME_BFI32(&CRC_CRC_REG(base), ((uint32_t)(value) << CRC_CRC_HL_SHIFT), CRC_CRC_HL_SHIFT, CRC_CRC_HL_WIDTH))
+#define CRC_WR_DATA_HL(base, value) (CRC_RMW_DATA(base, CRC_DATA_HL_MASK, CRC_DATA_HL(value)))
+#define CRC_BWR_DATA_HL(base, value) (BME_BFI32(&CRC_DATA_REG(base), ((uint32_t)(value) << CRC_DATA_HL_SHIFT), CRC_DATA_HL_SHIFT, CRC_DATA_HL_WIDTH))
 /*@}*/
 
 /*!
- * @name Register CRC_CRC, field HU[31:24] (RW)
+ * @name Register CRC_DATA, field HU[31:24] (RW)
  *
  * In 16-bit CRC mode (CTRL[TCRC] is 0), this field is not used for programming
  * a seed value. In 32-bit CRC mode (CTRL[TCRC] is 1), values written to this
@@ -5275,97 +5302,97 @@
  * 32-bit CRC modes.
  */
 /*@{*/
-/*! @brief Read current value of the CRC_CRC_HU field. */
-#define CRC_RD_CRC_HU(base)  ((CRC_CRC_REG(base) & CRC_CRC_HU_MASK) >> CRC_CRC_HU_SHIFT)
-#define CRC_BRD_CRC_HU(base) (BME_UBFX32(&CRC_CRC_REG(base), CRC_CRC_HU_SHIFT, CRC_CRC_HU_WIDTH))
+/*! @brief Read current value of the CRC_DATA_HU field. */
+#define CRC_RD_DATA_HU(base) ((CRC_DATA_REG(base) & CRC_DATA_HU_MASK) >> CRC_DATA_HU_SHIFT)
+#define CRC_BRD_DATA_HU(base) (BME_UBFX32(&CRC_DATA_REG(base), CRC_DATA_HU_SHIFT, CRC_DATA_HU_WIDTH))
 
 /*! @brief Set the HU field to a new value. */
-#define CRC_WR_CRC_HU(base, value) (CRC_RMW_CRC(base, CRC_CRC_HU_MASK, CRC_CRC_HU(value)))
-#define CRC_BWR_CRC_HU(base, value) (BME_BFI32(&CRC_CRC_REG(base), ((uint32_t)(value) << CRC_CRC_HU_SHIFT), CRC_CRC_HU_SHIFT, CRC_CRC_HU_WIDTH))
+#define CRC_WR_DATA_HU(base, value) (CRC_RMW_DATA(base, CRC_DATA_HU_MASK, CRC_DATA_HU(value)))
+#define CRC_BWR_DATA_HU(base, value) (BME_BFI32(&CRC_DATA_REG(base), ((uint32_t)(value) << CRC_DATA_HU_SHIFT), CRC_DATA_HU_SHIFT, CRC_DATA_HU_WIDTH))
 /*@}*/
 
 /*******************************************************************************
- * CRC_CRCLU - CRC_CRCLU register.
+ * CRC_DATALU - CRC_DATALU register.
  ******************************************************************************/
 
 /*!
- * @brief CRC_CRCLU - CRC_CRCLU register. (RW)
+ * @brief CRC_DATALU - CRC_DATALU register. (RW)
  *
  * Reset value: 0xFFU
  */
 /*!
- * @name Constants and macros for entire CRC_CRCLU register
+ * @name Constants and macros for entire CRC_DATALU register
  */
 /*@{*/
-#define CRC_RD_CRCLU(base)       (CRC_CRCLU_REG(base))
-#define CRC_WR_CRCLU(base, value) (CRC_CRCLU_REG(base) = (value))
-#define CRC_RMW_CRCLU(base, mask, value) (CRC_WR_CRCLU(base, (CRC_RD_CRCLU(base) & ~(mask)) | (value)))
-#define CRC_SET_CRCLU(base, value) (BME_OR8(&CRC_CRCLU_REG(base), (uint8_t)(value)))
-#define CRC_CLR_CRCLU(base, value) (BME_AND8(&CRC_CRCLU_REG(base), (uint8_t)(~(value))))
-#define CRC_TOG_CRCLU(base, value) (BME_XOR8(&CRC_CRCLU_REG(base), (uint8_t)(value)))
+#define CRC_RD_DATALU(base)      (CRC_DATALU_REG(base))
+#define CRC_WR_DATALU(base, value) (CRC_DATALU_REG(base) = (value))
+#define CRC_RMW_DATALU(base, mask, value) (CRC_WR_DATALU(base, (CRC_RD_DATALU(base) & ~(mask)) | (value)))
+#define CRC_SET_DATALU(base, value) (BME_OR8(&CRC_DATALU_REG(base), (uint8_t)(value)))
+#define CRC_CLR_DATALU(base, value) (BME_AND8(&CRC_DATALU_REG(base), (uint8_t)(~(value))))
+#define CRC_TOG_DATALU(base, value) (BME_XOR8(&CRC_DATALU_REG(base), (uint8_t)(value)))
 /*@}*/
 
 /*******************************************************************************
- * CRC_CRCHL - CRC_CRCHL register.
+ * CRC_DATAHL - CRC_DATAHL register.
  ******************************************************************************/
 
 /*!
- * @brief CRC_CRCHL - CRC_CRCHL register. (RW)
+ * @brief CRC_DATAHL - CRC_DATAHL register. (RW)
  *
  * Reset value: 0xFFU
  */
 /*!
- * @name Constants and macros for entire CRC_CRCHL register
+ * @name Constants and macros for entire CRC_DATAHL register
  */
 /*@{*/
-#define CRC_RD_CRCHL(base)       (CRC_CRCHL_REG(base))
-#define CRC_WR_CRCHL(base, value) (CRC_CRCHL_REG(base) = (value))
-#define CRC_RMW_CRCHL(base, mask, value) (CRC_WR_CRCHL(base, (CRC_RD_CRCHL(base) & ~(mask)) | (value)))
-#define CRC_SET_CRCHL(base, value) (BME_OR8(&CRC_CRCHL_REG(base), (uint8_t)(value)))
-#define CRC_CLR_CRCHL(base, value) (BME_AND8(&CRC_CRCHL_REG(base), (uint8_t)(~(value))))
-#define CRC_TOG_CRCHL(base, value) (BME_XOR8(&CRC_CRCHL_REG(base), (uint8_t)(value)))
+#define CRC_RD_DATAHL(base)      (CRC_DATAHL_REG(base))
+#define CRC_WR_DATAHL(base, value) (CRC_DATAHL_REG(base) = (value))
+#define CRC_RMW_DATAHL(base, mask, value) (CRC_WR_DATAHL(base, (CRC_RD_DATAHL(base) & ~(mask)) | (value)))
+#define CRC_SET_DATAHL(base, value) (BME_OR8(&CRC_DATAHL_REG(base), (uint8_t)(value)))
+#define CRC_CLR_DATAHL(base, value) (BME_AND8(&CRC_DATAHL_REG(base), (uint8_t)(~(value))))
+#define CRC_TOG_DATAHL(base, value) (BME_XOR8(&CRC_DATAHL_REG(base), (uint8_t)(value)))
 /*@}*/
 
 /*******************************************************************************
- * CRC_CRCH - CRC_CRCH register.
+ * CRC_DATAH - CRC_DATAH register.
  ******************************************************************************/
 
 /*!
- * @brief CRC_CRCH - CRC_CRCH register. (RW)
+ * @brief CRC_DATAH - CRC_DATAH register. (RW)
  *
  * Reset value: 0xFFFFU
  */
 /*!
- * @name Constants and macros for entire CRC_CRCH register
+ * @name Constants and macros for entire CRC_DATAH register
  */
 /*@{*/
-#define CRC_RD_CRCH(base)        (CRC_CRCH_REG(base))
-#define CRC_WR_CRCH(base, value) (CRC_CRCH_REG(base) = (value))
-#define CRC_RMW_CRCH(base, mask, value) (CRC_WR_CRCH(base, (CRC_RD_CRCH(base) & ~(mask)) | (value)))
-#define CRC_SET_CRCH(base, value) (BME_OR16(&CRC_CRCH_REG(base), (uint16_t)(value)))
-#define CRC_CLR_CRCH(base, value) (BME_AND16(&CRC_CRCH_REG(base), (uint16_t)(~(value))))
-#define CRC_TOG_CRCH(base, value) (BME_XOR16(&CRC_CRCH_REG(base), (uint16_t)(value)))
+#define CRC_RD_DATAH(base)       (CRC_DATAH_REG(base))
+#define CRC_WR_DATAH(base, value) (CRC_DATAH_REG(base) = (value))
+#define CRC_RMW_DATAH(base, mask, value) (CRC_WR_DATAH(base, (CRC_RD_DATAH(base) & ~(mask)) | (value)))
+#define CRC_SET_DATAH(base, value) (BME_OR16(&CRC_DATAH_REG(base), (uint16_t)(value)))
+#define CRC_CLR_DATAH(base, value) (BME_AND16(&CRC_DATAH_REG(base), (uint16_t)(~(value))))
+#define CRC_TOG_DATAH(base, value) (BME_XOR16(&CRC_DATAH_REG(base), (uint16_t)(value)))
 /*@}*/
 
 /*******************************************************************************
- * CRC_CRCHU - CRC_CRCHU register.
+ * CRC_DATAHU - CRC_DATAHU register.
  ******************************************************************************/
 
 /*!
- * @brief CRC_CRCHU - CRC_CRCHU register. (RW)
+ * @brief CRC_DATAHU - CRC_DATAHU register. (RW)
  *
  * Reset value: 0xFFU
  */
 /*!
- * @name Constants and macros for entire CRC_CRCHU register
+ * @name Constants and macros for entire CRC_DATAHU register
  */
 /*@{*/
-#define CRC_RD_CRCHU(base)       (CRC_CRCHU_REG(base))
-#define CRC_WR_CRCHU(base, value) (CRC_CRCHU_REG(base) = (value))
-#define CRC_RMW_CRCHU(base, mask, value) (CRC_WR_CRCHU(base, (CRC_RD_CRCHU(base) & ~(mask)) | (value)))
-#define CRC_SET_CRCHU(base, value) (BME_OR8(&CRC_CRCHU_REG(base), (uint8_t)(value)))
-#define CRC_CLR_CRCHU(base, value) (BME_AND8(&CRC_CRCHU_REG(base), (uint8_t)(~(value))))
-#define CRC_TOG_CRCHU(base, value) (BME_XOR8(&CRC_CRCHU_REG(base), (uint8_t)(value)))
+#define CRC_RD_DATAHU(base)      (CRC_DATAHU_REG(base))
+#define CRC_WR_DATAHU(base, value) (CRC_DATAHU_REG(base) = (value))
+#define CRC_RMW_DATAHU(base, mask, value) (CRC_WR_DATAHU(base, (CRC_RD_DATAHU(base) & ~(mask)) | (value)))
+#define CRC_SET_DATAHU(base, value) (BME_OR8(&CRC_DATAHU_REG(base), (uint8_t)(value)))
+#define CRC_CLR_DATAHU(base, value) (BME_AND8(&CRC_DATAHU_REG(base), (uint8_t)(~(value))))
+#define CRC_TOG_DATAHU(base, value) (BME_XOR8(&CRC_DATAHU_REG(base), (uint8_t)(value)))
 /*@}*/
 
 /*******************************************************************************
@@ -5592,8 +5619,8 @@
  * Width of CRC protocol.
  *
  * Values:
- * - 0 - 16-bit CRC protocol.
- * - 1 - 32-bit CRC protocol.
+ * - 0b0 - 16-bit CRC protocol.
+ * - 0b1 - 32-bit CRC protocol.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRL_TCRC field. */
@@ -5613,8 +5640,8 @@
  * data for CRC computation.
  *
  * Values:
- * - 0 - Writes to the CRC data register are data values.
- * - 1 - Writes to the CRC data register are seed values.
+ * - 0b0 - Writes to the CRC data register are data values.
+ * - 0b1 - Writes to the CRC data register are seed values.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRL_WAS field. */
@@ -5633,8 +5660,8 @@
  * 0xFFFF. Asserting this bit enables on the fly complementing of read data.
  *
  * Values:
- * - 0 - No XOR on reading.
- * - 1 - Invert or complement the read value of the CRC Data register.
+ * - 0b0 - No XOR on reading.
+ * - 0b1 - Invert or complement the read value of the CRC Data register.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRL_FXOR field. */
@@ -5654,10 +5681,10 @@
  * transpose options.
  *
  * Values:
- * - 00 - No transposition.
- * - 01 - Bits in bytes are transposed; bytes are not transposed.
- * - 10 - Both bits in bytes and bytes are transposed.
- * - 11 - Only bytes are transposed; no bits in a byte are transposed.
+ * - 0b00 - No transposition.
+ * - 0b01 - Bits in bytes are transposed; bytes are not transposed.
+ * - 0b10 - Both bits in bytes and bytes are transposed.
+ * - 0b11 - Only bytes are transposed; no bits in a byte are transposed.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRL_TOTR field. */
@@ -5677,10 +5704,10 @@
  * options.
  *
  * Values:
- * - 00 - No transposition.
- * - 01 - Bits in bytes are transposed; bytes are not transposed.
- * - 10 - Both bits in bytes and bytes are transposed.
- * - 11 - Only bytes are transposed; no bits in a byte are transposed.
+ * - 0b00 - No transposition.
+ * - 0b01 - Bits in bytes are transposed; bytes are not transposed.
+ * - 0b10 - Both bits in bytes and bytes are transposed.
+ * - 0b11 - Only bytes are transposed; no bits in a byte are transposed.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRL_TOT field. */
@@ -5721,8 +5748,8 @@
  * @name Register CRC_CTRLHU, field TCRC[0] (RW)
  *
  * Values:
- * - 0 - 16-bit CRC protocol.
- * - 1 - 32-bit CRC protocol.
+ * - 0b0 - 16-bit CRC protocol.
+ * - 0b1 - 32-bit CRC protocol.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRLHU_TCRC field. */
@@ -5738,8 +5765,8 @@
  * @name Register CRC_CTRLHU, field WAS[1] (RW)
  *
  * Values:
- * - 0 - Writes to CRC data register are data values.
- * - 1 - Writes to CRC data reguster are seed values.
+ * - 0b0 - Writes to CRC data register are data values.
+ * - 0b1 - Writes to CRC data reguster are seed values.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRLHU_WAS field. */
@@ -5755,8 +5782,8 @@
  * @name Register CRC_CTRLHU, field FXOR[2] (RW)
  *
  * Values:
- * - 0 - No XOR on reading.
- * - 1 - Invert or complement the read value of CRC data register.
+ * - 0b0 - No XOR on reading.
+ * - 0b1 - Invert or complement the read value of CRC data register.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRLHU_FXOR field. */
@@ -5772,10 +5799,10 @@
  * @name Register CRC_CTRLHU, field TOTR[5:4] (RW)
  *
  * Values:
- * - 00 - No Transposition.
- * - 01 - Bits in bytes are transposed, bytes are not transposed.
- * - 10 - Both bits in bytes and bytes are transposed.
- * - 11 - Only bytes are transposed; no bits in a byte are transposed.
+ * - 0b00 - No Transposition.
+ * - 0b01 - Bits in bytes are transposed, bytes are not transposed.
+ * - 0b10 - Both bits in bytes and bytes are transposed.
+ * - 0b11 - Only bytes are transposed; no bits in a byte are transposed.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRLHU_TOTR field. */
@@ -5791,10 +5818,10 @@
  * @name Register CRC_CTRLHU, field TOT[7:6] (RW)
  *
  * Values:
- * - 00 - No Transposition.
- * - 01 - Bits in bytes are transposed, bytes are not transposed.
- * - 10 - Both bits in bytes and bytes are transposed.
- * - 11 - Only bytes are transposed; no bits in a byte are transposed.
+ * - 0b00 - No Transposition.
+ * - 0b01 - Bits in bytes are transposed, bytes are not transposed.
+ * - 0b10 - Both bits in bytes and bytes are transposed.
+ * - 0b11 - Only bytes are transposed; no bits in a byte are transposed.
  */
 /*@{*/
 /*! @brief Read current value of the CRC_CTRLHU_TOT field. */
@@ -5924,8 +5951,8 @@
  * @name Register DAC_SR, field DACBFRPBF[0] (RW)
  *
  * Values:
- * - 0 - The DAC buffer read pointer is not equal to C2[DACBFUP].
- * - 1 - The DAC buffer read pointer is equal to C2[DACBFUP].
+ * - 0b0 - The DAC buffer read pointer is not equal to C2[DACBFUP].
+ * - 0b1 - The DAC buffer read pointer is equal to C2[DACBFUP].
  */
 /*@{*/
 /*! @brief Read current value of the DAC_SR_DACBFRPBF field. */
@@ -5941,8 +5968,8 @@
  * @name Register DAC_SR, field DACBFRPTF[1] (RW)
  *
  * Values:
- * - 0 - The DAC buffer read pointer is not zero.
- * - 1 - The DAC buffer read pointer is zero.
+ * - 0b0 - The DAC buffer read pointer is not zero.
+ * - 0b1 - The DAC buffer read pointer is zero.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_SR_DACBFRPTF field. */
@@ -5952,6 +5979,23 @@
 /*! @brief Set the DACBFRPTF field to a new value. */
 #define DAC_WR_SR_DACBFRPTF(base, value) (DAC_RMW_SR(base, DAC_SR_DACBFRPTF_MASK, DAC_SR_DACBFRPTF(value)))
 #define DAC_BWR_SR_DACBFRPTF(base, value) (BME_BFI8(&DAC_SR_REG(base), ((uint8_t)(value) << DAC_SR_DACBFRPTF_SHIFT), DAC_SR_DACBFRPTF_SHIFT, DAC_SR_DACBFRPTF_WIDTH))
+/*@}*/
+
+/*!
+ * @name Register DAC_SR, field DACBFWMF[2] (RW)
+ *
+ * Values:
+ * - 0b0 - The DAC buffer read pointer has not reached the watermark level.
+ * - 0b1 - The DAC buffer read pointer has reached the watermark level.
+ */
+/*@{*/
+/*! @brief Read current value of the DAC_SR_DACBFWMF field. */
+#define DAC_RD_SR_DACBFWMF(base) ((DAC_SR_REG(base) & DAC_SR_DACBFWMF_MASK) >> DAC_SR_DACBFWMF_SHIFT)
+#define DAC_BRD_SR_DACBFWMF(base) (BME_UBFX8(&DAC_SR_REG(base), DAC_SR_DACBFWMF_SHIFT, DAC_SR_DACBFWMF_WIDTH))
+
+/*! @brief Set the DACBFWMF field to a new value. */
+#define DAC_WR_SR_DACBFWMF(base, value) (DAC_RMW_SR(base, DAC_SR_DACBFWMF_MASK, DAC_SR_DACBFWMF(value)))
+#define DAC_BWR_SR_DACBFWMF(base, value) (BME_BFI8(&DAC_SR_REG(base), ((uint8_t)(value) << DAC_SR_DACBFWMF_SHIFT), DAC_SR_DACBFWMF_SHIFT, DAC_SR_DACBFWMF_WIDTH))
 /*@}*/
 
 /*******************************************************************************
@@ -5988,8 +6032,8 @@
  * @name Register DAC_C0, field DACBBIEN[0] (RW)
  *
  * Values:
- * - 0 - The DAC buffer read pointer bottom flag interrupt is disabled.
- * - 1 - The DAC buffer read pointer bottom flag interrupt is enabled.
+ * - 0b0 - The DAC buffer read pointer bottom flag interrupt is disabled.
+ * - 0b1 - The DAC buffer read pointer bottom flag interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACBBIEN field. */
@@ -6005,8 +6049,8 @@
  * @name Register DAC_C0, field DACBTIEN[1] (RW)
  *
  * Values:
- * - 0 - The DAC buffer read pointer top flag interrupt is disabled.
- * - 1 - The DAC buffer read pointer top flag interrupt is enabled.
+ * - 0b0 - The DAC buffer read pointer top flag interrupt is disabled.
+ * - 0b1 - The DAC buffer read pointer top flag interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACBTIEN field. */
@@ -6022,8 +6066,8 @@
  * @name Register DAC_C0, field DACBWIEN[2] (RW)
  *
  * Values:
- * - 0 - The DAC buffer watermark interrupt is disabled.
- * - 1 - The DAC buffer watermark interrupt is enabled.
+ * - 0b0 - The DAC buffer watermark interrupt is disabled.
+ * - 0b1 - The DAC buffer watermark interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACBWIEN field. */
@@ -6042,8 +6086,8 @@
  * details on the impact of the modes below.
  *
  * Values:
- * - 0 - High-Power mode
- * - 1 - Low-Power mode
+ * - 0b0 - High-Power mode
+ * - 0b1 - Low-Power mode
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_LPEN field. */
@@ -6063,8 +6107,8 @@
  * advance the buffer read pointer once.
  *
  * Values:
- * - 0 - The DAC soft trigger is not valid.
- * - 1 - The DAC soft trigger is valid.
+ * - 0b0 - The DAC soft trigger is not valid.
+ * - 0b1 - The DAC soft trigger is valid.
  */
 /*@{*/
 /*! @brief Set the DACSWTRG field to a new value. */
@@ -6076,8 +6120,8 @@
  * @name Register DAC_C0, field DACTRGSEL[5] (RW)
  *
  * Values:
- * - 0 - The DAC hardware trigger is selected.
- * - 1 - The DAC software trigger is selected.
+ * - 0b0 - The DAC hardware trigger is selected.
+ * - 0b1 - The DAC software trigger is selected.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACTRGSEL field. */
@@ -6093,8 +6137,8 @@
  * @name Register DAC_C0, field DACRFS[6] (RW)
  *
  * Values:
- * - 0 - The DAC selects DACREF_1 as the reference voltage.
- * - 1 - The DAC selects DACREF_2 as the reference voltage.
+ * - 0b0 - The DAC selects DACREF_1 as the reference voltage.
+ * - 0b1 - The DAC selects DACREF_2 as the reference voltage.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACRFS field. */
@@ -6112,8 +6156,8 @@
  * Starts the Programmable Reference Generator operation.
  *
  * Values:
- * - 0 - The DAC system is disabled.
- * - 1 - The DAC system is enabled.
+ * - 0b0 - The DAC system is disabled.
+ * - 0b1 - The DAC system is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C0_DACEN field. */
@@ -6156,10 +6200,10 @@
  * @name Register DAC_C1, field DACBFEN[0] (RW)
  *
  * Values:
- * - 0 - Buffer read pointer is disabled. The converted data is always the first
- *     word of the buffer.
- * - 1 - Buffer read pointer is enabled. The converted data is the word that the
- *     read pointer points to. It means converted data can be from any word of
+ * - 0b0 - Buffer read pointer is disabled. The converted data is always the
+ *     first word of the buffer.
+ * - 0b1 - Buffer read pointer is enabled. The converted data is the word that
+ *     the read pointer points to. It means converted data can be from any word of
  *     the buffer.
  */
 /*@{*/
@@ -6173,13 +6217,11 @@
 /*@}*/
 
 /*!
- * @name Register DAC_C1, field DACBFMD[2:1] (RW)
+ * @name Register DAC_C1, field DACBFMD[2] (RW)
  *
  * Values:
- * - 00 - Normal mode
- * - 01 - Reserved
- * - 10 - One-Time Scan mode
- * - 11 - Reserved
+ * - 0b0 - Normal mode
+ * - 0b1 - One-Time Scan mode
  */
 /*@{*/
 /*! @brief Read current value of the DAC_C1_DACBFMD field. */
@@ -6192,38 +6234,12 @@
 /*@}*/
 
 /*!
- * @name Register DAC_C1, field DACBFWM[4:3] (RW)
- *
- * Controls when SR[DACBFWMF] is set. When the DAC buffer read pointer reaches
- * the word defined by this field, which is 1-4 words away from the upper limit
- * (DACBUP), SR[DACBFWMF] will be set. This allows user configuration of the
- * watermark interrupt. If FIFO depth is 2, all settings are treat the same, which
- * means if the FIFO is not FULL the watermark status bit and DACBFRPBF are set. User
- * may need to use one of the status bit for DMA or IRQ request.
- *
- * Values:
- * - 00 - 1 word
- * - 01 - 2 words
- * - 10 - Reserved
- * - 11 - Reserved
- */
-/*@{*/
-/*! @brief Read current value of the DAC_C1_DACBFWM field. */
-#define DAC_RD_C1_DACBFWM(base) ((DAC_C1_REG(base) & DAC_C1_DACBFWM_MASK) >> DAC_C1_DACBFWM_SHIFT)
-#define DAC_BRD_C1_DACBFWM(base) (BME_UBFX8(&DAC_C1_REG(base), DAC_C1_DACBFWM_SHIFT, DAC_C1_DACBFWM_WIDTH))
-
-/*! @brief Set the DACBFWM field to a new value. */
-#define DAC_WR_C1_DACBFWM(base, value) (DAC_RMW_C1(base, DAC_C1_DACBFWM_MASK, DAC_C1_DACBFWM(value)))
-#define DAC_BWR_C1_DACBFWM(base, value) (BME_BFI8(&DAC_C1_REG(base), ((uint8_t)(value) << DAC_C1_DACBFWM_SHIFT), DAC_C1_DACBFWM_SHIFT, DAC_C1_DACBFWM_WIDTH))
-/*@}*/
-
-/*!
  * @name Register DAC_C1, field DMAEN[7] (RW)
  *
  * Values:
- * - 0 - DMA is disabled.
- * - 1 - DMA is enabled. When DMA is enabled, the DMA request will be generated
- *     by original interrupts. The interrupts will not be presented on this
+ * - 0b0 - DMA is disabled.
+ * - 0b1 - DMA is enabled. When DMA is enabled, the DMA request will be
+ *     generated by original interrupts. The interrupts will not be presented on this
  *     module at the same time.
  */
 /*@{*/
@@ -6325,9 +6341,9 @@
  * - DMA_SADDR - TCD Source Address
  * - DMA_SOFF - TCD Signed Source Address Offset
  * - DMA_ATTR - TCD Transfer Attributes
- * - DMA_NBYTES_MLNO - TCD Minor Byte Count (Minor Loop Disabled)
- * - DMA_NBYTES_MLOFFNO - TCD Signed Minor Loop Offset (Minor Loop Enabled and Offset Disabled)
- * - DMA_NBYTES_MLOFFYES - TCD Signed Minor Loop Offset (Minor Loop and Offset Enabled)
+ * - DMA_NBYTES_MLNO - TCD Minor Byte Count (Minor Loop Mapping Disabled)
+ * - DMA_NBYTES_MLOFFNO - TCD Signed Minor Loop Offset (Minor Loop Mapping Enabled and Offset Disabled)
+ * - DMA_NBYTES_MLOFFYES - TCD Signed Minor Loop Offset (Minor Loop Mapping and Offset Enabled)
  * - DMA_SLAST - TCD Last Source Address Adjustment
  * - DMA_DADDR - TCD Destination Address
  * - DMA_DOFF - TCD Signed Destination Address Offset
@@ -6400,8 +6416,8 @@
  * @name Register DMA_CR, field EDBG[1] (RW)
  *
  * Values:
- * - 0 - When in debug mode, the DMA continues to operate.
- * - 1 - When in debug mode, the DMA stalls the start of a new channel.
+ * - 0b0 - When in debug mode, the DMA continues to operate.
+ * - 0b1 - When in debug mode, the DMA stalls the start of a new channel.
  *     Executing channels are allowed to complete. Channel execution resumes when the
  *     system exits debug mode or the EDBG bit is cleared.
  */
@@ -6419,8 +6435,8 @@
  * @name Register DMA_CR, field ERCA[2] (RW)
  *
  * Values:
- * - 0 - Fixed priority arbitration is used for channel selection .
- * - 1 - Round robin arbitration is used for channel selection .
+ * - 0b0 - Fixed priority arbitration is used for channel selection .
+ * - 0b1 - Round robin arbitration is used for channel selection .
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CR_ERCA field. */
@@ -6436,8 +6452,8 @@
  * @name Register DMA_CR, field HOE[4] (RW)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - Any error causes the HALT bit to set. Subsequently, all service
+ * - 0b0 - Normal operation
+ * - 0b1 - Any error causes the HALT bit to set. Subsequently, all service
  *     requests are ignored until the HALT bit is cleared.
  */
 /*@{*/
@@ -6454,9 +6470,9 @@
  * @name Register DMA_CR, field HALT[5] (RW)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - Stall the start of any new channels. Executing channels are allowed to
- *     complete. Channel execution resumes when this bit is cleared.
+ * - 0b0 - Normal operation
+ * - 0b1 - Stall the start of any new channels. Executing channels are allowed
+ *     to complete. Channel execution resumes when this bit is cleared.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CR_HALT field. */
@@ -6479,13 +6495,13 @@
  * processing.
  *
  * Values:
- * - 0 - A minor loop channel link made to itself goes through channel
+ * - 0b0 - A minor loop channel link made to itself goes through channel
  *     arbitration before being activated again.
- * - 1 - A minor loop channel link made to itself does not go through channel
+ * - 0b1 - A minor loop channel link made to itself does not go through channel
  *     arbitration before being activated again. Upon minor loop completion, the
  *     channel activates again if that channel has a minor loop channel link
- *     enabled and the link channel is itself. This effectively applies the minor loop
- *     offsets and restarts the next minor loop.
+ *     enabled and the link channel is itself. This effectively applies the minor
+ *     loop offsets and restarts the next minor loop.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CR_CLM field. */
@@ -6501,11 +6517,11 @@
  * @name Register DMA_CR, field EMLM[7] (RW)
  *
  * Values:
- * - 0 - Disabled. TCDn.word2 is defined as a 32-bit NBYTES field.
- * - 1 - Enabled. TCDn.word2 is redefined to include individual enable fields,
+ * - 0b0 - Disabled. TCDn.word2 is defined as a 32-bit NBYTES field.
+ * - 0b1 - Enabled. TCDn.word2 is redefined to include individual enable fields,
  *     an offset field, and the NBYTES field. The individual enable fields allow
- *     the minor loop offset to be applied to the source address, the destination
- *     address, or both. The NBYTES field is reduced when either offset is
+ *     the minor loop offset to be applied to the source address, the
+ *     destination address, or both. The NBYTES field is reduced when either offset is
  *     enabled.
  */
 /*@{*/
@@ -6522,13 +6538,13 @@
  * @name Register DMA_CR, field ECX[16] (RW)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - Cancel the remaining data transfer in the same fashion as the CX bit.
+ * - 0b0 - Normal operation
+ * - 0b1 - Cancel the remaining data transfer in the same fashion as the CX bit.
  *     Stop the executing channel and force the minor loop to finish. The cancel
  *     takes effect after the last write of the current read/write sequence. The
  *     ECX bit clears itself after the cancel is honored. In addition to
- *     cancelling the transfer, ECX treats the cancel as an error condition, thus updating
- *     the Error Status register (DMAx_ES) and generating an optional error
+ *     cancelling the transfer, ECX treats the cancel as an error condition, thus
+ *     updating the Error Status register (DMAx_ES) and generating an optional error
  *     interrupt.
  */
 /*@{*/
@@ -6545,8 +6561,8 @@
  * @name Register DMA_CR, field CX[17] (RW)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - Cancel the remaining data transfer. Stop the executing channel and
+ * - 0b0 - Normal operation
+ * - 0b1 - Cancel the remaining data transfer. Stop the executing channel and
  *     force the minor loop to finish. The cancel takes effect after the last write
  *     of the current read/write sequence. The CX bit clears itself after the
  *     cancel has been honored. This cancel retires the channel normally as if the
@@ -6560,6 +6576,19 @@
 /*! @brief Set the CX field to a new value. */
 #define DMA_WR_CR_CX(base, value) (DMA_RMW_CR(base, DMA_CR_CX_MASK, DMA_CR_CX(value)))
 #define DMA_BWR_CR_CX(base, value) (BME_BFI32(&DMA_CR_REG(base), ((uint32_t)(value) << DMA_CR_CX_SHIFT), DMA_CR_CX_SHIFT, DMA_CR_CX_WIDTH))
+/*@}*/
+
+/*!
+ * @name Register DMA_CR, field ACTIVE[31] (RO)
+ *
+ * Values:
+ * - 0b0 - eDMA is idle.
+ * - 0b1 - eDMA is executing a channel.
+ */
+/*@{*/
+/*! @brief Read current value of the DMA_CR_ACTIVE field. */
+#define DMA_RD_CR_ACTIVE(base) ((DMA_CR_REG(base) & DMA_CR_ACTIVE_MASK) >> DMA_CR_ACTIVE_SHIFT)
+#define DMA_BRD_CR_ACTIVE(base) (BME_UBFX32(&DMA_CR_REG(base), DMA_CR_ACTIVE_SHIFT, DMA_CR_ACTIVE_WIDTH))
 /*@}*/
 
 /*******************************************************************************
@@ -6592,8 +6621,8 @@
  * @name Register DMA_ES, field DBE[0] (RO)
  *
  * Values:
- * - 0 - No destination bus error
- * - 1 - The last recorded error was a bus error on a destination write
+ * - 0b0 - No destination bus error
+ * - 0b1 - The last recorded error was a bus error on a destination write
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ES_DBE field. */
@@ -6605,8 +6634,8 @@
  * @name Register DMA_ES, field SBE[1] (RO)
  *
  * Values:
- * - 0 - No source bus error
- * - 1 - The last recorded error was a bus error on a source read
+ * - 0b0 - No source bus error
+ * - 0b1 - The last recorded error was a bus error on a source read
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ES_SBE field. */
@@ -6618,10 +6647,10 @@
  * @name Register DMA_ES, field SGE[2] (RO)
  *
  * Values:
- * - 0 - No scatter/gather configuration error
- * - 1 - The last recorded error was a configuration error detected in the
- *     TCDn_DLASTSGA field. This field is checked at the beginning of a scatter/gather
- *     operation after major loop completion if TCDn_CSR[ESG] is enabled.
+ * - 0b0 - No scatter/gather configuration error
+ * - 0b1 - The last recorded error was a configuration error detected in the
+ *     TCDn_DLASTSGA field. This field is checked at the beginning of a
+ *     scatter/gather operation after major loop completion if TCDn_CSR[ESG] is enabled.
  *     TCDn_DLASTSGA is not on a 32 byte boundary.
  */
 /*@{*/
@@ -6634,8 +6663,8 @@
  * @name Register DMA_ES, field NCE[3] (RO)
  *
  * Values:
- * - 0 - No NBYTES/CITER configuration error
- * - 1 - The last recorded error was a configuration error detected in the
+ * - 0b0 - No NBYTES/CITER configuration error
+ * - 0b1 - The last recorded error was a configuration error detected in the
  *     TCDn_NBYTES or TCDn_CITER fields. TCDn_NBYTES is not a multiple of
  *     TCDn_ATTR[SSIZE] and TCDn_ATTR[DSIZE], or TCDn_CITER[CITER] is equal to zero, or
  *     TCDn_CITER[ELINK] is not equal to TCDn_BITER[ELINK]
@@ -6650,8 +6679,8 @@
  * @name Register DMA_ES, field DOE[4] (RO)
  *
  * Values:
- * - 0 - No destination offset configuration error
- * - 1 - The last recorded error was a configuration error detected in the
+ * - 0b0 - No destination offset configuration error
+ * - 0b1 - The last recorded error was a configuration error detected in the
  *     TCDn_DOFF field. TCDn_DOFF is inconsistent with TCDn_ATTR[DSIZE].
  */
 /*@{*/
@@ -6664,8 +6693,8 @@
  * @name Register DMA_ES, field DAE[5] (RO)
  *
  * Values:
- * - 0 - No destination address configuration error
- * - 1 - The last recorded error was a configuration error detected in the
+ * - 0b0 - No destination address configuration error
+ * - 0b1 - The last recorded error was a configuration error detected in the
  *     TCDn_DADDR field. TCDn_DADDR is inconsistent with TCDn_ATTR[DSIZE].
  */
 /*@{*/
@@ -6678,8 +6707,8 @@
  * @name Register DMA_ES, field SOE[6] (RO)
  *
  * Values:
- * - 0 - No source offset configuration error
- * - 1 - The last recorded error was a configuration error detected in the
+ * - 0b0 - No source offset configuration error
+ * - 0b1 - The last recorded error was a configuration error detected in the
  *     TCDn_SOFF field. TCDn_SOFF is inconsistent with TCDn_ATTR[SSIZE].
  */
 /*@{*/
@@ -6692,8 +6721,8 @@
  * @name Register DMA_ES, field SAE[7] (RO)
  *
  * Values:
- * - 0 - No source address configuration error.
- * - 1 - The last recorded error was a configuration error detected in the
+ * - 0b0 - No source address configuration error.
+ * - 0b1 - The last recorded error was a configuration error detected in the
  *     TCDn_SADDR field. TCDn_SADDR is inconsistent with TCDn_ATTR[SSIZE].
  */
 /*@{*/
@@ -6718,8 +6747,8 @@
  * @name Register DMA_ES, field CPE[14] (RO)
  *
  * Values:
- * - 0 - No channel priority error
- * - 1 - The last recorded error was a configuration error in the channel
+ * - 0b0 - No channel priority error
+ * - 0b1 - The last recorded error was a configuration error in the channel
  *     priorities . Channel priorities are not unique.
  */
 /*@{*/
@@ -6732,8 +6761,8 @@
  * @name Register DMA_ES, field ECX[16] (RO)
  *
  * Values:
- * - 0 - No canceled transfers
- * - 1 - The last recorded entry was a canceled transfer by the error cancel
+ * - 0b0 - No canceled transfers
+ * - 0b1 - The last recorded entry was a canceled transfer by the error cancel
  *     transfer input
  */
 /*@{*/
@@ -6748,8 +6777,8 @@
  * Logical OR of all ERR status bits
  *
  * Values:
- * - 0 - No ERR bits are set.
- * - 1 - At least one ERR bit is set indicating a valid error exists that has
+ * - 0b0 - No ERR bits are set.
+ * - 0b1 - At least one ERR bit is set indicating a valid error exists that has
  *     not been cleared.
  */
 /*@{*/
@@ -6797,8 +6826,8 @@
  * @name Register DMA_ERQ, field ERQ0[0] (RW)
  *
  * Values:
- * - 0 - The DMA request signal for the corresponding channel is disabled
- * - 1 - The DMA request signal for the corresponding channel is enabled
+ * - 0b0 - The DMA request signal for the corresponding channel is disabled
+ * - 0b1 - The DMA request signal for the corresponding channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERQ_ERQ0 field. */
@@ -6814,8 +6843,8 @@
  * @name Register DMA_ERQ, field ERQ1[1] (RW)
  *
  * Values:
- * - 0 - The DMA request signal for the corresponding channel is disabled
- * - 1 - The DMA request signal for the corresponding channel is enabled
+ * - 0b0 - The DMA request signal for the corresponding channel is disabled
+ * - 0b1 - The DMA request signal for the corresponding channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERQ_ERQ1 field. */
@@ -6831,8 +6860,8 @@
  * @name Register DMA_ERQ, field ERQ2[2] (RW)
  *
  * Values:
- * - 0 - The DMA request signal for the corresponding channel is disabled
- * - 1 - The DMA request signal for the corresponding channel is enabled
+ * - 0b0 - The DMA request signal for the corresponding channel is disabled
+ * - 0b1 - The DMA request signal for the corresponding channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERQ_ERQ2 field. */
@@ -6848,8 +6877,8 @@
  * @name Register DMA_ERQ, field ERQ3[3] (RW)
  *
  * Values:
- * - 0 - The DMA request signal for the corresponding channel is disabled
- * - 1 - The DMA request signal for the corresponding channel is enabled
+ * - 0b0 - The DMA request signal for the corresponding channel is disabled
+ * - 0b1 - The DMA request signal for the corresponding channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERQ_ERQ3 field. */
@@ -6865,8 +6894,8 @@
  * @name Register DMA_ERQ, field ERQ4[4] (RW)
  *
  * Values:
- * - 0 - The DMA request signal for the corresponding channel is disabled
- * - 1 - The DMA request signal for the corresponding channel is enabled
+ * - 0b0 - The DMA request signal for the corresponding channel is disabled
+ * - 0b1 - The DMA request signal for the corresponding channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERQ_ERQ4 field. */
@@ -6882,8 +6911,8 @@
  * @name Register DMA_ERQ, field ERQ5[5] (RW)
  *
  * Values:
- * - 0 - The DMA request signal for the corresponding channel is disabled
- * - 1 - The DMA request signal for the corresponding channel is enabled
+ * - 0b0 - The DMA request signal for the corresponding channel is disabled
+ * - 0b1 - The DMA request signal for the corresponding channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERQ_ERQ5 field. */
@@ -6899,8 +6928,8 @@
  * @name Register DMA_ERQ, field ERQ6[6] (RW)
  *
  * Values:
- * - 0 - The DMA request signal for the corresponding channel is disabled
- * - 1 - The DMA request signal for the corresponding channel is enabled
+ * - 0b0 - The DMA request signal for the corresponding channel is disabled
+ * - 0b1 - The DMA request signal for the corresponding channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERQ_ERQ6 field. */
@@ -6916,8 +6945,8 @@
  * @name Register DMA_ERQ, field ERQ7[7] (RW)
  *
  * Values:
- * - 0 - The DMA request signal for the corresponding channel is disabled
- * - 1 - The DMA request signal for the corresponding channel is enabled
+ * - 0b0 - The DMA request signal for the corresponding channel is disabled
+ * - 0b1 - The DMA request signal for the corresponding channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERQ_ERQ7 field. */
@@ -6967,9 +6996,9 @@
  * @name Register DMA_EEI, field EEI0[0] (RW)
  *
  * Values:
- * - 0 - The error signal for corresponding channel does not generate an error
+ * - 0b0 - The error signal for corresponding channel does not generate an error
  *     interrupt
- * - 1 - The assertion of the error signal for corresponding channel generates
+ * - 0b1 - The assertion of the error signal for corresponding channel generates
  *     an error interrupt request
  */
 /*@{*/
@@ -6986,9 +7015,9 @@
  * @name Register DMA_EEI, field EEI1[1] (RW)
  *
  * Values:
- * - 0 - The error signal for corresponding channel does not generate an error
+ * - 0b0 - The error signal for corresponding channel does not generate an error
  *     interrupt
- * - 1 - The assertion of the error signal for corresponding channel generates
+ * - 0b1 - The assertion of the error signal for corresponding channel generates
  *     an error interrupt request
  */
 /*@{*/
@@ -7005,9 +7034,9 @@
  * @name Register DMA_EEI, field EEI2[2] (RW)
  *
  * Values:
- * - 0 - The error signal for corresponding channel does not generate an error
+ * - 0b0 - The error signal for corresponding channel does not generate an error
  *     interrupt
- * - 1 - The assertion of the error signal for corresponding channel generates
+ * - 0b1 - The assertion of the error signal for corresponding channel generates
  *     an error interrupt request
  */
 /*@{*/
@@ -7024,9 +7053,9 @@
  * @name Register DMA_EEI, field EEI3[3] (RW)
  *
  * Values:
- * - 0 - The error signal for corresponding channel does not generate an error
+ * - 0b0 - The error signal for corresponding channel does not generate an error
  *     interrupt
- * - 1 - The assertion of the error signal for corresponding channel generates
+ * - 0b1 - The assertion of the error signal for corresponding channel generates
  *     an error interrupt request
  */
 /*@{*/
@@ -7043,9 +7072,9 @@
  * @name Register DMA_EEI, field EEI4[4] (RW)
  *
  * Values:
- * - 0 - The error signal for corresponding channel does not generate an error
+ * - 0b0 - The error signal for corresponding channel does not generate an error
  *     interrupt
- * - 1 - The assertion of the error signal for corresponding channel generates
+ * - 0b1 - The assertion of the error signal for corresponding channel generates
  *     an error interrupt request
  */
 /*@{*/
@@ -7062,9 +7091,9 @@
  * @name Register DMA_EEI, field EEI5[5] (RW)
  *
  * Values:
- * - 0 - The error signal for corresponding channel does not generate an error
+ * - 0b0 - The error signal for corresponding channel does not generate an error
  *     interrupt
- * - 1 - The assertion of the error signal for corresponding channel generates
+ * - 0b1 - The assertion of the error signal for corresponding channel generates
  *     an error interrupt request
  */
 /*@{*/
@@ -7081,9 +7110,9 @@
  * @name Register DMA_EEI, field EEI6[6] (RW)
  *
  * Values:
- * - 0 - The error signal for corresponding channel does not generate an error
+ * - 0b0 - The error signal for corresponding channel does not generate an error
  *     interrupt
- * - 1 - The assertion of the error signal for corresponding channel generates
+ * - 0b1 - The assertion of the error signal for corresponding channel generates
  *     an error interrupt request
  */
 /*@{*/
@@ -7100,9 +7129,9 @@
  * @name Register DMA_EEI, field EEI7[7] (RW)
  *
  * Values:
- * - 0 - The error signal for corresponding channel does not generate an error
+ * - 0b0 - The error signal for corresponding channel does not generate an error
  *     interrupt
- * - 1 - The assertion of the error signal for corresponding channel generates
+ * - 0b1 - The assertion of the error signal for corresponding channel generates
  *     an error interrupt request
  */
 /*@{*/
@@ -7160,8 +7189,8 @@
  * @name Register DMA_CEEI, field CAEE[6] (WORZ)
  *
  * Values:
- * - 0 - Clear only the EEI bit specified in the CEEI field
- * - 1 - Clear all bits in EEI
+ * - 0b0 - Clear only the EEI bit specified in the CEEI field
+ * - 0b1 - Clear all bits in EEI
  */
 /*@{*/
 /*! @brief Set the CAEE field to a new value. */
@@ -7173,8 +7202,8 @@
  * @name Register DMA_CEEI, field NOP[7] (WORZ)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - No operation, ignore the other bits in this register
+ * - 0b0 - Normal operation
+ * - 0b1 - No operation, ignore the other bits in this register
  */
 /*@{*/
 /*! @brief Set the NOP field to a new value. */
@@ -7227,8 +7256,8 @@
  * @name Register DMA_SEEI, field SAEE[6] (WORZ)
  *
  * Values:
- * - 0 - Set only the EEI bit specified in the SEEI field.
- * - 1 - Sets all bits in EEI
+ * - 0b0 - Set only the EEI bit specified in the SEEI field.
+ * - 0b1 - Sets all bits in EEI
  */
 /*@{*/
 /*! @brief Set the SAEE field to a new value. */
@@ -7240,8 +7269,8 @@
  * @name Register DMA_SEEI, field NOP[7] (WORZ)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - No operation, ignore the other bits in this register
+ * - 0b0 - Normal operation
+ * - 0b1 - No operation, ignore the other bits in this register
  */
 /*@{*/
 /*! @brief Set the NOP field to a new value. */
@@ -7294,8 +7323,8 @@
  * @name Register DMA_CERQ, field CAER[6] (WORZ)
  *
  * Values:
- * - 0 - Clear only the ERQ bit specified in the CERQ field
- * - 1 - Clear all bits in ERQ
+ * - 0b0 - Clear only the ERQ bit specified in the CERQ field
+ * - 0b1 - Clear all bits in ERQ
  */
 /*@{*/
 /*! @brief Set the CAER field to a new value. */
@@ -7307,8 +7336,8 @@
  * @name Register DMA_CERQ, field NOP[7] (WORZ)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - No operation, ignore the other bits in this register
+ * - 0b0 - Normal operation
+ * - 0b1 - No operation, ignore the other bits in this register
  */
 /*@{*/
 /*! @brief Set the NOP field to a new value. */
@@ -7360,8 +7389,8 @@
  * @name Register DMA_SERQ, field SAER[6] (WORZ)
  *
  * Values:
- * - 0 - Set only the ERQ bit specified in the SERQ field
- * - 1 - Set all bits in ERQ
+ * - 0b0 - Set only the ERQ bit specified in the SERQ field
+ * - 0b1 - Set all bits in ERQ
  */
 /*@{*/
 /*! @brief Set the SAER field to a new value. */
@@ -7373,8 +7402,8 @@
  * @name Register DMA_SERQ, field NOP[7] (WORZ)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - No operation, ignore the other bits in this register
+ * - 0b0 - Normal operation
+ * - 0b1 - No operation, ignore the other bits in this register
  */
 /*@{*/
 /*! @brief Set the NOP field to a new value. */
@@ -7427,8 +7456,8 @@
  * @name Register DMA_CDNE, field CADN[6] (WORZ)
  *
  * Values:
- * - 0 - Clears only the TCDn_CSR[DONE] bit specified in the CDNE field
- * - 1 - Clears all bits in TCDn_CSR[DONE]
+ * - 0b0 - Clears only the TCDn_CSR[DONE] bit specified in the CDNE field
+ * - 0b1 - Clears all bits in TCDn_CSR[DONE]
  */
 /*@{*/
 /*! @brief Set the CADN field to a new value. */
@@ -7440,8 +7469,8 @@
  * @name Register DMA_CDNE, field NOP[7] (WORZ)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - No operation, ignore the other bits in this register
+ * - 0b0 - Normal operation
+ * - 0b1 - No operation, ignore the other bits in this register
  */
 /*@{*/
 /*! @brief Set the NOP field to a new value. */
@@ -7493,8 +7522,8 @@
  * @name Register DMA_SSRT, field SAST[6] (WORZ)
  *
  * Values:
- * - 0 - Set only the TCDn_CSR[START] bit specified in the SSRT field
- * - 1 - Set all bits in TCDn_CSR[START]
+ * - 0b0 - Set only the TCDn_CSR[START] bit specified in the SSRT field
+ * - 0b1 - Set all bits in TCDn_CSR[START]
  */
 /*@{*/
 /*! @brief Set the SAST field to a new value. */
@@ -7506,8 +7535,8 @@
  * @name Register DMA_SSRT, field NOP[7] (WORZ)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - No operation, ignore the other bits in this register
+ * - 0b0 - Normal operation
+ * - 0b1 - No operation, ignore the other bits in this register
  */
 /*@{*/
 /*! @brief Set the NOP field to a new value. */
@@ -7560,8 +7589,8 @@
  * @name Register DMA_CERR, field CAEI[6] (WORZ)
  *
  * Values:
- * - 0 - Clear only the ERR bit specified in the CERR field
- * - 1 - Clear all bits in ERR
+ * - 0b0 - Clear only the ERR bit specified in the CERR field
+ * - 0b1 - Clear all bits in ERR
  */
 /*@{*/
 /*! @brief Set the CAEI field to a new value. */
@@ -7573,8 +7602,8 @@
  * @name Register DMA_CERR, field NOP[7] (WORZ)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - No operation, ignore the other bits in this register
+ * - 0b0 - Normal operation
+ * - 0b1 - No operation, ignore the other bits in this register
  */
 /*@{*/
 /*! @brief Set the NOP field to a new value. */
@@ -7627,8 +7656,8 @@
  * @name Register DMA_CINT, field CAIR[6] (WORZ)
  *
  * Values:
- * - 0 - Clear only the INT bit specified in the CINT field
- * - 1 - Clear all bits in INT
+ * - 0b0 - Clear only the INT bit specified in the CINT field
+ * - 0b1 - Clear all bits in INT
  */
 /*@{*/
 /*! @brief Set the CAIR field to a new value. */
@@ -7640,8 +7669,8 @@
  * @name Register DMA_CINT, field NOP[7] (WORZ)
  *
  * Values:
- * - 0 - Normal operation
- * - 1 - No operation, ignore the other bits in this register
+ * - 0b0 - Normal operation
+ * - 0b1 - No operation, ignore the other bits in this register
  */
 /*@{*/
 /*! @brief Set the NOP field to a new value. */
@@ -7662,17 +7691,17 @@
  * of an interrupt request for each channel. Depending on the appropriate bit
  * setting in the transfer-control descriptors, the eDMA engine generates an
  * interrupt on data transfer completion. The outputs of this register are directly
- * routed to the interrupt controller (INTC). During the interrupt-service routine
- * associated with any given channel, it is the software's responsibility to clear
- * the appropriate bit, negating the interrupt request. Typically, a write to
- * the CINT register in the interrupt service routine is used for this purpose. The
- * state of any given channel's interrupt request is directly affected by writes
- * to this register; it is also affected by writes to the CINT register. On
- * writes to INT, a 1 in any bit position clears the corresponding channel's
- * interrupt request. A zero in any bit position has no affect on the corresponding
- * channel's current interrupt status. The CINT register is provided so the interrupt
- * request for a single channel can easily be cleared without the need to perform
- * a read-modify-write sequence to the INT register.
+ * routed to the interrupt controller. During the interrupt-service routine
+ * associated with any given channel, it is the software's responsibility to clear the
+ * appropriate bit, negating the interrupt request. Typically, a write to the CINT
+ * register in the interrupt service routine is used for this purpose. The state
+ * of any given channel's interrupt request is directly affected by writes to
+ * this register; it is also affected by writes to the CINT register. On writes to
+ * INT, a 1 in any bit position clears the corresponding channel's interrupt
+ * request. A zero in any bit position has no affect on the corresponding channel's
+ * current interrupt status. The CINT register is provided so the interrupt request
+ * for a single channel can easily be cleared without the need to perform a
+ * read-modify-write sequence to the INT register.
  */
 /*!
  * @name Constants and macros for entire DMA_INT register
@@ -7694,8 +7723,8 @@
  * @name Register DMA_INT, field INT0[0] (W1C)
  *
  * Values:
- * - 0 - The interrupt request for corresponding channel is cleared
- * - 1 - The interrupt request for corresponding channel is active
+ * - 0b0 - The interrupt request for corresponding channel is cleared
+ * - 0b1 - The interrupt request for corresponding channel is active
  */
 /*@{*/
 /*! @brief Read current value of the DMA_INT_INT0 field. */
@@ -7711,8 +7740,8 @@
  * @name Register DMA_INT, field INT1[1] (W1C)
  *
  * Values:
- * - 0 - The interrupt request for corresponding channel is cleared
- * - 1 - The interrupt request for corresponding channel is active
+ * - 0b0 - The interrupt request for corresponding channel is cleared
+ * - 0b1 - The interrupt request for corresponding channel is active
  */
 /*@{*/
 /*! @brief Read current value of the DMA_INT_INT1 field. */
@@ -7728,8 +7757,8 @@
  * @name Register DMA_INT, field INT2[2] (W1C)
  *
  * Values:
- * - 0 - The interrupt request for corresponding channel is cleared
- * - 1 - The interrupt request for corresponding channel is active
+ * - 0b0 - The interrupt request for corresponding channel is cleared
+ * - 0b1 - The interrupt request for corresponding channel is active
  */
 /*@{*/
 /*! @brief Read current value of the DMA_INT_INT2 field. */
@@ -7745,8 +7774,8 @@
  * @name Register DMA_INT, field INT3[3] (W1C)
  *
  * Values:
- * - 0 - The interrupt request for corresponding channel is cleared
- * - 1 - The interrupt request for corresponding channel is active
+ * - 0b0 - The interrupt request for corresponding channel is cleared
+ * - 0b1 - The interrupt request for corresponding channel is active
  */
 /*@{*/
 /*! @brief Read current value of the DMA_INT_INT3 field. */
@@ -7762,8 +7791,8 @@
  * @name Register DMA_INT, field INT4[4] (W1C)
  *
  * Values:
- * - 0 - The interrupt request for corresponding channel is cleared
- * - 1 - The interrupt request for corresponding channel is active
+ * - 0b0 - The interrupt request for corresponding channel is cleared
+ * - 0b1 - The interrupt request for corresponding channel is active
  */
 /*@{*/
 /*! @brief Read current value of the DMA_INT_INT4 field. */
@@ -7779,8 +7808,8 @@
  * @name Register DMA_INT, field INT5[5] (W1C)
  *
  * Values:
- * - 0 - The interrupt request for corresponding channel is cleared
- * - 1 - The interrupt request for corresponding channel is active
+ * - 0b0 - The interrupt request for corresponding channel is cleared
+ * - 0b1 - The interrupt request for corresponding channel is active
  */
 /*@{*/
 /*! @brief Read current value of the DMA_INT_INT5 field. */
@@ -7796,8 +7825,8 @@
  * @name Register DMA_INT, field INT6[6] (W1C)
  *
  * Values:
- * - 0 - The interrupt request for corresponding channel is cleared
- * - 1 - The interrupt request for corresponding channel is active
+ * - 0b0 - The interrupt request for corresponding channel is cleared
+ * - 0b1 - The interrupt request for corresponding channel is active
  */
 /*@{*/
 /*! @brief Read current value of the DMA_INT_INT6 field. */
@@ -7813,8 +7842,8 @@
  * @name Register DMA_INT, field INT7[7] (W1C)
  *
  * Values:
- * - 0 - The interrupt request for corresponding channel is cleared
- * - 1 - The interrupt request for corresponding channel is active
+ * - 0b0 - The interrupt request for corresponding channel is cleared
+ * - 0b1 - The interrupt request for corresponding channel is active
  */
 /*@{*/
 /*! @brief Read current value of the DMA_INT_INT7 field. */
@@ -7874,8 +7903,8 @@
  * @name Register DMA_ERR, field ERR0[0] (W1C)
  *
  * Values:
- * - 0 - An error in this channel has not occurred
- * - 1 - An error in this channel has occurred
+ * - 0b0 - An error in this channel has not occurred
+ * - 0b1 - An error in this channel has occurred
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERR_ERR0 field. */
@@ -7891,8 +7920,8 @@
  * @name Register DMA_ERR, field ERR1[1] (W1C)
  *
  * Values:
- * - 0 - An error in this channel has not occurred
- * - 1 - An error in this channel has occurred
+ * - 0b0 - An error in this channel has not occurred
+ * - 0b1 - An error in this channel has occurred
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERR_ERR1 field. */
@@ -7908,8 +7937,8 @@
  * @name Register DMA_ERR, field ERR2[2] (W1C)
  *
  * Values:
- * - 0 - An error in this channel has not occurred
- * - 1 - An error in this channel has occurred
+ * - 0b0 - An error in this channel has not occurred
+ * - 0b1 - An error in this channel has occurred
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERR_ERR2 field. */
@@ -7925,8 +7954,8 @@
  * @name Register DMA_ERR, field ERR3[3] (W1C)
  *
  * Values:
- * - 0 - An error in this channel has not occurred
- * - 1 - An error in this channel has occurred
+ * - 0b0 - An error in this channel has not occurred
+ * - 0b1 - An error in this channel has occurred
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERR_ERR3 field. */
@@ -7942,8 +7971,8 @@
  * @name Register DMA_ERR, field ERR4[4] (W1C)
  *
  * Values:
- * - 0 - An error in this channel has not occurred
- * - 1 - An error in this channel has occurred
+ * - 0b0 - An error in this channel has not occurred
+ * - 0b1 - An error in this channel has occurred
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERR_ERR4 field. */
@@ -7959,8 +7988,8 @@
  * @name Register DMA_ERR, field ERR5[5] (W1C)
  *
  * Values:
- * - 0 - An error in this channel has not occurred
- * - 1 - An error in this channel has occurred
+ * - 0b0 - An error in this channel has not occurred
+ * - 0b1 - An error in this channel has occurred
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERR_ERR5 field. */
@@ -7976,8 +8005,8 @@
  * @name Register DMA_ERR, field ERR6[6] (W1C)
  *
  * Values:
- * - 0 - An error in this channel has not occurred
- * - 1 - An error in this channel has occurred
+ * - 0b0 - An error in this channel has not occurred
+ * - 0b1 - An error in this channel has occurred
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERR_ERR6 field. */
@@ -7993,8 +8022,8 @@
  * @name Register DMA_ERR, field ERR7[7] (W1C)
  *
  * Values:
- * - 0 - An error in this channel has not occurred
- * - 1 - An error in this channel has occurred
+ * - 0b0 - An error in this channel has not occurred
+ * - 0b1 - An error in this channel has occurred
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ERR_ERR7 field. */
@@ -8042,8 +8071,8 @@
  * and Channel is free, the HRS bit is automatically cleared by hardware.
  *
  * Values:
- * - 0 - A hardware service request for channel 0 is not present
- * - 1 - A hardware service request for channel 0 is present
+ * - 0b0 - A hardware service request for channel 0 is not present
+ * - 0b1 - A hardware service request for channel 0 is present
  */
 /*@{*/
 /*! @brief Read current value of the DMA_HRS_HRS0 field. */
@@ -8059,8 +8088,8 @@
  * and Channel is free, the HRS bit is automatically cleared by hardware.
  *
  * Values:
- * - 0 - A hardware service request for channel 1 is not present
- * - 1 - A hardware service request for channel 1 is present
+ * - 0b0 - A hardware service request for channel 1 is not present
+ * - 0b1 - A hardware service request for channel 1 is present
  */
 /*@{*/
 /*! @brief Read current value of the DMA_HRS_HRS1 field. */
@@ -8076,8 +8105,8 @@
  * and Channel is free, the HRS bit is automatically cleared by hardware.
  *
  * Values:
- * - 0 - A hardware service request for channel 2 is not present
- * - 1 - A hardware service request for channel 2 is present
+ * - 0b0 - A hardware service request for channel 2 is not present
+ * - 0b1 - A hardware service request for channel 2 is present
  */
 /*@{*/
 /*! @brief Read current value of the DMA_HRS_HRS2 field. */
@@ -8093,8 +8122,8 @@
  * and Channel is free, the HRS bit is automatically cleared by hardware.
  *
  * Values:
- * - 0 - A hardware service request for channel 3 is not present
- * - 1 - A hardware service request for channel 3 is present
+ * - 0b0 - A hardware service request for channel 3 is not present
+ * - 0b1 - A hardware service request for channel 3 is present
  */
 /*@{*/
 /*! @brief Read current value of the DMA_HRS_HRS3 field. */
@@ -8110,8 +8139,8 @@
  * and Channel is free, the HRS bit is automatically cleared by hardware.
  *
  * Values:
- * - 0 - A hardware service request for channel 4 is not present
- * - 1 - A hardware service request for channel 4 is present
+ * - 0b0 - A hardware service request for channel 4 is not present
+ * - 0b1 - A hardware service request for channel 4 is present
  */
 /*@{*/
 /*! @brief Read current value of the DMA_HRS_HRS4 field. */
@@ -8127,8 +8156,8 @@
  * and Channel is free, the HRS bit is automatically cleared by hardware.
  *
  * Values:
- * - 0 - A hardware service request for channel 5 is not present
- * - 1 - A hardware service request for channel 5 is present
+ * - 0b0 - A hardware service request for channel 5 is not present
+ * - 0b1 - A hardware service request for channel 5 is present
  */
 /*@{*/
 /*! @brief Read current value of the DMA_HRS_HRS5 field. */
@@ -8144,8 +8173,8 @@
  * and Channel is free, the HRS bit is automatically cleared by hardware.
  *
  * Values:
- * - 0 - A hardware service request for channel 6 is not present
- * - 1 - A hardware service request for channel 6 is present
+ * - 0b0 - A hardware service request for channel 6 is not present
+ * - 0b1 - A hardware service request for channel 6 is present
  */
 /*@{*/
 /*! @brief Read current value of the DMA_HRS_HRS6 field. */
@@ -8161,8 +8190,8 @@
  * and Channel is free, the HRS bit is automatically cleared by hardware.
  *
  * Values:
- * - 0 - A hardware service request for channel 7 is not present
- * - 1 - A hardware service request for channel 7 is present
+ * - 0b0 - A hardware service request for channel 7 is not present
+ * - 0b1 - A hardware service request for channel 7 is present
  */
 /*@{*/
 /*! @brief Read current value of the DMA_HRS_HRS7 field. */
@@ -8199,8 +8228,8 @@
  * @name Register DMA_EARS, field EDREQ_0[0] (RW)
  *
  * Values:
- * - 0 - Disable asynchronous DMA request for channel 0.
- * - 1 - Enable asynchronous DMA request for channel 0.
+ * - 0b0 - Disable asynchronous DMA request for channel 0.
+ * - 0b1 - Enable asynchronous DMA request for channel 0.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_EARS_EDREQ_0 field. */
@@ -8216,8 +8245,8 @@
  * @name Register DMA_EARS, field EDREQ_1[1] (RW)
  *
  * Values:
- * - 0 - Disable asynchronous DMA request for channel 1
- * - 1 - Enable asynchronous DMA request for channel 1.
+ * - 0b0 - Disable asynchronous DMA request for channel 1
+ * - 0b1 - Enable asynchronous DMA request for channel 1.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_EARS_EDREQ_1 field. */
@@ -8233,8 +8262,8 @@
  * @name Register DMA_EARS, field EDREQ_2[2] (RW)
  *
  * Values:
- * - 0 - Disable asynchronous DMA request for channel 2.
- * - 1 - Enable asynchronous DMA request for channel 2.
+ * - 0b0 - Disable asynchronous DMA request for channel 2.
+ * - 0b1 - Enable asynchronous DMA request for channel 2.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_EARS_EDREQ_2 field. */
@@ -8250,8 +8279,8 @@
  * @name Register DMA_EARS, field EDREQ_3[3] (RW)
  *
  * Values:
- * - 0 - Disable asynchronous DMA request for channel 3.
- * - 1 - Enable asynchronous DMA request for channel 3.
+ * - 0b0 - Disable asynchronous DMA request for channel 3.
+ * - 0b1 - Enable asynchronous DMA request for channel 3.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_EARS_EDREQ_3 field. */
@@ -8267,8 +8296,8 @@
  * @name Register DMA_EARS, field EDREQ_4[4] (RW)
  *
  * Values:
- * - 0 - Disable asynchronous DMA request for channel 4.
- * - 1 - Enable asynchronous DMA request for channel 4.
+ * - 0b0 - Disable asynchronous DMA request for channel 4.
+ * - 0b1 - Enable asynchronous DMA request for channel 4.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_EARS_EDREQ_4 field. */
@@ -8284,8 +8313,8 @@
  * @name Register DMA_EARS, field EDREQ_5[5] (RW)
  *
  * Values:
- * - 0 - Disable asynchronous DMA request for channel 5.
- * - 1 - Enable asynchronous DMA request for channel 5.
+ * - 0b0 - Disable asynchronous DMA request for channel 5.
+ * - 0b1 - Enable asynchronous DMA request for channel 5.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_EARS_EDREQ_5 field. */
@@ -8301,8 +8330,8 @@
  * @name Register DMA_EARS, field EDREQ_6[6] (RW)
  *
  * Values:
- * - 0 - Disable asynchronous DMA request for channel 6.
- * - 1 - Enable asynchronous DMA request for channel 6.
+ * - 0b0 - Disable asynchronous DMA request for channel 6.
+ * - 0b1 - Enable asynchronous DMA request for channel 6.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_EARS_EDREQ_6 field. */
@@ -8318,8 +8347,8 @@
  * @name Register DMA_EARS, field EDREQ_7[7] (RW)
  *
  * Values:
- * - 0 - Disable asynchronous DMA request for channel 7.
- * - 1 - Enable asynchronous DMA request for channel 7.
+ * - 0b0 - Disable asynchronous DMA request for channel 7.
+ * - 0b1 - Enable asynchronous DMA request for channel 7.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_EARS_EDREQ_7 field. */
@@ -8385,8 +8414,8 @@
  * @name Register DMA_DCHPRI3, field DPA[6] (RW)
  *
  * Values:
- * - 0 - Channel n can suspend a lower priority channel.
- * - 1 - Channel n cannot suspend any channel, regardless of channel priority.
+ * - 0b0 - Channel n can suspend a lower priority channel.
+ * - 0b1 - Channel n cannot suspend any channel, regardless of channel priority.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCHPRI3_DPA field. */
@@ -8402,9 +8431,9 @@
  * @name Register DMA_DCHPRI3, field ECP[7] (RW)
  *
  * Values:
- * - 0 - Channel n cannot be suspended by a higher priority channel's service
+ * - 0b0 - Channel n cannot be suspended by a higher priority channel's service
  *     request.
- * - 1 - Channel n can be temporarily suspended by the service request of a
+ * - 0b1 - Channel n can be temporarily suspended by the service request of a
  *     higher priority channel.
  */
 /*@{*/
@@ -8471,8 +8500,8 @@
  * @name Register DMA_DCHPRI2, field DPA[6] (RW)
  *
  * Values:
- * - 0 - Channel n can suspend a lower priority channel.
- * - 1 - Channel n cannot suspend any channel, regardless of channel priority.
+ * - 0b0 - Channel n can suspend a lower priority channel.
+ * - 0b1 - Channel n cannot suspend any channel, regardless of channel priority.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCHPRI2_DPA field. */
@@ -8488,9 +8517,9 @@
  * @name Register DMA_DCHPRI2, field ECP[7] (RW)
  *
  * Values:
- * - 0 - Channel n cannot be suspended by a higher priority channel's service
+ * - 0b0 - Channel n cannot be suspended by a higher priority channel's service
  *     request.
- * - 1 - Channel n can be temporarily suspended by the service request of a
+ * - 0b1 - Channel n can be temporarily suspended by the service request of a
  *     higher priority channel.
  */
 /*@{*/
@@ -8557,8 +8586,8 @@
  * @name Register DMA_DCHPRI1, field DPA[6] (RW)
  *
  * Values:
- * - 0 - Channel n can suspend a lower priority channel.
- * - 1 - Channel n cannot suspend any channel, regardless of channel priority.
+ * - 0b0 - Channel n can suspend a lower priority channel.
+ * - 0b1 - Channel n cannot suspend any channel, regardless of channel priority.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCHPRI1_DPA field. */
@@ -8574,9 +8603,9 @@
  * @name Register DMA_DCHPRI1, field ECP[7] (RW)
  *
  * Values:
- * - 0 - Channel n cannot be suspended by a higher priority channel's service
+ * - 0b0 - Channel n cannot be suspended by a higher priority channel's service
  *     request.
- * - 1 - Channel n can be temporarily suspended by the service request of a
+ * - 0b1 - Channel n can be temporarily suspended by the service request of a
  *     higher priority channel.
  */
 /*@{*/
@@ -8643,8 +8672,8 @@
  * @name Register DMA_DCHPRI0, field DPA[6] (RW)
  *
  * Values:
- * - 0 - Channel n can suspend a lower priority channel.
- * - 1 - Channel n cannot suspend any channel, regardless of channel priority.
+ * - 0b0 - Channel n can suspend a lower priority channel.
+ * - 0b1 - Channel n cannot suspend any channel, regardless of channel priority.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCHPRI0_DPA field. */
@@ -8660,9 +8689,9 @@
  * @name Register DMA_DCHPRI0, field ECP[7] (RW)
  *
  * Values:
- * - 0 - Channel n cannot be suspended by a higher priority channel's service
+ * - 0b0 - Channel n cannot be suspended by a higher priority channel's service
  *     request.
- * - 1 - Channel n can be temporarily suspended by the service request of a
+ * - 0b1 - Channel n can be temporarily suspended by the service request of a
  *     higher priority channel.
  */
 /*@{*/
@@ -8729,8 +8758,8 @@
  * @name Register DMA_DCHPRI7, field DPA[6] (RW)
  *
  * Values:
- * - 0 - Channel n can suspend a lower priority channel.
- * - 1 - Channel n cannot suspend any channel, regardless of channel priority.
+ * - 0b0 - Channel n can suspend a lower priority channel.
+ * - 0b1 - Channel n cannot suspend any channel, regardless of channel priority.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCHPRI7_DPA field. */
@@ -8746,9 +8775,9 @@
  * @name Register DMA_DCHPRI7, field ECP[7] (RW)
  *
  * Values:
- * - 0 - Channel n cannot be suspended by a higher priority channel's service
+ * - 0b0 - Channel n cannot be suspended by a higher priority channel's service
  *     request.
- * - 1 - Channel n can be temporarily suspended by the service request of a
+ * - 0b1 - Channel n can be temporarily suspended by the service request of a
  *     higher priority channel.
  */
 /*@{*/
@@ -8815,8 +8844,8 @@
  * @name Register DMA_DCHPRI6, field DPA[6] (RW)
  *
  * Values:
- * - 0 - Channel n can suspend a lower priority channel.
- * - 1 - Channel n cannot suspend any channel, regardless of channel priority.
+ * - 0b0 - Channel n can suspend a lower priority channel.
+ * - 0b1 - Channel n cannot suspend any channel, regardless of channel priority.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCHPRI6_DPA field. */
@@ -8832,9 +8861,9 @@
  * @name Register DMA_DCHPRI6, field ECP[7] (RW)
  *
  * Values:
- * - 0 - Channel n cannot be suspended by a higher priority channel's service
+ * - 0b0 - Channel n cannot be suspended by a higher priority channel's service
  *     request.
- * - 1 - Channel n can be temporarily suspended by the service request of a
+ * - 0b1 - Channel n can be temporarily suspended by the service request of a
  *     higher priority channel.
  */
 /*@{*/
@@ -8901,8 +8930,8 @@
  * @name Register DMA_DCHPRI5, field DPA[6] (RW)
  *
  * Values:
- * - 0 - Channel n can suspend a lower priority channel.
- * - 1 - Channel n cannot suspend any channel, regardless of channel priority.
+ * - 0b0 - Channel n can suspend a lower priority channel.
+ * - 0b1 - Channel n cannot suspend any channel, regardless of channel priority.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCHPRI5_DPA field. */
@@ -8918,9 +8947,9 @@
  * @name Register DMA_DCHPRI5, field ECP[7] (RW)
  *
  * Values:
- * - 0 - Channel n cannot be suspended by a higher priority channel's service
+ * - 0b0 - Channel n cannot be suspended by a higher priority channel's service
  *     request.
- * - 1 - Channel n can be temporarily suspended by the service request of a
+ * - 0b1 - Channel n can be temporarily suspended by the service request of a
  *     higher priority channel.
  */
 /*@{*/
@@ -8987,8 +9016,8 @@
  * @name Register DMA_DCHPRI4, field DPA[6] (RW)
  *
  * Values:
- * - 0 - Channel n can suspend a lower priority channel.
- * - 1 - Channel n cannot suspend any channel, regardless of channel priority.
+ * - 0b0 - Channel n can suspend a lower priority channel.
+ * - 0b1 - Channel n cannot suspend any channel, regardless of channel priority.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_DCHPRI4_DPA field. */
@@ -9004,9 +9033,9 @@
  * @name Register DMA_DCHPRI4, field ECP[7] (RW)
  *
  * Values:
- * - 0 - Channel n cannot be suspended by a higher priority channel's service
+ * - 0b0 - Channel n cannot be suspended by a higher priority channel's service
  *     request.
- * - 1 - Channel n can be temporarily suspended by the service request of a
+ * - 0b1 - Channel n can be temporarily suspended by the service request of a
  *     higher priority channel.
  */
 /*@{*/
@@ -9122,14 +9151,14 @@
  * Using a Reserved value causes a configuration error.
  *
  * Values:
- * - 000 - 8-bit
- * - 001 - 16-bit
- * - 010 - 32-bit
- * - 011 - Reserved
- * - 100 - 16-byte burst
- * - 101 - 32-byte burst
- * - 110 - Reserved
- * - 111 - Reserved
+ * - 0b000 - 8-bit
+ * - 0b001 - 16-bit
+ * - 0b010 - 32-bit
+ * - 0b011 - Reserved
+ * - 0b100 - 16-byte
+ * - 0b101 - 32-byte
+ * - 0b110 - Reserved
+ * - 0b111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ATTR_SSIZE field. */
@@ -9145,7 +9174,7 @@
  * @name Register DMA_ATTR, field SMOD[15:11] (RW)
  *
  * Values:
- * - 0 - Source address modulo feature is disabled
+ * - 0b00000 - Source address modulo feature is disabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_ATTR_SMOD field. */
@@ -9158,11 +9187,11 @@
 /*@}*/
 
 /*******************************************************************************
- * DMA_NBYTES_MLOFFNO - TCD Signed Minor Loop Offset (Minor Loop Enabled and Offset Disabled)
+ * DMA_NBYTES_MLOFFNO - TCD Signed Minor Loop Offset (Minor Loop Mapping Enabled and Offset Disabled)
  ******************************************************************************/
 
 /*!
- * @brief DMA_NBYTES_MLOFFNO - TCD Signed Minor Loop Offset (Minor Loop Enabled and Offset Disabled) (RW)
+ * @brief DMA_NBYTES_MLOFFNO - TCD Signed Minor Loop Offset (Minor Loop Mapping Enabled and Offset Disabled) (RW)
  *
  * Reset value: 0x00000000U
  *
@@ -9221,8 +9250,8 @@
  * upon minor loop completion.
  *
  * Values:
- * - 0 - The minor loop offset is not applied to the DADDR
- * - 1 - The minor loop offset is applied to the DADDR
+ * - 0b0 - The minor loop offset is not applied to the DADDR
+ * - 0b1 - The minor loop offset is applied to the DADDR
  */
 /*@{*/
 /*! @brief Read current value of the DMA_NBYTES_MLOFFNO_DMLOE field. */
@@ -9241,8 +9270,8 @@
  * minor loop completion.
  *
  * Values:
- * - 0 - The minor loop offset is not applied to the SADDR
- * - 1 - The minor loop offset is applied to the SADDR
+ * - 0b0 - The minor loop offset is not applied to the SADDR
+ * - 0b1 - The minor loop offset is applied to the SADDR
  */
 /*@{*/
 /*! @brief Read current value of the DMA_NBYTES_MLOFFNO_SMLOE field. */
@@ -9255,11 +9284,11 @@
 /*@}*/
 
 /*******************************************************************************
- * DMA_NBYTES_MLNO - TCD Minor Byte Count (Minor Loop Disabled)
+ * DMA_NBYTES_MLNO - TCD Minor Byte Count (Minor Loop Mapping Disabled)
  ******************************************************************************/
 
 /*!
- * @brief DMA_NBYTES_MLNO - TCD Minor Byte Count (Minor Loop Disabled) (RW)
+ * @brief DMA_NBYTES_MLNO - TCD Minor Byte Count (Minor Loop Mapping Disabled) (RW)
  *
  * Reset value: 0x00000000U
  *
@@ -9284,11 +9313,11 @@
 /*@}*/
 
 /*******************************************************************************
- * DMA_NBYTES_MLOFFYES - TCD Signed Minor Loop Offset (Minor Loop and Offset Enabled)
+ * DMA_NBYTES_MLOFFYES - TCD Signed Minor Loop Offset (Minor Loop Mapping and Offset Enabled)
  ******************************************************************************/
 
 /*!
- * @brief DMA_NBYTES_MLOFFYES - TCD Signed Minor Loop Offset (Minor Loop and Offset Enabled) (RW)
+ * @brief DMA_NBYTES_MLOFFYES - TCD Signed Minor Loop Offset (Minor Loop Mapping and Offset Enabled) (RW)
  *
  * Reset value: 0x00000000U
  *
@@ -9360,8 +9389,8 @@
  * upon minor loop completion.
  *
  * Values:
- * - 0 - The minor loop offset is not applied to the DADDR
- * - 1 - The minor loop offset is applied to the DADDR
+ * - 0b0 - The minor loop offset is not applied to the DADDR
+ * - 0b1 - The minor loop offset is applied to the DADDR
  */
 /*@{*/
 /*! @brief Read current value of the DMA_NBYTES_MLOFFYES_DMLOE field. */
@@ -9380,8 +9409,8 @@
  * minor loop completion.
  *
  * Values:
- * - 0 - The minor loop offset is not applied to the SADDR
- * - 1 - The minor loop offset is applied to the SADDR
+ * - 0b0 - The minor loop offset is not applied to the SADDR
+ * - 0b1 - The minor loop offset is applied to the SADDR
  */
 /*@{*/
 /*! @brief Read current value of the DMA_NBYTES_MLOFFYES_SMLOE field. */
@@ -9521,8 +9550,8 @@
  * configuration error is reported.
  *
  * Values:
- * - 0 - The channel-to-channel linking is disabled
- * - 1 - The channel-to-channel linking is enabled
+ * - 0b0 - The channel-to-channel linking is disabled
+ * - 0b1 - The channel-to-channel linking is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CITER_ELINKNO_ELINK field. */
@@ -9615,8 +9644,8 @@
  * configuration error is reported.
  *
  * Values:
- * - 0 - The channel-to-channel linking is disabled
- * - 1 - The channel-to-channel linking is enabled
+ * - 0b0 - The channel-to-channel linking is disabled
+ * - 0b1 - The channel-to-channel linking is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CITER_ELINKYES_ELINK field. */
@@ -9681,8 +9710,8 @@
  * automatically clears this flag after the channel begins execution.
  *
  * Values:
- * - 0 - The channel is not explicitly started.
- * - 1 - The channel is explicitly started via a software initiated service
+ * - 0b0 - The channel is not explicitly started.
+ * - 0b1 - The channel is explicitly started via a software initiated service
  *     request.
  */
 /*@{*/
@@ -9703,8 +9732,8 @@
  * zero.
  *
  * Values:
- * - 0 - The end-of-major loop interrupt is disabled.
- * - 1 - The end-of-major loop interrupt is enabled.
+ * - 0b0 - The end-of-major loop interrupt is disabled.
+ * - 0b1 - The end-of-major loop interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CSR_INTMAJOR field. */
@@ -9728,8 +9757,8 @@
  * transfer's progress. If BITER = 1, do not use INTHALF. Use INTMAJOR instead.
  *
  * Values:
- * - 0 - The half-point interrupt is disabled.
- * - 1 - The half-point interrupt is enabled.
+ * - 0b0 - The half-point interrupt is disabled.
+ * - 0b1 - The half-point interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CSR_INTHALF field. */
@@ -9748,8 +9777,8 @@
  * ERQ bit when the current major iteration count reaches zero.
  *
  * Values:
- * - 0 - The channel's ERQ bit is not affected.
- * - 1 - The channel's ERQ bit is cleared when the major loop is complete.
+ * - 0b0 - The channel's ERQ bit is not affected.
+ * - 0b1 - The channel's ERQ bit is cleared when the major loop is complete.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CSR_DREQ field. */
@@ -9772,10 +9801,10 @@
  * written to while the TCDn_CSR[DONE] bit is set.
  *
  * Values:
- * - 0 - The current channel's TCD is normal format.
- * - 1 - The current channel's TCD specifies a scatter gather format. The
- *     DLASTSGA field provides a memory pointer to the next TCD to be loaded into this
- *     channel after the major loop completes its execution.
+ * - 0b0 - The current channel's TCD is normal format.
+ * - 0b1 - The current channel's TCD specifies a scatter gather format. The
+ *     DLASTSGA field provides a memory pointer to the next TCD to be loaded into
+ *     this channel after the major loop completes its execution.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CSR_ESG field. */
@@ -9797,8 +9826,8 @@
  * this field is forced to zero when written to while the TCDn_CSR[DONE] bit is set.
  *
  * Values:
- * - 0 - The channel-to-channel linking is disabled.
- * - 1 - The channel-to-channel linking is enabled.
+ * - 0b0 - The channel-to-channel linking is disabled.
+ * - 0b1 - The channel-to-channel linking is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CSR_MAJORELINK field. */
@@ -9877,10 +9906,10 @@
  * latency.
  *
  * Values:
- * - 00 - No eDMA engine stalls
- * - 01 - Reserved
- * - 10 - eDMA engine stalls for 4 cycles after each R/W.
- * - 11 - eDMA engine stalls for 8 cycles after each R/W.
+ * - 0b00 - No eDMA engine stalls.
+ * - 0b01 - Reserved
+ * - 0b10 - eDMA engine stalls for 4 cycles after each R/W.
+ * - 0b11 - eDMA engine stalls for 8 cycles after each R/W.
  */
 /*@{*/
 /*! @brief Read current value of the DMA_CSR_BWC field. */
@@ -9979,8 +10008,8 @@
  * the CITER field.
  *
  * Values:
- * - 0 - The channel-to-channel linking is disabled
- * - 1 - The channel-to-channel linking is enabled
+ * - 0b0 - The channel-to-channel linking is disabled
+ * - 0b1 - The channel-to-channel linking is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_BITER_ELINKYES_ELINK field. */
@@ -10058,8 +10087,8 @@
  * into the CITER field.
  *
  * Values:
- * - 0 - The channel-to-channel linking is disabled
- * - 1 - The channel-to-channel linking is enabled
+ * - 0b0 - The channel-to-channel linking is disabled
+ * - 0b1 - The channel-to-channel linking is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMA_BITER_ELINKNO_ELINK field. */
@@ -10183,10 +10212,10 @@
  * Enables the DMA channel.
  *
  * Values:
- * - 0 - DMA channel is disabled. This mode is primarily used during
+ * - 0b0 - DMA channel is disabled. This mode is primarily used during
  *     configuration of the DMAMux. The DMA has separate channel enables/disables, which
  *     should be used to disable or reconfigure a DMA channel.
- * - 1 - DMA channel is enabled
+ * - 0b1 - DMA channel is enabled
  */
 /*@{*/
 /*! @brief Read current value of the DMAMUX_CHCFG_ENBL field. */
@@ -10710,8 +10739,8 @@
  * bit has no effect.
  *
  * Values:
- * - 0 - No protection violation detected
- * - 1 - Protection violation detected
+ * - 0b0 - No protection violation detected
+ * - 0b1 - Protection violation detected
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSTAT_FPVIOL field. */
@@ -10733,8 +10762,8 @@
  * 0 to the ACCERR bit has no effect.
  *
  * Values:
- * - 0 - No access error detected
- * - 1 - Access error detected
+ * - 0b0 - No access error detected
+ * - 0b1 - Access error detected
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSTAT_ACCERR field. */
@@ -10756,8 +10785,8 @@
  * it. Writing a 0 to RDCOLERR has no effect.
  *
  * Values:
- * - 0 - No collision error detected
- * - 1 - Collision error detected
+ * - 0b0 - No collision error detected
+ * - 0b1 - Collision error detected
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSTAT_RDCOLERR field. */
@@ -10780,8 +10809,8 @@
  * hardware reset value.
  *
  * Values:
- * - 0 - Flash command in progress
- * - 1 - Flash command has completed
+ * - 0b0 - Flash command in progress
+ * - 0b1 - Flash command has completed
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSTAT_CCIF field. */
@@ -10829,8 +10858,8 @@
  * it is executing.
  *
  * Values:
- * - 0 - No suspend requested
- * - 1 - Suspend the current Erase Flash Sector command execution.
+ * - 0b0 - No suspend requested
+ * - 0b1 - Suspend the current Erase Flash Sector command execution.
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FCNFG_ERSSUSP field. */
@@ -10854,10 +10883,10 @@
  * completes.
  *
  * Values:
- * - 0 - No request or request complete
- * - 1 - Request to: run the Erase All Blocks command, verify the erased state,
- *     program the security byte in the Flash Configuration Field to the unsecure
- *     state, and release MCU security by setting the FSEC[SEC] field to the
+ * - 0b0 - No request or request complete
+ * - 0b1 - Request to: run the Erase All Blocks command, verify the erased
+ *     state, program the security byte in the Flash Configuration Field to the
+ *     unsecure state, and release MCU security by setting the FSEC[SEC] field to the
  *     unsecure state.
  */
 /*@{*/
@@ -10872,8 +10901,8 @@
  * Controls interrupt generation when a flash memory read collision error occurs.
  *
  * Values:
- * - 0 - Read collision error interrupt disabled
- * - 1 - Read collision error interrupt enabled. An interrupt request is
+ * - 0b0 - Read collision error interrupt disabled
+ * - 0b1 - Read collision error interrupt enabled. An interrupt request is
  *     generated whenever a flash memory read collision error is detected (see the
  *     description of FSTAT[RDCOLERR]).
  */
@@ -10893,8 +10922,8 @@
  * Controls interrupt generation when a flash command completes.
  *
  * Values:
- * - 0 - Command complete interrupt disabled
- * - 1 - Command complete interrupt enabled. An interrupt request is generated
+ * - 0b0 - Command complete interrupt disabled
+ * - 0b1 - Command complete interrupt enabled. An interrupt request is generated
  *     whenever the FSTAT[CCIF] flag is set.
  */
 /*@{*/
@@ -10942,11 +10971,11 @@
  * is unsecured using backdoor key access, SEC is forced to 10b.
  *
  * Values:
- * - 00 - MCU security status is secure.
- * - 01 - MCU security status is secure.
- * - 10 - MCU security status is unsecure. (The standard shipping condition of
+ * - 0b00 - MCU security status is secure.
+ * - 0b01 - MCU security status is secure.
+ * - 0b10 - MCU security status is unsecure. (The standard shipping condition of
  *     the flash memory module is unsecure.)
- * - 11 - MCU security status is secure.
+ * - 0b11 - MCU security status is secure.
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSEC_SEC field. */
@@ -10967,10 +10996,10 @@
  * is set to unsecure, the FSLACC setting does not matter.
  *
  * Values:
- * - 00 - Freescale factory access granted
- * - 01 - Freescale factory access denied
- * - 10 - Freescale factory access denied
- * - 11 - Freescale factory access granted
+ * - 0b00 - Freescale factory access granted
+ * - 0b01 - Freescale factory access denied
+ * - 0b10 - Freescale factory access denied
+ * - 0b11 - Freescale factory access granted
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSEC_FSLACC field. */
@@ -10981,15 +11010,14 @@
 /*!
  * @name Register FTFA_FSEC, field MEEN[5:4] (RO)
  *
- * Enables and disables mass erase capability of the flash memory module. The
- * state of this field is relevant only when SEC is set to secure outside of NVM
- * Normal Mode. When SEC is set to unsecure, the MEEN setting does not matter.
+ * Enables and disables mass erase capability of the flash memory module. When
+ * SEC is set to unsecure, the MEEN setting does not matter.
  *
  * Values:
- * - 00 - Mass erase is enabled
- * - 01 - Mass erase is enabled
- * - 10 - Mass erase is disabled
- * - 11 - Mass erase is enabled
+ * - 0b00 - Mass erase is enabled
+ * - 0b01 - Mass erase is enabled
+ * - 0b10 - Mass erase is disabled
+ * - 0b11 - Mass erase is enabled
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSEC_MEEN field. */
@@ -11003,11 +11031,11 @@
  * Enables or disables backdoor key access to the flash memory module.
  *
  * Values:
- * - 00 - Backdoor key access disabled
- * - 01 - Backdoor key access disabled (preferred KEYEN state to disable
+ * - 0b00 - Backdoor key access disabled
+ * - 0b01 - Backdoor key access disabled (preferred KEYEN state to disable
  *     backdoor key access)
- * - 10 - Backdoor key access enabled
- * - 11 - Backdoor key access disabled
+ * - 0b10 - Backdoor key access enabled
+ * - 0b11 - Backdoor key access disabled
  */
 /*@{*/
 /*! @brief Read current value of the FTFA_FSEC_KEYEN field. */
@@ -11355,17 +11383,17 @@
  * any flash command. Unprotected regions can be changed by program and erase
  * operations. The four FPROT registers allow up to 32 protectable regions. Each bit
  * protects a 1/32 region of the program flash memory except for memory
- * configurations with less than 32 KB of program flash where each assigned bit protects 1
- * KB . For configurations with 24 KB of program flash memory or less, FPROT0 is
- * not used. For configurations with 16 KB of program flash memory or less,
- * FPROT1 is not used. For configurations with 8 KB of program flash memory, FPROT2 is
- * not used. The bitfields are defined in each register as follows: Program
+ * configurations with less than 64 KB of program flash where each assigned bit protects 2
+ * KB . For configurations with 48 KB of program flash memory or less, FPROT0 is
+ * not used. For configurations with 32 KB of program flash memory or less,
+ * FPROT1 is not used. For configurations with 16 KB of program flash memory, FPROT2
+ * is not used. The bitfields are defined in each register as follows: Program
  * flash protection register Program flash protection bits FPROT0 PROT[31:24] FPROT1
  * PROT[23:16] FPROT2 PROT[15:8] FPROT3 PROT[7:0] During the reset sequence, the
  * FPROT registers are loaded with the contents of the program flash protection
  * bytes in the Flash Configuration Field as indicated in the following table.
- * Program flash protection register Flash Configuration Field offset address FPROT0
- * 0x000B FPROT1 0x000A FPROT2 0x0009 FPROT3 0x0008 To change the program flash
+ * Program flash protection register Flash Configuration Field offset address
+ * FPROT0 0x000B FPROT1 0x000A FPROT2 0x0009 FPROT3 0x0008 To change the program flash
  * protection that is loaded during the reset sequence, unprotect the sector of
  * program flash memory that contains the Flash Configuration Field. Then,
  * reprogram the program flash protection byte.
@@ -11397,17 +11425,17 @@
  * any flash command. Unprotected regions can be changed by program and erase
  * operations. The four FPROT registers allow up to 32 protectable regions. Each bit
  * protects a 1/32 region of the program flash memory except for memory
- * configurations with less than 32 KB of program flash where each assigned bit protects 1
- * KB . For configurations with 24 KB of program flash memory or less, FPROT0 is
- * not used. For configurations with 16 KB of program flash memory or less,
- * FPROT1 is not used. For configurations with 8 KB of program flash memory, FPROT2 is
- * not used. The bitfields are defined in each register as follows: Program
+ * configurations with less than 64 KB of program flash where each assigned bit protects 2
+ * KB . For configurations with 48 KB of program flash memory or less, FPROT0 is
+ * not used. For configurations with 32 KB of program flash memory or less,
+ * FPROT1 is not used. For configurations with 16 KB of program flash memory, FPROT2
+ * is not used. The bitfields are defined in each register as follows: Program
  * flash protection register Program flash protection bits FPROT0 PROT[31:24] FPROT1
  * PROT[23:16] FPROT2 PROT[15:8] FPROT3 PROT[7:0] During the reset sequence, the
  * FPROT registers are loaded with the contents of the program flash protection
  * bytes in the Flash Configuration Field as indicated in the following table.
- * Program flash protection register Flash Configuration Field offset address FPROT0
- * 0x000B FPROT1 0x000A FPROT2 0x0009 FPROT3 0x0008 To change the program flash
+ * Program flash protection register Flash Configuration Field offset address
+ * FPROT0 0x000B FPROT1 0x000A FPROT2 0x0009 FPROT3 0x0008 To change the program flash
  * protection that is loaded during the reset sequence, unprotect the sector of
  * program flash memory that contains the Flash Configuration Field. Then,
  * reprogram the program flash protection byte.
@@ -11439,17 +11467,17 @@
  * any flash command. Unprotected regions can be changed by program and erase
  * operations. The four FPROT registers allow up to 32 protectable regions. Each bit
  * protects a 1/32 region of the program flash memory except for memory
- * configurations with less than 32 KB of program flash where each assigned bit protects 1
- * KB . For configurations with 24 KB of program flash memory or less, FPROT0 is
- * not used. For configurations with 16 KB of program flash memory or less,
- * FPROT1 is not used. For configurations with 8 KB of program flash memory, FPROT2 is
- * not used. The bitfields are defined in each register as follows: Program
+ * configurations with less than 64 KB of program flash where each assigned bit protects 2
+ * KB . For configurations with 48 KB of program flash memory or less, FPROT0 is
+ * not used. For configurations with 32 KB of program flash memory or less,
+ * FPROT1 is not used. For configurations with 16 KB of program flash memory, FPROT2
+ * is not used. The bitfields are defined in each register as follows: Program
  * flash protection register Program flash protection bits FPROT0 PROT[31:24] FPROT1
  * PROT[23:16] FPROT2 PROT[15:8] FPROT3 PROT[7:0] During the reset sequence, the
  * FPROT registers are loaded with the contents of the program flash protection
  * bytes in the Flash Configuration Field as indicated in the following table.
- * Program flash protection register Flash Configuration Field offset address FPROT0
- * 0x000B FPROT1 0x000A FPROT2 0x0009 FPROT3 0x0008 To change the program flash
+ * Program flash protection register Flash Configuration Field offset address
+ * FPROT0 0x000B FPROT1 0x000A FPROT2 0x0009 FPROT3 0x0008 To change the program flash
  * protection that is loaded during the reset sequence, unprotect the sector of
  * program flash memory that contains the Flash Configuration Field. Then,
  * reprogram the program flash protection byte.
@@ -11481,17 +11509,17 @@
  * any flash command. Unprotected regions can be changed by program and erase
  * operations. The four FPROT registers allow up to 32 protectable regions. Each bit
  * protects a 1/32 region of the program flash memory except for memory
- * configurations with less than 32 KB of program flash where each assigned bit protects 1
- * KB . For configurations with 24 KB of program flash memory or less, FPROT0 is
- * not used. For configurations with 16 KB of program flash memory or less,
- * FPROT1 is not used. For configurations with 8 KB of program flash memory, FPROT2 is
- * not used. The bitfields are defined in each register as follows: Program
+ * configurations with less than 64 KB of program flash where each assigned bit protects 2
+ * KB . For configurations with 48 KB of program flash memory or less, FPROT0 is
+ * not used. For configurations with 32 KB of program flash memory or less,
+ * FPROT1 is not used. For configurations with 16 KB of program flash memory, FPROT2
+ * is not used. The bitfields are defined in each register as follows: Program
  * flash protection register Program flash protection bits FPROT0 PROT[31:24] FPROT1
  * PROT[23:16] FPROT2 PROT[15:8] FPROT3 PROT[7:0] During the reset sequence, the
  * FPROT registers are loaded with the contents of the program flash protection
  * bytes in the Flash Configuration Field as indicated in the following table.
- * Program flash protection register Flash Configuration Field offset address FPROT0
- * 0x000B FPROT1 0x000A FPROT2 0x0009 FPROT3 0x0008 To change the program flash
+ * Program flash protection register Flash Configuration Field offset address
+ * FPROT0 0x000B FPROT1 0x000A FPROT2 0x0009 FPROT3 0x0008 To change the program flash
  * protection that is loaded during the reset sequence, unprotect the sector of
  * program flash memory that contains the Flash Configuration Field. Then,
  * reprogram the program flash protection byte.
@@ -12093,14 +12121,14 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 000 - Divide by 1
- * - 001 - Divide by 2
- * - 010 - Divide by 4
- * - 011 - Divide by 8
- * - 100 - Divide by 16
- * - 101 - Divide by 32
- * - 110 - Divide by 64
- * - 111 - Divide by 128
+ * - 0b000 - Divide by 1
+ * - 0b001 - Divide by 2
+ * - 0b010 - Divide by 4
+ * - 0b011 - Divide by 8
+ * - 0b100 - Divide by 16
+ * - 0b101 - Divide by 32
+ * - 0b110 - Divide by 64
+ * - 0b111 - Divide by 128
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SC_PS field. */
@@ -12119,10 +12147,10 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 00 - No clock selected. This in effect disables the FTM counter.
- * - 01 - System clock
- * - 10 - Fixed frequency clock
- * - 11 - External clock
+ * - 0b00 - No clock selected. This in effect disables the FTM counter.
+ * - 0b01 - System clock
+ * - 0b10 - Fixed frequency clock
+ * - 0b11 - External clock
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SC_CLKS field. */
@@ -12142,8 +12170,8 @@
  * = 1.
  *
  * Values:
- * - 0 - FTM counter operates in Up Counting mode.
- * - 1 - FTM counter operates in Up-Down Counting mode.
+ * - 0b0 - FTM counter operates in Up Counting mode.
+ * - 0b1 - FTM counter operates in Up-Down Counting mode.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SC_CPWMS field. */
@@ -12161,8 +12189,8 @@
  * Enables FTM overflow interrupts.
  *
  * Values:
- * - 0 - Disable TOF interrupts. Use software polling.
- * - 1 - Enable TOF interrupts. An interrupt is generated when TOF equals one.
+ * - 0b0 - Disable TOF interrupts. Use software polling.
+ * - 0b1 - Enable TOF interrupts. An interrupt is generated when TOF equals one.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SC_TOIE field. */
@@ -12186,8 +12214,8 @@
  * previous TOF.
  *
  * Values:
- * - 0 - FTM counter has not overflowed.
- * - 1 - FTM counter has overflowed.
+ * - 0b0 - FTM counter has not overflowed.
+ * - 0b1 - FTM counter has overflowed.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SC_TOF field. */
@@ -12314,11 +12342,11 @@
  * High-true pulses (clear Output on match-up) X1 Low-true pulses (set Output on
  * match-up) 1 0 XX 10 Combine PWM High-true pulses (set on channel (n) match, and
  * clear on channel (n+1) match) X1 Low-true pulses (clear on channel (n) match, and
- * set on channel (n+1) match) 1 0 0 X0 See the following table (#ModeSel2Table).
- * Dual Edge Capture One-Shot Capture mode X1 Continuous Capture mode Dual Edge
- * Capture mode - edge polarity selection ELSnB ELSnA Channel Port Enable
- * Detected Edges 0 0 Disabled No edge 0 1 Enabled Rising edge 1 0 Enabled Falling edge
- * 1 1 Enabled Rising and falling edges
+ * set on channel (n+1) match) 1 0 0 X0 See the following table (). Dual Edge
+ * Capture One-Shot Capture mode X1 Continuous Capture mode Dual Edge Capture mode -
+ * edge polarity selection ELSnB ELSnA Channel Port Enable Detected Edges 0 0
+ * Disabled No edge 0 1 Enabled Rising edge 1 0 Enabled Falling edge 1 1 Enabled
+ * Rising and falling edges
  */
 /*!
  * @name Constants and macros for entire FTM_CnSC register
@@ -12342,8 +12370,8 @@
  * Enables DMA transfers for the channel.
  *
  * Values:
- * - 0 - Disable DMA transfers.
- * - 1 - Enable DMA transfers.
+ * - 0b0 - Disable DMA transfers.
+ * - 0b1 - Enable DMA transfers.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_CnSC_DMA field. */
@@ -12363,9 +12391,9 @@
  * MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - FTM counter is not reset when the selected channel (n) input event is
+ * - 0b0 - FTM counter is not reset when the selected channel (n) input event is
  *     detected.
- * - 1 - FTM counter is reset when the selected channel (n) input event is
+ * - 0b1 - FTM counter is reset when the selected channel (n) input event is
  *     detected.
  */
 /*@{*/
@@ -12381,9 +12409,8 @@
 /*!
  * @name Register FTM_CnSC, field ELSA[2] (RW)
  *
- * The functionality of ELSB and ELSA depends on the channel mode. See
- * #ModeSel1Table. This field is write protected. It can be written only when MODE[WPDIS]
- * = 1.
+ * The functionality of ELSB and ELSA depends on the channel mode. See . This
+ * field is write protected. It can be written only when MODE[WPDIS] = 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_CnSC_ELSA field. */
@@ -12398,9 +12425,8 @@
 /*!
  * @name Register FTM_CnSC, field ELSB[3] (RW)
  *
- * The functionality of ELSB and ELSA depends on the channel mode. See
- * #ModeSel1Table. This field is write protected. It can be written only when MODE[WPDIS]
- * = 1.
+ * The functionality of ELSB and ELSA depends on the channel mode. See . This
+ * field is write protected. It can be written only when MODE[WPDIS] = 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_CnSC_ELSB field. */
@@ -12416,8 +12442,8 @@
  * @name Register FTM_CnSC, field MSA[4] (RW)
  *
  * Used for further selections in the channel logic. Its functionality is
- * dependent on the channel mode. See #ModeSel1Table. This field is write protected. It
- * can be written only when MODE[WPDIS] = 1.
+ * dependent on the channel mode. See . This field is write protected. It can be
+ * written only when MODE[WPDIS] = 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_CnSC_MSA field. */
@@ -12433,8 +12459,8 @@
  * @name Register FTM_CnSC, field MSB[5] (RW)
  *
  * Used for further selections in the channel logic. Its functionality is
- * dependent on the channel mode. See #ModeSel1Table. This field is write protected. It
- * can be written only when MODE[WPDIS] = 1.
+ * dependent on the channel mode. See . This field is write protected. It can be
+ * written only when MODE[WPDIS] = 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_CnSC_MSB field. */
@@ -12452,8 +12478,8 @@
  * Enables channel interrupts.
  *
  * Values:
- * - 0 - Disable channel interrupts. Use software polling.
- * - 1 - Enable channel interrupts.
+ * - 0b0 - Disable channel interrupts. Use software polling.
+ * - 0b1 - Enable channel interrupts.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_CnSC_CHIE field. */
@@ -12476,8 +12502,8 @@
  * lost due to the clearing sequence for a previous CHF.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_CnSC_CHF field. */
@@ -12630,8 +12656,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_STATUS_CH0F field. */
@@ -12649,8 +12675,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_STATUS_CH1F field. */
@@ -12668,8 +12694,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_STATUS_CH2F field. */
@@ -12687,8 +12713,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_STATUS_CH3F field. */
@@ -12706,8 +12732,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_STATUS_CH4F field. */
@@ -12725,8 +12751,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_STATUS_CH5F field. */
@@ -12744,8 +12770,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_STATUS_CH6F field. */
@@ -12763,8 +12789,8 @@
  * See the register description.
  *
  * Values:
- * - 0 - No channel event has occurred.
- * - 1 - A channel event has occurred.
+ * - 0b0 - No channel event has occurred.
+ * - 0b1 - A channel event has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_STATUS_CH7F field. */
@@ -12812,9 +12838,9 @@
  * This field is write protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - TPM compatibility. Free running counter and synchronization compatible
- *     with TPM.
- * - 1 - Free running counter and synchronization are different from TPM
+ * - 0b0 - TPM compatibility. Free running counter and synchronization
+ *     compatible with TPM.
+ * - 0b1 - Free running counter and synchronization are different from TPM
  *     behavior.
  */
 /*@{*/
@@ -12854,8 +12880,8 @@
  * 1 is written to WPDIS. Writing 0 to WPDIS has no effect.
  *
  * Values:
- * - 0 - Write protection is enabled.
- * - 1 - Write protection is disabled.
+ * - 0b0 - Write protection is enabled.
+ * - 0b1 - Write protection is disabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_MODE_WPDIS field. */
@@ -12875,9 +12901,9 @@
  * synchronization when SYNCMODE is 0.
  *
  * Values:
- * - 0 - No restrictions. Software and hardware triggers can be used by MOD,
+ * - 0b0 - No restrictions. Software and hardware triggers can be used by MOD,
  *     CnV, OUTMASK, and FTM counter synchronization.
- * - 1 - Software trigger can only be used by MOD and CnV synchronization, and
+ * - 0b1 - Software trigger can only be used by MOD and CnV synchronization, and
  *     hardware triggers can only be used by OUTMASK and FTM counter
  *     synchronization.
  */
@@ -12898,8 +12924,8 @@
  * written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Capture test mode is disabled.
- * - 1 - Capture test mode is enabled.
+ * - 0b0 - Capture test mode is disabled.
+ * - 0b1 - Capture test mode is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_MODE_CAPTEST field. */
@@ -12918,12 +12944,12 @@
  * written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 00 - Fault control is disabled for all channels.
- * - 01 - Fault control is enabled for even channels only (channels 0, 2, 4, and
- *     6), and the selected mode is the manual fault clearing.
- * - 10 - Fault control is enabled for all channels, and the selected mode is
+ * - 0b00 - Fault control is disabled for all channels.
+ * - 0b01 - Fault control is enabled for even channels only (channels 0, 2, 4,
+ *     and 6), and the selected mode is the manual fault clearing.
+ * - 0b10 - Fault control is enabled for all channels, and the selected mode is
  *     the manual fault clearing.
- * - 11 - Fault control is enabled for all channels, and the selected mode is
+ * - 0b11 - Fault control is enabled for all channels, and the selected mode is
  *     the automatic fault clearing.
  */
 /*@{*/
@@ -12943,8 +12969,8 @@
  * the FTM fault control is enabled.
  *
  * Values:
- * - 0 - Fault control interrupt is disabled.
- * - 1 - Fault control interrupt is enabled.
+ * - 0b0 - Fault control interrupt is disabled.
+ * - 0b1 - Fault control interrupt is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_MODE_FAULTIE field. */
@@ -13003,8 +13029,8 @@
  * FTM counter reaches its minimum value (CNTIN register).
  *
  * Values:
- * - 0 - The minimum loading point is disabled.
- * - 1 - The minimum loading point is enabled.
+ * - 0b0 - The minimum loading point is disabled.
+ * - 0b1 - The minimum loading point is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNC_CNTMIN field. */
@@ -13024,8 +13050,8 @@
  * counter reaches its maximum value (MOD register).
  *
  * Values:
- * - 0 - The maximum loading point is disabled.
- * - 1 - The maximum loading point is enabled.
+ * - 0b0 - The maximum loading point is disabled.
+ * - 0b1 - The maximum loading point is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNC_CNTMAX field. */
@@ -13045,9 +13071,9 @@
  * when SYNCMODE is zero.
  *
  * Values:
- * - 0 - FTM counter continues to count normally.
- * - 1 - FTM counter is updated with its initial value when the selected trigger
- *     is detected.
+ * - 0b0 - FTM counter continues to count normally.
+ * - 0b1 - FTM counter is updated with its initial value when the selected
+ *     trigger is detected.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNC_REINIT field. */
@@ -13065,9 +13091,9 @@
  * Selects when the OUTMASK register is updated with the value of its buffer.
  *
  * Values:
- * - 0 - OUTMASK register is updated with the value of its buffer in all rising
- *     edges of the system clock.
- * - 1 - OUTMASK register is updated with the value of its buffer only by the
+ * - 0b0 - OUTMASK register is updated with the value of its buffer in all
+ *     rising edges of the system clock.
+ * - 0b1 - OUTMASK register is updated with the value of its buffer only by the
  *     PWM synchronization.
  */
 /*@{*/
@@ -13087,8 +13113,8 @@
  * occurs when a rising edge is detected at the trigger 0 input signal.
  *
  * Values:
- * - 0 - Trigger is disabled.
- * - 1 - Trigger is enabled.
+ * - 0b0 - Trigger is disabled.
+ * - 0b1 - Trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNC_TRIG0 field. */
@@ -13107,8 +13133,8 @@
  * happens when a rising edge is detected at the trigger 1 input signal.
  *
  * Values:
- * - 0 - Trigger is disabled.
- * - 1 - Trigger is enabled.
+ * - 0b0 - Trigger is disabled.
+ * - 0b1 - Trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNC_TRIG1 field. */
@@ -13127,8 +13153,8 @@
  * happens when a rising edge is detected at the trigger 2 input signal.
  *
  * Values:
- * - 0 - Trigger is disabled.
- * - 1 - Trigger is enabled.
+ * - 0b0 - Trigger is disabled.
+ * - 0b1 - Trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNC_TRIG2 field. */
@@ -13147,8 +13173,8 @@
  * trigger happens when a 1 is written to SWSYNC bit.
  *
  * Values:
- * - 0 - Software trigger is not selected.
- * - 1 - Software trigger is selected.
+ * - 0b0 - Software trigger is not selected.
+ * - 0b1 - Software trigger is selected.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNC_SWSYNC field. */
@@ -13192,8 +13218,8 @@
  * initialization occurs.
  *
  * Values:
- * - 0 - The initialization value is 0.
- * - 1 - The initialization value is 1.
+ * - 0b0 - The initialization value is 0.
+ * - 0b1 - The initialization value is 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTINIT_CH0OI field. */
@@ -13212,8 +13238,8 @@
  * initialization occurs.
  *
  * Values:
- * - 0 - The initialization value is 0.
- * - 1 - The initialization value is 1.
+ * - 0b0 - The initialization value is 0.
+ * - 0b1 - The initialization value is 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTINIT_CH1OI field. */
@@ -13232,8 +13258,8 @@
  * initialization occurs.
  *
  * Values:
- * - 0 - The initialization value is 0.
- * - 1 - The initialization value is 1.
+ * - 0b0 - The initialization value is 0.
+ * - 0b1 - The initialization value is 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTINIT_CH2OI field. */
@@ -13252,8 +13278,8 @@
  * initialization occurs.
  *
  * Values:
- * - 0 - The initialization value is 0.
- * - 1 - The initialization value is 1.
+ * - 0b0 - The initialization value is 0.
+ * - 0b1 - The initialization value is 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTINIT_CH3OI field. */
@@ -13272,8 +13298,8 @@
  * initialization occurs.
  *
  * Values:
- * - 0 - The initialization value is 0.
- * - 1 - The initialization value is 1.
+ * - 0b0 - The initialization value is 0.
+ * - 0b1 - The initialization value is 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTINIT_CH4OI field. */
@@ -13292,8 +13318,8 @@
  * initialization occurs.
  *
  * Values:
- * - 0 - The initialization value is 0.
- * - 1 - The initialization value is 1.
+ * - 0b0 - The initialization value is 0.
+ * - 0b1 - The initialization value is 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTINIT_CH5OI field. */
@@ -13312,8 +13338,8 @@
  * initialization occurs.
  *
  * Values:
- * - 0 - The initialization value is 0.
- * - 1 - The initialization value is 1.
+ * - 0b0 - The initialization value is 0.
+ * - 0b1 - The initialization value is 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTINIT_CH6OI field. */
@@ -13332,8 +13358,8 @@
  * initialization occurs.
  *
  * Values:
- * - 0 - The initialization value is 0.
- * - 1 - The initialization value is 1.
+ * - 0b0 - The initialization value is 0.
+ * - 0b1 - The initialization value is 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTINIT_CH7OI field. */
@@ -13384,8 +13410,8 @@
  * Defines if the channel output is masked or unmasked.
  *
  * Values:
- * - 0 - Channel output is not masked. It continues to operate normally.
- * - 1 - Channel output is masked. It is forced to its inactive state.
+ * - 0b0 - Channel output is not masked. It continues to operate normally.
+ * - 0b1 - Channel output is masked. It is forced to its inactive state.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTMASK_CH0OM field. */
@@ -13403,8 +13429,8 @@
  * Defines if the channel output is masked or unmasked.
  *
  * Values:
- * - 0 - Channel output is not masked. It continues to operate normally.
- * - 1 - Channel output is masked. It is forced to its inactive state.
+ * - 0b0 - Channel output is not masked. It continues to operate normally.
+ * - 0b1 - Channel output is masked. It is forced to its inactive state.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTMASK_CH1OM field. */
@@ -13422,8 +13448,8 @@
  * Defines if the channel output is masked or unmasked.
  *
  * Values:
- * - 0 - Channel output is not masked. It continues to operate normally.
- * - 1 - Channel output is masked. It is forced to its inactive state.
+ * - 0b0 - Channel output is not masked. It continues to operate normally.
+ * - 0b1 - Channel output is masked. It is forced to its inactive state.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTMASK_CH2OM field. */
@@ -13441,8 +13467,8 @@
  * Defines if the channel output is masked or unmasked.
  *
  * Values:
- * - 0 - Channel output is not masked. It continues to operate normally.
- * - 1 - Channel output is masked. It is forced to its inactive state.
+ * - 0b0 - Channel output is not masked. It continues to operate normally.
+ * - 0b1 - Channel output is masked. It is forced to its inactive state.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTMASK_CH3OM field. */
@@ -13460,8 +13486,8 @@
  * Defines if the channel output is masked or unmasked.
  *
  * Values:
- * - 0 - Channel output is not masked. It continues to operate normally.
- * - 1 - Channel output is masked. It is forced to its inactive state.
+ * - 0b0 - Channel output is not masked. It continues to operate normally.
+ * - 0b1 - Channel output is masked. It is forced to its inactive state.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTMASK_CH4OM field. */
@@ -13479,8 +13505,8 @@
  * Defines if the channel output is masked or unmasked.
  *
  * Values:
- * - 0 - Channel output is not masked. It continues to operate normally.
- * - 1 - Channel output is masked. It is forced to its inactive state.
+ * - 0b0 - Channel output is not masked. It continues to operate normally.
+ * - 0b1 - Channel output is masked. It is forced to its inactive state.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTMASK_CH5OM field. */
@@ -13498,8 +13524,8 @@
  * Defines if the channel output is masked or unmasked.
  *
  * Values:
- * - 0 - Channel output is not masked. It continues to operate normally.
- * - 1 - Channel output is masked. It is forced to its inactive state.
+ * - 0b0 - Channel output is not masked. It continues to operate normally.
+ * - 0b1 - Channel output is masked. It is forced to its inactive state.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTMASK_CH6OM field. */
@@ -13517,8 +13543,8 @@
  * Defines if the channel output is masked or unmasked.
  *
  * Values:
- * - 0 - Channel output is not masked. It continues to operate normally.
- * - 1 - Channel output is masked. It is forced to its inactive state.
+ * - 0b0 - Channel output is not masked. It continues to operate normally.
+ * - 0b1 - Channel output is masked. It is forced to its inactive state.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_OUTMASK_CH7OM field. */
@@ -13567,8 +13593,8 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Channels (n) and (n+1) are independent.
- * - 1 - Channels (n) and (n+1) are combined.
+ * - 0b0 - Channels (n) and (n+1) are independent.
+ * - 0b1 - Channels (n) and (n+1) are combined.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_COMBINE0 field. */
@@ -13588,8 +13614,8 @@
  * is write protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel (n+1) output is the same as the channel (n) output.
- * - 1 - The channel (n+1) output is the complement of the channel (n) output.
+ * - 0b0 - The channel (n+1) output is the same as the channel (n) output.
+ * - 0b1 - The channel (n+1) output is the complement of the channel (n) output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_COMP0 field. */
@@ -13606,12 +13632,12 @@
  *
  * Enables the Dual Edge Capture mode in the channels (n) and (n+1). This bit
  * reconfigures the function of MSnA, ELSnB:ELSnA and ELS(n+1)B:ELS(n+1)A bits in
- * Dual Edge Capture mode according to #ModeSel1Table. This field is write
- * protected. It can be written only when MODE[WPDIS] = 1.
+ * Dual Edge Capture mode according to . This field is write protected. It can be
+ * written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The Dual Edge Capture mode in this pair of channels is disabled.
- * - 1 - The Dual Edge Capture mode in this pair of channels is enabled.
+ * - 0b0 - The Dual Edge Capture mode in this pair of channels is disabled.
+ * - 0b1 - The Dual Edge Capture mode in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DECAPEN0 field. */
@@ -13633,8 +13659,8 @@
  * (n+1) event is made.
  *
  * Values:
- * - 0 - The dual edge captures are inactive.
- * - 1 - The dual edge captures are active.
+ * - 0b0 - The dual edge captures are inactive.
+ * - 0b1 - The dual edge captures are active.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DECAP0 field. */
@@ -13653,8 +13679,8 @@
  * write protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The deadtime insertion in this pair of channels is disabled.
- * - 1 - The deadtime insertion in this pair of channels is enabled.
+ * - 0b0 - The deadtime insertion in this pair of channels is disabled.
+ * - 0b1 - The deadtime insertion in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DTEN0 field. */
@@ -13672,8 +13698,8 @@
  * Enables PWM synchronization of registers C(n)V and C(n+1)V.
  *
  * Values:
- * - 0 - The PWM synchronization in this pair of channels is disabled.
- * - 1 - The PWM synchronization in this pair of channels is enabled.
+ * - 0b0 - The PWM synchronization in this pair of channels is disabled.
+ * - 0b1 - The PWM synchronization in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_SYNCEN0 field. */
@@ -13692,8 +13718,8 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The fault control in this pair of channels is disabled.
- * - 1 - The fault control in this pair of channels is enabled.
+ * - 0b0 - The fault control in this pair of channels is disabled.
+ * - 0b1 - The fault control in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_FAULTEN0 field. */
@@ -13712,8 +13738,8 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Channels (n) and (n+1) are independent.
- * - 1 - Channels (n) and (n+1) are combined.
+ * - 0b0 - Channels (n) and (n+1) are independent.
+ * - 0b1 - Channels (n) and (n+1) are combined.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_COMBINE1 field. */
@@ -13733,8 +13759,8 @@
  * is write protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel (n+1) output is the same as the channel (n) output.
- * - 1 - The channel (n+1) output is the complement of the channel (n) output.
+ * - 0b0 - The channel (n+1) output is the same as the channel (n) output.
+ * - 0b1 - The channel (n+1) output is the complement of the channel (n) output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_COMP1 field. */
@@ -13751,12 +13777,12 @@
  *
  * Enables the Dual Edge Capture mode in the channels (n) and (n+1). This bit
  * reconfigures the function of MSnA, ELSnB:ELSnA and ELS(n+1)B:ELS(n+1)A bits in
- * Dual Edge Capture mode according to #ModeSel1Table. This field is write
- * protected. It can be written only when MODE[WPDIS] = 1.
+ * Dual Edge Capture mode according to . This field is write protected. It can be
+ * written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The Dual Edge Capture mode in this pair of channels is disabled.
- * - 1 - The Dual Edge Capture mode in this pair of channels is enabled.
+ * - 0b0 - The Dual Edge Capture mode in this pair of channels is disabled.
+ * - 0b1 - The Dual Edge Capture mode in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DECAPEN1 field. */
@@ -13778,8 +13804,8 @@
  * (n+1) event is made.
  *
  * Values:
- * - 0 - The dual edge captures are inactive.
- * - 1 - The dual edge captures are active.
+ * - 0b0 - The dual edge captures are inactive.
+ * - 0b1 - The dual edge captures are active.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DECAP1 field. */
@@ -13798,8 +13824,8 @@
  * write protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The deadtime insertion in this pair of channels is disabled.
- * - 1 - The deadtime insertion in this pair of channels is enabled.
+ * - 0b0 - The deadtime insertion in this pair of channels is disabled.
+ * - 0b1 - The deadtime insertion in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DTEN1 field. */
@@ -13817,8 +13843,8 @@
  * Enables PWM synchronization of registers C(n)V and C(n+1)V.
  *
  * Values:
- * - 0 - The PWM synchronization in this pair of channels is disabled.
- * - 1 - The PWM synchronization in this pair of channels is enabled.
+ * - 0b0 - The PWM synchronization in this pair of channels is disabled.
+ * - 0b1 - The PWM synchronization in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_SYNCEN1 field. */
@@ -13837,8 +13863,8 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The fault control in this pair of channels is disabled.
- * - 1 - The fault control in this pair of channels is enabled.
+ * - 0b0 - The fault control in this pair of channels is disabled.
+ * - 0b1 - The fault control in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_FAULTEN1 field. */
@@ -13857,8 +13883,8 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Channels (n) and (n+1) are independent.
- * - 1 - Channels (n) and (n+1) are combined.
+ * - 0b0 - Channels (n) and (n+1) are independent.
+ * - 0b1 - Channels (n) and (n+1) are combined.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_COMBINE2 field. */
@@ -13878,8 +13904,8 @@
  * is write protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel (n+1) output is the same as the channel (n) output.
- * - 1 - The channel (n+1) output is the complement of the channel (n) output.
+ * - 0b0 - The channel (n+1) output is the same as the channel (n) output.
+ * - 0b1 - The channel (n+1) output is the complement of the channel (n) output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_COMP2 field. */
@@ -13896,12 +13922,12 @@
  *
  * Enables the Dual Edge Capture mode in the channels (n) and (n+1). This bit
  * reconfigures the function of MSnA, ELSnB:ELSnA and ELS(n+1)B:ELS(n+1)A bits in
- * Dual Edge Capture mode according to #ModeSel1Table. This field is write
- * protected. It can be written only when MODE[WPDIS] = 1.
+ * Dual Edge Capture mode according to . This field is write protected. It can be
+ * written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The Dual Edge Capture mode in this pair of channels is disabled.
- * - 1 - The Dual Edge Capture mode in this pair of channels is enabled.
+ * - 0b0 - The Dual Edge Capture mode in this pair of channels is disabled.
+ * - 0b1 - The Dual Edge Capture mode in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DECAPEN2 field. */
@@ -13923,8 +13949,8 @@
  * (n+1) event is made.
  *
  * Values:
- * - 0 - The dual edge captures are inactive.
- * - 1 - The dual edge captures are active.
+ * - 0b0 - The dual edge captures are inactive.
+ * - 0b1 - The dual edge captures are active.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DECAP2 field. */
@@ -13943,8 +13969,8 @@
  * write protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The deadtime insertion in this pair of channels is disabled.
- * - 1 - The deadtime insertion in this pair of channels is enabled.
+ * - 0b0 - The deadtime insertion in this pair of channels is disabled.
+ * - 0b1 - The deadtime insertion in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DTEN2 field. */
@@ -13962,8 +13988,8 @@
  * Enables PWM synchronization of registers C(n)V and C(n+1)V.
  *
  * Values:
- * - 0 - The PWM synchronization in this pair of channels is disabled.
- * - 1 - The PWM synchronization in this pair of channels is enabled.
+ * - 0b0 - The PWM synchronization in this pair of channels is disabled.
+ * - 0b1 - The PWM synchronization in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_SYNCEN2 field. */
@@ -13982,8 +14008,8 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The fault control in this pair of channels is disabled.
- * - 1 - The fault control in this pair of channels is enabled.
+ * - 0b0 - The fault control in this pair of channels is disabled.
+ * - 0b1 - The fault control in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_FAULTEN2 field. */
@@ -14002,8 +14028,8 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Channels (n) and (n+1) are independent.
- * - 1 - Channels (n) and (n+1) are combined.
+ * - 0b0 - Channels (n) and (n+1) are independent.
+ * - 0b1 - Channels (n) and (n+1) are combined.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_COMBINE3 field. */
@@ -14023,8 +14049,8 @@
  * is write protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel (n+1) output is the same as the channel (n) output.
- * - 1 - The channel (n+1) output is the complement of the channel (n) output.
+ * - 0b0 - The channel (n+1) output is the same as the channel (n) output.
+ * - 0b1 - The channel (n+1) output is the complement of the channel (n) output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_COMP3 field. */
@@ -14041,12 +14067,12 @@
  *
  * Enables the Dual Edge Capture mode in the channels (n) and (n+1). This bit
  * reconfigures the function of MSnA, ELSnB:ELSnA and ELS(n+1)B:ELS(n+1)A bits in
- * Dual Edge Capture mode according to #ModeSel1Table. This field is write
- * protected. It can be written only when MODE[WPDIS] = 1.
+ * Dual Edge Capture mode according to . This field is write protected. It can be
+ * written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The Dual Edge Capture mode in this pair of channels is disabled.
- * - 1 - The Dual Edge Capture mode in this pair of channels is enabled.
+ * - 0b0 - The Dual Edge Capture mode in this pair of channels is disabled.
+ * - 0b1 - The Dual Edge Capture mode in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DECAPEN3 field. */
@@ -14068,8 +14094,8 @@
  * (n+1) event is made.
  *
  * Values:
- * - 0 - The dual edge captures are inactive.
- * - 1 - The dual edge captures are active.
+ * - 0b0 - The dual edge captures are inactive.
+ * - 0b1 - The dual edge captures are active.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DECAP3 field. */
@@ -14088,8 +14114,8 @@
  * write protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The deadtime insertion in this pair of channels is disabled.
- * - 1 - The deadtime insertion in this pair of channels is enabled.
+ * - 0b0 - The deadtime insertion in this pair of channels is disabled.
+ * - 0b1 - The deadtime insertion in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_DTEN3 field. */
@@ -14107,8 +14133,8 @@
  * Enables PWM synchronization of registers C(n)V and C(n+1)V.
  *
  * Values:
- * - 0 - The PWM synchronization in this pair of channels is disabled.
- * - 1 - The PWM synchronization in this pair of channels is enabled.
+ * - 0b0 - The PWM synchronization in this pair of channels is disabled.
+ * - 0b1 - The PWM synchronization in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_SYNCEN3 field. */
@@ -14127,8 +14153,8 @@
  * protected. It can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The fault control in this pair of channels is disabled.
- * - 1 - The fault control in this pair of channels is enabled.
+ * - 0b0 - The fault control in this pair of channels is disabled.
+ * - 0b1 - The fault control in this pair of channels is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_COMBINE_FAULTEN3 field. */
@@ -14198,9 +14224,9 @@
  * only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0x - Divide the system clock by 1.
- * - 10 - Divide the system clock by 4.
- * - 11 - Divide the system clock by 16.
+ * - 0b0x - Divide the system clock by 1.
+ * - 0b10 - Divide the system clock by 4.
+ * - 0b11 - Divide the system clock by 16.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_DEADTIME_DTPS field. */
@@ -14250,8 +14276,8 @@
  * to the CnV register.
  *
  * Values:
- * - 0 - The generation of the channel trigger is disabled.
- * - 1 - The generation of the channel trigger is enabled.
+ * - 0b0 - The generation of the channel trigger is disabled.
+ * - 0b1 - The generation of the channel trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_EXTTRIG_CH2TRIG field. */
@@ -14270,8 +14296,8 @@
  * to the CnV register.
  *
  * Values:
- * - 0 - The generation of the channel trigger is disabled.
- * - 1 - The generation of the channel trigger is enabled.
+ * - 0b0 - The generation of the channel trigger is disabled.
+ * - 0b1 - The generation of the channel trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_EXTTRIG_CH3TRIG field. */
@@ -14290,8 +14316,8 @@
  * to the CnV register.
  *
  * Values:
- * - 0 - The generation of the channel trigger is disabled.
- * - 1 - The generation of the channel trigger is enabled.
+ * - 0b0 - The generation of the channel trigger is disabled.
+ * - 0b1 - The generation of the channel trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_EXTTRIG_CH4TRIG field. */
@@ -14310,8 +14336,8 @@
  * to the CnV register.
  *
  * Values:
- * - 0 - The generation of the channel trigger is disabled.
- * - 1 - The generation of the channel trigger is enabled.
+ * - 0b0 - The generation of the channel trigger is disabled.
+ * - 0b1 - The generation of the channel trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_EXTTRIG_CH5TRIG field. */
@@ -14330,8 +14356,8 @@
  * to the CnV register.
  *
  * Values:
- * - 0 - The generation of the channel trigger is disabled.
- * - 1 - The generation of the channel trigger is enabled.
+ * - 0b0 - The generation of the channel trigger is disabled.
+ * - 0b1 - The generation of the channel trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_EXTTRIG_CH0TRIG field. */
@@ -14350,8 +14376,8 @@
  * to the CnV register.
  *
  * Values:
- * - 0 - The generation of the channel trigger is disabled.
- * - 1 - The generation of the channel trigger is enabled.
+ * - 0b0 - The generation of the channel trigger is disabled.
+ * - 0b1 - The generation of the channel trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_EXTTRIG_CH1TRIG field. */
@@ -14370,8 +14396,8 @@
  * CNTIN register.
  *
  * Values:
- * - 0 - The generation of initialization trigger is disabled.
- * - 1 - The generation of initialization trigger is enabled.
+ * - 0b0 - The generation of initialization trigger is disabled.
+ * - 0b1 - The generation of initialization trigger is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_EXTTRIG_INITTRIGEN field. */
@@ -14393,8 +14419,8 @@
  * sequence is completed for the earlier TRIGF.
  *
  * Values:
- * - 0 - No channel trigger was generated.
- * - 1 - A channel trigger was generated.
+ * - 0b0 - No channel trigger was generated.
+ * - 0b1 - A channel trigger was generated.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_EXTTRIG_TRIGF field. */
@@ -14443,8 +14469,8 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel polarity is active high.
- * - 1 - The channel polarity is active low.
+ * - 0b0 - The channel polarity is active high.
+ * - 0b1 - The channel polarity is active low.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_POL_POL0 field. */
@@ -14463,8 +14489,8 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel polarity is active high.
- * - 1 - The channel polarity is active low.
+ * - 0b0 - The channel polarity is active high.
+ * - 0b1 - The channel polarity is active low.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_POL_POL1 field. */
@@ -14483,8 +14509,8 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel polarity is active high.
- * - 1 - The channel polarity is active low.
+ * - 0b0 - The channel polarity is active high.
+ * - 0b1 - The channel polarity is active low.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_POL_POL2 field. */
@@ -14503,8 +14529,8 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel polarity is active high.
- * - 1 - The channel polarity is active low.
+ * - 0b0 - The channel polarity is active high.
+ * - 0b1 - The channel polarity is active low.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_POL_POL3 field. */
@@ -14523,8 +14549,8 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel polarity is active high.
- * - 1 - The channel polarity is active low.
+ * - 0b0 - The channel polarity is active high.
+ * - 0b1 - The channel polarity is active low.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_POL_POL4 field. */
@@ -14543,8 +14569,8 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel polarity is active high.
- * - 1 - The channel polarity is active low.
+ * - 0b0 - The channel polarity is active high.
+ * - 0b1 - The channel polarity is active low.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_POL_POL5 field. */
@@ -14563,8 +14589,8 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel polarity is active high.
- * - 1 - The channel polarity is active low.
+ * - 0b0 - The channel polarity is active high.
+ * - 0b1 - The channel polarity is active low.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_POL_POL6 field. */
@@ -14583,8 +14609,8 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The channel polarity is active high.
- * - 1 - The channel polarity is active low.
+ * - 0b0 - The channel polarity is active high.
+ * - 0b1 - The channel polarity is active low.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_POL_POL7 field. */
@@ -14638,8 +14664,8 @@
  * earlier fault condition.
  *
  * Values:
- * - 0 - No fault condition was detected at the fault input.
- * - 1 - A fault condition was detected at the fault input.
+ * - 0b0 - No fault condition was detected at the fault input.
+ * - 0b1 - A fault condition was detected at the fault input.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FMS_FAULTF0 field. */
@@ -14665,8 +14691,8 @@
  * earlier fault condition.
  *
  * Values:
- * - 0 - No fault condition was detected at the fault input.
- * - 1 - A fault condition was detected at the fault input.
+ * - 0b0 - No fault condition was detected at the fault input.
+ * - 0b1 - A fault condition was detected at the fault input.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FMS_FAULTF1 field. */
@@ -14692,8 +14718,8 @@
  * earlier fault condition.
  *
  * Values:
- * - 0 - No fault condition was detected at the fault input.
- * - 1 - A fault condition was detected at the fault input.
+ * - 0b0 - No fault condition was detected at the fault input.
+ * - 0b1 - A fault condition was detected at the fault input.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FMS_FAULTF2 field. */
@@ -14719,8 +14745,8 @@
  * earlier fault condition.
  *
  * Values:
- * - 0 - No fault condition was detected at the fault input.
- * - 1 - A fault condition was detected at the fault input.
+ * - 0b0 - No fault condition was detected at the fault input.
+ * - 0b1 - A fault condition was detected at the fault input.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FMS_FAULTF3 field. */
@@ -14739,8 +14765,8 @@
  * their filter is enabled) when fault control is enabled.
  *
  * Values:
- * - 0 - The logic OR of the enabled fault inputs is 0.
- * - 1 - The logic OR of the enabled fault inputs is 1.
+ * - 0b0 - The logic OR of the enabled fault inputs is 0.
+ * - 0b1 - The logic OR of the enabled fault inputs is 1.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FMS_FAULTIN field. */
@@ -14756,8 +14782,8 @@
  * WPDIS. Writing 0 to WPEN has no effect.
  *
  * Values:
- * - 0 - Write protection is disabled. Write protected bits can be written.
- * - 1 - Write protection is enabled. Write protected bits cannot be written.
+ * - 0b0 - Write protection is disabled. Write protected bits can be written.
+ * - 0b1 - Write protection is enabled. Write protected bits cannot be written.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FMS_WPEN field. */
@@ -14782,8 +14808,8 @@
  * are cleared individually.
  *
  * Values:
- * - 0 - No fault condition was detected.
- * - 1 - A fault condition was detected.
+ * - 0b0 - No fault condition was detected.
+ * - 0b1 - A fault condition was detected.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FMS_FAULTF field. */
@@ -14924,8 +14950,8 @@
  * only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Fault input is disabled.
- * - 1 - Fault input is enabled.
+ * - 0b0 - Fault input is disabled.
+ * - 0b1 - Fault input is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FLTCTRL_FAULT0EN field. */
@@ -14944,8 +14970,8 @@
  * only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Fault input is disabled.
- * - 1 - Fault input is enabled.
+ * - 0b0 - Fault input is disabled.
+ * - 0b1 - Fault input is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FLTCTRL_FAULT1EN field. */
@@ -14964,8 +14990,8 @@
  * only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Fault input is disabled.
- * - 1 - Fault input is enabled.
+ * - 0b0 - Fault input is disabled.
+ * - 0b1 - Fault input is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FLTCTRL_FAULT2EN field. */
@@ -14984,8 +15010,8 @@
  * only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Fault input is disabled.
- * - 1 - Fault input is enabled.
+ * - 0b0 - Fault input is disabled.
+ * - 0b1 - Fault input is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FLTCTRL_FAULT3EN field. */
@@ -15004,8 +15030,8 @@
  * be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Fault input filter is disabled.
- * - 1 - Fault input filter is enabled.
+ * - 0b0 - Fault input filter is disabled.
+ * - 0b1 - Fault input filter is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FLTCTRL_FFLTR0EN field. */
@@ -15024,8 +15050,8 @@
  * be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Fault input filter is disabled.
- * - 1 - Fault input filter is enabled.
+ * - 0b0 - Fault input filter is disabled.
+ * - 0b1 - Fault input filter is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FLTCTRL_FFLTR1EN field. */
@@ -15044,8 +15070,8 @@
  * be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Fault input filter is disabled.
- * - 1 - Fault input filter is enabled.
+ * - 0b0 - Fault input filter is disabled.
+ * - 0b1 - Fault input filter is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FLTCTRL_FFLTR2EN field. */
@@ -15064,8 +15090,8 @@
  * be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Fault input filter is disabled.
- * - 1 - Fault input filter is enabled.
+ * - 0b0 - Fault input filter is disabled.
+ * - 0b1 - Fault input filter is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_FLTCTRL_FFLTR3EN field. */
@@ -15127,12 +15153,12 @@
  *
  * Enables the Quadrature Decoder mode. In this mode, the phase A and B input
  * signals control the FTM counter direction. The Quadrature Decoder mode has
- * precedence over the other modes. See #ModeSel1Table. This field is write protected.
- * It can be written only when MODE[WPDIS] = 1.
+ * precedence over the other modes. See . This field is write protected. It can be
+ * written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - Quadrature Decoder mode is disabled.
- * - 1 - Quadrature Decoder mode is enabled.
+ * - 0b0 - Quadrature Decoder mode is disabled.
+ * - 0b1 - Quadrature Decoder mode is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_QDCTRL_QUADEN field. */
@@ -15150,10 +15176,10 @@
  * Indicates if the TOF bit was set on the top or the bottom of counting.
  *
  * Values:
- * - 0 - TOF bit was set on the bottom of counting. There was an FTM counter
- *     decrement and FTM counter changes from its minimum value (CNTIN register) to
- *     its maximum value (MOD register).
- * - 1 - TOF bit was set on the top of counting. There was an FTM counter
+ * - 0b0 - TOF bit was set on the bottom of counting. There was an FTM counter
+ *     decrement and FTM counter changes from its minimum value (CNTIN register)
+ *     to its maximum value (MOD register).
+ * - 0b1 - TOF bit was set on the top of counting. There was an FTM counter
  *     increment and FTM counter changes from its maximum value (MOD register) to its
  *     minimum value (CNTIN register).
  */
@@ -15169,8 +15195,8 @@
  * Indicates the counting direction.
  *
  * Values:
- * - 0 - Counting direction is decreasing (FTM counter decrement).
- * - 1 - Counting direction is increasing (FTM counter increment).
+ * - 0b0 - Counting direction is decreasing (FTM counter decrement).
+ * - 0b1 - Counting direction is increasing (FTM counter increment).
  */
 /*@{*/
 /*! @brief Read current value of the FTM_QDCTRL_QUADIR field. */
@@ -15184,8 +15210,8 @@
  * Selects the encoding mode used in the Quadrature Decoder mode.
  *
  * Values:
- * - 0 - Phase A and phase B encoding mode.
- * - 1 - Count and direction encoding mode.
+ * - 0b0 - Phase A and phase B encoding mode.
+ * - 0b1 - Count and direction encoding mode.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_QDCTRL_QUADMODE field. */
@@ -15203,10 +15229,10 @@
  * Selects the polarity for the quadrature decoder phase B input.
  *
  * Values:
- * - 0 - Normal polarity. Phase B input signal is not inverted before
+ * - 0b0 - Normal polarity. Phase B input signal is not inverted before
  *     identifying the rising and falling edges of this signal.
- * - 1 - Inverted polarity. Phase B input signal is inverted before identifying
- *     the rising and falling edges of this signal.
+ * - 0b1 - Inverted polarity. Phase B input signal is inverted before
+ *     identifying the rising and falling edges of this signal.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_QDCTRL_PHBPOL field. */
@@ -15224,10 +15250,10 @@
  * Selects the polarity for the quadrature decoder phase A input.
  *
  * Values:
- * - 0 - Normal polarity. Phase A input signal is not inverted before
+ * - 0b0 - Normal polarity. Phase A input signal is not inverted before
  *     identifying the rising and falling edges of this signal.
- * - 1 - Inverted polarity. Phase A input signal is inverted before identifying
- *     the rising and falling edges of this signal.
+ * - 0b1 - Inverted polarity. Phase A input signal is inverted before
+ *     identifying the rising and falling edges of this signal.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_QDCTRL_PHAPOL field. */
@@ -15247,8 +15273,8 @@
  * filter is also disabled when CH1FVAL is zero.
  *
  * Values:
- * - 0 - Phase B input filter is disabled.
- * - 1 - Phase B input filter is enabled.
+ * - 0b0 - Phase B input filter is disabled.
+ * - 0b1 - Phase B input filter is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_QDCTRL_PHBFLTREN field. */
@@ -15268,8 +15294,8 @@
  * filter is also disabled when CH0FVAL is zero.
  *
  * Values:
- * - 0 - Phase A input filter is disabled.
- * - 1 - Phase A input filter is enabled.
+ * - 0b0 - Phase A input filter is disabled.
+ * - 0b1 - Phase A input filter is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_QDCTRL_PHAFLTREN field. */
@@ -15353,8 +15379,8 @@
  * generated by another FTM.
  *
  * Values:
- * - 0 - Use of an external global time base is disabled.
- * - 1 - Use of an external global time base is enabled.
+ * - 0b0 - Use of an external global time base is disabled.
+ * - 0b1 - Use of an external global time base is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_CONF_GTBEEN field. */
@@ -15372,8 +15398,8 @@
  * Enables the global time base signal generation to other FTMs.
  *
  * Values:
- * - 0 - A global time base signal generation is disabled.
- * - 1 - A global time base signal generation is enabled.
+ * - 0b0 - A global time base signal generation is disabled.
+ * - 0b1 - A global time base signal generation is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_CONF_GTBEOUT field. */
@@ -15419,9 +15445,9 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The fault input polarity is active high. A 1 at the fault input
+ * - 0b0 - The fault input polarity is active high. A 1 at the fault input
  *     indicates a fault.
- * - 1 - The fault input polarity is active low. A 0 at the fault input
+ * - 0b1 - The fault input polarity is active low. A 0 at the fault input
  *     indicates a fault.
  */
 /*@{*/
@@ -15441,9 +15467,9 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The fault input polarity is active high. A 1 at the fault input
+ * - 0b0 - The fault input polarity is active high. A 1 at the fault input
  *     indicates a fault.
- * - 1 - The fault input polarity is active low. A 0 at the fault input
+ * - 0b1 - The fault input polarity is active low. A 0 at the fault input
  *     indicates a fault.
  */
 /*@{*/
@@ -15463,9 +15489,9 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The fault input polarity is active high. A 1 at the fault input
+ * - 0b0 - The fault input polarity is active high. A 1 at the fault input
  *     indicates a fault.
- * - 1 - The fault input polarity is active low. A 0 at the fault input
+ * - 0b1 - The fault input polarity is active low. A 0 at the fault input
  *     indicates a fault.
  */
 /*@{*/
@@ -15485,9 +15511,9 @@
  * can be written only when MODE[WPDIS] = 1.
  *
  * Values:
- * - 0 - The fault input polarity is active high. A 1 at the fault input
+ * - 0b0 - The fault input polarity is active high. A 1 at the fault input
  *     indicates a fault.
- * - 1 - The fault input polarity is active low. A 0 at the fault input
+ * - 0b1 - The fault input polarity is active low. A 0 at the fault input
  *     indicates a fault.
  */
 /*@{*/
@@ -15533,9 +15559,9 @@
  * @name Register FTM_SYNCONF, field HWTRIGMODE[0] (RW)
  *
  * Values:
- * - 0 - FTM clears the TRIGj bit when the hardware trigger j is detected, where
- *     j = 0, 1,2.
- * - 1 - FTM does not clear the TRIGj bit when the hardware trigger j is
+ * - 0b0 - FTM clears the TRIGj bit when the hardware trigger j is detected,
+ *     where j = 0, 1,2.
+ * - 0b1 - FTM does not clear the TRIGj bit when the hardware trigger j is
  *     detected, where j = 0, 1,2.
  */
 /*@{*/
@@ -15552,9 +15578,9 @@
  * @name Register FTM_SYNCONF, field CNTINC[2] (RW)
  *
  * Values:
- * - 0 - CNTIN register is updated with its buffer value at all rising edges of
- *     system clock.
- * - 1 - CNTIN register is updated with its buffer value by the PWM
+ * - 0b0 - CNTIN register is updated with its buffer value at all rising edges
+ *     of system clock.
+ * - 0b1 - CNTIN register is updated with its buffer value by the PWM
  *     synchronization.
  */
 /*@{*/
@@ -15571,9 +15597,9 @@
  * @name Register FTM_SYNCONF, field INVC[4] (RW)
  *
  * Values:
- * - 0 - INVCTRL register is updated with its buffer value at all rising edges
+ * - 0b0 - INVCTRL register is updated with its buffer value at all rising edges
  *     of system clock.
- * - 1 - INVCTRL register is updated with its buffer value by the PWM
+ * - 0b1 - INVCTRL register is updated with its buffer value by the PWM
  *     synchronization.
  */
 /*@{*/
@@ -15590,9 +15616,9 @@
  * @name Register FTM_SYNCONF, field SWOC[5] (RW)
  *
  * Values:
- * - 0 - SWOCTRL register is updated with its buffer value at all rising edges
+ * - 0b0 - SWOCTRL register is updated with its buffer value at all rising edges
  *     of system clock.
- * - 1 - SWOCTRL register is updated with its buffer value by the PWM
+ * - 0b1 - SWOCTRL register is updated with its buffer value by the PWM
  *     synchronization.
  */
 /*@{*/
@@ -15611,8 +15637,8 @@
  * Selects the PWM Synchronization mode.
  *
  * Values:
- * - 0 - Legacy PWM synchronization is selected.
- * - 1 - Enhanced PWM synchronization is selected.
+ * - 0b0 - Legacy PWM synchronization is selected.
+ * - 0b1 - Enhanced PWM synchronization is selected.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNCONF_SYNCMODE field. */
@@ -15630,8 +15656,9 @@
  * FTM counter synchronization is activated by the software trigger.
  *
  * Values:
- * - 0 - The software trigger does not activate the FTM counter synchronization.
- * - 1 - The software trigger activates the FTM counter synchronization.
+ * - 0b0 - The software trigger does not activate the FTM counter
+ *     synchronization.
+ * - 0b1 - The software trigger activates the FTM counter synchronization.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNCONF_SWRSTCNT field. */
@@ -15650,9 +15677,9 @@
  * trigger.
  *
  * Values:
- * - 0 - The software trigger does not activate MOD, CNTIN, and CV registers
+ * - 0b0 - The software trigger does not activate MOD, CNTIN, and CV registers
  *     synchronization.
- * - 1 - The software trigger activates MOD, CNTIN, and CV registers
+ * - 0b1 - The software trigger activates MOD, CNTIN, and CV registers
  *     synchronization.
  */
 /*@{*/
@@ -15671,9 +15698,9 @@
  * Output mask synchronization is activated by the software trigger.
  *
  * Values:
- * - 0 - The software trigger does not activate the OUTMASK register
+ * - 0b0 - The software trigger does not activate the OUTMASK register
  *     synchronization.
- * - 1 - The software trigger activates the OUTMASK register synchronization.
+ * - 0b1 - The software trigger activates the OUTMASK register synchronization.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNCONF_SWOM field. */
@@ -15691,9 +15718,9 @@
  * Inverting control synchronization is activated by the software trigger.
  *
  * Values:
- * - 0 - The software trigger does not activate the INVCTRL register
+ * - 0b0 - The software trigger does not activate the INVCTRL register
  *     synchronization.
- * - 1 - The software trigger activates the INVCTRL register synchronization.
+ * - 0b1 - The software trigger activates the INVCTRL register synchronization.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNCONF_SWINVC field. */
@@ -15711,9 +15738,9 @@
  * Software output control synchronization is activated by the software trigger.
  *
  * Values:
- * - 0 - The software trigger does not activate the SWOCTRL register
+ * - 0b0 - The software trigger does not activate the SWOCTRL register
  *     synchronization.
- * - 1 - The software trigger activates the SWOCTRL register synchronization.
+ * - 0b1 - The software trigger activates the SWOCTRL register synchronization.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNCONF_SWSOC field. */
@@ -15731,8 +15758,8 @@
  * FTM counter synchronization is activated by a hardware trigger.
  *
  * Values:
- * - 0 - A hardware trigger does not activate the FTM counter synchronization.
- * - 1 - A hardware trigger activates the FTM counter synchronization.
+ * - 0b0 - A hardware trigger does not activate the FTM counter synchronization.
+ * - 0b1 - A hardware trigger activates the FTM counter synchronization.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNCONF_HWRSTCNT field. */
@@ -15751,9 +15778,9 @@
  * trigger.
  *
  * Values:
- * - 0 - A hardware trigger does not activate MOD, CNTIN, and CV registers
+ * - 0b0 - A hardware trigger does not activate MOD, CNTIN, and CV registers
  *     synchronization.
- * - 1 - A hardware trigger activates MOD, CNTIN, and CV registers
+ * - 0b1 - A hardware trigger activates MOD, CNTIN, and CV registers
  *     synchronization.
  */
 /*@{*/
@@ -15772,9 +15799,9 @@
  * Output mask synchronization is activated by a hardware trigger.
  *
  * Values:
- * - 0 - A hardware trigger does not activate the OUTMASK register
+ * - 0b0 - A hardware trigger does not activate the OUTMASK register
  *     synchronization.
- * - 1 - A hardware trigger activates the OUTMASK register synchronization.
+ * - 0b1 - A hardware trigger activates the OUTMASK register synchronization.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNCONF_HWOM field. */
@@ -15792,9 +15819,9 @@
  * Inverting control synchronization is activated by a hardware trigger.
  *
  * Values:
- * - 0 - A hardware trigger does not activate the INVCTRL register
+ * - 0b0 - A hardware trigger does not activate the INVCTRL register
  *     synchronization.
- * - 1 - A hardware trigger activates the INVCTRL register synchronization.
+ * - 0b1 - A hardware trigger activates the INVCTRL register synchronization.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNCONF_HWINVC field. */
@@ -15812,9 +15839,9 @@
  * Software output control synchronization is activated by a hardware trigger.
  *
  * Values:
- * - 0 - A hardware trigger does not activate the SWOCTRL register
+ * - 0b0 - A hardware trigger does not activate the SWOCTRL register
  *     synchronization.
- * - 1 - A hardware trigger activates the SWOCTRL register synchronization.
+ * - 0b1 - A hardware trigger activates the SWOCTRL register synchronization.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SYNCONF_HWSOC field. */
@@ -15861,8 +15888,8 @@
  * @name Register FTM_INVCTRL, field INV0EN[0] (RW)
  *
  * Values:
- * - 0 - Inverting is disabled.
- * - 1 - Inverting is enabled.
+ * - 0b0 - Inverting is disabled.
+ * - 0b1 - Inverting is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_INVCTRL_INV0EN field. */
@@ -15878,8 +15905,8 @@
  * @name Register FTM_INVCTRL, field INV1EN[1] (RW)
  *
  * Values:
- * - 0 - Inverting is disabled.
- * - 1 - Inverting is enabled.
+ * - 0b0 - Inverting is disabled.
+ * - 0b1 - Inverting is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_INVCTRL_INV1EN field. */
@@ -15895,8 +15922,8 @@
  * @name Register FTM_INVCTRL, field INV2EN[2] (RW)
  *
  * Values:
- * - 0 - Inverting is disabled.
- * - 1 - Inverting is enabled.
+ * - 0b0 - Inverting is disabled.
+ * - 0b1 - Inverting is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_INVCTRL_INV2EN field. */
@@ -15912,8 +15939,8 @@
  * @name Register FTM_INVCTRL, field INV3EN[3] (RW)
  *
  * Values:
- * - 0 - Inverting is disabled.
- * - 1 - Inverting is enabled.
+ * - 0b0 - Inverting is disabled.
+ * - 0b1 - Inverting is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_INVCTRL_INV3EN field. */
@@ -15960,8 +15987,8 @@
  * @name Register FTM_SWOCTRL, field CH0OC[0] (RW)
  *
  * Values:
- * - 0 - The channel output is not affected by software output control.
- * - 1 - The channel output is affected by software output control.
+ * - 0b0 - The channel output is not affected by software output control.
+ * - 0b1 - The channel output is affected by software output control.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH0OC field. */
@@ -15977,8 +16004,8 @@
  * @name Register FTM_SWOCTRL, field CH1OC[1] (RW)
  *
  * Values:
- * - 0 - The channel output is not affected by software output control.
- * - 1 - The channel output is affected by software output control.
+ * - 0b0 - The channel output is not affected by software output control.
+ * - 0b1 - The channel output is affected by software output control.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH1OC field. */
@@ -15994,8 +16021,8 @@
  * @name Register FTM_SWOCTRL, field CH2OC[2] (RW)
  *
  * Values:
- * - 0 - The channel output is not affected by software output control.
- * - 1 - The channel output is affected by software output control.
+ * - 0b0 - The channel output is not affected by software output control.
+ * - 0b1 - The channel output is affected by software output control.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH2OC field. */
@@ -16011,8 +16038,8 @@
  * @name Register FTM_SWOCTRL, field CH3OC[3] (RW)
  *
  * Values:
- * - 0 - The channel output is not affected by software output control.
- * - 1 - The channel output is affected by software output control.
+ * - 0b0 - The channel output is not affected by software output control.
+ * - 0b1 - The channel output is affected by software output control.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH3OC field. */
@@ -16028,8 +16055,8 @@
  * @name Register FTM_SWOCTRL, field CH4OC[4] (RW)
  *
  * Values:
- * - 0 - The channel output is not affected by software output control.
- * - 1 - The channel output is affected by software output control.
+ * - 0b0 - The channel output is not affected by software output control.
+ * - 0b1 - The channel output is affected by software output control.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH4OC field. */
@@ -16045,8 +16072,8 @@
  * @name Register FTM_SWOCTRL, field CH5OC[5] (RW)
  *
  * Values:
- * - 0 - The channel output is not affected by software output control.
- * - 1 - The channel output is affected by software output control.
+ * - 0b0 - The channel output is not affected by software output control.
+ * - 0b1 - The channel output is affected by software output control.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH5OC field. */
@@ -16062,8 +16089,8 @@
  * @name Register FTM_SWOCTRL, field CH6OC[6] (RW)
  *
  * Values:
- * - 0 - The channel output is not affected by software output control.
- * - 1 - The channel output is affected by software output control.
+ * - 0b0 - The channel output is not affected by software output control.
+ * - 0b1 - The channel output is affected by software output control.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH6OC field. */
@@ -16079,8 +16106,8 @@
  * @name Register FTM_SWOCTRL, field CH7OC[7] (RW)
  *
  * Values:
- * - 0 - The channel output is not affected by software output control.
- * - 1 - The channel output is affected by software output control.
+ * - 0b0 - The channel output is not affected by software output control.
+ * - 0b1 - The channel output is affected by software output control.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH7OC field. */
@@ -16096,8 +16123,8 @@
  * @name Register FTM_SWOCTRL, field CH0OCV[8] (RW)
  *
  * Values:
- * - 0 - The software output control forces 0 to the channel output.
- * - 1 - The software output control forces 1 to the channel output.
+ * - 0b0 - The software output control forces 0 to the channel output.
+ * - 0b1 - The software output control forces 1 to the channel output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH0OCV field. */
@@ -16113,8 +16140,8 @@
  * @name Register FTM_SWOCTRL, field CH1OCV[9] (RW)
  *
  * Values:
- * - 0 - The software output control forces 0 to the channel output.
- * - 1 - The software output control forces 1 to the channel output.
+ * - 0b0 - The software output control forces 0 to the channel output.
+ * - 0b1 - The software output control forces 1 to the channel output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH1OCV field. */
@@ -16130,8 +16157,8 @@
  * @name Register FTM_SWOCTRL, field CH2OCV[10] (RW)
  *
  * Values:
- * - 0 - The software output control forces 0 to the channel output.
- * - 1 - The software output control forces 1 to the channel output.
+ * - 0b0 - The software output control forces 0 to the channel output.
+ * - 0b1 - The software output control forces 1 to the channel output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH2OCV field. */
@@ -16147,8 +16174,8 @@
  * @name Register FTM_SWOCTRL, field CH3OCV[11] (RW)
  *
  * Values:
- * - 0 - The software output control forces 0 to the channel output.
- * - 1 - The software output control forces 1 to the channel output.
+ * - 0b0 - The software output control forces 0 to the channel output.
+ * - 0b1 - The software output control forces 1 to the channel output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH3OCV field. */
@@ -16164,8 +16191,8 @@
  * @name Register FTM_SWOCTRL, field CH4OCV[12] (RW)
  *
  * Values:
- * - 0 - The software output control forces 0 to the channel output.
- * - 1 - The software output control forces 1 to the channel output.
+ * - 0b0 - The software output control forces 0 to the channel output.
+ * - 0b1 - The software output control forces 1 to the channel output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH4OCV field. */
@@ -16181,8 +16208,8 @@
  * @name Register FTM_SWOCTRL, field CH5OCV[13] (RW)
  *
  * Values:
- * - 0 - The software output control forces 0 to the channel output.
- * - 1 - The software output control forces 1 to the channel output.
+ * - 0b0 - The software output control forces 0 to the channel output.
+ * - 0b1 - The software output control forces 1 to the channel output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH5OCV field. */
@@ -16198,8 +16225,8 @@
  * @name Register FTM_SWOCTRL, field CH6OCV[14] (RW)
  *
  * Values:
- * - 0 - The software output control forces 0 to the channel output.
- * - 1 - The software output control forces 1 to the channel output.
+ * - 0b0 - The software output control forces 0 to the channel output.
+ * - 0b1 - The software output control forces 1 to the channel output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH6OCV field. */
@@ -16215,8 +16242,8 @@
  * @name Register FTM_SWOCTRL, field CH7OCV[15] (RW)
  *
  * Values:
- * - 0 - The software output control forces 0 to the channel output.
- * - 1 - The software output control forces 1 to the channel output.
+ * - 0b0 - The software output control forces 0 to the channel output.
+ * - 0b1 - The software output control forces 1 to the channel output.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_SWOCTRL_CH7OCV field. */
@@ -16262,8 +16289,8 @@
  * @name Register FTM_PWMLOAD, field CH0SEL[0] (RW)
  *
  * Values:
- * - 0 - Do not include the channel in the matching process.
- * - 1 - Include the channel in the matching process.
+ * - 0b0 - Do not include the channel in the matching process.
+ * - 0b1 - Include the channel in the matching process.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_PWMLOAD_CH0SEL field. */
@@ -16279,8 +16306,8 @@
  * @name Register FTM_PWMLOAD, field CH1SEL[1] (RW)
  *
  * Values:
- * - 0 - Do not include the channel in the matching process.
- * - 1 - Include the channel in the matching process.
+ * - 0b0 - Do not include the channel in the matching process.
+ * - 0b1 - Include the channel in the matching process.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_PWMLOAD_CH1SEL field. */
@@ -16296,8 +16323,8 @@
  * @name Register FTM_PWMLOAD, field CH2SEL[2] (RW)
  *
  * Values:
- * - 0 - Do not include the channel in the matching process.
- * - 1 - Include the channel in the matching process.
+ * - 0b0 - Do not include the channel in the matching process.
+ * - 0b1 - Include the channel in the matching process.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_PWMLOAD_CH2SEL field. */
@@ -16313,8 +16340,8 @@
  * @name Register FTM_PWMLOAD, field CH3SEL[3] (RW)
  *
  * Values:
- * - 0 - Do not include the channel in the matching process.
- * - 1 - Include the channel in the matching process.
+ * - 0b0 - Do not include the channel in the matching process.
+ * - 0b1 - Include the channel in the matching process.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_PWMLOAD_CH3SEL field. */
@@ -16330,8 +16357,8 @@
  * @name Register FTM_PWMLOAD, field CH4SEL[4] (RW)
  *
  * Values:
- * - 0 - Do not include the channel in the matching process.
- * - 1 - Include the channel in the matching process.
+ * - 0b0 - Do not include the channel in the matching process.
+ * - 0b1 - Include the channel in the matching process.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_PWMLOAD_CH4SEL field. */
@@ -16347,8 +16374,8 @@
  * @name Register FTM_PWMLOAD, field CH5SEL[5] (RW)
  *
  * Values:
- * - 0 - Do not include the channel in the matching process.
- * - 1 - Include the channel in the matching process.
+ * - 0b0 - Do not include the channel in the matching process.
+ * - 0b1 - Include the channel in the matching process.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_PWMLOAD_CH5SEL field. */
@@ -16364,8 +16391,8 @@
  * @name Register FTM_PWMLOAD, field CH6SEL[6] (RW)
  *
  * Values:
- * - 0 - Do not include the channel in the matching process.
- * - 1 - Include the channel in the matching process.
+ * - 0b0 - Do not include the channel in the matching process.
+ * - 0b1 - Include the channel in the matching process.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_PWMLOAD_CH6SEL field. */
@@ -16381,8 +16408,8 @@
  * @name Register FTM_PWMLOAD, field CH7SEL[7] (RW)
  *
  * Values:
- * - 0 - Do not include the channel in the matching process.
- * - 1 - Include the channel in the matching process.
+ * - 0b0 - Do not include the channel in the matching process.
+ * - 0b1 - Include the channel in the matching process.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_PWMLOAD_CH7SEL field. */
@@ -16401,8 +16428,8 @@
  * their write buffers.
  *
  * Values:
- * - 0 - Loading updated values is disabled.
- * - 1 - Loading updated values is enabled.
+ * - 0b0 - Loading updated values is disabled.
+ * - 0b1 - Loading updated values is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the FTM_PWMLOAD_LDOK field. */
@@ -16694,10 +16721,10 @@
  * divider to generate the I2C baud rate.
  *
  * Values:
- * - 00 - mul = 1
- * - 01 - mul = 2
- * - 10 - mul = 4
- * - 11 - Reserved
+ * - 0b00 - mul = 1
+ * - 0b01 - mul = 2
+ * - 0b10 - mul = 4
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the I2C_F_MULT field. */
@@ -16740,11 +16767,11 @@
  * Enables or disables the DMA function.
  *
  * Values:
- * - 0 - All DMA signalling disabled.
- * - 1 - DMA transfer is enabled. While SMB[FACK] = 0, the following conditions
- *     trigger the DMA request: a data byte is received, and either address or
- *     data is transmitted. (ACK/NACK is automatic) the first byte received matches
- *     the A1 register or is a general call address. If any address matching
+ * - 0b0 - All DMA signalling disabled.
+ * - 0b1 - DMA transfer is enabled. While SMB[FACK] = 0, the following
+ *     conditions trigger the DMA request: a data byte is received, and either address or
+ *     data is transmitted. (ACK/NACK is automatic) the first byte received
+ *     matches the A1 register or is a general call address. If any address matching
  *     occurs, S[IAAS] and S[TCF] are set. If the direction of transfer is known
  *     from master to slave, then it is not required to check S[SRW]. With this
  *     assumption, DMA can also be used in this case. In other cases, if the master
@@ -16769,9 +16796,9 @@
  * running when slave address matching occurs.
  *
  * Values:
- * - 0 - Normal operation. No interrupt generated when address matching in low
+ * - 0b0 - Normal operation. No interrupt generated when address matching in low
  *     power mode.
- * - 1 - Enables the wakeup function in low power mode.
+ * - 0b1 - Enables the wakeup function in low power mode.
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_WUEN field. */
@@ -16804,11 +16831,11 @@
  * generation. SCL is held low until TXAK is written.
  *
  * Values:
- * - 0 - An acknowledge signal is sent to the bus on the following receiving
+ * - 0b0 - An acknowledge signal is sent to the bus on the following receiving
  *     byte (if FACK is cleared) or the current receiving byte (if FACK is set).
- * - 1 - No acknowledge signal is sent to the bus on the following receiving
- *     data byte (if FACK is cleared) or the current receiving data byte (if FACK is
- *     set).
+ * - 0b1 - No acknowledge signal is sent to the bus on the following receiving
+ *     data byte (if FACK is cleared) or the current receiving data byte (if FACK
+ *     is set).
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_TXAK field. */
@@ -16829,8 +16856,8 @@
  * set by software according to the SRW bit in the status register.
  *
  * Values:
- * - 0 - Receive
- * - 1 - Transmit
+ * - 0b0 - Receive
+ * - 0b1 - Transmit
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_TX field. */
@@ -16850,8 +16877,8 @@
  * generated and the mode of operation changes from master to slave.
  *
  * Values:
- * - 0 - Slave mode
- * - 1 - Master mode
+ * - 0b0 - Slave mode
+ * - 0b1 - Master mode
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_MST field. */
@@ -16869,8 +16896,8 @@
  * Enables I2C interrupt requests.
  *
  * Values:
- * - 0 - Disabled
- * - 1 - Enabled
+ * - 0b0 - Disabled
+ * - 0b1 - Enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_IICIE field. */
@@ -16888,8 +16915,8 @@
  * Enables I2C module operation.
  *
  * Values:
- * - 0 - Disabled
- * - 1 - Enabled
+ * - 0b0 - Disabled
+ * - 0b1 - Enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C1_IICEN field. */
@@ -16930,9 +16957,9 @@
  * @name Register I2C_S, field RXAK[0] (RO)
  *
  * Values:
- * - 0 - Acknowledge signal was received after the completion of one byte of
+ * - 0b0 - Acknowledge signal was received after the completion of one byte of
  *     data transmission on the bus
- * - 1 - No acknowledge signal detected
+ * - 0b1 - No acknowledge signal detected
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_RXAK field. */
@@ -16959,8 +16986,8 @@
  * asserted again.
  *
  * Values:
- * - 0 - No interrupt pending
- * - 1 - Interrupt pending
+ * - 0b0 - No interrupt pending
+ * - 0b1 - Interrupt pending
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_IICIF field. */
@@ -16979,8 +17006,8 @@
  * the calling address sent to the master.
  *
  * Values:
- * - 0 - Slave receive, master writing to slave
- * - 1 - Slave transmit, master reading from slave
+ * - 0b0 - Slave receive, master writing to slave
+ * - 0b1 - Slave transmit, master reading from slave
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_SRW field. */
@@ -16998,8 +17025,8 @@
  * Writing the C1 register with any value clears this bit to 0.
  *
  * Values:
- * - 0 - Not addressed
- * - 1 - Addressed as a slave
+ * - 0b0 - Not addressed
+ * - 0b1 - Addressed as a slave
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_RAM field. */
@@ -17018,8 +17045,8 @@
  * bit must be cleared by software, by writing 1 to it.
  *
  * Values:
- * - 0 - Standard bus operation.
- * - 1 - Loss of arbitration.
+ * - 0b0 - Standard bus operation.
+ * - 0b1 - Loss of arbitration.
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_ARBL field. */
@@ -17039,8 +17066,8 @@
  * detected.
  *
  * Values:
- * - 0 - Bus is idle
- * - 1 - Bus is busy
+ * - 0b0 - Bus is idle
+ * - 0b1 - Bus is busy
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_BUSY field. */
@@ -17063,8 +17090,8 @@
  * value clears this bit.
  *
  * Values:
- * - 0 - Not addressed
- * - 1 - Addressed as a slave
+ * - 0b0 - Not addressed
+ * - 0b1 - Addressed as a slave
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_IAAS field. */
@@ -17085,8 +17112,8 @@
  * mode or by writing to the I2C data register in transmit mode.
  *
  * Values:
- * - 0 - Transfer in progress
- * - 1 - Transfer complete
+ * - 0b0 - Transfer in progress
+ * - 0b1 - Transfer complete
  */
 /*@{*/
 /*! @brief Read current value of the I2C_S_TCF field. */
@@ -17165,9 +17192,9 @@
  * or equal to the value of the RA register.
  *
  * Values:
- * - 0 - Range mode disabled. No address matching occurs for an address within
+ * - 0b0 - Range mode disabled. No address matching occurs for an address within
  *     the range of values of the A1 and RA registers.
- * - 1 - Range mode enabled. Address matching occurs when a slave receives an
+ * - 0b1 - Range mode enabled. Address matching occurs when a slave receives an
  *     address within the range of values of the A1 and RA registers.
  */
 /*@{*/
@@ -17189,9 +17216,9 @@
  * capture the master's data at only 10 kbit/s.
  *
  * Values:
- * - 0 - The slave baud rate follows the master baud rate and clock stretching
+ * - 0b0 - The slave baud rate follows the master baud rate and clock stretching
  *     may occur
- * - 1 - Slave baud rate is independent of the master baud rate
+ * - 0b1 - Slave baud rate is independent of the master baud rate
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C2_SBRC field. */
@@ -17209,8 +17236,8 @@
  * Controls the drive capability of the I2C pads.
  *
  * Values:
- * - 0 - Normal drive mode
- * - 1 - High drive mode
+ * - 0b0 - Normal drive mode
+ * - 0b1 - High drive mode
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C2_HDRS field. */
@@ -17228,8 +17255,8 @@
  * Controls the number of bits used for the slave address.
  *
  * Values:
- * - 0 - 7-bit address scheme
- * - 1 - 10-bit address scheme
+ * - 0b0 - 7-bit address scheme
+ * - 0b1 - 10-bit address scheme
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C2_ADEXT field. */
@@ -17247,8 +17274,8 @@
  * Enables general call address.
  *
  * Values:
- * - 0 - Disabled
- * - 1 - Enabled
+ * - 0b0 - Disabled
+ * - 0b1 - Enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_C2_GCAEN field. */
@@ -17293,7 +17320,7 @@
  * width setting, the filter does not allow the glitch to pass.
  *
  * Values:
- * - 0 - No filter/bypass
+ * - 0b0000 - No filter/bypass
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_FLT field. */
@@ -17312,8 +17339,8 @@
  * STARTF bit must be cleared by writing 1 to it.
  *
  * Values:
- * - 0 - No start happens on I2C bus
- * - 1 - Start detected on I2C bus
+ * - 0b0 - No start happens on I2C bus
+ * - 0b1 - Start detected on I2C bus
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_STARTF field. */
@@ -17335,8 +17362,8 @@
  * is asserted again.
  *
  * Values:
- * - 0 - Stop or start detection interrupt is disabled
- * - 1 - Stop or start detection interrupt is enabled
+ * - 0b0 - Stop or start detection interrupt is disabled
+ * - 0b1 - Stop or start detection interrupt is enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_SSIE field. */
@@ -17355,8 +17382,8 @@
  * bit must be cleared by writing 1 to it.
  *
  * Values:
- * - 0 - No stop happens on I2C bus
- * - 1 - Stop detected on I2C bus
+ * - 0b0 - No stop happens on I2C bus
+ * - 0b1 - Stop detected on I2C bus
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_STOPF field. */
@@ -17391,8 +17418,8 @@
  * TCF bit after the MCU wakes from the stop mode.
  *
  * Values:
- * - 0 - Stop holdoff is disabled. The MCU's entry to stop mode is not gated.
- * - 1 - Stop holdoff is enabled.
+ * - 0b0 - Stop holdoff is disabled. The MCU's entry to stop mode is not gated.
+ * - 0b1 - Stop holdoff is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the I2C_FLT_SHEN field. */
@@ -17486,8 +17513,8 @@
  * Enables SCL high and SDA low timeout interrupt.
  *
  * Values:
- * - 0 - SHTF2 interrupt is disabled
- * - 1 - SHTF2 interrupt is enabled
+ * - 0b0 - SHTF2 interrupt is disabled
+ * - 0b1 - SHTF2 interrupt is enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SHTF2IE field. */
@@ -17506,8 +17533,8 @@
  * LoValue / 512. Software clears this bit by writing 1 to it.
  *
  * Values:
- * - 0 - No SCL high and SDA low timeout occurs
- * - 1 - SCL high and SDA low timeout occurs
+ * - 0b0 - No SCL high and SDA low timeout occurs
+ * - 0b1 - SCL high and SDA low timeout occurs
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SHTF2 field. */
@@ -17526,8 +17553,8 @@
  * LoValue / 512, which indicates the bus is free. This bit is cleared automatically.
  *
  * Values:
- * - 0 - No SCL high and SDA high timeout occurs
- * - 1 - SCL high and SDA high timeout occurs
+ * - 0b0 - No SCL high and SDA high timeout occurs
+ * - 0b1 - SCL high and SDA high timeout occurs
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SHTF1 field. */
@@ -17544,8 +17571,8 @@
  * is disabled when the SLT register's value is 0.
  *
  * Values:
- * - 0 - No low timeout occurs
- * - 1 - Low timeout occurs
+ * - 0b0 - No low timeout occurs
+ * - 0b1 - Low timeout occurs
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SLTF field. */
@@ -17563,8 +17590,8 @@
  * Selects the clock source of the timeout counter.
  *
  * Values:
- * - 0 - Timeout counter counts at the frequency of the I2C module clock / 64
- * - 1 - Timeout counter counts at the frequency of the I2C module clock
+ * - 0b0 - Timeout counter counts at the frequency of the I2C module clock / 64
+ * - 0b1 - Timeout counter counts at the frequency of the I2C module clock
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_TCKSEL field. */
@@ -17582,8 +17609,8 @@
  * Enables or disables SMBus device default address.
  *
  * Values:
- * - 0 - I2C address register 2 matching is disabled
- * - 1 - I2C address register 2 matching is enabled
+ * - 0b0 - I2C address register 2 matching is disabled
+ * - 0b1 - I2C address register 2 matching is enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_SIICAEN field. */
@@ -17604,8 +17631,8 @@
  * SMBus specification.
  *
  * Values:
- * - 0 - SMBus alert response address matching is disabled
- * - 1 - SMBus alert response address matching is enabled
+ * - 0b0 - SMBus alert response address matching is disabled
+ * - 0b1 - SMBus alert response address matching is enabled
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_ALERTEN field. */
@@ -17624,9 +17651,9 @@
  * according to the result of receiving data byte.
  *
  * Values:
- * - 0 - An ACK or NACK is sent on the following receiving data byte
- * - 1 - Writing 0 to TXAK after receiving a data byte generates an ACK. Writing
- *     1 to TXAK after receiving a data byte generates a NACK.
+ * - 0b0 - An ACK or NACK is sent on the following receiving data byte
+ * - 0b1 - Writing 0 to TXAK after receiving a data byte generates an ACK.
+ *     Writing 1 to TXAK after receiving a data byte generates a NACK.
  */
 /*@{*/
 /*! @brief Read current value of the I2C_SMB_FACK field. */
@@ -17787,10 +17814,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE1_WUPE0 field. */
@@ -17808,10 +17835,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE1_WUPE1 field. */
@@ -17829,10 +17856,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE1_WUPE2 field. */
@@ -17850,10 +17877,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE1_WUPE3 field. */
@@ -17904,10 +17931,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE2_WUPE4 field. */
@@ -17925,10 +17952,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE2_WUPE5 field. */
@@ -17946,10 +17973,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE2_WUPE6 field. */
@@ -17967,10 +17994,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE2_WUPE7 field. */
@@ -18021,10 +18048,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE3_WUPE8 field. */
@@ -18042,10 +18069,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE3_WUPE9 field. */
@@ -18063,10 +18090,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE3_WUPE10 field. */
@@ -18084,10 +18111,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE3_WUPE11 field. */
@@ -18138,10 +18165,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE4_WUPE12 field. */
@@ -18159,10 +18186,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE4_WUPE13 field. */
@@ -18180,10 +18207,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE4_WUPE14 field. */
@@ -18201,10 +18228,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE4_WUPE15 field. */
@@ -18255,10 +18282,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE5_WUPE16 field. */
@@ -18276,10 +18303,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE5_WUPE17 field. */
@@ -18297,10 +18324,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE5_WUPE18 field. */
@@ -18318,10 +18345,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE5_WUPE19 field. */
@@ -18372,10 +18399,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE6_WUPE20 field. */
@@ -18393,10 +18420,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE6_WUPE21 field. */
@@ -18414,10 +18441,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE6_WUPE22 field. */
@@ -18435,10 +18462,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE6_WUPE23 field. */
@@ -18489,10 +18516,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE7_WUPE24 field. */
@@ -18510,10 +18537,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE7_WUPE25 field. */
@@ -18531,10 +18558,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE7_WUPE26 field. */
@@ -18552,10 +18579,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE7_WUPE27 field. */
@@ -18606,10 +18633,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE8_WUPE28 field. */
@@ -18627,10 +18654,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE8_WUPE29 field. */
@@ -18648,10 +18675,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE8_WUPE30 field. */
@@ -18669,10 +18696,10 @@
  * Enables and configures the edge detection for the wakeup pin.
  *
  * Values:
- * - 00 - External input pin disabled as wakeup input
- * - 01 - External input pin enabled with rising edge detection
- * - 10 - External input pin enabled with falling edge detection
- * - 11 - External input pin enabled with any change detection
+ * - 0b00 - External input pin disabled as wakeup input
+ * - 0b01 - External input pin enabled with rising edge detection
+ * - 0b10 - External input pin enabled with falling edge detection
+ * - 0b11 - External input pin enabled with any change detection
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PE8_WUPE31 field. */
@@ -18723,8 +18750,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME0 field. */
@@ -18742,8 +18769,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME1 field. */
@@ -18761,8 +18788,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME2 field. */
@@ -18780,8 +18807,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME3 field. */
@@ -18799,8 +18826,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME4 field. */
@@ -18818,8 +18845,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME5 field. */
@@ -18837,8 +18864,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME6 field. */
@@ -18856,8 +18883,8 @@
  * Enables an internal module as a wakeup source input.
  *
  * Values:
- * - 0 - Internal module flag not used as wakeup source
- * - 1 - Internal module flag used as wakeup source
+ * - 0b0 - Internal module flag not used as wakeup source
+ * - 0b1 - Internal module flag used as wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_ME_WUME7 field. */
@@ -18913,8 +18940,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF0.
  *
  * Values:
- * - 0 - LLWU_P0 input was not a wakeup source
- * - 1 - LLWU_P0 input was a wakeup source
+ * - 0b0 - LLWU_P0 input was not a wakeup source
+ * - 0b1 - LLWU_P0 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF1_WUF0 field. */
@@ -18933,8 +18960,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF1.
  *
  * Values:
- * - 0 - LLWU_P1 input was not a wakeup source
- * - 1 - LLWU_P1 input was a wakeup source
+ * - 0b0 - LLWU_P1 input was not a wakeup source
+ * - 0b1 - LLWU_P1 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF1_WUF1 field. */
@@ -18953,8 +18980,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF2.
  *
  * Values:
- * - 0 - LLWU_P2 input was not a wakeup source
- * - 1 - LLWU_P2 input was a wakeup source
+ * - 0b0 - LLWU_P2 input was not a wakeup source
+ * - 0b1 - LLWU_P2 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF1_WUF2 field. */
@@ -18973,8 +19000,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF3.
  *
  * Values:
- * - 0 - LLWU_P3 input was not a wakeup source
- * - 1 - LLWU_P3 input was a wakeup source
+ * - 0b0 - LLWU_P3 input was not a wakeup source
+ * - 0b1 - LLWU_P3 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF1_WUF3 field. */
@@ -18993,8 +19020,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF4.
  *
  * Values:
- * - 0 - LLWU_P4 input was not a wakeup source
- * - 1 - LLWU_P4 input was a wakeup source
+ * - 0b0 - LLWU_P4 input was not a wakeup source
+ * - 0b1 - LLWU_P4 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF1_WUF4 field. */
@@ -19013,8 +19040,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF5.
  *
  * Values:
- * - 0 - LLWU_P5 input was not a wakeup source
- * - 1 - LLWU_P5 input was a wakeup source
+ * - 0b0 - LLWU_P5 input was not a wakeup source
+ * - 0b1 - LLWU_P5 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF1_WUF5 field. */
@@ -19033,8 +19060,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF6.
  *
  * Values:
- * - 0 - LLWU_P6 input was not a wakeup source
- * - 1 - LLWU_P6 input was a wakeup source
+ * - 0b0 - LLWU_P6 input was not a wakeup source
+ * - 0b1 - LLWU_P6 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF1_WUF6 field. */
@@ -19053,8 +19080,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF7.
  *
  * Values:
- * - 0 - LLWU_P7 input was not a wakeup source
- * - 1 - LLWU_P7 input was a wakeup source
+ * - 0b0 - LLWU_P7 input was not a wakeup source
+ * - 0b1 - LLWU_P7 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF1_WUF7 field. */
@@ -19110,8 +19137,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF8.
  *
  * Values:
- * - 0 - LLWU_P8 input was not a wakeup source
- * - 1 - LLWU_P8 input was a wakeup source
+ * - 0b0 - LLWU_P8 input was not a wakeup source
+ * - 0b1 - LLWU_P8 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF2_WUF8 field. */
@@ -19130,8 +19157,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF9.
  *
  * Values:
- * - 0 - LLWU_P9 input was not a wakeup source
- * - 1 - LLWU_P9 input was a wakeup source
+ * - 0b0 - LLWU_P9 input was not a wakeup source
+ * - 0b1 - LLWU_P9 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF2_WUF9 field. */
@@ -19150,8 +19177,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF10.
  *
  * Values:
- * - 0 - LLWU_P10 input was not a wakeup source
- * - 1 - LLWU_P10 input was a wakeup source
+ * - 0b0 - LLWU_P10 input was not a wakeup source
+ * - 0b1 - LLWU_P10 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF2_WUF10 field. */
@@ -19170,8 +19197,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF11.
  *
  * Values:
- * - 0 - LLWU_P11 input was not a wakeup source
- * - 1 - LLWU_P11 input was a wakeup source
+ * - 0b0 - LLWU_P11 input was not a wakeup source
+ * - 0b1 - LLWU_P11 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF2_WUF11 field. */
@@ -19190,8 +19217,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF12.
  *
  * Values:
- * - 0 - LLWU_P12 input was not a wakeup source
- * - 1 - LLWU_P12 input was a wakeup source
+ * - 0b0 - LLWU_P12 input was not a wakeup source
+ * - 0b1 - LLWU_P12 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF2_WUF12 field. */
@@ -19210,8 +19237,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF13.
  *
  * Values:
- * - 0 - LLWU_P13 input was not a wakeup source
- * - 1 - LLWU_P13 input was a wakeup source
+ * - 0b0 - LLWU_P13 input was not a wakeup source
+ * - 0b1 - LLWU_P13 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF2_WUF13 field. */
@@ -19230,8 +19257,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF14.
  *
  * Values:
- * - 0 - LLWU_P14 input was not a wakeup source
- * - 1 - LLWU_P14 input was a wakeup source
+ * - 0b0 - LLWU_P14 input was not a wakeup source
+ * - 0b1 - LLWU_P14 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF2_WUF14 field. */
@@ -19250,8 +19277,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF15.
  *
  * Values:
- * - 0 - LLWU_P15 input was not a wakeup source
- * - 1 - LLWU_P15 input was a wakeup source
+ * - 0b0 - LLWU_P15 input was not a wakeup source
+ * - 0b1 - LLWU_P15 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF2_WUF15 field. */
@@ -19307,8 +19334,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF16.
  *
  * Values:
- * - 0 - LLWU_P16 input was not a wakeup source
- * - 1 - LLWU_P16 input was a wakeup source
+ * - 0b0 - LLWU_P16 input was not a wakeup source
+ * - 0b1 - LLWU_P16 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF3_WUF16 field. */
@@ -19327,8 +19354,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF17.
  *
  * Values:
- * - 0 - LLWU_P17 input was not a wakeup source
- * - 1 - LLWU_P17 input was a wakeup source
+ * - 0b0 - LLWU_P17 input was not a wakeup source
+ * - 0b1 - LLWU_P17 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF3_WUF17 field. */
@@ -19347,8 +19374,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF18.
  *
  * Values:
- * - 0 - LLWU_P18 input was not a wakeup source
- * - 1 - LLWU_P18 input was a wakeup source
+ * - 0b0 - LLWU_P18 input was not a wakeup source
+ * - 0b1 - LLWU_P18 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF3_WUF18 field. */
@@ -19367,8 +19394,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF19.
  *
  * Values:
- * - 0 - LLWU_P19 input was not a wakeup source
- * - 1 - LLWU_P19 input was a wakeup source
+ * - 0b0 - LLWU_P19 input was not a wakeup source
+ * - 0b1 - LLWU_P19 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF3_WUF19 field. */
@@ -19387,8 +19414,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF20.
  *
  * Values:
- * - 0 - LLWU_P20 input was not a wakeup source
- * - 1 - LLWU_P20 input was a wakeup source
+ * - 0b0 - LLWU_P20 input was not a wakeup source
+ * - 0b1 - LLWU_P20 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF3_WUF20 field. */
@@ -19407,8 +19434,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF21.
  *
  * Values:
- * - 0 - LLWU_P21 input was not a wakeup source
- * - 1 - LLWU_P21 input was a wakeup source
+ * - 0b0 - LLWU_P21 input was not a wakeup source
+ * - 0b1 - LLWU_P21 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF3_WUF21 field. */
@@ -19427,8 +19454,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF22.
  *
  * Values:
- * - 0 - LLWU_P22 input was not a wakeup source
- * - 1 - LLWU_P22 input was a wakeup source
+ * - 0b0 - LLWU_P22 input was not a wakeup source
+ * - 0b1 - LLWU_P22 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF3_WUF22 field. */
@@ -19447,8 +19474,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF23.
  *
  * Values:
- * - 0 - LLWU_P23 input was not a wakeup source
- * - 1 - LLWU_P23 input was a wakeup source
+ * - 0b0 - LLWU_P23 input was not a wakeup source
+ * - 0b1 - LLWU_P23 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF3_WUF23 field. */
@@ -19504,8 +19531,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF24.
  *
  * Values:
- * - 0 - LLWU_P24 input was not a wakeup source
- * - 1 - LLWU_P24 input was a wakeup source
+ * - 0b0 - LLWU_P24 input was not a wakeup source
+ * - 0b1 - LLWU_P24 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF4_WUF24 field. */
@@ -19524,8 +19551,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF25.
  *
  * Values:
- * - 0 - LLWU_P25 input was not a wakeup source
- * - 1 - LLWU_P25 input was a wakeup source
+ * - 0b0 - LLWU_P25 input was not a wakeup source
+ * - 0b1 - LLWU_P25 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF4_WUF25 field. */
@@ -19544,8 +19571,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF26.
  *
  * Values:
- * - 0 - LLWU_P26 input was not a wakeup source
- * - 1 - LLWU_P26 input was a wakeup source
+ * - 0b0 - LLWU_P26 input was not a wakeup source
+ * - 0b1 - LLWU_P26 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF4_WUF26 field. */
@@ -19564,8 +19591,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF27.
  *
  * Values:
- * - 0 - LLWU_P27 input was not a wakeup source
- * - 1 - LLWU_P27 input was a wakeup source
+ * - 0b0 - LLWU_P27 input was not a wakeup source
+ * - 0b1 - LLWU_P27 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF4_WUF27 field. */
@@ -19584,8 +19611,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF28.
  *
  * Values:
- * - 0 - LLWU_P28 input was not a wakeup source
- * - 1 - LLWU_P28 input was a wakeup source
+ * - 0b0 - LLWU_P28 input was not a wakeup source
+ * - 0b1 - LLWU_P28 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF4_WUF28 field. */
@@ -19604,8 +19631,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF29.
  *
  * Values:
- * - 0 - LLWU_P29 input was not a wakeup source
- * - 1 - LLWU_P29 input was a wakeup source
+ * - 0b0 - LLWU_P29 input was not a wakeup source
+ * - 0b1 - LLWU_P29 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF4_WUF29 field. */
@@ -19624,8 +19651,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF30.
  *
  * Values:
- * - 0 - LLWU_P30 input was not a wakeup source
- * - 1 - LLWU_P30 input was a wakeup source
+ * - 0b0 - LLWU_P30 input was not a wakeup source
+ * - 0b1 - LLWU_P30 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF4_WUF30 field. */
@@ -19644,8 +19671,8 @@
  * low-leakage power mode. To clear the flag write a one to WUF31.
  *
  * Values:
- * - 0 - LLWU_P31 input was not a wakeup source
- * - 1 - LLWU_P31 input was a wakeup source
+ * - 0b0 - LLWU_P31 input was not a wakeup source
+ * - 0b1 - LLWU_P31 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_PF4_WUF31 field. */
@@ -19698,8 +19725,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 0 input was not a wakeup source
- * - 1 - Module 0 input was a wakeup source
+ * - 0b0 - Module 0 input was not a wakeup source
+ * - 0b1 - Module 0 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_MF5_MWUF0 field. */
@@ -19715,8 +19742,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 1 input was not a wakeup source
- * - 1 - Module 1 input was a wakeup source
+ * - 0b0 - Module 1 input was not a wakeup source
+ * - 0b1 - Module 1 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_MF5_MWUF1 field. */
@@ -19732,8 +19759,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 2 input was not a wakeup source
- * - 1 - Module 2 input was a wakeup source
+ * - 0b0 - Module 2 input was not a wakeup source
+ * - 0b1 - Module 2 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_MF5_MWUF2 field. */
@@ -19749,8 +19776,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 3 input was not a wakeup source
- * - 1 - Module 3 input was a wakeup source
+ * - 0b0 - Module 3 input was not a wakeup source
+ * - 0b1 - Module 3 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_MF5_MWUF3 field. */
@@ -19766,8 +19793,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 4 input was not a wakeup source
- * - 1 - Module 4 input was a wakeup source
+ * - 0b0 - Module 4 input was not a wakeup source
+ * - 0b1 - Module 4 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_MF5_MWUF4 field. */
@@ -19783,8 +19810,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 5 input was not a wakeup source
- * - 1 - Module 5 input was a wakeup source
+ * - 0b0 - Module 5 input was not a wakeup source
+ * - 0b1 - Module 5 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_MF5_MWUF5 field. */
@@ -19800,8 +19827,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 6 input was not a wakeup source
- * - 1 - Module 6 input was a wakeup source
+ * - 0b0 - Module 6 input was not a wakeup source
+ * - 0b1 - Module 6 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_MF5_MWUF6 field. */
@@ -19817,8 +19844,8 @@
  * clearing mechanism.
  *
  * Values:
- * - 0 - Module 7 input was not a wakeup source
- * - 1 - Module 7 input was a wakeup source
+ * - 0b0 - Module 7 input was not a wakeup source
+ * - 0b1 - Module 7 input was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_MF5_MWUF7 field. */
@@ -19865,8 +19892,8 @@
  * Selects 1 of the wakeup pins to be muxed into the filter.
  *
  * Values:
- * - 00000 - Select LLWU_P0 for filter
- * - 11111 - Select LLWU_P31 for filter
+ * - 0b00000 - Select LLWU_P0 for filter
+ * - 0b11111 - Select LLWU_P31 for filter
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT1_FILTSEL field. */
@@ -19884,10 +19911,10 @@
  * Controls the digital filter options for the external pin detect.
  *
  * Values:
- * - 00 - Filter disabled
- * - 01 - Filter posedge detect enabled
- * - 10 - Filter negedge detect enabled
- * - 11 - Filter any edge detect enabled
+ * - 0b00 - Filter disabled
+ * - 0b01 - Filter posedge detect enabled
+ * - 0b10 - Filter negedge detect enabled
+ * - 0b11 - Filter any edge detect enabled
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT1_FILTE field. */
@@ -19907,8 +19934,8 @@
  * FILTF.
  *
  * Values:
- * - 0 - Pin Filter 1 was not a wakeup source
- * - 1 - Pin Filter 1 was a wakeup source
+ * - 0b0 - Pin Filter 1 was not a wakeup source
+ * - 0b1 - Pin Filter 1 was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT1_FILTF field. */
@@ -19959,8 +19986,8 @@
  * Selects 1 of the wakeup pins to be muxed into the filter.
  *
  * Values:
- * - 00000 - Select LLWU_P0 for filter
- * - 11111 - Select LLWU_P31 for filter
+ * - 0b00000 - Select LLWU_P0 for filter
+ * - 0b11111 - Select LLWU_P31 for filter
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT2_FILTSEL field. */
@@ -19978,10 +20005,10 @@
  * Controls the digital filter options for the external pin detect.
  *
  * Values:
- * - 00 - Filter disabled
- * - 01 - Filter posedge detect enabled
- * - 10 - Filter negedge detect enabled
- * - 11 - Filter any edge detect enabled
+ * - 0b00 - Filter disabled
+ * - 0b01 - Filter posedge detect enabled
+ * - 0b10 - Filter negedge detect enabled
+ * - 0b11 - Filter any edge detect enabled
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT2_FILTE field. */
@@ -20001,8 +20028,8 @@
  * FILTF.
  *
  * Values:
- * - 0 - Pin Filter 2 was not a wakeup source
- * - 1 - Pin Filter 2 was a wakeup source
+ * - 0b0 - Pin Filter 2 was not a wakeup source
+ * - 0b1 - Pin Filter 2 was a wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the LLWU_FILT2_FILTF field. */
@@ -20062,8 +20089,8 @@
  * CSR[5:1] must not be altered.
  *
  * Values:
- * - 0 - LPTMR is disabled and internal logic is reset.
- * - 1 - LPTMR is enabled.
+ * - 0b0 - LPTMR is disabled and internal logic is reset.
+ * - 0b1 - LPTMR is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TEN field. */
@@ -20082,8 +20109,8 @@
  * disabled.
  *
  * Values:
- * - 0 - Time Counter mode.
- * - 1 - Pulse Counter mode.
+ * - 0b0 - Time Counter mode.
+ * - 0b1 - Pulse Counter mode.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TMS field. */
@@ -20103,8 +20130,8 @@
  * LPTMR is disabled.
  *
  * Values:
- * - 0 - CNR is reset whenever TCF is set.
- * - 1 - CNR is reset on overflow.
+ * - 0b0 - CNR is reset whenever TCF is set.
+ * - 0b1 - CNR is reset on overflow.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TFC field. */
@@ -20123,10 +20150,10 @@
  * be changed only when the LPTMR is disabled.
  *
  * Values:
- * - 0 - Pulse Counter input source is active-high, and the CNR will increment
+ * - 0b0 - Pulse Counter input source is active-high, and the CNR will increment
  *     on the rising-edge.
- * - 1 - Pulse Counter input source is active-low, and the CNR will increment on
- *     the falling-edge.
+ * - 0b1 - Pulse Counter input source is active-low, and the CNR will increment
+ *     on the falling-edge.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TPP field. */
@@ -20147,10 +20174,10 @@
  * inputs.
  *
  * Values:
- * - 00 - Pulse counter input 0 is selected.
- * - 01 - Pulse counter input 1 is selected.
- * - 10 - Pulse counter input 2 is selected.
- * - 11 - Pulse counter input 3 is selected.
+ * - 0b00 - Pulse counter input 0 is selected.
+ * - 0b01 - Pulse counter input 1 is selected.
+ * - 0b10 - Pulse counter input 2 is selected.
+ * - 0b11 - Pulse counter input 3 is selected.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TPS field. */
@@ -20168,8 +20195,8 @@
  * When TIE is set, the LPTMR Interrupt is generated whenever TCF is also set.
  *
  * Values:
- * - 0 - Timer interrupt disabled.
- * - 1 - Timer interrupt enabled.
+ * - 0b0 - Timer interrupt disabled.
+ * - 0b1 - Timer interrupt enabled.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TIE field. */
@@ -20188,8 +20215,8 @@
  * increments. TCF is cleared when the LPTMR is disabled or a logic 1 is written to it.
  *
  * Values:
- * - 0 - The value of CNR is not equal to CMR and increments.
- * - 1 - The value of CNR is equal to CMR and increments.
+ * - 0b0 - The value of CNR is not equal to CMR and increments.
+ * - 0b1 - The value of CNR is equal to CMR and increments.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_CSR_TCF field. */
@@ -20235,10 +20262,10 @@
  * these inputs.
  *
  * Values:
- * - 00 - Prescaler/glitch filter clock 0 selected.
- * - 01 - Prescaler/glitch filter clock 1 selected.
- * - 10 - Prescaler/glitch filter clock 2 selected.
- * - 11 - Prescaler/glitch filter clock 3 selected.
+ * - 0b00 - Prescaler/glitch filter clock 0 selected.
+ * - 0b01 - Prescaler/glitch filter clock 1 selected.
+ * - 0b10 - Prescaler/glitch filter clock 2 selected.
+ * - 0b11 - Prescaler/glitch filter clock 3 selected.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_PSR_PCS field. */
@@ -20259,8 +20286,8 @@
  * must be altered only when the LPTMR is disabled.
  *
  * Values:
- * - 0 - Prescaler/glitch filter is enabled.
- * - 1 - Prescaler/glitch filter is bypassed.
+ * - 0b0 - Prescaler/glitch filter is enabled.
+ * - 0b1 - Prescaler/glitch filter is bypassed.
  */
 /*@{*/
 /*! @brief Read current value of the LPTMR_PSR_PBYP field. */
@@ -20280,37 +20307,37 @@
  * is disabled.
  *
  * Values:
- * - 0000 - Prescaler divides the prescaler clock by 2; glitch filter does not
+ * - 0b0000 - Prescaler divides the prescaler clock by 2; glitch filter does not
  *     support this configuration.
- * - 0001 - Prescaler divides the prescaler clock by 4; glitch filter recognizes
- *     change on input pin after 2 rising clock edges.
- * - 0010 - Prescaler divides the prescaler clock by 8; glitch filter recognizes
- *     change on input pin after 4 rising clock edges.
- * - 0011 - Prescaler divides the prescaler clock by 16; glitch filter
+ * - 0b0001 - Prescaler divides the prescaler clock by 4; glitch filter
+ *     recognizes change on input pin after 2 rising clock edges.
+ * - 0b0010 - Prescaler divides the prescaler clock by 8; glitch filter
+ *     recognizes change on input pin after 4 rising clock edges.
+ * - 0b0011 - Prescaler divides the prescaler clock by 16; glitch filter
  *     recognizes change on input pin after 8 rising clock edges.
- * - 0100 - Prescaler divides the prescaler clock by 32; glitch filter
+ * - 0b0100 - Prescaler divides the prescaler clock by 32; glitch filter
  *     recognizes change on input pin after 16 rising clock edges.
- * - 0101 - Prescaler divides the prescaler clock by 64; glitch filter
+ * - 0b0101 - Prescaler divides the prescaler clock by 64; glitch filter
  *     recognizes change on input pin after 32 rising clock edges.
- * - 0110 - Prescaler divides the prescaler clock by 128; glitch filter
+ * - 0b0110 - Prescaler divides the prescaler clock by 128; glitch filter
  *     recognizes change on input pin after 64 rising clock edges.
- * - 0111 - Prescaler divides the prescaler clock by 256; glitch filter
+ * - 0b0111 - Prescaler divides the prescaler clock by 256; glitch filter
  *     recognizes change on input pin after 128 rising clock edges.
- * - 1000 - Prescaler divides the prescaler clock by 512; glitch filter
+ * - 0b1000 - Prescaler divides the prescaler clock by 512; glitch filter
  *     recognizes change on input pin after 256 rising clock edges.
- * - 1001 - Prescaler divides the prescaler clock by 1024; glitch filter
+ * - 0b1001 - Prescaler divides the prescaler clock by 1024; glitch filter
  *     recognizes change on input pin after 512 rising clock edges.
- * - 1010 - Prescaler divides the prescaler clock by 2048; glitch filter
+ * - 0b1010 - Prescaler divides the prescaler clock by 2048; glitch filter
  *     recognizes change on input pin after 1024 rising clock edges.
- * - 1011 - Prescaler divides the prescaler clock by 4096; glitch filter
+ * - 0b1011 - Prescaler divides the prescaler clock by 4096; glitch filter
  *     recognizes change on input pin after 2048 rising clock edges.
- * - 1100 - Prescaler divides the prescaler clock by 8192; glitch filter
+ * - 0b1100 - Prescaler divides the prescaler clock by 8192; glitch filter
  *     recognizes change on input pin after 4096 rising clock edges.
- * - 1101 - Prescaler divides the prescaler clock by 16,384; glitch filter
+ * - 0b1101 - Prescaler divides the prescaler clock by 16,384; glitch filter
  *     recognizes change on input pin after 8192 rising clock edges.
- * - 1110 - Prescaler divides the prescaler clock by 32,768; glitch filter
+ * - 0b1110 - Prescaler divides the prescaler clock by 32,768; glitch filter
  *     recognizes change on input pin after 16,384 rising clock edges.
- * - 1111 - Prescaler divides the prescaler clock by 65,536; glitch filter
+ * - 0b1111 - Prescaler divides the prescaler clock by 65,536; glitch filter
  *     recognizes change on input pin after 32,768 rising clock edges.
  */
 /*@{*/
@@ -20415,7 +20442,6 @@
  * - MCG_C2 - MCG Control 2 Register
  * - MCG_C3 - MCG Control 3 Register
  * - MCG_C4 - MCG Control 4 Register
- * - MCG_C5 - MCG Control 5 Register
  * - MCG_C6 - MCG Control 6 Register
  * - MCG_S - MCG Status Register
  * - MCG_SC - MCG Status and Control Register
@@ -20458,8 +20484,8 @@
  * MCG enters Stop mode.
  *
  * Values:
- * - 0 - Internal reference clock is disabled in Stop mode.
- * - 1 - Internal reference clock is enabled in Stop mode if IRCLKEN is set or
+ * - 0b0 - Internal reference clock is disabled in Stop mode.
+ * - 0b1 - Internal reference clock is enabled in Stop mode if IRCLKEN is set or
  *     if MCG is in FEI, FBI, or BLPI modes before entering Stop mode.
  */
 /*@{*/
@@ -20478,8 +20504,8 @@
  * Enables the internal reference clock for use as MCGIRCLK.
  *
  * Values:
- * - 0 - MCGIRCLK inactive.
- * - 1 - MCGIRCLK active.
+ * - 0b0 - MCGIRCLK inactive.
+ * - 0b1 - MCGIRCLK active.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C1_IRCLKEN field. */
@@ -20497,8 +20523,8 @@
  * Selects the reference clock source for the FLL.
  *
  * Values:
- * - 0 - External reference clock is selected.
- * - 1 - The slow internal reference clock is selected.
+ * - 0b0 - External reference clock is selected.
+ * - 0b1 - The slow internal reference clock is selected.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C1_IREFS field. */
@@ -20520,21 +20546,21 @@
  * to enter a FLL mode from FBE).
  *
  * Values:
- * - 000 - If RANGE = 0 , Divide Factor is 1; for all other RANGE values, Divide
- *     Factor is 32.
- * - 001 - If RANGE = 0 , Divide Factor is 2; for all other RANGE values, Divide
- *     Factor is 64.
- * - 010 - If RANGE = 0 , Divide Factor is 4; for all other RANGE values, Divide
- *     Factor is 128.
- * - 011 - If RANGE = 0 , Divide Factor is 8; for all other RANGE values, Divide
- *     Factor is 256.
- * - 100 - If RANGE = 0 , Divide Factor is 16; for all other RANGE values,
+ * - 0b000 - If RANGE = 0 , Divide Factor is 1; for all other RANGE values,
+ *     Divide Factor is 32.
+ * - 0b001 - If RANGE = 0 , Divide Factor is 2; for all other RANGE values,
+ *     Divide Factor is 64.
+ * - 0b010 - If RANGE = 0 , Divide Factor is 4; for all other RANGE values,
+ *     Divide Factor is 128.
+ * - 0b011 - If RANGE = 0 , Divide Factor is 8; for all other RANGE values,
+ *     Divide Factor is 256.
+ * - 0b100 - If RANGE = 0 , Divide Factor is 16; for all other RANGE values,
  *     Divide Factor is 512.
- * - 101 - If RANGE = 0 , Divide Factor is 32; for all other RANGE values,
+ * - 0b101 - If RANGE = 0 , Divide Factor is 32; for all other RANGE values,
  *     Divide Factor is 1024.
- * - 110 - If RANGE = 0 , Divide Factor is 64; for all other RANGE values,
+ * - 0b110 - If RANGE = 0 , Divide Factor is 64; for all other RANGE values,
  *     Divide Factor is 1280 .
- * - 111 - If RANGE = 0 , Divide Factor is 128; for all other RANGE values,
+ * - 0b111 - If RANGE = 0 , Divide Factor is 128; for all other RANGE values,
  *     Divide Factor is 1536 .
  */
 /*@{*/
@@ -20553,10 +20579,10 @@
  * Selects the clock source for MCGOUTCLK .
  *
  * Values:
- * - 00 - Encoding 0 - Output of FLL is selected.
- * - 01 - Encoding 1 - Internal reference clock is selected.
- * - 10 - Encoding 2 - External reference clock is selected.
- * - 11 - Encoding 3 - Reserved.
+ * - 0b00 - Encoding 0 - Output of FLL is selected.
+ * - 0b01 - Encoding 1 - Internal reference clock is selected.
+ * - 0b10 - Encoding 2 - External reference clock is selected.
+ * - 0b11 - Encoding 3 - Reserved.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C1_CLKS field. */
@@ -20599,8 +20625,8 @@
  * Selects between the fast or slow internal reference clock source.
  *
  * Values:
- * - 0 - Slow internal reference clock selected.
- * - 1 - Fast internal reference clock selected.
+ * - 0b0 - Slow internal reference clock selected.
+ * - 0b1 - Fast internal reference clock selected.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_IRCS field. */
@@ -20621,8 +20647,8 @@
  * LP bit has no affect.
  *
  * Values:
- * - 0 - FLL is not disabled in bypass modes.
- * - 1 - FLL is disabled in bypass modes (lower power)
+ * - 0b0 - FLL is not disabled in bypass modes.
+ * - 0b1 - FLL is disabled in bypass modes (lower power)
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_LP field. */
@@ -20641,8 +20667,8 @@
  * chapter for more details.
  *
  * Values:
- * - 0 - External reference clock requested.
- * - 1 - Oscillator requested.
+ * - 0b0 - External reference clock requested.
+ * - 0b1 - Oscillator requested.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_EREFS field. */
@@ -20661,8 +20687,8 @@
  * chapter for more details.
  *
  * Values:
- * - 0 - Configure crystal oscillator for low-power operation.
- * - 1 - Configure crystal oscillator for high-gain operation.
+ * - 0b0 - Configure crystal oscillator for low-power operation.
+ * - 0b1 - Configure crystal oscillator for high-gain operation.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_HGO field. */
@@ -20682,8 +20708,10 @@
  * sheet for the frequency ranges used.
  *
  * Values:
- * - 00 - Encoding 0 - Low frequency range selected for the crystal oscillator .
- * - 01 - Encoding 1 - High frequency range selected for the crystal oscillator .
+ * - 0b00 - Encoding 0 - Low frequency range selected for the crystal oscillator
+ *     .
+ * - 0b01 - Encoding 1 - High frequency range selected for the crystal
+ *     oscillator .
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_RANGE field. */
@@ -20722,9 +20750,9 @@
  * set.
  *
  * Values:
- * - 0 - Interrupt request is generated on a loss of OSC0 external reference
+ * - 0b0 - Interrupt request is generated on a loss of OSC0 external reference
  *     clock.
- * - 1 - Generate a reset request on a loss of OSC0 external reference clock.
+ * - 0b1 - Generate a reset request on a loss of OSC0 external reference clock.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C2_LOCRE0 field. */
@@ -20835,10 +20863,10 @@
  * clock domains. See the DCO Frequency Range table for more details.
  *
  * Values:
- * - 00 - Encoding 0 - Low range (reset default).
- * - 01 - Encoding 1 - Mid range.
- * - 10 - Encoding 2 - Mid-high range.
- * - 11 - Encoding 3 - High range.
+ * - 0b00 - Encoding 0 - Low range (reset default).
+ * - 0b01 - Encoding 1 - Mid range.
+ * - 0b10 - Encoding 2 - Mid-high range.
+ * - 0b11 - Encoding 3 - High range.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C4_DRST_DRS field. */
@@ -20863,8 +20891,8 @@
  * 80-100 MHz 1 32.768 kHz 2929 96 MHz
  *
  * Values:
- * - 0 - DCO has a default range of 25%.
- * - 1 - DCO is fine-tuned for maximum frequency with 32.768 kHz reference.
+ * - 0b0 - DCO has a default range of 25%.
+ * - 0b1 - DCO is fine-tuned for maximum frequency with 32.768 kHz reference.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C4_DMX32 field. */
@@ -20874,22 +20902,6 @@
 /*! @brief Set the DMX32 field to a new value. */
 #define MCG_WR_C4_DMX32(base, value) (MCG_RMW_C4(base, MCG_C4_DMX32_MASK, MCG_C4_DMX32(value)))
 #define MCG_BWR_C4_DMX32(base, value) (BME_BFI8(&MCG_C4_REG(base), ((uint8_t)(value) << MCG_C4_DMX32_SHIFT), MCG_C4_DMX32_SHIFT, MCG_C4_DMX32_WIDTH))
-/*@}*/
-
-/*******************************************************************************
- * MCG_C5 - MCG Control 5 Register
- ******************************************************************************/
-
-/*!
- * @brief MCG_C5 - MCG Control 5 Register (ROZ)
- *
- * Reset value: 0x00U
- */
-/*!
- * @name Constants and macros for entire MCG_C5 register
- */
-/*@{*/
-#define MCG_RD_C5(base)          (MCG_C5_REG(base))
 /*@}*/
 
 /*******************************************************************************
@@ -20930,8 +20942,8 @@
  * is in BLPE mode.
  *
  * Values:
- * - 0 - External clock monitor is disabled.
- * - 1 - Generate a reset request on loss of external clock.
+ * - 0b0 - External clock monitor is disabled.
+ * - 0b1 - Generate a reset request on loss of external clock.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_C6_CME field. */
@@ -20974,8 +20986,8 @@
  * bit .
  *
  * Values:
- * - 0 - Source of internal reference clock is the slow clock (32 kHz IRC).
- * - 1 - Source of internal reference clock is the fast clock (4 MHz IRC).
+ * - 0b0 - Source of internal reference clock is the slow clock (32 kHz IRC).
+ * - 0b1 - Source of internal reference clock is the fast clock (4 MHz IRC).
  */
 /*@{*/
 /*! @brief Read current value of the MCG_S_IRCST field. */
@@ -21005,10 +21017,10 @@
  * clock domains.
  *
  * Values:
- * - 00 - Encoding 0 - Output of the FLL is selected (reset default).
- * - 01 - Encoding 1 - Internal reference clock is selected.
- * - 10 - Encoding 2 - External reference clock is selected.
- * - 11 - Reserved.
+ * - 0b00 - Encoding 0 - Output of the FLL is selected (reset default).
+ * - 0b01 - Encoding 1 - Internal reference clock is selected.
+ * - 0b10 - Encoding 2 - External reference clock is selected.
+ * - 0b11 - Reserved.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_S_CLKST field. */
@@ -21024,8 +21036,8 @@
  * internal synchronization between clock domains.
  *
  * Values:
- * - 0 - Source of FLL reference clock is the external reference clock.
- * - 1 - Source of FLL reference clock is the internal reference clock.
+ * - 0b0 - Source of FLL reference clock is the external reference clock.
+ * - 0b1 - Source of FLL reference clock is the internal reference clock.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_S_IREFST field. */
@@ -21066,8 +21078,8 @@
  * logic 1 to it when set.
  *
  * Values:
- * - 0 - Loss of OSC0 has not occurred.
- * - 1 - Loss of OSC0 has occurred.
+ * - 0b0 - Loss of OSC0 has not occurred.
+ * - 0b1 - Loss of OSC0 has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_LOCS0 field. */
@@ -21087,14 +21099,14 @@
  * divider when the Fast IRC is enabled is not supported).
  *
  * Values:
- * - 000 - Divide Factor is 1
- * - 001 - Divide Factor is 2.
- * - 010 - Divide Factor is 4.
- * - 011 - Divide Factor is 8.
- * - 100 - Divide Factor is 16
- * - 101 - Divide Factor is 32
- * - 110 - Divide Factor is 64
- * - 111 - Divide Factor is 128.
+ * - 0b000 - Divide Factor is 1
+ * - 0b001 - Divide Factor is 2.
+ * - 0b010 - Divide Factor is 4.
+ * - 0b011 - Divide Factor is 8.
+ * - 0b100 - Divide Factor is 16
+ * - 0b101 - Divide Factor is 32
+ * - 0b110 - Divide Factor is 64
+ * - 0b111 - Divide Factor is 128.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_FCRDIV field. */
@@ -21116,9 +21128,9 @@
  * Otherwise FLL filter and frequency values will change.)
  *
  * Values:
- * - 0 - FLL filter and FLL frequency will reset on changes to currect clock
+ * - 0b0 - FLL filter and FLL frequency will reset on changes to currect clock
  *     mode.
- * - 1 - Fll filter and FLL frequency retain their previous values during new
+ * - 0b1 - Fll filter and FLL frequency retain their previous values during new
  *     clock mode change.
  */
 /*@{*/
@@ -21140,8 +21152,8 @@
  * clears the flag.
  *
  * Values:
- * - 0 - Automatic Trim Machine completed normally.
- * - 1 - Automatic Trim Machine failed.
+ * - 0b0 - Automatic Trim Machine completed normally.
+ * - 0b1 - Automatic Trim Machine failed.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_ATMF field. */
@@ -21159,8 +21171,8 @@
  * Selects the IRCS clock for Auto Trim Test.
  *
  * Values:
- * - 0 - 32 kHz Internal Reference Clock selected.
- * - 1 - 4 MHz Internal Reference Clock selected.
+ * - 0b0 - 32 kHz Internal Reference Clock selected.
+ * - 0b1 - 4 MHz Internal Reference Clock selected.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_ATMS field. */
@@ -21182,8 +21194,8 @@
  * operation and clears this bit.
  *
  * Values:
- * - 0 - Auto Trim Machine disabled.
- * - 1 - Auto Trim Machine enabled.
+ * - 0b0 - Auto Trim Machine disabled.
+ * - 0b1 - Auto Trim Machine enabled.
  */
 /*@{*/
 /*! @brief Read current value of the MCG_SC_ATME field. */
@@ -21279,8 +21291,8 @@
  * @name Register MCM_PLASC, field ASC[7:0] (RO)
  *
  * Values:
- * - 0 - A bus slave connection to AXBS input port n is absent.
- * - 1 - A bus slave connection to AXBS input port n is present.
+ * - 0b00000000 - A bus slave connection to AXBS input port n is absent.
+ * - 0b00000001 - A bus slave connection to AXBS input port n is present.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLASC_ASC field. */
@@ -21315,8 +21327,8 @@
  * @name Register MCM_PLAMC, field AMC[7:0] (RO)
  *
  * Values:
- * - 0 - A bus master connection to AXBS input port n is absent
- * - 1 - A bus master connection to AXBS input port n is present
+ * - 0b00000000 - A bus master connection to AXBS input port n is absent
+ * - 0b00000001 - A bus master connection to AXBS input port n is present
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLAMC_AMC field. */
@@ -21366,8 +21378,8 @@
  * @name Register MCM_PLACR, field ARB[9] (RW)
  *
  * Values:
- * - 0 - Fixed-priority arbitration for the crossbar masters
- * - 1 - Round-robin arbitration for the crossbar masters
+ * - 0b0 - Fixed-priority arbitration for the crossbar masters
+ * - 0b1 - Round-robin arbitration for the crossbar masters
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_ARB field. */
@@ -21397,8 +21409,8 @@
  * Disables flash controller data caching.
  *
  * Values:
- * - 0 - Enable flash controller data caching
- * - 1 - Disable flash controller data caching.
+ * - 0b0 - Enable flash controller data caching
+ * - 0b1 - Disable flash controller data caching.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_DFCDA field. */
@@ -21416,8 +21428,8 @@
  * Disables flash controller instruction caching.
  *
  * Values:
- * - 0 - Enable flash controller instruction caching.
- * - 1 - Disable flash controller instruction caching.
+ * - 0b0 - Enable flash controller instruction caching.
+ * - 0b1 - Disable flash controller instruction caching.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_DFCIC field. */
@@ -21435,8 +21447,8 @@
  * Disables flash controller cache.
  *
  * Values:
- * - 0 - Enable flash controller cache.
- * - 1 - Disable flash controller cache.
+ * - 0b0 - Enable flash controller cache.
+ * - 0b1 - Disable flash controller cache.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_DFCC field. */
@@ -21454,8 +21466,8 @@
  * Enables flash data speculation.
  *
  * Values:
- * - 0 - Disable flash data speculation.
- * - 1 - Enable flash data speculation.
+ * - 0b0 - Disable flash data speculation.
+ * - 0b1 - Enable flash data speculation.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_EFDS field. */
@@ -21473,8 +21485,8 @@
  * Disables flash controller speculation.
  *
  * Values:
- * - 0 - Enable flash controller speculation.
- * - 1 - Disable flash controller speculation.
+ * - 0b0 - Enable flash controller speculation.
+ * - 0b1 - Disable flash controller speculation.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_DFCS field. */
@@ -21500,8 +21512,8 @@
  * when the operation completes.
  *
  * Values:
- * - 0 - Disable stalling flash controller when flash is busy.
- * - 1 - Enable stalling flash controller when flash is busy.
+ * - 0b0 - Disable stalling flash controller when flash is busy.
+ * - 0b1 - Enable stalling flash controller when flash is busy.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_PLACR_ESFC field. */
@@ -21546,8 +21558,8 @@
  * This bit is auto-cleared by vector fetching if CPOWOI = 1.
  *
  * Values:
- * - 0 - Request is cleared.
- * - 1 - Request Compute Operation.
+ * - 0b0 - Request is cleared.
+ * - 0b1 - Request Compute Operation.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_CPO_CPOREQ field. */
@@ -21563,10 +21575,10 @@
  * @name Register MCM_CPO, field CPOACK[1] (RO)
  *
  * Values:
- * - 0 - Compute operation entry has not completed or compute operation exit has
- *     completed.
- * - 1 - Compute operation entry has completed or compute operation exit has not
- *     completed.
+ * - 0b0 - Compute operation entry has not completed or compute operation exit
+ *     has completed.
+ * - 0b1 - Compute operation entry has completed or compute operation exit has
+ *     not completed.
  */
 /*@{*/
 /*! @brief Read current value of the MCM_CPO_CPOACK field. */
@@ -21578,8 +21590,8 @@
  * @name Register MCM_CPO, field CPOWOI[2] (RW)
  *
  * Values:
- * - 0 - No effect.
- * - 1 - When set, the CPOREQ is cleared on any interrupt or exception vector
+ * - 0b0 - No effect.
+ * - 0b1 - When set, the CPOREQ is cleared on any interrupt or exception vector
  *     fetch.
  */
 /*@{*/
@@ -21708,8 +21720,8 @@
  * this bit's function.
  *
  * Values:
- * - 0 - No operation initiated
- * - 1 - If CSR[DFS] = 1, then initiate a divide calculation, else ignore
+ * - 0b0 - No operation initiated
+ * - 0b1 - If CSR[DFS] = 1, then initiate a divide calculation, else ignore
  */
 /*@{*/
 /*! @brief Set the SRT field to a new value. */
@@ -21725,8 +21737,8 @@
  * divide operations.
  *
  * Values:
- * - 0 - Perform a signed divide
- * - 1 - Perform an unsigned divide
+ * - 0b0 - Perform a signed divide
+ * - 0b1 - Perform an unsigned divide
  */
 /*@{*/
 /*! @brief Read current value of the MMDVSQ_CSR_USGN field. */
@@ -21750,8 +21762,8 @@
  * the remainder
  *
  * Values:
- * - 0 - Return the quotient in the RES for the divide calculation
- * - 1 - Return the remainder in the RES for the divide calculation
+ * - 0b0 - Return the quotient in the RES for the divide calculation
+ * - 0b1 - Return the remainder in the RES for the divide calculation
  */
 /*@{*/
 /*! @brief Read current value of the MMDVSQ_CSR_REM field. */
@@ -21772,8 +21784,8 @@
  * divide-by-zero.
  *
  * Values:
- * - 0 - Reads of the RES register return the register contents
- * - 1 - If CSR[DZ] = 1, an attempted read of RES register is error terminated
+ * - 0b0 - Reads of the RES register return the register contents
+ * - 0b1 - If CSR[DZ] = 1, an attempted read of RES register is error terminated
  *     to signal a divide-by-zero, else the register contents are returned
  */
 /*@{*/
@@ -21797,8 +21809,8 @@
  * beginning of each operation.
  *
  * Values:
- * - 0 - The last divide operation had a non-zero divisor, that is, DSOR != 0
- * - 1 - The last divide operation had a zero divisor, that is, DSOR = 0
+ * - 0b0 - The last divide operation had a non-zero divisor, that is, DSOR != 0
+ * - 0b1 - The last divide operation had a zero divisor, that is, DSOR = 0
  */
 /*@{*/
 /*! @brief Read current value of the MMDVSQ_CSR_DZ field. */
@@ -21816,8 +21828,8 @@
  * mechanism.
  *
  * Values:
- * - 0 - A divide operation is initiated by a write to the DSOR register
- * - 1 - A divide operation is initiated by a write to the CSR register with
+ * - 0b0 - A divide operation is initiated by a write to the DSOR register
+ * - 0b1 - A divide operation is initiated by a write to the CSR register with
  *     CSR[SRT] = 1
  */
 /*@{*/
@@ -21835,11 +21847,11 @@
  *
  * Current or last operation was a square root. This read-only indicator bit
  * signals if the current or last operation performed by the MMDVSQ was a square
- * root. The reset state of this indicator is cleared.
+ * root.
  *
  * Values:
- * - 0 - Current or last MMDVSQ operation was not a square root
- * - 1 - Current or last MMDVSQ operation was a square root
+ * - 0b0 - Current or last MMDVSQ operation was not a square root
+ * - 0b1 - Current or last MMDVSQ operation was a square root
  */
 /*@{*/
 /*! @brief Read current value of the MMDVSQ_CSR_SQRT field. */
@@ -21851,12 +21863,11 @@
  * @name Register MMDVSQ_CSR, field DIV[30] (RO)
  *
  * Current or last operation was a divide. This read-only indicator bit signals
- * if the current or last operation performed by the MMDVSQ was a divide. The
- * reset state of this indicator is set.
+ * if the current or last operation performed by the MMDVSQ was a divide.
  *
  * Values:
- * - 0 - Current or last MMDVSQ operation was not a divide
- * - 1 - Current or last MMDVSQ operation was a divide
+ * - 0b0 - Current or last MMDVSQ operation was not a divide
+ * - 0b1 - Current or last MMDVSQ operation was a divide
  */
 /*@{*/
 /*! @brief Read current value of the MMDVSQ_CSR_DIV field. */
@@ -21879,8 +21890,8 @@
  * SQRT] are reserved.
  *
  * Values:
- * - 0 - MMDVSQ is idle
- * - 1 - MMDVSQ is busy performing a divide or square root calculation
+ * - 0b0 - MMDVSQ is idle
+ * - 0b1 - MMDVSQ is busy performing a divide or square root calculation
  */
 /*@{*/
 /*! @brief Read current value of the MMDVSQ_CSR_BUSY field. */
@@ -21927,10 +21938,11 @@
  * Reset value: 0x00000000U
  *
  * The write-only radicand register is loaded with the input "square" number. A
- * memory write to this register initiates a square root calculation. A memory
- * write access to the RCND register while the module is busy during a calculation
- * causes the access to be stalled (using wait states) until the calculation
- * completes. An attempted read of this register is error terminated.
+ * memory write to the radicand register initiates a square root calculation.
+ * While the MMDVSQ module is busy performing a square root calculation, any memory
+ * write access to the RCND register causes the write access to be stalled (using
+ * wait states) until the square root calculation finishes. Any attempted read
+ * of the radicand register terminates with an error.
  */
 /*!
  * @name Constants and macros for entire MMDVSQ_RCND register
@@ -22812,11 +22824,11 @@
  * non-zero value, so the combined comparators match on a range of addresses.
  *
  * Values:
- * - 0000 - Disabled.
- * - 0100 - Instruction fetch.
- * - 0101 - Data operand read.
- * - 0110 - Data operand write.
- * - 0111 - Data operand (read + write).
+ * - 0b0000 - Disabled.
+ * - 0b0100 - Instruction fetch.
+ * - 0b0101 - Data operand read.
+ * - 0b0110 - Data operand write.
+ * - 0b0111 - Data operand (read + write).
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_FCT_FUNCTION field. */
@@ -22836,8 +22848,8 @@
  * supports address comparisons.
  *
  * Values:
- * - 0 - Perform address comparison.
- * - 1 - Perform data value comparison.
+ * - 0b0 - Perform address comparison.
+ * - 0b1 - Perform data value comparison.
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_FCT_DATAVMATCH field. */
@@ -22856,10 +22868,10 @@
  * comparison.
  *
  * Values:
- * - 00 - Byte.
- * - 01 - Halfword.
- * - 10 - Word.
- * - 11 - Reserved. Any attempts to use this value results in UNPREDICTABLE
+ * - 0b00 - Byte.
+ * - 0b01 - Halfword.
+ * - 0b10 - Word.
+ * - 0b11 - Reserved. Any attempts to use this value results in UNPREDICTABLE
  *     behavior.
  */
 /*@{*/
@@ -22899,8 +22911,8 @@
  * register clears this bit.
  *
  * Values:
- * - 0 - No match.
- * - 1 - Match occurred.
+ * - 0b0 - No match.
+ * - 0b1 - Match occurred.
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_FCT_MATCHED field. */
@@ -22953,8 +22965,8 @@
  * {1,1}
  *
  * Values:
- * - 0 - Trigger TSTOP based on the assertion of MTBDWT_FCT0[MATCHED].
- * - 1 - Trigger TSTART based on the assertion of MTBDWT_FCT0[MATCHED].
+ * - 0b0 - Trigger TSTOP based on the assertion of MTBDWT_FCT0[MATCHED].
+ * - 0b1 - Trigger TSTART based on the assertion of MTBDWT_FCT0[MATCHED].
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_TBCTRL_ACOMP0 field. */
@@ -22973,8 +22985,8 @@
  * compare has triggered and the trace buffer's recording state is changed.
  *
  * Values:
- * - 0 - Trigger TSTOP based on the assertion of MTBDWT_FCT1[MATCHED].
- * - 1 - Trigger TSTART based on the assertion of MTBDWT_FCT1[MATCHED].
+ * - 0b0 - Trigger TSTOP based on the assertion of MTBDWT_FCT1[MATCHED].
+ * - 0b1 - Trigger TSTART based on the assertion of MTBDWT_FCT1[MATCHED].
  */
 /*@{*/
 /*! @brief Read current value of the MTBDWT_TBCTRL_ACOMP1 field. */
@@ -23317,8 +23329,8 @@
  * @name Register NV_FSEC, field SEC[1:0] (RO)
  *
  * Values:
- * - 10 - MCU security status is unsecure
- * - 11 - MCU security status is secure
+ * - 0b10 - MCU security status is unsecure
+ * - 0b11 - MCU security status is secure
  */
 /*@{*/
 /*! @brief Read current value of the NV_FSEC_SEC field. */
@@ -23330,8 +23342,8 @@
  * @name Register NV_FSEC, field FSLACC[3:2] (RO)
  *
  * Values:
- * - 10 - Freescale factory access denied
- * - 11 - Freescale factory access granted
+ * - 0b10 - Freescale factory access denied
+ * - 0b11 - Freescale factory access granted
  */
 /*@{*/
 /*! @brief Read current value of the NV_FSEC_FSLACC field. */
@@ -23343,8 +23355,8 @@
  * @name Register NV_FSEC, field MEEN[5:4] (RO)
  *
  * Values:
- * - 10 - Mass erase is disabled
- * - 11 - Mass erase is enabled
+ * - 0b10 - Mass erase is disabled
+ * - 0b11 - Mass erase is enabled
  */
 /*@{*/
 /*! @brief Read current value of the NV_FSEC_MEEN field. */
@@ -23356,8 +23368,8 @@
  * @name Register NV_FSEC, field KEYEN[7:6] (RO)
  *
  * Values:
- * - 10 - Backdoor key access enabled
- * - 11 - Backdoor key access disabled
+ * - 0b10 - Backdoor key access enabled
+ * - 0b11 - Backdoor key access disabled
  */
 /*@{*/
 /*! @brief Read current value of the NV_FSEC_KEYEN field. */
@@ -23389,9 +23401,9 @@
  * @name Register NV_FOPT, field LPBOOT0[0] (RO)
  *
  * Values:
- * - 00 - Core and system clock divider (OUTDIV1) is 0x7 (divide by 8) when
+ * - 0b0 - Core and system clock divider (OUTDIV1) is 0x7 (divide by 8) when
  *     LPBOOT1=0 or 0x1 (divide by 2) when LPBOOT1=1.
- * - 01 - Core and system clock divider (OUTDIV1) is 0x3 (divide by 4) when
+ * - 0b1 - Core and system clock divider (OUTDIV1) is 0x3 (divide by 4) when
  *     LPBOOT1=0 or 0x0 (divide by 1) when LPBOOT1=1.
  */
 /*@{*/
@@ -23404,8 +23416,8 @@
  * @name Register NV_FOPT, field NMI_DIS[2] (RO)
  *
  * Values:
- * - 00 - NMI interrupts are always blocked
- * - 01 - NMI_b pin/interrupts reset default to enabled
+ * - 0b0 - NMI interrupts are always blocked
+ * - 0b1 - NMI_b pin/interrupts reset default to enabled
  */
 /*@{*/
 /*! @brief Read current value of the NV_FOPT_NMI_DIS field. */
@@ -23417,9 +23429,9 @@
  * @name Register NV_FOPT, field RESET_PIN_CFG[3] (RO)
  *
  * Values:
- * - 00 - RESET pin is disabled following a POR and cannot be enabled as reset
+ * - 0b0 - RESET pin is disabled following a POR and cannot be enabled as reset
  *     function
- * - 01 - RESET_b pin is dedicated
+ * - 0b1 - RESET_b pin is dedicated
  */
 /*@{*/
 /*! @brief Read current value of the NV_FOPT_RESET_PIN_CFG field. */
@@ -23431,9 +23443,9 @@
  * @name Register NV_FOPT, field LPBOOT1[4] (RO)
  *
  * Values:
- * - 00 - Core and system clock divider (OUTDIV1) is 0x7 (divide by 8) when
+ * - 0b0 - Core and system clock divider (OUTDIV1) is 0x7 (divide by 8) when
  *     LPBOOT0=0 or 0x3 (divide by 4) when LPBOOT0=1.
- * - 01 - Core and system clock divider (OUTDIV1) is 0x1 (divide by 2) when
+ * - 0b1 - Core and system clock divider (OUTDIV1) is 0x1 (divide by 2) when
  *     LPBOOT0=0 or 0x0 (divide by 1) when LPBOOT0=1.
  */
 /*@{*/
@@ -23446,8 +23458,8 @@
  * @name Register NV_FOPT, field FAST_INIT[5] (RO)
  *
  * Values:
- * - 00 - Slower initialization
- * - 01 - Fast Initialization
+ * - 0b0 - Slower initialization
+ * - 0b1 - Fast Initialization
  */
 /*@{*/
 /*! @brief Read current value of the NV_FOPT_FAST_INIT field. */
@@ -23501,8 +23513,8 @@
  * Configures the oscillator load.
  *
  * Values:
- * - 0 - Disable the selection.
- * - 1 - Add 16 pF capacitor to the oscillator load.
+ * - 0b0 - Disable the selection.
+ * - 0b1 - Add 16 pF capacitor to the oscillator load.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_SC16P field. */
@@ -23520,8 +23532,8 @@
  * Configures the oscillator load.
  *
  * Values:
- * - 0 - Disable the selection.
- * - 1 - Add 8 pF capacitor to the oscillator load.
+ * - 0b0 - Disable the selection.
+ * - 0b1 - Add 8 pF capacitor to the oscillator load.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_SC8P field. */
@@ -23539,8 +23551,8 @@
  * Configures the oscillator load.
  *
  * Values:
- * - 0 - Disable the selection.
- * - 1 - Add 4 pF capacitor to the oscillator load.
+ * - 0b0 - Disable the selection.
+ * - 0b1 - Add 4 pF capacitor to the oscillator load.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_SC4P field. */
@@ -23558,8 +23570,8 @@
  * Configures the oscillator load.
  *
  * Values:
- * - 0 - Disable the selection.
- * - 1 - Add 2 pF capacitor to the oscillator load.
+ * - 0b0 - Disable the selection.
+ * - 0b1 - Add 2 pF capacitor to the oscillator load.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_SC2P field. */
@@ -23578,8 +23590,8 @@
  * enabled when MCU enters Stop mode.
  *
  * Values:
- * - 0 - External reference clock is disabled in Stop mode.
- * - 1 - External reference clock stays enabled in Stop mode if ERCLKEN is set
+ * - 0b0 - External reference clock is disabled in Stop mode.
+ * - 0b1 - External reference clock stays enabled in Stop mode if ERCLKEN is set
  *     before entering Stop mode.
  */
 /*@{*/
@@ -23598,8 +23610,8 @@
  * Enables external reference clock (OSCERCLK).
  *
  * Values:
- * - 0 - External reference clock is inactive.
- * - 1 - External reference clock is enabled.
+ * - 0b0 - External reference clock is inactive.
+ * - 0b1 - External reference clock is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the OSC_CR_ERCLKEN field. */
@@ -23688,8 +23700,8 @@
  * Enables the PDB operation in Continuous mode.
  *
  * Values:
- * - 0 - PDB operation in One-Shot mode
- * - 1 - PDB operation in Continuous mode
+ * - 0b0 - PDB operation in One-Shot mode
+ * - 0b1 - PDB operation in Continuous mode
  */
 /*@{*/
 /*! @brief Read current value of the PDB_SC_CONT field. */
@@ -23708,10 +23720,10 @@
  * clock.
  *
  * Values:
- * - 00 - Multiplication factor is 1.
- * - 01 - Multiplication factor is 10.
- * - 10 - Multiplication factor is 20.
- * - 11 - Multiplication factor is 40.
+ * - 0b00 - Multiplication factor is 1.
+ * - 0b01 - Multiplication factor is 10.
+ * - 0b10 - Multiplication factor is 20.
+ * - 0b11 - Multiplication factor is 40.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_SC_MULT field. */
@@ -23730,8 +23742,8 @@
  * generates a PDB interrupt.
  *
  * Values:
- * - 0 - PDB interrupt disabled.
- * - 1 - PDB interrupt enabled.
+ * - 0b0 - PDB interrupt disabled.
+ * - 0b1 - PDB interrupt enabled.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_SC_PDBIE field. */
@@ -23763,8 +23775,8 @@
  * @name Register PDB_SC, field PDBEN[7] (RW)
  *
  * Values:
- * - 0 - PDB disabled. Counter is off.
- * - 1 - PDB enabled.
+ * - 0b0 - PDB disabled. Counter is off.
+ * - 0b1 - PDB enabled.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_SC_PDBEN field. */
@@ -23784,22 +23796,22 @@
  * configuration details for the actual PDB input trigger connections.
  *
  * Values:
- * - 0000 - Trigger-In 0 is selected.
- * - 0001 - Trigger-In 1 is selected.
- * - 0010 - Trigger-In 2 is selected.
- * - 0011 - Trigger-In 3 is selected.
- * - 0100 - Trigger-In 4 is selected.
- * - 0101 - Trigger-In 5 is selected.
- * - 0110 - Trigger-In 6 is selected.
- * - 0111 - Trigger-In 7 is selected.
- * - 1000 - Trigger-In 8 is selected.
- * - 1001 - Trigger-In 9 is selected.
- * - 1010 - Trigger-In 10 is selected.
- * - 1011 - Trigger-In 11 is selected.
- * - 1100 - Trigger-In 12 is selected.
- * - 1101 - Trigger-In 13 is selected.
- * - 1110 - Trigger-In 14 is selected.
- * - 1111 - Software trigger is selected.
+ * - 0b0000 - Trigger-In 0 is selected.
+ * - 0b0001 - Trigger-In 1 is selected.
+ * - 0b0010 - Trigger-In 2 is selected.
+ * - 0b0011 - Trigger-In 3 is selected.
+ * - 0b0100 - Trigger-In 4 is selected.
+ * - 0b0101 - Trigger-In 5 is selected.
+ * - 0b0110 - Trigger-In 6 is selected.
+ * - 0b0111 - Trigger-In 7 is selected.
+ * - 0b1000 - Trigger-In 8 is selected.
+ * - 0b1001 - Trigger-In 9 is selected.
+ * - 0b1010 - Trigger-In 10 is selected.
+ * - 0b1011 - Trigger-In 11 is selected.
+ * - 0b1100 - Trigger-In 12 is selected.
+ * - 0b1101 - Trigger-In 13 is selected.
+ * - 0b1110 - Trigger-In 14 is selected.
+ * - 0b1111 - Software trigger is selected.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_SC_TRGSEL field. */
@@ -23815,21 +23827,21 @@
  * @name Register PDB_SC, field PRESCALER[14:12] (RW)
  *
  * Values:
- * - 000 - Counting uses the peripheral clock divided by multiplication factor
+ * - 0b000 - Counting uses the peripheral clock divided by multiplication factor
  *     selected by MULT.
- * - 001 - Counting uses the peripheral clock divided by twice of the
+ * - 0b001 - Counting uses the peripheral clock divided by twice of the
  *     multiplication factor selected by MULT.
- * - 010 - Counting uses the peripheral clock divided by four times of the
+ * - 0b010 - Counting uses the peripheral clock divided by four times of the
  *     multiplication factor selected by MULT.
- * - 011 - Counting uses the peripheral clock divided by eight times of the
+ * - 0b011 - Counting uses the peripheral clock divided by eight times of the
  *     multiplication factor selected by MULT.
- * - 100 - Counting uses the peripheral clock divided by 16 times of the
+ * - 0b100 - Counting uses the peripheral clock divided by 16 times of the
  *     multiplication factor selected by MULT.
- * - 101 - Counting uses the peripheral clock divided by 32 times of the
+ * - 0b101 - Counting uses the peripheral clock divided by 32 times of the
  *     multiplication factor selected by MULT.
- * - 110 - Counting uses the peripheral clock divided by 64 times of the
+ * - 0b110 - Counting uses the peripheral clock divided by 64 times of the
  *     multiplication factor selected by MULT.
- * - 111 - Counting uses the peripheral clock divided by 128 times of the
+ * - 0b111 - Counting uses the peripheral clock divided by 128 times of the
  *     multiplication factor selected by MULT.
  */
 /*@{*/
@@ -23849,8 +23861,8 @@
  * interrupt.
  *
  * Values:
- * - 0 - DMA disabled.
- * - 1 - DMA enabled.
+ * - 0b0 - DMA disabled.
+ * - 0b1 - DMA enabled.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_SC_DMAEN field. */
@@ -23882,8 +23894,8 @@
  * PDB channel sequence error flags generates a PDB sequence error interrupt.
  *
  * Values:
- * - 0 - PDB sequence error interrupt disabled.
- * - 1 - PDB sequence error interrupt enabled.
+ * - 0b0 - PDB sequence error interrupt disabled.
+ * - 0b1 - PDB sequence error interrupt enabled.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_SC_PDBEIE field. */
@@ -23902,14 +23914,14 @@
  * after 1 is written to LDOK.
  *
  * Values:
- * - 00 - The internal registers are loaded with the values from their buffers
+ * - 0b00 - The internal registers are loaded with the values from their buffers
  *     immediately after 1 is written to LDOK.
- * - 01 - The internal registers are loaded with the values from their buffers
+ * - 0b01 - The internal registers are loaded with the values from their buffers
  *     when the PDB counter reaches the MOD register value after 1 is written to
  *     LDOK.
- * - 10 - The internal registers are loaded with the values from their buffers
+ * - 0b10 - The internal registers are loaded with the values from their buffers
  *     when a trigger input event is detected after 1 is written to LDOK.
- * - 11 - The internal registers are loaded with the values from their buffers
+ * - 0b11 - The internal registers are loaded with the values from their buffers
  *     when either the PDB counter reaches the MOD register value or a trigger
  *     input event is detected, after 1 is written to LDOK.
  */
@@ -24076,8 +24088,8 @@
  * bits are implemented in this MCU.
  *
  * Values:
- * - 0 - PDB channel's corresponding pre-trigger disabled.
- * - 1 - PDB channel's corresponding pre-trigger enabled.
+ * - 0b00000000 - PDB channel's corresponding pre-trigger disabled.
+ * - 0b00000001 - PDB channel's corresponding pre-trigger enabled.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_C1_EN field. */
@@ -24096,14 +24108,14 @@
  * implemented in this MCU.
  *
  * Values:
- * - 0 - PDB channel's corresponding pre-trigger is in bypassed mode. The
- *     pre-trigger asserts one peripheral clock cycle after a rising edge is detected
- *     on selected trigger input source or software trigger is selected and SWTRIG
- *     is written with 1.
- * - 1 - PDB channel's corresponding pre-trigger asserts when the counter
- *     reaches the channel delay register and one peripheral clock cycle after a rising
- *     edge is detected on selected trigger input source or software trigger is
- *     selected and SETRIG is written with 1.
+ * - 0b00000000 - PDB channel's corresponding pre-trigger is in bypassed mode.
+ *     The pre-trigger asserts one peripheral clock cycle after a rising edge is
+ *     detected on selected trigger input source or software trigger is selected
+ *     and SWTRIG is written with 1.
+ * - 0b00000001 - PDB channel's corresponding pre-trigger asserts when the
+ *     counter reaches the channel delay register and one peripheral clock cycle after
+ *     a rising edge is detected on selected trigger input source or software
+ *     trigger is selected and SETRIG is written with 1.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_C1_TOS field. */
@@ -24127,8 +24139,10 @@
  * back-to-back connection chain.
  *
  * Values:
- * - 0 - PDB channel's corresponding pre-trigger back-to-back operation disabled.
- * - 1 - PDB channel's corresponding pre-trigger back-to-back operation enabled.
+ * - 0b00000000 - PDB channel's corresponding pre-trigger back-to-back operation
+ *     disabled.
+ * - 0b00000001 - PDB channel's corresponding pre-trigger back-to-back operation
+ *     enabled.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_C1_BB field. */
@@ -24171,13 +24185,14 @@
  * Only the lower M bits are implemented in this MCU.
  *
  * Values:
- * - 0 - Sequence error not detected on PDB channel's corresponding pre-trigger.
- * - 1 - Sequence error detected on PDB channel's corresponding pre-trigger.
- *     ADCn block can be triggered for a conversion by one pre-trigger from PDB
- *     channel n. When one conversion, which is triggered by one of the pre-triggers
- *     from PDB channel n, is in progress, new trigger from PDB channel's
- *     corresponding pre-trigger m cannot be accepted by ADCn, and ERR[m] is set.
- *     Writing 0's to clear the sequence error flags.
+ * - 0b00000000 - Sequence error not detected on PDB channel's corresponding
+ *     pre-trigger.
+ * - 0b00000001 - Sequence error detected on PDB channel's corresponding
+ *     pre-trigger. ADCn block can be triggered for a conversion by one pre-trigger from
+ *     PDB channel n. When one conversion, which is triggered by one of the
+ *     pre-triggers from PDB channel n, is in progress, new trigger from PDB
+ *     channel's corresponding pre-trigger m cannot be accepted by ADCn, and ERR[m] is
+ *     set. Writing 0's to clear the sequence error flags.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_S_ERR field. */
@@ -24278,8 +24293,8 @@
  * Enables the DAC interval trigger.
  *
  * Values:
- * - 0 - DAC interval trigger disabled.
- * - 1 - DAC interval trigger enabled.
+ * - 0b0 - DAC interval trigger disabled.
+ * - 0b1 - DAC interval trigger enabled.
  */
 /*@{*/
 /*! @brief Read current value of the PDB_INTC_TOE field. */
@@ -24297,10 +24312,10 @@
  * This bit enables the external trigger for DAC interval counter.
  *
  * Values:
- * - 0 - DAC external trigger input disabled. DAC interval counter is reset and
- *     started counting when a rising edge is detected on selected trigger input
- *     source or software trigger is selected and SWTRIG is written with 1.
- * - 1 - DAC external trigger input enabled. DAC interval counter is bypassed
+ * - 0b0 - DAC external trigger input disabled. DAC interval counter is reset
+ *     and started counting when a rising edge is detected on selected trigger
+ *     input source or software trigger is selected and SWTRIG is written with 1.
+ * - 0b1 - DAC external trigger input enabled. DAC interval counter is bypassed
  *     and DAC external trigger input triggers the DAC interval trigger.
  */
 /*@{*/
@@ -24387,8 +24402,8 @@
  * Enables the pulse output. Only lower Y bits are implemented in this MCU.
  *
  * Values:
- * - 0 - PDB Pulse-Out disabled
- * - 1 - PDB Pulse-Out enabled
+ * - 0b00000000 - PDB Pulse-Out disabled
+ * - 0b00000001 - PDB Pulse-Out enabled
  */
 /*@{*/
 /*! @brief Read current value of the PDB_POEN_POEN field. */
@@ -24516,10 +24531,10 @@
  * Selects the LVD trip point voltage (V LVD ).
  *
  * Values:
- * - 00 - Low trip point selected (V LVD = V LVDL )
- * - 01 - High trip point selected (V LVD = V LVDH )
- * - 10 - Reserved
- * - 11 - Reserved
+ * - 0b00 - Low trip point selected (V LVD = V LVDL )
+ * - 0b01 - High trip point selected (V LVD = V LVDH )
+ * - 0b10 - Reserved
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC1_LVDV field. */
@@ -24538,8 +24553,8 @@
  * Additional writes are ignored.
  *
  * Values:
- * - 0 - LVDF does not generate hardware resets
- * - 1 - Force an MCU reset when LVDF = 1
+ * - 0b0 - LVDF does not generate hardware resets
+ * - 0b1 - Force an MCU reset when LVDF = 1
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC1_LVDRE field. */
@@ -24557,8 +24572,8 @@
  * Enables hardware interrupt requests for LVDF.
  *
  * Values:
- * - 0 - Hardware interrupt disabled (use polling)
- * - 1 - Request a hardware interrupt when LVDF = 1
+ * - 0b0 - Hardware interrupt disabled (use polling)
+ * - 0b1 - Request a hardware interrupt when LVDF = 1
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC1_LVDIE field. */
@@ -24588,8 +24603,8 @@
  * This read-only status field indicates a low-voltage detect event.
  *
  * Values:
- * - 0 - Low-voltage event not detected
- * - 1 - Low-voltage event detected
+ * - 0b0 - Low-voltage event not detected
+ * - 0b1 - Low-voltage event detected
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC1_LVDF field. */
@@ -24637,10 +24652,10 @@
  * depends on LVDSC1[LVDV].
  *
  * Values:
- * - 00 - Low trip point selected (VLVW = VLVW1)
- * - 01 - Mid 1 trip point selected (VLVW = VLVW2)
- * - 10 - Mid 2 trip point selected (VLVW = VLVW3)
- * - 11 - High trip point selected (VLVW = VLVW4)
+ * - 0b00 - Low trip point selected (VLVW = VLVW1)
+ * - 0b01 - Mid 1 trip point selected (VLVW = VLVW2)
+ * - 0b10 - Mid 2 trip point selected (VLVW = VLVW3)
+ * - 0b11 - High trip point selected (VLVW = VLVW4)
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC2_LVWV field. */
@@ -24658,8 +24673,8 @@
  * Enables hardware interrupt requests for LVWF.
  *
  * Values:
- * - 0 - Hardware interrupt disabled (use polling)
- * - 1 - Request a hardware interrupt when LVWF = 1
+ * - 0b0 - Hardware interrupt disabled (use polling)
+ * - 0b1 - Request a hardware interrupt when LVWF = 1
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC2_LVWIE field. */
@@ -24693,8 +24708,8 @@
  * LVWACK first.
  *
  * Values:
- * - 0 - Low-voltage warning event not detected
- * - 1 - Low-voltage warning event detected
+ * - 0b0 - Low-voltage warning event not detected
+ * - 0b1 - Low-voltage warning event detected
  */
 /*@{*/
 /*! @brief Read current value of the PMC_LVDSC2_LVWF field. */
@@ -24740,8 +24755,8 @@
  * Enables the bandgap buffer.
  *
  * Values:
- * - 0 - Bandgap buffer not enabled
- * - 1 - Bandgap buffer enabled
+ * - 0b0 - Bandgap buffer not enabled
+ * - 0b1 - Bandgap buffer enabled
  */
 /*@{*/
 /*! @brief Read current value of the PMC_REGSC_BGBE field. */
@@ -24760,8 +24775,8 @@
  * regulator.
  *
  * Values:
- * - 0 - Regulator is in stop regulation or in transition to/from it
- * - 1 - Regulator is in run regulation
+ * - 0b0 - Regulator is in stop regulation or in transition to/from it
+ * - 0b1 - Regulator is in run regulation
  */
 /*@{*/
 /*! @brief Read current value of the PMC_REGSC_REGONS field. */
@@ -24781,8 +24796,8 @@
  * being falsely set when ACKISO is cleared.
  *
  * Values:
- * - 0 - Peripherals and I/O pads are in normal run state.
- * - 1 - Certain peripherals and I/O pads are in an isolated and latched state.
+ * - 0b0 - Peripherals and I/O pads are in normal run state.
+ * - 0b1 - Certain peripherals and I/O pads are in an isolated and latched state.
  */
 /*@{*/
 /*! @brief Read current value of the PMC_REGSC_ACKISO field. */
@@ -24804,8 +24819,8 @@
  * modes, clear BGEN to avoid excess power consumption.
  *
  * Values:
- * - 0 - Bandgap voltage reference is disabled in VLPx , and VLLSx modes.
- * - 1 - Bandgap voltage reference is enabled in VLPx , and VLLSx modes.
+ * - 0b0 - Bandgap voltage reference is disabled in VLPx , and VLLSx modes.
+ * - 0b1 - Bandgap voltage reference is enabled in VLPx , and VLLSx modes.
  */
 /*@{*/
 /*! @brief Read current value of the PMC_REGSC_BGEN field. */
@@ -24874,9 +24889,9 @@
  * resistor direction. Pull configuration is valid in all digital pin muxing modes.
  *
  * Values:
- * - 0 - Internal pulldown resistor is enabled on the corresponding pin, if the
- *     corresponding PE field is set.
- * - 1 - Internal pullup resistor is enabled on the corresponding pin, if the
+ * - 0b0 - Internal pulldown resistor is enabled on the corresponding pin, if
+ *     the corresponding PE field is set.
+ * - 0b1 - Internal pullup resistor is enabled on the corresponding pin, if the
  *     corresponding PE field is set.
  */
 /*@{*/
@@ -24898,9 +24913,9 @@
  * valid in all digital pin muxing modes.
  *
  * Values:
- * - 0 - Internal pullup or pulldown resistor is not enabled on the
+ * - 0b0 - Internal pullup or pulldown resistor is not enabled on the
  *     corresponding pin.
- * - 1 - Internal pullup or pulldown resistor is enabled on the corresponding
+ * - 0b1 - Internal pullup or pulldown resistor is enabled on the corresponding
  *     pin, if the pin is configured as a digital input.
  */
 /*@{*/
@@ -24914,6 +24929,28 @@
 /*@}*/
 
 /*!
+ * @name Register PORT_PCR, field SRE[2] (RW)
+ *
+ * This field is read-only for pins that do not support a configurable slew
+ * rate. Slew rate configuration is valid in all digital pin muxing modes.
+ *
+ * Values:
+ * - 0b0 - Fast slew rate is configured on the corresponding pin, if the pin is
+ *     configured as a digital output.
+ * - 0b1 - Slow slew rate is configured on the corresponding pin, if the pin is
+ *     configured as a digital output.
+ */
+/*@{*/
+/*! @brief Read current value of the PORT_PCR_SRE field. */
+#define PORT_RD_PCR_SRE(base, index) ((PORT_PCR_REG(base, index) & PORT_PCR_SRE_MASK) >> PORT_PCR_SRE_SHIFT)
+#define PORT_BRD_PCR_SRE(base, index) (BME_UBFX32(&PORT_PCR_REG(base, index), PORT_PCR_SRE_SHIFT, PORT_PCR_SRE_WIDTH))
+
+/*! @brief Set the SRE field to a new value. */
+#define PORT_WR_PCR_SRE(base, index, value) (PORT_RMW_PCR(base, index, (PORT_PCR_SRE_MASK | PORT_PCR_ISF_MASK), PORT_PCR_SRE(value)))
+#define PORT_BWR_PCR_SRE(base, index, value) (BME_BFI32(&PORT_PCR_REG(base, index), ((uint32_t)(value) << PORT_PCR_SRE_SHIFT), PORT_PCR_SRE_SHIFT, PORT_PCR_SRE_WIDTH))
+/*@}*/
+
+/*!
  * @name Register PORT_PCR, field PFE[4] (RW)
  *
  * This field is read-only for pins that do not support a configurable passive
@@ -24921,10 +24958,10 @@
  * modes.
  *
  * Values:
- * - 0 - Passive input filter is disabled on the corresponding pin.
- * - 1 - Passive input filter is enabled on the corresponding pin, if the pin is
- *     configured as a digital input. Refer to the device data sheet for filter
- *     characteristics.
+ * - 0b0 - Passive input filter is disabled on the corresponding pin.
+ * - 0b1 - Passive input filter is enabled on the corresponding pin, if the pin
+ *     is configured as a digital input. Refer to the device data sheet for
+ *     filter characteristics.
  */
 /*@{*/
 /*! @brief Read current value of the PORT_PCR_PFE field. */
@@ -24943,9 +24980,9 @@
  * strength. Drive strength configuration is valid in all digital pin muxing modes.
  *
  * Values:
- * - 0 - Low drive strength is configured on the corresponding pin, if pin is
+ * - 0b0 - Low drive strength is configured on the corresponding pin, if pin is
  *     configured as a digital output.
- * - 1 - High drive strength is configured on the corresponding pin, if pin is
+ * - 0b1 - High drive strength is configured on the corresponding pin, if pin is
  *     configured as a digital output.
  */
 /*@{*/
@@ -24967,14 +25004,14 @@
  * follows:
  *
  * Values:
- * - 000 - Pin disabled (analog).
- * - 001 - Alternative 1 (GPIO).
- * - 010 - Alternative 2 (chip-specific).
- * - 011 - Alternative 3 (chip-specific).
- * - 100 - Alternative 4 (chip-specific).
- * - 101 - Alternative 5 (chip-specific).
- * - 110 - Alternative 6 (chip-specific).
- * - 111 - Alternative 7 (chip-specific).
+ * - 0b000 - Pin disabled (analog).
+ * - 0b001 - Alternative 1 (GPIO).
+ * - 0b010 - Alternative 2 (chip-specific).
+ * - 0b011 - Alternative 3 (chip-specific).
+ * - 0b100 - Alternative 4 (chip-specific).
+ * - 0b101 - Alternative 5 (chip-specific).
+ * - 0b110 - Alternative 6 (chip-specific).
+ * - 0b111 - Alternative 7 (chip-specific).
  */
 /*@{*/
 /*! @brief Read current value of the PORT_PCR_MUX field. */
@@ -24994,22 +25031,22 @@
  * corresponding pin is configured to generate interrupt/DMA request as follows:
  *
  * Values:
- * - 0000 - Flag is disabled.
- * - 0001 - Flag and DMA request on rising edge.
- * - 0010 - Flag and DMA request on falling edge.
- * - 0011 - Flag and DMA request on either edge.
- * - 0100 - Reserved.
- * - 0101 - Reserved.
- * - 0110 - Reserved.
- * - 0111 - Reserved.
- * - 1000 - Flag and Interrupt when logic 0.
- * - 1001 - Flag and Interrupt on rising-edge.
- * - 1010 - Flag and Interrupt on falling-edge.
- * - 1011 - Flag and Interrupt on either edge.
- * - 1100 - Flag and Interrupt when logic 1.
- * - 1101 - Reserved.
- * - 1110 - Reserved.
- * - 1111 - Reserved.
+ * - 0b0000 - Interrupt Status Flag (ISF) is disabled.
+ * - 0b0001 - ISF flag and DMA request on rising edge.
+ * - 0b0010 - ISF flag and DMA request on falling edge.
+ * - 0b0011 - ISF flag and DMA request on either edge.
+ * - 0b0100 - Reserved.
+ * - 0b0101 - Reserved.
+ * - 0b0110 - Reserved.
+ * - 0b0111 - Reserved.
+ * - 0b1000 - ISF flag and Interrupt when logic 0.
+ * - 0b1001 - ISF flag and Interrupt on rising-edge.
+ * - 0b1010 - ISF flag and Interrupt on falling-edge.
+ * - 0b1011 - ISF flag and Interrupt on either edge.
+ * - 0b1100 - ISF flag and Interrupt when logic 1.
+ * - 0b1101 - Reserved.
+ * - 0b1110 - Reserved.
+ * - 0b1111 - Reserved.
  */
 /*@{*/
 /*! @brief Read current value of the PORT_PCR_IRQC field. */
@@ -25028,12 +25065,12 @@
  * The pin interrupt configuration is valid in all digital pin muxing modes.
  *
  * Values:
- * - 0 - Configured interrupt is not detected.
- * - 1 - Configured interrupt is detected. If the pin is configured to generate
- *     a DMA request, then the corresponding flag will be cleared automatically
+ * - 0b0 - Configured interrupt is not detected.
+ * - 0b1 - Configured interrupt is detected. If the pin is configured to
+ *     generate a DMA request, then the corresponding flag will be cleared automatically
  *     at the completion of the requested DMA transfer. Otherwise, the flag
- *     remains set until a logic 1 is written to the flag. If the pin is configured for
- *     a level sensitive interrupt and the pin remains asserted, then the flag
+ *     remains set until a logic 1 is written to the flag. If the pin is configured
+ *     for a level sensitive interrupt and the pin remains asserted, then the flag
  *     is set again immediately after it is cleared.
  */
 /*@{*/
@@ -25089,9 +25126,10 @@
  * the value in GPWD.
  *
  * Values:
- * - 0 - Corresponding Pin Control Register is not updated with the value in
- *     GPWD.
- * - 1 - Corresponding Pin Control Register is updated with the value in GPWD.
+ * - 0b0000000000000000 - Corresponding Pin Control Register is not updated with
+ *     the value in GPWD.
+ * - 0b0000000000000001 - Corresponding Pin Control Register is updated with the
+ *     value in GPWD.
  */
 /*@{*/
 /*! @brief Set the GPWE field to a new value. */
@@ -25142,9 +25180,10 @@
  * the value in GPWD.
  *
  * Values:
- * - 0 - Corresponding Pin Control Register is not updated with the value in
- *     GPWD.
- * - 1 - Corresponding Pin Control Register is updated with the value in GPWD.
+ * - 0b0000000000000000 - Corresponding Pin Control Register is not updated with
+ *     the value in GPWD.
+ * - 0b0000000000000001 - Corresponding Pin Control Register is updated with the
+ *     value in GPWD.
  */
 /*@{*/
 /*! @brief Set the GPWE field to a new value. */
@@ -25228,8 +25267,8 @@
  * mode causes a reset. This bit is cleared by any reset except WAKEUP.
  *
  * Values:
- * - 0 - Reset not caused by LLWU module wakeup source
- * - 1 - Reset caused by LLWU module wakeup source
+ * - 0b0 - Reset not caused by LLWU module wakeup source
+ * - 0b1 - Reset caused by LLWU module wakeup source
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_WAKEUP field. */
@@ -25244,8 +25283,8 @@
  * an LVD reset occurs. This field is also set by POR.
  *
  * Values:
- * - 0 - Reset not caused by LVD trip or POR
- * - 1 - Reset caused by LVD trip or POR
+ * - 0b0 - Reset not caused by LVD trip or POR
+ * - 0b1 - Reset caused by LVD trip or POR
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_LVD field. */
@@ -25261,8 +25300,8 @@
  * detailed MCG description for information on enabling the clock monitor.
  *
  * Values:
- * - 0 - Reset not caused by a loss of external clock.
- * - 1 - Reset caused by a loss of external clock.
+ * - 0b0 - Reset not caused by a loss of external clock.
+ * - 0b1 - Reset caused by a loss of external clock.
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_LOC field. */
@@ -25277,8 +25316,8 @@
  * reset source can be blocked by disabling the watchdog.
  *
  * Values:
- * - 0 - Reset not caused by watchdog timeout
- * - 1 - Reset caused by watchdog timeout
+ * - 0b0 - Reset not caused by watchdog timeout
+ * - 0b1 - Reset caused by watchdog timeout
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_WDOG field. */
@@ -25293,8 +25332,8 @@
  * RESET pin.
  *
  * Values:
- * - 0 - Reset not caused by external reset pin
- * - 1 - Reset caused by external reset pin
+ * - 0b0 - Reset not caused by external reset pin
+ * - 0b1 - Reset caused by external reset pin
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_PIN field. */
@@ -25311,8 +25350,8 @@
  * internal supply was below the LVD threshold.
  *
  * Values:
- * - 0 - Reset not caused by POR
- * - 1 - Reset caused by POR
+ * - 0b0 - Reset not caused by POR
+ * - 0b1 - Reset caused by POR
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS0_POR field. */
@@ -25353,8 +25392,8 @@
  * event.
  *
  * Values:
- * - 0 - Reset not caused by core LOCKUP event
- * - 1 - Reset caused by core LOCKUP event
+ * - 0b0 - Reset not caused by core LOCKUP event
+ * - 0b1 - Reset caused by core LOCKUP event
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS1_LOCKUP field. */
@@ -25369,8 +25408,8 @@
  * Application Interrupt and Reset Control Register in the ARM core.
  *
  * Values:
- * - 0 - Reset not caused by software setting of SYSRESETREQ bit
- * - 1 - Reset caused by software setting of SYSRESETREQ bit
+ * - 0b0 - Reset not caused by software setting of SYSRESETREQ bit
+ * - 0b1 - Reset caused by software setting of SYSRESETREQ bit
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS1_SW field. */
@@ -25385,9 +25424,9 @@
  * System Reset Request bit in the MDM-AP Control Register.
  *
  * Values:
- * - 0 - Reset not caused by host debugger system setting of the System Reset
+ * - 0b0 - Reset not caused by host debugger system setting of the System Reset
  *     Request bit
- * - 1 - Reset caused by host debugger system setting of the System Reset
+ * - 0b1 - Reset caused by host debugger system setting of the System Reset
  *     Request bit
  */
 /*@{*/
@@ -25404,10 +25443,10 @@
  * second to enter stop mode.
  *
  * Values:
- * - 0 - Reset not caused by peripheral failure to acknowledge attempt to enter
+ * - 0b0 - Reset not caused by peripheral failure to acknowledge attempt to
+ *     enter stop mode
+ * - 0b1 - Reset caused by peripheral failure to acknowledge attempt to enter
  *     stop mode
- * - 1 - Reset caused by peripheral failure to acknowledge attempt to enter stop
- *     mode
  */
 /*@{*/
 /*! @brief Read current value of the RCM_SRS1_SACKERR field. */
@@ -25450,10 +25489,10 @@
  * Selects how the reset pin filter is enabled in run and wait modes.
  *
  * Values:
- * - 00 - All filtering disabled
- * - 01 - Bus clock filter enabled for normal operation
- * - 10 - LPO clock filter enabled for normal operation
- * - 11 - Reserved
+ * - 0b00 - All filtering disabled
+ * - 0b01 - Bus clock filter enabled for normal operation
+ * - 0b10 - LPO clock filter enabled for normal operation
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the RCM_RPFC_RSTFLTSRW field. */
@@ -25473,8 +25512,8 @@
  * before clearing PMC_REGSC[ACKISO].
  *
  * Values:
- * - 0 - All filtering disabled
- * - 1 - LPO clock filter enabled
+ * - 0b0 - All filtering disabled
+ * - 0b1 - LPO clock filter enabled
  */
 /*@{*/
 /*! @brief Read current value of the RCM_RPFC_RSTFLTSS field. */
@@ -25520,38 +25559,38 @@
  * Selects the reset pin bus clock filter width.
  *
  * Values:
- * - 00000 - Bus clock filter count is 1
- * - 00001 - Bus clock filter count is 2
- * - 00010 - Bus clock filter count is 3
- * - 00011 - Bus clock filter count is 4
- * - 00100 - Bus clock filter count is 5
- * - 00101 - Bus clock filter count is 6
- * - 00110 - Bus clock filter count is 7
- * - 00111 - Bus clock filter count is 8
- * - 01000 - Bus clock filter count is 9
- * - 01001 - Bus clock filter count is 10
- * - 01010 - Bus clock filter count is 11
- * - 01011 - Bus clock filter count is 12
- * - 01100 - Bus clock filter count is 13
- * - 01101 - Bus clock filter count is 14
- * - 01110 - Bus clock filter count is 15
- * - 01111 - Bus clock filter count is 16
- * - 10000 - Bus clock filter count is 17
- * - 10001 - Bus clock filter count is 18
- * - 10010 - Bus clock filter count is 19
- * - 10011 - Bus clock filter count is 20
- * - 10100 - Bus clock filter count is 21
- * - 10101 - Bus clock filter count is 22
- * - 10110 - Bus clock filter count is 23
- * - 10111 - Bus clock filter count is 24
- * - 11000 - Bus clock filter count is 25
- * - 11001 - Bus clock filter count is 26
- * - 11010 - Bus clock filter count is 27
- * - 11011 - Bus clock filter count is 28
- * - 11100 - Bus clock filter count is 29
- * - 11101 - Bus clock filter count is 30
- * - 11110 - Bus clock filter count is 31
- * - 11111 - Bus clock filter count is 32
+ * - 0b00000 - Bus clock filter count is 1
+ * - 0b00001 - Bus clock filter count is 2
+ * - 0b00010 - Bus clock filter count is 3
+ * - 0b00011 - Bus clock filter count is 4
+ * - 0b00100 - Bus clock filter count is 5
+ * - 0b00101 - Bus clock filter count is 6
+ * - 0b00110 - Bus clock filter count is 7
+ * - 0b00111 - Bus clock filter count is 8
+ * - 0b01000 - Bus clock filter count is 9
+ * - 0b01001 - Bus clock filter count is 10
+ * - 0b01010 - Bus clock filter count is 11
+ * - 0b01011 - Bus clock filter count is 12
+ * - 0b01100 - Bus clock filter count is 13
+ * - 0b01101 - Bus clock filter count is 14
+ * - 0b01110 - Bus clock filter count is 15
+ * - 0b01111 - Bus clock filter count is 16
+ * - 0b10000 - Bus clock filter count is 17
+ * - 0b10001 - Bus clock filter count is 18
+ * - 0b10010 - Bus clock filter count is 19
+ * - 0b10011 - Bus clock filter count is 20
+ * - 0b10100 - Bus clock filter count is 21
+ * - 0b10101 - Bus clock filter count is 22
+ * - 0b10110 - Bus clock filter count is 23
+ * - 0b10111 - Bus clock filter count is 24
+ * - 0b11000 - Bus clock filter count is 25
+ * - 0b11001 - Bus clock filter count is 26
+ * - 0b11010 - Bus clock filter count is 27
+ * - 0b11011 - Bus clock filter count is 28
+ * - 0b11100 - Bus clock filter count is 29
+ * - 0b11101 - Bus clock filter count is 30
+ * - 0b11110 - Bus clock filter count is 31
+ * - 0b11111 - Bus clock filter count is 32
  */
 /*@{*/
 /*! @brief Read current value of the RCM_RPFW_RSTFLTSEL field. */
@@ -25841,7 +25880,7 @@
  * - SIM_UIDMH - Unique Identification Register Mid-High
  * - SIM_UIDML - Unique Identification Register Mid Low
  * - SIM_UIDL - Unique Identification Register Low
- * - SIM_WDOGCTRL - WDOG Control Register
+ * - SIM_WDOGC - WDOG Control Register
  */
 
 #define SIM_INSTANCE_COUNT (1U) /*!< Number of instances of the SIM module. */
@@ -25883,10 +25922,10 @@
  * only for POR/LVD.
  *
  * Values:
- * - 00 - System oscillator (OSC32KCLK)
- * - 01 - Reserved
- * - 10 - Reserved
- * - 11 - LPO 1 kHz
+ * - 0b00 - System oscillator (OSC32KCLK)
+ * - 0b01 - Reserved
+ * - 0b10 - Reserved
+ * - 0b11 - LPO 1 kHz
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT1_OSC32KSEL field. */
@@ -25933,14 +25972,14 @@
  * Selects the clock to output on the CLKOUT pin.
  *
  * Values:
- * - 000 - Reserved
- * - 001 - Reserved
- * - 010 - Bus clock
- * - 011 - LPO clock (1 kHz)
- * - 100 - MCGIRCLK
- * - 101 - Reserved
- * - 110 - OSCERCLK
- * - 111 - Reserved
+ * - 0b000 - Reserved
+ * - 0b001 - Reserved
+ * - 0b010 - Bus clock
+ * - 0b011 - LPO clock (1 kHz)
+ * - 0b100 - MCGIRCLK
+ * - 0b101 - Reserved
+ * - 0b110 - OSCERCLK
+ * - 0b111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT2_CLKOUTSEL field. */
@@ -25958,10 +25997,10 @@
  * Selects the fixed frequency clock for FTM0, FTM1, FTM2, FTM3, FTM4, and FTM5.
  *
  * Values:
- * - 00 - MCGFFCLK
- * - 01 - MCGIRCLK
- * - 10 - OSCERCLK
- * - 11 - MCGFFCLK
+ * - 0b00 - MCGFFCLK
+ * - 0b01 - MCGIRCLK
+ * - 0b10 - OSCERCLK
+ * - 0b11 - MCGFFCLK
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT2_FTMFFCLKSEL field. */
@@ -26006,8 +26045,8 @@
  * register in the port control module.
  *
  * Values:
- * - 0 - FTM0_FLT0 pin
- * - 1 - CMP0 out
+ * - 0b0 - FTM0_FLT0 pin
+ * - 0b1 - CMP0 out
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM0FLT0 field. */
@@ -26027,8 +26066,8 @@
  * register in the port control module.
  *
  * Values:
- * - 0 - FTM0_FLT1 pin
- * - 1 - CMP1 out
+ * - 0b0 - FTM0_FLT1 pin
+ * - 0b1 - CMP1 out
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM0FLT1 field. */
@@ -26048,8 +26087,8 @@
  * register in the port control module.
  *
  * Values:
- * - 0 - FTM1_FLT0 pin
- * - 1 - CMP0 out
+ * - 0b0 - FTM1_FLT0 pin
+ * - 0b1 - CMP0 out
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM1FLT0 field. */
@@ -26069,8 +26108,8 @@
  * register in the port control module.
  *
  * Values:
- * - 0 - FTM2_FLT0 pin
- * - 1 - CMP0 out
+ * - 0b0 - FTM2_FLT0 pin
+ * - 0b1 - CMP0 out
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM2FLT0 field. */
@@ -26088,8 +26127,8 @@
  * Selects the source of FTM0 hardware trigger 0.
  *
  * Values:
- * - 0 - HSCMP0 output drives FTM0 hardware trigger 0
- * - 1 - FTM1 channel match drives FTM0 hardware trigger 0
+ * - 0b0 - CMP0 output drives FTM0 hardware trigger 0
+ * - 0b1 - FTM1 channel match drives FTM0 hardware trigger 0
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM0TRG0SRC field. */
@@ -26107,8 +26146,8 @@
  * Selects the source of FTM0 hardware trigger 1.
  *
  * Values:
- * - 0 - PDB channel 1 trigger drives FTM0 hardware trigger 1
- * - 1 - FTM2 channel match drives FTM0 hardware trigger 1
+ * - 0b0 - PDB0 channel 1 trigger drives FTM0 hardware trigger 1
+ * - 0b1 - FTM2 channel match drives FTM0 hardware trigger 1
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM0TRG1SRC field. */
@@ -26126,8 +26165,8 @@
  * Selects the source of FTM0 hardware trigger 2.
  *
  * Values:
- * - 0 - HSCMP0 output drives FTM0 hardware trigger 2
- * - 1 - HSCMP1 output drives FTM0 hardware trigger 2
+ * - 0b0 - CMP0 output drives FTM0 hardware trigger 2
+ * - 0b1 - CMP1 output drives FTM0 hardware trigger 2
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM0TRG2SRC field. */
@@ -26145,8 +26184,8 @@
  * Selects the source of FTM1 hardware trigger 0.
  *
  * Values:
- * - 0 - HSCMP0 output drives FTM1 hardware trigger 0
- * - 1 - FTM0 channel match drives FTM1 hardware trigger 0
+ * - 0b0 - CMP0 output drives FTM1 hardware trigger 0
+ * - 0b1 - FTM0 channel match drives FTM1 hardware trigger 0
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM1TRG0SRC field. */
@@ -26164,8 +26203,8 @@
  * Selects the source of FTM1 hardware trigger 1.
  *
  * Values:
- * - 0 - PDB channel 1 trigger drives FTM1 hardware trigger 1
- * - 1 - FTM2 channel match drives FTM1 hardware trigger 1
+ * - 0b0 - PDB0 channel 1 trigger drives FTM1 hardware trigger 1
+ * - 0b1 - FTM2 channel match drives FTM1 hardware trigger 1
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM1TRG1SRC field. */
@@ -26183,8 +26222,8 @@
  * Selects the source of FTM1 hardware trigger 2.
  *
  * Values:
- * - 0 - HSCMP0 output drives FTM1 hardware trigger 2
- * - 1 - HSCMP1 output drives FTM1 hardware trigger 2
+ * - 0b0 - CMP0 output drives FTM1 hardware trigger 2
+ * - 0b1 - CMP1 output drives FTM1 hardware trigger 2
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM1TRG2SRC field. */
@@ -26202,8 +26241,8 @@
  * Selects the source of FTM2 hardware trigger 0.
  *
  * Values:
- * - 0 - HSCMP0 output drives FTM2 hardware trigger 0
- * - 1 - FTM0 channel match drives FTM2 hardware trigger 0
+ * - 0b0 - CMP0 output drives FTM2 hardware trigger 0
+ * - 0b1 - FTM0 channel match drives FTM2 hardware trigger 0
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM2TRG0SRC field. */
@@ -26221,8 +26260,8 @@
  * Selects the source of FTM2 hardware trigger 1.
  *
  * Values:
- * - 0 - PDB output trigger 1 drives FTM2 hardware trigger 1
- * - 1 - FTM1 channel match drives FTM2 hardware trigger 1
+ * - 0b0 - PDB0 output trigger 1 drives FTM2 hardware trigger 1
+ * - 0b1 - FTM1 channel match drives FTM2 hardware trigger 1
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM2TRG1SRC field. */
@@ -26240,8 +26279,8 @@
  * Selects the source of FTM2 hardware trigger 2.
  *
  * Values:
- * - 0 - HSCMP0 output drives FTM2 hardware trigger 2
- * - 1 - HSCMP1 output drives FTM2 hardware trigger 2
+ * - 0b0 - CMP0 output drives FTM2 hardware trigger 2
+ * - 0b1 - CMP1 output drives FTM2 hardware trigger 2
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM2TRG2SRC field. */
@@ -26254,71 +26293,71 @@
 /*@}*/
 
 /*!
- * @name Register SIM_SOPT4, field FTM1ICH0SRC[19:18] (RW)
+ * @name Register SIM_SOPT4, field FTM1CH0SRC[19:18] (RW)
  *
  * Selects the source for FTM1 channel 0 input capture. When the FTM is not in
  * Input Capture mode, clear this field.
  *
  * Values:
- * - 00 - FTM1_CH0 signal
- * - 01 - CMP0 output
- * - 10 - CMP1 output
- * - 11 - Reserved
+ * - 0b00 - FTM1_CH0 signal
+ * - 0b01 - CMP0 output
+ * - 0b10 - CMP1 output
+ * - 0b11 - Reserved
  */
 /*@{*/
-/*! @brief Read current value of the SIM_SOPT4_FTM1ICH0SRC field. */
-#define SIM_RD_SOPT4_FTM1ICH0SRC(base) ((SIM_SOPT4_REG(base) & SIM_SOPT4_FTM1ICH0SRC_MASK) >> SIM_SOPT4_FTM1ICH0SRC_SHIFT)
-#define SIM_BRD_SOPT4_FTM1ICH0SRC(base) (BME_UBFX32(&SIM_SOPT4_REG(base), SIM_SOPT4_FTM1ICH0SRC_SHIFT, SIM_SOPT4_FTM1ICH0SRC_WIDTH))
+/*! @brief Read current value of the SIM_SOPT4_FTM1CH0SRC field. */
+#define SIM_RD_SOPT4_FTM1CH0SRC(base) ((SIM_SOPT4_REG(base) & SIM_SOPT4_FTM1CH0SRC_MASK) >> SIM_SOPT4_FTM1CH0SRC_SHIFT)
+#define SIM_BRD_SOPT4_FTM1CH0SRC(base) (BME_UBFX32(&SIM_SOPT4_REG(base), SIM_SOPT4_FTM1CH0SRC_SHIFT, SIM_SOPT4_FTM1CH0SRC_WIDTH))
 
-/*! @brief Set the FTM1ICH0SRC field to a new value. */
-#define SIM_WR_SOPT4_FTM1ICH0SRC(base, value) (SIM_RMW_SOPT4(base, SIM_SOPT4_FTM1ICH0SRC_MASK, SIM_SOPT4_FTM1ICH0SRC(value)))
-#define SIM_BWR_SOPT4_FTM1ICH0SRC(base, value) (BME_BFI32(&SIM_SOPT4_REG(base), ((uint32_t)(value) << SIM_SOPT4_FTM1ICH0SRC_SHIFT), SIM_SOPT4_FTM1ICH0SRC_SHIFT, SIM_SOPT4_FTM1ICH0SRC_WIDTH))
+/*! @brief Set the FTM1CH0SRC field to a new value. */
+#define SIM_WR_SOPT4_FTM1CH0SRC(base, value) (SIM_RMW_SOPT4(base, SIM_SOPT4_FTM1CH0SRC_MASK, SIM_SOPT4_FTM1CH0SRC(value)))
+#define SIM_BWR_SOPT4_FTM1CH0SRC(base, value) (BME_BFI32(&SIM_SOPT4_REG(base), ((uint32_t)(value) << SIM_SOPT4_FTM1CH0SRC_SHIFT), SIM_SOPT4_FTM1CH0SRC_SHIFT, SIM_SOPT4_FTM1CH0SRC_WIDTH))
 /*@}*/
 
 /*!
- * @name Register SIM_SOPT4, field FTM2ICH0SRC[21:20] (RW)
+ * @name Register SIM_SOPT4, field FTM2CH0SRC[21:20] (RW)
  *
  * Selects the source for FTM2 channel 0 input capture. When the FTM is not in
  * Input Capture mode, clear this field.
  *
  * Values:
- * - 00 - FTM2_CH0 signal
- * - 01 - CMP0 output
- * - 10 - CMP1 output
- * - 11 - Reserved
+ * - 0b00 - FTM2_CH0 signal
+ * - 0b01 - CMP0 output
+ * - 0b10 - CMP1 output
+ * - 0b11 - Reserved
  */
 /*@{*/
-/*! @brief Read current value of the SIM_SOPT4_FTM2ICH0SRC field. */
-#define SIM_RD_SOPT4_FTM2ICH0SRC(base) ((SIM_SOPT4_REG(base) & SIM_SOPT4_FTM2ICH0SRC_MASK) >> SIM_SOPT4_FTM2ICH0SRC_SHIFT)
-#define SIM_BRD_SOPT4_FTM2ICH0SRC(base) (BME_UBFX32(&SIM_SOPT4_REG(base), SIM_SOPT4_FTM2ICH0SRC_SHIFT, SIM_SOPT4_FTM2ICH0SRC_WIDTH))
+/*! @brief Read current value of the SIM_SOPT4_FTM2CH0SRC field. */
+#define SIM_RD_SOPT4_FTM2CH0SRC(base) ((SIM_SOPT4_REG(base) & SIM_SOPT4_FTM2CH0SRC_MASK) >> SIM_SOPT4_FTM2CH0SRC_SHIFT)
+#define SIM_BRD_SOPT4_FTM2CH0SRC(base) (BME_UBFX32(&SIM_SOPT4_REG(base), SIM_SOPT4_FTM2CH0SRC_SHIFT, SIM_SOPT4_FTM2CH0SRC_WIDTH))
 
-/*! @brief Set the FTM2ICH0SRC field to a new value. */
-#define SIM_WR_SOPT4_FTM2ICH0SRC(base, value) (SIM_RMW_SOPT4(base, SIM_SOPT4_FTM2ICH0SRC_MASK, SIM_SOPT4_FTM2ICH0SRC(value)))
-#define SIM_BWR_SOPT4_FTM2ICH0SRC(base, value) (BME_BFI32(&SIM_SOPT4_REG(base), ((uint32_t)(value) << SIM_SOPT4_FTM2ICH0SRC_SHIFT), SIM_SOPT4_FTM2ICH0SRC_SHIFT, SIM_SOPT4_FTM2ICH0SRC_WIDTH))
+/*! @brief Set the FTM2CH0SRC field to a new value. */
+#define SIM_WR_SOPT4_FTM2CH0SRC(base, value) (SIM_RMW_SOPT4(base, SIM_SOPT4_FTM2CH0SRC_MASK, SIM_SOPT4_FTM2CH0SRC(value)))
+#define SIM_BWR_SOPT4_FTM2CH0SRC(base, value) (BME_BFI32(&SIM_SOPT4_REG(base), ((uint32_t)(value) << SIM_SOPT4_FTM2CH0SRC_SHIFT), SIM_SOPT4_FTM2CH0SRC_SHIFT, SIM_SOPT4_FTM2CH0SRC_WIDTH))
 /*@}*/
 
 /*!
- * @name Register SIM_SOPT4, field FTM2ICH1SRC[22] (RW)
+ * @name Register SIM_SOPT4, field FTM2CH1SRC[22] (RW)
  *
  * Selects the source for FTM2 channel 1 input capture. When the FTM is not in
  * Input Capture mode, clear this field.
  *
  * Values:
- * - 0 - FTM2_CH1 pin is fed to FTM2 CH1
- * - 1 - FTM2_CH1 pin XOR FTM2_CH0 pin XOR FTM1_CH1 pin is fed to FTM2 CH1 If
+ * - 0b0 - FTM2_CH1 pin is fed to FTM2 CH1
+ * - 0b1 - FTM2_CH1 pin XOR FTM2_CH0 pin XOR FTM1_CH1 pin is fed to FTM2 CH1 If
  *     this field is set, then the three input pins feed FTM2 channel 1 input
- *     capture. In this case, FTM1 channel 1 cannot be used for input capture of FTM1,
- *     as it has no pin. FTM1 channel1 can be used for Output Compare mode of
+ *     capture. In this case, FTM1 channel 1 cannot be used for input capture of
+ *     FTM1, as it has no pin. FTM1 channel1 can be used for Output Compare mode of
  *     FTM1, though without an output.
  */
 /*@{*/
-/*! @brief Read current value of the SIM_SOPT4_FTM2ICH1SRC field. */
-#define SIM_RD_SOPT4_FTM2ICH1SRC(base) ((SIM_SOPT4_REG(base) & SIM_SOPT4_FTM2ICH1SRC_MASK) >> SIM_SOPT4_FTM2ICH1SRC_SHIFT)
-#define SIM_BRD_SOPT4_FTM2ICH1SRC(base) (BME_UBFX32(&SIM_SOPT4_REG(base), SIM_SOPT4_FTM2ICH1SRC_SHIFT, SIM_SOPT4_FTM2ICH1SRC_WIDTH))
+/*! @brief Read current value of the SIM_SOPT4_FTM2CH1SRC field. */
+#define SIM_RD_SOPT4_FTM2CH1SRC(base) ((SIM_SOPT4_REG(base) & SIM_SOPT4_FTM2CH1SRC_MASK) >> SIM_SOPT4_FTM2CH1SRC_SHIFT)
+#define SIM_BRD_SOPT4_FTM2CH1SRC(base) (BME_UBFX32(&SIM_SOPT4_REG(base), SIM_SOPT4_FTM2CH1SRC_SHIFT, SIM_SOPT4_FTM2CH1SRC_WIDTH))
 
-/*! @brief Set the FTM2ICH1SRC field to a new value. */
-#define SIM_WR_SOPT4_FTM2ICH1SRC(base, value) (SIM_RMW_SOPT4(base, SIM_SOPT4_FTM2ICH1SRC_MASK, SIM_SOPT4_FTM2ICH1SRC(value)))
-#define SIM_BWR_SOPT4_FTM2ICH1SRC(base, value) (BME_BFI32(&SIM_SOPT4_REG(base), ((uint32_t)(value) << SIM_SOPT4_FTM2ICH1SRC_SHIFT), SIM_SOPT4_FTM2ICH1SRC_SHIFT, SIM_SOPT4_FTM2ICH1SRC_WIDTH))
+/*! @brief Set the FTM2CH1SRC field to a new value. */
+#define SIM_WR_SOPT4_FTM2CH1SRC(base, value) (SIM_RMW_SOPT4(base, SIM_SOPT4_FTM2CH1SRC_MASK, SIM_SOPT4_FTM2CH1SRC(value)))
+#define SIM_BWR_SOPT4_FTM2CH1SRC(base, value) (BME_BFI32(&SIM_SOPT4_REG(base), ((uint32_t)(value) << SIM_SOPT4_FTM2CH1SRC_SHIFT), SIM_SOPT4_FTM2CH1SRC_SHIFT, SIM_SOPT4_FTM2CH1SRC_WIDTH))
 /*@}*/
 
 /*!
@@ -26329,10 +26368,10 @@
  * the appropriate pin control register in the port control module.
  *
  * Values:
- * - 00 - FTM0 external clock driven by FTM_CLKIN0 pin
- * - 01 - FTM0 external clock driven by FTM_CLKIN1 pin
- * - 10 - FTM0 external clock driven by FTM_CLKIN2 pin
- * - 11 - Reserved
+ * - 0b00 - FTM0 external clock driven by FTM_CLKIN0 pin
+ * - 0b01 - FTM0 external clock driven by FTM_CLKIN1 pin
+ * - 0b10 - FTM0 external clock driven by FTM_CLKIN2 pin
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM0CLKSEL field. */
@@ -26352,10 +26391,10 @@
  * the appropriate pin control register in the port control module.
  *
  * Values:
- * - 00 - FTM1 external clock driven by FTM_CLKIN0 pin
- * - 01 - FTM1 external clock driven by FTM_CLKIN1 pin
- * - 10 - FTM1 external clock driven by FTM_CLKIN2 pin
- * - 11 - Reserved
+ * - 0b00 - FTM1 external clock driven by FTM_CLKIN0 pin
+ * - 0b01 - FTM1 external clock driven by FTM_CLKIN1 pin
+ * - 0b10 - FTM1 external clock driven by FTM_CLKIN2 pin
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM1CLKSEL field. */
@@ -26375,10 +26414,10 @@
  * the appropriate pin control register in the port control module.
  *
  * Values:
- * - 00 - FTM2 external clock driven by FTM_CLKIN0 pin
- * - 01 - FTM2 external clock driven by FTM_CLKIN1 pin
- * - 10 - FTM2 external clock driven by FTM_CLKIN2 pin
- * - 11 - Reserved
+ * - 0b00 - FTM2 external clock driven by FTM_CLKIN0 pin
+ * - 0b01 - FTM2 external clock driven by FTM_CLKIN1 pin
+ * - 0b10 - FTM2 external clock driven by FTM_CLKIN2 pin
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT4_FTM2CLKSEL field. */
@@ -26421,10 +26460,10 @@
  * Selects the source for the UART 0 transmit data.
  *
  * Values:
- * - 00 - UART0_TX pin
- * - 01 - UART0_TX pin modulated with FTM1 channel 0 output
- * - 10 - UART0_TX pin modulated with FTM2 channel 0 output
- * - 11 - Reserved
+ * - 0b00 - UART0_TX pin
+ * - 0b01 - UART0_TX pin modulated with FTM1 channel 0 output
+ * - 0b10 - UART0_TX pin modulated with FTM2 channel 0 output
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART0TXSRC field. */
@@ -26442,10 +26481,10 @@
  * Selects the source for the UART 0 receive data.
  *
  * Values:
- * - 00 - UART0_RX pin
- * - 01 - CMP0
- * - 10 - CMP1
- * - 11 - Reserved
+ * - 0b00 - UART0_RX pin
+ * - 0b01 - CMP0
+ * - 0b10 - CMP1
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART0RXSRC field. */
@@ -26463,10 +26502,10 @@
  * Selects the source for the UART 1 transmit data.
  *
  * Values:
- * - 00 - UART1_TX pin
- * - 01 - UART1_TX pin modulated with FTM1 channel 0 output
- * - 10 - UART1_TX pin modulated with FTM2 channel 0 output
- * - 11 - Reserved
+ * - 0b00 - UART1_TX pin
+ * - 0b01 - UART1_TX pin modulated with FTM1 channel 0 output
+ * - 0b10 - UART1_TX pin modulated with FTM2 channel 0 output
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART1TXSRC field. */
@@ -26484,10 +26523,10 @@
  * Selects the source for the UART 1 receive data.
  *
  * Values:
- * - 00 - UART1_RX pin
- * - 01 - CMP0
- * - 10 - CMP1
- * - 11 - Reserved
+ * - 0b00 - UART1_RX pin
+ * - 0b01 - CMP0
+ * - 0b10 - CMP1
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART1RXSRC field. */
@@ -26503,8 +26542,8 @@
  * @name Register SIM_SOPT5, field UART0ODE[16] (RW)
  *
  * Values:
- * - 0 - Open drain is disabled on UART0
- * - 1 - Open drain is enabled on UART0
+ * - 0b0 - Open drain is disabled on UART0
+ * - 0b1 - Open drain is enabled on UART0
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART0ODE field. */
@@ -26520,8 +26559,8 @@
  * @name Register SIM_SOPT5, field UART1ODE[17] (RW)
  *
  * Values:
- * - 0 - Open drain is disabled on UART1
- * - 1 - Open drain is enabled on UART1
+ * - 0b0 - Open drain is disabled on UART1
+ * - 0b1 - Open drain is enabled on UART1
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT5_UART1ODE field. */
@@ -26562,8 +26601,8 @@
  * @name Register SIM_SOPT6, field FTM3FLT0[0] (RW)
  *
  * Values:
- * - 0 - FTM3_FLT0 pin
- * - 1 - Reserved
+ * - 0b0 - FTM3_FLT0 pin
+ * - 0b1 - CMP0 out
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM3FLT0 field. */
@@ -26579,8 +26618,8 @@
  * @name Register SIM_SOPT6, field FTM4FLT0[2] (RW)
  *
  * Values:
- * - 0 - FTM4_FLT0 pin
- * - 1 - CMP0 out
+ * - 0b0 - FTM4_FLT0 pin
+ * - 0b1 - CMP0 out
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM4FLT0 field. */
@@ -26596,8 +26635,8 @@
  * @name Register SIM_SOPT6, field FTM5FLT0[3] (RW)
  *
  * Values:
- * - 0 - FTM5_FLT0 pin
- * - 1 - CMP0 out
+ * - 0b0 - FTM5_FLT0 pin
+ * - 0b1 - CMP0 out
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM5FLT0 field. */
@@ -26613,8 +26652,8 @@
  * @name Register SIM_SOPT6, field FTM3TRG0SRC[7] (RW)
  *
  * Values:
- * - 0 - CMP0 output drives FTM3 hardware trigger 0
- * - 1 - FTM5 channel match drives FTM3 hardware trigger 0
+ * - 0b0 - CMP0 output drives FTM3 hardware trigger 0
+ * - 0b1 - FTM5 channel match drives FTM3 hardware trigger 0
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM3TRG0SRC field. */
@@ -26630,8 +26669,8 @@
  * @name Register SIM_SOPT6, field FTM3TRG1SRC[8] (RW)
  *
  * Values:
- * - 0 - PDB1 output drives FTM3 hardware trigger 1
- * - 1 - FTM4 channel match drives FTM3 hardware trigger 1
+ * - 0b0 - PDB1 output drives FTM3 hardware trigger 1
+ * - 0b1 - FTM4 channel match drives FTM3 hardware trigger 1
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM3TRG1SRC field. */
@@ -26647,8 +26686,8 @@
  * @name Register SIM_SOPT6, field FTM3TRG2SRC[9] (RW)
  *
  * Values:
- * - 0 - CMP0 output drives FTM3 hardware trigger 2
- * - 1 - CMP1 output drives FTM3 hardware trigger 2
+ * - 0b0 - CMP0 output drives FTM3 hardware trigger 2
+ * - 0b1 - CMP1 output drives FTM3 hardware trigger 2
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM3TRG2SRC field. */
@@ -26664,8 +26703,8 @@
  * @name Register SIM_SOPT6, field FTM4TRG0SRC[10] (RW)
  *
  * Values:
- * - 0 - CMP0 output drives FTM4 hardware trigger 0
- * - 1 - FTM3 channel match drives FTM4 hardware trigger 0
+ * - 0b0 - CMP0 output drives FTM4 hardware trigger 0
+ * - 0b1 - FTM3 channel match drives FTM4 hardware trigger 0
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM4TRG0SRC field. */
@@ -26681,8 +26720,8 @@
  * @name Register SIM_SOPT6, field FTM4TRG1SRC[11] (RW)
  *
  * Values:
- * - 0 - PDB1 output trigger 1 drives FTM4 hardware trigger 1
- * - 1 - FTM5 channel match drives FTM4 hardware trigger 1
+ * - 0b0 - PDB1 output trigger 1 drives FTM4 hardware trigger 1
+ * - 0b1 - FTM5 channel match drives FTM4 hardware trigger 1
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM4TRG1SRC field. */
@@ -26698,8 +26737,8 @@
  * @name Register SIM_SOPT6, field FTM4TRG2SRC[12] (RW)
  *
  * Values:
- * - 0 - CMP0 output drives FTM4 hardware trigger 2
- * - 1 - CMP1 output drives FTM4 hardware trigger 2
+ * - 0b0 - CMP0 output drives FTM4 hardware trigger 2
+ * - 0b1 - CMP1 output drives FTM4 hardware trigger 2
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM4TRG2SRC field. */
@@ -26715,8 +26754,8 @@
  * @name Register SIM_SOPT6, field FTM5TRG0SRC[13] (RW)
  *
  * Values:
- * - 0 - CMP0 output drives FTM5 hardware trigger 0
- * - 1 - FTM3 channel match drives FTM5 hardware trigger 0
+ * - 0b0 - CMP0 output drives FTM5 hardware trigger 0
+ * - 0b1 - FTM3 channel match drives FTM5 hardware trigger 0
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM5TRG0SRC field. */
@@ -26732,8 +26771,8 @@
  * @name Register SIM_SOPT6, field FTM5TRG1SRC[14] (RW)
  *
  * Values:
- * - 0 - PDB1 output trigger 1 drives FTM5 hardware trigger 1
- * - 1 - FTM4 channel match drives FTM5 hardware trigger 1
+ * - 0b0 - PDB1 output trigger 1 drives FTM5 hardware trigger 1
+ * - 0b1 - FTM4 channel match drives FTM5 hardware trigger 1
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM5TRG1SRC field. */
@@ -26749,8 +26788,8 @@
  * @name Register SIM_SOPT6, field FTM5TRG2SRC[15] (RW)
  *
  * Values:
- * - 0 - CMP0 output drives FTM5 hardware trigger 2
- * - 1 - CMP1 output drives FTM5 hardware trigger 2
+ * - 0b0 - CMP0 output drives FTM5 hardware trigger 2
+ * - 0b1 - CMP1 output drives FTM5 hardware trigger 2
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM5TRG2SRC field. */
@@ -26763,55 +26802,55 @@
 /*@}*/
 
 /*!
- * @name Register SIM_SOPT6, field FTM4ICH0SRC[19:18] (RW)
+ * @name Register SIM_SOPT6, field FTM4CH0SRC[19:18] (RW)
  *
  * Selects the source for FTM4 channel 0 input capture.
  *
  * Values:
- * - 00 - FTM4_CH0 signal
- * - 01 - CMP0 output
- * - 10 - CMP1 output
- * - 11 - Reserved
+ * - 0b00 - FTM4_CH0 signal
+ * - 0b01 - CMP0 output
+ * - 0b10 - CMP1 output
+ * - 0b11 - Reserved
  */
 /*@{*/
-/*! @brief Read current value of the SIM_SOPT6_FTM4ICH0SRC field. */
-#define SIM_RD_SOPT6_FTM4ICH0SRC(base) ((SIM_SOPT6_REG(base) & SIM_SOPT6_FTM4ICH0SRC_MASK) >> SIM_SOPT6_FTM4ICH0SRC_SHIFT)
-#define SIM_BRD_SOPT6_FTM4ICH0SRC(base) (BME_UBFX32(&SIM_SOPT6_REG(base), SIM_SOPT6_FTM4ICH0SRC_SHIFT, SIM_SOPT6_FTM4ICH0SRC_WIDTH))
+/*! @brief Read current value of the SIM_SOPT6_FTM4CH0SRC field. */
+#define SIM_RD_SOPT6_FTM4CH0SRC(base) ((SIM_SOPT6_REG(base) & SIM_SOPT6_FTM4CH0SRC_MASK) >> SIM_SOPT6_FTM4CH0SRC_SHIFT)
+#define SIM_BRD_SOPT6_FTM4CH0SRC(base) (BME_UBFX32(&SIM_SOPT6_REG(base), SIM_SOPT6_FTM4CH0SRC_SHIFT, SIM_SOPT6_FTM4CH0SRC_WIDTH))
 
-/*! @brief Set the FTM4ICH0SRC field to a new value. */
-#define SIM_WR_SOPT6_FTM4ICH0SRC(base, value) (SIM_RMW_SOPT6(base, SIM_SOPT6_FTM4ICH0SRC_MASK, SIM_SOPT6_FTM4ICH0SRC(value)))
-#define SIM_BWR_SOPT6_FTM4ICH0SRC(base, value) (BME_BFI32(&SIM_SOPT6_REG(base), ((uint32_t)(value) << SIM_SOPT6_FTM4ICH0SRC_SHIFT), SIM_SOPT6_FTM4ICH0SRC_SHIFT, SIM_SOPT6_FTM4ICH0SRC_WIDTH))
+/*! @brief Set the FTM4CH0SRC field to a new value. */
+#define SIM_WR_SOPT6_FTM4CH0SRC(base, value) (SIM_RMW_SOPT6(base, SIM_SOPT6_FTM4CH0SRC_MASK, SIM_SOPT6_FTM4CH0SRC(value)))
+#define SIM_BWR_SOPT6_FTM4CH0SRC(base, value) (BME_BFI32(&SIM_SOPT6_REG(base), ((uint32_t)(value) << SIM_SOPT6_FTM4CH0SRC_SHIFT), SIM_SOPT6_FTM4CH0SRC_SHIFT, SIM_SOPT6_FTM4CH0SRC_WIDTH))
 /*@}*/
 
 /*!
- * @name Register SIM_SOPT6, field FTM5ICH0SRC[21:20] (RW)
+ * @name Register SIM_SOPT6, field FTM5CH0SRC[21:20] (RW)
  *
  * Selects the source for FTM5 channel 0 input capture.
  *
  * Values:
- * - 00 - FTM5_CH0 signal
- * - 01 - CMP0 output
- * - 10 - CMP1 output
- * - 11 - Reserved
+ * - 0b00 - FTM5_CH0 signal
+ * - 0b01 - CMP0 output
+ * - 0b10 - CMP1 output
+ * - 0b11 - Reserved
  */
 /*@{*/
-/*! @brief Read current value of the SIM_SOPT6_FTM5ICH0SRC field. */
-#define SIM_RD_SOPT6_FTM5ICH0SRC(base) ((SIM_SOPT6_REG(base) & SIM_SOPT6_FTM5ICH0SRC_MASK) >> SIM_SOPT6_FTM5ICH0SRC_SHIFT)
-#define SIM_BRD_SOPT6_FTM5ICH0SRC(base) (BME_UBFX32(&SIM_SOPT6_REG(base), SIM_SOPT6_FTM5ICH0SRC_SHIFT, SIM_SOPT6_FTM5ICH0SRC_WIDTH))
+/*! @brief Read current value of the SIM_SOPT6_FTM5CH0SRC field. */
+#define SIM_RD_SOPT6_FTM5CH0SRC(base) ((SIM_SOPT6_REG(base) & SIM_SOPT6_FTM5CH0SRC_MASK) >> SIM_SOPT6_FTM5CH0SRC_SHIFT)
+#define SIM_BRD_SOPT6_FTM5CH0SRC(base) (BME_UBFX32(&SIM_SOPT6_REG(base), SIM_SOPT6_FTM5CH0SRC_SHIFT, SIM_SOPT6_FTM5CH0SRC_WIDTH))
 
-/*! @brief Set the FTM5ICH0SRC field to a new value. */
-#define SIM_WR_SOPT6_FTM5ICH0SRC(base, value) (SIM_RMW_SOPT6(base, SIM_SOPT6_FTM5ICH0SRC_MASK, SIM_SOPT6_FTM5ICH0SRC(value)))
-#define SIM_BWR_SOPT6_FTM5ICH0SRC(base, value) (BME_BFI32(&SIM_SOPT6_REG(base), ((uint32_t)(value) << SIM_SOPT6_FTM5ICH0SRC_SHIFT), SIM_SOPT6_FTM5ICH0SRC_SHIFT, SIM_SOPT6_FTM5ICH0SRC_WIDTH))
+/*! @brief Set the FTM5CH0SRC field to a new value. */
+#define SIM_WR_SOPT6_FTM5CH0SRC(base, value) (SIM_RMW_SOPT6(base, SIM_SOPT6_FTM5CH0SRC_MASK, SIM_SOPT6_FTM5CH0SRC(value)))
+#define SIM_BWR_SOPT6_FTM5CH0SRC(base, value) (BME_BFI32(&SIM_SOPT6_REG(base), ((uint32_t)(value) << SIM_SOPT6_FTM5CH0SRC_SHIFT), SIM_SOPT6_FTM5CH0SRC_SHIFT, SIM_SOPT6_FTM5CH0SRC_WIDTH))
 /*@}*/
 
 /*!
  * @name Register SIM_SOPT6, field FTM3CLKSEL[25:24] (RW)
  *
  * Values:
- * - 00 - FTM3 external clock driven by FTM_CLKIN0 pin
- * - 01 - FTM3 external clock driven by FTM_CLKIN1 pin
- * - 10 - FTM3 external clock driven by FTM_CLKIN2 pin
- * - 11 - Reserved
+ * - 0b00 - FTM3 external clock driven by FTM_CLKIN0 pin
+ * - 0b01 - FTM3 external clock driven by FTM_CLKIN1 pin
+ * - 0b10 - FTM3 external clock driven by FTM_CLKIN2 pin
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM3CLKSEL field. */
@@ -26827,10 +26866,10 @@
  * @name Register SIM_SOPT6, field FTM4CLKSEL[27:26] (RW)
  *
  * Values:
- * - 00 - FTM4 external clock driven by FTM_CLKIN0 pin
- * - 01 - FTM4 external clock driven by FTM_CLKIN1 pin
- * - 10 - FTM4 external clock driven by FTM_CLKIN2 pin
- * - 11 - Reserved
+ * - 0b00 - FTM4 external clock driven by FTM_CLKIN0 pin
+ * - 0b01 - FTM4 external clock driven by FTM_CLKIN1 pin
+ * - 0b10 - FTM4 external clock driven by FTM_CLKIN2 pin
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM4CLKSEL field. */
@@ -26846,10 +26885,10 @@
  * @name Register SIM_SOPT6, field FTM5CLKSEL[29:28] (RW)
  *
  * Values:
- * - 00 - FTM5 external clock driven by FTM_CLKIN0 pin
- * - 01 - FTM5 external clock driven by FTM_CLKIN1 pin
- * - 10 - FTM5 external clock driven by FTM_CLKIN2 pin
- * - 11 - Reserved
+ * - 0b00 - FTM5 external clock driven by FTM_CLKIN0 pin
+ * - 0b01 - FTM5 external clock driven by FTM_CLKIN1 pin
+ * - 0b10 - FTM5 external clock driven by FTM_CLKIN2 pin
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT6_FTM5CLKSEL field. */
@@ -26893,22 +26932,22 @@
  * Stop and VLPS modes. .
  *
  * Values:
- * - 0000 - External trigger pin input (PDB0_EXTRG)
- * - 0001 - HSCMP0 output
- * - 0010 - HSCMP1 output
- * - 0011 - Reserved
- * - 0100 - DMA channel 0 transfer last write complete
- * - 0101 - DMA channel 1 transfer last write complete
- * - 0110 - DMA channel 2 transfer last write complete
- * - 0111 - DMA channel 3 transfer last write complete
- * - 1000 - FTM0 intialtrig or external trig output
- * - 1001 - FTM1 intial trig or external trig output
- * - 1010 - FTM2 intial trig or external trig output
- * - 1011 - FTM3 intial trig or external trig output
- * - 1100 - FTM4 intial trig or external trig output
- * - 1101 - FTM5 intial trig or external trig output
- * - 1110 - LPTMR0 trigger
- * - 1011 - Reserved
+ * - 0b0000 - External trigger pin input (PDB_EXTRG0)
+ * - 0b0001 - CMP0 output
+ * - 0b0010 - CMP1 output
+ * - 0b0011 - External trigger pin input (PDB_EXTRG1)
+ * - 0b0100 - DMA channel 0 transfer last write complete
+ * - 0b0101 - DMA channel 1 transfer last write complete
+ * - 0b0110 - DMA channel 2 transfer last write complete
+ * - 0b0111 - DMA channel 3 transfer last write complete
+ * - 0b1000 - FTM0 intialtrig or external trig output
+ * - 0b1001 - FTM1 intial trig or external trig output
+ * - 0b1010 - FTM2 intial trig or external trig output
+ * - 0b1011 - FTM3 intial trig or external trig output
+ * - 0b1100 - FTM4 intial trig or external trig output
+ * - 0b1101 - FTM5 intial trig or external trig output
+ * - 0b1110 - LPTMR0 trigger
+ * - 0b1111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT7_ADC0TRGSEL field. */
@@ -26927,9 +26966,9 @@
  * through ADC0ALTTRGEN.
  *
  * Values:
- * - 0 - Pre-trigger A for ADC0. Clearing this field will result in ADHWTSA=1
+ * - 0b0 - Pre-trigger A for ADC0. Clearing this field will result in ADHWTSA=1
  *     and ADHWTSB=0.
- * - 1 - Pre-trigger B for ADC0. Setting this bit will result in ADHWTSA=0 and
+ * - 0b1 - Pre-trigger B for ADC0. Setting this bit will result in ADHWTSA=0 and
  *     ADHWTSB=1.
  */
 /*@{*/
@@ -26948,10 +26987,10 @@
  * Enable alternative conversion triggers for ADC0.
  *
  * Values:
- * - 00 - PDB0 CH0 triggers ADC0
- * - 01 - PDB1 CH0 triggers ADC0
- * - 10 - Alt trigger source as per ADC0TRGSEL
- * - 11 - PDB0 CH0 OR PDB1 CH0 trigger ADC0
+ * - 0b00 - PDB0 CH0 triggers ADC0
+ * - 0b01 - PDB1 CH0 triggers ADC0
+ * - 0b10 - Alt trigger source as per ADC0TRGSEL
+ * - 0b11 - PDB0 CH0 OR PDB1 CH0 trigger ADC0
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT7_ADC0ALTTRGEN field. */
@@ -26970,22 +27009,22 @@
  * Stop and VLPS modes.
  *
  * Values:
- * - 0000 - External trigger pin input (PDB0_EXTRG)
- * - 0001 - HSCMP0 output
- * - 0010 - HSCMP1 output
- * - 0011 - Reserved
- * - 0100 - DMA channel 0 transfer last write complete
- * - 0101 - DMA channel 1 transfer last write complete
- * - 0110 - DMA channel 2 transfer last write complete
- * - 0111 - DMA channel 3 transfer last write complete
- * - 1000 - FTM0 intialtrig or external trig output
- * - 1001 - FTM1 intial trig or external trig output
- * - 1010 - FTM2 intial trig or external trig output
- * - 1011 - FTM3 intial trig or external trig output
- * - 1100 - FTM4 intial trig or external trig output
- * - 1101 - FTM5 intial trig or external trig output
- * - 1110 - LPTMR0 trigger
- * - 1011 - Reserved
+ * - 0b0000 - External trigger pin input (PDB_EXTRG0)
+ * - 0b0001 - CMP0 output
+ * - 0b0010 - CMP1 output
+ * - 0b0011 - External trigger pin input (PDB_EXTRG1)
+ * - 0b0100 - DMA channel 0 transfer last write complete
+ * - 0b0101 - DMA channel 1 transfer last write complete
+ * - 0b0110 - DMA channel 2 transfer last write complete
+ * - 0b0111 - DMA channel 3 transfer last write complete
+ * - 0b1000 - FTM0 intialtrig or external trig output
+ * - 0b1001 - FTM1 intial trig or external trig output
+ * - 0b1010 - FTM2 intial trig or external trig output
+ * - 0b1011 - FTM3 intial trig or external trig output
+ * - 0b1100 - FTM4 intial trig or external trig output
+ * - 0b1101 - FTM5 intial trig or external trig output
+ * - 0b1110 - LPTMR0 trigger
+ * - 0b1111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT7_ADC1TRGSEL field. */
@@ -27004,9 +27043,9 @@
  * through ADC1ALTTRGEN.
  *
  * Values:
- * - 0 - Pre-trigger A for ADC1. Clearing this field will result in ADHWTSA=1
+ * - 0b0 - Pre-trigger A for ADC1. Clearing this field will result in ADHWTSA=1
  *     and ADHWTSB=0.
- * - 1 - Pre-trigger B for ADC1. Setting this bit will result in ADHWTSA=0 and
+ * - 0b1 - Pre-trigger B for ADC1. Setting this bit will result in ADHWTSA=0 and
  *     ADHWTSB=1.
  */
 /*@{*/
@@ -27025,10 +27064,10 @@
  * Enable alternative conversion triggers for ADC1.
  *
  * Values:
- * - 00 - PDB0 CH1 triggers ADC1
- * - 01 - PDB1 CH1 triggers ADC1
- * - 10 - Alt trigger source ADC1TRGSEL
- * - 11 - PDB0 CH1 OR PDB1 CH1 trigger ADC1
+ * - 0b00 - PDB0 CH1 triggers ADC1
+ * - 0b01 - PDB1 CH1 triggers ADC1
+ * - 0b10 - Alt trigger source ADC1TRGSEL
+ * - 0b11 - PDB0 CH1 OR PDB1 CH1 trigger ADC1
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT7_ADC1ALTTRGEN field. */
@@ -27046,10 +27085,10 @@
  * Selects the source for the ADC0 ALT clock.
  *
  * Values:
- * - 00 - OUTDIV5 output
- * - 01 - MCGIRCLK
- * - 10 - OSCERCLK
- * - 11 - Reserved
+ * - 0b00 - OUTDIV5 output
+ * - 0b01 - MCGIRCLK
+ * - 0b10 - OSCERCLK
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT7_ADC0ALTCLKSRC field. */
@@ -27067,10 +27106,10 @@
  * Selects the source for the ADC1 ALT clock.
  *
  * Values:
- * - 00 - OUTDIV5 output
- * - 01 - MCGIRCLK
- * - 10 - OSCERCLK
- * - 11 - Reserved
+ * - 0b00 - OUTDIV5 output
+ * - 0b01 - MCGIRCLK
+ * - 0b10 - OSCERCLK
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT7_ADC1ALTCLKSRC field. */
@@ -27120,11 +27159,11 @@
  * @name Register SIM_SOPT8, field FTM0SYNCBIT[0] (RW)
  *
  * Values:
- * - 0 - No effect to FTM0; this allow the hardware trigger options to function
- *     as expected. See SOPT4[FTM0TRG0SRC].
- * - 1 - If TRIG0 enabled, this refreshes the FTM0CNTIN and all buffered
- *     registers of the FTM0 (must write 0 first then write 1); this masks the hardware
- *     trigger.
+ * - 0b0 - No effect to FTM0; this allow the hardware trigger options to
+ *     function as expected. See SOPT4[FTM0TRG0SRC].
+ * - 0b1 - If TRIG0 enabled, this refreshes the FTM0CNTIN and all buffered
+ *     registers of the FTM0 (must write 0 first then write 1); this masks the
+ *     hardware trigger.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT8_FTM0SYNCBIT field. */
@@ -27140,11 +27179,11 @@
  * @name Register SIM_SOPT8, field FTM1SYNCBIT[1] (RW)
  *
  * Values:
- * - 0 - No effect to FTM1; this allows the hardware trigger options to function
- *     as expected. See SOPT4[FTM1TRG0SRC].
- * - 1 - If TRIG0 enabled, this refreshes the FTM1CNTIN and all buffered
- *     registers of the FTM1 (must write 0 first then write 1); this masks the hardware
- *     trigger.
+ * - 0b0 - No effect to FTM1; this allows the hardware trigger options to
+ *     function as expected. See SOPT4[FTM1TRG0SRC].
+ * - 0b1 - If TRIG0 enabled, this refreshes the FTM1CNTIN and all buffered
+ *     registers of the FTM1 (must write 0 first then write 1); this masks the
+ *     hardware trigger.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT8_FTM1SYNCBIT field. */
@@ -27160,9 +27199,9 @@
  * @name Register SIM_SOPT8, field FTM2SYNCBIT[2] (RW)
  *
  * Values:
- * - 0 - No effect to FTM2; this allows the hardware trigger options to function
- *     as expected. See SOPT4[FTM2TRG0SRC].
- * - 1 - If TRIG0 is enabled, this refreshes the FTM2CNTIN and all buffered
+ * - 0b0 - No effect to FTM2; this allows the hardware trigger options to
+ *     function as expected. See SOPT4[FTM2TRG0SRC].
+ * - 0b1 - If TRIG0 is enabled, this refreshes the FTM2CNTIN and all buffered
  *     registers of the FTM2 (must write 0 first then write 1); this masks the
  *     hardware trigger.
  */
@@ -27180,9 +27219,9 @@
  * @name Register SIM_SOPT8, field FTM3SYNCBIT[3] (RW)
  *
  * Values:
- * - 0 - No effect to FTM3; this allows the hardware trigger options to function
- *     as expected. See SOPT6[FTM3TRG0SRC].
- * - 1 - If TRIG0 is enabled, this refreshes the FTM3CNTIN and allbuffered
+ * - 0b0 - No effect to FTM3; this allows the hardware trigger options to
+ *     function as expected. See SOPT6[FTM3TRG0SRC].
+ * - 0b1 - If TRIG0 is enabled, this refreshes the FTM3CNTIN and allbuffered
  *     registers of the FTM3 (must write 0 first then write 1); this masks the
  *     hardware trigger.
  */
@@ -27200,9 +27239,9 @@
  * @name Register SIM_SOPT8, field FTM4SYNCBIT[4] (RW)
  *
  * Values:
- * - 0 - No effect to FTM4; this allows the hardware trigger options to function
- *     as expected. See SOPT6[FTM4TRG0SRC].
- * - 1 - If TRIG0 is enabled, this refreshes the FTM4CNTIN and allbuffered
+ * - 0b0 - No effect to FTM4; this allows the hardware trigger options to
+ *     function as expected. See SOPT6[FTM4TRG0SRC].
+ * - 0b1 - If TRIG0 is enabled, this refreshes the FTM4CNTIN and allbuffered
  *     registers of the FTM4 (must write 0 first then write 1); this masks the
  *     hardware trigger.
  */
@@ -27220,9 +27259,9 @@
  * @name Register SIM_SOPT8, field FTM5SYNCBIT[5] (RW)
  *
  * Values:
- * - 0 - No effect on FTM5; this allows the hardware trigger options to function
- *     as expected. See SOPT6[FTM5TRG0SRC].
- * - 1 - If TRIG0 is enabled, this refreshes the FTM5CNTIN and allbuffered
+ * - 0b0 - No effect on FTM5; this allows the hardware trigger options to
+ *     function as expected. See SOPT6[FTM5TRG0SRC].
+ * - 0b1 - If TRIG0 is enabled, this refreshes the FTM5CNTIN and allbuffered
  *     registers of the FTM5 (must write 0 first then write 1); this masks the
  *     hardware trigger.
  */
@@ -27240,11 +27279,11 @@
  * @name Register SIM_SOPT8, field CARRIER_SELECT0[9:8] (RW)
  *
  * Values:
- * - 00 - FTM1_CH1 output provides the carrier signal for Timer Modulation mode
- * - 01 - LPTMR0 prescaler output provides the carrier signal for Timer
+ * - 0b00 - FTM1_CH1 output provides the carrier signal for Timer Modulation mode
+ * - 0b01 - LPTMR0 prescaler output provides the carrier signal for Timer
  *     Modulation mode
- * - 10 - FTM5_CH1 output provides the carrier signal for Timer Modulation mode
- * - 11 - Reserved
+ * - 0b10 - FTM5_CH1 output provides the carrier signal for Timer Modulation mode
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT8_CARRIER_SELECT0 field. */
@@ -27263,8 +27302,8 @@
  * output PWM/OCMP mode, clear this field.
  *
  * Values:
- * - 0 - FTM0CH0 pin is the output of FTM0 channel 0 PWM/OCMP
- * - 1 - FTM0CH0 pin is the output of FTM0 channel 0 PWM/OCMP modulating the
+ * - 0b0 - FTM0CH0 pin is the output of FTM0 channel 0 PWM/OCMP
+ * - 0b1 - FTM0CH0 pin is the output of FTM0 channel 0 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT0
  */
 /*@{*/
@@ -27284,8 +27323,8 @@
  * output PWM/OCMP mode, clear this field.
  *
  * Values:
- * - 0 - FTM0CH1 pin is the output of FTM0 channel 1 PWM/OCMP
- * - 1 - FTM0CH1 pin is the output of FTM0 channel 1 PWM/OCMP modulating the
+ * - 0b0 - FTM0CH1 pin is the output of FTM0 channel 1 PWM/OCMP
+ * - 0b1 - FTM0CH1 pin is the output of FTM0 channel 1 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT0
  */
 /*@{*/
@@ -27305,8 +27344,8 @@
  * output PWM/OCMP mode, clear this field.
  *
  * Values:
- * - 0 - FTM0CH2 pin is the output of FTM0 channel 2 PWM/OCMP
- * - 1 - FTM0CH2 pin is the output of FTM0 channel 2 PWM/OCMP modulating the
+ * - 0b0 - FTM0CH2 pin is the output of FTM0 channel 2 PWM/OCMP
+ * - 0b1 - FTM0CH2 pin is the output of FTM0 channel 2 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT0
  */
 /*@{*/
@@ -27326,8 +27365,8 @@
  * output PWM/OCMP mode, clear this field.
  *
  * Values:
- * - 0 - FTM0CH3 pin is the output of FTM0 channel 3 PWM/OCMP
- * - 1 - FTM0CH3 pin is the output of FTM0 channel 3 PWM/OCMP modulating the
+ * - 0b0 - FTM0CH3 pin is the output of FTM0 channel 3 PWM/OCMP
+ * - 0b1 - FTM0CH3 pin is the output of FTM0 channel 3 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT0
  */
 /*@{*/
@@ -27347,8 +27386,8 @@
  * output PWM/OCMP mode, clear this field.
  *
  * Values:
- * - 0 - FTM0CH4 pin is the output of FTM0 channel 4 PWM/OCMP
- * - 1 - FTM0CH4 pin is the output of FTM0 channel 4 PWM/OCMP modulating the
+ * - 0b0 - FTM0CH4 pin is the output of FTM0 channel 4 PWM/OCMP
+ * - 0b1 - FTM0CH4 pin is the output of FTM0 channel 4 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT0
  */
 /*@{*/
@@ -27368,8 +27407,8 @@
  * output PWM/OCMP mode, clear this field.
  *
  * Values:
- * - 0 - FTM0CH5 pin is the output of FTM0 channel 5 PWM/OCMP
- * - 1 - FTM0CH5 pin is the output of FTM0 channel 5 PWM/OCMP modulating the
+ * - 0b0 - FTM0CH5 pin is the output of FTM0 channel 5 PWM/OCMP
+ * - 0b1 - FTM0CH5 pin is the output of FTM0 channel 5 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT0
  */
 /*@{*/
@@ -27389,8 +27428,8 @@
  * output PWM/OCMP mode, clear this field.
  *
  * Values:
- * - 0 - FTM2CH0 pin is the output of FTM2 channel 0 PWM/OCMP
- * - 1 - FTM2CH0 pin is the output of FTM2 channel 0 PWM/OCMP modulating the
+ * - 0b0 - FTM2CH0 pin is the output of FTM2 channel 0 PWM/OCMP
+ * - 0b1 - FTM2CH0 pin is the output of FTM2 channel 0 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT0
  */
 /*@{*/
@@ -27410,8 +27449,8 @@
  * output PWM/OCMP mode, clear this field.
  *
  * Values:
- * - 0 - FTM2CH1 pin is the output of FTM2 channel 1 PWM/OCMP
- * - 1 - FTM2CH1 pin is the output of FTM2 channel 1 PWM/OCMP modulating the
+ * - 0b0 - FTM2CH1 pin is the output of FTM2 channel 1 PWM/OCMP
+ * - 0b1 - FTM2CH1 pin is the output of FTM2 channel 1 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT0
  */
 /*@{*/
@@ -27453,11 +27492,11 @@
  * @name Register SIM_SOPT9, field CARRIER_SELECT1[9:8] (RW)
  *
  * Values:
- * - 00 - FTM1_CH1 output provides the carrier signal for Timer Modulation mode
- * - 01 - LPTMR0 prescaler output provides the carrier signal for Timer
+ * - 0b00 - FTM1_CH1 output provides the carrier signal for Timer Modulation mode
+ * - 0b01 - LPTMR0 prescaler output provides the carrier signal for Timer
  *     Modulation mode
- * - 10 - FTM5_CH1 output provides the carrier signal for Timer Modulation mode
- * - 11 - Reserved
+ * - 0b10 - FTM5_CH1 output provides the carrier signal for Timer Modulation mode
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SOPT9_CARRIER_SELECT1 field. */
@@ -27473,8 +27512,8 @@
  * @name Register SIM_SOPT9, field FTM3OCH0SRC[16] (RW)
  *
  * Values:
- * - 0 - FTM3CH0 pin is the output of FTM3 channel 0 PWM/OCMP
- * - 1 - FTM3CH0 pin is the output of FTM3 channel 0 PWM/OCMP modulating the
+ * - 0b0 - FTM3CH0 pin is the output of FTM3 channel 0 PWM/OCMP
+ * - 0b1 - FTM3CH0 pin is the output of FTM3 channel 0 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT1
  */
 /*@{*/
@@ -27491,8 +27530,8 @@
  * @name Register SIM_SOPT9, field FTM3OCH1SRC[17] (RW)
  *
  * Values:
- * - 0 - FTM3CH1 pin is the output of FTM3 channel 1 PWM/OCMP
- * - 1 - FTM3CH1 pin is the output of FTM3 channel 1 PWM/OCMP modulating the
+ * - 0b0 - FTM3CH1 pin is the output of FTM3 channel 1 PWM/OCMP
+ * - 0b1 - FTM3CH1 pin is the output of FTM3 channel 1 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT1
  */
 /*@{*/
@@ -27509,8 +27548,8 @@
  * @name Register SIM_SOPT9, field FTM3OCH2SRC[18] (RW)
  *
  * Values:
- * - 0 - FTM3CH2 pin is the output of FTM3 channel 2 PWM/OCMP
- * - 1 - FTM3CH2 pin is the output of FTM3 channel 2 PWM/OCMP modulating the
+ * - 0b0 - FTM3CH2 pin is the output of FTM3 channel 2 PWM/OCMP
+ * - 0b1 - FTM3CH2 pin is the output of FTM3 channel 2 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT1
  */
 /*@{*/
@@ -27527,8 +27566,8 @@
  * @name Register SIM_SOPT9, field FTM3OCH3SRC[19] (RW)
  *
  * Values:
- * - 0 - FTM3CH3 pin is the output of FTM3 channel 3 PWM/OCMP
- * - 1 - FTM3CH3 pin is the output of FTM3 channel 3 PWM/OCMP modulating the
+ * - 0b0 - FTM3CH3 pin is the output of FTM3 channel 3 PWM/OCMP
+ * - 0b1 - FTM3CH3 pin is the output of FTM3 channel 3 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT1
  */
 /*@{*/
@@ -27545,8 +27584,8 @@
  * @name Register SIM_SOPT9, field FTM3OCH4SRC[20] (RW)
  *
  * Values:
- * - 0 - FTM3CH4 pin is the output of FTM3 channel 4 PWM/OCMP
- * - 1 - FTM3CH4 pin is the output of FTM3 channel 4 PWM/OCMP modulating the
+ * - 0b0 - FTM3CH4 pin is the output of FTM3 channel 4 PWM/OCMP
+ * - 0b1 - FTM3CH4 pin is the output of FTM3 channel 4 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT1
  */
 /*@{*/
@@ -27563,8 +27602,8 @@
  * @name Register SIM_SOPT9, field FTM3OCH5SRC[21] (RW)
  *
  * Values:
- * - 0 - FTM3CH5 pin is the output of FTM3 channel 5 PWM/OCMP
- * - 1 - FTM3CH5 pin is the output of FTM3 channel 5 PWM/OCMP modulating the
+ * - 0b0 - FTM3CH5 pin is the output of FTM3 channel 5 PWM/OCMP
+ * - 0b1 - FTM3CH5 pin is the output of FTM3 channel 5 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT1
  */
 /*@{*/
@@ -27581,8 +27620,8 @@
  * @name Register SIM_SOPT9, field FTM4OCH0SRC[22] (RW)
  *
  * Values:
- * - 0 - FTM4CH0 pin is the output of FTM4 channel 0 PWM/OCMP
- * - 1 - FTM4CH0 pin is the output of FTM4 channel 0 PWM/OCMP modulating the
+ * - 0b0 - FTM4CH0 pin is the output of FTM4 channel 0 PWM/OCMP
+ * - 0b1 - FTM4CH0 pin is the output of FTM4 channel 0 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT1
  */
 /*@{*/
@@ -27599,8 +27638,8 @@
  * @name Register SIM_SOPT9, field FTM4OCH1SRC[23] (RW)
  *
  * Values:
- * - 0 - FTM4CH1 pin is the output of FTM4 channel 1 PWM/OCMP
- * - 1 - FTM4CH1 pin is the output of FTM4 channel 1 PWM/OCMP modulating the
+ * - 0b0 - FTM4CH1 pin is the output of FTM4 channel 1 PWM/OCMP
+ * - 0b1 - FTM4CH1 pin is the output of FTM4 channel 1 PWM/OCMP modulating the
  *     carrier frequency, as per CARRIER_SELECT1
  */
 /*@{*/
@@ -27639,22 +27678,22 @@
  * Specifies the pincount of the device.
  *
  * Values:
- * - 0000 - Reserved
- * - 0001 - Reserved
- * - 0010 - 32-pin
- * - 0011 - Reserved
- * - 0100 - 48-pin
- * - 0101 - 64-pin
- * - 0110 - Reserved
- * - 0111 - Reserved
- * - 1000 - Reserved
- * - 1001 - Reserved
- * - 1010 - Reserved
- * - 1011 - Reserved
- * - 1100 - Reserved
- * - 1101 - Reserved
- * - 1110 - Reserved
- * - 1111 - Reserved
+ * - 0b0000 - Reserved
+ * - 0b0001 - Reserved
+ * - 0b0010 - 32-pin
+ * - 0b0011 - Reserved
+ * - 0b0100 - 48-pin
+ * - 0b0101 - 64-pin
+ * - 0b0110 - Reserved
+ * - 0b0111 - Reserved
+ * - 0b1000 - Reserved
+ * - 0b1001 - Reserved
+ * - 0b1010 - Reserved
+ * - 0b1011 - Reserved
+ * - 0b1100 - Reserved
+ * - 0b1101 - Reserved
+ * - 0b1110 - Reserved
+ * - 0b1111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_PINID field. */
@@ -27691,14 +27730,14 @@
  * Specifies the size of the System SRAM.
  *
  * Values:
- * - 0000 - Reserved
- * - 0001 - Reserved
- * - 0010 - Reserved
- * - 0011 - Reserved
- * - 0100 - Reserved
- * - 0101 - 16 KB
- * - 0110 - Reserved
- * - 0111 - Reserved
+ * - 0b0000 - Reserved
+ * - 0b0001 - Reserved
+ * - 0b0010 - Reserved
+ * - 0b0011 - Reserved
+ * - 0b0100 - Reserved
+ * - 0b0101 - 16 KB
+ * - 0b0110 - Reserved
+ * - 0b0111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_SRAMSIZE field. */
@@ -27710,7 +27749,7 @@
  * @name Register SIM_SDID, field SERIERID[23:20] (RO)
  *
  * Values:
- * - 0110 - V-family - Motor control
+ * - 0b0110 - V-family - Motor control
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_SERIERID field. */
@@ -27724,8 +27763,8 @@
  * Specifies the V sub-family of the device.
  *
  * Values:
- * - 0000 - MKV10xxxx
- * - 0001 - MKV11xxxx
+ * - 0b0000 - MKV10xxxx
+ * - 0b0001 - MKV11xxxx
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_SUBFAMID field. */
@@ -27739,7 +27778,7 @@
  * Specifies the V-family of the device.
  *
  * Values:
- * - 0001 - MKV1xZx
+ * - 0b0001 - MKV1xZx
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SDID_FAMID field. */
@@ -27786,8 +27825,8 @@
  * This bit controls the clock gate to the EWM module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_EWM field. */
@@ -27805,8 +27844,8 @@
  * This bit controls the clock gate to the I2C0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_I2C0 field. */
@@ -27824,8 +27863,8 @@
  * This bit controls the clock gate to the UART0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_UART0 field. */
@@ -27843,8 +27882,8 @@
  * This bit controls the clock gate to the UART1 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_UART1 field. */
@@ -27862,8 +27901,8 @@
  * Controls the clock gate to both the comparator modules (CMP0 and CMP1).
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC4_CMP field. */
@@ -27906,8 +27945,8 @@
  * Controls the clock software access to the Low Power Timer module.
  *
  * Values:
- * - 0 - Access disabled
- * - 1 - Access enabled
+ * - 0b0 - Access disabled
+ * - 0b1 - Access enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_LPTMR field. */
@@ -27925,8 +27964,8 @@
  * Controls the clock gate to the Port A module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTA field. */
@@ -27944,8 +27983,8 @@
  * Controls the clock gate to the Port B module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTB field. */
@@ -27963,8 +28002,8 @@
  * Controls the clock gate to the Port C module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTC field. */
@@ -27982,8 +28021,8 @@
  * Controls the clock gate to the Port D module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTD field. */
@@ -28001,8 +28040,8 @@
  * Controls the clock gate to the Port E module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC5_PORTE field. */
@@ -28047,8 +28086,8 @@
  * blocked.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_FTF field. */
@@ -28066,8 +28105,8 @@
  * Controls the clock gate to the DMA Mux module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_DMAMUX field. */
@@ -28085,8 +28124,8 @@
  * Controls the clock gate to the FLEXCAN0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_FLEXCAN0 field. */
@@ -28104,8 +28143,8 @@
  * Controls the clock gate to the FTM3 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_FTM3 field. */
@@ -28123,8 +28162,8 @@
  * Controls the clock gate to the FTM4 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_FTM4 field. */
@@ -28142,8 +28181,8 @@
  * Controls the clock gate to the FTM5 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_FTM5 field. */
@@ -28161,8 +28200,8 @@
  * Controls the clock gate to the SPI0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_SPI0 field. */
@@ -28178,8 +28217,8 @@
  * @name Register SIM_SCGC6, field PDB1[17] (RW)
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_PDB1 field. */
@@ -28197,8 +28236,8 @@
  * Controls the clock gate to the CRC module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_CRC field. */
@@ -28216,8 +28255,8 @@
  * Controls the clock gate to the PDB module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_PDB0 field. */
@@ -28235,8 +28274,8 @@
  * Controls the clock gate to the FTM0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_FTM0 field. */
@@ -28254,8 +28293,8 @@
  * Controls the clock gate to the FTM1 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_FTM1 field. */
@@ -28273,8 +28312,8 @@
  * Controls the clock gate to the FTM2 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_FTM2 field. */
@@ -28292,8 +28331,8 @@
  * Controls the clock gate to the ADC0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_ADC0 field. */
@@ -28311,8 +28350,8 @@
  * Controls the clock gate to the ADC1 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_ADC1 field. */
@@ -28330,8 +28369,8 @@
  * Controls the clock gate to the DAC0 module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC6_DAC0 field. */
@@ -28374,8 +28413,8 @@
  * Controls the clock gate to the DMA module.
  *
  * Values:
- * - 0 - Clock disabled
- * - 1 - Clock enabled
+ * - 0b0 - Clock disabled
+ * - 0b1 - Clock enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_SCGC7_DMA field. */
@@ -28422,14 +28461,14 @@
  * by two).
  *
  * Values:
- * - 000 - Divide-by-1
- * - 001 - Divide-by-2
- * - 010 - Divide-by-3
- * - 011 - Divide-by-4
- * - 100 - Divide-by-5
- * - 101 - Divide-by-6
- * - 110 - Divide-by-7
- * - 111 - Divide-by-8
+ * - 0b000 - Divide-by-1
+ * - 0b001 - Divide-by-2
+ * - 0b010 - Divide-by-3
+ * - 0b011 - Divide-by-4
+ * - 0b100 - Divide-by-5
+ * - 0b101 - Divide-by-6
+ * - 0b110 - Divide-by-7
+ * - 0b111 - Divide-by-8
  */
 /*@{*/
 /*! @brief Read current value of the SIM_CLKDIV1_OUTDIV5 field. */
@@ -28447,8 +28486,8 @@
  * This bit controls the OUTDIV5 divider.
  *
  * Values:
- * - 0 - OUTDIV5 disabled
- * - 1 - OUTDIV5 enabled
+ * - 0b0 - OUTDIV5 disabled
+ * - 0b1 - OUTDIV5 enabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_CLKDIV1_OUTDIV5EN field. */
@@ -28468,14 +28507,14 @@
  * 001 (divide by two).
  *
  * Values:
- * - 000 - Divide-by-1.
- * - 001 - Divide-by-2.
- * - 010 - Divide-by-3.
- * - 011 - Divide-by-4.
- * - 100 - Divide-by-5.
- * - 101 - Divide-by-6.
- * - 110 - Divide-by-7.
- * - 111 - Divide-by-8.
+ * - 0b000 - Divide-by-1.
+ * - 0b001 - Divide-by-2.
+ * - 0b010 - Divide-by-3.
+ * - 0b011 - Divide-by-4.
+ * - 0b100 - Divide-by-5.
+ * - 0b101 - Divide-by-6.
+ * - 0b110 - Divide-by-7.
+ * - 0b111 - Divide-by-8.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_CLKDIV1_OUTDIV4 field. */
@@ -28496,22 +28535,22 @@
  * FTF_FOPT[LPBOOT] configuration bits.
  *
  * Values:
- * - 0000 - Divide-by-1.
- * - 0001 - Divide-by-2.
- * - 0010 - Divide-by-3.
- * - 0011 - Divide-by-4.
- * - 0100 - Divide-by-5.
- * - 0101 - Divide-by-6.
- * - 0110 - Divide-by-7.
- * - 0111 - Divide-by-8.
- * - 1000 - Divide-by-9.
- * - 1001 - Divide-by-10.
- * - 1010 - Divide-by-11.
- * - 1011 - Divide-by-12.
- * - 1100 - Divide-by-13.
- * - 1101 - Divide-by-14.
- * - 1110 - Divide-by-15.
- * - 1111 - Divide-by-16.
+ * - 0b0000 - Divide-by-1.
+ * - 0b0001 - Divide-by-2.
+ * - 0b0010 - Divide-by-3.
+ * - 0b0011 - Divide-by-4.
+ * - 0b0100 - Divide-by-5.
+ * - 0b0101 - Divide-by-6.
+ * - 0b0110 - Divide-by-7.
+ * - 0b0111 - Divide-by-8.
+ * - 0b1000 - Divide-by-9.
+ * - 0b1001 - Divide-by-10.
+ * - 0b1010 - Divide-by-11.
+ * - 0b1011 - Divide-by-12.
+ * - 0b1100 - Divide-by-13.
+ * - 0b1101 - Divide-by-14.
+ * - 0b1110 - Divide-by-15.
+ * - 0b1111 - Divide-by-16.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_CLKDIV1_OUTDIV1 field. */
@@ -28531,8 +28570,6 @@
  * @brief SIM_FCFG1 - Flash Configuration Register 1 (RW)
  *
  * Reset value: 0x00000000U
- *
- * The EESIZE and DEPART filelds are not applicable.
  */
 /*!
  * @name Constants and macros for entire SIM_FCFG1 register
@@ -28559,8 +28596,8 @@
  * Flash.
  *
  * Values:
- * - 0 - Flash is enabled
- * - 1 - Flash is disabled
+ * - 0b0 - Flash is enabled
+ * - 0b1 - Flash is disabled
  */
 /*@{*/
 /*! @brief Read current value of the SIM_FCFG1_FLASHDIS field. */
@@ -28583,8 +28620,8 @@
  * Doze mode is extended when this field is set.
  *
  * Values:
- * - 0 - Flash remains enabled during Doze mode
- * - 1 - Flash is disabled for the duration of Doze mode
+ * - 0b0 - Flash remains enabled during Doze mode
+ * - 0b1 - Flash is disabled for the duration of Doze mode
  */
 /*@{*/
 /*! @brief Read current value of the SIM_FCFG1_FLASHDOZE field. */
@@ -28603,13 +28640,13 @@
  * device.
  *
  * Values:
- * - 0000 - 8 KB of program flash memory, 0.25 KB protection region
- * - 0001 - 16 KB of program flash memory, 0.5 KB protection region
- * - 0011 - 32 KB of program flash memory, 1 KB protection region
- * - 0101 - 64 KB of program flash memory, 2 KB protection region
- * - 0111 - 128 KB of program flash memory, 4 KB protection region
- * - 1001 - 256 KB of program flash memory, 4 KB protection region
- * - 1111 - 32 KB of program flash memory, 1 KB protection region
+ * - 0b0000 - 8 KB of program flash memory, 0.25 KB protection region
+ * - 0b0001 - 16 KB of program flash memory, 0.5 KB protection region
+ * - 0b0011 - 32 KB of program flash memory, 1 KB protection region
+ * - 0b0101 - 64 KB of program flash memory, 2 KB protection region
+ * - 0b0111 - 128 KB of program flash memory, 4 KB protection region
+ * - 0b1001 - 256 KB of program flash memory, 4 KB protection region
+ * - 0b1111 - 32 KB of program flash memory, 1 KB protection region
  */
 /*@{*/
 /*! @brief Read current value of the SIM_FCFG1_PFSIZE field. */
@@ -28641,9 +28678,9 @@
  * @name Register SIM_FCFG2, field MAXADDR[30:24] (RO)
  *
  * This field concatenated with 13 leading zeros indicates the first invalid
- * address of program flash. For example, if MAXADDR = 0x20, the first invalid
- * address of flash block 0 is 0x0004_0000. This would be the MAXADDR value for a
- * device with 256 KB program flash.
+ * address of program flash. For example, if MAXADDR = 0x10, the first invalid
+ * address of flash block 0 is 0x0002_0000. This would be the MAXADDR value for a
+ * device with 128 KB program flash.
  */
 /*@{*/
 /*! @brief Read current value of the SIM_FCFG2_MAXADDR field. */
@@ -28715,49 +28752,49 @@
 /*@}*/
 
 /*******************************************************************************
- * SIM_WDOGCTRL - WDOG Control Register
+ * SIM_WDOGC - WDOG Control Register
  ******************************************************************************/
 
 /*!
- * @brief SIM_WDOGCTRL - WDOG Control Register (RW)
+ * @brief SIM_WDOGC - WDOG Control Register (RW)
  *
  * Reset value: 0x00000000U
  */
 /*!
- * @name Constants and macros for entire SIM_WDOGCTRL register
+ * @name Constants and macros for entire SIM_WDOGC register
  */
 /*@{*/
-#define SIM_RD_WDOGCTRL(base)    (SIM_WDOGCTRL_REG(base))
-#define SIM_WR_WDOGCTRL(base, value) (SIM_WDOGCTRL_REG(base) = (value))
-#define SIM_RMW_WDOGCTRL(base, mask, value) (SIM_WR_WDOGCTRL(base, (SIM_RD_WDOGCTRL(base) & ~(mask)) | (value)))
-#define SIM_SET_WDOGCTRL(base, value) (BME_OR32(&SIM_WDOGCTRL_REG(base), (uint32_t)(value)))
-#define SIM_CLR_WDOGCTRL(base, value) (BME_AND32(&SIM_WDOGCTRL_REG(base), (uint32_t)(~(value))))
-#define SIM_TOG_WDOGCTRL(base, value) (BME_XOR32(&SIM_WDOGCTRL_REG(base), (uint32_t)(value)))
+#define SIM_RD_WDOGC(base)       (SIM_WDOGC_REG(base))
+#define SIM_WR_WDOGC(base, value) (SIM_WDOGC_REG(base) = (value))
+#define SIM_RMW_WDOGC(base, mask, value) (SIM_WR_WDOGC(base, (SIM_RD_WDOGC(base) & ~(mask)) | (value)))
+#define SIM_SET_WDOGC(base, value) (BME_OR32(&SIM_WDOGC_REG(base), (uint32_t)(value)))
+#define SIM_CLR_WDOGC(base, value) (BME_AND32(&SIM_WDOGC_REG(base), (uint32_t)(~(value))))
+#define SIM_TOG_WDOGC(base, value) (BME_XOR32(&SIM_WDOGC_REG(base), (uint32_t)(value)))
 /*@}*/
 
 /*
- * Constants & macros for individual SIM_WDOGCTRL bitfields
+ * Constants & macros for individual SIM_WDOGC bitfields
  */
 
 /*!
- * @name Register SIM_WDOGCTRL, field WDOGCLKS[1] (RW)
+ * @name Register SIM_WDOGC, field WDOGCLKS[1] (RW)
  *
  * Selects the default clock source of the WDOG watchdog. On reset it will be
  * the 1kHZ LPO. The software can change this to the MCGIRCLK, which can be 32KHz
  * or 4Mhz, depending on the MCG configuration.
  *
  * Values:
- * - 0 - Internal 1 kHz clock is source to WDOG
- * - 1 - MCGIRCLK is source to WDOG
+ * - 0b0 - Internal 1 kHz clock is source to WDOG
+ * - 0b1 - MCGIRCLK is source to WDOG
  */
 /*@{*/
-/*! @brief Read current value of the SIM_WDOGCTRL_WDOGCLKS field. */
-#define SIM_RD_WDOGCTRL_WDOGCLKS(base) ((SIM_WDOGCTRL_REG(base) & SIM_WDOGCTRL_WDOGCLKS_MASK) >> SIM_WDOGCTRL_WDOGCLKS_SHIFT)
-#define SIM_BRD_WDOGCTRL_WDOGCLKS(base) (BME_UBFX32(&SIM_WDOGCTRL_REG(base), SIM_WDOGCTRL_WDOGCLKS_SHIFT, SIM_WDOGCTRL_WDOGCLKS_WIDTH))
+/*! @brief Read current value of the SIM_WDOGC_WDOGCLKS field. */
+#define SIM_RD_WDOGC_WDOGCLKS(base) ((SIM_WDOGC_REG(base) & SIM_WDOGC_WDOGCLKS_MASK) >> SIM_WDOGC_WDOGCLKS_SHIFT)
+#define SIM_BRD_WDOGC_WDOGCLKS(base) (BME_UBFX32(&SIM_WDOGC_REG(base), SIM_WDOGC_WDOGCLKS_SHIFT, SIM_WDOGC_WDOGCLKS_WIDTH))
 
 /*! @brief Set the WDOGCLKS field to a new value. */
-#define SIM_WR_WDOGCTRL_WDOGCLKS(base, value) (SIM_RMW_WDOGCTRL(base, SIM_WDOGCTRL_WDOGCLKS_MASK, SIM_WDOGCTRL_WDOGCLKS(value)))
-#define SIM_BWR_WDOGCTRL_WDOGCLKS(base, value) (BME_BFI32(&SIM_WDOGCTRL_REG(base), ((uint32_t)(value) << SIM_WDOGCTRL_WDOGCLKS_SHIFT), SIM_WDOGCTRL_WDOGCLKS_SHIFT, SIM_WDOGCTRL_WDOGCLKS_WIDTH))
+#define SIM_WR_WDOGC_WDOGCLKS(base, value) (SIM_RMW_WDOGC(base, SIM_WDOGC_WDOGCLKS_MASK, SIM_WDOGC_WDOGCLKS(value)))
+#define SIM_BWR_WDOGC_WDOGCLKS(base, value) (BME_BFI32(&SIM_WDOGC_REG(base), ((uint32_t)(value) << SIM_WDOGC_WDOGCLKS_SHIFT), SIM_WDOGC_WDOGCLKS_SHIFT, SIM_WDOGC_WDOGCLKS_WIDTH))
 /*@}*/
 
 /*
@@ -28819,8 +28856,8 @@
  * bit allows the MCU to enter any very-low-leakage stop mode (VLLSx).
  *
  * Values:
- * - 0 - Any VLLSx mode is not allowed
- * - 1 - Any VLLSx mode is allowed
+ * - 0b0 - Any VLLSx mode is not allowed
+ * - 0b1 - Any VLLSx mode is allowed
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMPROT_AVLLS field. */
@@ -28839,8 +28876,8 @@
  * field allows the MCU to enter any very-low-power mode (VLPR, VLPW, and VLPS).
  *
  * Values:
- * - 0 - VLPR, VLPW, and VLPS are not allowed.
- * - 1 - VLPR, VLPW, and VLPS are allowed.
+ * - 0b0 - VLPR, VLPW, and VLPS are not allowed.
+ * - 0b1 - VLPR, VLPW, and VLPS are allowed.
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMPROT_AVLP field. */
@@ -28897,14 +28934,14 @@
  * select a Partial Stop mode if desired.
  *
  * Values:
- * - 000 - Normal Stop (STOP)
- * - 001 - Reserved
- * - 010 - Very-Low-Power Stop (VLPS)
- * - 011 - Reserved
- * - 100 - Very-Low-Leakage Stop (VLLSx)
- * - 101 - Reserved
- * - 110 - Reseved
- * - 111 - Reserved
+ * - 0b000 - Normal Stop (STOP)
+ * - 0b001 - Reserved
+ * - 0b010 - Very-Low-Power Stop (VLPS)
+ * - 0b011 - Reserved
+ * - 0b100 - Very-Low-Leakage Stop (VLLSx)
+ * - 0b101 - Reserved
+ * - 0b110 - Reseved
+ * - 0b111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMCTRL_STOPM field. */
@@ -28925,8 +28962,8 @@
  * mode entry sequence and is set if the sequence was aborted.
  *
  * Values:
- * - 0 - The previous stop mode entry was successsful.
- * - 1 - The previous stop mode entry was aborted.
+ * - 0b0 - The previous stop mode entry was successsful.
+ * - 0b1 - The previous stop mode entry was aborted.
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMCTRL_STOPA field. */
@@ -28943,10 +28980,10 @@
  * VLPR, RUNM should not be written back to RUN until PMSTAT=VLPR.
  *
  * Values:
- * - 00 - Normal Run mode (RUN)
- * - 01 - Reserved
- * - 10 - Very-Low-Power Run mode (VLPR)
- * - 11 - Reserved
+ * - 0b00 - Normal Run mode (RUN)
+ * - 0b01 - Reserved
+ * - 0b10 - Very-Low-Power Run mode (VLPR)
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SMC_PMCTRL_RUNM field. */
@@ -28995,14 +29032,14 @@
  * This field controls which VLLS sub-mode to enter if STOPM = VLLSx.
  *
  * Values:
- * - 000 - VLLS0
- * - 001 - VLLS1
- * - 010 - Reserved
- * - 011 - VLLS3
- * - 100 - Reserved
- * - 101 - Reserved
- * - 110 - Reserved
- * - 111 - Reserved
+ * - 0b000 - VLLS0
+ * - 0b001 - VLLS1
+ * - 0b010 - Reserved
+ * - 0b011 - VLLS3
+ * - 0b100 - Reserved
+ * - 0b101 - Reserved
+ * - 0b110 - Reserved
+ * - 0b111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SMC_STOPCTRL_VLLSM field. */
@@ -29015,33 +29052,13 @@
 /*@}*/
 
 /*!
- * @name Register SMC_STOPCTRL, field LPOPO[3] (RW)
- *
- * Controls whether the 1 kHz LPO clock is enabled in VLLSx modes. During VLLS0
- * mode, the LPO clock is disabled by hardware and this bit has no effect.
- *
- * Values:
- * - 0 - LPO clock is enabled in VLLSx
- * - 1 - LPO clock is disabled in VLLSx
- */
-/*@{*/
-/*! @brief Read current value of the SMC_STOPCTRL_LPOPO field. */
-#define SMC_RD_STOPCTRL_LPOPO(base) ((SMC_STOPCTRL_REG(base) & SMC_STOPCTRL_LPOPO_MASK) >> SMC_STOPCTRL_LPOPO_SHIFT)
-#define SMC_BRD_STOPCTRL_LPOPO(base) (BME_UBFX8(&SMC_STOPCTRL_REG(base), SMC_STOPCTRL_LPOPO_SHIFT, SMC_STOPCTRL_LPOPO_WIDTH))
-
-/*! @brief Set the LPOPO field to a new value. */
-#define SMC_WR_STOPCTRL_LPOPO(base, value) (SMC_RMW_STOPCTRL(base, SMC_STOPCTRL_LPOPO_MASK, SMC_STOPCTRL_LPOPO(value)))
-#define SMC_BWR_STOPCTRL_LPOPO(base, value) (BME_BFI8(&SMC_STOPCTRL_REG(base), ((uint8_t)(value) << SMC_STOPCTRL_LPOPO_SHIFT), SMC_STOPCTRL_LPOPO_SHIFT, SMC_STOPCTRL_LPOPO_WIDTH))
-/*@}*/
-
-/*!
  * @name Register SMC_STOPCTRL, field PORPO[5] (RW)
  *
  * This bit controls whether the POR detect circuit is enabled in VLLS0 mode.
  *
  * Values:
- * - 0 - POR detect circuit is enabled in VLLS0
- * - 1 - POR detect circuit is disabled in VLLS0
+ * - 0b0 - POR detect circuit is enabled in VLLS0
+ * - 0b1 - POR detect circuit is disabled in VLLS0
  */
 /*@{*/
 /*! @brief Read current value of the SMC_STOPCTRL_PORPO field. */
@@ -29064,10 +29081,11 @@
  * PSTOP1, both system and bus clocks are gated.
  *
  * Values:
- * - 00 - STOP - Normal Stop mode
- * - 01 - PSTOP1 - Partial Stop with both system and bus clocks disabled
- * - 10 - PSTOP2 - Partial Stop with system clock disabled and bus clock enabled
- * - 11 - Reserved
+ * - 0b00 - STOP - Normal Stop mode
+ * - 0b01 - PSTOP1 - Partial Stop with both system and bus clocks disabled
+ * - 0b10 - PSTOP2 - Partial Stop with system clock disabled and bus clock
+ *     enabled
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SMC_STOPCTRL_PSTOPO field. */
@@ -29166,8 +29184,8 @@
  * transfers
  *
  * Values:
- * - 0 - Start transfers.
- * - 1 - Stop transfers.
+ * - 0b0 - Start transfers.
+ * - 0b1 - Stop transfers.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_HALT field. */
@@ -29186,10 +29204,10 @@
  * field is valid only when CPHA bit in CTARn[CPHA] is 0.
  *
  * Values:
- * - 00 - 0 protocol clock cycles between SCK edge and SIN sample
- * - 01 - 1 protocol clock cycle between SCK edge and SIN sample
- * - 10 - 2 protocol clock cycles between SCK edge and SIN sample
- * - 11 - Reserved
+ * - 0b00 - 0 protocol clock cycles between SCK edge and SIN sample
+ * - 0b01 - 1 protocol clock cycle between SCK edge and SIN sample
+ * - 0b10 - 2 protocol clock cycles between SCK edge and SIN sample
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_SMPL_PT field. */
@@ -29208,8 +29226,8 @@
  * CLR_RXF bit is always read as zero.
  *
  * Values:
- * - 0 - Do not clear the RX FIFO counter.
- * - 1 - Clear the RX FIFO counter.
+ * - 0b0 - Do not clear the RX FIFO counter.
+ * - 0b1 - Clear the RX FIFO counter.
  */
 /*@{*/
 /*! @brief Set the CLR_RXF field to a new value. */
@@ -29224,8 +29242,8 @@
  * CLR_TXF bit is always read as zero.
  *
  * Values:
- * - 0 - Do not clear the TX FIFO counter.
- * - 1 - Clear the TX FIFO counter.
+ * - 0b0 - Do not clear the TX FIFO counter.
+ * - 0b1 - Clear the TX FIFO counter.
  */
 /*@{*/
 /*! @brief Set the CLR_TXF field to a new value. */
@@ -29241,8 +29259,8 @@
  * is cleared.
  *
  * Values:
- * - 0 - RX FIFO is enabled.
- * - 1 - RX FIFO is disabled.
+ * - 0b0 - RX FIFO is enabled.
+ * - 0b1 - RX FIFO is disabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_DIS_RXF field. */
@@ -29262,8 +29280,8 @@
  * is cleared.
  *
  * Values:
- * - 0 - TX FIFO is enabled.
- * - 1 - TX FIFO is disabled.
+ * - 0b0 - TX FIFO is enabled.
+ * - 0b1 - TX FIFO is disabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_DIS_TXF field. */
@@ -29285,8 +29303,8 @@
  * because a slave doesn't have control over master transactions.
  *
  * Values:
- * - 0 - Enables the module clocks.
- * - 1 - Allows external logic to disable the module clocks.
+ * - 0b0 - Enables the module clocks.
+ * - 0b1 - Allows external logic to disable the module clocks.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_MDIS field. */
@@ -29305,8 +29323,8 @@
  * mechanism.
  *
  * Values:
- * - 0 - Doze mode has no effect on the module.
- * - 1 - Doze mode disables the module.
+ * - 0b0 - Doze mode has no effect on the module.
+ * - 0b1 - Doze mode disables the module.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_DOZE field. */
@@ -29325,8 +29343,8 @@
  * information for the number of PCS signals used in this MCU.
  *
  * Values:
- * - 0 - The inactive state of PCSx is low.
- * - 1 - The inactive state of PCSx is high.
+ * - 0b00000 - The inactive state of PCSx is low.
+ * - 0b00001 - The inactive state of PCSx is high.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_PCSIS field. */
@@ -29347,8 +29365,8 @@
  * or shifted into the shift register.
  *
  * Values:
- * - 0 - Incoming data is ignored.
- * - 1 - Incoming data is shifted into the shift register.
+ * - 0b0 - Incoming data is ignored.
+ * - 0b1 - Incoming data is shifted into the shift register.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_ROOE field. */
@@ -29366,8 +29384,8 @@
  * Enables a modified transfer format to be used.
  *
  * Values:
- * - 0 - Modified SPI transfer format disabled.
- * - 1 - Modified SPI transfer format enabled.
+ * - 0b0 - Modified SPI transfer format disabled.
+ * - 0b1 - Modified SPI transfer format enabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_MTFE field. */
@@ -29386,8 +29404,8 @@
  * enters Debug mode.
  *
  * Values:
- * - 0 - Do not halt serial transfers in Debug mode.
- * - 1 - Halt serial transfers in Debug mode.
+ * - 0b0 - Do not halt serial transfers in Debug mode.
+ * - 0b1 - Halt serial transfers in Debug mode.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_FRZ field. */
@@ -29405,10 +29423,10 @@
  * Selects among the different configurations of the module.
  *
  * Values:
- * - 00 - SPI
- * - 01 - Reserved
- * - 10 - Reserved
- * - 11 - Reserved
+ * - 0b00 - SPI
+ * - 0b01 - Reserved
+ * - 0b10 - Reserved
+ * - 0b11 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_DCONF field. */
@@ -29422,8 +29440,8 @@
  * Enables the Serial Communication Clock (SCK) to run continuously.
  *
  * Values:
- * - 0 - Continuous SCK disabled.
- * - 1 - Continuous SCK enabled.
+ * - 0b0 - Continuous SCK disabled.
+ * - 0b1 - Continuous SCK enabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_CONT_SCKE field. */
@@ -29442,8 +29460,8 @@
  * operation.
  *
  * Values:
- * - 0 - Enables Slave mode
- * - 1 - Enables Master mode
+ * - 0b0 - Enables Slave mode
+ * - 0b1 - Enables Master mode
  */
 /*@{*/
 /*! @brief Read current value of the SPI_MCR_MSTR field. */
@@ -29541,9 +29559,9 @@
  * transfers are done as if the CPHA bit is set to 1.
  *
  * Values:
- * - 0 - Data is captured on the leading edge of SCK and changed on the
+ * - 0b0 - Data is captured on the leading edge of SCK and changed on the
  *     following edge.
- * - 1 - Data is changed on the leading edge of SCK and captured on the
+ * - 0b1 - Data is changed on the leading edge of SCK and captured on the
  *     following edge.
  */
 /*@{*/
@@ -29564,8 +29582,8 @@
  * inactive state of SCK is not guaranted.
  *
  * Values:
- * - 0 - The inactive state value of SCK is low.
- * - 1 - The inactive state value of SCK is high.
+ * - 0b0 - The inactive state value of SCK is low.
+ * - 0b1 - The inactive state value of SCK is high.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CTAR_SLAVE_CPOL field. */
@@ -29723,10 +29741,10 @@
  * the BR field description for details on how to compute the baud rate.
  *
  * Values:
- * - 00 - Baud Rate Prescaler value is 2.
- * - 01 - Baud Rate Prescaler value is 3.
- * - 10 - Baud Rate Prescaler value is 5.
- * - 11 - Baud Rate Prescaler value is 7.
+ * - 0b00 - Baud Rate Prescaler value is 2.
+ * - 0b01 - Baud Rate Prescaler value is 3.
+ * - 0b10 - Baud Rate Prescaler value is 5.
+ * - 0b11 - Baud Rate Prescaler value is 7.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CTAR_PBR field. */
@@ -29748,10 +29766,10 @@
  * Transfer (tDT ) for more details.
  *
  * Values:
- * - 00 - Delay after Transfer Prescaler value is 1.
- * - 01 - Delay after Transfer Prescaler value is 3.
- * - 10 - Delay after Transfer Prescaler value is 5.
- * - 11 - Delay after Transfer Prescaler value is 7.
+ * - 0b00 - Delay after Transfer Prescaler value is 1.
+ * - 0b01 - Delay after Transfer Prescaler value is 3.
+ * - 0b10 - Delay after Transfer Prescaler value is 5.
+ * - 0b11 - Delay after Transfer Prescaler value is 7.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CTAR_PDT field. */
@@ -29771,10 +29789,10 @@
  * compute the After SCK Delay. Refer After SCK Delay (tASC ) for more details.
  *
  * Values:
- * - 00 - Delay after Transfer Prescaler value is 1.
- * - 01 - Delay after Transfer Prescaler value is 3.
- * - 10 - Delay after Transfer Prescaler value is 5.
- * - 11 - Delay after Transfer Prescaler value is 7.
+ * - 0b00 - Delay after Transfer Prescaler value is 1.
+ * - 0b01 - Delay after Transfer Prescaler value is 3.
+ * - 0b10 - Delay after Transfer Prescaler value is 5.
+ * - 0b11 - Delay after Transfer Prescaler value is 7.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CTAR_PASC field. */
@@ -29794,10 +29812,10 @@
  * compute the PCS to SCK Delay. Refer PCS to SCK Delay (tCSC ) for more details.
  *
  * Values:
- * - 00 - PCS to SCK Prescaler value is 1.
- * - 01 - PCS to SCK Prescaler value is 3.
- * - 10 - PCS to SCK Prescaler value is 5.
- * - 11 - PCS to SCK Prescaler value is 7.
+ * - 0b00 - PCS to SCK Prescaler value is 1.
+ * - 0b01 - PCS to SCK Prescaler value is 3.
+ * - 0b10 - PCS to SCK Prescaler value is 5.
+ * - 0b11 - PCS to SCK Prescaler value is 7.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CTAR_PCSSCK field. */
@@ -29815,8 +29833,8 @@
  * Specifies whether the LSB or MSB of the frame is transferred first.
  *
  * Values:
- * - 0 - Data is transferred MSB first.
- * - 1 - Data is transferred LSB first.
+ * - 0b0 - Data is transferred MSB first.
+ * - 0b1 - Data is transferred LSB first.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CTAR_LSBFE field. */
@@ -29838,9 +29856,9 @@
  * transfers are done as if the CPHA bit is set to 1.
  *
  * Values:
- * - 0 - Data is captured on the leading edge of SCK and changed on the
+ * - 0b0 - Data is captured on the leading edge of SCK and changed on the
  *     following edge.
- * - 1 - Data is changed on the leading edge of SCK and captured on the
+ * - 0b1 - Data is changed on the leading edge of SCK and captured on the
  *     following edge.
  */
 /*@{*/
@@ -29866,8 +29884,8 @@
  * inactive state of SCK is not guaranted.
  *
  * Values:
- * - 0 - The inactive state value of SCK is low.
- * - 1 - The inactive state value of SCK is high.
+ * - 0b0 - The inactive state value of SCK is low.
+ * - 0b1 - The inactive state value of SCK is high.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CTAR_CPOL field. */
@@ -29909,9 +29927,9 @@
  * 40/60 1 0 11 43/57 1 1 00 50/50 1 1 01 66/33 1 1 10 60/40 1 1 11 57/43
  *
  * Values:
- * - 0 - The baud rate is computed normally with a 50/50 duty cycle.
- * - 1 - The baud rate is doubled with the duty cycle depending on the Baud Rate
- *     Prescaler.
+ * - 0b0 - The baud rate is computed normally with a 50/50 duty cycle.
+ * - 0b1 - The baud rate is doubled with the duty cycle depending on the Baud
+ *     Rate Prescaler.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_CTAR_DBR field. */
@@ -30014,8 +30032,8 @@
  * the RX FIFO is empty.
  *
  * Values:
- * - 0 - RX FIFO is empty.
- * - 1 - RX FIFO is not empty.
+ * - 0b0 - RX FIFO is empty.
+ * - 0b1 - RX FIFO is not empty.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_SR_RFDF field. */
@@ -30035,8 +30053,8 @@
  * set until it is cleared by writing a 1 to it.
  *
  * Values:
- * - 0 - No Rx FIFO overflow.
- * - 1 - Rx FIFO overflow has occurred.
+ * - 0b0 - No Rx FIFO overflow.
+ * - 0b1 - Rx FIFO overflow has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_SR_RFOF field. */
@@ -30057,8 +30075,8 @@
  * the TX FIFO full request.
  *
  * Values:
- * - 0 - TX FIFO is full.
- * - 1 - TX FIFO is not full.
+ * - 0b0 - TX FIFO is full.
+ * - 0b1 - TX FIFO is not full.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_SR_TFFF field. */
@@ -30080,8 +30098,8 @@
  * set until cleared by writing 1 to it.
  *
  * Values:
- * - 0 - No TX FIFO underflow.
- * - 1 - TX FIFO underflow has occurred.
+ * - 0b0 - No TX FIFO underflow.
+ * - 0b1 - TX FIFO underflow has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_SR_TFUF field. */
@@ -30103,8 +30121,8 @@
  * the TXRXS bit is automatically cleared.
  *
  * Values:
- * - 0 - EOQ is not set in the executing command.
- * - 1 - EOQ is set in the executing SPI command.
+ * - 0b0 - EOQ is not set in the executing command.
+ * - 0b1 - EOQ is set in the executing SPI command.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_SR_EOQF field. */
@@ -30122,9 +30140,9 @@
  * Reflects the run status of the module.
  *
  * Values:
- * - 0 - Transmit and receive operations are disabled (The module is in Stopped
- *     state).
- * - 1 - Transmit and receive operations are enabled (The module is in Running
+ * - 0b0 - Transmit and receive operations are disabled (The module is in
+ *     Stopped state).
+ * - 0b1 - Transmit and receive operations are enabled (The module is in Running
  *     state).
  */
 /*@{*/
@@ -30144,8 +30162,8 @@
  * until it is cleared by writing a 1 to it.
  *
  * Values:
- * - 0 - Transfer not complete.
- * - 1 - Transfer complete.
+ * - 0b0 - Transfer not complete.
+ * - 0b1 - Transfer complete.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_SR_TCF field. */
@@ -30193,8 +30211,8 @@
  * RFDF_DIRS bit selects between generating an interrupt request or a DMA request.
  *
  * Values:
- * - 0 - Interrupt request.
- * - 1 - DMA request.
+ * - 0b0 - Interrupt request.
+ * - 0b1 - DMA request.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_RSER_RFDF_DIRS field. */
@@ -30213,8 +30231,8 @@
  * selects between generating an interrupt request or a DMA request.
  *
  * Values:
- * - 0 - RFDF interrupt or DMA requests are disabled.
- * - 1 - RFDF interrupt or DMA requests are enabled.
+ * - 0b0 - RFDF interrupt or DMA requests are disabled.
+ * - 0b1 - RFDF interrupt or DMA requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_RSER_RFDF_RE field. */
@@ -30232,8 +30250,8 @@
  * Enables the RFOF flag in the SR to generate an interrupt request.
  *
  * Values:
- * - 0 - RFOF interrupt requests are disabled.
- * - 1 - RFOF interrupt requests are enabled.
+ * - 0b0 - RFOF interrupt requests are disabled.
+ * - 0b1 - RFOF interrupt requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_RSER_RFOF_RE field. */
@@ -30253,8 +30271,8 @@
  * interrupt request or a DMA request.
  *
  * Values:
- * - 0 - TFFF flag generates interrupt requests.
- * - 1 - TFFF flag generates DMA requests.
+ * - 0b0 - TFFF flag generates interrupt requests.
+ * - 0b1 - TFFF flag generates DMA requests.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_RSER_TFFF_DIRS field. */
@@ -30273,8 +30291,8 @@
  * selects between generating an interrupt request or a DMA request.
  *
  * Values:
- * - 0 - TFFF interrupts or DMA requests are disabled.
- * - 1 - TFFF interrupts or DMA requests are enabled.
+ * - 0b0 - TFFF interrupts or DMA requests are disabled.
+ * - 0b1 - TFFF interrupts or DMA requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_RSER_TFFF_RE field. */
@@ -30292,8 +30310,8 @@
  * Enables the TFUF flag in the SR to generate an interrupt request.
  *
  * Values:
- * - 0 - TFUF interrupt requests are disabled.
- * - 1 - TFUF interrupt requests are enabled.
+ * - 0b0 - TFUF interrupt requests are disabled.
+ * - 0b1 - TFUF interrupt requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_RSER_TFUF_RE field. */
@@ -30311,8 +30329,8 @@
  * Enables the EOQF flag in the SR to generate an interrupt request.
  *
  * Values:
- * - 0 - EOQF interrupt requests are disabled.
- * - 1 - EOQF interrupt requests are enabled.
+ * - 0b0 - EOQF interrupt requests are disabled.
+ * - 0b1 - EOQF interrupt requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_RSER_EOQF_RE field. */
@@ -30330,8 +30348,8 @@
  * Enables TCF flag in the SR to generate an interrupt request.
  *
  * Values:
- * - 0 - TCF interrupt requests are disabled.
- * - 1 - TCF interrupt requests are enabled.
+ * - 0b0 - TCF interrupt requests are disabled.
+ * - 0b1 - TCF interrupt requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_RSER_TCF_RE field. */
@@ -30405,8 +30423,8 @@
  * chip-specific SPI information for the number of PCS signals used in this MCU.
  *
  * Values:
- * - 0 - Negate the PCS[x] signal.
- * - 1 - Assert the PCS[x] signal.
+ * - 0b00000 - Negate the PCS[x] signal.
+ * - 0b00001 - Assert the PCS[x] signal.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_PUSHR_PCS field. */
@@ -30425,8 +30443,8 @@
  * the module starts transmitting the current SPI frame.
  *
  * Values:
- * - 0 - Do not clear the TCR[TCNT] field.
- * - 1 - Clear the TCR[TCNT] field.
+ * - 0b0 - Do not clear the TCR[TCNT] field.
+ * - 0b1 - Clear the TCR[TCNT] field.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_PUSHR_CTCNT field. */
@@ -30446,8 +30464,8 @@
  * SR is set.
  *
  * Values:
- * - 0 - The SPI data is not the last data to transfer.
- * - 1 - The SPI data is the last data to transfer.
+ * - 0b0 - The SPI data is not the last data to transfer.
+ * - 0b1 - The SPI data is the last data to transfer.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_PUSHR_EOQ field. */
@@ -30468,14 +30486,14 @@
  * not program a value in this field for a register that is not present.
  *
  * Values:
- * - 000 - CTAR0
- * - 001 - CTAR1
- * - 010 - Reserved
- * - 011 - Reserved
- * - 100 - Reserved
- * - 101 - Reserved
- * - 110 - Reserved
- * - 111 - Reserved
+ * - 0b000 - CTAR0
+ * - 0b001 - CTAR1
+ * - 0b010 - Reserved
+ * - 0b011 - Reserved
+ * - 0b100 - Reserved
+ * - 0b101 - Reserved
+ * - 0b110 - Reserved
+ * - 0b111 - Reserved
  */
 /*@{*/
 /*! @brief Read current value of the SPI_PUSHR_CTAS field. */
@@ -30494,8 +30512,8 @@
  * The bit enables the selected PCS signals to remain asserted between transfers.
  *
  * Values:
- * - 0 - Return PCSn signals to their inactive state between transfers.
- * - 1 - Keep PCSn signals asserted between transfers.
+ * - 0b0 - Return PCSn signals to their inactive state between transfers.
+ * - 0b1 - Keep PCSn signals asserted between transfers.
  */
 /*@{*/
 /*! @brief Read current value of the SPI_PUSHR_CONT field. */
@@ -30850,7 +30868,7 @@
  ******************************************************************************/
 
 /*!
- * @brief SPI_SREX - Status Register Extended (RW)
+ * @brief SPI_SREX - Status Register Extended (RO)
  *
  * Reset value: 0x00000000U
  *
@@ -30862,11 +30880,6 @@
  */
 /*@{*/
 #define SPI_RD_SREX(base)        (SPI_SREX_REG(base))
-#define SPI_WR_SREX(base, value) (SPI_SREX_REG(base) = (value))
-#define SPI_RMW_SREX(base, mask, value) (SPI_WR_SREX(base, (SPI_RD_SREX(base) & ~(mask)) | (value)))
-#define SPI_SET_SREX(base, value) (BME_OR32(&SPI_SREX_REG(base), (uint32_t)(value)))
-#define SPI_CLR_SREX(base, value) (BME_AND32(&SPI_SREX_REG(base), (uint32_t)(~(value))))
-#define SPI_TOG_SREX(base, value) (BME_XOR32(&SPI_SREX_REG(base), (uint32_t)(value)))
 /*@}*/
 
 /*
@@ -30901,7 +30914,7 @@
 /*@}*/
 
 /*!
- * @name Register SPI_SREX, field TXCTR4[11] (RW)
+ * @name Register SPI_SREX, field TXCTR4[11] (RO)
  *
  * This bit is an extension of SR[TXCTR]. The concatenated field {TXCTR4, TXCTR}
  * indicates the number of valid entries in the TX FIFO. This field is
@@ -30913,14 +30926,10 @@
 /*! @brief Read current value of the SPI_SREX_TXCTR4 field. */
 #define SPI_RD_SREX_TXCTR4(base) ((SPI_SREX_REG(base) & SPI_SREX_TXCTR4_MASK) >> SPI_SREX_TXCTR4_SHIFT)
 #define SPI_BRD_SREX_TXCTR4(base) (BME_UBFX32(&SPI_SREX_REG(base), SPI_SREX_TXCTR4_SHIFT, SPI_SREX_TXCTR4_WIDTH))
-
-/*! @brief Set the TXCTR4 field to a new value. */
-#define SPI_WR_SREX_TXCTR4(base, value) (SPI_RMW_SREX(base, SPI_SREX_TXCTR4_MASK, SPI_SREX_TXCTR4(value)))
-#define SPI_BWR_SREX_TXCTR4(base, value) (BME_BFI32(&SPI_SREX_REG(base), ((uint32_t)(value) << SPI_SREX_TXCTR4_SHIFT), SPI_SREX_TXCTR4_SHIFT, SPI_SREX_TXCTR4_WIDTH))
 /*@}*/
 
 /*!
- * @name Register SPI_SREX, field RXCTR4[14] (RW)
+ * @name Register SPI_SREX, field RXCTR4[14] (RO)
  *
  * This bit is an extension of SR[RXCTR]. The concatenated field {RXCTR4, RXCTR}
  * indicates the number of entries in the RX FIFO. This field is decremented
@@ -30931,10 +30940,6 @@
 /*! @brief Read current value of the SPI_SREX_RXCTR4 field. */
 #define SPI_RD_SREX_RXCTR4(base) ((SPI_SREX_REG(base) & SPI_SREX_RXCTR4_MASK) >> SPI_SREX_RXCTR4_SHIFT)
 #define SPI_BRD_SREX_RXCTR4(base) (BME_UBFX32(&SPI_SREX_REG(base), SPI_SREX_RXCTR4_SHIFT, SPI_SREX_RXCTR4_WIDTH))
-
-/*! @brief Set the RXCTR4 field to a new value. */
-#define SPI_WR_SREX_RXCTR4(base, value) (SPI_RMW_SREX(base, SPI_SREX_RXCTR4_MASK, SPI_SREX_RXCTR4(value)))
-#define SPI_BWR_SREX_RXCTR4(base, value) (BME_BFI32(&SPI_SREX_REG(base), ((uint32_t)(value) << SPI_SREX_RXCTR4_SHIFT), SPI_SREX_RXCTR4_SHIFT, SPI_SREX_RXCTR4_WIDTH))
 /*@}*/
 
 /*
@@ -31029,8 +31034,8 @@
  * valid for all 8, 9 and 10 bit data formats available.
  *
  * Values:
- * - 0 - Data frame consists of a single stop bit.
- * - 1 - Data frame consists of two stop bits.
+ * - 0b0 - Data frame consists of a single stop bit.
+ * - 0b1 - Data frame consists of two stop bits.
  */
 /*@{*/
 /*! @brief Read current value of the UART_BDH_SBNS field. */
@@ -31049,8 +31054,8 @@
  * requests.
  *
  * Values:
- * - 0 - Hardware interrupts from RXEDGIF disabled using polling.
- * - 1 - RXEDGIF interrupt request enabled.
+ * - 0b0 - Hardware interrupts from RXEDGIF disabled using polling.
+ * - 0b1 - RXEDGIF interrupt request enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_BDH_RXEDGIE field. */
@@ -31068,8 +31073,8 @@
  * Enables the LIN break detect flag, LBKDIF, to generate interrupt requests,
  *
  * Values:
- * - 0 - LBKDIF interrupt requests disabled.
- * - 1 - LBKDIF interrupt requests enabled.
+ * - 0b0 - LBKDIF interrupt requests disabled.
+ * - 0b1 - LBKDIF interrupt requests enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_BDH_LBKDIE field. */
@@ -31147,8 +31152,8 @@
  * parity bit and an even number of 1s sets the parity bit.
  *
  * Values:
- * - 0 - Even parity.
- * - 1 - Odd parity.
+ * - 0b0 - Even parity.
+ * - 0b1 - Odd parity.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_PT field. */
@@ -31167,8 +31172,8 @@
  * a parity bit in the bit position immediately preceding the stop bit.
  *
  * Values:
- * - 0 - Parity function disabled.
- * - 1 - Parity function enabled.
+ * - 0b0 - Parity function disabled.
+ * - 0b1 - Parity function enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_PE field. */
@@ -31197,8 +31202,8 @@
  * and C4[M10] fields.
  *
  * Values:
- * - 0 - Idle character bit count starts after start bit.
- * - 1 - Idle character bit count starts after stop bit.
+ * - 0b0 - Idle character bit count starts after start bit.
+ * - 0b1 - Idle character bit count starts after stop bit.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_ILT field. */
@@ -31218,8 +31223,8 @@
  * receive pin input signal.
  *
  * Values:
- * - 0 - Idle line wakeup.
- * - 1 - Address mark wakeup.
+ * - 0b0 - Idle line wakeup.
+ * - 0b1 - Address mark wakeup.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_WAKE field. */
@@ -31235,8 +31240,9 @@
  * @name Register UART_C1, field M[4] (RW)
  *
  * Values:
- * - 0 - Normal-start + 8 data bits (MSB/LSB first as determined by MSBF) + stop.
- * - 1 - Use-start + 9 data bits (MSB/LSB first as determined by MSBF) + stop.
+ * - 0b0 - Normal-start + 8 data bits (MSB/LSB first as determined by MSBF) +
+ *     stop.
+ * - 0b1 - Use-start + 9 data bits (MSB/LSB first as determined by MSBF) + stop.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_M field. */
@@ -31256,9 +31262,9 @@
  * input.
  *
  * Values:
- * - 0 - Selects internal loop back mode. The receiver input is internally
+ * - 0b0 - Selects internal loop back mode. The receiver input is internally
  *     connected to transmitter output.
- * - 1 - Single wire UART mode where the receiver input is connected to the
+ * - 0b1 - Single wire UART mode where the receiver input is connected to the
  *     transmit pin input signal.
  */
 /*@{*/
@@ -31275,8 +31281,8 @@
  * @name Register UART_C1, field UARTSWAI[6] (RW)
  *
  * Values:
- * - 0 - UART clock continues to run in Wait mode.
- * - 1 - UART clock freezes while CPU is in Wait mode.
+ * - 0b0 - UART clock continues to run in Wait mode.
+ * - 0b1 - UART clock freezes while CPU is in Wait mode.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_UARTSWAI field. */
@@ -31296,9 +31302,9 @@
  * the receiver must be enabled to use the loop function.
  *
  * Values:
- * - 0 - Normal operation.
- * - 1 - Loop mode where transmitter output is internally connected to receiver
- *     input. The receiver input is determined by RSRC.
+ * - 0b0 - Normal operation.
+ * - 0b1 - Loop mode where transmitter output is internally connected to
+ *     receiver input. The receiver input is determined by RSRC.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C1_LOOPS field. */
@@ -31349,8 +31355,8 @@
  * 0s if S2[BRK13] is cleared 13 or 14 logic 0s if S2[BRK13] is set.
  *
  * Values:
- * - 0 - Normal transmitter operation.
- * - 1 - Queue break characters to be sent.
+ * - 0b0 - Normal transmitter operation.
+ * - 0b1 - Queue break characters to be sent.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_SBK field. */
@@ -31375,10 +31381,10 @@
  * detected before IDLE is allowed to reasserted.
  *
  * Values:
- * - 0 - Normal operation.
- * - 1 - RWU enables the wakeup function and inhibits further receiver interrupt
- *     requests. Normally, hardware wakes the receiver by automatically clearing
- *     RWU.
+ * - 0b0 - Normal operation.
+ * - 0b1 - RWU enables the wakeup function and inhibits further receiver
+ *     interrupt requests. Normally, hardware wakes the receiver by automatically
+ *     clearing RWU.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_RWU field. */
@@ -31396,8 +31402,8 @@
  * Enables the UART receiver.
  *
  * Values:
- * - 0 - Receiver off.
- * - 1 - Receiver on.
+ * - 0b0 - Receiver off.
+ * - 0b1 - Receiver on.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_RE field. */
@@ -31416,8 +31422,8 @@
  * clearing and then setting TE.
  *
  * Values:
- * - 0 - Transmitter off.
- * - 1 - Transmitter on.
+ * - 0b0 - Transmitter off.
+ * - 0b1 - Transmitter on.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_TE field. */
@@ -31435,8 +31441,8 @@
  * Enables the idle line flag, S1[IDLE], to generate interrupt requests
  *
  * Values:
- * - 0 - IDLE interrupt requests disabled.
- * - 1 - IDLE interrupt requests enabled.
+ * - 0b0 - IDLE interrupt requests disabled.
+ * - 0b1 - IDLE interrupt requests enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_ILIE field. */
@@ -31455,8 +31461,8 @@
  * based on the state of C5[RDMAS].
  *
  * Values:
- * - 0 - RDRF interrupt and DMA transfer requests disabled.
- * - 1 - RDRF interrupt or DMA transfer requests enabled.
+ * - 0b0 - RDRF interrupt and DMA transfer requests disabled.
+ * - 0b1 - RDRF interrupt or DMA transfer requests enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_RIE field. */
@@ -31475,8 +31481,8 @@
  * requests .
  *
  * Values:
- * - 0 - TC interrupt requests disabled.
- * - 1 - TC interrupt requests enabled.
+ * - 0b0 - TC interrupt requests disabled.
+ * - 0b1 - TC interrupt requests enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_TCIE field. */
@@ -31496,8 +31502,8 @@
  * must be cleared, and D[D] must not be written unless servicing a DMA request.
  *
  * Values:
- * - 0 - TDRE interrupt and DMA transfer requests disabled.
- * - 1 - TDRE interrupt or DMA transfer requests enabled.
+ * - 0b0 - TDRE interrupt and DMA transfer requests disabled.
+ * - 0b1 - TDRE interrupt or DMA transfer requests enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C2_TIE field. */
@@ -31562,10 +31568,10 @@
  * the ED register prior to reading the D register.
  *
  * Values:
- * - 0 - No parity error detected since the last time this flag was cleared. If
- *     the receive buffer has a depth greater than 1, then there may be data in
+ * - 0b0 - No parity error detected since the last time this flag was cleared.
+ *     If the receive buffer has a depth greater than 1, then there may be data in
  *     the receive buffer what was received with a parity error.
- * - 1 - At least one dataword was received with a parity error since the last
+ * - 0b1 - At least one dataword was received with a parity error since the last
  *     time this flag was cleared.
  */
 /*@{*/
@@ -31586,8 +31592,8 @@
  * enabled.
  *
  * Values:
- * - 0 - No framing error detected.
- * - 1 - Framing error.
+ * - 0b0 - No framing error detected.
+ * - 0b1 - Framing error.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_FE field. */
@@ -31607,10 +31613,10 @@
  * receive buffer has a depth of one. To clear NF, read S1 and then read D.
  *
  * Values:
- * - 0 - No noise detected since the last time this flag was cleared. If the
+ * - 0b0 - No noise detected since the last time this flag was cleared. If the
  *     receive buffer has a depth greater than 1 then there may be data in the
  *     receiver buffer that was received with noise.
- * - 1 - At least one dataword was received with noise detected since the last
+ * - 0b1 - At least one dataword was received with noise detected since the last
  *     time the flag was cleared.
  */
 /*@{*/
@@ -31636,9 +31642,9 @@
  * is not cleared before the next data character is received.
  *
  * Values:
- * - 0 - No overrun has occurred since the last time the flag was cleared.
- * - 1 - Overrun has occurred or the overrun flag has not been cleared since the
- *     last overrun occured.
+ * - 0b0 - No overrun has occurred since the last time the flag was cleared.
+ * - 0b1 - Overrun has occurred or the overrun flag has not been cleared since
+ *     the last overrun occured.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_OR field. */
@@ -31660,9 +31666,9 @@
  * RWUID is set, else the IDLE flag does not become set.
  *
  * Values:
- * - 0 - Receiver input is either active now or has never become active since
+ * - 0b0 - Receiver input is either active now or has never become active since
  *     the IDLE flag was last cleared.
- * - 1 - Receiver input has become idle or the flag has not been cleared since
+ * - 0b1 - Receiver input has become idle or the flag has not been cleared since
  *     it last asserted.
  */
 /*@{*/
@@ -31686,9 +31692,9 @@
  * buffer but over-write each other.
  *
  * Values:
- * - 0 - The number of datawords in the receive buffer is less than the number
+ * - 0b0 - The number of datawords in the receive buffer is less than the number
  *     indicated by RXWATER.
- * - 1 - The number of datawords in the receive buffer is equal to or greater
+ * - 0b1 - The number of datawords in the receive buffer is equal to or greater
  *     than the number indicated by RXWATER at some point in time since this flag
  *     was last cleared.
  */
@@ -31709,8 +31715,8 @@
  * SBK in C2.
  *
  * Values:
- * - 0 - Transmitter active (sending data, a preamble, or a break).
- * - 1 - Transmitter idle (transmission activity complete).
+ * - 0b0 - Transmitter active (sending data, a preamble, or a break).
+ * - 0b1 - Transmitter idle (transmission activity complete).
  */
 /*@{*/
 /*! @brief Read current value of the UART_S1_TC field. */
@@ -31733,10 +31739,10 @@
  * ineffective until sufficient data has been written.
  *
  * Values:
- * - 0 - The amount of data in the transmit buffer is greater than the value
+ * - 0b0 - The amount of data in the transmit buffer is greater than the value
  *     indicated by TWFIFO[TXWATER].
- * - 1 - The amount of data in the transmit buffer is less than or equal to the
- *     value indicated by TWFIFO[TXWATER] at some point in time since the flag
+ * - 0b1 - The amount of data in the transmit buffer is less than or equal to
+ *     the value indicated by TWFIFO[TXWATER] at some point in time since the flag
  *     has been cleared.
  */
 /*@{*/
@@ -31784,8 +31790,8 @@
  * character.
  *
  * Values:
- * - 0 - UART receiver idle/inactive waiting for a start bit.
- * - 1 - UART receiver active, RxD input not idle.
+ * - 0b0 - UART receiver idle/inactive waiting for a start bit.
+ * - 0b1 - UART receiver active, RxD input not idle.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_RAF field. */
@@ -31801,8 +31807,8 @@
  * Overrun operation
  *
  * Values:
- * - 0 - Break character detection is disabled.
- * - 1 - Break character is detected at length of 11 bit times if C1[M] = 0 or
+ * - 0b0 - Break character detection is disabled.
+ * - 0b1 - Break character is detected at length of 11 bit times if C1[M] = 0 or
  *     12 bits time if C1[M] = 1.
  */
 /*@{*/
@@ -31824,8 +31830,8 @@
  * field. Transmitting break characters
  *
  * Values:
- * - 0 - Break character is 10, 11, or 12 bits long.
- * - 1 - Break character is 13 or 14 bits long.
+ * - 0b0 - Break character is 10, 11, or 12 bits long.
+ * - 0b1 - Break character is 13 or 14 bits long.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_BRK13 field. */
@@ -31844,8 +31850,8 @@
  * character that wakes the receiver sets S1[IDLE].
  *
  * Values:
- * - 0 - S1[IDLE] is not set upon detection of an idle character.
- * - 1 - S1[IDLE] is set upon detection of an idle character.
+ * - 0b0 - S1[IDLE] is not set upon detection of an idle character.
+ * - 0b1 - S1[IDLE] is set upon detection of an idle character.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_RWUID field. */
@@ -31866,8 +31872,8 @@
  * inverts the RxD input for data bits, start and stop bits, break, and idle.
  *
  * Values:
- * - 0 - Receive data is not inverted.
- * - 1 - Receive data is inverted.
+ * - 0b0 - Receive data is not inverted.
+ * - 0b1 - Receive data is inverted.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_RXINV field. */
@@ -31887,12 +31893,12 @@
  * location of the parity bit, or the location of the start or stop bits.
  *
  * Values:
- * - 0 - LSB (bit0) is the first bit that is transmitted following the start
+ * - 0b0 - LSB (bit0) is the first bit that is transmitted following the start
  *     bit. Further, the first bit received after the start bit is identified as
  *     bit0.
- * - 1 - MSB (bit8, bit7 or bit6) is the first bit that is transmitted following
- *     the start bit, depending on the setting of C1[M] and C1[PE]. Further, the
- *     first bit received after the start bit is identified as bit8, bit7, or
+ * - 0b1 - MSB (bit8, bit7 or bit6) is the first bit that is transmitted
+ *     following the start bit, depending on the setting of C1[M] and C1[PE]. Further,
+ *     the first bit received after the start bit is identified as bit8, bit7, or
  *     bit6, depending on the setting of C1[M] and C1[PE].
  */
 /*@{*/
@@ -31914,8 +31920,8 @@
  * detected only in two wire mode and on receiving data coming from the RxD pin.
  *
  * Values:
- * - 0 - No active edge on the receive pin has occurred.
- * - 1 - An active edge on the receive pin has occurred.
+ * - 0b0 - No active edge on the receive pin has occurred.
+ * - 0b1 - An active edge on the receive pin has occurred.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_RXEDGIF field. */
@@ -31936,8 +31942,8 @@
  * last LIN break character. LBKDIF is cleared by writing a 1 to it.
  *
  * Values:
- * - 0 - No LIN break character detected.
- * - 1 - LIN break character detected.
+ * - 0b0 - No LIN break character detected.
+ * - 0b1 - LIN break character detected.
  */
 /*@{*/
 /*! @brief Read current value of the UART_S2_LBKDIF field. */
@@ -31983,8 +31989,8 @@
  * Enables the parity error flag, S1[PF], to generate interrupt requests.
  *
  * Values:
- * - 0 - PF interrupt requests are disabled.
- * - 1 - PF interrupt requests are enabled.
+ * - 0b0 - PF interrupt requests are disabled.
+ * - 0b1 - PF interrupt requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_PEIE field. */
@@ -32002,8 +32008,8 @@
  * Enables the framing error flag, S1[FE], to generate interrupt requests.
  *
  * Values:
- * - 0 - FE interrupt requests are disabled.
- * - 1 - FE interrupt requests are enabled.
+ * - 0b0 - FE interrupt requests are disabled.
+ * - 0b1 - FE interrupt requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_FEIE field. */
@@ -32021,8 +32027,8 @@
  * Enables the noise flag, S1[NF], to generate interrupt requests.
  *
  * Values:
- * - 0 - NF interrupt requests are disabled.
- * - 1 - NF interrupt requests are enabled.
+ * - 0b0 - NF interrupt requests are disabled.
+ * - 0b1 - NF interrupt requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_NEIE field. */
@@ -32040,8 +32046,8 @@
  * Enables the overrun error flag, S1[OR], to generate interrupt requests.
  *
  * Values:
- * - 0 - OR interrupts are disabled.
- * - 1 - OR interrupt requests are enabled.
+ * - 0b0 - OR interrupts are disabled.
+ * - 0b1 - OR interrupt requests are enabled.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_ORIE field. */
@@ -32064,8 +32070,8 @@
  * RXINV is disabled.
  *
  * Values:
- * - 0 - Transmit data is not inverted.
- * - 1 - Transmit data is inverted.
+ * - 0b0 - Transmit data is not inverted.
+ * - 0b1 - Transmit data is inverted.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_TXINV field. */
@@ -32084,8 +32090,8 @@
  * single-wire mode of operation. This field is relevant only to the single wire mode.
  *
  * Values:
- * - 0 - TXD pin is an input in single wire mode.
- * - 1 - TXD pin is an output in single wire mode.
+ * - 0b0 - TXD pin is an input in single wire mode.
+ * - 0b1 - TXD pin is an output in single wire mode.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C3_TXDIR field. */
@@ -32273,8 +32279,8 @@
  * C1[M] and C1[PE] must also be set. See Data format for more information.
  *
  * Values:
- * - 0 - The parity bit is the ninth bit in the serial transmission.
- * - 1 - The parity bit is the tenth bit in the serial transmission.
+ * - 0b0 - The parity bit is the ninth bit in the serial transmission.
+ * - 0b1 - The parity bit is the tenth bit in the serial transmission.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C4_M10 field. */
@@ -32292,9 +32298,10 @@
  * See Match address operation for more information.
  *
  * Values:
- * - 0 - All data received is transferred to the data buffer if MAEN1 is cleared.
- * - 1 - All data received with the most significant bit cleared, is discarded.
- *     All data received with the most significant bit set, is compared with
+ * - 0b0 - All data received is transferred to the data buffer if MAEN1 is
+ *     cleared.
+ * - 0b1 - All data received with the most significant bit cleared, is
+ *     discarded. All data received with the most significant bit set, is compared with
  *     contents of MA2 register. If no match occurs, the data is discarded. If a
  *     match occurs, data is transferred to the data buffer.
  */
@@ -32314,11 +32321,12 @@
  * See Match address operation for more information.
  *
  * Values:
- * - 0 - All data received is transferred to the data buffer if MAEN2 is cleared.
- * - 1 - All data received with the most significant bit cleared, is discarded.
- *     All data received with the most significant bit set, is compared with
- *     contents of MA1 register. If no match occurs, the data is discarded. If match
- *     occurs, data is transferred to the data buffer.
+ * - 0b0 - All data received is transferred to the data buffer if MAEN2 is
+ *     cleared.
+ * - 0b1 - All data received with the most significant bit cleared, is
+ *     discarded. All data received with the most significant bit set, is compared with
+ *     contents of MA1 register. If no match occurs, the data is discarded. If
+ *     match occurs, data is transferred to the data buffer.
  */
 /*@{*/
 /*! @brief Read current value of the UART_C4_MAEN1 field. */
@@ -32364,9 +32372,9 @@
  * regardless of the state of RDMAS.
  *
  * Values:
- * - 0 - If C2[RIE] and S1[RDRF] are set, the RDFR interrupt request signal is
+ * - 0b0 - If C2[RIE] and S1[RDRF] are set, the RDFR interrupt request signal is
  *     asserted to request an interrupt service.
- * - 1 - If C2[RIE] and S1[RDRF] are set, the RDRF DMA request signal is
+ * - 0b1 - If C2[RIE] and S1[RDRF] are set, the RDRF DMA request signal is
  *     asserted to request a DMA transfer.
  */
 /*@{*/
@@ -32390,9 +32398,9 @@
  * serviced.
  *
  * Values:
- * - 0 - If C2[TIE] is set and the S1[TDRE] flag is set, the TDRE interrupt
+ * - 0b0 - If C2[TIE] is set and the S1[TDRE] flag is set, the TDRE interrupt
  *     request signal is asserted to request interrupt service.
- * - 1 - If C2[TIE] is set and the S1[TDRE] flag is set, the TDRE DMA request
+ * - 0b1 - If C2[TIE] is set and the S1[TDRE] flag is set, the TDRE DMA request
  *     signal is asserted to request a DMA transfer.
  */
 /*@{*/
@@ -32442,8 +32450,8 @@
  * parity error.
  *
  * Values:
- * - 0 - The dataword was received without a parity error.
- * - 1 - The dataword was received with a parity error.
+ * - 0b0 - The dataword was received without a parity error.
+ * - 0b1 - The dataword was received with a parity error.
  */
 /*@{*/
 /*! @brief Read current value of the UART_ED_PARITYE field. */
@@ -32458,8 +32466,8 @@
  * noise.
  *
  * Values:
- * - 0 - The dataword was received without noise.
- * - 1 - The data was received with noise.
+ * - 0b0 - The dataword was received without noise.
+ * - 0b1 - The data was received with noise.
  */
 /*@{*/
 /*! @brief Read current value of the UART_ED_NOISY field. */
@@ -32501,12 +32509,12 @@
  * independently from the state of TXRTSE and RXRTSE.
  *
  * Values:
- * - 0 - CTS has no effect on the transmitter.
- * - 1 - Enables clear-to-send operation. The transmitter checks the state of
+ * - 0b0 - CTS has no effect on the transmitter.
+ * - 0b1 - Enables clear-to-send operation. The transmitter checks the state of
  *     CTS each time it is ready to send a character. If CTS is asserted, the
  *     character is sent. If CTS is deasserted, the signal TXD remains in the mark
- *     state and transmission is delayed until CTS is asserted. Changes in CTS as a
- *     character is being sent do not affect its transmission.
+ *     state and transmission is delayed until CTS is asserted. Changes in CTS as
+ *     a character is being sent do not affect its transmission.
  */
 /*@{*/
 /*! @brief Read current value of the UART_MODEM_TXCTSE field. */
@@ -32524,11 +32532,12 @@
  * Controls RTS before and after a transmission.
  *
  * Values:
- * - 0 - The transmitter has no effect on RTS.
- * - 1 - When a character is placed into an empty transmitter data buffer , RTS
- *     asserts one bit time before the start bit is transmitted. RTS deasserts
+ * - 0b0 - The transmitter has no effect on RTS.
+ * - 0b1 - When a character is placed into an empty transmitter data buffer ,
+ *     RTS asserts one bit time before the start bit is transmitted. RTS deasserts
  *     one bit time after all characters in the transmitter data buffer and shift
- *     register are completely sent, including the last stop bit. (FIFO) (FIFO)
+ *     register are completely sent, including the last stop bit. (FIFO) Ensure
+ *     that C2[TE] is asserted before assertion of this bit.
  */
 /*@{*/
 /*! @brief Read current value of the UART_MODEM_TXRTSE field. */
@@ -32548,8 +32557,8 @@
  * unless TXRTSE is set.
  *
  * Values:
- * - 0 - Transmitter RTS is active low.
- * - 1 - Transmitter RTS is active high.
+ * - 0b0 - Transmitter RTS is active low.
+ * - 0b1 - Transmitter RTS is active high.
  */
 /*@{*/
 /*! @brief Read current value of the UART_MODEM_TXRTSPOL field. */
@@ -32568,11 +32577,11 @@
  * prevent receiver overrun. Do not set both RXRTSE and TXRTSE.
  *
  * Values:
- * - 0 - The receiver has no effect on RTS.
- * - 1 - RTS is deasserted if the number of characters in the receiver data
+ * - 0b0 - The receiver has no effect on RTS.
+ * - 0b1 - RTS is deasserted if the number of characters in the receiver data
  *     register (FIFO) is equal to or greater than RWFIFO[RXWATER]. RTS is asserted
- *     when the number of characters in the receiver data register (FIFO) is less
- *     than RWFIFO[RXWATER]. See Hardware flow control
+ *     when the number of characters in the receiver data register (FIFO) is
+ *     less than RWFIFO[RXWATER]. See Hardware flow control
  */
 /*@{*/
 /*! @brief Read current value of the UART_MODEM_RXRTSE field. */
@@ -32622,14 +32631,14 @@
  * buffer before an overrun occurs. This field is read only.
  *
  * Values:
- * - 000 - Receive FIFO/Buffer depth = 1 dataword.
- * - 001 - Receive FIFO/Buffer depth = 4 datawords.
- * - 010 - Receive FIFO/Buffer depth = 8 datawords.
- * - 011 - Receive FIFO/Buffer depth = 16 datawords.
- * - 100 - Receive FIFO/Buffer depth = 32 datawords.
- * - 101 - Receive FIFO/Buffer depth = 64 datawords.
- * - 110 - Receive FIFO/Buffer depth = 128 datawords.
- * - 111 - Reserved.
+ * - 0b000 - Receive FIFO/Buffer depth = 1 dataword.
+ * - 0b001 - Receive FIFO/Buffer depth = 4 datawords.
+ * - 0b010 - Receive FIFO/Buffer depth = 8 datawords.
+ * - 0b011 - Receive FIFO/Buffer depth = 16 datawords.
+ * - 0b100 - Receive FIFO/Buffer depth = 32 datawords.
+ * - 0b101 - Receive FIFO/Buffer depth = 64 datawords.
+ * - 0b110 - Receive FIFO/Buffer depth = 128 datawords.
+ * - 0b111 - Reserved.
  */
 /*@{*/
 /*! @brief Read current value of the UART_PFIFO_RXFIFOSIZE field. */
@@ -32648,8 +32657,8 @@
  * commands must be issued immediately after changing this field.
  *
  * Values:
- * - 0 - Receive FIFO is not enabled. Buffer is depth 1. (Legacy support)
- * - 1 - Receive FIFO is enabled. Buffer is depth indicted by RXFIFOSIZE.
+ * - 0b0 - Receive FIFO is not enabled. Buffer is depth 1. (Legacy support)
+ * - 0b1 - Receive FIFO is enabled. Buffer is depth indicted by RXFIFOSIZE.
  */
 /*@{*/
 /*! @brief Read current value of the UART_PFIFO_RXFE field. */
@@ -32668,14 +32677,14 @@
  * buffer. This field is read only.
  *
  * Values:
- * - 000 - Transmit FIFO/Buffer depth = 1 dataword.
- * - 001 - Transmit FIFO/Buffer depth = 4 datawords.
- * - 010 - Transmit FIFO/Buffer depth = 8 datawords.
- * - 011 - Transmit FIFO/Buffer depth = 16 datawords.
- * - 100 - Transmit FIFO/Buffer depth = 32 datawords.
- * - 101 - Transmit FIFO/Buffer depth = 64 datawords.
- * - 110 - Transmit FIFO/Buffer depth = 128 datawords.
- * - 111 - Reserved.
+ * - 0b000 - Transmit FIFO/Buffer depth = 1 dataword.
+ * - 0b001 - Transmit FIFO/Buffer depth = 4 datawords.
+ * - 0b010 - Transmit FIFO/Buffer depth = 8 datawords.
+ * - 0b011 - Transmit FIFO/Buffer depth = 16 datawords.
+ * - 0b100 - Transmit FIFO/Buffer depth = 32 datawords.
+ * - 0b101 - Transmit FIFO/Buffer depth = 64 datawords.
+ * - 0b110 - Transmit FIFO/Buffer depth = 128 datawords.
+ * - 0b111 - Reserved.
  */
 /*@{*/
 /*! @brief Read current value of the UART_PFIFO_TXFIFOSIZE field. */
@@ -32694,8 +32703,8 @@
  * be issued immediately after changing this field.
  *
  * Values:
- * - 0 - Transmit FIFO is not enabled. Buffer is depth 1. (Legacy support).
- * - 1 - Transmit FIFO is enabled. Buffer is depth indicated by TXFIFOSIZE.
+ * - 0b0 - Transmit FIFO is not enabled. Buffer is depth 1. (Legacy support).
+ * - 0b1 - Transmit FIFO is enabled. Buffer is depth indicated by TXFIFOSIZE.
  */
 /*@{*/
 /*! @brief Read current value of the UART_PFIFO_TXFE field. */
@@ -32744,8 +32753,8 @@
  * When this field is set, the RXUF flag generates an interrupt to the host.
  *
  * Values:
- * - 0 - RXUF flag does not generate an interrupt to the host.
- * - 1 - RXUF flag generates an interrupt to the host.
+ * - 0b0 - RXUF flag does not generate an interrupt to the host.
+ * - 0b1 - RXUF flag generates an interrupt to the host.
  */
 /*@{*/
 /*! @brief Read current value of the UART_CFIFO_RXUFE field. */
@@ -32763,8 +32772,8 @@
  * When this field is set, the TXOF flag generates an interrupt to the host.
  *
  * Values:
- * - 0 - TXOF flag does not generate an interrupt to the host.
- * - 1 - TXOF flag generates an interrupt to the host.
+ * - 0b0 - TXOF flag does not generate an interrupt to the host.
+ * - 0b1 - TXOF flag generates an interrupt to the host.
  */
 /*@{*/
 /*! @brief Read current value of the UART_CFIFO_TXOFE field. */
@@ -32782,8 +32791,8 @@
  * When this field is set, the RXOF flag generates an interrupt to the host.
  *
  * Values:
- * - 0 - RXOF flag does not generate an interrupt to the host.
- * - 1 - RXOF flag generates an interrupt to the host.
+ * - 0b0 - RXOF flag does not generate an interrupt to the host.
+ * - 0b1 - RXOF flag generates an interrupt to the host.
  */
 /*@{*/
 /*! @brief Read current value of the UART_CFIFO_RXOFE field. */
@@ -32803,8 +32812,8 @@
  * register.
  *
  * Values:
- * - 0 - No flush operation occurs.
- * - 1 - All data in the receive FIFO/buffer is cleared out.
+ * - 0b0 - No flush operation occurs.
+ * - 0b1 - All data in the receive FIFO/buffer is cleared out.
  */
 /*@{*/
 /*! @brief Set the RXFLUSH field to a new value. */
@@ -32820,8 +32829,8 @@
  * register.
  *
  * Values:
- * - 0 - No flush operation occurs.
- * - 1 - All data in the transmit FIFO/Buffer is cleared out.
+ * - 0b0 - No flush operation occurs.
+ * - 0b1 - All data in the transmit FIFO/Buffer is cleared out.
  */
 /*@{*/
 /*! @brief Set the TXFLUSH field to a new value. */
@@ -32867,10 +32876,10 @@
  * is cleared by writing a 1.
  *
  * Values:
- * - 0 - No receive buffer underflow has occurred since the last time the flag
+ * - 0b0 - No receive buffer underflow has occurred since the last time the flag
  *     was cleared.
- * - 1 - At least one receive buffer underflow has occurred since the last time
- *     the flag was cleared.
+ * - 0b1 - At least one receive buffer underflow has occurred since the last
+ *     time the flag was cleared.
  */
 /*@{*/
 /*! @brief Read current value of the UART_SFIFO_RXUF field. */
@@ -32891,10 +32900,10 @@
  * flag is cleared by writing a 1.
  *
  * Values:
- * - 0 - No transmit buffer overflow has occurred since the last time the flag
+ * - 0b0 - No transmit buffer overflow has occurred since the last time the flag
  *     was cleared.
- * - 1 - At least one transmit buffer overflow has occurred since the last time
- *     the flag was cleared.
+ * - 0b1 - At least one transmit buffer overflow has occurred since the last
+ *     time the flag was cleared.
  */
 /*@{*/
 /*! @brief Read current value of the UART_SFIFO_TXOF field. */
@@ -32915,9 +32924,9 @@
  * is cleared by writing a 1.
  *
  * Values:
- * - 0 - No receive buffer overflow has occurred since the last time the flag
+ * - 0b0 - No receive buffer overflow has occurred since the last time the flag
  *     was cleared.
- * - 1 - At least one receive buffer overflow has occurred since the last time
+ * - 0b1 - At least one receive buffer overflow has occurred since the last time
  *     the flag was cleared.
  */
 /*@{*/
@@ -32937,8 +32946,8 @@
  * take into account data that is in the receive shift register.
  *
  * Values:
- * - 0 - Receive buffer is not empty.
- * - 1 - Receive buffer is empty.
+ * - 0b0 - Receive buffer is not empty.
+ * - 0b1 - Receive buffer is empty.
  */
 /*@{*/
 /*! @brief Read current value of the UART_SFIFO_RXEMPT field. */
@@ -32953,8 +32962,8 @@
  * not take into account data that is in the transmit shift register.
  *
  * Values:
- * - 0 - Transmit buffer is not empty.
- * - 1 - Transmit buffer is empty.
+ * - 0b0 - Transmit buffer is not empty.
+ * - 0b1 - Transmit buffer is empty.
  */
 /*@{*/
 /*! @brief Read current value of the UART_SFIFO_TXEMPT field. */
@@ -33109,8 +33118,8 @@
  * for more than one WDOG_CLK cycle for the WDOG to be enabled or disabled.
  *
  * Values:
- * - 0 - WDOG is disabled.
- * - 1 - WDOG is enabled.
+ * - 0b0 - WDOG is disabled.
+ * - 0b1 - WDOG is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_WDOGEN field. */
@@ -33128,8 +33137,8 @@
  * Selects clock source for the WDOG timer and other internal timing operations.
  *
  * Values:
- * - 0 - WDOG clock sourced from LPO .
- * - 1 - WDOG clock sourced from alternate clock source.
+ * - 0b0 - WDOG clock sourced from LPO .
+ * - 0b1 - WDOG clock sourced from alternate clock source.
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_CLKSRC field. */
@@ -33148,9 +33157,9 @@
  * immediately, as opposed to updating after WCT.
  *
  * Values:
- * - 0 - WDOG time-out generates reset only.
- * - 1 - WDOG time-out initially generates an interrupt. After WCT, it generates
- *     a reset.
+ * - 0b0 - WDOG time-out generates reset only.
+ * - 0b1 - WDOG time-out initially generates an interrupt. After WCT, it
+ *     generates a reset.
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_IRQRSTEN field. */
@@ -33168,8 +33177,8 @@
  * Enables Windowing mode.
  *
  * Values:
- * - 0 - Windowing mode is disabled.
- * - 1 - Windowing mode is enabled.
+ * - 0b0 - Windowing mode is disabled.
+ * - 0b1 - Windowing mode is enabled.
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_WINEN field. */
@@ -33188,8 +33197,8 @@
  * initial configuration window (WCT) closes, through unlock sequence.
  *
  * Values:
- * - 0 - No further updates allowed to WDOG write-once registers.
- * - 1 - WDOG write-once registers can be unlocked for updating.
+ * - 0b0 - No further updates allowed to WDOG write-once registers.
+ * - 0b1 - WDOG write-once registers can be unlocked for updating.
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_ALLOWUPDATE field. */
@@ -33207,8 +33216,8 @@
  * Enables or disables WDOG in Debug mode.
  *
  * Values:
- * - 0 - WDOG is disabled in CPU Debug mode.
- * - 1 - WDOG is enabled in CPU Debug mode.
+ * - 0b0 - WDOG is disabled in CPU Debug mode.
+ * - 0b1 - WDOG is enabled in CPU Debug mode.
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_DBGEN field. */
@@ -33226,8 +33235,8 @@
  * Enables or disables WDOG in Stop mode.
  *
  * Values:
- * - 0 - WDOG is disabled in CPU Stop mode.
- * - 1 - WDOG is enabled in CPU Stop mode.
+ * - 0b0 - WDOG is disabled in CPU Stop mode.
+ * - 0b1 - WDOG is enabled in CPU Stop mode.
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_STOPEN field. */
@@ -33245,8 +33254,8 @@
  * Enables or disables WDOG in Wait mode.
  *
  * Values:
- * - 0 - WDOG is disabled in CPU Wait mode.
- * - 1 - WDOG is enabled in CPU Wait mode.
+ * - 0b0 - WDOG is disabled in CPU Wait mode.
+ * - 0b1 - WDOG is enabled in CPU Wait mode.
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_WAITEN field. */
@@ -33284,10 +33293,10 @@
  * timer.
  *
  * Values:
- * - 0 - Quick test. The timer runs in normal operation. You can load a small
+ * - 0b0 - Quick test. The timer runs in normal operation. You can load a small
  *     time-out value to do a quick test.
- * - 1 - Byte test. Puts the timer in the byte test mode where individual bytes
- *     of the timer are enabled for operation and are compared for time-out
+ * - 0b1 - Byte test. Puts the timer in the byte test mode where individual
+ *     bytes of the timer are enabled for operation and are compared for time-out
  *     against the corresponding byte of the programmed time-out value. Select the
  *     byte through BYTESEL[1:0] for testing.
  */
@@ -33308,10 +33317,10 @@
  * byte test mode.
  *
  * Values:
- * - 00 - Byte 0 selected
- * - 01 - Byte 1 selected
- * - 10 - Byte 2 selected
- * - 11 - Byte 3 selected
+ * - 0b00 - Byte 0 selected
+ * - 0b01 - Byte 1 selected
+ * - 0b10 - Byte 2 selected
+ * - 0b11 - Byte 3 selected
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_BYTESEL field. */
@@ -33331,8 +33340,8 @@
  * after it is set.
  *
  * Values:
- * - 0 - WDOG functional test mode is not disabled.
- * - 1 - WDOG functional test mode is disabled permanently until reset.
+ * - 0b0 - WDOG functional test mode is not disabled.
+ * - 0b1 - WDOG functional test mode is disabled permanently until reset.
  */
 /*@{*/
 /*! @brief Read current value of the WDOG_STCTRLH_DISTESTWDOG field. */
@@ -33636,6 +33645,11 @@
 #define TPIU_IDX (0) /*!< Instance number for TPIU. */
 #define SCB_IDX (0) /*!< Instance number for SCB. */
 #define CoreDebug_IDX (0) /*!< Instance number for CoreDebug. */
+
+#if defined(__IAR_SYSTEMS_ICC__)
+  /* Restore checking of "Error[Pm008]: sections of code should not be 'commented out' (MISRA C 2004 rule 2.4)" */
+  #pragma diag_default=pm008
+#endif
 
 #endif /* __MKV11Z7_EXTENSION_H__ */
 /* EOF */

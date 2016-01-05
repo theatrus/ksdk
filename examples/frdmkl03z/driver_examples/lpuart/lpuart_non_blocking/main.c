@@ -41,8 +41,8 @@
 //  Consts
 ///////////////////////////////////////////////////////////////////////////////
 
-const uint8_t buffStart[]    = "\n\r++++++++++++++++ LPUART Send/Receive Non Blocking Example +++++++++++++++++\n\r";
-const uint8_t bufferData1[]  = "\n\rType characters from keyboard, the board will receive and then echo them to terminal screen\n\r";
+const uint8_t buffStart[]    = "\r\n++++++++++++++++ LPUART Send/Receive Non Blocking Example +++++++++++++++++\r\n";
+const uint8_t bufferData1[]  = "\r\nType characters from keyboard, the board will receive and then echo them to terminal screen\r\n";
 
 ///////////////////////////////////////////////////////////////////////////////
 //  Code
@@ -69,7 +69,7 @@ int main(void)
 
     // Fill in lpuart config data
     lpuart_user_config_t lpuartConfig = {
-        .clockSource     = kClockLpuartSrcIrc48M,
+        .clockSource     = BOARD_LPUART_CLOCK_SOURCE,
         .bitCountPerChar = kLpuart8BitsPerChar,
         .parityMode      = kLpuartParityDisabled,
         .stopBitCount    = kLpuartOneStopBit,

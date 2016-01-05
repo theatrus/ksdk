@@ -45,7 +45,6 @@
 #include "usb_host_hid.h"
 #include "host_mouse.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
 #include "fsl_debug_console.h"
@@ -53,36 +52,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "board.h"
+  #ifdef BOARD_USE_LPUART
+#include "fsl_lpuart_driver.h"
+  #else
 #include "fsl_uart_driver.h"
-#endif 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "sci.h"
-#include "adapter_bm.h"
-#endif
+  #endif
 /*****************************************************************************
  * Constant and Macro's 
  *****************************************************************************/
-#define USBCFG_DEFAULT_OTG_CONTROLLER 0
 #if  USBCFG_DEV_COMPOSITE
 #error This application requires USBCFG_DEV_COMPOSITE defined zero in usb_device_config.h. Please recompile USB library with this option.
 #endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-
-#if ! BSPCFG_ENABLE_I2C0
-#error This application requires BSPCFG_ENABLE_I2C0 defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
 #define MAIN_TASK                       (10)
-#endif
 /*****************************************************************************
  * Local Types 
  *****************************************************************************/
@@ -102,7 +84,7 @@ extern void HOST_APP_uninit(void);
 void OTG_App_Periodic_Task(void);
 extern void HOST_APP_task_stun(uint32_t param);
 extern void DEV_APP_task_stun(uint32_t param);
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (FSL_RTOS_MQX)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (FSL_RTOS_MQX)))
 void Main_Task(uint32_t param);
 #endif
 /****************************************************************************
@@ -117,19 +99,11 @@ bool g_sess_vld; /* TRUE if session is valid */
 bool g_vbus_err; /* VBUS over current */
 os_event_handle g_otg_app_event_handle;
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+  #ifdef BOARD_USE_LPUART
+lpuart_state_t g_uart_state;
+  #else
 uart_state_t g_uart_state;
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    /* { TASK_TEMPLATE_INDEX, TASK_ADDRESS, TASK_STACKSIZE, TASK_PRIORITY, TASK_NAME, TASK_ATTRIBUTES}, */
-    { MAIN_TASK, (TASK_FPTR) Main_Task, 3000L, 10L, "Main", MQX_AUTO_START_TASK },
-    { DEV_APP_TASK_INDEX, (TASK_FPTR) DEV_APP_task_stun, 2000L, 11L, "Device", 0 },
-    { HOST_APP_TASK_INDEX, (TASK_FPTR) HOST_APP_task_stun, 3000L, 11L, "Host", 0 },
-    { 0L, 0L, 0L, 0L, 0L, 0L }
-};
-#endif
+  #endif
 
 /*****************************************************************************
  * Local Functions Prototypes
@@ -148,6 +122,22 @@ static const otg_int_struct_t g_otg_init =
     DEV_APP_load,
     HOST_APP_unload,
     DEV_APP_unload,
+};
+
+
+/* Declare max3353 low level trigger interrupt pin for the usb otg demo */
+gpio_input_pin_user_config_t max3353intPin[] =
+{
+    {
+        .pinName = BOARD_MAX3353_GPIO_INT,
+        .config.isPullEnable = true,
+        .config.pullSelect = kPortPullUp,
+        .config.isPassiveFilterEnabled = false,
+        .config.interrupt = kPortIntLogicZero /* kPortIntDisabled, kPortIntFallingEdge */
+    },
+    {
+        .pinName = GPIO_PINS_OUT_OF_RANGE,
+    }
 };
 
 /*****************************************************************************
@@ -208,7 +198,7 @@ void OTG_App_Load_Unload_Task(os_event_handle event)
  *END*--------------------------------------------------------------------*/
 void APP_task()
 {
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS))  
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS)
     OS_Event_wait(g_otg_app_event_handle, OTG_LOAD_UNLOAD_EVENT_MARK, FALSE, 10);
 #endif  
 
@@ -219,20 +209,75 @@ void APP_task()
     App_HandleUserInput();
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 void uart_rx_tx_hander()
 {
 #ifdef __cplusplus
     extern "C"
     {
 #endif
+  #ifdef BOARD_USE_LPUART
+    extern void LPUART_DRV_IRQHandler(uint32_t instance);
+  #else
         extern void UART_DRV_IRQHandler(uint32_t instance);
+#endif
 #ifdef __cplusplus
     }
 #endif
+  #ifdef BOARD_USE_LPUART
+    LPUART_DRV_IRQHandler (BOARD_DEBUG_UART_INSTANCE);
+  #else
     UART_DRV_IRQHandler (BOARD_DEBUG_UART_INSTANCE);
+  #endif
 }
-#endif
+
+
+/*FUNCTION*-------------------------------------------------------------------
+ *
+ * Function Name    : max3353_set_pin_int
+ * Returned Value   : none
+ * Comments         :
+ *    This function enables/disables the pin interrupt associated with the max3353 interrupt pin 
+ *
+ *END*----------------------------------------------------------------------*/
+void max3353_set_pin_int
+(
+    bool level,
+    bool enable
+)
+{
+    if (enable)
+    {
+        if (level)/* interrupt is triggered  by low level */
+        {
+            max3353intPin[0].config.interrupt = kPortIntLogicZero;
+            GPIO_DRV_Init(max3353intPin, NULL);
+        }
+        else/* interrupt is triggered by falling edge */
+        {
+            max3353intPin[0].config.interrupt = kPortIntFallingEdge;
+            GPIO_DRV_Init(max3353intPin, NULL);
+        }
+    }
+    else
+    {
+        max3353intPin[0].config.interrupt = kPortIntDisabled;
+        GPIO_DRV_Init(max3353intPin, NULL);
+    }
+}
+
+/*FUNCTION*-------------------------------------------------------------------
+ *
+ * Function Name    : otg_max3353_pin_int_clear
+ * Returned Value   : none
+ * Comments         :
+ *    This function clears the pin interrupt flag associated with the max3353 interrupt pin 
+ *
+ *END*----------------------------------------------------------------------*/
+void max3353_clear_pin_int_flag(void)
+{
+    GPIO_DRV_ClearPinIntFlag(BOARD_MAX3353_GPIO_INT);
+}
+
 /*FUNCTION*----------------------------------------------------------------
  *
  * Function Name  : OTG_App_Init
@@ -243,6 +288,19 @@ void uart_rx_tx_hander()
  *END*--------------------------------------------------------------------*/
 void APP_init()
 {
+    usb_otg_max3353_init_struct_t otg_max3353_init_param =
+    {
+        (void*) BOARD_MAX3353_INT_PORT,
+        max3353_set_pin_int,
+        max3353_clear_pin_int_flag,
+        BOARD_MAX3353_INT_PIN,
+        BOARD_MAX3353_INT_VECTOR,
+        MAX3353_INT_LEVEL,
+        BOARD_MAX3353_I2C_INSTANCE,
+        BOARD_MAX3353_I2C_VECTOR,
+        MAX3353_I2C_ADDRESS,
+    };
+    
     /* Initialize the current platform. Call for the _bsp_platform_init which is specific to each processor family */
     OS_Lock();
     g_otg_handle = NULL;
@@ -251,7 +309,22 @@ void APP_init()
     g_sess_vld = FALSE;
     g_vbus_err = FALSE;
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+  #ifdef BOARD_USE_LPUART
+    lpuart_user_config_t   usrt_config =
+    {
+        .clockSource = BOARD_LPUART_CLOCK_SOURCE,
+        .baudRate = BOARD_DEBUG_UART_BAUD,
+        .parityMode = kLpuartParityDisabled,
+        .stopBitCount = kLpuartOneStopBit,
+        .bitCountPerChar = kLpuart8BitsPerChar,
+    };
+    OS_install_isr((IRQn_Type) g_lpuartRxTxIrqId[BOARD_DEBUG_UART_INSTANCE], uart_rx_tx_hander, NULL);
+    if (kStatus_LPUART_Initialized == LPUART_DRV_Init(BOARD_DEBUG_UART_INSTANCE, &g_uart_state, &usrt_config))
+    {
+        LPUART_DRV_Deinit(BOARD_DEBUG_UART_INSTANCE);
+        LPUART_DRV_Init(BOARD_DEBUG_UART_INSTANCE, &g_uart_state, &usrt_config);
+    }
+  #else
     uart_user_config_t   usrt_config = 
     {
         .baudRate = BOARD_DEBUG_UART_BAUD,
@@ -265,14 +338,18 @@ void APP_init()
         UART_DRV_Deinit(BOARD_DEBUG_UART_INSTANCE);
         UART_DRV_Init(BOARD_DEBUG_UART_INSTANCE, &g_uart_state, &usrt_config);
     }
-#endif
+  #endif
     g_otg_app_event_handle = OS_Event_create(0);
+    usb_otg_set_peripheral_init_param(USB_OTG_PERIPHERAL_MAX3353, (usb_otg_peripheral_union_t*)&otg_max3353_init_param);
+    configure_i2c_pins(BOARD_MAX3353_I2C_INSTANCE);
     USB_PRINTF("\n\r otg module is initilalizing:");
-    usb_otg_init(USBCFG_DEFAULT_OTG_CONTROLLER, (otg_int_struct_t *) &g_otg_init, &g_otg_handle);
+    usb_otg_init(USBCFG_DEFAULT_OTG_CONTROLLER, (otg_int_struct_t *) &g_otg_init, usb_otg_board_init, &g_otg_handle);
     USB_PRINTF("\n\rPress P to print the menu:");
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+  #ifdef BOARD_USE_LPUART
+    OS_intr_init(g_lpuartRxTxIrqId[BOARD_DEBUG_UART_INSTANCE], 5, 0, TRUE);
+  #else
     OS_intr_init(g_uartRxTxIrqId[BOARD_DEBUG_UART_INSTANCE], 5, 0, TRUE);
-#endif
+  #endif
     OS_Unlock();
 }
 
@@ -389,17 +466,22 @@ void App_OtgCallback(usb_otg_handle handle, os_event_handle event)
 static void App_HandleUserInput(void)
 {
     uint8_t character = 0;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    if (status())
+  #ifdef BOARD_USE_LPUART
+    uint32_t recLength = 0;
+    lpuart_status_t ret = kStatus_LPUART_Success;
+    static uint8_t rec_char = 0;
+    ret = LPUART_DRV_GetReceiveStatus(BOARD_DEBUG_UART_INSTANCE, &recLength);
+
+    if (kStatus_LPUART_Success == ret)
     {
-        USB_PRINTF("\n\r");
-        character = getchar();
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-    uart_getchar_no_block(&character);
-    if (character)
+        character = rec_char;
+        rec_char = 0;
+        LPUART_DRV_ReceiveData(BOARD_DEBUG_UART_INSTANCE, &rec_char, 1);
+    }
+    if(character != (int8_t)0x00)
     {
         USB_PRINTF("\n\r %c", character);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+  #else
     uint32_t recLength = 0;
     uart_status_t ret = kStatus_UART_Success;
     static uint8_t rec_char = 0;
@@ -414,7 +496,7 @@ static void App_HandleUserInput(void)
     if(character != (int8_t)0x00)
     {
         USB_PRINTF("\n\r %c", character);
-#endif    
+  #endif
         switch(character)
         {
 
@@ -698,30 +780,7 @@ static void App_Print_Event(usb_otg_handle handle, os_event_handle event)
     OS_Event_clear(event, OTG_A_B_STATE_EVENT_MARK);
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : main (Main_Task if using MQX)
- * Returned Value : none
- * Comments       :
- *     Execution starts here
- *
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    APP_init();
-    /*
-     ** Infinite loop, waiting for events requiring action
-     */
-    for (;;)
-    {
-        APP_task();
-    } /* Endfor */
-} /* Endbody */
 
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
 TASK_TEMPLATE_STRUCT MQX_template_list[] =
@@ -765,5 +824,4 @@ int main(void)
     return 1;
 #endif
 }
-#endif
 

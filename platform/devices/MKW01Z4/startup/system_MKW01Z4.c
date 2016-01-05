@@ -85,7 +85,15 @@ uint8_t ExtClk_Setup_HookUp(uint32_t clk_out_value) {
     result =  1U;  /*  The output was set successfully */
     break;
 #if defined(SYSTEM_MODEM_CLK_OUT_CTRL_VALUE)
+  case 1875000U:
+  case 3750000U:
+  case 7500000U:
+  case 15000000U:
   case 30000000U:    /*  For the japanese version of the board with 30MHz external crystal */
+  case 2000000U:
+  case 4000000U:
+  case 8000000U:
+  case 16000000U:
   case 32000000U:    /*  For the european and american version of the board */
     SIM->SCGC5 |= (uint32_t)SIM_SCGC5_PORTE_MASK; /* PORTE clock gate enable */
     /* Modem RESET pin initialization (MCU PTE30) */

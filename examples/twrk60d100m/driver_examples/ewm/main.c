@@ -102,7 +102,7 @@ int main(void)
     //Enable EWM interrupt.
     EWM_DRV_SetIntCmd(EWM_INSTANCE, true);
 
-    PRINTF("\r\n Press SW to expire EWM ");
+    PRINTF("\r\n Press %s to expire EWM ",BOARD_SW_NAME);
     while (1)
     {
         // Restart counter.
@@ -116,7 +116,7 @@ int main(void)
 
             // Clear interrupt flag.
             ewmIsrFlag = false;
-            PRINTF("\r\n Press SW to expire EWM again");
+            PRINTF("\r\n Press %s to expire EWM again",BOARD_SW_NAME);
 
             // Restart counter & enable interrupt for next run
             EWM_DRV_Refresh(EWM_INSTANCE);

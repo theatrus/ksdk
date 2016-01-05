@@ -38,9 +38,6 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "user_config.h"
-#endif
 #include "usb_class.h"
 #include "usb_device_config.h"
 #include "usb.h"
@@ -55,7 +52,9 @@
  *****************************************************************************/
 #define BCD_USB_VERSION                  (0x0200)
 
-#define HIGH_SPEED                       (0)
+#ifndef HIGH_SPEED
+#define  HIGH_SPEED                      (0)
+#endif
 
 #if HIGH_SPEED
 #define CONTROLLER_ID                    USB_CONTROLLER_EHCI_0
@@ -163,11 +162,11 @@
 #define DEVICE_DESC_DEVICE_CLASS                (0x00)
 #define DEVICE_DESC_DEVICE_SUBCLASS             (0x00)
 #define DEVICE_DESC_DEVICE_PROTOCOL             (0x00)
-#define DEVICE_DESC_NUM_CONFIG_SUPPOTED         (0x01)
+#define DEVICE_DESC_NUM_CONFIG_SUPPORTED         (0x01)
 /* Keep the following macro Zero if you don't Support Other Speed Configuration
  If you support Other Speeds make it 0x01 */
-#define DEVICE_OTHER_DESC_NUM_CONFIG_SUPPOTED   (0x00) 
-#define CONFIG_DESC_NUM_INTERFACES_SUPPOTED     (0x01)
+#define DEVICE_OTHER_DESC_NUM_CONFIG_SUPPORTED   (0x00) 
+#define CONFIG_DESC_NUM_INTERFACES_SUPPORTED     (0x01)
 #define CONFIG_DESC_CURRENT_DRAWN               (0x32)
 
 /* mass storage specific macros */

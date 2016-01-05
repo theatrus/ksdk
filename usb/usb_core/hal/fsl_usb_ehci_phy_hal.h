@@ -31,28 +31,11 @@
 #ifndef __FSL_USB_EHCI_PHY_HAL_H__
 #define __FSL_USB_EHCI_PHY_HAL_H__
 
-#include "adapter.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
-#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
-#include "fsl_usb_features.h"
-#include "fsl_device_registers.h"
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-    #if (defined(CPU_MK65F18))
-      #include "MK65F18.h"
-    #endif
-#endif
+#include<stdint.h>
+#include<stdbool.h>
+#include<assert.h>
+#include"fsl_device_registers.h"
 
-//#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
-
-#if (defined(CPU_MK65F18))
-#include "MK65F18.h"
-#endif
-//#include "fsl_usb_features.h"
-//#include "device/fsl_device_registers.h"
 
 /*!
  * @addtogroup usb_ehci_phy_hal
@@ -74,11 +57,11 @@ extern "C" {
  */
 
 /*!
- * @brief Set the ehci phy trim override enable
+ * @brief Set the ehci phy trim override enable.
  *
- * This function Set the ehci phy trim override enable
+ * This function Set the ehci phy trim override enable.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_trim_override_enable(uint32_t instance)
 {
@@ -86,11 +69,11 @@ static void usb_hal_ehci_phy_trim_override_enable(uint32_t instance)
 }
 
 /*!
- * @brief Enable the ehci phy pll power up
+ * @brief Enable the ehci phy pll power up.
  *
- * This function Enable the ehci phy pll power up
+ * This function Enable the ehci phy pll power up.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_pll_enalbe_power_up(uint32_t instance)
 {
@@ -98,11 +81,11 @@ static void usb_hal_ehci_phy_pll_enalbe_power_up(uint32_t instance)
 }
 
 /*!
- * @brief Enable the ehci phy pll bypass
+ * @brief Enable the ehci phy pll bypass.
  *
- * This function Enable the ehci phy pll bypass
+ * This function Enable the ehci phy pll bypass.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static inline void usb_hal_ehci_phy_pll_enable_bypass(uint32_t instance)
 {
@@ -111,11 +94,11 @@ static inline void usb_hal_ehci_phy_pll_enable_bypass(uint32_t instance)
 
 
 /*!
- * @brief Disable the ehci phy pll bypass
+ * @brief Disable the ehci phy pll bypass.
  *
- * This function Disable the ehci phy pll bypass
+ * This function Disable the ehci phy pll bypass.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_pll_clear_bypass(uint32_t instance)
 {
@@ -123,11 +106,11 @@ static void usb_hal_ehci_phy_pll_clear_bypass(uint32_t instance)
 }
 
 /*!
- * @brief Enable the ehci phy usb clock
+ * @brief Enable the ehci phy usb clock.
  *
- * This function Enable the ehci phy usb clock
+ * This function Enable the ehci phy usb clock.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_enable_usb_clock(uint32_t instance)
 {
@@ -135,12 +118,12 @@ static void usb_hal_ehci_phy_enable_usb_clock(uint32_t instance)
 }
 
 /*!
- * @brief Select the ehci phy pll reference clock
+ * @brief Select the ehci phy pll reference clock.
  *
- * This function Select the ehci phy pll reference clock
+ * This function Select the ehci phy pll reference clock.
  *
- * @param the instance number
- * @param the frequency
+ * @param instance the instance number.
+ * @param frequency the frequency.
  */
 static void usb_hal_ehci_phy_select_pll_reference_clock(uint32_t instance,uint32_t frequency)
 {
@@ -159,11 +142,11 @@ static void usb_hal_ehci_phy_select_pll_reference_clock(uint32_t instance,uint32
 }
 
 /*!
- * @brief Wait the ehci phy pll to lock
+ * @brief Wait the ehci phy pll to lock.
  *
- * This function Wait the ehci phy pll to lock
+ * This function Wait the ehci phy pll to lock.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_wait_pll_lock(uint32_t instance)
 {
@@ -172,11 +155,11 @@ static void usb_hal_ehci_phy_wait_pll_lock(uint32_t instance)
 }
 
 /*!
- * @brief Release the ehci phy from reset
+ * @brief Release the ehci phy from reset.
  *
- * This function Release the ehci phy from reset
+ * This function Release the ehci phy from reset.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_release_from_reset(uint32_t instance)
 {
@@ -184,11 +167,11 @@ static void usb_hal_ehci_phy_release_from_reset(uint32_t instance)
 }
 
 /*!
- * @brief Run the utmi clock
+ * @brief Run the utmi clock.
  *
- * This function Run the utmi clock
+ * This function Run the utmi clock.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_run_clock(uint32_t instance)
 {
@@ -196,11 +179,11 @@ static void usb_hal_ehci_phy_run_clock(uint32_t instance)
 }
 
 /*!
- * @brief Enable the utmi level2 clock
+ * @brief Enable the utmi level2 clock.
  *
- * This function Enable the utmi level2 clock
+ * This function Enable the utmi level2 clock.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_enable_utmi_level2(uint32_t instance)
 {
@@ -208,11 +191,11 @@ static void usb_hal_ehci_phy_enable_utmi_level2(uint32_t instance)
 }
 
 /*!
- * @brief Enable the utmi level3 clock
+ * @brief Enable the utmi level3 clock.
  *
- * This function Enable the utmi level3 clock
+ * This function Enable the utmi level3 clock.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_enable_utmi_level3(uint32_t instance)
 {
@@ -220,11 +203,11 @@ static void usb_hal_ehci_phy_enable_utmi_level3(uint32_t instance)
 }
 
 /*!
- * @brief Enable the ehci phy disconnect detect
+ * @brief Enable the ehci phy disconnect detect.
  *
- * This function Enable the ehci phy disconnect detect
+ * This function Enable the ehci phy disconnect detect.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static inline void usb_hal_ehci_phy_enable_disconnect_detect(uint32_t instance)
 {
@@ -232,11 +215,11 @@ static inline void usb_hal_ehci_phy_enable_disconnect_detect(uint32_t instance)
 }
 
 /*!
- * @brief Disable the ehci phy disconnect detect
+ * @brief Disable the ehci phy disconnect detect.
  *
- * This function Disable the ehci phy disconnect detect
+ * This function Disable the ehci phy disconnect detect.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 
 static inline void usb_hal_ehci_phy_disable_disconnect_detect(uint32_t instance)
@@ -246,11 +229,11 @@ static inline void usb_hal_ehci_phy_disable_disconnect_detect(uint32_t instance)
 }
 
 /*!
- * @brief Set the ehci phy power state to normal
+ * @brief Set the ehci phy power state to normal.
  *
- * This function Set the ehci phy power state to normal
+ * This function Set the ehci phy power state to normal.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_set_power_state_to_normal(uint32_t instance)
 {
@@ -258,12 +241,12 @@ static void usb_hal_ehci_phy_set_power_state_to_normal(uint32_t instance)
 }
 
 /*!
- * @brief Set the ehci phy pfd frac value
+ * @brief Set the ehci phy pfd frac value.
  *
- * This function Set the ehci phy pfd frac value
+ * This function Set the ehci phy pfd frac value.
  *
- * @param the instance number
- * @param the frac_value
+ * @param instance the instance number.
+ * @param frac_value the frac_value.
  */
 static void usb_hal_ehci_phy_set_pfd_frac_value(uint32_t instance,uint32_t frac_value)
 {
@@ -271,12 +254,12 @@ static void usb_hal_ehci_phy_set_pfd_frac_value(uint32_t instance,uint32_t frac_
 }
 
 /*!
- * @brief Select the pfd clock divider
+ * @brief Select the pfd clock divider.
  *
- * This function Select the pfd clock divider
+ * This function Select the pfd clock divider.
  *
- * @param the instance number
- * @param the divider
+ * @param instance the instance number.
+ * @param divider the divider.
  */
 static void usb_hal_ehci_phy_select_pfd_clock_divider(uint32_t instance,uint32_t divider)
 {
@@ -284,12 +267,12 @@ static void usb_hal_ehci_phy_select_pfd_clock_divider(uint32_t instance,uint32_t
 }
 
 /*!
- * @brief Disable the ehci phy pull down resistor
+ * @brief Disable the ehci phy pull down resistor.
  *
- * This function Disable the ehci phy pull down resistor
+ * This function Disable the ehci phy pull down resistor.
  *
- * @param the instance number
- * @param the divider
+ * @param instance the instance number.
+ * @param divider the divider.
  */
 static void usb_hal_ehci_phy_disable_pulldown_resistor(uint32_t instance)
 {
@@ -297,11 +280,11 @@ static void usb_hal_ehci_phy_disable_pulldown_resistor(uint32_t instance)
 }
 
 /*!
- * @brief Disable the ehci phy pfd clock gate
+ * @brief Disable the ehci phy pfd clock gate.
  *
- * This function Disable the ehci phy pfd clock gate
+ * This function Disable the ehci phy pfd clock gate.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_disable_pfd_clock_gate(uint32_t instance)
 {
@@ -309,17 +292,48 @@ static void usb_hal_ehci_phy_disable_pfd_clock_gate(uint32_t instance)
 }
 
 /*!
- * @brief Wait the ehci phy clock to be stable
+ * @brief Wait the ehci phy clock to be stable.
  *
- * This function Wait the ehci phy clock to be stable
+ * This function Wait the ehci phy clock to be stable.
  *
- * @param the instance number
+ * @param instance the instance number.
  */
 static void usb_hal_ehci_phy_wait_pfd_stable(uint32_t instance)
 {
     while (!(USBPHY_ANACTRL & USBPHY_ANACTRL_PFD_STABLE_MASK))
     {}
 }
+
+/*!
+ * @brief Enable  the ehci phy tx sync mux function.
+ *
+ * This function Enable  the ehci phy tx sync mux function.
+ *
+ * @param instance the instance number.
+ */
+static void usb_hal_ehci_phy_enable_tx_sync_mux(uint32_t instance)
+{
+    USBPHY_TX |= 1<<24;
+}
+
+/*!
+ * @brief adjust  the current of the HS ehci phy, which related to the High Speed TX eye diagram.
+ *
+ * This function adjust  the current of the HS ehci phy.
+ *
+ * @param instance the instance number.
+ * @param cal the cal value.
+ */ 
+static  inline void usb_hal_ehci_phy_set_tx_d_cal(uint32_t instance, uint32_t cal)
+{
+    USBPHY_TX &= ~USBPHY_TX_D_CAL_MASK;
+    USBPHY_TX |= USBPHY_TX_D_CAL(cal);
+}
+
+#if defined(__cplusplus)
+}
+#endif
+
 #endif
 
 /* EOF */

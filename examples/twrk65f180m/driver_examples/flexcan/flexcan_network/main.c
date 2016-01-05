@@ -146,9 +146,8 @@ int main(void)
     // init the uart module with base address and config structure
     UART_DRV_Init(uartInstance, &uartState, &uartConfig);
 
-    OSA_Init();
-
     hardware_init();
+    OSA_Init();
 
     init_pit_timer(pitInstance);
 
@@ -288,7 +287,7 @@ int main(void)
     result = FLEXCAN_DRV_ConfigTxMb(flexcanInstance, TX_mailbox_num, &tx_info, TX_identifier);
     if (result)
     {
-        PRINTF("\nTransmit MB config error. Error Code: 0x%lx", result);
+        PRINTF("\r\nTransmit MB config error. Error Code: 0x%lx", result);
     }
 
     if (flexcan1_data.is_rx_fifo_needed)

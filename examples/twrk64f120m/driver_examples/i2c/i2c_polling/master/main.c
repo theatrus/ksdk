@@ -84,7 +84,7 @@ int main(void)
     uint32_t count = 0;
     uint32_t i = 0;
     // i2c master base address
-    I2C_Type * baseAddr = g_i2cBase[BOARD_I2C_COMM_INSTANCE];
+    I2C_Type * baseAddr = g_i2cBase[BOARD_I2C_INSTANCE];
 
     uint16_t address = 0x7FU;
     uint32_t baudRate_kbps = 400;   // 400 Kbps
@@ -98,14 +98,14 @@ int main(void)
     OSA_Init();
 
     PRINTF("\r\n=================== I2C MASTER POLLING ==================\r\n");
-    PRINTF("\n1. Master sends length of string (1 byte).\
+    PRINTF("\r\n1. Master sends length of string (1 byte).\
     \r\n2. Master sends a string to slave.\
     \r\n3. Master receives a string from slave.\
     \r\n4. Compare rxBuff and txBuff to see result.\r\n");
     PRINTF("\r\n=========================================================\r\n");
 
     /* Enable clock for I2C.*/
-    CLOCK_SYS_EnableI2cClock(BOARD_I2C_COMM_INSTANCE);
+    CLOCK_SYS_EnableI2cClock(BOARD_I2C_INSTANCE);
 
     /* Initialize peripheral to known state.*/
     I2C_HAL_Init(baseAddr);
@@ -114,7 +114,7 @@ int main(void)
     I2C_HAL_Enable(baseAddr);
 
     /* Get the current bus clock.*/
-    i2cClockFreq = CLOCK_SYS_GetI2cFreq(BOARD_I2C_COMM_INSTANCE);
+    i2cClockFreq = CLOCK_SYS_GetI2cFreq(BOARD_I2C_INSTANCE);
 
     I2C_HAL_SetBaudRate(baseAddr, i2cClockFreq, baudRate_kbps, NULL);
 
@@ -125,7 +125,7 @@ int main(void)
     }
 
     count = 1;
-    PRINTF("\r\nPress any key to start transfer:\r\n\n");
+    PRINTF("\r\nPress any key to start transfer:\r\n\r\n");
      // Loop for transfer
     while(1)
     {
@@ -168,14 +168,18 @@ int main(void)
         /* Compare to check result */
         if(i2c_compare((uint8_t*)txBuff, rxBuff, count) != true)
         {
-            PRINTF("\r\nFailure when transfer with size of buffer is %d.\n\r", count);
+            PRINTF("\r\nFailure when transfer with size of buffer is %d.\r\n", count);
             break;
         }
-        PRINTF("\r\nMaster Sends/ Receives %2d bytes Successfully\r\n\n", count);
+        PRINTF("\r\nMaster Sends/ Receives %2d bytes Successfully\r\n\r\n", count);
 
         if(++count > DATA_LENGTH)
         {
+#if defined(KM34Z7_SERIES)
+            break;
+#else
             count = 1;
+#endif
         }
 
         OSA_TimeDelay(2);
@@ -187,7 +191,7 @@ int main(void)
     I2C_HAL_Disable(baseAddr);
 
     /* Disable clock for I2C.*/
-    CLOCK_SYS_DisableI2cClock(BOARD_I2C_COMM_INSTANCE);
+    CLOCK_SYS_DisableI2cClock(BOARD_I2C_INSTANCE);
 
     return 0;
 }

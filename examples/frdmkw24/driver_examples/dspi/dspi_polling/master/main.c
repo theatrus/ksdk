@@ -42,7 +42,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define DSPI_MASTER_INSTANCE        (0)                 /*! User change define to choose DSPI instance */
+#define DSPI_MASTER_INSTANCE        BOARD_DSPI_INSTANCE /*! User change define to choose DSPI instance */
 #define TRANSFER_SIZE               (32)                /*! Transfer size */
 #define TRANSFER_BAUDRATE           (500000U)           /*! Transfer baudrate - 500k */
 
@@ -55,6 +55,9 @@
  ******************************************************************************/
 uint8_t receiveBuffer[TRANSFER_SIZE] = {0};
 uint8_t sendBuffer[TRANSFER_SIZE] = {0};
+
+// Table of base pointers for SPI instances.
+extern SPI_Type * const g_dspiBase[SPI_INSTANCE_COUNT];
 
 /*******************************************************************************
  * Code
@@ -69,8 +72,9 @@ uint8_t sendBuffer[TRANSFER_SIZE] = {0};
 int main(void)
 {
     uint32_t i;
+    uint8_t errTransfer;
     uint32_t loopCount = 1;
-    SPI_Type * dspiBaseAddr = (SPI_Type*)SPI0_BASE;
+    SPI_Type * dspiBaseAddr = g_dspiBase[BOARD_DSPI_INSTANCE];
     uint32_t dspiSourceClock;
     uint32_t calculatedBaudRate;
     dspi_device_t masterDevice;
@@ -90,8 +94,9 @@ int main(void)
 
     // Print a note.
     PRINTF("\r\n DSPI board to board polling example");
-    PRINTF("\r\n This example run on instance 0 ");
-    PRINTF("\r\n Be sure DSPI0-DSPI0 are connected \n");
+    PRINTF("\r\n This example run on instance %d ", (uint32_t)DSPI_MASTER_INSTANCE);
+    PRINTF("\r\n Be sure DSPI%d-DSPI%d are connected \r\n",
+                        (uint32_t)DSPI_MASTER_INSTANCE, (uint32_t)DSPI_MASTER_INSTANCE);
 
     // Enable DSPI clock.
     CLOCK_SYS_EnableSpiClock(DSPI_MASTER_INSTANCE);
@@ -131,7 +136,7 @@ int main(void)
         }
 
         // Print out transmit buffer.
-        PRINTF("\r\n Master transmit:\n");
+        PRINTF("\r\n Master transmit:\r\n");
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
             // Print 16 numbers in a line.
@@ -207,7 +212,7 @@ int main(void)
         }
 
         // Print out receive buffer.
-        PRINTF("\r\n Master receive:\n");
+        PRINTF("\r\n Master receive:\r\n");
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
             // Print 16 numbers in a line.
@@ -218,20 +223,27 @@ int main(void)
             PRINTF(" %02X", receiveBuffer[i]);
         }
 
+        errTransfer = false;
         // Check receiveBuffer.
         for (i = 0; i < TRANSFER_SIZE; ++i)
         {
             if (receiveBuffer[i] != sendBuffer[i])
             {
-                // Master received incorrect.
-                PRINTF("\r\n ERROR: master received incorrect \n\r");
-                return -1;
+                errTransfer = true;
+                break;
             }
         }
-
-        PRINTF("\r\n DSPI Master Sends/ Recevies Successfully");
+        if (errTransfer)
+        {
+            // Master received incorrect.
+            PRINTF("\r\n ERROR: master received incorrect at No.%d\r\n", i);
+        }
+        else
+        {
+            PRINTF("\r\n DSPI Master Sends/ Recevies Successfully");
+        }
         // Wait for press any key.
-        PRINTF("\r\n Press any key to run again\n");
+        PRINTF("\r\n Press any key to run again\r\n");
         GETCHAR();
         // Increase loop count to change transmit buffer.
         loopCount++;

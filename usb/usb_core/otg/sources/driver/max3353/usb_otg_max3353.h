@@ -103,11 +103,7 @@ typedef struct usb_otg_max3353_call_struct
 {
     usb_otg_state_struct_t * otg_handle_ptr;
     usb_otg_max3353_init_struct_t * init_param_ptr;
-    #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    void* i2c_f_ptr;
-#else
     uint8_t channel;
-#endif
 } usb_otg_max3353_call_struct_t;
 
 #ifdef __cplusplus

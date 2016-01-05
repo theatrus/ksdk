@@ -196,7 +196,9 @@ void task_master(task_param_t param)
     {
         static int32_t ledr_sts = 0;
         static int32_t ledg_sts = 0;
+#if defined(BOARD_GPIO_LED_BLUE)
         static int32_t ledb_sts = 0;
+#endif
 
         PRINTF("\r\n");
         print_menu();

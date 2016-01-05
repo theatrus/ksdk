@@ -79,19 +79,6 @@ Include the USB stack header files.
 #define CONTROLLER_ID                      USB_CONTROLLER_KHCI_0
 #endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in mqx_sdk_config.h. Please recompile BSP with this option.
-#endif
-
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in mqx_sdk_config.h and recompile BSP with this option.
-#endif
-
-#endif
-
 void   APP_task(void);
 uint32_t   usb_host_mass_device_event (usb_device_instance_handle,usb_interface_descriptor_handle,uint32_t);
 
@@ -181,7 +168,7 @@ void APP_init(void)
 {  
     usb_status status;
    
-    status = usb_host_init(CONTROLLER_ID, &g_host_handle);
+    status = usb_host_init(CONTROLLER_ID, usb_host_board_init, &g_host_handle);
     if(status != USB_OK) 
     {
         printf("\r\nUSB Host Initialization failed! STATUS: 0x%x", status);
@@ -287,31 +274,6 @@ void APP_task ( void )
         } /* Endswitch */
     }
 } /* Endbody */
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
-*
-* Function Name  : main (Main_Task if using MQX)
-* Returned Value : none
-* Comments       :
-*     Execution starts here
-*
-*END*--------------------------------------------------------------------*/
-
-void Main_Task ( uint32_t param )
-{
-    APP_init();
-   
-    /*
-    ** Infinite loop, waiting for events requiring action
-    */
-    for ( ; ; ) 
-    {
-        APP_task();
-        _time_delay(1);
-    } /* Endfor */
-} /* Endbody */
-#endif
 
 /*FUNCTION*----------------------------------------------------------------
 *

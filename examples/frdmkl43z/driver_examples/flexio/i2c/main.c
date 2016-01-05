@@ -43,7 +43,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions
 ///////////////////////////////////////////////////////////////////////////////
-#define I2C_SLAVE (1U) /*!< Instance number for I2C0. */
+
+
+#if defined FRDM_K82F
+    #define I2C_SLAVE (3U) /*!< Instance number for I2C3. */
+#else
+    #define I2C_SLAVE (1U) /*!< Instance number for I2C1. */
+#endif
+
 #define I2C_SLAVE_ADDR              0x7FU
 #define I2C_RESET_BUFF(x,size) \
    do \
@@ -97,17 +104,17 @@ static int32_t i2c_compare_sink_source(uint8_t *source, uint8_t *sink, uint16_t 
     {
         if (source[i] != sink[i])
         {
-            return -1;
+            return false;
         }
     }
-    return 0;
+    return true;
 }
 
 static void master_send_slave_receive_int(void)
 {
     FLEXIO_I2C_DRV_MasterSendData(&masterState,I2C_SLAVE_ADDR,NULL,s_masterWriteBuffer,13);
     I2C_DRV_SlaveReceiveDataBlocking(I2C_SLAVE,s_slaveReadBuffer,13, 1000);
-    if(i2c_compare_sink_source(s_masterWriteBuffer, s_slaveReadBuffer, 13))
+    if(i2c_compare_sink_source(s_masterWriteBuffer, s_slaveReadBuffer, 13) != true)
     {
        PRINTF("\r\nFlexIO simulated I2C master to I2C standard slave write transfer failed!!\r\n");
        return;
@@ -118,7 +125,7 @@ static void master_receive_slave_send_int(void)
 {
     FLEXIO_I2C_DRV_MasterReceiveData(&masterState,I2C_SLAVE_ADDR,NULL,s_masterReadBuffer,13);
     I2C_DRV_SlaveSendDataBlocking(I2C_SLAVE,s_slaveWriteBuffer,13, 1000);
-    if(i2c_compare_sink_source(s_masterReadBuffer, s_slaveWriteBuffer, 13))
+    if(i2c_compare_sink_source(s_masterReadBuffer, s_slaveWriteBuffer, 13) != true)
     {
        PRINTF("\r\nFlexIO simulated I2C master to I2C standard slave read transfer failed!!\r\n");
        return;
@@ -130,7 +137,7 @@ static void master_send_slave_receive_int_blocking(void)
     I2C_RESET_BUFF(s_slaveReadBuffer,13);
     I2C_DRV_SlaveReceiveData(I2C_SLAVE,s_slaveReadBuffer,13);
     FLEXIO_I2C_DRV_MasterSendDataBlocking(&masterState,I2C_SLAVE_ADDR,NULL,s_masterWriteBuffer,13, 1000);
-    if(i2c_compare_sink_source(s_masterWriteBuffer, s_slaveReadBuffer, 13))
+    if(i2c_compare_sink_source(s_masterWriteBuffer, s_slaveReadBuffer, 13) != true)
     {
        PRINTF("\r\nFlexIO simulated I2C master to I2C standard slave write transfer failed!!\r\n");
        return;
@@ -142,7 +149,7 @@ static void master_receive_slave_send_int_blocking(void)
     I2C_RESET_BUFF(s_masterReadBuffer,13);
     I2C_DRV_SlaveSendData(I2C_SLAVE,s_slaveWriteBuffer,13);
     FLEXIO_I2C_DRV_MasterReceiveDataBlocking(&masterState,I2C_SLAVE_ADDR,NULL,s_masterReadBuffer,13,1000);
-    if(i2c_compare_sink_source(s_masterReadBuffer, s_slaveWriteBuffer, 13))
+    if(i2c_compare_sink_source(s_masterReadBuffer, s_slaveWriteBuffer, 13) != true)
     {
        PRINTF("\r\nFlexIO simulated I2C master to I2C standard slave read transfer failed!!\r\n");
        return;
@@ -171,7 +178,7 @@ int main(void)
     /* Fill in i2c master config data */
     flexio_i2c_userconfig_t masterConfig;
     masterConfig.baudRate = 200000;
-    masterConfig.i2cHwConfig.sdaPinIdx = 2;
+    masterConfig.i2cHwConfig.sdaPinIdx = 5;
     masterConfig.i2cHwConfig.sclkPinIdx = 4;
     masterConfig.i2cHwConfig.shifterIdx[0] = 0;
     masterConfig.i2cHwConfig.shifterIdx[1] = 1;
@@ -185,16 +192,16 @@ int main(void)
     I2C_DRV_SlaveInit(I2C_SLAVE, &slaveConfig, &slaveState);
 	
     // Inform to start example
-    PRINTF("\n\r++++++++++++++++ FLEXIO I2C Master Send/Receive Example Start +++++++++++++++++\n\r");
-    PRINTF("\n\r-------------------Non-blocking&Blocking example--------------------------\
-            \n\r1. FlexIO simulated I2C master write a buffer to I2C1 \
+    PRINTF("\r\n++++++++++++++++ FLEXIO I2C Master Send/Receive Example Start +++++++++++++++++\r\n");
+    PRINTF("\r\n-------------------Non-blocking&Blocking example--------------------------\
+            \r\n1. FlexIO simulated I2C master write a buffer to I2C1 \
             \r\n2. I2C1 acts as slave and receives data from FlexIO simulated I2C Master.\
             \r\n3. Compare rxBuff and txBuff to see result.\
-            \n\r4. FlexIO simulated I2C master read a buffer from I2C1\
+            \r\n4. FlexIO simulated I2C master read a buffer from I2C1\
             \r\n5. I2C1 send the buffer and FlexIO simulated I2C master receives the buffer.\
             \r\n6. Compare rxBuff and txBuff to see result.\r\n");
     PRINTF("\r\n============================================================\r\n");
-    PRINTF("\r\nPress any key to start transfer:\r\n\n");
+    PRINTF("\r\nPress any key to start transfer:\r\n\r\n");
     while (1)
     {
         GETCHAR();

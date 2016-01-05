@@ -298,7 +298,6 @@ void CADC_HAL_ConfigChn(ADC_Type * base, const cadc_chn_config_t *configPtr)
     {
     case kCAdcDiffChnANB0_1:
     case kCAdcDiffChnANB2_3:
-        /* chns -= 2U; */
     case kCAdcDiffChnANA0_1:
     case kCAdcDiffChnANA2_3:
         if ( (kCAdcDiffChnANB0_1 == chns) || (kCAdcDiffChnANB2_3 == chns) )
@@ -315,7 +314,6 @@ void CADC_HAL_ConfigChn(ADC_Type * base, const cadc_chn_config_t *configPtr)
         break;
     case kCAdcDiffChnANB4_5:
     case kCAdcDiffChnANB6_7:
-        /* chns -= 2U; */
     case kCAdcDiffChnANA4_5:
     case kCAdcDiffChnANA6_7:
         if ( (kCAdcDiffChnANB4_5 == chns) || (kCAdcDiffChnANB6_7 == chns) )

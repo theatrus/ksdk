@@ -52,6 +52,7 @@ typedef enum _mcglite_mode
     kMcgliteModeLirc8M,                      /*!< clock mode is LIRC 8M  */
     kMcgliteModeLirc2M,                      /*!< clock mode is LIRC 2M  */
     kMcgliteModeExt,                         /*!< clock mode is EXT  */
+    kMcgliteModeLirc,                        /*!< clock mode is LIRC 2M or 8M */
     kMcgliteModeStop,                        /*!< clock mode is STOP  */
     kMcgliteModeError                        /*!< Unknown mode */
 } mcglite_mode_t;
@@ -77,7 +78,7 @@ extern "C" {
 /*!
  * @brief Gets the current MCG_Lite clock mode.
  *
- * This is an internal function that checks the MCG registers and determine
+ * This is an internal function that checks the MCG registers and determines
  * the current MCG_lite mode.
  *
  * @param base MCG_Lite register base address.
@@ -89,47 +90,43 @@ mcglite_mode_t CLOCK_HAL_GetMode(MCG_Type * base);
 /*!
  * @brief Sets the MCG_Lite to HIRC mode.
  *
- * This is an internal function that changes MCG_Lite
+ * This is an internal function that sets MCG_Lite
  * to HRIC mode.
  *
  * @param base MCG_Lite register base address.
- * @param outclkfreq MCGOUTCLK frequency in new mode.
  *
  * @return Error code.
  */
-mcglite_mode_error_t CLOCK_HAL_SetHircMode(MCG_Type * base, uint32_t *outClkFreq);
+mcglite_mode_error_t CLOCK_HAL_SetHircMode(MCG_Type * base);
 
 /*!
  * @brief Sets the MCG_Lite to LIRC mode.
  *
- * This is an internal function that changes MCG_Lite
+ * This is an internal function that sets MCG_Lite
  * to LIRC mode.
  *
  * @param base MCG_Lite register base address.
  * @param lirc     Set to LIRC2M or LIRC8M.
  * @param div1     The FCRDIV setting.
- * @param outclkfreq MCGOUTCLK frequency in new mode.
  *
  * @return Error code.
  */
 mcglite_mode_error_t CLOCK_HAL_SetLircMode(MCG_Type * base,
                                mcglite_lirc_select_t lirc,
-                               mcglite_lirc_div_t div1,
-                               uint32_t *outClkFreq);
+                               mcglite_lirc_div_t div1);
 
 /*!
  * @brief Sets the MCG_Lite to EXT mode.
  *
- * This is an internal function that changes MCG_Lite
- * to EXT mode. Before this function, please make sure
- * the OSC or external clock source is ready.
+ * This is an internal function that sets MCG_Lite
+ * to EXT mode. Before calling this function, ensure
+ * that either the OSC or external clock source is ready.
  *
  * @param base MCG_Lite register base address.
- * @param outclkfreq MCGOUTCLK frequency in new mode.
  *
  * @return Error code.
  */
-mcglite_mode_error_t CLOCK_HAL_SetExtMode(MCG_Type * base, uint32_t *outClkFreq);
+mcglite_mode_error_t CLOCK_HAL_SetExtMode(MCG_Type * base);
 
 /*! @}*/
 

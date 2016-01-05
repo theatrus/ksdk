@@ -186,7 +186,7 @@ int main(void)
     GPIO_DRV_Init(0, ledPins);
 
     // Initiate I2C instance module
-    I2C_DRV_SlaveInit(BOARD_I2C_COMM_INSTANCE, &userConfig, &slave);
+    I2C_DRV_SlaveInit(BOARD_I2C_INSTANCE, &userConfig, &slave);
 
     PRINTF("\r\n====== I2C Slave ======\r\n\r\n");
 

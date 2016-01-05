@@ -10,7 +10,7 @@
 **     Compiler:            Keil ARM C/C++ Compiler
 **     Reference manual:    K22P121M120SF7RM, Rev. 1, March 24, 2014
 **     Version:             rev. 2.8, 2015-02-19
-**     Build:               b150317
+**     Build:               b150602
 **
 **     Abstract:
 **         Linker file for the Keil ARM C/C++ Compiler
@@ -52,11 +52,11 @@
 #define m_interrupts_start             0x1FFF0000
 #define m_interrupts_size              0x00000400
 
-#define m_data_start                   0x1FFF0400
-#define m_data_size                    0x0000FC00
+#define m_text_start                   0x1FFF0400
+#define m_text_size                    0x0000FC00
 
-#define m_text_start                   0x20000000
-#define m_text_size                    0x00010000
+#define m_data_start                   0x20000000
+#define m_data_size                    0x00010000
 
 /* Sizes */
 #if (defined(__stack_size__))

@@ -65,28 +65,28 @@
 typedef enum _power_wakeup_module
 {
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE0
-    kPowerManagerWakeupLptmr      = kLlwuWakeupModule0,
+    kPowerManagerWakeupModule0      = kLlwuWakeupModule0,
 #endif
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE1
-    kPowerManagerWakeupCmp0       = kLlwuWakeupModule1,
+    kPowerManagerWakeupModule1      = kLlwuWakeupModule1,
 #endif
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE2
-    kPowerManagerWakeupCmp1       = kLlwuWakeupModule2,
+    kPowerManagerWakeupModule2      = kLlwuWakeupModule2,
 #endif
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE3
-    kPowerManagerWakeupCmp2       = kLlwuWakeupModule3,
+    kPowerManagerWakeupModule3      = kLlwuWakeupModule3,
 #endif
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE4
-    kPowerManagerWakeupTsi        = kLlwuWakeupModule4,
+    kPowerManagerWakeupModule4      = kLlwuWakeupModule4,
 #endif
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE5
-    kPowerManagerWakeupRtcAlarm   = kLlwuWakeupModule5,
+    kPowerManagerWakeupModule5      = kLlwuWakeupModule5,
 #endif
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE6
-    kPowerManagerWakeupDryIce     = kLlwuWakeupModule6,
+    kPowerManagerWakeupModule6      = kLlwuWakeupModule6,
 #endif
 #if FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE7
-    kPowerManagerWakeupRtcSeconds = kLlwuWakeupModule7,
+    kPowerManagerWakeupModule7      = kLlwuWakeupModule7,
 #endif
     kPowerManagerWakeupMax        = FSL_FEATURE_LLWU_HAS_INTERNAL_MODULE
 } power_wakeup_module_t;

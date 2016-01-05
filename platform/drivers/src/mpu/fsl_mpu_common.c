@@ -38,7 +38,11 @@
 MPU_Type * const g_mpuBase[] = MPU_BASE_PTRS;
 
 /*! @brief Table to save MPU IRQ enum numbers for core access. */
+#if __CORTEX_M == (0x00)
+const IRQn_Type g_mpuIrqId[MPU_INSTANCE_COUNT] = {HardFault_IRQn};
+#else
 const IRQn_Type g_mpuIrqId[MPU_INSTANCE_COUNT] = {BusFault_IRQn};
+#endif
 
 /*******************************************************************************
  * EOF

@@ -28,22 +28,22 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -T${ProjDirPat
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -T${ProjDirPath}/../../../../../platform/devices/MKL27Z644/linker/gcc/MKL27Z64xxx4_flash.ld  -static")
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__heap_size__=0x200  -Xlinker --defsym=__stack_size__=0x200")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__heap_size__=0x200  -Xlinker --defsym=__stack_size__=0x200")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__heap_size__=0x200  -Xlinker --defsym=__stack_size__=0x200")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__heap_size__=0x200  -Xlinker --defsym=__stack_size__=0x200")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -71,10 +71,9 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/system/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/utilities/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/src/flash/C90TFS/drvsrc/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/..)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/utilities/inc)
@@ -85,30 +84,15 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/system/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/utilities/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/src/flash/C90TFS/drvsrc/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/..)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
 ENDIF()
 
 # ADD_EXECUTABLE
 ADD_EXECUTABLE(flash_demo 
     "${ProjDirPath}/../../../../../platform/utilities/src/fsl_misc_utilities.c"
     "${ProjDirPath}/../../../../../platform/devices/MKL27Z644/startup/gcc/startup_MKL27Z644.S"
-    "${ProjDirPath}/../../../../../platform/utilities/src/fsl_debug_console.c"
-    "${ProjDirPath}/../../../../../platform/utilities/inc/fsl_debug_console.h"
-    "${ProjDirPath}/../../../../../platform/utilities/src/print_scan.c"
-    "${ProjDirPath}/../../../../../platform/utilities/src/print_scan.h"
-    "${ProjDirPath}/../../../../../platform/devices/MKL27Z644/startup/system_MKL27Z644.c"
-    "${ProjDirPath}/../../../../../platform/devices/startup.c"
-    "${ProjDirPath}/../../../../../platform/devices/startup.h"
-    "${ProjDirPath}/../../../gpio_pins.c"
-    "${ProjDirPath}/../../../gpio_pins.h"
-    "${ProjDirPath}/../../../pin_mux.c"
-    "${ProjDirPath}/../../../pin_mux.h"
-    "${ProjDirPath}/../../../board.c"
-    "${ProjDirPath}/../../../board.h"
-    "${ProjDirPath}/../hardware_init.c"
     "${ProjDirPath}/../main.c"
     "${ProjDirPath}/../flash_swap.c"
     "${ProjDirPath}/../../../../../platform/drivers/src/flash/C90TFS/drvsrc/source/CopyToRam.c"
@@ -147,6 +131,20 @@ ADD_EXECUTABLE(flash_demo
     "${ProjDirPath}/../../../../../platform/drivers/src/flash/C90TFS/drvsrc/include/SSD_FTFx_Common.h"
     "${ProjDirPath}/../../../../../platform/drivers/src/flash/C90TFS/drvsrc/include/SSD_FTFx_Internal.h"
     "${ProjDirPath}/../../../../../platform/drivers/src/flash/C90TFS/drvsrc/include/SSD_Types.h"
+    "${ProjDirPath}/../hardware_init.c"
+    "${ProjDirPath}/../../../gpio_pins.c"
+    "${ProjDirPath}/../../../gpio_pins.h"
+    "${ProjDirPath}/../../../pin_mux.c"
+    "${ProjDirPath}/../../../pin_mux.h"
+    "${ProjDirPath}/../../../board.c"
+    "${ProjDirPath}/../../../board.h"
+    "${ProjDirPath}/../../../../../platform/utilities/src/fsl_debug_console.c"
+    "${ProjDirPath}/../../../../../platform/utilities/inc/fsl_debug_console.h"
+    "${ProjDirPath}/../../../../../platform/utilities/src/print_scan.c"
+    "${ProjDirPath}/../../../../../platform/utilities/src/print_scan.h"
+    "${ProjDirPath}/../../../../../platform/devices/MKL27Z644/startup/system_MKL27Z644.c"
+    "${ProjDirPath}/../../../../../platform/devices/startup.c"
+    "${ProjDirPath}/../../../../../platform/devices/startup.h"
 )
 SET_TARGET_PROPERTIES(flash_demo PROPERTIES OUTPUT_NAME "flash_demo.elf")
 

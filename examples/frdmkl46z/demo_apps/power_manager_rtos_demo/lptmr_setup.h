@@ -57,11 +57,6 @@
 // Prototypes
 ///////////////////////////////////////////////////////////////////////////////
 /*!
- * @brief LPTMR interrupt callback
- */
-// void lptmr_isr_callback(void);
-
-/*!
  * @brief LPTMR initialize
  */
 void lptmrInit(lptmr_user_config_t *lptmrUserConfig, lptmr_state_t *gLPTMRState);

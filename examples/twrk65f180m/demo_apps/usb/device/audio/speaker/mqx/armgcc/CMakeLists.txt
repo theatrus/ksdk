@@ -28,22 +28,22 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -T${ProjDirPat
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -T${ProjDirPath}/../../../../../../../../../platform/devices/MK65F18/linker/gcc/MK65FN2M0xxx18_flash.ld  -static")
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -Wno-format  -fno-strict-aliasing  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -Wno-format  -fno-strict-aliasing  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -Xlinker --defsym=__ram_vector_table__=1  -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x4000  -Xlinker --defsym=__heap_size__=0x8000")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -Xlinker --defsym=__ram_vector_table__=1  -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x4000  -Xlinker --defsym=__heap_size__=0x8000")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-format  -fno-strict-aliasing  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -Wno-format  -fno-strict-aliasing  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Xlinker --defsym=__ram_vector_table__=1  -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x4000  -Xlinker --defsym=__heap_size__=0x8000")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Xlinker --defsym=__ram_vector_table__=1  -Xlinker -z -Xlinker muldefs  -Xlinker -static  -Xlinker -cref  -nostartfiles  -Xlinker --undefined=__isr_vector  -lc  -lgcc    -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16    -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x4000  -Xlinker --defsym=__heap_size__=0x8000")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -53,16 +53,16 @@ SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D_DEBUG=1")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D_AEABI_LC_CTYPE=C")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -D__STRICT_ANSI__=1")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MK65FN2M0VMI18")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_MQX")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR_K65F180M")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTOWER")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DFSL_RTOS_MQX")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D_DEBUG=0")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D_AEABI_LC_CTYPE=C")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -D__STRICT_ANSI__=1")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MK65FN2M0VMI18")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_MQX")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTWR_K65F180M")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTOWER")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DFSL_RTOS_MQX")
 
 # CXX MACRO
 
@@ -82,7 +82,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/adapter/sources)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/adapter/sources/sdk)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include/twrk65f180m)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include/MK65F18)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/cdc)
@@ -93,11 +93,12 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/include/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/msd)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/phdc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/video)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller/ehci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/hal)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include/twrk65f180m)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include/MK65F18)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/sources/classes/cdc)
@@ -112,7 +113,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/sources/driver/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/sources/driver/max3353/sdk)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/sources/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/sources/otg)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/drivers/inc)
@@ -121,6 +122,8 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/drivers/src/pit)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/drivers/src/edma)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/system/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/composite/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/config/mcu/MK65F18)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/config/board/twrk65f180m)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
@@ -134,8 +137,6 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/config/common)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/mqx/source/bsp)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/mqx/source/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/composite/inc)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/lib/twrk65f180m.armgcc/release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/lib/twrk65f180m.armgcc/release/config)
@@ -151,7 +152,7 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/adapter/sources)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/adapter/sources/sdk)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include/twrk65f180m)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include/MK65F18)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/cdc)
@@ -162,11 +163,12 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/include/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/msd)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/phdc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/video)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller/ehci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/hal)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include/twrk65f180m)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include/MK65F18)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/sources/classes/cdc)
@@ -181,7 +183,7 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/sources/driver/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/sources/driver/max3353/sdk)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/sources/include)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/otg/sources/otg)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/drivers/inc)
@@ -190,6 +192,8 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/drivers/src/pit)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/drivers/src/edma)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/system/inc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/composite/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/config/mcu/MK65F18)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/config/board/twrk65f180m)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
@@ -203,13 +207,28 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/config/common)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/mqx/source/bsp)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../rtos/mqx/mqx/source/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../..)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../platform/composite/inc)
 ENDIF()
 
 # ADD_EXECUTABLE
 ADD_EXECUTABLE(dev_audio_speaker_mqx 
     "${ProjDirPath}/../../../../../../../../../platform/utilities/src/fsl_misc_utilities.c"
+    "${ProjDirPath}/../../usb_request.h"
+    "${ProjDirPath}/../../usb_request.c"
+    "${ProjDirPath}/../../usb_descriptor.h"
+    "${ProjDirPath}/../../usb_descriptor.c"
+    "${ProjDirPath}/../../audio_speaker.h"
+    "${ProjDirPath}/../../audio_speaker.c"
+    "${ProjDirPath}/../../../../../../../../../platform/composite/inc/fsl_soundcard.h"
+    "${ProjDirPath}/../../../../../../../../../platform/composite/src/soundcard/fsl_soundcard.c"
+    "${ProjDirPath}/../../fsl_sgtl5000_driver.c"
+    "${ProjDirPath}/../../fsl_sgtl5000_driver.h"
+    "${ProjDirPath}/../../hardware_init.c"
+    "${ProjDirPath}/../../../../../../../gpio_pins.c"
+    "${ProjDirPath}/../../../../../../../gpio_pins.h"
+    "${ProjDirPath}/../../../../../../../pin_mux.c"
+    "${ProjDirPath}/../../../../../../../pin_mux.h"
+    "${ProjDirPath}/../../../../../../../board.h"
+    "${ProjDirPath}/../../../../../../../board.c"
     "${ProjDirPath}/../../../../../../../../../rtos/mqx/mqx/source/bsp/bsp.h"
     "${ProjDirPath}/../../../../../../../../../rtos/mqx/mqx/source/bsp/bsp_config.h"
     "${ProjDirPath}/../../../../../../../../../rtos/mqx/mqx/source/bsp/init_bsp.c"
@@ -223,38 +242,21 @@ ADD_EXECUTABLE(dev_audio_speaker_mqx
     "${ProjDirPath}/../../../../../../../../../platform/utilities/inc/fsl_debug_console.h"
     "${ProjDirPath}/../../../../../../../../../platform/utilities/src/print_scan.c"
     "${ProjDirPath}/../../../../../../../../../platform/utilities/src/print_scan.h"
-    "${ProjDirPath}/../../../../../../../gpio_pins.c"
-    "${ProjDirPath}/../../../../../../../gpio_pins.h"
-    "${ProjDirPath}/../../../../../../../pin_mux.c"
-    "${ProjDirPath}/../../../../../../../pin_mux.h"
-    "${ProjDirPath}/../../../../../../../board.h"
-    "${ProjDirPath}/../../../../../../../board.c"
-    "${ProjDirPath}/../../hardware_init.c"
-    "${ProjDirPath}/../../usb_request.h"
-    "${ProjDirPath}/../../usb_request.c"
-    "${ProjDirPath}/../../usb_descriptor.h"
-    "${ProjDirPath}/../../usb_descriptor.c"
-    "${ProjDirPath}/../../audio_speaker.h"
-    "${ProjDirPath}/../../audio_speaker.c"
-    "${ProjDirPath}/../../../../../../../../../platform/composite/inc/fsl_soundcard.h"
-    "${ProjDirPath}/../../../../../../../../../platform/composite/src/soundcard/fsl_soundcard.c"
-    "${ProjDirPath}/../../fsl_sgtl5000_driver.c"
-    "${ProjDirPath}/../../fsl_sgtl5000_driver.h"
 )
 SET_TARGET_PROPERTIES(dev_audio_speaker_mqx PROPERTIES OUTPUT_NAME "dev_audio_speaker_mqx.elf")
 
 TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx -Wl,--start-group)
 # LIBRARIES
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
+    TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../usb/usb_core/device/lib/mqx/armgcc/MK65F18/debug/libusbd_mqx.a)
+    TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../lib/ksdk_mqx_lib/armgcc/K65F18/debug/libksdk_platform_mqx.a)
     TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../rtos/mqx/lib/twrk65f180m.armgcc/debug/mqx/lib_mqx.a)
     TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../rtos/mqx/lib/twrk65f180m.armgcc/debug/mqx_stdlib/lib_mqx_stdlib.a)
-    TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../usb/usb_core/device/build/armgcc/usbd_sdk_twrk65f180m_mqx/debug/libusbd_mqx.a)
-    TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../lib/ksdk_mqx_lib/armgcc/K65F18/debug/libksdk_platform_mqx.a)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
+    TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../usb/usb_core/device/lib/mqx/armgcc/MK65F18/release/libusbd_mqx.a)
+    TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../lib/ksdk_mqx_lib/armgcc/K65F18/release/libksdk_platform_mqx.a)
     TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../rtos/mqx/lib/twrk65f180m.armgcc/release/mqx/lib_mqx.a)
     TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../rtos/mqx/lib/twrk65f180m.armgcc/release/mqx_stdlib/lib_mqx_stdlib.a)
-    TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../usb/usb_core/device/build/armgcc/usbd_sdk_twrk65f180m_mqx/release/libusbd_mqx.a)
-    TARGET_LINK_LIBRARIES(dev_audio_speaker_mqx ${ProjDirPath}/../../../../../../../../../lib/ksdk_mqx_lib/armgcc/K65F18/release/libksdk_platform_mqx.a)
 ENDIF()
 
 # SYSTEM LIBRARIES

@@ -227,6 +227,7 @@ void CADC_DRV_SoftTriggerConv(uint32_t instance, cadc_conv_id_t convId);
  *
  * @param instance Instance ID number.
  * @param slotIdx Indicated slot number, available in range of 0 - 15.
+ * @return The conversion value.
  */
 uint16_t CADC_DRV_GetSeqSlotConvValue(uint32_t instance, uint32_t slotIdx);
 

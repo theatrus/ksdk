@@ -46,7 +46,9 @@
  **
  ** Application-specific definitions
  */
+#ifndef HIGH_SPEED
 #define  HIGH_SPEED           (0)
+#endif
 
 #if HIGH_SPEED
 #define CONTROLLER_ID         USB_CONTROLLER_EHCI_0

@@ -4,7 +4,7 @@
 **     Compiler:            GNU C Compiler
 **     Reference manual:    KL02P32M48SF0RM Rev3.1, July 2013
 **     Version:             rev. 1.4, 2015-01-23
-**     Build:               b150416
+**     Build:               b150624
 **
 **     Abstract:
 **         Linker file for the GNU C Compiler
@@ -204,6 +204,8 @@ SECTIONS
   } > m_data
 
   __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
+  text_end = ORIGIN(m_text) + LENGTH(m_text);
+  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   /* Uninitialized data section */
   .bss :

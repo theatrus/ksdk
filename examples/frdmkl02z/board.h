@@ -40,9 +40,16 @@
 
 #define CLOCK_VLPR 1U
 #define CLOCK_RUN  2U
+#define CLOCK_NUMBER_OF_CONFIGURATIONS 3U
 
 #ifndef CLOCK_INIT_CONFIG
 #define CLOCK_INIT_CONFIG CLOCK_RUN
+#endif
+
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 47972352U
+#else
+#define CORE_CLOCK_FREQ 4000000U
 #endif
 
 /* OSC0 configuration. */
@@ -73,7 +80,7 @@
 #ifndef BOARD_DEBUG_UART_BAUD
     #define BOARD_DEBUG_UART_BAUD       115200
 #endif
-
+#define BOARD_LOW_POWER_UART_BAUD       9600
 #define BOARD_USE_LPSCI
 #define PM_DBG_UART_IRQ_HANDLER         MODULE_IRQ_HANDLER(UART0_RX_TX)
 #define PM_DBG_UART_IRQn                UART0_RX_TX_IRQn
@@ -83,12 +90,24 @@
 
 #define HWADC_INSTANCE            0   /*! ADC instance 0. */
 #define ADC_IRQ_N                 ADC0_IRQn   /*! ADC irq handler number. */
-/* The i2c instance used for i2c communication demo */
-#define BOARD_I2C_COMM_INSTANCE     0
+/* The i2c instance used for i2c connection by default */
+#define BOARD_I2C_INSTANCE          0
+
+/* The spi instance used for spi example */
+#define BOARD_SPI_INSTANCE              0
 
 /* The TPM instance/channel used for board */
 #define BOARD_TPM_INSTANCE              0
 #define BOARD_TPM_CHANNEL               1
+
+/* The bubble level demo information */
+#define BOARD_BUBBLE_TPM_INSTANCE       1
+#define BOARD_TPM_X_CHANNEL             0
+#define BOARD_TPM_Y_CHANNEL             1
+#define BOARD_MMA8451_ADDR              0x1D
+#define BOARD_ACCEL_ADDR                BOARD_MMA8451_ADDR
+#define BOARD_ACCEL_BAUDRATE            100
+#define BOARD_ACCEL_I2C_INSTANCE        0
 
 /* The ADC channel used for board */
 #define BOARD_ADC_HW_TRIGGER_CHAN       kAdc16Chn2d     /* J10-5 */
@@ -129,6 +148,9 @@ extern "C" {
 
 void hardware_init(void);
 void dbg_uart_init(void);
+/*This function to used for power manager demo*/
+void disable_unused_pins(void);
+void enable_unused_pins(void);
 
 /* Function to initialize clock base on board configuration. */
 void BOARD_ClockInit(void);

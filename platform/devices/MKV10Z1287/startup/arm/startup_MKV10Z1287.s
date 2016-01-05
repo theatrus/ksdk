@@ -4,7 +4,7 @@
 ; *            MKV10Z1287
 ; *  @version: 1.0
 ; *  @date:    2014-12-14
-; *  @build:   b150202
+; *  @build:   b150602
 ; * ---------------------------------------------------------------------------------------
 ; *
 ; * Copyright (c) 1997 - 2015 , Freescale Semiconductor, Inc.
@@ -77,7 +77,7 @@ __Vectors       DCD     |Image$$ARM_LIB_STACK$$ZI$$Limit| ; Top of Stack
                 DCD     DMA_Error_IRQHandler                ;DMA error interrupt channels 0-7
                 DCD     FTFA_IRQHandler                     ;FTFA command complete and read collision
                 DCD     LVD_LVW_IRQHandler                  ;Low-voltage detect, low-voltage warning
-                DCD     LLW_IRQHandler                      ;Low Leakage Wakeup
+                DCD     LLWU_IRQHandler                     ;Low Leakage Wakeup
                 DCD     I2C0_IRQHandler                     ;I2C0 interrupt
                 DCD     Reserved25_IRQHandler               ;Reserved interrupt
                 DCD     SPI0_IRQHandler                     ;SPI0 single interrupt vector for all sources
@@ -248,7 +248,7 @@ Reset_Handler   PROC
                 IMPORT  __main
 
                 IF      :LNOT::DEF:RAM_TARGET
-                LDR R0, =FlashConfig    ; dummy read, workaround for flashConfig
+                REQUIRE FlashConfig
                 ENDIF
 
                 CPSID   I               ; Mask interrupts
@@ -297,7 +297,7 @@ Default_Handler\
                 EXPORT  DMA_Error_IRQHandler         [WEAK]
                 EXPORT  FTFA_IRQHandler         [WEAK]
                 EXPORT  LVD_LVW_IRQHandler         [WEAK]
-                EXPORT  LLW_IRQHandler         [WEAK]
+                EXPORT  LLWU_IRQHandler         [WEAK]
                 EXPORT  I2C0_IRQHandler         [WEAK]
                 EXPORT  Reserved25_IRQHandler         [WEAK]
                 EXPORT  SPI0_IRQHandler         [WEAK]
@@ -330,7 +330,7 @@ DMA3_DMA7_IRQHandler
 DMA_Error_IRQHandler
 FTFA_IRQHandler
 LVD_LVW_IRQHandler
-LLW_IRQHandler
+LLWU_IRQHandler
 I2C0_IRQHandler
 Reserved25_IRQHandler
 SPI0_IRQHandler

@@ -59,8 +59,8 @@ typedef struct _ewm_config
 #if FSL_FEATURE_EWM_HAS_PRESCALER
     uint8_t ewmPrescalerValue; /*!< Set EWM prescaler value @internal gui name="Prescaler" id="Prescaler" */
 #endif    
-    uint8_t ewmCmpLowValue;    /*!< Set EWM compare low register value @internal gui name="Compare low register value" id="LowValue" */
-    uint8_t ewmCmpHighValue;   /*!< Set EWM compare high register value, the maximum value should be 0xfe otherwise the counter will never expire @internal gui name="Compare high register value" id="HighValue" */
+    uint8_t ewmCmpLowValue;    /*!< Set EWM compare low register value @internal gui name="Compare low register value" id="LowValue" default="0" */
+    uint8_t ewmCmpHighValue;   /*!< Set EWM compare high register value, the maximum value should be 0xfe otherwise the counter will never expire @internal gui name="Compare high register value" id="HighValue" default="254" */
 }ewm_config_t;
 
 /*! @brief ewm status return codes.*/
@@ -86,7 +86,7 @@ extern "C" {
 /*!
  * @brief Enable the EWM.
  * 
- * This function checks whether the EWM is enabled.
+ * This function enables the EWM.
  *
  * @param base The EWM peripheral base address
  */
@@ -96,9 +96,9 @@ static inline void EWM_HAL_Enable(EWM_Type * base)
 }
 
 /*!
- * @brief Enable the EWM.
+ * @brief Disable the EWM.
  * 
- * This function checks whether the EWM is enabled.
+ * This function disables the EWM.
  *
  * @param base The EWM peripheral base address
  */
@@ -159,7 +159,7 @@ static inline void EWM_HAL_SetCmpLowRegValue(EWM_Type * base, uint8_t minService
  * and this register is write once, one more write will cause bus fault.
  *
  * @param base The EWM peripheral base address
- * @param maxServiceCycles The EWM compare low register value 
+ * @param maxServiceCycles The EWM compare high register value 
  */
 static inline void EWM_HAL_SetCmpHighRegValue(EWM_Type * base, uint8_t maxServiceCycles)
 {

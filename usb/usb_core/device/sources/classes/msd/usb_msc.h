@@ -227,6 +227,7 @@ typedef struct _msc_variable_struct
     uint8_t                                     stall_status;
     /* LUN can have value only from 0 to 15 decimal */
     uint8_t                                     lun;
+    uint8_t                                     controller_id;
 }msc_device_struct_t; 
 
 /**************************************************************************//*!

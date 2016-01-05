@@ -80,7 +80,6 @@ usb_status usb_mass_ufi_generic
     USB_HOST_TO_BE_UNALIGNED_LONG(blen, ufi_ptr->BLENGTH)
 
     /* Construct CBW fields (sig and tag will be filled up by class driver)*/
-    /* (uint_32_ptr)cmd_ptr->CBW_PTR->DCBWDATATRANSFERLENGTH = USB_HOST_TO_LE_LONG(buf_len); */
     USB_HOST_TO_LE_UNALIGNED_LONG(buf_len, cmd_ptr->CBW_PTR->DCBWDATATRANSFERLENGTH)
     cmd_ptr->CBW_PTR->BMCBWFLAGS = cbwflags;
     TRANSFER_LOW_NIBBLE(cmd_ptr->LUN, cmd_ptr->CBW_PTR->BCBWLUN);

@@ -228,7 +228,7 @@
         <option>
           <name>CCAllowList</name>
           <version>1</version>
-          <state>00000000</state>
+          <state>00000001</state>
         </option>
         <option>
           <name>CCDebugInfo</name>
@@ -297,7 +297,7 @@
         <option>
           <name>CCIncludePath2</name>
           
-        <state>$PROJ_DIR$/../../../../../../platform/osa/inc</state><state>$PROJ_DIR$/../../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../../../../platform/CMSIS/Include</state><state>$PROJ_DIR$/../../../../../../platform/devices</state><state>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/include</state><state>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/startup</state><state>$PROJ_DIR$/../../../../../../platform/hal/inc</state><state>$PROJ_DIR$/../../../../../../platform/drivers/inc</state><state>$PROJ_DIR$/../../../../../../platform/system/inc</state><state>$PROJ_DIR$/../../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../..</state><state>$PROJ_DIR$/../../../../../../platform/drivers/src/lpuart</state></option>
+        <state>$PROJ_DIR$/../../../../../../platform/osa/inc</state><state>$PROJ_DIR$/../../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../../../../platform/CMSIS/Include</state><state>$PROJ_DIR$/../../../../../../platform/devices</state><state>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/include</state><state>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/startup</state><state>$PROJ_DIR$/../../../../../../platform/hal/inc</state><state>$PROJ_DIR$/../../../../../../platform/drivers/inc</state><state>$PROJ_DIR$/../../../../../../platform/system/inc</state><state>$PROJ_DIR$/../../../../../../platform/drivers/src/lpuart</state><state>$PROJ_DIR$/../../../..</state></option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -1169,7 +1169,7 @@
         <option>
           <name>CCAllowList</name>
           <version>1</version>
-          <state>00010000</state>
+          <state>11111111</state>
         </option>
         <option>
           <name>CCDebugInfo</name>
@@ -1238,7 +1238,7 @@
         <option>
           <name>CCIncludePath2</name>
           
-        <state>$PROJ_DIR$/../../../../../../platform/osa/inc</state><state>$PROJ_DIR$/../../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../../../../platform/CMSIS/Include</state><state>$PROJ_DIR$/../../../../../../platform/devices</state><state>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/include</state><state>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/startup</state><state>$PROJ_DIR$/../../../../../../platform/hal/inc</state><state>$PROJ_DIR$/../../../../../../platform/drivers/inc</state><state>$PROJ_DIR$/../../../../../../platform/system/inc</state><state>$PROJ_DIR$/../../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../..</state><state>$PROJ_DIR$/../../../../../../platform/drivers/src/lpuart</state></option>
+        <state>$PROJ_DIR$/../../../../../../platform/osa/inc</state><state>$PROJ_DIR$/../../../../../../platform/utilities/inc</state><state>$PROJ_DIR$/../../../../../../platform/CMSIS/Include</state><state>$PROJ_DIR$/../../../../../../platform/devices</state><state>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/include</state><state>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/startup</state><state>$PROJ_DIR$/../../../../../../platform/hal/inc</state><state>$PROJ_DIR$/../../../../../../platform/drivers/inc</state><state>$PROJ_DIR$/../../../../../../platform/system/inc</state><state>$PROJ_DIR$/../../../../../../platform/drivers/src/lpuart</state><state>$PROJ_DIR$/../../../..</state></option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -1888,4 +1888,4 @@
   
   
   
-<group><name>startup</name><file><name>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/startup/iar/startup_MKL27Z644.s</name></file><file><name>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/startup/system_MKL27Z644.c</name></file><file><name>$PROJ_DIR$/../../../../../../platform/devices/startup.c</name></file><file><name>$PROJ_DIR$/../../../../../../platform/devices/startup.h</name></file></group><group><name>utilities</name><file><name>$PROJ_DIR$/../../../../../../platform/utilities/src/fsl_debug_console.c</name></file><file><name>$PROJ_DIR$/../../../../../../platform/utilities/inc/fsl_debug_console.h</name></file><file><name>$PROJ_DIR$/../../../../../../platform/utilities/src/print_scan.c</name></file><file><name>$PROJ_DIR$/../../../../../../platform/utilities/src/print_scan.h</name></file></group><group><name>board</name><file><name>$PROJ_DIR$/../../../../gpio_pins.c</name></file><file><name>$PROJ_DIR$/../../../../gpio_pins.h</name></file><file><name>$PROJ_DIR$/../../../../pin_mux.c</name></file><file><name>$PROJ_DIR$/../../../../pin_mux.h</name></file><file><name>$PROJ_DIR$/../../../../board.c</name></file><file><name>$PROJ_DIR$/../../../../board.h</name></file><file><name>$PROJ_DIR$/../hardware_init.c</name></file></group><group><name>source</name><file><name>$PROJ_DIR$/../main.c</name></file><file><name>$PROJ_DIR$/../fsl_lpuart_irq.c</name></file></group></project>
+<group><name>startup</name><file><name>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/startup/iar/startup_MKL27Z644.s</name></file><file><name>$PROJ_DIR$/../../../../../../platform/devices/MKL27Z644/startup/system_MKL27Z644.c</name></file><file><name>$PROJ_DIR$/../../../../../../platform/devices/startup.c</name></file><file><name>$PROJ_DIR$/../../../../../../platform/devices/startup.h</name></file></group><group><name>source</name><file><name>$PROJ_DIR$/../main.c</name></file><file><name>$PROJ_DIR$/../fsl_lpuart_irq.c</name></file></group><group><name>board</name><file><name>$PROJ_DIR$/../hardware_init.c</name></file><file><name>$PROJ_DIR$/../../../../gpio_pins.c</name></file><file><name>$PROJ_DIR$/../../../../gpio_pins.h</name></file><file><name>$PROJ_DIR$/../../../../pin_mux.c</name></file><file><name>$PROJ_DIR$/../../../../pin_mux.h</name></file><file><name>$PROJ_DIR$/../../../../board.c</name></file><file><name>$PROJ_DIR$/../../../../board.h</name></file></group><group><name>utilities</name><file><name>$PROJ_DIR$/../../../../../../platform/utilities/src/fsl_debug_console.c</name></file><file><name>$PROJ_DIR$/../../../../../../platform/utilities/inc/fsl_debug_console.h</name></file><file><name>$PROJ_DIR$/../../../../../../platform/utilities/src/print_scan.c</name></file><file><name>$PROJ_DIR$/../../../../../../platform/utilities/src/print_scan.h</name></file></group></project>

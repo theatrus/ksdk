@@ -207,16 +207,16 @@ _mfs_error MFS_find_init(
         isd_ptr->ATTR_ONE_MASK = sp_ptr->ATTRIBUTE & 0x3F;
         isd_ptr->ATTR_ZERO_MASK = ~isd_ptr->ATTR_ONE_MASK;
     }
-    else if (sp_ptr->ATTRIBUTE & MFS_SEARCH_NORMAL)
-    {
-        /* non-system, non-hidden */
-        isd_ptr->ATTR_ONE_MASK = 0;
-        isd_ptr->ATTR_ZERO_MASK = MFS_ATTR_HIDDEN_FILE | MFS_ATTR_SYSTEM_FILE;
-    }
     else if (sp_ptr->ATTRIBUTE & MFS_SEARCH_SUBDIR)
     {
         /* non-system, non-hidden subdirs*/
         isd_ptr->ATTR_ONE_MASK = MFS_ATTR_DIR_NAME;
+        isd_ptr->ATTR_ZERO_MASK = MFS_ATTR_HIDDEN_FILE | MFS_ATTR_SYSTEM_FILE;
+    }
+    else if ((sp_ptr->ATTRIBUTE & 0x3F) == MFS_SEARCH_NORMAL)
+    {
+        /* no attributes explicitly specified, search for non-system, non-hidden */
+        isd_ptr->ATTR_ONE_MASK = 0;
         isd_ptr->ATTR_ZERO_MASK = MFS_ATTR_HIDDEN_FILE | MFS_ATTR_SYSTEM_FILE;
     }
     else

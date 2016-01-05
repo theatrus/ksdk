@@ -40,21 +40,22 @@
 #include "dev_mouse.h"
 #include "dev_mouse_api.h"
 #include "otg_mouse.h"
+#include "board.h"
 /*****************************************************************************
  * Constant and Macro's 
  *****************************************************************************/
 uint32_t g_dev_app_task_id = 0;
 /* KHCI task parameters */
 #define USB_DEV_HID_TASK_TEMPLATE_INDEX       0
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS))  
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS)
 /* USB stack running on OS */
 #define USB_DEV_HID_TASK_ADDRESS              DEV_APP_task_stun
 /* USB stack running on BM  */
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)||(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))
+#else
 #define USB_DEV_HID_TASK_ADDRESS              DEV_APP_task
 #endif
 #define USB_DEV_HID_TASK_STACKSIZE            1600
-#define USB_DEV_HID_TASK_PRIORITY             (11)
+#define USB_DEV_HID_TASK_PRIORITY             (6)
 #define USB_DEV_HID_TASK_NAME                 "HID Device Task"
 #define USB_DEV_HID_TASK_ATTRIBUTES           0
 #define USB_DEV_HID_TASK_DEFAULT_TIME_SLICE   0
@@ -351,6 +352,8 @@ usb_status DEV_APP_init(void)
     config_struct.hid_application_callback.arg = &g_mouse.app_handle;
     config_struct.class_specific_callback.callback = USB_App_Param_Callback;
     config_struct.class_specific_callback.arg = &g_mouse.app_handle;
+    config_struct.board_init_callback.callback = usb_device_board_init;
+    config_struct.board_init_callback.arg = USBCFG_DEFAULT_OTG_CONTROLLER;
     config_struct.desc_callback_ptr = &g_desc_callback;
 
     USB_Class_HID_Init(0x0, &config_struct, &g_mouse.app_handle);
@@ -393,7 +396,7 @@ void DEV_APP_uninit(void)
         OS_Task_delete(g_dev_app_task_id);
     }
 }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (USE_RTOS)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (USE_RTOS)))
 
 /*FUNCTION*----------------------------------------------------------------
  *

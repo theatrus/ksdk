@@ -40,6 +40,12 @@ void hardware_init(void) {
   CLOCK_SYS_EnablePortClock(PORTC_IDX);
 
   configure_cmp_pins(0);
+
+  /* Board don't have pull up resister, so internal resister need to be enabled */
+  PORT_HAL_SetMuxMode(PORTC,6u,kPortMuxAsGpio);
+  PORT_HAL_SetPullMode(PORTC,6U,kPortPullUp);
+  PORT_HAL_SetPullCmd(PORTC,6U,true);
+
   /* Init board clock */
   BOARD_ClockInit();
   dbg_uart_init();

@@ -6,12 +6,12 @@
 **     Compiler:            IAR ANSI C/C++ Compiler for ARM
 **     Reference manual:    K10P144M100SF2V2RM Rev. 2, Jun 2012
 **     Version:             rev. 1.6, 2014-10-14
-**     Build:               b141113
+**     Build:               b150520
 **
 **     Abstract:
 **         Linker file for the IAR ANSI C/C++ Compiler for ARM
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,

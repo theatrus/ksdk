@@ -34,15 +34,28 @@
 #include "fsl_sim_hal.h"
 #include "board.h"
 
+#ifdef BOARD_ADC_HW_TRIGGER_ADC_INSTANCE
+#define ADC_INST          BOARD_ADC_HW_TRIGGER_ADC_INSTANCE  /*!< ADC instance */
+#else
 #define ADC_INST          0U  /*!< ADC instance */
-#define INPUT_SIGNAL_FREQ 20U /* in HZ */
+#endif
+#ifdef BOARD_ADC_HW_TRIGGER_DAC_INSTANCE
+#define DAC_INST          BOARD_ADC_HW_TRIGGER_DAC_INSTANCE  /*!< DAC instance */
+#else
+#define DAC_INST          0U  /*!< DAC instance */
+#endif
+#define INPUT_SIGNAL_FREQ 10U /* in HZ */
 #define CHART_ROWS        30U /*!< chart row for sampled data */
 #define CHART_COLS        100U /*!< chart column for sampled data */
 #define NR_SAMPLES        100U /*!< number of samples in one period */
 #ifdef BOARD_ADC_HW_TRIGGER_CHAN
 #define ADC_INPUT_CHAN    BOARD_ADC_HW_TRIGGER_CHAN /* default input signal channel */
 #else
+#if defined(KM34Z7_SERIES)
+#define ADC_INPUT_CHAN    (kAdc16Chn15) /* default input signal channel */
+#else
 #define ADC_INPUT_CHAN    (kAdc16Chn23) /* default input signal channel */
+#endif
 #endif
 
 #endif /*_ADC_HW_TRIGGER_H*/

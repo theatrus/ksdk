@@ -149,11 +149,11 @@ static usb_interfaces_struct_t usb_msd_configuration[USB_MSD_CFG_MAX] = {
 static usb_class_struct_t usb_dec_class[USB_MSD_CDC_CLASS_MAX] =
 {
     {
-        USB_CLASS_CDC,
+        USB_CLASS_COMMUNICATION,
         USB_DESC_CONFIGURATION(USB_CDC_IF_MAX, usb_cdc_if),
     },
     {
-        USB_CLASS_MSC,
+        USB_CLASS_MASS_STORAGE,
         USB_DESC_CONFIGURATION(USB_MSD_IF_MAX, usb_msd_if),
     },
 };
@@ -391,7 +391,7 @@ uint8_t g_device_qualifier_descriptor[DEVICE_QUALIFIER_DESCRIPTOR_SIZE] =
     /* bMaxPacketSize0 */
     CONTROL_MAX_PACKET_SIZE,
     /* bNumConfigurations */
-    DEVICE_DESC_NUM_CONFIG_SUPPOTED,
+    DEVICE_DESC_NUM_CONFIG_SUPPORTED,
     /* Reserved : must be zero */
     0x00
 };
@@ -859,10 +859,10 @@ uint8_t USB_Set_Configuration
     {
         switch(usb_composite_info.class_handle[i].type)
         {
-            case USB_CLASS_CDC:
+            case USB_CLASS_COMMUNICATION:
                 usb_dec_class[i].interfaces = usb_cdc_configuration[config - 1];
                 break;
-            case USB_CLASS_MSC:
+            case USB_CLASS_MASS_STORAGE:
                 usb_dec_class[i].interfaces = usb_msd_configuration[config - 1];
                 break;
             default:
@@ -890,31 +890,16 @@ uint8_t USB_Desc_Get_Entity(cdc_handle_t handle,entity_type type, uint32_t * obj
             break;
         case USB_CLASS_INTERFACE_INDEX_INFO:
             *object = 0xff;
-            for (int i = 0;i < 2;i++)
+
+            if (handle == (uint32_t)g_composite_device.cdc_vcom)
             {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-                if (handle == (uint32_t)g_composite_device->cdc_vcom)
-                {
-                    *object = (uint32_t)CDC_VCOM_INTERFACE_INDEX;
-                    break;
-                }
-                else if (handle == (uint32_t)g_composite_device->msc_disk.app_handle)
-                {
-                    *object = (uint32_t)MSC_DISK_INTERFACE_INDEX;
-                    break;
-                }
-#else
-                if (handle == (uint32_t)g_composite_device.cdc_vcom)
-                {
-                    *object = (uint32_t)CDC_VCOM_INTERFACE_INDEX;
-                    break;
-                }
-                else if (handle == (uint32_t)g_composite_device.msc_disk.app_handle)
-                {
-                    *object = (uint32_t)MSC_DISK_INTERFACE_INDEX;
-                    break;
-                }
-#endif
+                *object = (uint32_t)CDC_VCOM_INTERFACE_INDEX;
+                break;
+            }
+            else if (handle == (uint32_t)g_composite_device.msc_disk.app_handle)
+            {
+                *object = (uint32_t)MSC_DISK_INTERFACE_INDEX;
+                break;
             }
             break;
         case USB_COMPOSITE_INFO:

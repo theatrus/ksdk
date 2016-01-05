@@ -1,0 +1,25 @@
+var group__int__instructions =
+[
+    [ "MMAU_HAL_slda_d", "group__int__instructions.html#gafdb2096408bf41f4c31b1cb581b04062", null ],
+    [ "MMAU_HAL_d_smul_ll", "group__int__instructions.html#ga513e077261812581d9980c21ee4e7a65", null ],
+    [ "MMAU_HAL_d_smul_dl", "group__int__instructions.html#ga29211bca3bdc3a6b577e111db8b174d6", null ],
+    [ "MMAU_HAL_d_smuls_dl", "group__int__instructions.html#ga03594fe5a0f6711f71613ede39e7e336", null ],
+    [ "MMAU_HAL_d_smula_l", "group__int__instructions.html#gaf6b29cf02636741c328de912b4c26f4a", null ],
+    [ "MMAU_HAL_d_smulas_l", "group__int__instructions.html#gaab141bc30abf1022084ee4af93707815", null ],
+    [ "MMAU_HAL_d_smac_ll", "group__int__instructions.html#ga83230360242c5362e47e88491357d1fc", null ],
+    [ "MMAU_HAL_d_smacs_ll", "group__int__instructions.html#gad1ae5c18ff53c36647ace3a4c520ea5a", null ],
+    [ "MMAU_HAL_d_smac_dl", "group__int__instructions.html#ga3bb71f93cae80a5a4c72e51d2f82b95c", null ],
+    [ "MMAU_HAL_d_smacs_dl", "group__int__instructions.html#gaada3104729598c2de08f27e6df3da4bf", null ],
+    [ "MMAU_HAL_d_smaca_dl", "group__int__instructions.html#ga116d614d051665d7652a6c385307ca08", null ],
+    [ "MMAU_HAL_d_smacas_dl", "group__int__instructions.html#ga6c03d1b3f988020140942ebde0c98fd3", null ],
+    [ "MMAU_HAL_l_sdiv_ll", "group__int__instructions.html#ga9a2b919cdbd6cdde9b55b6cf5c62d12d", null ],
+    [ "MMAU_HAL_l_sdivs_ll", "group__int__instructions.html#ga76ccc5877205f9fa146d1065bc196e9d", null ],
+    [ "MMAU_HAL_d_sdiv_dl", "group__int__instructions.html#ga066dbcd0a17f9174563e0f0b4d25e68c", null ],
+    [ "MMAU_HAL_d_sdivs_dl", "group__int__instructions.html#ga14fc9ddabf1fffd3741cfce676765cfe", null ],
+    [ "MMAU_HAL_d_sdiv_dd", "group__int__instructions.html#ga7394d29de88220736050c6c640879427", null ],
+    [ "MMAU_HAL_d_sdivs_dd", "group__int__instructions.html#ga939550fb6f612dc151f9e315c5c0497b", null ],
+    [ "MMAU_HAL_d_sdiva_l", "group__int__instructions.html#ga4a5c6eab043cc41fe459eccd9567a2b8", null ],
+    [ "MMAU_HAL_d_sdivas_l", "group__int__instructions.html#gada76bf93a7d8e2dfa78e6890caf757a9", null ],
+    [ "MMAU_HAL_d_sdiva_d", "group__int__instructions.html#gaae1db1f9e7458ae7c1477b0eb2b2eff9", null ],
+    [ "MMAU_HAL_d_sdivas_d", "group__int__instructions.html#ga57a174e84e39b6d10c2b560141ea7e2e", null ]
+];

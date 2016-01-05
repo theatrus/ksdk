@@ -63,7 +63,7 @@ const clock_manager_user_config_t g_defaultClockConfigVlpr =
     }
 };
 
-/* Configuration for enter RUN mode. Core clock = 48MHz. */
+/* Configuration for enter RUN mode. Core clock = 47.972352 Mhz. */
 const clock_manager_user_config_t g_defaultClockConfigRun =
 {
     .mcgConfig =
@@ -110,6 +110,21 @@ void BOARD_InitOsc0(void)
     CLOCK_SYS_OscInit(0U, &osc0Config);
 }
 
+static void CLOCK_SetBootConfig(clock_manager_user_config_t const* config)
+{
+    CLOCK_SYS_SetSimConfigration(&config->simConfig);
+
+    CLOCK_SYS_SetOscerConfigration(0, &config->oscerConfig);
+
+#if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
+    CLOCK_SYS_BootToBlpi(&config->mcgConfig);
+ #else
+    CLOCK_SYS_BootToFee(&config->mcgConfig);
+ #endif
+
+    SystemCoreClock = CORE_CLOCK_FREQ;
+}
+
 /* Initialize clock. */
 void BOARD_ClockInit(void)
 {
@@ -125,12 +140,11 @@ void BOARD_ClockInit(void)
 
     /* Set system clock configuration. */
 #if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigVlpr);
+    CLOCK_SetBootConfig(&g_defaultClockConfigVlpr);
 #else
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigRun);
+    CLOCK_SetBootConfig(&g_defaultClockConfigRun);
 #endif
 }
-
 
 void dbg_uart_init(void)
 {
@@ -149,5 +163,3 @@ void dbg_uart_init(void)
 /*******************************************************************************
  * EOF
  ******************************************************************************/
-
- 

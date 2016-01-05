@@ -41,8 +41,8 @@
 //  Consts
 ///////////////////////////////////////////////////////////////////////////////
 
-const uint8_t buffStart[]    = "\n\r++++++++++++++++ LPUART Send/Receive Polling Example +++++++++++++++++\n\r";
-const uint8_t bufferData1[]  = "\n\rType characters from keyboard, the board will receive and then echo them to terminal screen\n\r";
+const uint8_t buffStart[]    = "\r\n++++++++++++++++ LPUART Send/Receive Polling Example +++++++++++++++++\r\n";
+const uint8_t bufferData1[]  = "\r\nType characters from keyboard, the board will receive and then echo them to terminal screen\r\n";
 
 ///////////////////////////////////////////////////////////////////////////////
 //  Code
@@ -69,11 +69,14 @@ int main(void)
 
     // Enable clock for PORTs, setup board clock source
     hardware_init();
+
+    // Set LPUART clock source
+    CLOCK_SYS_SetLpuartSrc(BOARD_DEBUG_UART_INSTANCE, BOARD_LPUART_CLOCK_SOURCE);
+
     // Ungate lpuart module clock
     CLOCK_SYS_EnableLpuartClock(BOARD_DEBUG_UART_INSTANCE);
     // Initialize the LPUART instance
     LPUART_HAL_Init(baseAddr);
-    CLOCK_SYS_SetLpuartSrc(BOARD_DEBUG_UART_INSTANCE, kClockLpuartSrcIrc48M);
 
     // LPUART clock source is either system or bus clock depending on instance
     lpuartSourceClock = CLOCK_SYS_GetLpuartFreq(BOARD_DEBUG_UART_INSTANCE);

@@ -167,7 +167,7 @@ const TASK_TEMPLATE_STRUCT  MQX_template_list[] =
                     &task_slave_task_handler);
     if(result != kStatus_OSA_Success)
     {
-        PRINTF("Failed to create slave task\n\n");
+        PRINTF("Failed to create slave task\r\n\r\n");
 #if (FSL_RTOS_MQX) && (MQX_COMMON_CONFIG != MQX_LITE_CONFIG)
         return;
 #else
@@ -185,7 +185,7 @@ const TASK_TEMPLATE_STRUCT  MQX_template_list[] =
                     &task_sample_task_handler);
     if (result != kStatus_OSA_Success)
     {
-        PRINTF("Failed to create sample task\n\n");
+        PRINTF("Failed to create sample task\r\n\r\n");
 #if (FSL_RTOS_MQX) && (MQX_COMMON_CONFIG != MQX_LITE_CONFIG)
         return;
 #else
@@ -205,7 +205,7 @@ const TASK_TEMPLATE_STRUCT  MQX_template_list[] =
                     &task_master_task_handler);
     if (result != kStatus_OSA_Success)
     {
-        PRINTF("Failed to create master task\n\n");
+        PRINTF("Failed to create master task\r\n\r\n");
 #if (FSL_RTOS_MQX) && (MQX_COMMON_CONFIG != MQX_LITE_CONFIG)
         return;
 #else

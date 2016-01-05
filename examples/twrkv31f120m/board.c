@@ -167,6 +167,21 @@ void BOARD_InitOsc0(void)
     CLOCK_SYS_OscInit(0U, &osc0Config);
 }
 
+static void CLOCK_SetBootConfig(clock_manager_user_config_t const* config)
+{
+    CLOCK_SYS_SetSimConfigration(&config->simConfig);
+
+    CLOCK_SYS_SetOscerConfigration(0, &config->oscerConfig);
+
+#if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
+    CLOCK_SYS_BootToBlpi(&config->mcgConfig);
+ #else
+    CLOCK_SYS_BootToPee(&config->mcgConfig);
+ #endif
+
+    SystemCoreClock = CORE_CLOCK_FREQ;
+}
+
 /* Initialize clock. */
 void BOARD_ClockInit(void)
 {
@@ -187,13 +202,28 @@ void BOARD_ClockInit(void)
 
     /* Set system clock configuration. */
 #if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigVlpr);
+    CLOCK_SetBootConfig(&g_defaultClockConfigVlpr);
 #elif (CLOCK_INIT_CONFIG == CLOCK_HSRUN)
     SMC_HAL_SetMode(SMC, &powerModeConfig);
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigHsrun);
+    CLOCK_SetBootConfig(&g_defaultClockConfigHsrun);
 #else
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigRun);
+    CLOCK_SetBootConfig(&g_defaultClockConfigRun);
 #endif
+}
+
+bool BOARD_IsSDCardDetected(void)
+{
+    GPIO_Type * gpioBase = g_gpioBase[GPIO_EXTRACT_PORT(kGpioSdcardCardDetection)];
+    uint32_t pin = GPIO_EXTRACT_PIN(kGpioSdcardCardDetection);
+
+    if(GPIO_HAL_ReadPinInput(gpioBase, pin) == false)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void dbg_uart_init(void)

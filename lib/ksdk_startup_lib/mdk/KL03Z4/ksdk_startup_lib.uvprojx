@@ -365,8 +365,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>DEBUG, CPU_MKL03Z32VFK4, FRDM_KL03Z, FREEDOM</Define>
+              <Define>DEBUG, CPU_MKL03Z32VFK4</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MKL03Z4/include;../../../../platform/devices/MKL03Z4/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>
@@ -767,8 +768,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>NDEBUG, CPU_MKL03Z32VFK4, FRDM_KL03Z, FREEDOM</Define>
+              <Define>NDEBUG, CPU_MKL03Z32VFK4</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MKL03Z4/include;../../../../platform/devices/MKL03Z4/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>

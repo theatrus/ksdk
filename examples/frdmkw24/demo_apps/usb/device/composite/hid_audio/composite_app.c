@@ -50,9 +50,6 @@
 #include <stdlib.h>
 #endif
 
-#if ! USBCFG_DEV_COMPOSITE
-#error This application requires USBCFG_DEV_COMPOSITE defined non-zero in usb_device_config.h. Please recompile usbd with this option.
-#endif
 
 /*****************************************************************************
  * Constant and Macro's - None
@@ -73,13 +70,7 @@ uint16_t                                  g_composite_speed;
 extern usb_desc_request_notify_struct_t   desc_callback;
 
 extern void Main_Task(uint32_t param);
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    { MAIN_TASK, Main_Task, 2 * 3000L, 7L, "Main", MQX_AUTO_START_TASK, 0, 0 },
-    { 0L, 0L, 0L, 0L, 0L, 0L, 0, 0 }
-};
-#endif
+
 /*****************************************************************************
  * Local Types - None
  *****************************************************************************/
@@ -128,6 +119,8 @@ void APP_init(void)
     audio_config_callback_handle->composite_application_callback.arg = &g_composite_device.audio_handle;
     audio_config_callback_handle->class_specific_callback.callback = Audio_USB_App_Class_Callback;
     audio_config_callback_handle->class_specific_callback.arg = &g_composite_device.audio_handle;
+    audio_config_callback_handle->board_init_callback.callback = usb_device_board_init;
+    audio_config_callback_handle->board_init_callback.arg = CONTROLLER_ID;
     audio_config_callback_handle->desc_callback_ptr = &desc_callback;
     audio_config_callback_handle->type = USB_CLASS_AUDIO;
 
@@ -137,6 +130,8 @@ void APP_init(void)
     hid_mouse_config_callback_handle->composite_application_callback.arg = &g_composite_device.hid_mouse;
     hid_mouse_config_callback_handle->class_specific_callback.callback = Hid_USB_App_Class_Callback;
     hid_mouse_config_callback_handle->class_specific_callback.arg = &g_composite_device.hid_mouse;
+    hid_mouse_config_callback_handle->board_init_callback.callback = usb_device_board_init;
+    hid_mouse_config_callback_handle->board_init_callback.arg = CONTROLLER_ID;
     hid_mouse_config_callback_handle->desc_callback_ptr = &desc_callback;
     hid_mouse_config_callback_handle->type = USB_CLASS_HID;
     OS_Mem_zero(&g_composite_device.hid_mouse, sizeof(hid_mouse_struct_t));
@@ -159,23 +154,6 @@ void APP_task(void)
 
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-/*FUNCTION*----------------------------------------------------------------
- * 
- * Function Name  : Main_Task
- * Returned Value : None
- * Comments       :
- *     First function called.  Calls the Test_App
- *     callback functions.
- * 
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    UNUSED_ARGUMENT (param)
-    APP_init();
-}
-#endif
 
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
@@ -217,7 +195,7 @@ void main(void)
     APP_task();
 
 #if (USE_RTOS)
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
 #endif
     OSA_Start();
 #if (!defined(FSL_RTOS_MQX))&(defined(__CC_ARM) || defined(__GNUC__))

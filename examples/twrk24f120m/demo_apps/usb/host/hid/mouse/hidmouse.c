@@ -42,7 +42,6 @@
 #include "usb_host_hub_sm.h"
 #include "hidmouse.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 //#include "MK70F12_port.h"
 //#include "fsl_usb_features.h"
@@ -52,19 +51,7 @@
 #include "fsl_debug_console.h"
 #include <stdio.h>
 #include <stdlib.h>
-#endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-
-#endif
 /************************************************************************************
  **
  ** Globals
@@ -87,6 +74,7 @@ volatile uint32_t sleep_test = FALSE;
 #define USB_EVENT_CTRL           (0x01)
 #define USB_EVENT_DATA           (0x02)
 #define USB_EVENT_DATA_CORRUPTED (0x04)
+#define USB_EVENT_STATE_CHANGE   (0x08)
 
 /************************************************************************************
  Table of driver capabilities this application wants to use. See Host API document for
@@ -130,15 +118,69 @@ static usb_host_driver_info_t DriverInfoTable[] =
 void process_mouse_buffer(uint8_t * buffer);
 void usb_host_hid_mouse_ctrl_callback(void* unused, void* user_parm, uint8_t *buffer, uint32_t buflen, usb_status status);
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#define MAIN_TASK                (10)
-void Main_Task(uint32_t param);
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
+
+
+static void update_state(void)
 {
-    { MAIN_TASK, Main_Task, 3000L, 9L, "Main", MQX_AUTO_START_TASK },
-    { 0L, 0L, 0L, 0L, 0L, 0L }
-};
-#endif
+    if (mouse_hid_device.state_change != 0)
+    {
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_ATTACHED)
+        {
+            if (mouse_hid_device.dev_state == USB_DEVICE_IDLE)
+            {
+                mouse_hid_device.dev_state = USB_DEVICE_ATTACHED;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_ATTACHED);
+        }
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_OPENED)
+        {
+            if (mouse_hid_device.dev_state != USB_DEVICE_DETACHED)
+            {
+                mouse_hid_device.dev_state = USB_DEVICE_INTERFACE_OPENED;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_OPENED);
+        }
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_DETACHED)
+        {
+            mouse_hid_device.dev_state = USB_DEVICE_DETACHED;
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_DETACHED);
+        }
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_IDLE)
+        {
+            mouse_hid_device.dev_state = USB_DEVICE_IDLE;
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_IDLE);
+        }
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_SET_IDLE)
+        {
+            if (mouse_hid_device.dev_state == USB_DEVICE_SETTING_PROTOCOL)
+            {
+                mouse_hid_device.dev_state = USB_DEVICE_SET_IDLE;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_SET_IDLE);
+        }
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_REMOVE)
+        {
+            mouse_hid_device.dev_state = USB_DEVICE_REMOVE;
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_REMOVE);
+        }
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_DESCRIPTOR_DONE)
+        {
+            if ((mouse_hid_device.dev_state == USB_DEVICE_GET_REPORT_DESCRIPTOR) || (mouse_hid_device.dev_state == USB_DEVICE_SETTING_PROTOCOL))
+            {
+                mouse_hid_device.dev_state = USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_DESCRIPTOR_DONE);
+        }
+        if (mouse_hid_device.state_change & USB_STATE_CHANGE_INUSE)
+        {
+            if (mouse_hid_device.dev_state == USB_DEVICE_SETTING_IDLE)
+            {
+                mouse_hid_device.dev_state = USB_DEVICE_INUSE;
+            }
+            mouse_hid_device.state_change &= ~(USB_STATE_CHANGE_INUSE);
+        }
+    }
+}
 
 /*FUNCTION*----------------------------------------------------------------
  *
@@ -307,7 +349,8 @@ usb_status usb_host_hid_mouse_event
         {
             mouse_hid_device.dev_handle = dev_handle;
             mouse_hid_device.intf_handle = mouse_hid_get_interface();
-            mouse_hid_device.dev_state = USB_DEVICE_ATTACHED;
+            mouse_hid_device.state_change |= USB_STATE_CHANGE_ATTACHED;
+            OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         }
         else
         {
@@ -317,7 +360,8 @@ usb_status usb_host_hid_mouse_event
 
     case USB_INTF_OPENED_EVENT:
         USB_PRINTF("----- Interfaced Event -----\r\n");
-        mouse_hid_device.dev_state = USB_DEVICE_INTERFACE_OPENED;
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_OPENED;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         break;
 
     case USB_DETACH_EVENT:
@@ -330,11 +374,13 @@ usb_status usb_host_hid_mouse_event
         USB_PRINTF("  SubClass = %d", intf_ptr->bInterfaceSubClass);
         USB_PRINTF("  Protocol = %d\r\n", intf_ptr->bInterfaceProtocol);
         mouse_interface_number = 0;
-        mouse_hid_device.dev_state = USB_DEVICE_DETACHED;
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_DETACHED;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         break;
     default:
         USB_PRINTF("HID Device state = %d??\r\n", mouse_hid_device.dev_state);
-        mouse_hid_device.dev_state = USB_DEVICE_IDLE;
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_IDLE;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         break;
     }
 
@@ -378,7 +424,8 @@ void usb_host_hid_mouse_ctrl_callback
         }
         else
         {
-            mouse_hid_device.dev_state = USB_DEVICE_REMOVE;
+            mouse_hid_device.state_change |= USB_STATE_CHANGE_REMOVE;
+            OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
             USB_PRINTF("\nGoing to remove the device!\r\n");
             /* notify application that status has changed */
             OS_Event_set(mouse_usb_event, USB_EVENT_CTRL);
@@ -387,7 +434,8 @@ void usb_host_hid_mouse_ctrl_callback
     }
     else if (status == USBERR_TR_RETRY_FAILED)
     {
-        mouse_hid_device.dev_state = USB_DEVICE_REMOVE;
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_REMOVE;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         mouse_hid_device.stall_tries = USBCFG_HOST_CTRL_STALL_RETRY;
         USB_PRINTF("\nGoing to remove the device!\r\n");
         /* notify application that status has changed */
@@ -408,11 +456,13 @@ void usb_host_hid_mouse_ctrl_callback
     {
         if (status == USBERR_ENDPOINT_STALLED)
         {
-            mouse_hid_device.dev_state = USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE;
+            mouse_hid_device.state_change |= USB_STATE_CHANGE_DESCRIPTOR_DONE;
+            OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         }
         else
         {
-            mouse_hid_device.dev_state = USB_DEVICE_SET_IDLE;
+            mouse_hid_device.state_change |= USB_STATE_CHANGE_SET_IDLE;
+            OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
             USB_PRINTF("setting protocol done\r\n");
         }
     }
@@ -420,11 +470,13 @@ void usb_host_hid_mouse_ctrl_callback
     {
         if (status == USBERR_ENDPOINT_STALLED)
         {
-            mouse_hid_device.dev_state = USB_DEVICE_INTERFACE_OPENED;
+            mouse_hid_device.state_change |= USB_STATE_CHANGE_OPENED;
+            OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         }
         else
         {
-            mouse_hid_device.dev_state = USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE;
+            mouse_hid_device.state_change |= USB_STATE_CHANGE_DESCRIPTOR_DONE;
+            OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
             USB_PRINTF("get report descriptor done\r\n");
         }
     }
@@ -445,7 +497,8 @@ void usb_host_hid_mouse_ctrl_callback
         {
             mouse_hid_device.stall_tries = USBCFG_HOST_CTRL_STALL_RETRY;
         }
-        mouse_hid_device.dev_state = USB_DEVICE_INUSE;
+        mouse_hid_device.state_change |= USB_STATE_CHANGE_INUSE;
+        OS_Event_set(mouse_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("setting idle done\r\n");
 #endif
     }
@@ -638,7 +691,7 @@ void APP_init(void)
 {
     usb_status status = USB_OK;
 
-    status = usb_host_init(CONTROLLER_ID, &host_handle);
+    status = usb_host_init(CONTROLLER_ID, usb_host_board_init, &host_handle);
     if (status != USB_OK)
     {
         USB_PRINTF("\r\nUSB Host Initialization failed! STATUS: 0x%x", status);
@@ -694,7 +747,13 @@ void APP_task(void)
     static uint8_t i = 0;
 
     // Wait for insertion or removal event
-    OS_Event_wait(mouse_usb_event, USB_EVENT_CTRL | USB_EVENT_DATA | USB_EVENT_DATA_CORRUPTED, FALSE, 0);
+    OS_Event_wait(mouse_usb_event, USB_EVENT_CTRL | USB_EVENT_DATA | USB_EVENT_DATA_CORRUPTED | USB_EVENT_STATE_CHANGE, FALSE, 0);
+    /* update state for not app_task context */
+    if (OS_Event_check_bit(mouse_usb_event, USB_EVENT_STATE_CHANGE))
+    {
+        OS_Event_clear(mouse_usb_event, USB_EVENT_STATE_CHANGE);
+        update_state();
+    }
     if (OS_Event_check_bit(mouse_usb_event, USB_EVENT_CTRL))
     {
         OS_Event_clear(mouse_usb_event, USB_EVENT_CTRL);
@@ -911,30 +970,7 @@ void APP_task(void)
     } /* Endswitch */
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : main (Main_Task if using MQX)
- * Returned Value : none
- * Comments       :
- *     Execution starts here
- *
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    APP_init();
-    /*
-     ** Infinite loop, waiting for events requiring action
-     */
-    for (;;)
-    {
-        APP_task();
-    } /* Endfor */
-} /* Endbody */
 
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
@@ -973,11 +1009,10 @@ int main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
     OSA_Start();
 #if !defined(FSL_RTOS_MQX)
     return 1;
 #endif
 }
-#endif
 

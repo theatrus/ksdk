@@ -105,7 +105,7 @@ typedef enum _flexio_timer_mode
 } flexio_timer_mode_t;
 
 /*!
- * @brief Define type of timer initial output or timer reset affaction.
+ * @brief Define type of timer initial output or timer reset condition.
  */
 typedef enum _flexio_timer_output
 {
@@ -116,7 +116,7 @@ typedef enum _flexio_timer_output
 } flexio_timer_output_t;
 
 /*!
- * @brief Define type of timer decerement.
+ * @brief Define type of timer decrement.
  */
 typedef enum _flexio_timer_decrement_source
 {
@@ -191,8 +191,8 @@ typedef enum _flexio_timer_start_bit_condition
 /*! @briedf Define type of timer polarity for shifter control. */
 typedef enum _flexio_shifter_timer_polarity
 {
-    kFlexioShifterTimerPolarityOnPositive = 0U, /* Shift on positive edge of shift clock */
-    kFlexioShifterTimerPolarityOnNegitive = 1U  /* Shift on negative edge of shift clock */
+    kFlexioShifterTimerPolarityOnPositive = 0U, /* Shift on positive edge of shift clock. */
+    kFlexioShifterTimerPolarityOnNegitive = 1U  /* Shift on negative edge of shift clock. */
 } flexio_shifter_timer_polarity_t;
 
 /*!
@@ -205,6 +205,13 @@ typedef enum _flexio_shifter_mode
     kFlexioShifterModeTransmit        = 2U, /*!< Transmit mode. */
     kFlexioShifterModeMatchStore      = 4U, /*!< Match store mode. */
     kFlexioShifterModeMatchContinuous = 5U  /*!< Match continuous mode. */
+#if FSL_FEATURE_FLEXIO_HAS_STATE_MODE
+    , kFlexioShifterModeState         = 6U  /*!< SHIFTBUF contents are used for storing programmable state attributes. */
+#endif /* FSL_FEATURE_FLEXIO_HAS_STATE_MODE */
+#if FSL_FEATURE_FLEXIO_HAS_LOGIC_MODE
+    , kFlexioShifterModeLogic         = 7U  /*!< SHIFTBUF contents are used for implementing programmable logic look up table. */
+#endif /* FSL_FEATURE_FLEXIO_HAS_LOGIC_MODE */
+
 } flexio_shifter_mode_t;
 
 /*!
@@ -234,7 +241,7 @@ typedef enum _flexio_shifter_start_bit
     kFlexioShifterStartBitDisabledLoadDataOnEnable = 0U, /*!< Disable shifter start bit, transmitter loads data on enable. */
     kFlexioShifterStartBitDisabledLoadDataOnShift  = 1U, /*!< Disable shifter start bit, transmitter loads data on first shift. */
     kFlexioShifterStartBitLow                      = 2U, /*!< Set shifter start bit to logic low level. */
-    kFlexioShifterStartBitHigh                     = 3U  /*!< Set shifter start bit to logic high lecel. */
+    kFlexioShifterStartBitHigh                     = 3U  /*!< Set shifter start bit to logic high level. */
 } flexio_shifter_start_bit_t;
 
 /*******************************************************************************
@@ -271,12 +278,12 @@ typedef struct _flexio_timer_config_t
 #define FLEXIO_HAL_TIMER_TRIGGER_SEL_TIMn(x)       (((x) << 2) | 0x3)
 
 /*!
- * @brief Define structure of configure the Flexio shifter.
+ * @brief Define structure of configure the FlexIO shifter.
  */
 typedef struct _flexio_shifter_config_t
 {
     /* Timer. */
-    uint32_t timsel; /*!< Selects which Timer is used for controlling the logic/shift register and generating the Shift clock. */
+    uint32_t                        timsel; /*!< Selects which Timer is used for controlling the logic/shift register and generating the Shift clock. */
     flexio_shifter_timer_polarity_t timpol; /*!< Timer Polarity. */
     /* Pin. */
     flexio_pin_config_t             pincfg; /*!< Shifter Pin Configuration. */
@@ -284,6 +291,9 @@ typedef struct _flexio_shifter_config_t
     flexio_pin_polarity_t           pinpol; /*!< Shifter Pin Polarity. */
     /* Shifter. */
     flexio_shifter_mode_t           smode;  /*!< Configures the mode of the Shifter. */
+#if FSL_FEATURE_FLEXIO_HAS_PARALLEL_WIDTH
+    uint32_t                        pwidth; /*!< Configures the parallel width when using parallel mode.*/
+#endif /* FSL_FEATURE_FLEXIO_HAS_PARALLEL_WIDTH */
     flexio_shifter_input_source_t   insrc;  /*!< Selects the input source for the shifter. */
     flexio_shifter_stop_bit_t       sstop;  /*!< Shifter STOP bit. */
     flexio_shifter_start_bit_t      sstart; /*!< Shifter START bit. */
@@ -301,7 +311,7 @@ extern "C" {
  * FLEXIO_VERID
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Get the FlexIO major version number.
+ * @brief Gets the FlexIO major version number.
  *
  * @param base base address
  * @return major version
@@ -312,7 +322,7 @@ static inline uint32_t FLEXIO_HAL_GetMajorVersionNumber(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Get the FlexIO minor version number.
+ * @brief Gets the FlexIO minor version number.
  *
  * @param base base address
  * @return minor version
@@ -323,7 +333,7 @@ static inline uint32_t FLEXIO_HAL_GetMinorVersionNumber(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Get the FlexIO feature specification number.
+ * @brief Gets the FlexIO feature specification number.
  *
  * @param base base address
  * @return feature number
@@ -337,7 +347,7 @@ static inline uint32_t FLEXIO_HAL_GetFeatureNumber(FLEXIO_Type * base)
  * FLEXIO_PARAM
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Get the number of external triggers implemented.
+ * @brief Gets the number of implemented external triggers.
  *
  * @param base base address
  * @return number of external triggers
@@ -348,7 +358,7 @@ static inline uint32_t FLEXIO_HAL_GetTriggerNumber(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Get the number of pins implemented.
+ * @brief Gets the number of implemented pins.
  *
  * @param base base address
  * @return number of pins
@@ -359,7 +369,7 @@ static inline uint32_t FLEXIO_HAL_GetPinNumber(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Get the number of timers implemented.
+ * @brief Gets the number of implemented timers.
  *
  * @param base base address
  * @return number of timers
@@ -370,7 +380,7 @@ static inline uint32_t FLEXIO_HAL_GetTimerNumber(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Get the number of shifters implemented.
+ * @brief Gets the number of implemented shifters.
  *
  * @param base base address
  * @return number of shifters
@@ -384,7 +394,7 @@ static inline uint32_t FLEXIO_HAL_GetShifterNumber(FLEXIO_Type * base)
  * FLEXIO_CTRL
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Control the FlexIO operation in Doze modes.
+ * @brief Controls the FlexIO operation in doze modes.
  *
  * @param base base address
  * @param enable Pass true to enable FlexIO in Doze modes.
@@ -395,10 +405,10 @@ static inline void FLEXIO_HAL_SetDozeModeCmd(FLEXIO_Type * base, bool enable)
 }
 
 /*!
- * @brief Control the FlexIO operation in Debug mode.
+ * @brief Controls the FlexIO operation in debug mode.
  *
  * @param base base address
- * @param enable Pass true to enable FlexIO in Debug mode.
+ * @param enable Pass true to enable FlexIO in debug mode.
  */
 static inline void FLEXIO_HAL_SetDebugModeCmd(FLEXIO_Type * base, bool enable)
 {
@@ -406,7 +416,7 @@ static inline void FLEXIO_HAL_SetDebugModeCmd(FLEXIO_Type * base, bool enable)
 }
 
 /*!
- * @brief Control the FlexIO register accesses speed.
+ * @brief Controls the FlexIO register accesses speed.
  *
  * @param base base address
  * @param enable true if fast register access is enabled, FlexIO clock to be set
@@ -419,7 +429,7 @@ static inline void FLEXIO_HAL_SetFastAccessCmd(FLEXIO_Type * base, bool enable)
 }
 
 /*!
- * @brief Software reset of the module
+ * @brief Software reset of the module.
  *
  * @param base base address
  * @param enable true  - Enable software reset
@@ -431,14 +441,13 @@ static inline void FLEXIO_HAL_SetSoftwareResetCmd(FLEXIO_Type * base, bool enabl
 }
 
 /*!
- * @brief Enable the FlexIO module operation.
+ * @brief Enables the FlexIO module operation.
  *
  * @param base base address
  * @param enable Pass true to enable FlexIO
  */
 static inline void FLEXIO_HAL_SetFlexioEnableCmd(FLEXIO_Type * base, bool enable)
 {
-    /*FLEXIO_BWR_CTRL_FLEXEN(base, enable ? 1U : 0U);*/
     uint32_t tmp32 = FLEXIO_RD_CTRL(base);
     tmp32 &= ~FLEXIO_CTRL_FLEXEN_MASK;
     if (enable)
@@ -456,7 +465,7 @@ static inline void FLEXIO_HAL_SetFlexioEnableCmd(FLEXIO_Type * base, bool enable
  * FLEXIO_TIMIEN - Timer Interrupt Enable Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Enable or disable timer status interrupt requests.
+ * @brief Enables or disables the timer status interrupt requests.
  *
  * @param base base address
  * @param mask Mask of timers to be enabled/disabled interrupt status
@@ -468,7 +477,7 @@ void FLEXIO_HAL_SetTimerStatusIntCmd(FLEXIO_Type * base, uint32_t mask, bool ena
  * FLEXIO_TIMSTAT - Timer Status Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Get timer status flags.
+ * @brief Gets timer status flags.
  *
  * @param base base address
  *
@@ -480,7 +489,7 @@ static inline uint32_t FLEXIO_HAL_GetTimerStatusFlags(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Clear timer status flags.
+ * @brief Clears timer status flags.
  *
  * @param base base address
  * @param mask timer mask
@@ -498,7 +507,7 @@ static inline void FLEXIO_HAL_ClearTimerStatusFlags(FLEXIO_Type * base, uint32_t
  * FLEXIO_TIMCMPn - Timer Compare N Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Configure a timer in FlexIO.
+ * @brief Configures a FlexIO timer.
  *
  * @param base base address
  * @param timerIdx timer id number
@@ -508,13 +517,13 @@ void FLEXIO_HAL_ConfigureTimer(FLEXIO_Type * base, uint32_t timerIdx,
     const flexio_timer_config_t *timerConfigPtr);
 
 /*------------------------------------------------------------------------------
- * Shfiter
+ * Shifter
  *----------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------------
  * FLEXIO_SHIFTSTAT - Shifter Status Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Get shifter status flags.
+ * @brief Gets shifter status flags.
  *
  * @param base base address
  *
@@ -526,7 +535,7 @@ static inline uint32_t FLEXIO_HAL_GetShifterStatusFlags(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Clear shifter status flags.
+ * @brief Clears shifter status flags.
  *
  * @param base base address
  * @param mask shifter mask
@@ -542,7 +551,7 @@ static inline void FLEXIO_HAL_ClearShifterStatusFlags(FLEXIO_Type * base, uint32
  * FLEXIO_SHIFTSIEN - Shifter Status Interrupt Enable
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Enable or disable shifter status interrupt requests.
+ * @brief Enables or disables shifter status interrupt requests.
  *
  * @param base base address
  * @param mask Mask of shifters to be enabled/disabled status interrupt status
@@ -551,7 +560,7 @@ static inline void FLEXIO_HAL_ClearShifterStatusFlags(FLEXIO_Type * base, uint32
 void FLEXIO_HAL_SetShifterStatusIntCmd(FLEXIO_Type * base, uint32_t mask, bool enable);
 
 /*!
- * @brief Return enabled shifter status interrupt
+ * @brief Returns enabled shifter status interrupts.
  *
  * @param base base address
  *
@@ -566,7 +575,7 @@ static inline uint32_t FLEXIO_HAL_GetShifterStatusIntCmd(FLEXIO_Type * base)
  * FLEXIO_SHIFTERR - Shifter Error Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Get shifter error flags.
+ * @brief Gets shifter error flags.
  *
  * @param base base address
  *
@@ -578,7 +587,7 @@ static inline uint32_t FLEXIO_HAL_GetShifterErrorFlags(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Clear shifter error flags.
+ * @brief Clears shifter error flags.
  *
  * @param base base address
  * @param mask shifter mask
@@ -594,7 +603,7 @@ static inline void FLEXIO_HAL_ClearShifterErrorFlags(FLEXIO_Type * base, uint32_
  * FLEXIO_SHIFTEIEN - Shifter Error Interrupt Enable
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Return shifter enabled error interrupts
+ * @brief Returns shifter enabled error interrupts.
  *
  * @param base base address
  *
@@ -606,7 +615,7 @@ static inline uint32_t FLEXIO_HAL_GetShifterErrorInt(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Enable or disable shifter error interrupt requests.
+ * @brief Enables or disables shifter error interrupt requests.
  *
  * @param base base address
  * @param mask Mask of shifters to be enabled/disabled error interrupt status
@@ -619,7 +628,7 @@ void FLEXIO_HAL_SetShifterErrorIntCmd(FLEXIO_Type * base, uint32_t mask, bool en
  * FLEXIO_SHIFTCFGn - Shifter Configuration N Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Configure a shifter including ctl, cfg
+ * @brief Configures a shifter including CTL and CFG
  *
  * @param base base address
  * @param shifterIdx shifter index
@@ -632,7 +641,7 @@ void FLEXIO_HAL_ConfigureShifter(FLEXIO_Type * base, uint32_t shifterIdx,
  * FLEXIO_SHIFTSDEN - Shifter Status DMA Enable
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Return shifter enabled status DMA support.
+ * @brief Returns the shifter-enabled status DMA support.
  *
  * @param base base address
  *
@@ -644,7 +653,7 @@ static inline uint32_t FLEXIO_HAL_GetShiftStatusDma(FLEXIO_Type * base)
 }
 
 /*!
- * @brief Enable or disable shifter status DMA support.
+ * @brief Enables or disables the shifter status DMA support.
  *
  * @param base base address
  * @param mask Mask of shifters to be enabled/disabled DMA status
@@ -656,7 +665,7 @@ void FLEXIO_HAL_SetShifterStatusDmaCmd(FLEXIO_Type * base, uint32_t mask, bool e
  * FLEXIO_SHIFTBUFn - Shifter Buffer N Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Store data from shifter buffer.
+ * @brief Stores data from the shifter buffer.
  *
  * @param base base address
  * @param shifterIdx shifter index
@@ -669,7 +678,7 @@ static inline uint32_t FLEXIO_HAL_GetShifterBuffer(FLEXIO_Type * base, uint32_t 
 }
 
 /*!
- * @brief Load data to shifter buffer.
+ * @brief Loads data to the shifter buffer.
  *
  * @param base base address
  * @param shifterIdx shifter index
@@ -684,7 +693,7 @@ static inline void FLEXIO_HAL_SetShifterBuffer(FLEXIO_Type * base, uint32_t shif
  * FLEXIO_SHIFTBUFBBSn - Shifter Buffer N Bit Byte Swapped Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Store data from bit byte swapped shifter buffer.
+ * @brief Stores data from the bit byte swapped shifter buffer.
  *
  * @param base base address
  * @param shifterIdx shifter index
@@ -698,7 +707,7 @@ static inline uint32_t FLEXIO_HAL_GetShifterBufferBitByteSwapped(FLEXIO_Type * b
 }
 
 /*!
- * @brief Load data to bit byte swapped shifter buffer.
+ * @brief Loads data to the bit byte swapped shifter buffer.
  *
  * @param base base address
  * @param shifterIdx shifter index
@@ -713,7 +722,7 @@ static inline void FLEXIO_HAL_SetShifterBufferBitByteSwapped(FLEXIO_Type * base,
  * FLEXIO_SHIFTBUFBYSn - Shifter Buffer N Byte Swapped Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Store data from byte swapped shifter buffer.
+ * @brief Stores data from the byte swapped shifter buffer.
  *
  * @param base base address
  * @param shifterIdx shifter index
@@ -727,7 +736,7 @@ static inline uint32_t FLEXIO_HAL_GetShifterBufferByteSwapped(FLEXIO_Type * base
 }
 
 /*!
- * @brief Load data to byte swapped shifter buffer.
+ * @brief Loads data to the byte swapped shifter buffer.
  *
  * @param base base address
  * @param shifterIdx shifter index
@@ -742,7 +751,7 @@ static inline void FLEXIO_HAL_SetShifterBufferByteSwapped(FLEXIO_Type * base, ui
  * FLEXIO_SHIFTBUFBISn - Shifter Buffer N Bit Swapped Register
  *----------------------------------------------------------------------------*/
 /*!
- * @brief Store data from bit swapped shifter buffer.
+ * @brief Stores data from the bit swapped shifter buffer.
  *
  * @param base base address
  * @param shifterIdx shifter index
@@ -756,19 +765,115 @@ static inline uint32_t FLEXIO_HAL_GetShifterBufferBitSwapped(FLEXIO_Type * base,
 }
 
 /*!
- * @brief Load data to Bit swapped shifter buffer.
+ * @brief Loads data to the bit swapped shifter buffer.
  *
  * @param base base address
  * @param shifterIdx shifter index
- * @param value Value to be load to Bit swapped shifter buffer
+ * @param value Value to be load to bit swapped shifter buffer
  */
 static inline void FLEXIO_HAL_SetShifterBufferBitSwapped(FLEXIO_Type * base, uint32_t shifterIdx, uint32_t value)
 {
     FLEXIO_WR_SHIFTBUFBIS(base, shifterIdx, value);
 }
 
+#if FSL_FEATURE_FLEXIO_HAS_SHFT_BUFFER_NIBBLE_BYTE_SWAP
+/*------------------------------------------------------------------------------
+ * FLEXIOx_SHIFTBUFNBSn - shifter buffer N Nibble Byte Swapped register
+ *----------------------------------------------------------------------------*/
 /*!
- * @brief Restore the FlexIO peripheral to reset state.
+ * @brief Stores data from the shifter buffer N Nibble Byte Swapped register.
+ *
+ * @param base base address
+ * @param shifterIdx shifter index
+ *
+ * @return Shifter Buffer N Nibble Byte Swapped register content
+ * SHIFTBUF{ [27:24],[31:28],[19:16],[23:20],[11:8],[15:12],[3:0],[7:4]}.
+ */
+static inline uint32_t FLEXIO_HAL_GetShifterBufferNibbleByteSwapped(FLEXIO_Type * base, uint32_t shifterIdx)
+{
+    return FLEXIO_RD_SHIFTBUFNBS(base, shifterIdx);
+}
+
+/*!
+ * @brief Loads data to the shifter buffer N Nibble Byte Swapped register.
+ *
+ * @param base base address
+ * @param shifterIdx shifter index
+ * @param value Value to be load to Shifter Buffer N Nibble Byte Swapped register
+ */
+static inline void FLEXIO_HAL_SetShifterBufferNibbleByteSwapped(FLEXIO_Type * base, uint32_t shifterIdx, uint32_t value)
+{
+    FLEXIO_WR_SHIFTBUFNBS(base, shifterIdx, value);
+}
+
+#endif /* FSL_FEATURE_FLEXIO_HAS_SHFT_BUFFER_NIBBLE_BYTE_SWAP */
+
+#if FSL_FEATURE_FLEXIO_HAS_SHFT_BUFFER_HALF_WORD_SWAP
+/*------------------------------------------------------------------------------
+ * FLEXIOx_SHIFTBUFHWSn - shifter buffer N Half Word Swapped register
+ *----------------------------------------------------------------------------*/
+/*!
+ * @brief Stores data from the shifter buffer N Half Word Swapped register.
+ *
+ * @param base base address
+ * @param shifterIdx shifter index
+ *
+ * @return Shifter Buffer N Half Word Swapped Register content.
+ * SHIFTBUF{[15:0], [31:24]}.
+ */
+static inline uint32_t FLEXIO_HAL_GetShifterBufferHalfWordSwapped(FLEXIO_Type * base, uint32_t shifterIdx)
+{
+    return FLEXIO_RD_SHIFTBUFHWS(base, shifterIdx);
+}
+
+/*!
+ * @brief Loads data to the shifter buffer N Half Word Swapped register.
+ *
+ * @param base base address
+ * @param shifterIdx shifter index
+ * @param value Value to be load to Shifter Buffer N Half Word Swapped register.
+ */
+static inline void FLEXIO_HAL_SetShifterBufferHalfWordSwapped(FLEXIO_Type * base, uint32_t shifterIdx, uint32_t value)
+{
+    FLEXIO_WR_SHIFTBUFHWS(base, shifterIdx, value);
+}
+
+#endif /* FSL_FEATURE_FLEXIO_HAS_SHFT_BUFFER_HALF_WORD_SWAP */
+
+#if FSL_FEATURE_FLEXIO_HAS_SHFT_BUFFER_NIBBLE_SWAP
+/*------------------------------------------------------------------------------
+ * FLEXIOx_SHIFTBUFNISn - shifter buffer N Nibble Swapped register
+ *----------------------------------------------------------------------------*/
+/*!
+ * @brief Stores data from the shifter buffer N Nibble Swapped register.
+ *
+ * @param base base address
+ * @param shifterIdx shifter index
+ *
+ * @return Shifter Buffer N Nibble Swapped Register content.
+ * SHIFTBUF{[3:0],[7:4],[11:8],[15:12],[19:16],[23:20],[27:24],[31:28] }.
+ */
+static inline uint32_t FLEXIO_HAL_GetShifterBufferNibbleSwapped(FLEXIO_Type * base, uint32_t shifterIdx)
+{
+    return FLEXIO_RD_SHIFTBUFNIS(base, shifterIdx);
+}
+
+/*!
+ * @brief Loads data to the shifter buffer N Nibble Swapped register.
+ *
+ * @param base base address
+ * @param shifterIdx shifter index
+ * @param value Value to be load to shifter buffer N Nibble Swapped register.
+ */
+static inline void FLEXIO_HAL_SetShifterBufferNibbleSwapped(FLEXIO_Type * base, uint32_t shifterIdx, uint32_t value)
+{
+    FLEXIO_WR_SHIFTBUFNIS(base, shifterIdx, value);
+}
+
+#endif /* FSL_FEATURE_FLEXIO_HAS_SHFT_BUFFER_NIBBLE_SWAP */
+
+/*!
+ * @brief Restores the FlexIO peripheral to reset state.
  *
  * @param base base address
  */

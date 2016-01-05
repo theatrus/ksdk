@@ -46,6 +46,12 @@
 #define CLOCK_INIT_CONFIG CLOCK_RUN
 #endif
 
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 48000000U
+#else
+#define CORE_CLOCK_FREQ 4000000U
+#endif
+
 /* OSC0 configuration. */
 #define OSC0_XTAL_FREQ 4000000U
 #define OSC0_SC2P_ENABLE_CONFIG  false
@@ -73,7 +79,6 @@
 #define RTC_SC8P_ENABLE_CONFIG       false
 #define RTC_SC16P_ENABLE_CONFIG      false
 #define RTC_OSC_ENABLE_CONFIG        true
-#define RTC_CLK_OUTPUT_ENABLE_CONFIG true
 
 #define BOARD_RTC_CLK_FREQUENCY     32768U;
 /* The USB_CDC to use for debug messages. */
@@ -99,10 +104,27 @@
 
 #define BOARD_USE_DSPI                  (1)
 
+/* Define feature for the low_power_demo */
+#define FSL_FEATURE_HAS_VLLS2           (1)
+
+/* Define the port interrupt number for the board switches */
 #define BOARD_SW_GPIO               kGpioSW1
 #define BOARD_SW_IRQ_NUM            PORTC_IRQn
 #define BOARD_SW_IRQ_HANDLER        PORTC_IRQHandler
-
+#define BOARD_SW_NAME               "SW1"
+/* Define print statement to inform user which switch to press for
+ * power_manager_hal_demo and power_manager_rtos_demo
+ */
+#define PRINT_LLWU_SW_NUM \
+  PRINTF("SW1")
+/* Defines the llwu pin number for board switch which is used in power_manager_demo. */
+#define BOARD_SW_HAS_LLWU_PIN           1
+#define  BOARD_SW_LLWU_EXT_PIN           kLlwuWakeupPin8
+/* Switch port base address and IRQ handler name. Used by power_manager_demo */
+#define BOARD_SW_LLWU_PIN               4
+#define BOARD_SW_LLWU_BASE              PORTC
+#define BOARD_SW_LLWU_IRQ_HANDLER       PORTC_IRQHandler
+#define BOARD_SW_LLWU_IRQ_NUM           PORTC_IRQn
 /* The instances of peripherals used for dac_adc_demo */
 #define BOARD_DAC_DEMO_DAC_INSTANCE     0U
 #define BOARD_DAC_DEMO_ADC_INSTANCE     0U
@@ -129,8 +151,8 @@
 #define BOARD_GPIO_LED_RED              kGpioLED1
 #define BOARD_GPIO_LED_GREEN            kGpioLED2
 
-#define LED1_EN (PORT_HAL_SetMuxMode(PORTD, 4, kPortMuxAsGpio))    /*!< Enable target LED0 */
-#define LED2_EN (PORT_HAL_SetMuxMode(PORTD, 5, kPortMuxAsGpio))    /*!< Enable target LED1 */
+#define LED1_EN (GPIO_DRV_OutputPinInit(&ledPins[0])) /*!< Enable target LED0 */
+#define LED2_EN (GPIO_DRV_OutputPinInit(&ledPins[1])) /*!< Enable target LED1 */
 
 #define LED1_DIS (PORT_HAL_SetMuxMode(PORTD, 4, kPortPinDisabled)) /*!< Disable target LED1 */
 #define LED2_DIS (PORT_HAL_SetMuxMode(PORTD, 5, kPortPinDisabled)) /*!< Disable target LED2 */
@@ -160,6 +182,9 @@ extern "C" {
 
 void hardware_init(void);
 void dbg_uart_init(void);
+void disable_unused_pins(void);
+void enable_unused_pins(void);
+/*This function to used for power manager demo*/
 /* Function to initialize clock base on board configuration. */
 void BOARD_ClockInit(void);
 
@@ -168,6 +193,9 @@ void BOARD_InitOsc0(void);
 
 /* Function to initialize RTC external clock base on board configuration. */
 void BOARD_InitRtcOsc(void);
+
+/*Function to handle board-specified initialization*/
+uint8_t usb_device_board_init(uint8_t controller_id);
 
 #if defined(__cplusplus)
 }

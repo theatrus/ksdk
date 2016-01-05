@@ -32,6 +32,7 @@
 #include <stdbool.h>
 #include "fsl_spi_shared_function.h"
 #include "fsl_device_registers.h"
+#include "fsl_clock_manager.h"
 
 /*!
  * @addtogroup spi_irq
@@ -45,6 +46,24 @@
 /*******************************************************************************
  * Code
  ******************************************************************************/
+#if defined(KM34Z7_SERIES)
+/*!
+ * @brief This function is the implementation of SPI0 handler named in startup code.
+ *
+ * It passes the instance to the shared SPI DMA IRQ handler.
+ */
+void SPI0_SPI1_IRQHandler(void)
+{
+    for(uint32_t i=0; i < SPI_INSTANCE_COUNT; i++)
+    {
+        if (CLOCK_SYS_GetSpiGateCmd(i))
+        {
+            SPI_DRV_IRQHandler(i);
+        }
+    }
+}
+
+#else
 
 #if (SPI_INSTANCE_COUNT == 1)
 /*!
@@ -77,6 +96,7 @@ void SPI1_IRQHandler(void)
 {
    SPI_DRV_IRQHandler(SPI1_IDX);
 }
+#endif
 #endif
 
 /*! @} */

@@ -1444,7 +1444,6 @@ _mfs_error MFS_lfn_chain_store(
         {
             /* there is an unprocessed sector located during previous iteration, use it */
             sector_num++;
-            sector_count--;
         }
         else
         {
@@ -1454,6 +1453,7 @@ _mfs_error MFS_lfn_chain_store(
                 break;
             }
         }
+        sector_count--;
 
         error_code = MFS_sector_map(drive_ptr, sector_num, (void **)&lfn_entry_ptr, MFS_MAP_MODE_MODIFY, 0);
         if (error_code != MFS_NO_ERROR)

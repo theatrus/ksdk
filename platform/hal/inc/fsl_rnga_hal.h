@@ -45,7 +45,7 @@
  * Definitions
  *******************************************************************************/
 
-/*! @brief the max cpu clock cycles rnga module used to get a new random data */
+/*! @brief The maximum CPU clock cycles that the RNGA module uses to get new random data */
 #define MAX_COUNT  4096
 
 /*! @brief RNGA working mode */
@@ -58,8 +58,8 @@ typedef enum _rnga_mode
 /*! @brief Defines the value of output register level */
 typedef enum _rnga_output_reg_level
 {
-    kRNGAOutputRegLevelNowords = 0U, /*!< output register no words. */
-    kRNGAOutputRegLevelOneword = 1U, /*!< output register one word. */
+    kRNGAOutputRegLevelNowords = 0U, /*!< Output register no words. */
+    kRNGAOutputRegLevelOneword = 1U, /*!< Output register one word. */
 } rnga_output_reg_level_t;
 
 /*!
@@ -74,6 +74,7 @@ typedef enum _rnga_status
     kStatus_RNGA_InvalidArgument = 1U, /*!< Invalid argument */
     kStatus_RNGA_Underflow = 2U, /*!< Underflow */
     kStatus_RNGA_Timeout = 3U, /*!< Timeout */
+    kStatus_RNGA_OSAError = 4U /*!< Failure of OS abstraction layer */
 } rnga_status_t;
 
 /*******************************************************************************
@@ -95,7 +96,7 @@ extern "C" {
  *
  * This function initializes the RNGA to a default state.
  *
- * @param base, RNGA base address
+ * @param base RNGA base address
  */
 static inline void RNGA_HAL_Init(RNG_Type * base)
 {
@@ -108,7 +109,7 @@ static inline void RNGA_HAL_Init(RNG_Type * base)
  *
  * This function enables the RNGA random data generation and loading.
  *
- * @param base, RNGA base address
+ * @param base RNGA base address
  */
 static inline void RNGA_HAL_Enable(RNG_Type * base)
 {
@@ -121,7 +122,7 @@ static inline void RNGA_HAL_Enable(RNG_Type * base)
  * 
  * This function disables the RNGA module.
  *
- * @param base, RNGA base address
+ * @param base RNGA base address
 */
 static inline void RNGA_HAL_Disable(RNG_Type * base)
 {
@@ -132,12 +133,12 @@ static inline void RNGA_HAL_Disable(RNG_Type * base)
 /*!
  * @brief Sets the RNGA high assurance.
  * 
- * This function sets the RNGA high assurance(notification of security
+ * This function sets the RNGA high assurance (notification of security
  * violations.
  *
- * @param base, RNGA base address
- * @param enable,   0 means notification of security violations disabled.
- *                  1 means notification of security violations enabled.
+ * @param base RNGA base address
+ * @param enable 0 means notification of security violations disabled.
+ *               1 means notification of security violations enabled.
 */
 static inline void RNGA_HAL_SetHighAssuranceCmd(RNG_Type * base, bool enable)
 {
@@ -150,9 +151,9 @@ static inline void RNGA_HAL_SetHighAssuranceCmd(RNG_Type * base, bool enable)
  * 
  * This function sets the RNGA error interrupt mask.
  *
- * @param base, RNGA base address
- * @param enable,   0 means unmask RNGA interrupt.
- *                  1 means mask RNGA interrupt.
+ * @param base RNGA base address
+ * @param enable 0 means unmask RNGA interrupt.
+ *               1 means mask RNGA interrupt.
 */
 static inline void RNGA_HAL_SetIntMaskCmd(RNG_Type * base, bool enable)
 {
@@ -165,9 +166,9 @@ static inline void RNGA_HAL_SetIntMaskCmd(RNG_Type * base, bool enable)
  * 
  * This function clears the RNGA interrupt.
  *
- * @param base, RNGA base address
- * @param enable,   0 means do not clear the interrupt.
- *                  1 means clear the interrupt.
+ * @param base RNGA base address
+ * @param enable 0 means do not clear the interrupt.
+ *               1 means clear the interrupt.
 */
 static inline void RNGA_HAL_ClearIntFlag(RNG_Type * base, bool enable)
 {
@@ -180,9 +181,9 @@ static inline void RNGA_HAL_ClearIntFlag(RNG_Type * base, bool enable)
  * 
  * This function specifies whether the RNGA is in sleep mode or normal mode.
  *
- * @param base, RNGA base address
- * @param mode,  kRNGAModeNormal means set RNGA in normal mode.
- *               kRNGAModeSleep means set RNGA in sleep mode.
+ * @param base RNGA base address
+ * @param mode kRNGAModeNormal means set RNGA in normal mode.
+ *             kRNGAModeSleep means set RNGA in sleep mode.
 */
 static inline void RNGA_HAL_SetWorkModeCmd(RNG_Type * base, rnga_mode_t mode)
 {
@@ -196,7 +197,7 @@ static inline void RNGA_HAL_SetWorkModeCmd(RNG_Type * base, rnga_mode_t mode)
  * This function gets the size of the output register as 
  * 32-bit random data words it can hold.
  *
- * @param base, RNGA base address
+ * @param base RNGA base address
  * @return 1 means one word(this value is fixed).
  */
 static inline uint8_t RNGA_HAL_GetOutputRegSize(RNG_Type * base)
@@ -225,9 +226,9 @@ static inline rnga_output_reg_level_t RNGA_HAL_GetOutputRegLevel(RNG_Type * base
  *
  * This function checks whether the RNGA works in sleep mode or normal mode. 
  *
- * @param base, RNGA base address
- * @return  Kmode_RNGA_Normal means in normal mode
- *          Kmode_RNGA_Sleep means in sleep mode
+ * @param base RNGA base address
+ * @return Kmode_RNGA_Normal means in normal mode
+ *         Kmode_RNGA_Sleep means in sleep mode
 */
 static inline rnga_mode_t RNGA_HAL_GetWorkMode(RNG_Type * base)
 {
@@ -242,7 +243,7 @@ static inline rnga_mode_t RNGA_HAL_GetWorkMode(RNG_Type * base)
  * condition has occurred since the error interrupt was last cleared  or the RNGA was
  * reset.
  *
- * @param base, RNGA base address
+ * @param base RNGA base address
  * @return 0 means no underflow, 1 means underflow
 */
 static inline bool RNGA_HAL_GetErrorIntCmd(RNG_Type * base)
@@ -258,7 +259,7 @@ static inline bool RNGA_HAL_GetErrorIntCmd(RNG_Type * base)
  * condition has occurred since the register (SR) was last read or the RNGA was
  * reset.
  *
- * @param base, RNGA base address
+ * @param base RNGA base address
  * @return 0 means no underflow, 1 means underflow
 */
 static inline bool RNGA_HAL_GetOutputRegUnderflowCmd(RNG_Type * base)
@@ -273,7 +274,7 @@ static inline bool RNGA_HAL_GetOutputRegUnderflowCmd(RNG_Type * base)
  * This function gets the RNGA status whether the most recent read of
  * OR[RANDOUT] causes an OR underflow condition.
  *
- * @param base, RNGA base address
+ * @param base RNGA base address
  * @return 0 means no underflow, 1 means underflow
 */
 static inline bool RNGA_HAL_GetLastReadStatusCmd(RNG_Type * base)
@@ -288,7 +289,7 @@ static inline bool RNGA_HAL_GetLastReadStatusCmd(RNG_Type * base)
  * This function gets the RNGA status whether a security violation has
  * occurred when high assurance is enabled.
  *
- * @param base, RNGA base address
+ * @param base RNGA base address
  * @return 0 means no security violation, 1 means security violation
 */
 static inline bool RNGA_HAL_GetSecurityViolationCmd(RNG_Type * base)
@@ -298,11 +299,11 @@ static inline bool RNGA_HAL_GetSecurityViolationCmd(RNG_Type * base)
 
 
 /*!
- * @brief Gets a random data from the RNGA. 
+ * @brief Gets random data from the RNGA. 
  *
- * This function gets a random data from RNGA.
+ * This function gets random data from the RNGA.
  *
- * @param base, RNGA base address
+ * @param base RNGA base address
  * @return random data obtained
 */
 static inline uint32_t RNGA_HAL_ReadRandomData(RNG_Type * base)
@@ -312,12 +313,12 @@ static inline uint32_t RNGA_HAL_ReadRandomData(RNG_Type * base)
 
 
 /*!
- * @brief Get random data.
+ * @brief Gets random data.
  *
- * This function is used to get a random data from RNGA
+ * This function gets random data from RNGA.
  *
- * @param base, RNGA base address
- * @param data, pointer address used to store random data
+ * @param base RNGA base address
+ * @param data pointer address used to store random data
  * @return one random data
  */
 rnga_status_t RNGA_HAL_GetRandomData(RNG_Type * base, uint32_t *data);
@@ -327,16 +328,16 @@ rnga_status_t RNGA_HAL_GetRandomData(RNG_Type * base, uint32_t *data);
  * @brief Inputs an entropy value used to seed the RNGA. 
  *
  * This function specifies an entropy value that RNGA uses with
- * its ring oscillations to seed its pseudorandom algorithm.
+ * its ring oscillations to seed its pseudo-random algorithm.
  *
- * @param base, RNGA base address
- * @param data, external entropy value
+ * @param base RNGA base address
+ * @param data external entropy value
 */
 static inline void RNGA_HAL_WriteSeed(RNG_Type * base, uint32_t data)
 {
     RNG_WR_ER(base, data);
 }
-
+/*! @}*/
 #if defined(__cplusplus)
 }
 #endif

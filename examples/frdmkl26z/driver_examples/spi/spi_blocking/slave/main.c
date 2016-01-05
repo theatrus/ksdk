@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,46 +28,38 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
+///////////////////////////////////////////////////////////////////////////////
+//  Includes
+///////////////////////////////////////////////////////////////////////////////
+// Standard C Included Files
+#include <stdio.h>
+ // SDK Included Files
+#include "board.h"
 #include "fsl_spi_slave_driver.h"
 #include "fsl_clock_manager.h"
 #include "fsl_debug_console.h"
-#include "board.h"
-#include <stdio.h>
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#if (defined FRDM_KL43Z) || (defined MRB_KW01)
-#define SPI_SLAVE_INSTANCE          (1)                 /*! User change define to choose SPI instance */
-#else
-#define SPI_SLAVE_INSTANCE          (0)                 /*! User change define to choose SPI instance */
-#endif
+#define SPI_SLAVE_INSTANCE          BOARD_SPI_INSTANCE      /*! User change define to choose SPI instance */
 #define TRANSFER_SIZE               (64)
-#define SLAVE_TRANSFER_TIMEOUT      (OSA_WAIT_FOREVER)             /*! Transfer timeout of slave - 5s */
-
-/*******************************************************************************
- * Prototypes
- ******************************************************************************/
+#define SLAVE_TRANSFER_TIMEOUT      (OSA_WAIT_FOREVER)      /*! Transfer timeout of slave - 5s */
 
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-
-/*!
- * @brief Buffer for storing data received by the SPI slave driver.
- */
+// Buffer for storing data received by the SPI slave driver.
 uint8_t s_spiSinkBuffer[TRANSFER_SIZE] = {0};
-
-/*!
- * @brief Buffer that supplies data to be transmitted with the SPI slave driver.
- */
-uint8_t s_spiSourceBuffer[TRANSFER_SIZE] = {0};
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
-
+/*!
+ * @brief SPI slave blocking.
+ *
+ * This function sends back received buffer from master through SPI interface.
+ */
 int main (void)
 {
     uint32_t j;
@@ -77,9 +69,9 @@ int main (void)
     // Create slaveUserConfig
     spi_slave_user_config_t slaveUserConfig =
     {
-    #if FSL_FEATURE_SPI_16BIT_TRANSFERS
+#if FSL_FEATURE_SPI_16BIT_TRANSFERS
         .bitCount       = kSpi8BitMode,
-    #endif
+#endif
         .direction      = kSpiMsbFirst,
         .polarity       = kSpiClockPolarity_ActiveHigh,
         .phase          = kSpiClockPhase_FirstEdge
@@ -87,21 +79,21 @@ int main (void)
 
     // init the hardware, this also sets up up the SPI pins for each specific SoC
     hardware_init();
-
+    // Init OSA layer.
     OSA_Init();
 
+    // Print a note.
     PRINTF("\r\nSPI board to board blocking example");
     PRINTF("\r\nThis example run on instance %d", (uint32_t)SPI_SLAVE_INSTANCE);
     PRINTF("\r\nBe sure master's SPI%d and slave's SPI%d are connected ",
                     (uint32_t)SPI_SLAVE_INSTANCE, (uint32_t)SPI_SLAVE_INSTANCE);
 
-    //USER CONFIGURABLE OPTION FOR SPI INSTANCE (if applicable)
-
+    // Initialize slave driver.
     SPI_DRV_SlaveInit(SPI_SLAVE_INSTANCE, &spiSlaveState, &slaveUserConfig);
 
     while(1)
     {
-        PRINTF("\r\nSlave example is running...");
+        PRINTF("\r\nSlave example is running...\r\n");
 
         // Reset the sink buffer
         for (j = 0; j < TRANSFER_SIZE; j++)
@@ -110,27 +102,21 @@ int main (void)
         }
 
         // Receive data from master
-        PRINTF("\r\nSPI is waiting to receive data \r\n");
-
         spiResult = SPI_DRV_SlaveTransferBlocking(SPI_SLAVE_INSTANCE,
                                                 NULL,
                                                 s_spiSinkBuffer,
-                                                TRANSFER_SIZE, OSA_WAIT_FOREVER);
+                                                TRANSFER_SIZE, SLAVE_TRANSFER_TIMEOUT);
         if (spiResult != kStatus_SPI_Success)
         {
             PRINTF("\r\nERROR: slave receives error ");
             return -1;
         }
 
-        for (j = 0; j < TRANSFER_SIZE; j++)
-        {
-            s_spiSourceBuffer[j] = s_spiSinkBuffer[j];
-        }
-        // Send back datat to master
+        // Send back data to master
         spiResult = SPI_DRV_SlaveTransferBlocking(SPI_SLAVE_INSTANCE,
-                                                s_spiSourceBuffer,
+                                                s_spiSinkBuffer,
                                                 NULL,
-                                                TRANSFER_SIZE, OSA_WAIT_FOREVER);
+                                                TRANSFER_SIZE, SLAVE_TRANSFER_TIMEOUT);
         if (spiResult != kStatus_SPI_Success)
         {
             PRINTF("\r\nERROR: slave sends error ");
@@ -141,7 +127,8 @@ int main (void)
         PRINTF("\r\nSlave receive:");
         for (j = 0; j < TRANSFER_SIZE; j++)
         {
-            if (j%16 == 0)
+            // Print 16 numbers in a line.
+            if ((j & 0x0F) == 0)
             {
                 PRINTF("\r\n    ");
             }

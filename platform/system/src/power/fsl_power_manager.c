@@ -55,10 +55,8 @@
 #endif
 
 /* Maximum allowed clocks for VLPR mode */
-#if defined(POWER_VLPR_MCG_LITE)
-#define POWER_VLPR_MAX_CLK 2000000UL
-#else
 #define POWER_VLPR_MAX_CLK 4000000UL
+#if !defined(POWER_VLPR_MCG_LITE)
 #define POWER_VLPR_MCG_LITE 0
 #endif
 

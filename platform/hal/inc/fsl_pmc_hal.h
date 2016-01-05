@@ -250,7 +250,7 @@ static inline void PMC_HAL_ClearAckIsolation(PMC_Type * base)
  *
  * @param base  Base address for current PMC instance.
  * @return Regulation status
- *               0 - Regulator is in a stop regulation or in transition to/from it.
+ *               0 - Regulator is in a stop regulation or in transition to/from the regulation.
  *               1 - Regulator is in a run regulation.
  *
  */

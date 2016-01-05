@@ -67,34 +67,38 @@ void DMA_HAL_ConfigTransfer(
     config.linkType = kDmaChannelLinkDisable;
 
     /* Common configuration. */
-    DMA_HAL_SetAutoAlignCmd(base, channel, false);
-    DMA_HAL_SetCycleStealCmd(base, channel, true);
-    DMA_HAL_SetAsyncDmaRequestCmd(base, channel, false);
-    DMA_HAL_SetDisableRequestAfterDoneCmd(base, channel, true);
+    DMA_BWR_DCR_AA(base, channel, false);
+    DMA_BWR_DCR_CS(base, channel, true);
+    DMA_BWR_DCR_EADREQ(base, channel, false);
+    DMA_BWR_DCR_D_REQ(base, channel, true);
     DMA_HAL_SetChanLink(base, channel, &config);
 
-    DMA_HAL_SetIntCmd(base, channel, true);
-    DMA_HAL_SetSourceAddr(base, channel, sourceAddr);
-    DMA_HAL_SetDestAddr(base, channel, destAddr);
-    DMA_HAL_SetSourceModulo(base, channel, kDmaModuloDisable);
-    DMA_HAL_SetDestModulo(base, channel, kDmaModuloDisable);
-    DMA_HAL_SetSourceTransferSize(base, channel, size);
-    DMA_HAL_SetDestTransferSize(base, channel, size);
-    DMA_HAL_SetTransferCount(base, channel, length);
+    DMA_BWR_DCR_EINT(base, channel, true);
+    DMA_WR_SAR(base, channel, sourceAddr);
+    DMA_WR_DAR(base, channel, destAddr);
+    DMA_BWR_DCR_SMOD(base, channel, kDmaModuloDisable);
+    DMA_BWR_DCR_DMOD(base, channel, kDmaModuloDisable);
+    DMA_BWR_DCR_SSIZE(base, channel, size);
+    DMA_BWR_DCR_DSIZE(base, channel, size);
+    DMA_BWR_DSR_BCR_BCR(base, channel, length);
 
     switch (type)
     {
       case kDmaMemoryToPeripheral:
-          DMA_HAL_SetSourceIncrementCmd(base, channel, true);
-          DMA_HAL_SetDestIncrementCmd(base, channel, false);
+          DMA_BWR_DCR_SINC(base, channel, true);
+          DMA_BWR_DCR_DINC(base, channel, false);
           break;
       case kDmaPeripheralToMemory:
-          DMA_HAL_SetSourceIncrementCmd(base, channel, false);
-          DMA_HAL_SetDestIncrementCmd(base, channel, true);
+          DMA_BWR_DCR_SINC(base, channel, false);
+          DMA_BWR_DCR_DINC(base, channel, true);
           break;
       case kDmaMemoryToMemory:
-          DMA_HAL_SetSourceIncrementCmd(base, channel, true);
-          DMA_HAL_SetDestIncrementCmd(base, channel, true);
+          DMA_BWR_DCR_SINC(base, channel, true);
+          DMA_BWR_DCR_DINC(base, channel, true);
+          break;
+      case kDmaPeripheralToPeripheral:
+          DMA_BWR_DCR_SINC(base, channel, false);
+          DMA_BWR_DCR_DINC(base, channel, false);
           break;
       default:
           break;

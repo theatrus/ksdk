@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ksdk:manifest format_version="1.2" xmlns:ksdk="http://freescale.com/ksdk/1.2/ksdk_manifest.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://freescale.com/ksdk/1.2/ksdk_manifest.xsd http://freescale.com/ksdk/1.2/ksdk_manifest.xsd">
+  <!--This file is designed to identify uCOSIII RTOS in Kinetis SDK release. -->
+  <components>
+    <component name="uCOSIII" type="os" api_version="1.0.0">
+      <!-- \uCOSIII\src\config -->
+      <!-- source path="rtos/uCOSIII/src/config" type="src">
+        <files mask="*.c"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/config" type="c_include">
+        <files mask="*.h"/>
+      </source -->
+      <!-- \uCOSIII\src\uC-CPU -->
+      <source path="rtos/uCOSIII/src/uC-CPU" type="src">
+        <files mask="*.c"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/uC-CPU" type="c_include">
+        <files mask="*.h"/>
+      </source>      
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M0/GNU" type="src" core="cm0plus" compiler="gcc">
+        <files mask="*.S"/>
+        <files mask="*.c"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M0/GNU" type="c_include" core="cm0plus" compiler="gcc">
+        <files mask="*.h"/>
+      </source>             
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M0/IAR" type="src" core="cm0plus" compiler="iar">
+        <files mask="*.asm"/>
+        <files mask="*.c"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M0/IAR" type="c_include" core="cm0plus" compiler="iar">
+        <files mask="*.h"/>
+      </source>               
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M0/RealView" type="src" core="cm0plus" compiler="arm">
+        <files mask="*.s"/>
+        <files mask="*.c"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M0/RealView" type="c_include" core="cm0plus" compiler="arm">
+        <files mask="*.h"/>
+      </source>      
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M4/GNU" type="src" core="cm4" compiler="gcc">
+        <files mask="*.S"/>
+        <files mask="*.c"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M4/GNU" type="c_include" core="cm4" compiler="gcc">
+        <files mask="*.h"/>
+      </source>       
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M4/IAR" type="src" core="cm4" compiler="iar">
+        <files mask="*.asm"/>
+        <files mask="*.c"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M4/IAR" type="c_include" core="cm4" compiler="iar">
+        <files mask="*.h"/>
+      </source>      
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M4/RealView" type="src" core="cm4" compiler="arm">
+        <files mask="*.s"/>
+        <files mask="*.c"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/uC-CPU/ARM-Cortex-M4/RealView" type="c_include" core="cm4" compiler="arm">
+        <files mask="*.h"/>
+      </source>                  
+      <!-- \uCOSIII\src\uC-LIB\ -->
+      <source path="rtos/uCOSIII/src/uC-LIB" type="src">
+        <files mask="*.c"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/uC-LIB" type="c_include">
+        <files mask="*.h"/>
+      </source>       
+        <!-- Cortex M4 -->
+      <source path="rtos/uCOSIII/src/uC-LIB/Ports/ARM-Cortex-M4/GNU" type="src" core="cm4" compiler="gcc" variant="MemCopyOptimization">
+        <files mask="*.s"/>
+      </source>    
+      <source path="rtos/uCOSIII/src/uC-LIB/Ports/ARM-Cortex-M4/IAR" type="src" core="cm4" compiler="iar" variant="MemCopyOptimization">
+        <files mask="*.asm"/>
+      </source>   
+      <source path="rtos/uCOSIII/src/uC-LIB/Ports/ARM-Cortex-M4/RealView" type="src" core="cm4" compiler="arm" variant="MemCopyOptimization">
+        <files mask="*.s"/>
+      </source>        
+      <!-- uCOSIII\src\uCOS-III\Ports\ -->
+        <!-- Cortex M0 -->
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M0/Generic/GNU" type="src" core="cm0plus" compiler="gcc">
+        <files mask="*.S"/>
+        <files mask="*.c"/>
+      </source>
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M0/Generic/GNU" type="c_include" core="cm0plus" compiler="gcc">
+        <files mask="*.h"/>
+      </source>        
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M0/Generic/IAR" type="src" core="cm0plus" compiler="iar">
+        <files mask="*.asm"/>
+        <files mask="*.c"/>
+      </source>
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M0/Generic/IAR" type="c_include" core="cm0plus" compiler="iar">
+        <files mask="*.h"/>
+      </source>         
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M0/Generic/RealView" type="src" core="cm0plus" compiler="arm">
+        <files mask="*.s"/>
+        <files mask="*.c"/>
+      </source>  
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M0/Generic/RealView" type="c_include" core="cm0plus" compiler="arm">
+        <files mask="*.h"/>
+      </source>       
+        <!-- Cortex M4 -->
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M4/Generic/GNU" type="src" core="cm4" compiler="gcc">
+        <files mask="*.S"/>
+        <files mask="*.c"/>
+      </source>
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M4/Generic/GNU" type="c_include" core="cm4" compiler="gcc">
+        <files mask="*.h"/>
+      </source>       
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M4/Generic/IAR" type="src" core="cm4" compiler="iar">
+        <files mask="*.asm"/>
+        <files mask="*.c"/>
+      </source>
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M4/Generic/IAR" type="c_include" core="cm4" compiler="iar">
+        <files mask="*.h"/>
+      </source>      
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M4/Generic/RealView" type="src" core="cm4" compiler="arm">
+        <files mask="*.s"/>
+        <files mask="*.c"/>
+      </source>
+      <source path="rtos/uCOSIII/src/uCOS-III/Ports/ARM-Cortex-M4/Generic/RealView" type="c_include" core="cm4" compiler="arm">
+        <files mask="*.h"/>
+      </source>      
+      <!-- uCOSIII\src\uCOS-III\Source\ -->
+      <source path="rtos/uCOSIII/src/uCOS-III/Source" type="src">
+        <files mask="*.c"/>
+      </source>
+      <source path="rtos/uCOSIII/src/uCOS-III/Source" type="c_include">
+        <files mask="*.h"/>
+      </source>      
+    </component>
+  </components>
+</ksdk:manifest>

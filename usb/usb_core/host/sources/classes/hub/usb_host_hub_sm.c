@@ -45,15 +45,9 @@
 #define USB_HUB_EVENT_CTRL           (0x01)
 #define USB_HUB_EVENT_DELETE         (0x02)
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)          /* USB stack running on SDK */
 #if !(USE_RTOS)
 #define USB_HUB_TASK_ADDRESS                usb_hub_task
 #else 
-#define USB_HUB_TASK_ADDRESS              usb_hub_task_stun
-#endif
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)        /* USB stack running on BM  */
-#define USB_HUB_TASK_ADDRESS              usb_hub_task
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)       /* USB stack running on MQX */  
 #define USB_HUB_TASK_ADDRESS              usb_hub_task_stun
 #endif
 
@@ -313,7 +307,7 @@ static void usb_hub_task(void* param)
  *  Comments       :
  *        KHCI task
  *END*-----------------------------------------------------------------*/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (USE_RTOS))) 
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (USE_RTOS))
 static void usb_hub_task_stun(void* hub_instance)
 {
     while(1)
@@ -1041,23 +1035,6 @@ usb_status status
             {
                 if((1 << PORT_CONNECTION) & hub_port_handle->status)
                 {
-                    /*
-                     if ((usb_host_ptr->hub_handle != NULL) && (usb_host_ptr->hub_handle != hub_instance))
-                     {
-                     hub_port_handle->port_reset = HUB_PORT_RESET_TIMES;
-                     hub_port_handle->port_sm_state = HUB_PORT_WAIT_C_PORT_CONNECTION;
-                     if ((hub_instance->in_control < 1) && (hub_instance->in_recv < 1))
-                     {
-                     usb_host_hub_get_bitmap(hub_instance, &hub_com);
-                     }
-                     break;
-                     }
-                     else
-                     {
-                     usb_host_ptr->hub_handle = hub_instance;
-                     hub_port_handle->port_sm_state = HUB_PORT_DEAL_C_PORT_CONNECTION;
-                     }
-                     */
                     hub_port_handle->port_sm_state = HUB_PORT_DEAL_C_PORT_CONNECTION;
                 }
                 else

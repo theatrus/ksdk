@@ -108,21 +108,18 @@ void BOARD_InitOsc0(void)
 /* Function to initialize RTC external clock base on board configuration. */
 void BOARD_InitRtcOsc(void)
 {
-#if ((OSC0_XTAL_FREQ != 32768U) && (RTC_OSC_ENABLE_CONFIG))
-#error Set RTC_OSC_ENABLE_CONFIG will override OSC0 configuration and OSC0 must be 32k.
-#endif
-    rtc_osc_user_config_t rtcOscConfig =
-    {
-        .freq                = RTC_XTAL_FREQ,
-        .enableCapacitor2p   = RTC_SC2P_ENABLE_CONFIG,
-        .enableCapacitor4p   = RTC_SC4P_ENABLE_CONFIG,
-        .enableCapacitor8p   = RTC_SC8P_ENABLE_CONFIG,
-        .enableCapacitor16p  = RTC_SC16P_ENABLE_CONFIG,
-        .enableOsc           = RTC_OSC_ENABLE_CONFIG,
-        .enableClockOutput   = RTC_CLK_OUTPUT_ENABLE_CONFIG,
-    };
+    g_xtalRtcClkFreq = RTC_XTAL_FREQ; /* External 32K fed in through RTC_CLKIN */
+}
 
-    CLOCK_SYS_RtcOscInit(0U, &rtcOscConfig);
+static void CLOCK_SetBootConfig(clock_manager_user_config_t const* config)
+{
+    CLOCK_SYS_SetSimConfigration(&config->simConfig);
+
+    CLOCK_SYS_SetOscerConfigration(0, &config->oscerConfig);
+
+    CLOCK_SYS_SetMcgliteMode(&config->mcgliteConfig);
+
+    SystemCoreClock = CORE_CLOCK_FREQ;
 }
 
 /* Initialize clock. */
@@ -149,9 +146,9 @@ void BOARD_ClockInit(void)
 
     /* Set system clock configuration. */
 #if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigVlpr);
+    CLOCK_SetBootConfig(&g_defaultClockConfigVlpr);
 #else
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigRun);
+    CLOCK_SetBootConfig(&g_defaultClockConfigRun);
 #endif
 }
 
@@ -173,6 +170,36 @@ void NMI_Handler(void)
 {
     /* Disable NMI pin. */
     PORT_HAL_SetMuxMode(NMI_PORT, NMI_PIN, kPortMuxAsGpio);
+}
+/******************************************************************************
+ *
+ *   @name      usb_device_board_init
+ *
+ *   @brief     This function is to handle board-specified initialization
+ *
+ *   @param     controller_id:        refer to CONTROLLER_INDEX defined in usb_misc.h
+ *                                    "0" stands for USB_CONTROLLER_KHCI_0.
+ *   @return    status
+ *                                    0 : successful
+ *                                    1 : failed
+ **
+ *****************************************************************************/
+uint8_t usb_device_board_init(uint8_t controller_id)
+{
+    int8_t ret = 0;
+
+    if (0 == controller_id)
+    {
+        /* TO DO */
+        /*add board initialization code if have*/
+    }
+    else
+    {
+        ret = 1;
+    }
+
+    return ret;
+
 }
 
 /*******************************************************************************

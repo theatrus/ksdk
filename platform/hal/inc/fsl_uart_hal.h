@@ -209,7 +209,7 @@ typedef enum _uart_iso7816_anack_config{
 } uart_iso7816_anack_config_t;
 
 /*!
- * @brief UART ISO7816 Initital Character detection.
+ * @brief UART ISO7816 Initial Character detection.
  *
  * This provides constants for the UART ISO7816 module Initial generation.
  */
@@ -224,27 +224,27 @@ typedef enum _uart_iso7816_initd_config{
  * This provides constants for the UART status flags for use in the UART functions.
  */
 typedef enum _uart_status_flag {
-    kUartTxDataRegEmpty = 0U << UART_SHIFT | UART_S1_TDRE_SHIFT, /*!< Tx data register empty flag, sets when Tx buffer is empty */
+    kUartTxDataRegEmpty = 0U << UART_SHIFT | UART_S1_TDRE_SHIFT, /*!< Transmit data register empty flag, sets when transmit buffer is empty */
     kUartTxComplete     = 0U << UART_SHIFT | UART_S1_TC_SHIFT,   /*!< Transmission complete flag, sets when transmission activity complete */
-    kUartRxDataRegFull  = 0U << UART_SHIFT | UART_S1_RDRF_SHIFT, /*!< Rx data register full flag, sets when the receive data buffer is full */
+    kUartRxDataRegFull  = 0U << UART_SHIFT | UART_S1_RDRF_SHIFT, /*!< Receive data register full flag, sets when the receive data buffer is full */
     kUartIdleLineDetect = 0U << UART_SHIFT | UART_S1_IDLE_SHIFT, /*!< Idle line detect flag, sets when idle line detected */
-    kUartRxOverrun      = 0U << UART_SHIFT | UART_S1_OR_SHIFT,   /*!< Rx Overrun, sets when new data is received before data is read from receive register */
-    kUartNoiseDetect    = 0U << UART_SHIFT | UART_S1_NF_SHIFT,   /*!< Rx takes 3 samples of each received bit. If any of these samples differ, noise flag sets */
+    kUartRxOverrun      = 0U << UART_SHIFT | UART_S1_OR_SHIFT,   /*!< Receive Overrun, sets when new data is received before data is read from receive register */
+    kUartNoiseDetect    = 0U << UART_SHIFT | UART_S1_NF_SHIFT,   /*!< Receive takes 3 samples of each received bit. If any of these samples differ, noise flag sets */
     kUartFrameErr       = 0U << UART_SHIFT | UART_S1_FE_SHIFT,   /*!< Frame error flag, sets if logic 0 was detected where stop bit expected */
     kUartParityErr      = 0U << UART_SHIFT | UART_S1_PF_SHIFT,   /*!< If parity enabled, sets upon parity error detection */
 #if FSL_FEATURE_UART_HAS_LIN_BREAK_DETECT
     kUartLineBreakDetect    = 1U << UART_SHIFT | UART_S2_LBKDIF_SHIFT,  /*!< LIN break detect interrupt flag, sets when LIN break char detected and LIN circuit enabled */
 #endif
-    kUartRxActiveEdgeDetect = 1U << UART_SHIFT | UART_S2_RXEDGIF_SHIFT, /*!< Rx pin active edge interrupt flag, sets when active edge detected */
+    kUartRxActiveEdgeDetect = 1U << UART_SHIFT | UART_S2_RXEDGIF_SHIFT, /*!< Receive pin active edge interrupt flag, sets when active edge detected */
     kUartRxActive           = 1U << UART_SHIFT | UART_S2_RAF_SHIFT,     /*!< Receiver Active Flag (RAF), sets at beginning of valid start bit */
 #if FSL_FEATURE_UART_HAS_EXTENDED_DATA_REGISTER_FLAGS
     kUartNoiseInCurrentWord     = 2U << UART_SHIFT | UART_ED_NOISY_SHIFT,   /*!< NOISY bit, sets if noise detected in current data word */
     kUartParityErrInCurrentWord = 2U << UART_SHIFT | UART_ED_PARITYE_SHIFT, /*!< PARITYE bit, sets if noise detected in current data word */
 #endif
 #if FSL_FEATURE_UART_HAS_FIFO
-    kUartTxBuffEmpty     = 3U << UART_SHIFT | UART_SFIFO_TXEMPT_SHIFT, /*!< TXEMPT bit, sets if Tx buffer is empty */
-    kUartRxBuffEmpty     = 3U << UART_SHIFT | UART_SFIFO_RXEMPT_SHIFT, /*!< RXEMPT bit, sets if Rx buffer is empty */
-    kUartTxBuffOverflow  = 3U << UART_SHIFT | UART_SFIFO_TXOF_SHIFT,   /*!< TXOF bit, sets if Tx buffer overflow occurred */
+    kUartTxBuffEmpty     = 3U << UART_SHIFT | UART_SFIFO_TXEMPT_SHIFT, /*!< TXEMPT bit, sets if transmit buffer is empty */
+    kUartRxBuffEmpty     = 3U << UART_SHIFT | UART_SFIFO_RXEMPT_SHIFT, /*!< RXEMPT bit, sets if receive buffer is empty */
+    kUartTxBuffOverflow  = 3U << UART_SHIFT | UART_SFIFO_TXOF_SHIFT,   /*!< TXOF bit, sets if transmit buffer overflow occurred */
     kUartRxBuffUnderflow = 3U << UART_SHIFT | UART_SFIFO_RXUF_SHIFT,   /*!< RXUF bit, sets if receive buffer underflow occurred */
 #endif
 } uart_status_flag_t;
@@ -258,7 +258,7 @@ typedef enum _uart_interrupt {
 #if FSL_FEATURE_UART_HAS_LIN_BREAK_DETECT
     kUartIntLinBreakDetect  = 0U << UART_SHIFT | UART_BDH_LBKDIE_SHIFT,  /*!< LIN break detect. */
 #endif
-    kUartIntRxActiveEdge    = 0U << UART_SHIFT | UART_BDH_RXEDGIE_SHIFT, /*!< RX Active Edge. */
+    kUartIntRxActiveEdge    = 0U << UART_SHIFT | UART_BDH_RXEDGIE_SHIFT, /*!< Receive Active Edge. */
     kUartIntTxDataRegEmpty  = 1U << UART_SHIFT | UART_C2_TIE_SHIFT,      /*!< Transmit data register empty. */
     kUartIntTxComplete      = 1U << UART_SHIFT | UART_C2_TCIE_SHIFT,     /*!< Transmission complete. */
     kUartIntRxDataRegFull   = 1U << UART_SHIFT | UART_C2_RIE_SHIFT,      /*!< Receiver data register full. */
@@ -268,18 +268,18 @@ typedef enum _uart_interrupt {
     kUartIntFrameErrFlag    = 2U << UART_SHIFT | UART_C3_FEIE_SHIFT,     /*!< Framing error flag. */
     kUartIntParityErrFlag   = 2U << UART_SHIFT | UART_C3_PEIE_SHIFT,     /*!< Parity error flag. */
 #if FSL_FEATURE_UART_HAS_FIFO
-    kUartIntTxFifoOverflow  = 3U << UART_SHIFT | UART_CFIFO_TXOFE_SHIFT, /*!< TX FIFO Overflow. */
-    kUartIntRxFifoUnderflow = 3U << UART_SHIFT | UART_CFIFO_RXUFE_SHIFT, /*!< RX FIFO Underflow. */
+    kUartIntTxFifoOverflow  = 3U << UART_SHIFT | UART_CFIFO_TXOFE_SHIFT, /*!< Transmit FIFO Overflow. */
+    kUartIntRxFifoUnderflow = 3U << UART_SHIFT | UART_CFIFO_RXUFE_SHIFT, /*!< Receive FIFO Underflow. */
 #endif
 } uart_interrupt_t;
 
 /*!
- * @brief UART ISO7816 specific interrupt configuration.
+ * @brief UART ISO7816-specific interrupt configuration.
  *
- * This enum contains the settings for all of the UART ISO7816 feature specfic interrupt configurations.
+ * This enumeration contains the settings for all of the UART ISO7816 feature-specific interrupt configurations.
  */
 typedef enum _uart_iso7816_interrupt {
-    kUartIntIso7816RxThreasholdExceeded = 0U,   /*!< Receive Threashold Exceeded. */
+    kUartIntIso7816RxThreasholdExceeded = 0U,   /*!< Receive Threshold Exceeded. */
     kUartIntIso7816TxThresholdExceeded  = 1U,   /*!< TransmitThresholdExceeded. */
     kUartIntIso7816GuardTimerViolated   = 2U,   /*!< Guard Timer Violated. */
     kUartIntIso7816AtrDurationTimer     = 3U,   /*!< ATR Duration Timer. */
@@ -408,7 +408,7 @@ uart_status_t UART_HAL_SetBaudRate(UART_Type * base, uint32_t sourceClockInHz, u
  *
  * This function allows the user to program the baud rate divisor directly in situations
  * where the divisor value is known. In this case, the user may not want to call the
- * UART_HAL_SetBaudRate() function, as the divisor is already known.
+ * UART_HAL_SetBaudRate() function, because the divisor is already known.
  *
  * @param   base UART module base pointer.
  * @param   baudRateDivisor The baud rate modulo division "SBR" value.
@@ -482,10 +482,10 @@ static inline void UART_HAL_SetStopBitCount(UART_Type * base, uart_stop_bit_coun
 #endif
 
 /*!
- * @brief  Get UART tx/rx data register address.
+ * @brief  Get UART transmit/receive data register address.
  *
  * @param   base UART module base pointer.
- * @return  UART tx/rx data register address.
+ * @return  UART transmit/receive data register address.
  */
 static inline uint32_t UART_HAL_GetDataRegAddr(UART_Type * base)
 {
@@ -519,7 +519,7 @@ bool UART_HAL_GetIntMode(UART_Type * base, uart_interrupt_t interrupt);
 
 #if FSL_FEATURE_UART_HAS_DMA_SELECT
 /*!
- * @brief  Enable or disable UART DMA request for Transmitter.
+ * @brief  Enables or disables the UART DMA request for Transmitter.
  *
  * This function allows the user to configure the receive data register full
  * flag to generate a DMA request.
@@ -549,7 +549,7 @@ static inline bool UART_HAL_GetTxDmaCmd(UART_Type * base)
 }
 
 /*!
- * @brief  Enable or disable UART DMA request for Receiver.
+ * @brief  Enables or disables UART DMA request for Receiver.
  *
  * This function allows the user to configure the receive data register full
  * flag to generate a DMA request.
@@ -619,7 +619,7 @@ void  UART_HAL_Getchar(UART_Type * base, uint8_t *readData);
 void  UART_HAL_Getchar9(UART_Type * base, uint16_t *readData);
 
 /*!
- * @brief Send out multiple bytes of data using polling method.
+ * @brief Sends out multiple bytes of data using polling method.
  *
  * This function only supports 8-bit transaction.
  *
@@ -630,7 +630,7 @@ void  UART_HAL_Getchar9(UART_Type * base, uint16_t *readData);
 void UART_HAL_SendDataPolling(UART_Type * base, const uint8_t *txBuff, uint32_t txSize);
 
 /*!
- * @brief Receive multiple bytes of data using polling method.
+ * @brief Receives multiple bytes of data using polling method.
  *
  * This function only supports 8-bit transaction.
  *
@@ -760,7 +760,7 @@ uart_status_t UART_HAL_ClearStatusFlag(UART_Type * base, uart_status_flag_t stat
 uart_status_t UART_HAL_SetTxFifoCmd(UART_Type * base, bool enable);
 
 /*!
- * @brief  Enables or disable the UART receive FIFO.
+ * @brief  Enables or disables the UART receive FIFO.
  *
  * This function allows the user to enable or disable the UART receive FIFO.
  * It is required that the transmitter/receiver be disabled before calling this function
@@ -1031,7 +1031,7 @@ static inline void UART_HAL_SetTransmitterDir(UART_Type * base, uart_singlewire_
  * NOTE: RWU should only be set with C1[WAKE] = 0 (wakeup on idle) if the channel is currently
  * not idle.
  * This can be determined by the S2[RAF] flag. If set to wake up FROM an IDLE event and the channel
- * is already idle, it is possible that the UART will discard data because data must be received
+ * is already idle, it is possible that the UART discards data because data must be received
  * (or a LIN break detect) after an IDLE is detected before IDLE is allowed to be reasserted.
  *
  * @param base UART module base pointer.
@@ -1102,13 +1102,13 @@ static inline uart_wakeup_method_t UART_HAL_GetReceiverWakeupMethod(UART_Type * 
  *
  * This function allows the user to configure the UART idle-line detect operation. There are two
  * separate operations for the user to configure, the idle line bit-count start and the receive
- * wake up affect on IDLE status bit. The user will pass in a structure of type
+ * wake up affect on IDLE status bit. The user passes in a structure of type
  * uart_idle_line_config_t.
  *
  * @param   base UART module base pointer.
  * @param   idleLine Idle bit count start: 0 - after start bit (default), 1 - after stop bit
  * @param   rxWakeIdleDetect Receiver Wake Up Idle Detect. IDLE status bit operation during receive
- *          standby. Controls whether idle character that wakes up receiver will also set IDLE status
+ *          standby. Controls whether idle character that wakes up receiver also sets IDLE status
  *          bit. 0 - IDLE status bit doesn't get set (default), 1 - IDLE status bit gets set
  */
 void UART_HAL_ConfigIdleLineDetect(UART_Type * base, uint8_t idleLine, uint8_t rxWakeIdleDetect);
@@ -1160,8 +1160,8 @@ static inline void UART_HAL_SetBreakCharDetectLength(UART_Type * base, uart_brea
  * @brief  Configures the UART transmit send break character operation.
  *
  * This function allows the user to queue a UART break character to send.  If true is passed into
- * the function, then a break character is queued for transmission.  A break character will
- * continuously be queued until this function is called again when a false is passed into this
+ * the function, then a break character is queued for transmission.  A break character is
+ * continuously  queued until this function is called again when a false is passed into this
  * function.
  *
  * @param   base UART module base pointer.
@@ -1345,7 +1345,7 @@ static inline bool UART_HAL_IsISO7816Enabled(UART_Type * base)
 }
 
 /*!
- * @brief  Enables/Disables UART ISO7816 module ONACK generation feature.
+ * @brief  Enables/disables UART ISO7816 module ONACK generation feature.
  *
  * This function enables/disables the ONACK generation in ISO7816 module in the UART for
  * a particular module base.
@@ -1374,7 +1374,7 @@ static inline bool UART_HAL_Is6NackOnOverflowEnabled(UART_Type * base)
 }
 
 /*!
- * @brief  Enables/Disables UART ISO7816 module ANACK generation feature.
+ * @brief  Enables/disables UART ISO7816 module ANACK generation feature.
  *
  * This function enables the ANACK generation in ISO7816 module in the UART for
  * a particular module base.
@@ -1403,9 +1403,9 @@ static inline bool UART_HAL_Is6NackOnOnErrorEnabled(UART_Type * base)
 }
 
 /*!
- * @brief  Enables/Disables UART ISO7816 module Initail character detection feature.
+ * @brief  Enables/Disables UART ISO7816 module initial character detection feature.
  *
- * This function enables/disables the Initail character detection in ISO7816 module in the UART for
+ * This function enables/disables the initial character detection in ISO7816 module in the UART for
  * a particular module base.
  *
  * @param base UART module base pointer.
@@ -1418,14 +1418,14 @@ static inline void UART_HAL_ConfigureInitialCharacterDetection(UART_Type * base,
 }
 
 /*!
- * @brief Gets the UART module ISO7816 module Initail character detection feature enabled/disabled
+ * @brief Gets the UART module ISO7816 module initial character detection feature enabled/disabled
  * configuration setting.
  *
- * This function allows the user to get the setting of the UART ISO7816 Initail character detection
+ * This function allows the user to get the setting of the UART ISO7816 initial character detection
  * feature settings.
  *
  * @param   base UART module base pointer.
- * @return The state of UART module ISO7816 Initail character detection feature enable(true)/disable(false)
+ * @return The state of UART module ISO7816 initial character detection feature enable(true)/disable(false)
  * setting.
  *
  */
@@ -1435,7 +1435,7 @@ static inline bool UART_HAL_IsInitialCharacterDetectionEnabled(UART_Type * base)
 }
 
 /*!
- * @brief  Sets treansfer protocol type for UART ISO7816 module.
+ * @brief  Sets transfer protocol type for UART ISO7816 module.
  *
  * This function sets the transfer protocol type in ISO7816 module in the UART for
  * a particular module base.
@@ -1449,7 +1449,7 @@ static inline void UART_HAL_SetTransferProtocolType(UART_Type * base, uart_iso78
 }
 
 /*!
- * @brief  Gets treansfer protocol type for UART ISO7816 module.
+ * @brief  Gets transfer protocol type for UART ISO7816 module.
  *
  * This function gets the transfer protocol type in ISO7816 module in the UART for
  * a particular module base.
@@ -1463,45 +1463,45 @@ static inline uart_iso7816_transfer_protocoltype_t UART_HAL_GetTransferProtocolT
 }
 
 /*!
- * @brief Configures the UART module ISO7816 feature specific interrupts to
+ * @brief Configures the UART module ISO7816 feature-specific interrupts to
  * enable/disable various interrupt sources.
  *
  * @param   base UART module base pointer.
- * @param   interrupt UART ISO7816 feature specific interrupt configuration data.
+ * @param   interrupt UART ISO7816 feature-specific interrupt configuration data.
  * @param   enable   true: enable, false: disable.
  */
 void UART_HAL_SetISO7816IntMode(UART_Type * base, uart_iso7816_interrupt_t interrupt, bool enable);
 
 /*!
- * @brief Returns whether the UART module ISO7816 feature specific interrupts
+ * @brief Returns whether the UART module ISO7816 feature-specific interrupts
  * is enabled/disabled.
  *
  * @param   base UART module base pointer.
- * @param   interrupt UART ISO7816 feature specific interrupt configuration data.
+ * @param   interrupt UART ISO7816 feature-specific interrupt configuration data.
  * @return  true: enable, false: disable.
  */
 bool UART_HAL_GetISO7816IntMode(UART_Type * base, uart_iso7816_interrupt_t interrupt);
 
 /*!
- * @brief Clears the UART module ISO7816 feature specific interrupts status bits
+ * @brief Clears the UART module ISO7816 feature-specific interrupts status bits
  *
  * @param   base UART module base pointer.
- * @param   interrupt UART ISO7816 feature specific interrupt configuration data.
+ * @param   interrupt UART ISO7816 feature-specific interrupt configuration data.
  */
 void UART_HAL_ClearISO7816InterruptStatus(UART_Type * base, uart_iso7816_interrupt_t interrupt);
 
 /*!
- * @brief Returns whether the UART module ISO7816 feature specific interrupt status
+ * @brief Returns whether the UART module ISO7816 feature-specific interrupt status
  * has been set or not.
  *
  * @param   base UART module base pointer.
- * @param   interrupt UART ISO7816 feature specific interrupt configuration data.
+ * @param   interrupt UART ISO7816 feature-specific interrupt configuration data.
  * @return  true, false.
  */
 bool UART_HAL_GetISO7816InterruptStatus(UART_Type * base, uart_iso7816_interrupt_t interrupt);
 
 /*!
- * @brief Sets the basic Elementaty Time Unit of UART instance in ISO7816 mode.
+ * @brief Sets the basic elementary Time Unit of UART instance in ISO7816 mode.
  *
  * @param   base UART module base pointer.
  * @param   sourceClockInHz Module source clock in Hz.
@@ -1513,21 +1513,21 @@ bool UART_HAL_GetISO7816InterruptStatus(UART_Type * base, uart_iso7816_interrupt
 uart_status_t UART_HAL_SetISO7816Etu(UART_Type * base, uint32_t sourceClockInHz, uint32_t sCClock, uint16_t Fi, uint8_t Di);
 
 /*!
- * @brief Resets UART ISO7816 specific Wait Timer
+ * @brief Resets UART ISO7816-specific Wait Timer
  *
  * @param   base UART module base pointer.
  */
 void UART_HAL_ResetISO7816WaitTimer(UART_Type * base);
 
 /*!
- * @brief Resets UART ISO7816 specific Character Wait Timer
+ * @brief Resets UART ISO7816-specific Character Wait Timer
  *
  * @param   base UART module base pointer.
  */
 void UART_HAL_ResetISO7816CharacterWaitTimer(UART_Type * base);
 
 /*!
- * @brief Resets UART ISO7816 specific Block Wait Timer
+ * @brief Resets UART ISO7816-specific Block Wait Timer
  *
  * @param   base UART module base pointer.
  */
@@ -1563,7 +1563,7 @@ static inline uint8_t UART_HAL_GetWaitTimeMultipllier(UART_Type * base)
 }
 
 /*!
- * @brief Resets UART ISO7816 specific Block Wait Timer
+ * @brief Resets UART ISO7816-specific Block Wait Timer
  *
  * @param base UART module base pointer.
  * @param mWtx Wait time multiplier.
@@ -1592,7 +1592,7 @@ static inline void UART_HAL_SetGuardBandInteger(UART_Type * base, uint8_t gtn)
  * a particular module base.
  *
  * @param base UART module base pointer.
- * @return
+ * @return Guard Band Integer value.
  */
 static inline uint8_t UART_HAL_GetGuardBandInteger(UART_Type * base)
 {

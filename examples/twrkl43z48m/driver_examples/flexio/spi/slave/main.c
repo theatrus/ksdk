@@ -38,24 +38,33 @@
 #include "fsl_flexio_spi_driver.h"
 #include "fsl_clock_manager.h"
 #include "fsl_debug_console.h"
+#if FSL_FEATURE_SOC_SPI_COUNT
 #include "fsl_spi_master_driver.h"
+#else
+#include "fsl_dspi_master_driver.h"
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Variables
 ///////////////////////////////////////////////////////////////////////////////
+#if defined TWR_K80F150M || defined TWR_K81F150M || defined FRDM_K82F
+#define COMM_SPI_MASTER          (0)
+#else
 #define COMM_SPI_MASTER          (1)
+#endif
 #define SPI_BAUDRATE           (200000U)           /*! Transfer baudrate - 200k */
 static uint32_t s_flexioInstance;
 flexio_spi_state_t slaveState;
-static uint8_t s_masterReadBuffer[20] = {0};
-static uint8_t s_slaveReadBuffer[20] = {0};
+#define BUF_LEN                 20
+static uint8_t s_masterReadBuffer[BUF_LEN] = {0};
+static uint8_t s_slaveReadBuffer[BUF_LEN] = {0};
 
-static uint8_t s_masterWriteBuffer[20] =
+static uint8_t s_masterWriteBuffer[BUF_LEN] =
 {
     "Standard SPI master"
 };
 
-static uint8_t s_slaveWriteBuffer[20] =
+static uint8_t s_slaveWriteBuffer[BUF_LEN] =
 {
     "FlexIO SPI slave"
 };
@@ -63,7 +72,7 @@ static uint8_t s_slaveWriteBuffer[20] =
 ////////////////////////////////////////////////////////////////////////////////
 // Code
 ////////////////////////////////////////////////////////////////////////////////
-static uint32_t spi_compare_sink_source(uint8_t *source, uint8_t *sink, uint16_t count)
+static bool spi_compare_sink_source(uint8_t *source, uint8_t *sink, uint16_t count)
 {
     uint16_t i;
     /* Comapre source and sink data*/
@@ -71,10 +80,10 @@ static uint32_t spi_compare_sink_source(uint8_t *source, uint8_t *sink, uint16_t
     {
         if (source[i] != sink[i])
         {
-            return -1;
+            return false;
         }
     }
-    return 0;
+    return true;
 }
 static void flexio_spi_reset_buffer(uint8_t *txBuff, uint32_t count)
 {
@@ -87,12 +96,17 @@ static void flexio_spi_reset_buffer(uint8_t *txBuff, uint32_t count)
 }
 static void master_slave_transfer_int(void)
 {
-    flexio_spi_reset_buffer(s_masterReadBuffer,20);
-    flexio_spi_reset_buffer(s_slaveReadBuffer,20);
-    FLEXIO_SPI_DRV_TransferData(&slaveState,s_slaveWriteBuffer,s_slaveReadBuffer,20);
+    flexio_spi_reset_buffer(s_masterReadBuffer,BUF_LEN);
+    flexio_spi_reset_buffer(s_slaveReadBuffer,BUF_LEN);
+    FLEXIO_SPI_DRV_TransferData(&slaveState,s_slaveWriteBuffer,s_slaveReadBuffer,BUF_LEN);
     FLEXIO_DRV_Start(s_flexioInstance);
-    SPI_DRV_MasterTransferBlocking(COMM_SPI_MASTER,NULL,s_masterWriteBuffer,s_masterReadBuffer,20,1000);
-    if((spi_compare_sink_source(s_masterWriteBuffer, s_slaveReadBuffer, 20))||(spi_compare_sink_source(s_slaveWriteBuffer, s_masterReadBuffer, 20)))
+#if FSL_FEATURE_SOC_SPI_COUNT
+    SPI_DRV_MasterTransferBlocking(COMM_SPI_MASTER,NULL,s_masterWriteBuffer,s_masterReadBuffer,BUF_LEN,1000);
+#else
+    DSPI_DRV_MasterTransferBlocking(COMM_SPI_MASTER,NULL,s_masterWriteBuffer,s_masterReadBuffer,BUF_LEN,1000);    
+#endif
+    if((spi_compare_sink_source(s_masterWriteBuffer, s_slaveReadBuffer, BUF_LEN) != true)
+        ||(spi_compare_sink_source(s_slaveWriteBuffer, s_masterReadBuffer, BUF_LEN) != true))
     {
        PRINTF("\r\nSPI master to FlexIO simulated SPI slave bidirectional transfer failed!!\r\n");
        return ;
@@ -101,12 +115,21 @@ static void master_slave_transfer_int(void)
 }
 static void master_slave_transfer_dma(void)
 {
-    flexio_spi_reset_buffer(s_masterReadBuffer,20);
-    flexio_spi_reset_buffer(s_slaveReadBuffer,20);
-    FLEXIO_SPI_DRV_DmaTransferData(&slaveState,s_slaveWriteBuffer,s_slaveReadBuffer,20);
+    flexio_spi_reset_buffer(s_masterReadBuffer,BUF_LEN);
+    flexio_spi_reset_buffer(s_slaveReadBuffer,BUF_LEN);
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+    FLEXIO_SPI_DRV_EdmaTransferData(&slaveState,s_slaveWriteBuffer,s_slaveReadBuffer,BUF_LEN);
+#else
+    FLEXIO_SPI_DRV_DmaTransferData(&slaveState,s_slaveWriteBuffer,s_slaveReadBuffer,20);    
+#endif
     FLEXIO_DRV_Start(s_flexioInstance);
-    SPI_DRV_MasterTransferBlocking(COMM_SPI_MASTER,NULL,s_masterWriteBuffer,s_masterReadBuffer,20,1000);
-    if((spi_compare_sink_source(s_masterWriteBuffer, s_slaveReadBuffer, 20))||(spi_compare_sink_source(s_slaveWriteBuffer, s_masterReadBuffer, 20)))
+#if FSL_FEATURE_SOC_SPI_COUNT
+    SPI_DRV_MasterTransferBlocking(COMM_SPI_MASTER,NULL,s_masterWriteBuffer,s_masterReadBuffer,BUF_LEN,1000);
+#else
+    DSPI_DRV_MasterTransferBlocking(COMM_SPI_MASTER,NULL,s_masterWriteBuffer,s_masterReadBuffer,BUF_LEN,1000);
+#endif
+    if((spi_compare_sink_source(s_masterWriteBuffer, s_slaveReadBuffer, BUF_LEN) != true)
+        ||(spi_compare_sink_source(s_slaveWriteBuffer, s_masterReadBuffer, BUF_LEN) != true))
     {
        PRINTF("\r\nSPI master to FlexIO simulated SPI slave DMA bidirectional transfer failed!!\r\n");
        return ;
@@ -116,7 +139,12 @@ static void master_slave_transfer_dma(void)
 int main(void)
 {
     s_flexioInstance = 0;
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+    edma_state_t         edmaState;
+    edma_user_config_t   edmaUserConfig;
+#else
     dma_state_t dmaState;
+#endif
     uint32_t calculatedBaudRate;
     flexio_user_config_t userConfig = 
     {
@@ -135,15 +163,32 @@ int main(void)
     slaveConfig.bitDirection = kFlexIOSpiMsbFirst;
     slaveConfig.dataSize = kFlexIOSpi8BitMode;
     slaveConfig.spiHwConfig.sdoPinIdx = 0;
+#if defined FRDM_K82F    
+    slaveConfig.spiHwConfig.sdiPinIdx = 2;
+#else
     slaveConfig.spiHwConfig.sdiPinIdx = 1;
+#endif    
+#if defined TWR_K80F150M || defined TWR_K81F150M || defined FRDM_K82F
+    slaveConfig.spiHwConfig.sclkPinIdx = 4;
+    slaveConfig.spiHwConfig.csnPinIdx = 5;
+    CLOCK_SYS_SetFlexioSrc(0,kClockFlexioSrcPllFllSelDiv);
+#else
     slaveConfig.spiHwConfig.sclkPinIdx = 2;
     slaveConfig.spiHwConfig.csnPinIdx = 3;
+#endif
     slaveConfig.spiHwConfig.shifterIdx[0] = 2;
     slaveConfig.spiHwConfig.shifterIdx[1] = 3;
     slaveConfig.spiHwConfig.timerIdx[0] = 2;
     /*Init FlexIO simulated SPI slave*/
+#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
+    edmaUserConfig.chnArbitration = kEDMAChnArbitrationRoundrobin;
+    edmaUserConfig.notHaltOnError = false;
+    EDMA_DRV_Init(&edmaState, &edmaUserConfig);
+#else
     DMA_DRV_Init(&dmaState);
+#endif
     FLEXIO_SPI_DRV_Init(s_flexioInstance,&slaveState,&slaveConfig); 
+#if FSL_FEATURE_SOC_SPI_COUNT
     /*Config SPI1 as SPI master*/
     spi_master_state_t spiMasterState;
     spi_master_user_config_t masterUserConfig =
@@ -162,12 +207,55 @@ int main(void)
     SPI_DRV_MasterConfigureBus(COMM_SPI_MASTER,
                                 &masterUserConfig,
                                 &calculatedBaudRate);
-    PRINTF("\n\r++++++++++++++++ FLEXIO SPI Send/Receive Example Start +++++++++++++++++\n\r");
-    PRINTF("\n\r1. SPI1 acts as master starts transfer with masterWriteBuff and masterReadBuff.\
+#else
+    dspi_status_t dspiResult;
+    dspi_master_state_t masterState;
+    dspi_device_t masterDevice;
+    dspi_master_user_config_t masterUserConfig = {
+        .isChipSelectContinuous     = true,
+        .isSckContinuous            = false,
+        .pcsPolarity                = kDspiPcs_ActiveLow,
+        .whichCtar                  = kDspiCtar0,
+        .whichPcs                   = kDspiPcs0
+    };
+ // Setup the configuration.
+    masterDevice.dataBusConfig.bitsPerFrame = 8;
+    masterDevice.dataBusConfig.clkPhase     = kDspiClockPhase_FirstEdge;
+    masterDevice.dataBusConfig.clkPolarity  = kDspiClockPolarity_ActiveHigh;
+    masterDevice.dataBusConfig.direction    = kDspiMsbFirst;
+
+    // Initialize master driver.
+    dspiResult = DSPI_DRV_MasterInit(COMM_SPI_MASTER,
+                                     &masterState,
+                                     &masterUserConfig);
+    if (dspiResult != kStatus_DSPI_Success)
+    {
+        PRINTF("\r\nERROR: Can not initialize master driver \r\n");
+        return -1;
+    }
+
+    // Configure baudrate.
+    masterDevice.bitsPerSec = 200000;
+    dspiResult = DSPI_DRV_MasterConfigureBus(COMM_SPI_MASTER,
+                                             &masterDevice,
+                                             &calculatedBaudRate);
+    if (dspiResult != kStatus_DSPI_Success)
+    {
+        PRINTF("\r\nERROR: failure in configuration bus\r\n");
+        return -1;
+    }
+    else
+    {
+        PRINTF("\r\n Transfer at baudrate %lu \r\n", calculatedBaudRate);
+    }
+    NVIC_SetPriority(g_dspiIrqId[COMM_SPI_MASTER],1);
+#endif
+    PRINTF("\r\n++++++++++++++++ FLEXIO SPI Send/Receive Example Start +++++++++++++++++\r\n");
+    PRINTF("\r\n1. SPI1 acts as master starts transfer with masterWriteBuff and masterReadBuff.\
             \r\n2. FlexIO simulated SPI slave also transfer with slaveWriteBuff and slaveReadBuff.\
             \r\n3. Compare masterWriteBuff and slaveReadBuff, slaveWriteBuff and masterReadBuff to see result.");
     PRINTF("\r\n============================================================\r\n");
-    PRINTF("\r\nPress any key to start transfer:\r\n\n");
+    PRINTF("\r\nPress any key to start transfer:\r\n\r\n");
     while(true)
     {
       GETCHAR();

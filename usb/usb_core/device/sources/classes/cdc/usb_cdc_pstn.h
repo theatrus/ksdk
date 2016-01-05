@@ -254,6 +254,26 @@
 /*Packets sent to the current group address. */
 #define NDIS_PACKET_TYPE_GROUP                  (0x1000)
 
+
+/*
+* Physical Medium Type definitions. Used with OID_GEN_PHYSICAL_MEDIUM.
+*/
+typedef enum _NDIS_PHYSICAL_MEDIUM
+{
+    NdisPhysicalMediumUnspecified,
+    NdisPhysicalMediumWirelessLan,
+    NdisPhysicalMediumCableModem,
+    NdisPhysicalMediumPhoneLine,
+    NdisPhysicalMediumPowerLine,
+    NdisPhysicalMediumDSL,      /* includes ADSL and UADSL (G.Lite) */
+    NdisPhysicalMediumFibreChannel,
+    NdisPhysicalMedium1394,
+    NdisPhysicalMediumWirelessWan,
+    NdisPhysicalMediumNative802_11,
+    NdisPhysicalMediumBluetooth,
+    NdisPhysicalMediumMax       /* Not a real physical type, defined as an upper-bound */
+} NDIS_PHYSICAL_MEDIUM;
+
 /***************************************************************
  * Object Identifiers used by NdisRequest Query/Set Information
  ***************************************************************/
@@ -319,6 +339,19 @@
 #define OID_802_3_XMIT_HEARTBEAT_FAILURE        0x01020205
 #define OID_802_3_XMIT_TIMES_CRS_LOST           0x01020206
 #define OID_802_3_XMIT_LATE_COLLISIONS          0x01020207
+
+/*
+*  Optional OIDs
+*/
+#define OID_GEN_VENDOR_DRIVER_VERSION           0x00010116
+#define OID_GEN_SUPPORTED_GUIDS                 0x00010117
+#define OID_GEN_NETWORK_LAYER_ADDRESSES         0x00010118  // Set only
+#define OID_GEN_TRANSPORT_HEADER_OFFSET         0x00010119  // Set only
+#define OID_GEN_MACHINE_NAME                    0x0001021A
+#define OID_GEN_RNDIS_CONFIG_PARAMETER          0x0001021B  // Set only
+#define OID_GEN_VLAN_ID                         0x0001021C
+#define OID_GEN_MEDIA_CAPABILITIES              0x00010201
+#define OID_GEN_PHYSICAL_MEDIUM                 0x00010202
 
 /****************************
  * NDIS Media Connect Status

@@ -37,10 +37,6 @@
 #include "usb_device_config.h"
 #include "usb.h"
 #include "usb_device_stack_interface.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#include <fio.h>
-#else
-#endif
 
 #include "virtual_com.h"
 #include "disk.h"
@@ -106,13 +102,10 @@ static uint8_t g_country_code[USB_MAX_SUPPORTED_INTERFACES][COMM_FEATURE_DATA_SI
 };
 static bool start_app = FALSE;
 static bool start_transactions = FALSE;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-static uint8_t *g_curr_recv_buf;
-static uint8_t *g_curr_send_buf;
-#else
+
 static uint8_t g_curr_recv_buf[DATA_BUFF_SIZE];
 static uint8_t g_curr_send_buf[DATA_BUFF_SIZE];
-#endif
+
 static uint32_t g_recv_size;
 static uint32_t g_send_size;
 /*****************************************************************************
@@ -319,10 +312,6 @@ uint8_t USB_Set_Country_Setting(uint32_t handle,
  *****************************************************************************/
 void cdc_vcom_preinit(void)
 {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    g_curr_recv_buf = (uint8_t *) OS_Mem_alloc_uncached_align(DATA_BUFF_SIZE, 32);
-    g_curr_send_buf = (uint8_t *) OS_Mem_alloc_uncached_align(DATA_BUFF_SIZE, 32);
-#endif
     g_recv_size = 0;
     g_send_size = 0;
 }

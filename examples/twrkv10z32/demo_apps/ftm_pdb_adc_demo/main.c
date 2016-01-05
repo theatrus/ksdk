@@ -89,7 +89,7 @@ uint8_t ADC_Calibration(ADC_Type* baseAddr);
 int main(void)
 {
     // Buffer used to hold the string to be transmitted */
-    char sourceBuff[43] = {"\r\nRun pdb trig adc with flextimer demo.\n\n\r"};
+    char sourceBuff[43] = {"\r\nRun pdb trig adc with flextimer demo.\r\n\r\n"};
     uint32_t i;
     uint16_t cnvvalue[6];
     adc16_converter_config_t adcUserConfig;
@@ -270,7 +270,7 @@ int main(void)
     while(1)
     {
         // Input any character to start demo
-        PRINTF("\r\nInput any character to start demo.\n\n\r");
+        PRINTF("\r\nInput any character to start demo.\r\n\r\n");
         GETCHAR();
         // Reset counter
         FTM_HAL_SetCounter(FTM0_BASE_PTR, 0);
@@ -288,7 +288,7 @@ int main(void)
         // Ouput ADC conversion result
         for(i=0;i<256;i++)
         {
-            PRINTF("\r\n%d, %d, %d, %d\n\r",u16Result0A[i],u16Result0B[i],u16Result1A[i],u16Result1B[i]);
+            PRINTF("\r\n%d, %d, %d, %d\r\n",u16Result0A[i],u16Result0B[i],u16Result1A[i],u16Result1B[i]);
         }
         // Clear data buffer
         for(i=0;i<256;i++)

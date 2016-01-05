@@ -97,7 +97,7 @@ int main(void)
     GPIO_DRV_Init(0, ledPins);
 
     // Init I2C module
-    I2C_DRV_MasterInit(BOARD_I2C_COMM_INSTANCE, &master);
+    I2C_DRV_MasterInit(BOARD_I2C_INSTANCE, &master);
 
     PRINTF("\r\n====== I2C Master ======\r\n\r\n");
 
@@ -120,7 +120,7 @@ int main(void)
         {
             cmdBuff[0] = i;
             returnValue = I2C_DRV_MasterReceiveDataBlocking(
-                                                       BOARD_I2C_COMM_INSTANCE,
+                                                       BOARD_I2C_INSTANCE,
                                                        &slave,
                                                        cmdBuff,
                                                        1,
@@ -152,7 +152,7 @@ int main(void)
             value = GETCHAR();
             PUTCHAR(value);
 
-            PRINTF("\n");
+            PRINTF("\r\n");
 
             index = (uint8_t)(indexChar - '0');
 
@@ -166,7 +166,7 @@ int main(void)
         sendBuff[0] = value;
 
         returnValue = I2C_DRV_MasterSendDataBlocking(
-                                                    BOARD_I2C_COMM_INSTANCE,
+                                                    BOARD_I2C_INSTANCE,
                                                     &slave,
                                                     cmdBuff,
                                                     1,

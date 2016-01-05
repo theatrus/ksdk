@@ -139,9 +139,6 @@ typedef struct usb_dev_data
 typedef struct usb_device_khci_data
 {
     uint8_t             setup_packet[16];
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    uint8_t             reserver1[16];
-#endif
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
     uint8_t             swap_buf[USBCFG_DEV_KHCI_SWAP_BUF_MAX];
 #endif

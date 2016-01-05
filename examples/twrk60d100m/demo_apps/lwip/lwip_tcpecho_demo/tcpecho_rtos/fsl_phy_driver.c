@@ -243,7 +243,7 @@ enet_status_t PHY_DRV_Autodiscover(uint32_t instance, uint32_t *phyAddr)
         return kStatus_ENET_InvalidInput;
     }
     
-    for (addrIdx = 0; addrIdx < kEnetPhyRegAll; addrIdx++)
+    for (addrIdx = 0; addrIdx <= ENET_PHY_MAX_ADDRESS; addrIdx++)
     {
         result = PHY_DRV_Read(instance, addrIdx, kEnetPhyId1, &data);
         if ((result == kStatus_ENET_Success) && (data != 0) && (data != 0xffff) )

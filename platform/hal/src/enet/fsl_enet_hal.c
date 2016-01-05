@@ -271,7 +271,7 @@ static void ENET_HAL_SetTxBuffDescriptors(ENET_Type * base, volatile enet_bd_str
     assert(txBuffSizeAlign >= kEnetMinBuffSize);
     /* Initialize transmit buffer descriptor rings start address*/
     ENET_WR_TDSR(base,(uint32_t)txBds);
-    /* Initialize receive and transmit buffer descriptors*/
+    /* Initialize transmit buffer descriptors*/
     ENET_HAL_InitTxBuffDescriptors(txBds, txBuffer, txBdNumber, txBuffSizeAlign);
 }
 
@@ -285,12 +285,12 @@ static void ENET_HAL_SetRxBuffDescriptors(ENET_Type * base, volatile enet_bd_str
 {
     /* max buffer size must larger than 256 to minimize bus usage*/
     assert(rxBuffSizeAlign >= kEnetMinBuffSize); 
-    /* Initialize transmit buffer descriptor rings start address*/
+    /* Initialize receive buffer descriptor rings start address*/
     ENET_WR_RDSR(base,(uint32_t)rxBds); 
 	
     ENET_WR_MRBR(base, (rxBuffSizeAlign & ENET_MRBR_R_BUF_SIZE_MASK));
 
-    /* Initialize receive and transmit buffer descriptors*/
+    /* Initialize receive buffer descriptors*/
     ENET_HAL_InitRxBuffDescriptors(rxBds, rxBuffer, rxBdNumber, rxBuffSizeAlign);
 }
 
@@ -600,47 +600,6 @@ void ENET_HAL_SetMulticastAddrHash(ENET_Type * base, uint32_t crcValue, enet_spe
     }
 }
 
-#if 0
-/*FUNCTION****************************************************************
- *
- * Function Name: ENET_HAL_SetUnicastAddrHash 
- * Description: Set a specific unicast address hash value to the mac register
- * To receive frames with the individual destination address.  
- *END*********************************************************************/
-static void ENET_HAL_SetUnicastAddrHash(ENET_Type * base, uint32_t crcValue, enet_special_address_filter_t mode)
-{
-    switch (mode)
-    {
-        case kEnetSpecialAddressInit:         /* Clear individual address register on ENET initialize */
-            ENET_WR_IALR(base,0);
-            ENET_WR_IAUR(base,0);			
-            break;
-        case kEnetSpecialAddressEnable:        /* Enable a special address*/
-            if (((crcValue >>31) & 1U) == 0)
-            {
-                ENET_SET_IALR(base,(1U << ((crcValue>>26)& kEnetHashValMask))); 
-            }
-            else
-            {
-                ENET_SET_IAUR(base,(1U << ((crcValue>>26)& kEnetHashValMask)));
-            }
-            break;
-        case kEnetSpecialAddressDisable:     /* Disable a special address*/
-            if (((crcValue >>31) & 1U) == 0)
-            {
-                ENET_CLR_IALR(base,(1U << ((crcValue>>26)& kEnetHashValMask)));
-            }
-            else
-            {
-                ENET_CLR_IAUR(base,(1U << ((crcValue>>26)& kEnetHashValMask))); 
-            }
-            break;
-        default:
-            break;
-    }
-}
-#endif
-
 /*FUNCTION****************************************************************
  *
  * Function Name: ENET_HAL_SetTxFifo
@@ -790,12 +749,12 @@ void ENET_HAL_SetTxBdBeforeSend(volatile enet_bd_struct_t *txBds, /*uint8_t *pac
 
     if (isTxtsCfged)
     {
-         /* Set receive and timestamp interrupt*/
+         /* Set transmit and time stamp interrupt*/
         txBds->controlExtend1 |= (kEnetTxBdTxInterrupt | kEnetTxBdTimeStamp);	
     }
     else
     {
-        /* Set receive interrupt*/
+        /* Set transmit interrupt*/
         txBds->controlExtend1 |= kEnetTxBdTxInterrupt;	
     }
 }

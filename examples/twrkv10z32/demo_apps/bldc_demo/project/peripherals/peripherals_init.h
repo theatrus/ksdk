@@ -23,11 +23,10 @@
 #include "gdflib.h"
 #include "gmclib.h"
 #include "MC33927.h"
-#include "MKV10Z7.h"
 #include "arm_cm0.h"
 #include "fsl_device_registers.h"
 #include "hwconfig.h"
-#include "fsl_sim_hal_MKV10Z7.h"
+#include "fsl_sim_hal.h"
 #include "fsl_clock_manager.h"
 #include "Fsl_mcg_hal.h"
 #include "fsl_adc16_hal.h"
@@ -38,6 +37,7 @@
 #include "fsl_dspi_hal.h"
 #include "fsl_uart_hal.h"
 #include "fsl_pdb_hal.h"
+#include "fsl_pdb_driver.h"
 
 /******************************************************************************
 * Local functions

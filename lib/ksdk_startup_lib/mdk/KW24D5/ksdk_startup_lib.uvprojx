@@ -12,7 +12,7 @@
       <ToolsetName>ARM-ADS</ToolsetName>
       <TargetOption>
         <TargetCommonOption>
-          <Device>MKW24D512VHA5</Device>
+          <Device>MKW24D512xxx5</Device>
           <Vendor>Freescale</Vendor>
           <PackID>Keil.Kinetis_K60_DFP.1.1.0</PackID>
           <PackURL>http://www.keil.com/pack/</PackURL>
@@ -365,6 +365,7 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
               <Define>DEBUG, CPU_MKW24D512VHA5</Define>
               <Undefine/>
@@ -414,7 +415,7 @@
       <ToolsetName>ARM-ADS</ToolsetName>
       <TargetOption>
         <TargetCommonOption>
-          <Device>MKW24D512VHA5</Device>
+          <Device>MKW24D512xxx5</Device>
           <Vendor>Freescale</Vendor>
           <PackID>Keil.Kinetis_K60_DFP.1.1.0</PackID>
           <PackURL>http://www.keil.com/pack/</PackURL>
@@ -767,6 +768,7 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
               <Define>NDEBUG, CPU_MKW24D512VHA5</Define>
               <Undefine/>

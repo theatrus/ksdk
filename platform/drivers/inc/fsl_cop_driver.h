@@ -73,6 +73,7 @@ extern "C" {
  *
  * @param instance The COP peripheral instance number.
  * @param initPtr COP Initialize data structure.
+ * @return The initialization status.
  *
  */
 cop_status_t COP_DRV_Init(uint32_t instance, const cop_config_t* initPtr);

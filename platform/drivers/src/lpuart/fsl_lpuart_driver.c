@@ -121,6 +121,52 @@ lpuart_status_t LPUART_DRV_Init(uint32_t instance, lpuart_state_t * lpuartStateP
     LPUART_HAL_SetParityMode(base, lpuartUserConfig->parityMode);
     LPUART_HAL_SetStopBitCount(base, lpuartUserConfig->stopBitCount);
 
+#if FSL_FEATURE_LPUART_HAS_FIFO
+    uint8_t fifoSize;
+    /* Obtain raw TX FIFO size bit setting */
+    fifoSize = LPUART_HAL_GetTxFifoSize(base);
+    /* Now calculate the number of data words per given FIFO size */
+    lpuartStatePtr->txFifoEntryCount = (fifoSize == 0 ? 1 : 0x1 << (fifoSize + 1));
+
+    /* Configure the TX FIFO watermark to be 1/2 of the total entry or 0 if
+     * entry count = 1 A watermark setting of 0 for TX FIFO entry count of 1
+     * means that TDRE will only interrupt when the TX buffer (the one entry in
+     * the TX FIFO) is empty. Otherwise, if we set the watermark to 1, the TDRE
+     * will always be set regardless if the TX buffer was empty or not as the
+     * spec says TDRE will set when the FIFO is at or below the configured
+     * watermark. */
+    if (lpuartStatePtr->txFifoEntryCount > 1)
+    {
+        LPUART_HAL_SetTxFifoWatermark(base, (lpuartStatePtr->txFifoEntryCount >> 1U));
+    }
+    else
+    {
+        LPUART_HAL_SetTxFifoWatermark(base, 0);
+    }
+
+    /* Configure the RX FIFO watermark to be 0.
+     * Note about RX FIFO support: There is only one RX data full interrupt that
+     * is associated with the RX FIFO Watermark. The watermark cannot be
+     * dynamically changed. This means if the rxSize is less or equal to the programmed
+     * watermark the interrupt will never occur. If we try to change the
+     * watermark, this will involve shutting down the receiver first - which is
+     * not a desirable operation when the LPUART is actively receiving data.
+     * Hence, the best solution is to set the RX FIFO watermark to 0. */
+    LPUART_HAL_SetRxFifoWatermark(base, 0);
+
+    /* Enable and flush the FIFO prior to enabling the TX/RX */
+    LPUART_HAL_SetTxFifoCmd(base, true);
+    LPUART_HAL_SetRxFifoCmd(base, true);
+    LPUART_HAL_FlushTxFifo(base);
+    LPUART_HAL_FlushRxFifo(base);
+#else
+    /* For modules that do not support a FIFO, they have a data buffer that
+     * essentially acts likes a one-entry FIFO, thus to make the code cleaner,
+     * we'll equate txFifoEntryCount to 1. Also note that TDRE flag will set
+     * only when the tx buffer is empty. */
+    lpuartStatePtr->txFifoEntryCount = 1;
+#endif
+
     /* finally, enable the LPUART transmitter and receiver */
     LPUART_HAL_SetTransmitterCmd(base, true);
     LPUART_HAL_SetReceiverCmd(base, true);
@@ -134,8 +180,8 @@ lpuart_status_t LPUART_DRV_Init(uint32_t instance, lpuart_state_t * lpuartStateP
 /*FUNCTION**********************************************************************
  *
  * Function Name : LPUART_DRV_Deinit
- * Description   : This function shuts down the UART by disabling interrupts and
- *                 transmitter/receiver.
+ * Description   : This function shuts down the UART by disabling interrupts, 
+ *                 transmitter/receiver and flushing FIFOs (if module supports FIFO).
  *
  *END**************************************************************************/
 lpuart_status_t LPUART_DRV_Deinit(uint32_t instance)
@@ -151,6 +197,12 @@ lpuart_status_t LPUART_DRV_Deinit(uint32_t instance)
     LPUART_Type * base = g_lpuartBase[instance];
     lpuart_state_t * lpuartState = (lpuart_state_t *)g_lpuartStatePtr[instance];
 
+    /* In case there is still data in the TX FIFO or shift register that is
+     * being transmitted wait till transmit is complete. */
+#if FSL_FEATURE_LPUART_HAS_FIFO
+    /* Wait until there all of the data has been drained from the TX FIFO */
+    while(LPUART_HAL_GetTxDatawordCountInFifo(base) != 0) { }
+#endif
     /* Wait until the data is completely shifted out of shift register */
     while (!LPUART_BRD_STAT_TC(base)) {}
 
@@ -164,6 +216,14 @@ lpuart_status_t LPUART_DRV_Deinit(uint32_t instance)
     /* Destroy TX and RX sema. */
     OSA_SemaDestroy(&lpuartState->txIrqSync);
     OSA_SemaDestroy(&lpuartState->rxIrqSync);
+
+#if FSL_FEATURE_LPUART_HAS_FIFO
+    /* Disable the FIFOs; should be done after disabling the TX/RX */
+    LPUART_HAL_SetTxFifoCmd(base, false);
+    LPUART_HAL_SetRxFifoCmd(base, false);
+    LPUART_HAL_FlushTxFifo(base);
+    LPUART_HAL_FlushRxFifo(base);
+#endif
 
     /* Clear our saved pointer to the state structure */
     g_lpuartStatePtr[instance] = NULL;
@@ -269,6 +329,12 @@ lpuart_status_t LPUART_DRV_SendDataBlocking(uint32_t instance,
 
             retVal = kStatus_LPUART_Timeout;
         }
+
+#if FSL_FEATURE_LPUART_HAS_FIFO
+        /* Wait till the TX FIFO is empty before returning. */
+        while(LPUART_HAL_GetTxDatawordCountInFifo(base) != 0) { }
+#endif        
+
     }
 
     return retVal;
@@ -320,7 +386,9 @@ lpuart_status_t LPUART_DRV_GetTransmitStatus(uint32_t instance, uint32_t * bytes
     lpuart_status_t retVal = kStatus_LPUART_Success;
     uint32_t txSize = lpuartState->txSize;
 
-    /* Fill in the bytes transferred. */
+    /* Fill in the bytes transferred. This may return that all bytes were
+     * transmitted, however, for IPs with FIFO support, there still may be data
+     * in the TX FIFO in the process of being transmitted. */
     if (bytesRemaining)
     {
         *bytesRemaining = txSize;
@@ -330,7 +398,17 @@ lpuart_status_t LPUART_DRV_GetTransmitStatus(uint32_t instance, uint32_t * bytes
     {
         retVal = kStatus_LPUART_TxBusy;
     }
+#if FSL_FEATURE_LPUART_HAS_FIFO    
+    else
+    {
+        LPUART_Type * base = g_lpuartBase[instance];
 
+        if (LPUART_HAL_GetTxDatawordCountInFifo(base))
+        {
+            retVal = kStatus_LPUART_TxBusy;
+        }
+    }    
+#endif
     return retVal;
 }
 
@@ -518,54 +596,75 @@ void LPUART_DRV_IRQHandler(uint32_t instance)
     /* Handle receive data full interrupt */
     if((LPUART_BRD_CTRL_RIE(base)) && (LPUART_BRD_STAT_RDRF(base)))
     {
-        /* Get data and put in receive buffer  */
-        LPUART_HAL_Getchar(base, lpuartState->rxBuff);
-
-        /* Invoke callback if there is one */
-        if (lpuartState->rxCallback != NULL)
+#if FSL_FEATURE_LPUART_HAS_FIFO
+        /* Read out all data from RX FIFO */
+        while(LPUART_HAL_GetRxDatawordCountInFifo(base))
         {
-            lpuartState->rxCallback(instance, lpuartState);
-        }
-        else
-        {
-            ++lpuartState->rxBuff;
-            --lpuartState->rxSize;
+#endif    
+            /* Get data and put in receive buffer  */
+            LPUART_HAL_Getchar(base, lpuartState->rxBuff);
 
-            /* Check and see if this was the last byte received */
-            if (lpuartState->rxSize == 0)
+            /* Invoke callback if there is one */
+            if (lpuartState->rxCallback != NULL)
             {
-                LPUART_DRV_CompleteReceiveData(instance);
+                lpuartState->rxCallback(instance, lpuartState);
             }
+            else
+            {
+                ++lpuartState->rxBuff;
+                --lpuartState->rxSize;
+
+                /* Check and see if this was the last byte received */
+                if (lpuartState->rxSize == 0)
+                {
+                    LPUART_DRV_CompleteReceiveData(instance);
+                    #if FSL_FEATURE_LPUART_HAS_FIFO
+                    break;
+                    #endif
+                }
+            }
+#if FSL_FEATURE_LPUART_HAS_FIFO
         }
+#endif        
     }
 
     /* Handle transmitter data register empty interrupt */
     if((LPUART_BRD_CTRL_TIE(base)) && (LPUART_BRD_STAT_TDRE(base)))
     {
-        /* check to see if there are any more bytes to send */
+        /* Check to see if there are any more bytes to send */
         if (lpuartState->txSize)
         {
-            /* Transmit the data */
-            LPUART_HAL_Putchar(base, *(lpuartState->txBuff));
+            uint8_t emptyEntryCountInFifo;
+#if FSL_FEATURE_LPUART_HAS_FIFO
+            emptyEntryCountInFifo = lpuartState->txFifoEntryCount -
+                                    LPUART_HAL_GetTxDatawordCountInFifo(base);
+#else
+            emptyEntryCountInFifo = lpuartState->txFifoEntryCount;
+#endif
+            while(emptyEntryCountInFifo--)
+            {
+                /* Transmit data and update tx size/buff */
+                LPUART_HAL_Putchar(base, *(lpuartState->txBuff));
 
-            /* Invoke callback if there is one */
-            if (lpuartState->txCallback != NULL)
-            {
-                /* The callback MUST set the txSize to 0 if the
-                 * transmit is ended.*/
-                lpuartState->txCallback(instance, lpuartState);
-            }
-            else
-            {
-                ++lpuartState->txBuff;
-                --lpuartState->txSize;
-            }
+                /* Invoke callback if there is one */
+                if (lpuartState->txCallback != NULL)
+                {
+                   /* The callback MUST set the txSize to 0 if the
+                    * transmit is ended.*/
+                   lpuartState->txCallback(instance, lpuartState);
+                }
+                else
+                {
+                    ++lpuartState->txBuff;
+                    --lpuartState->txSize;
+                }
 
-            /* Check and see if this was the last byte */
-            if (lpuartState->txSize == 0)
-            {
-                /* Complete transfer, will disable tx interrupt */
-                LPUART_DRV_CompleteSendData(instance);
+                /* Check and see if this was the last byte */
+                if (lpuartState->txSize == 0U)
+                {
+                    LPUART_DRV_CompleteSendData(instance);
+                    break;
+                }
             }
         }
     }
@@ -611,7 +710,10 @@ static lpuart_status_t LPUART_DRV_StartSendData(uint32_t instance,
     lpuartState->txSize = txSize;
     lpuartState->isTxBusy = true;
 
-    /* enable transmission complete interrupt */
+    /* Enable the transmitter data register empty interrupt. The TDRE flag will
+     * set whenever the TX buffer is emptied into the TX shift register (for
+     * non-FIFO IPs) or when the data in the TX FIFO is at or below the
+     * programmed watermark (for FIFO-supported IPs). */
     LPUART_BWR_CTRL_TIE(base, 1U);
 
     return kStatus_LPUART_Success;

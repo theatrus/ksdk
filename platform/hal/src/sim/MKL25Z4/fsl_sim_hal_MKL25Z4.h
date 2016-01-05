@@ -1010,11 +1010,10 @@ void SIM_HAL_SetUartOpenDrainCmd(SIM_Type * base, uint32_t  instance, bool enabl
 * @brief Gets the UARTx Open Drain Enable setting.
 *
 * This function  gets the UARTx Open Drain Enable setting.
-
-
 *
 * @param base Register base address of SIM.
 * @param instance UART instance.
+* @return enabled True if UARTx Open Drain is enabled.
 */
 bool SIM_HAL_GetUartOpenDrainCmd(SIM_Type * base, uint32_t  instance);
 
@@ -1071,11 +1070,10 @@ void SIM_HAL_SetTpmExternalClkPinSelMode(SIM_Type * base,
 * @brief Gets the Timer/PWM x external clock pin select setting.
 *
 * This function  gets the Timer/PWM x external clock pin select setting.
-
-
 *
 * @param base     Base address for current SIM instance.
 * @param instance     device instance.
+* @return Timer/PWM x external clock pin select setting
 */
 sim_tpm_clk_sel_t SIM_HAL_GetTpmExternalClkPinSelMode(SIM_Type * base, uint32_t instance);
 
@@ -1101,12 +1099,11 @@ void SIM_HAL_SetTpmChSrcMode(SIM_Type * base,
 * @brief Gets the Timer/PWM x channel y input capture source select setting.
 *
 * This function  gets the Timer/PWM x channel y input capture source.
-
-
 *
 * @param base     Base address for current SIM instance.
 * @param instance     device instance.
 * @param channel      TPM channel y
+* @return select Timer/PWM x channel y input capture source
 */
 
 sim_tpm_ch_src_t SIM_HAL_GetTpmChSrcMode(SIM_Type * base,

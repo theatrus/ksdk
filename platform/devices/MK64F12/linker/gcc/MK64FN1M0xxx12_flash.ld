@@ -7,13 +7,13 @@
 **
 **     Compiler:            GNU C Compiler
 **     Reference manual:    K64P144M120SF5RM, Rev.2, January 2014
-**     Version:             rev. 2.7, 2014-10-14
-**     Build:               b141113
+**     Version:             rev. 2.8, 2015-02-19
+**     Build:               b150624
 **
 **     Abstract:
 **         Linker file for the GNU C Compiler
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -199,6 +199,8 @@ SECTIONS
   } > m_data
 
   __DATA_END = __DATA_ROM + (__data_end__ - __data_start__);
+  text_end = ORIGIN(m_text) + LENGTH(m_text);
+  ASSERT(__DATA_END <= text_end, "region m_text overflowed with text and data")
 
   /* Uninitialized data section */
   .bss :

@@ -28,6 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "fsl_clock_manager.h"
 #include "fsl_uart_driver.h"
 
 /*******************************************************************************
@@ -43,7 +44,8 @@ extern void UART_DRV_IRQHandler(uint32_t instance);
  ******************************************************************************/
 
 #if defined (KL16Z4_SERIES) || defined (KL25Z4_SERIES) || defined (KL26Z4_SERIES) || \
-    defined (KL46Z4_SERIES) || defined (KV10Z7_SERIES) || defined (KW01Z4_SERIES)
+    defined (KL46Z4_SERIES) || defined (KV10Z7_SERIES) || defined (KW01Z4_SERIES) || \
+    defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES)
 /* NOTE: If a sub-family has UART0 separated as another IP, it will be handled by
  * LPSCI driver.
  */
@@ -71,6 +73,7 @@ void UART2_IRQHandler(void)
 }
 #endif
 
+
 #elif defined (K64F12_SERIES) || defined (K24F12_SERIES) || defined (K63F12_SERIES) || \
       defined (K22F51212_SERIES) || defined (K22F25612_SERIES) || defined (K22F12810_SERIES) || \
       defined (KV31F51212_SERIES) || defined (KV31F25612_SERIES) || defined (KV31F12810_SERIES) || \
@@ -78,7 +81,6 @@ void UART2_IRQHandler(void)
       defined (KV30F12810_SERIES) || defined (K02F12810_SERIES) || defined (K21DA5_SERIES) || \
       defined (K21FA12_SERIES) || defined (KW24D5_SERIES) || defined (KV46F15_SERIES) || \
       defined (K26F18_SERIES) || defined (K65F18_SERIES) || defined (K66F18_SERIES)
-
 #if (UART_INSTANCE_COUNT > 0)
 /* Implementation of UART0 handler named in startup code. */
 void UART0_RX_TX_IRQHandler(void)
@@ -137,6 +139,30 @@ void UART2_FLEXIO_IRQHandler(void)
 }
 #endif
 
+#elif defined (KM34Z7_SERIES)
+/* Implementation of UART5 handler named in startup code. */
+void UART0_UART1_UART2_UART3_IRQHandler(void)
+{
+    if (CLOCK_SYS_GetUartGateCmd(0))
+    {
+        UART_DRV_IRQHandler(0);
+    }
+
+    if (CLOCK_SYS_GetUartGateCmd(1))
+    {
+        UART_DRV_IRQHandler(1);
+    }
+
+    if (CLOCK_SYS_GetUartGateCmd(2))
+    {
+        UART_DRV_IRQHandler(2);
+    }
+
+    if (CLOCK_SYS_GetUartGateCmd(3))
+    {
+        UART_DRV_IRQHandler(3);
+    }
+}
 #else
     #error "No valid CPU defined!"
 #endif

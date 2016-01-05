@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<ProjectWorkspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_mpw.xsd">
-  <SchemaVersion>1.0</SchemaVersion>
-  <Header>### uVision Project, (C) Keil Software</Header>
-  <WorkspaceName>WorkSpace</WorkspaceName>
-<project><PathAndName>../../../../../../../../../rtos/mqx/mqx/build/mdk/mqx_twrk21d50m/mqx_twrk21d50m.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../../rtos/mqx/mqx_stdlib/build/mdk/mqx_stdlib_twrk21d50m/mqx_stdlib_twrk21d50m.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../../usb/usb_core/host/build/mdk/usbh_sdk_twrk21d50m_mqx/usbh_sdk_twrk21d50m_mqx.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../../../../../lib/ksdk_mqx_lib/mdk/K21DA5/ksdk_mqx_lib.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>host_hid_mouse_twrk21d50m_mqx.uvprojx</PathAndName><NodeIsActive>1</NodeIsActive></project></ProjectWorkspace>

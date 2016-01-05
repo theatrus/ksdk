@@ -46,8 +46,8 @@ i2c_master_state_t g_master;
 /* i2c slave */
 i2c_device_t g_slave =
 {
-    .address = MAX3353_SLAVE_ADDR,
-    .baudRate_kbps = MAX3353_SLAVE_BAUDRATE
+    MAX3353_SLAVE_ADDR,
+    MAX3353_SLAVE_BAUDRATE
 };
 extern usb_otg_khci_call_struct_t * g_otg_khci_call_ptr;
 /* Private functions prototypes *********************************************/
@@ -60,8 +60,6 @@ static uint8_t _usb_otg_max3353_get_status(uint8_t i2c_channel);
 static uint8_t _usb_otg_max3353_get_interrupts(uint8_t i2c_channel);
 static void _usb_otg_max3353_set_VBUS(uint8_t i2c_channel, bool enable);
 static void _usb_otg_max3353_set_pdowns(uint8_t i2c_channel, uint8_t bitfield);
-extern void bsp_usb_otg_max3353_clear_pin_int_flag(void);
-extern void bsp_usb_otg_max3353_set_pin_int(bool level, bool enable);
 extern void* bsp_usb_otg_get_peripheral_init_param(uint8_t peripheral_id);
 /* Private functions definitions *********************************************/
 /*FUNCTION*-------------------------------------------------------------------
@@ -393,8 +391,12 @@ static void _usb_otg_max3353_pin_isr
     void
     )
 {
-    usb_otg_state_struct_t * usb_otg_struct_ptr = ((usb_otg_max3353_call_struct_t *) g_otg_khci_call_ptr)->otg_handle_ptr;
-    bsp_usb_otg_max3353_clear_pin_int_flag();
+    usb_otg_state_struct_t*        usb_otg_struct_ptr = ((usb_otg_max3353_call_struct_t *) g_otg_khci_call_ptr)->otg_handle_ptr;
+    usb_otg_max3353_init_struct_t* peripheral_init_param_ptr = (usb_otg_max3353_init_struct_t*) bsp_usb_otg_get_peripheral_init_param((uint8_t) USB_OTG_PERIPHERAL_MAX3353);
+    if (NULL != peripheral_init_param_ptr->interrupt_pin_flag_clear)
+    {
+        peripheral_init_param_ptr->interrupt_pin_flag_clear();
+    }
     OS_Event_set(usb_otg_struct_ptr->otg_isr_event, USB_OTG_MAX3353_ISR_EVENT);
 }
 
@@ -444,11 +446,13 @@ usb_status usb_otg_max3353_init
     uint8_t i2c_channel = 0;
 
     otg_max3353_call_ptr->init_param_ptr = (usb_otg_max3353_init_struct_t*) bsp_usb_otg_get_peripheral_init_param((uint8_t) USB_OTG_PERIPHERAL_MAX3353);
+    if ((NULL == otg_max3353_call_ptr->init_param_ptr->interrupt_pin_init) || (NULL == otg_max3353_call_ptr->init_param_ptr->interrupt_pin_flag_clear))
+    {
+        return USBERR_INIT_FAILED;
+    }
     i2c_channel = otg_max3353_call_ptr->init_param_ptr->i2c_channel;
     /* install interrupt for i2c0 */
     OS_install_isr((IRQn_Type) otg_max3353_call_ptr->init_param_ptr->i2c_vector, (void (*)(void))_usb_otg_max3353_i2c_isr, NULL);
-    /* Initialize hardware */
-    configure_i2c_pins(i2c_channel);
     /* init the i2c master */
     I2C_DRV_MasterInit(i2c_channel, &g_master);
     OS_install_isr((IRQn_Type) otg_max3353_call_ptr->init_param_ptr->int_vector, (void (*)(void))_usb_otg_max3353_pin_isr, NULL);
@@ -457,7 +461,8 @@ usb_status usb_otg_max3353_init
     NVIC_SetPriority((IRQn_Type)otg_max3353_call_ptr->init_param_ptr->i2c_vector,3);
 #endif
     /* set interrupt pin for max 3353 out put interrupt */
-    bsp_usb_otg_max3353_set_pin_int(FALSE, TRUE);
+    //bsp_usb_otg_max3353_set_pin_int(FALSE, TRUE);
+    otg_max3353_call_ptr->init_param_ptr->interrupt_pin_init(FALSE, TRUE);
     /* set event to read the status */
     OS_Event_set(usb_otg_struct_ptr->otg_isr_event, USB_OTG_MAX3353_ISR_EVENT);
     OS_Unlock(); /* need to use i2c interrupt */
@@ -484,7 +489,10 @@ usb_status usb_otg_max3353_shut_down
     uint8_t channel = otg_max3353_call_ptr->init_param_ptr->i2c_channel;
 
     /* configure GPIO for I2C function */
-    bsp_usb_otg_max3353_set_pin_int(FALSE, FALSE);
+    if (NULL != otg_max3353_call_ptr->init_param_ptr->interrupt_pin_init)
+    {
+        otg_max3353_call_ptr->init_param_ptr->interrupt_pin_init(FALSE, FALSE);
+    }
     OS_Event_clear(usb_otg_struct_ptr->otg_isr_event, USB_OTG_MAX3353_ISR_EVENT);
     _usb_otg_max3353_enable_disable(channel, FALSE);
     return USB_OK;

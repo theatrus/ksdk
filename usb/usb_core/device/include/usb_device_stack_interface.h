@@ -70,7 +70,7 @@
 #define  USB_SERVICE_ERROR                     (0x16)
 //#define  USB_SERVICE_STALL                                (0x17)
 #define  USB_SERVICE_REQUEST                   (0x18)
-#define  USB_SERVICE_DETACH                    (0x19)
+#define  USB_DEV_SERVICE_DETACH                    (0x19)
 
 #define  USB_CONTROL_ENDPOINT                  (0)
 #define  USB_SETUP_PKT_SIZE                    (8)/* Setup Packet Size */
@@ -113,33 +113,6 @@
     config, \
 }
 
-/* Go through each endpoint in class */
-#define  for_each_ep_in_class_begin(epPtr, usbclassPtr, classtype) \
-    for(uint32_t class_i = 0; usbclassPtr[class_i].type != USB_CLASS_INVALID; class_i++) \
-    { \
-        if((usbclassPtr[class_i].type == classtype) || (classtype == USB_CLASS_ALL)) \
-        { \
-        for(uint32_t intf_i = 0; intf_i < usbclassPtr[class_i].interfaces.count; intf_i++) \
-        { \
-            for(uint32_t ep_i = 0; \
-                ((ep_i < usbclassPtr[class_i].interfaces.interface[intf_i].endpoints.count) && \
-                ((epPtr = usbclassPtr[class_i].interfaces.interface[intf_i].endpoints.ep + ep_i) != NULL)); \
-                ep_i++) \
-            { 
-#define  for_each_ep_in_class_end() }}}}
-
-/* Go through each interface in class */
-#define  for_each_if_in_class_begin(ifPtr, usbclassPtr, classtype) \
-                for(uint32_t class_i = 0; usbclassPtr[class_i].type != USB_CLASS_INVALID; class_i++) \
-                { \
-                    if((usbclassPtr[class_i].type == classtype) || (classtype == USB_CLASS_ALL)) \
-                    { \
-                    for(uint32_t intf_i = 0; ((intf_i < usbclassPtr[class_i].interfaces.count) \
-                        && ((ifPtr = usbclassPtr[class_i].interfaces.interface + intf_i) != NULL)); \
-                        intf_i++) \
-                    {
-#define  for_each_if_in_class_end() }}}
-
 typedef enum
 {
     USB_CLASS_INFO = 0,
@@ -149,18 +122,11 @@ typedef enum
     USB_PHDC_QOS_INFO,
     USB_MSC_LBA_INFO,
     USB_CLASS_INTERFACE_INDEX_INFO,
+    USB_VIDEO_UNITS,
+    USB_VIDEO_CTL_IF_INDEX_INFO,
+    USB_VIDEO_STREAM_IF_INDEX_INFO,
 } entity_type;
 
-typedef enum
-{
-    USB_CLASS_HID = 0,
-    USB_CLASS_CDC,
-    USB_CLASS_MSC,
-    USB_CLASS_AUDIO,
-    USB_CLASS_PHDC,
-    USB_CLASS_ALL,
-    USB_CLASS_INVALID
-} class_type;
 /*!
  * @brief Obtains the endpoint data structure.
  *
@@ -195,8 +161,9 @@ typedef struct _usb_endpoints
  */
 typedef struct _usb_if_struct
 {
-    uint8_t               index;        /*!< interface index*/
-    usb_endpoints_t       endpoints;    /*!< endpoints in this interface*/
+    uint8_t               index;             /*!< interface index*/
+    usb_endpoints_t       endpoints;         /*!< endpoints in this interface*/
+    uint8_t               alternate_setting; /*!< interface alternate value*/
 } usb_if_struct_t;
 
 /*!
@@ -219,7 +186,7 @@ typedef struct _usb_interfaces_struct
  */
 typedef struct _usb_class_struct
 {
-    class_type              type;          /*!< class type*/
+    uint8_t              type;          /*!< class type*/
     usb_interfaces_struct_t interfaces;    /*!< interfaces in this class*/
 } usb_class_struct_t;
 
@@ -332,6 +299,20 @@ typedef struct usb_vendor_req_callback_struct
     void*                 arg;         /*!< parameter for callback function*/
 }usb_vendor_req_callback_struct_t;
 
+/* callback function pointer structure to handle USB application board initialization request */
+typedef uint8_t(_CODE_PTR_ usb_board)(uint8_t controller_id);
+/*!
+ * @brief Obtains the callback for application.
+ *
+ * Structure Representing information for board callback.
+ *
+ */
+typedef struct usb_board_init_callback_struct
+{
+    usb_board             callback;    /*!< application callback function*/
+    uint8_t               arg;         /*!< parameter for callback function*/
+}usb_board_init_callback_struct_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -346,7 +327,7 @@ extern "C" {
  * @param handle  USB Device handle
  * @return USB_OK-Success/Others-Fail
  */
-extern usb_status usb_device_init(uint8_t controller_id, usb_device_handle * handle);
+extern usb_status usb_device_init(uint8_t controller_id, void* board_init_callback, usb_device_handle * handle);
 
 /*!
  * @brief Un-initializes the USB device controller.

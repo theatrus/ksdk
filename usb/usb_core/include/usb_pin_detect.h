@@ -38,6 +38,10 @@ typedef void(_CODE_PTR_ usb_pin_detect_service_t)(uint32_t event);
 
 #define  USB_DEVICE_ID_CHANGE                       (1)   /*  id change from device mode*/
 #define  USB_HOST_ID_CHANGE                         (2)   /* id change from host mode */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /*!
  * @brief Registers a callback function for usb device pin detect 
@@ -63,6 +67,9 @@ extern usb_status usb_device_register_pin_detect_service(uint8_t controller_id, 
  */
 extern usb_status usb_host_register_pin_detect_service(uint8_t controller_id, usb_pin_detect_service_t service, void* arg);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

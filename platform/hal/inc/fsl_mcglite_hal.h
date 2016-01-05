@@ -69,8 +69,8 @@ typedef enum _mcglite_mcgoutclk_source
 /*! @brief MCG_Lite LIRC select. */
 typedef enum _mcglite_lirc_select
 {
-    kMcgliteLircSel2M,          /*!< slow internal reference(LIRC) 2MHz clock selected */
-    kMcgliteLircSel8M,          /*!< slow internal reference(LIRC) 8MHz clock selected */
+    kMcgliteLircSel2M,          /*!< slow internal reference(LIRC) 2 MHz clock selected */
+    kMcgliteLircSel8M,          /*!< slow internal reference(LIRC) 8 MHz clock selected */
 } mcglite_lirc_select_t;
 
 /*! @brief MCG_Lite divider factor selection for clock source*/
@@ -133,10 +133,10 @@ extern "C" {
 uint32_t CLOCK_HAL_GetPeripheralClk(MCG_Type * base);
 
 /*!
-* @brief Gets the current MCG_Lite low internal reference clock(2MHz or 8MHz)
+* @brief Gets the current MCG_Lite low internal reference clock(2 MHz or 8 MHz)
 *
 * This function returns the MCG_Lite LIRC frequency (Hertz) based
-* on the current MCG_Lite configurations and settings. Please make sure LIRC
+* on the current MCG_Lite configurations and settings. Ensure that the LIRC
 * has been properly configured to get the valid value.
 *
 * @param base MCG_Lite register base address.
@@ -149,7 +149,7 @@ uint32_t CLOCK_HAL_GetLircClk(MCG_Type * base);
 * @brief Gets the current MCG_Lite LIRC_DIV1_CLK frequency.
 *
 * This function returns the MCG_Lite LIRC_DIV1_CLK frequency (Hertz) based
-* on the current MCG_Lite configurations and settings. Please make sure LIRC
+* on the current MCG_Lite configurations and settings. Ensure that the LIRC
 * has been properly configured to get the valid value.
 *
 * @param base MCG_Lite register base address.
@@ -162,7 +162,7 @@ uint32_t CLOCK_HAL_GetLircDiv1Clk(MCG_Type * base);
 * @brief Gets the current MCGIRCLK frequency.
 *
 * This function returns the MCGIRCLK frequency (Hertz) based
-* on the current MCG_Lite configurations and settings. Please make sure LIRC
+* on the current MCG_Lite configurations and settings. Ensure that the LIRC
 * has been properly configured to get the valid value.
 *
 * @param base MCG_Lite register base address.
@@ -176,7 +176,7 @@ uint32_t CLOCK_HAL_GetInternalRefClk(MCG_Type * base);
 *
 * This function returns the MCGOUTCLK frequency (Hertz) based on
 * the current MCG_Lite configurations and settings. The configuration should be
-* properly done in order to get the valid value.
+* properly done to get the valid value.
 *
 * @param base MCG_Lite register base address.
 *
@@ -192,7 +192,7 @@ uint32_t CLOCK_HAL_GetOutClk(MCG_Type * base);
 /*!
 * @brief Sets the Low Internal Reference Select.
 *
-* This function sets the LIRC to work at 2MHz or 8MHz.
+* This function sets the LIRC to work at 2 MHz or 8 MHz.
 *
 * @param base MCG_Lite register base address.
 *
@@ -302,7 +302,7 @@ static inline void CLOCK_HAL_SetExtRefSelMode0(MCG_Type * base, osc_src_t select
 * @brief Gets the Clock Mode Status.
 *
 * This function gets the Clock Mode Status. These bits indicate the current clock mode.
-* The CLKST bits do not update immediately after a write to the CLKS bits due to
+* The CLKST bits do not update immediately after a write to the CLKS bits because of the
 * internal synchronization between clock domains.
 *
 * @param base MCG_Lite register base address.
@@ -382,6 +382,7 @@ static inline void CLOCK_HAL_SetHighGainOsc0Mode(MCG_Type * base,
  * This function gets the High-frequency IRC coarse trim value.
  *
  * @param base MCG_Lite register base address.
+ * @return The coarse trim value.
  */
 static inline uint8_t CLOCK_HAL_GetHircCoarseTrim(MCG_Type * base)
 {
@@ -396,6 +397,7 @@ static inline uint8_t CLOCK_HAL_GetHircCoarseTrim(MCG_Type * base)
  * This function gets the High-frequency IRC tempco trim value.
  *
  * @param base MCG_Lite register base address.
+ * @return The tempco trim value.
  */
 static inline uint8_t CLOCK_HAL_GetHircTempcoTrim(MCG_Type * base)
 {
@@ -410,6 +412,7 @@ static inline uint8_t CLOCK_HAL_GetHircTempcoTrim(MCG_Type * base)
  * This function gets the High-frequency IRC fine trim value.
  *
  * @param base MCG_Lite register base address.
+ * @return The fine trim value.
  */
 static inline uint8_t CLOCK_HAL_GetHircFineTrim(MCG_Type * base)
 {
@@ -424,6 +427,7 @@ static inline uint8_t CLOCK_HAL_GetHircFineTrim(MCG_Type * base)
  * This function gets the LIRC 8M RANGE value.
  *
  * @param base MCG_Lite register base address.
+ * @return The trim range value.
  */
 static inline uint8_t CLOCK_HAL_GetLirc8MTrimRange(MCG_Type * base)
 {
@@ -436,6 +440,7 @@ static inline uint8_t CLOCK_HAL_GetLirc8MTrimRange(MCG_Type * base)
  * This function gets the LIRC 2M RANGE value.
  *
  * @param base MCG_Lite register base address.
+ * @return The trim range value.
  */
 static inline uint8_t CLOCK_HAL_GetLirc2MTrimRange(MCG_Type * base)
 {
@@ -450,6 +455,7 @@ static inline uint8_t CLOCK_HAL_GetLirc2MTrimRange(MCG_Type * base)
  * This function gets the LIRC 8M trim value.
  *
  * @param base MCG_Lite register base address.
+ * @return The trim value.
  */
 static inline uint8_t CLOCK_HAL_GetLirc8MTrim(MCG_Type * base)
 {
@@ -464,6 +470,7 @@ static inline uint8_t CLOCK_HAL_GetLirc8MTrim(MCG_Type * base)
  * This function gets the LIRC 2M trim value.
  *
  * @param base MCG_Lite register base address.
+ * @return The trim value.
  */
 static inline uint8_t CLOCK_HAL_GetLirc2MTrim(MCG_Type * base)
 {

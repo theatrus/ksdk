@@ -110,18 +110,6 @@ int adc16Init(adc16_converter_config_t *adcUserConfig, adc16_chn_config_t *adcCh
  */
 void adc16PrintTemperature(void);
 
-// /*!
-//  * @Brief enable the trigger source
-//  *
-//  * @param instance The ADC instance number
-//  */
-// void adc16InitPdbTriggerSource(uint32_t adcInstance);
-
-// /*!
-//  * @Brief disable the trigger source
-//  */
-// void adc16DeinitPdbTriggerSource(uint32_t adcInstance);
-
 /*!
  * @Brief enable the trigger source
  *
@@ -143,7 +131,5 @@ void ADC_InstallCallback(uint32_t instance, uint32_t chnGroup, void (*callbackFu
  * @brief User-defined function to read conversion value in ADC ISR
  */
 uint16_t ADC_GetConvValueRAWInt(uint32_t instance, uint32_t chnGroup);
-
-
 
 #endif

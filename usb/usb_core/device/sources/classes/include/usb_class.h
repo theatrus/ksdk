@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 * 
-* Copyright (c) 2008, 2013 - 2014 Freescale Semiconductor;
+* Copyright (c) 2008, 2013 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 * Copyright (c) 1989-2008 ARC International;
@@ -86,6 +86,15 @@ typedef struct usb_class_specific_handler_callback_struct
     usb_class_specific_handler_func  callback;
     void*                            arg;
 }usb_class_specific_callback_struct_t;
+
+/* Define function type for class device instance initialization */
+typedef usb_status (_CODE_PTR_ device_class_init_call) (uint8_t controller_id, void* class_config_ptr, class_handle_t* class_handle_ptr);
+/* Define function type for class device instance deinitialization, internal */
+typedef usb_status (_CODE_PTR_ device_class_deinit_call) (class_handle_t handle);
+/* Define function type for class device instance deinitialization, internal */
+typedef void (_CODE_PTR_ device_class_event_callback) (uint8_t event,void* val, void* arg);
+/* Define function type for class device instance deinitialization, internal */
+typedef usb_status (_CODE_PTR_ device_class_request_callback) (usb_setup_struct_t* setup_packet, uint8_t **data, uint32_t * size, void* arg);
 
 
 /******************************************************************************

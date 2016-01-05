@@ -341,8 +341,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186 
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>DEBUG, CPU_MK22FN512VLH12</Define>
+              <Define>DEBUG, CPU_MK22FN512VMP12</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MK22F51212/include;../../../../platform/devices/MK22F51212/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>
@@ -719,8 +720,9 @@
             <VariousControls>
               <MiscControls>  --library_type=standardlib --c99 --diag_suppress=1296,186  
  --library_interface=armcc  
+--diag_suppress=66 
 </MiscControls>
-              <Define>NDEBUG, CPU_MK22FN512VLH12</Define>
+              <Define>NDEBUG, CPU_MK22FN512VMP12</Define>
               <Undefine/>
               <IncludePath>../../../../platform/devices;../../../../platform/devices/MK22F51212/include;../../../../platform/devices/MK22F51212/startup;../../../../platform/CMSIS/Include</IncludePath>
             </VariousControls>

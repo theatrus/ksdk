@@ -47,6 +47,14 @@
 #define CLOCK_INIT_CONFIG CLOCK_HSRUN
 #endif
 
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 80000000U
+#elif (CLOCK_INIT_CONFIG == CLOCK_HSRUN)
+#define CORE_CLOCK_FREQ 120000000U
+#else
+#define CORE_CLOCK_FREQ 4000000U
+#endif
+
 /* OSC0 configuration. */
 #define OSC0_XTAL_FREQ 8000000U
 #define OSC0_SC2P_ENABLE_CONFIG  false
@@ -80,7 +88,7 @@
 #define BOARD_LOW_POWER_UART_BAUD       9600
 
 #define BOARD_USE_UART
-#define PM_DBG_UART_IRQ_HANDLER         MODULE_IRQ_HANDLER(UART0_RX_TX)
+#define PM_DBG_UART_IRQ_HANDLER         UART0_RX_TX_IRQHandler
 #define PM_DBG_UART_IRQn                UART0_RX_TX_IRQn
 
 /* Define feature for the low_power_demo */
@@ -90,7 +98,7 @@
 #define BOARD_SW_GPIO               kGpioSW1
 #define BOARD_SW_IRQ_NUM            PORTC_IRQn
 #define BOARD_SW_IRQ_HANDLER        PORTC_IRQHandler
-
+#define BOARD_SW_NAME               "SW1"
 /* Define print statement to inform user which switch to press for
  * power_manager_hal_demo and power_manager_rtos_demo
  */
@@ -116,9 +124,6 @@
 
 #define HWADC_INSTANCE               1
 #define ADC_IRQ_N                    ADC1_IRQn
-#if (defined FSL_RTOS_MQX)
-#define MQX_ADC_IRQHandler           MQX_ADC1_IRQHandler
-#endif
 
 /* The instances of peripherals used for dac_adc_demo */
 #define BOARD_DAC_DEMO_DAC_INSTANCE     0U
@@ -128,8 +133,11 @@
 /* The i2c instance used for i2c DAC demo */
 #define BOARD_DAC_I2C_INSTANCE 1
 
-/* The i2c instance used for i2c communication demo */
-#define BOARD_I2C_COMM_INSTANCE     0
+/* The i2c instance used for i2c connection by default */
+#define BOARD_I2C_INSTANCE          0
+
+/* The dspi instance used for dspi example */
+#define BOARD_DSPI_INSTANCE         0
 
 /* The Flextimer instance/channel used for board */
 #define BOARD_FTM_INSTANCE          0
@@ -194,12 +202,10 @@
 #define BOARD_RTC_FUNC_INSTANCE         0
 
 /* If connected the TWR_MEM, this is spi sd card */
-#define SDCARD_CARD_DETECTION_GPIO_PORT         PORTC_IDX
-#define SDCARD_CARD_DETECTION_GPIO_PIN          9
 #define SDCARD_CARD_WRITE_PROTECTION_GPIO_PORT  PORTB_IDX
 #define SDCARD_CARD_WRITE_PROTECTION_GPIO_PIN   22
 #define SDCARD_SPI_HW_INSTANCE                  1
-#define SDCARD_CARD_INSERTED                    0
+#define SDCARD_CD_GPIO_IRQ_HANDLER              PORTC_IRQHandler
 
 #if defined(__cplusplus)
 extern "C" {
@@ -215,6 +221,9 @@ void BOARD_ClockInit(void);
 
 /* Function to initialize OSC0 base on board configuration. */
 void BOARD_InitOsc0(void);
+
+/* Function to indicate whether a card is detected or not */
+bool BOARD_IsSDCardDetected(void);
 
 #if defined(__cplusplus)
 }

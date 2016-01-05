@@ -39,7 +39,6 @@ RNG_Type * const g_rngaBase[] = RNG_BASE_PTRS;
 
 /*! @brief Table to save RNGA IRQ enum numbers defined in CMSIS header file. */
 const IRQn_Type g_rngaIrqId[] = RNG_IRQS;
-
 /*******************************************************************************
  * EOF
  ******************************************************************************/

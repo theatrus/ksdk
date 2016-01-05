@@ -42,6 +42,10 @@ void hardware_init(void) {
 
   configure_ftm_pins(0);
 
+  /* Green Led is always ON, so need turn off it before run example */
+  LED1_EN;
+  LED1_OFF;
+
   /* Init board clock */
   BOARD_ClockInit();
   dbg_uart_init();

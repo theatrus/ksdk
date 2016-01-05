@@ -30,91 +30,25 @@
 
 #include <assert.h>
 #include "fsl_gpio_driver.h"
-#include "sdhc_sdcard.h"
+#include "board.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Code
 ///////////////////////////////////////////////////////////////////////////////
-
-#if defined (KL25Z4_SERIES) || defined (K64F12_SERIES) ||\
-    defined (K70F12_SERIES) || defined (K22F51212_SERIES)||\
-    defined (KV31F51212_SERIES) || defined (K60D10_SERIES) || defined (K21FA12_SERIES)
+extern void sdhc_card_detection(void);
 /*!
  * @brief gpio IRQ handler with the same name in startup code
  */
-void PORTA_IRQHandler(void)
+void BOARD_SDHC_CD_GPIO_IRQ_HANDLER(void)
 {
-    /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTA);
-}
+    PORT_Type * gpioBase = g_portBase[GPIO_EXTRACT_PORT(kGpioSdhc0Cd)];
+    uint32_t pin = GPIO_EXTRACT_PIN(kGpioSdhc0Cd);
 
-/*!
- * @brief gpio IRQ handler with the same name in startup code
- */
-void PORTD_IRQHandler(void)
-{
-    /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTD);
-}
-
-#if defined (K64F12_SERIES) || defined (K22F51212_SERIES) ||\
-    defined (K70F12_SERIES)|| defined (KV31F51212_SERIES) ||\
-    defined (K60D10_SERIES) || defined (K21FA12_SERIES)
-
-/*!
- * @brief gpio IRQ handler with the same name in startup code
- */
-void PORTB_IRQHandler(void)
-{
-#if defined (TWR_K64F120M)  
-    if(PORT_HAL_GetPortIntFlag(PORTB) == (1<<SDHC0_CD_GPIO_PIN))
+    if(PORT_HAL_GetPortIntFlag(gpioBase) == (1 << pin))
     {
-        sdhc_cd_irqhandler();
+        sdhc_card_detection();
     }
-#endif
     /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTB);
+    PORT_HAL_ClearPortIntFlag(gpioBase);
 }
 
-/*!
- * @brief gpio IRQ handler with the same name in startup code
- */
-void PORTC_IRQHandler(void)
-{
-#if defined (TWR_K21F120M)
-    if(PORT_HAL_GetPortIntFlag(PORTC) == (1<<SDHC0_CD_GPIO_PIN))
-    {
-        sdhc_cd_irqhandler();
-    }
-#endif
-    /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTC);
-}
-
-/*!
- * @brief gpio IRQ handler with the same name in startup code
- */
-void PORTE_IRQHandler(void)
-{
-#if defined (FRDM_K64F) || defined (TWR_K60D100M)
-    if(PORT_HAL_GetPortIntFlag(PORTE) == (1<<SDHC0_CD_GPIO_PIN))
-    {
-        sdhc_cd_irqhandler();
-    }
-#endif
-    /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTE);
-}
-
-#if defined (K70F12_SERIES)
-/*!
- * @brief gpio IRQ handler with the same name in startup code
- */
-void PORTF_IRQHandler(void)
-{
-    /* Clear interrupt flag.*/
-    PORT_HAL_ClearPortIntFlag(PORTF);
-}
-#endif
-#endif
-#endif

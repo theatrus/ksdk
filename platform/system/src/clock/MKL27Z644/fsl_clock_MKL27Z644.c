@@ -63,7 +63,7 @@ uint32_t g_usbClkInFreq[USB_EXT_CLK_COUNT];        /* USB_CLKIN        */
  * Description   : This funtion sets the SIM registers for clock transitiom.
  *
  *END**************************************************************************/
-static void CLOCK_SYS_SetSimConfigration(sim_config_t const *simConfig)
+void CLOCK_SYS_SetSimConfigration(sim_config_t const *simConfig)
 {
     CLOCK_HAL_SetOutDiv(SIM,
                         simConfig->outdiv1,

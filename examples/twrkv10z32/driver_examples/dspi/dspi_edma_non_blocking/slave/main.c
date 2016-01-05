@@ -43,7 +43,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define DSPI_SLAVE_INSTANCE         (0)                 /*! User change define to choose DSPI instance */
+#define DSPI_SLAVE_INSTANCE         BOARD_DSPI_INSTANCE /*! User change define to choose DSPI instance */
 #define TRANSFER_SIZE               (32)                /*! Transfer size */
 #define TRANSFER_BAUDRATE           (500000U)           /*! Transfer baudrate - 500k */
 /*******************************************************************************
@@ -83,8 +83,9 @@ int main(void)
     EDMA_DRV_Init(&dmaState, &dmaUserConfig);
     // Print a note.
     PRINTF("\r\n DSPI board to board EMDA non-blocking example");
-    PRINTF("\r\n This example run on instance 0 ");
-    PRINTF("\r\n Be sure DSPI0-DSPI0 are connected \n");
+    PRINTF("\r\n This example run on instance %d ", (uint32_t)DSPI_SLAVE_INSTANCE);
+    PRINTF("\r\n Be sure DSPI%d-DSPI%d are connected \r\n",
+                    (uint32_t)DSPI_SLAVE_INSTANCE,(uint32_t)DSPI_SLAVE_INSTANCE);
 
     // Setup the configuration and get user options.
     edmaSlaveConfig.dataConfig.bitsPerFrame = 8;
@@ -97,13 +98,13 @@ int main(void)
                                             &edmaSlaveConfig);
     if (dspiResult != kStatus_DSPI_Success)
     {
-        PRINTF("\r\nERROR: Can not initialize slave driver\n\r");
+        PRINTF("\r\nERROR: Can not initialize slave driver\r\n");
         return -1;
     }
 
     while(1)
     {
-        PRINTF("\r\n Slave test running...\n");
+        PRINTF("\r\n Slave test running...\r\n");
 
         // Reset the received buffer.
         for (i = 0; i < TRANSFER_SIZE; i++)
@@ -118,7 +119,7 @@ int main(void)
                                             TRANSFER_SIZE);
         if (dspiResult != kStatus_DSPI_Success)
         {
-            PRINTF("\r\nERROR: slave receives error \n\r");
+            PRINTF("\r\nERROR: slave receives error \r\n");
             return -1;
         }
         // Wait until the transfer is complete.
@@ -132,7 +133,7 @@ int main(void)
                                             TRANSFER_SIZE);
         if (dspiResult != kStatus_DSPI_Success)
         {
-            PRINTF("\r\nERROR: slave sends error \n\r");
+            PRINTF("\r\nERROR: slave sends error \r\n");
             return -1;
         }
         // Wait until the transfer is complete.
@@ -141,7 +142,7 @@ int main(void)
 
 
         // Print out receive buffer.
-        PRINTF("\r\n Slave receive:\n");
+        PRINTF("\r\n Slave receive:\r\n");
         for (i = 0; i < TRANSFER_SIZE; i++)
         {
             // Print 16 numbers in a line.

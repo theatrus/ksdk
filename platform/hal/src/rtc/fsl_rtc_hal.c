@@ -29,18 +29,8 @@
  */
 
 #include "fsl_rtc_hal.h"
-#include "fsl_device_registers.h"
 
 #if FSL_FEATURE_SOC_RTC_COUNT
-
-/* Checks mcg version */
-#if defined(FSL_FEATURE_MCGLITE_MCGLITE)
-#if (FSL_FEATURE_MCGLITE_MCGLITE)
-#include "fsl_mcglite_hal.h"
-#endif
-#else
-#include "fsl_mcg_hal.h"
-#endif
 
 /*******************************************************************************
  * Definitions
@@ -226,75 +216,27 @@ void RTC_HAL_ConvertDatetimeToSecs(const rtc_datetime_t * datetime, uint32_t * s
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : RTC_HAL_Enable
- * Description   : Initializes the RTC module.
- * This function will initiate a soft-reset of the RTC module to reset
- * all the RTC registers. It also enables the RTC oscillator.
- *
- *END**************************************************************************/
-void RTC_HAL_Enable(RTC_Type *rtcBase)
-{
-    /* We need to be careful setting the OSCE bit. Set this bit if the platform has a RTC OSC */
-#if defined(FSL_FEATURE_MCG_HAS_RTC_32K)
-#if (FSL_FEATURE_MCG_HAS_RTC_32K)
-    /* Enable RTC oscillator since it is required to start the counter*/
-    RTC_HAL_SetOscillatorCmd(rtcBase, true);
-#endif
-#endif
-
-    /*
-     * OSCE bit should also be set if we have a 32KHz external crystal feeding the System OSC.
-     * Setting the OSCE bit will activate the OSC32KCLK clock from the System OSC.
-     */
-    if ((g_xtal0ClkFreq == 32768) && (!(RTC_HAL_IsOscillatorEnabled(rtcBase))))
-    {
-        RTC_HAL_SetOscillatorCmd(rtcBase, true);
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
- * Function Name : RTC_HAL_Disable
- * Description   : Disables the RTC module.
- * This function disables the RTC counter and oscillator.
- * all the RTC registers. It also enables the RTC oscillator.
- *
- *END**************************************************************************/
-void RTC_HAL_Disable(RTC_Type *rtcBase)
-{
-    /* Disable counter*/
-    RTC_HAL_EnableCounter(rtcBase, false);
-
-    if (RTC_HAL_IsOscillatorEnabled(rtcBase))
-    {
-        /* Disable RTC oscillator */
-        RTC_HAL_SetOscillatorCmd(rtcBase, false);
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
  * Function Name : RTC_HAL_Init
  * Description   : This function will clear all interrupts and resets the RTC
  * module if the time invalid flag is set.
  *
  *END**************************************************************************/
-void RTC_HAL_Init(RTC_Type *rtcBase)
+void RTC_HAL_Init(RTC_Type *base)
 {
-    if(RTC_BRD_SR_TIF(rtcBase))
+    if(RTC_BRD_SR_TIF(base))
     {
         /* Resets the RTC registers except for the SWR bit */
-        RTC_HAL_SoftwareReset(rtcBase);
-        RTC_HAL_SoftwareResetFlagClear(rtcBase);
+        RTC_HAL_SoftwareReset(base);
+        RTC_HAL_SoftwareResetFlagClear(base);
 
         /* Set TSR register to 0x1 to avoid the TIF bit being set in the SR register */
-        RTC_HAL_SetSecsReg(rtcBase, 1U);
+        RTC_HAL_SetSecsReg(base, 1U);
     }
     /* Clear the interrupt enable register */
-    RTC_HAL_SetSecsIntCmd(rtcBase, false);
-    RTC_HAL_SetAlarmIntCmd(rtcBase, false);
-    RTC_HAL_SetTimeOverflowIntCmd(rtcBase, false);
-    RTC_HAL_SetTimeInvalidIntCmd(rtcBase, false);
+    RTC_HAL_SetSecsIntCmd(base, false);
+    RTC_HAL_SetAlarmIntCmd(base, false);
+    RTC_HAL_SetTimeOverflowIntCmd(base, false);
+    RTC_HAL_SetTimeInvalidIntCmd(base, false);
 }
 
 /*FUNCTION**********************************************************************
@@ -305,7 +247,7 @@ void RTC_HAL_Init(RTC_Type *rtcBase)
  * value to the RTC register. The RTC counter is started after setting the time.
  *
  *END**************************************************************************/
-void RTC_HAL_SetDatetime(RTC_Type *rtcBase, const rtc_datetime_t * datetime)
+void RTC_HAL_SetDatetime(RTC_Type *base, const rtc_datetime_t * datetime)
 {
     uint32_t seconds;
 
@@ -314,7 +256,7 @@ void RTC_HAL_SetDatetime(RTC_Type *rtcBase, const rtc_datetime_t * datetime)
 
     RTC_HAL_ConvertDatetimeToSecs(datetime, &seconds);
     /* Set time in seconds */
-    RTC_HAL_SetDatetimeInsecs(rtcBase, seconds);
+    RTC_HAL_SetDatetimeInsecs(base, seconds);
 }
 
 /*FUNCTION**********************************************************************
@@ -324,14 +266,14 @@ void RTC_HAL_SetDatetime(RTC_Type *rtcBase, const rtc_datetime_t * datetime)
  * provided in seconds. The RTC counter is started after setting the time.
  *
  *END**************************************************************************/
-void RTC_HAL_SetDatetimeInsecs(RTC_Type *rtcBase, const uint32_t seconds)
+void RTC_HAL_SetDatetimeInsecs(RTC_Type *base, const uint32_t seconds)
 {
     /* Disable counter*/
-    RTC_HAL_EnableCounter(rtcBase, false);
+    RTC_HAL_EnableCounter(base, false);
     /* Set seconds counter*/
-    RTC_HAL_SetSecsReg(rtcBase, seconds);
+    RTC_HAL_SetSecsReg(base, seconds);
     /* Enable the counter*/
-    RTC_HAL_EnableCounter(rtcBase, true);
+    RTC_HAL_EnableCounter(base, true);
 }
 
 /*FUNCTION**********************************************************************
@@ -342,14 +284,14 @@ void RTC_HAL_SetDatetimeInsecs(RTC_Type *rtcBase, const uint32_t seconds)
  * time structure which provides the time in date, hour, minutes and seconds.
  *
  *END**************************************************************************/
-void RTC_HAL_GetDatetime(RTC_Type *rtcBase, rtc_datetime_t * datetime)
+void RTC_HAL_GetDatetime(RTC_Type *base, rtc_datetime_t * datetime)
 {
     uint32_t seconds = 0;
 
     /* Protect against null pointers*/
     assert(datetime);
 
-    RTC_HAL_GetDatetimeInSecs(rtcBase, &seconds);
+    RTC_HAL_GetDatetimeInSecs(base, &seconds);
 
     RTC_HAL_ConvertSecsToDatetime(&seconds, datetime);
 }
@@ -360,11 +302,11 @@ void RTC_HAL_GetDatetime(RTC_Type *rtcBase, rtc_datetime_t * datetime)
  * Description   : Gets the RTC time and returns it in seconds.
  *
  *END**************************************************************************/
-void RTC_HAL_GetDatetimeInSecs(RTC_Type *rtcBase, uint32_t * seconds)
+void RTC_HAL_GetDatetimeInSecs(RTC_Type *base, uint32_t * seconds)
 {
     /* Protect against null pointers*/
     assert(seconds);
-    *seconds = RTC_HAL_GetSecsReg(rtcBase);
+    *seconds = RTC_HAL_GetSecsReg(base);
 }
 
 /*FUNCTION**********************************************************************
@@ -375,7 +317,7 @@ void RTC_HAL_GetDatetimeInSecs(RTC_Type *rtcBase, uint32_t * seconds)
  * time. If not, the function does not set the alarm and returns an error.
  *
  *END**************************************************************************/
-bool RTC_HAL_SetAlarm(RTC_Type *rtcBase, const rtc_datetime_t * date)
+bool RTC_HAL_SetAlarm(RTC_Type *base, const rtc_datetime_t * date)
 {
     uint32_t alrm_seconds, curr_seconds;
 
@@ -385,7 +327,7 @@ bool RTC_HAL_SetAlarm(RTC_Type *rtcBase, const rtc_datetime_t * date)
     RTC_HAL_ConvertDatetimeToSecs(date, &alrm_seconds);
 
     /* Get the current time */
-    curr_seconds = RTC_HAL_GetSecsReg(rtcBase);
+    curr_seconds = RTC_HAL_GetSecsReg(base);
 
     /* Make sure the alarm is for a future time */
     if (alrm_seconds <= curr_seconds)
@@ -394,7 +336,7 @@ bool RTC_HAL_SetAlarm(RTC_Type *rtcBase, const rtc_datetime_t * date)
     }
 
     /* set alarm in seconds*/
-    RTC_HAL_SetAlarmReg(rtcBase, alrm_seconds);
+    RTC_HAL_SetAlarmReg(base, alrm_seconds);
 
     return true;
 }
@@ -405,7 +347,7 @@ bool RTC_HAL_SetAlarm(RTC_Type *rtcBase, const rtc_datetime_t * date)
  * Description   : Reads the value of the time alarm.
  *
  *END**************************************************************************/
-void RTC_HAL_GetAlarm(RTC_Type *rtcBase, rtc_datetime_t * date)
+void RTC_HAL_GetAlarm(RTC_Type *base, rtc_datetime_t * date)
 {
     uint32_t seconds = 0;
 
@@ -413,7 +355,7 @@ void RTC_HAL_GetAlarm(RTC_Type *rtcBase, rtc_datetime_t * date)
     assert(date);
 
     /* Get alarm in seconds  */
-    seconds = RTC_HAL_GetAlarmReg(rtcBase);
+    seconds = RTC_HAL_GetAlarmReg(base);
 
     RTC_HAL_ConvertSecsToDatetime(&seconds, date);
 }
@@ -427,13 +369,13 @@ void RTC_HAL_GetAlarm(RTC_Type *rtcBase, rtc_datetime_t * date)
  * Counter Low and returns them as a single value.
  *
  *END**************************************************************************/
-void RTC_HAL_GetMonotonicCounter(RTC_Type *rtcBase, uint64_t * counter)
+void RTC_HAL_GetMonotonicCounter(RTC_Type *base, uint64_t * counter)
 {
     uint32_t tmpCountHigh = 0;
     uint32_t tmpCountLow = 0;
 
-    tmpCountHigh = RTC_HAL_GetMonotonicCounterHigh(rtcBase);
-    tmpCountLow = RTC_HAL_GetMonotonicCounterLow(rtcBase);
+    tmpCountHigh = RTC_HAL_GetMonotonicCounterHigh(base);
+    tmpCountLow = RTC_HAL_GetMonotonicCounterLow(base);
 
     *counter = (((uint64_t)(tmpCountHigh) << 32) | ((uint64_t)tmpCountLow));
 }
@@ -445,15 +387,15 @@ void RTC_HAL_GetMonotonicCounter(RTC_Type *rtcBase, uint64_t * counter)
  * Counter Low by decomposing the given single value.
  *
  *END**************************************************************************/
-void RTC_HAL_SetMonotonicCounter(RTC_Type *rtcBase, const uint64_t * counter)
+void RTC_HAL_SetMonotonicCounter(RTC_Type *base, const uint64_t * counter)
 {
     uint32_t tmpCountHigh = 0;
     uint32_t tmpCountLow = 0;
 
     tmpCountHigh = (uint32_t)((*counter) >> 32);
-    RTC_HAL_SetMonotonicCounterHigh(rtcBase, tmpCountHigh);
+    RTC_HAL_SetMonotonicCounterHigh(base, tmpCountHigh);
     tmpCountLow = (uint32_t)(*counter);
-    RTC_HAL_SetMonotonicCounterLow(rtcBase, tmpCountLow);
+    RTC_HAL_SetMonotonicCounterLow(base, tmpCountLow);
 }
 
 /*FUNCTION**********************************************************************
@@ -465,17 +407,17 @@ void RTC_HAL_SetMonotonicCounter(RTC_Type *rtcBase, const uint64_t * counter)
  * monotonic counter low that causes it to overflow also increments the monotonic counter high.
  *
  *END**************************************************************************/
-bool RTC_HAL_IncrementMonotonicCounter(RTC_Type *rtcBase)
+bool RTC_HAL_IncrementMonotonicCounter(RTC_Type *base)
 {
     bool result = false;
 
-    if((!(RTC_HAL_IsMonotonicCounterOverflow(rtcBase))) && (!(RTC_HAL_IsTimeInvalid(rtcBase))))
+    if((!(RTC_HAL_IsMonotonicCounterOverflow(base))) && (!(RTC_HAL_IsTimeInvalid(base))))
     {
         /* prepare for incrementing after write*/
-        RTC_HAL_SetMonotonicEnableCmd(rtcBase, true);
+        RTC_HAL_SetMonotonicEnableCmd(base, true);
 
         /* write anything so the counter increments*/
-        RTC_WR_MCLR(rtcBase, 1U);
+        RTC_WR_MCLR(base, 1U);
 
         result = true;
     }

@@ -59,7 +59,7 @@ volatile bool bFallingEvent = false;
 ///////////////////////////////////////////////////////////////////////////////
 /*!
 * @brief Compare analog input to reference DAC output.
-* This function compares analog input (SW1) to reference DAC output to control a LED
+* This function compares analog input to reference DAC output to control a LED
 * If the analog input higher than DAC output, led is turned on
 * otherwise led is turned off
 */
@@ -78,16 +78,8 @@ int main(void)
     LED1_EN;
     LED1_OFF;
 
-    PRINTF("The demo compares analog input to reference DAC output to control a LED.\n\
-    \rLED is turned ON/OFF when analog input is LOWER/HIGHER than DAC output\n\r");
-
-    // Init IO for CMP. Booad don't have pull up resister, so internal resister need to be enabled
-#if defined(TWR_K64F120M) ||defined(FRDM_K64F) || defined(TWR_K24F120M) || defined(TWR_K22F120M) || defined(TWR_K21F120M) ||\
-    defined(TWR_KV31F120M) || defined(TWR_K21D50M) || defined(TWR_KW24D512)
-    PORT_HAL_SetMuxMode(PORTC,6u,kPortMuxAsGpio);
-    PORT_HAL_SetPullMode(PORTC,6U,kPortPullUp);
-    PORT_HAL_SetPullCmd(PORTC,6U,true);
-#endif
+    PRINTF("The demo compares analog input to reference DAC output to control a LED.\r\n\
+    \rLED is turned ON/OFF when analog input is LOWER/HIGHER than DAC output\r\n");
 
     // Enable rising interrupt
     // Enable falling interrupt
@@ -109,10 +101,10 @@ int main(void)
 
     // Start the CMP function.
     CMP_DRV_Start(CMP_INSTANCE);
-#if defined(TWR_K65F180M)
-    PRINTF("\n\rChange potentiometer position and see status of led\n\n\r");
+#if defined(TWR_K65F180M) || defined (KM34Z7_SERIES)
+    PRINTF("\r\nChange potentiometer position and see status of led\r\n\r\n");
 #else
-    PRINTF("\n\rPress %s and see status of led\n\n\r", (uint8_t*)BOARD_CMP_SW_NAME);    
+    PRINTF("\r\nPress %s and see status of led\r\n\r\n", (uint8_t*)BOARD_CMP_SW_NAME);    
 #endif
     while (1)
     {

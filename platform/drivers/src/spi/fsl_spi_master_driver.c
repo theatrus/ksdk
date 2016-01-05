@@ -91,7 +91,10 @@ spi_status_t SPI_DRV_MasterInit(uint32_t instance, spi_master_state_t * spiState
     SPI_HAL_Init(base);
 
     /* Init the interrupt sync object.*/
-    OSA_SemaCreate(&spiState->irqSync, 0);
+    if (OSA_SemaCreate(&spiState->irqSync, 0) != kStatus_OSA_Success)
+    {
+        return kStatus_SPI_Error;
+    }
 
     /* Set SPI to master mode */
     SPI_HAL_SetMasterSlave(base, kSpiMaster);

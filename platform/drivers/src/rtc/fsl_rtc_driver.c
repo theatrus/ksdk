@@ -27,6 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include <string.h>
 #include "fsl_rtc_driver.h"
 #include "fsl_clock_manager.h"
@@ -69,7 +70,6 @@ rtc_status_t RTC_DRV_Init(uint32_t instance)
 
     /* Initialize the general configuration for RTC module.*/
     RTC_HAL_Init(rtcBase);
-    RTC_HAL_Enable(rtcBase);
 
     NVIC_ClearPendingIRQ(g_rtcIrqId[instance]);
     NVIC_ClearPendingIRQ(g_rtcSecondsIrqId[instance]);
@@ -91,9 +91,6 @@ void RTC_DRV_Deinit(uint32_t instance)
     /* Disable RTC interrupts.*/
     INT_SYS_DisableIRQ(g_rtcIrqId[instance]);
     INT_SYS_DisableIRQ(g_rtcSecondsIrqId[instance]);
-
-    /* Disable the RTC counter */
-    RTC_HAL_Disable(g_rtcBase[instance]);
 
     /* Disable clock gate to RTC module */
     CLOCK_SYS_DisableRtcClock(0U);

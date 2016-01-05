@@ -82,13 +82,13 @@ typedef enum _pdb_load_value_mode
 typedef enum _pdb_clk_prescaler_div
 {
     kPdbClkPreDivBy1   = 0U, /*!< Counting divided by multiplication factor selected by MULT. @internal gui name="1" */
-    kPdbClkPreDivBy2   = 1U, /*!< Counting divided by multiplication factor selected by 2 times ofMULT. @internal gui name="2" */
-    kPdbClkPreDivBy4   = 2U, /*!< Counting divided by multiplication factor selected by 4 times ofMULT. @internal gui name="4" */
-    kPdbClkPreDivBy8   = 3U, /*!< Counting divided by multiplication factor selected by 8 times ofMULT. @internal gui name="8" */
-    kPdbClkPreDivBy16  = 4U, /*!< Counting divided by multiplication factor selected by 16 times ofMULT. @internal gui name="16" */
-    kPdbClkPreDivBy32  = 5U, /*!< Counting divided by multiplication factor selected by 32 times ofMULT. @internal gui name="32" */
-    kPdbClkPreDivBy64  = 6U, /*!< Counting divided by multiplication factor selected by 64 times ofMULT. @internal gui name="64" */
-    kPdbClkPreDivBy128 = 7U, /*!< Counting divided by multiplication factor selected by 128 times ofMULT. @internal gui name="128" */
+    kPdbClkPreDivBy2   = 1U, /*!< Counting divided by multiplication factor selected by 2 times of MULT. @internal gui name="2" */
+    kPdbClkPreDivBy4   = 2U, /*!< Counting divided by multiplication factor selected by 4 times of MULT. @internal gui name="4" */
+    kPdbClkPreDivBy8   = 3U, /*!< Counting divided by multiplication factor selected by 8 times of MULT. @internal gui name="8" */
+    kPdbClkPreDivBy16  = 4U, /*!< Counting divided by multiplication factor selected by 16 times of MULT. @internal gui name="16" */
+    kPdbClkPreDivBy32  = 5U, /*!< Counting divided by multiplication factor selected by 32 times of MULT. @internal gui name="32" */
+    kPdbClkPreDivBy64  = 6U, /*!< Counting divided by multiplication factor selected by 64 times of MULT. @internal gui name="64" */
+    kPdbClkPreDivBy128 = 7U, /*!< Counting divided by multiplication factor selected by 128 times of MULT. @internal gui name="128" */
 } pdb_clk_prescaler_div_t;
 
 /*!
@@ -139,8 +139,8 @@ typedef struct PdbTimerConfig
 {
     pdb_load_value_mode_t loadValueMode; /*!< Select the load mode. @internal gui name="Load mode" id="LoadMode" */
     bool seqErrIntEnable; /*!< Enable PDB Sequence Error Interrupt. @internal gui name="Sequence error interrupt" id="SequenceErrorInterrupt" */
-    pdb_clk_prescaler_div_t clkPreDiv; /*!< Select the prescaler divider. @internal gui name="Divider" id="Divider" */
-    pdb_clk_prescaler_mult_factor_t clkPreMultFactor; /*!< Select multiplication factor for prescaler. @internal gui name="Multiplier" id="Multiplier" */
+    pdb_clk_prescaler_div_t clkPreDiv; /*!< Select the prescaler divider. @internal gui name="Prescaler divider" id="Divider" */
+    pdb_clk_prescaler_mult_factor_t clkPreMultFactor; /*!< Select multiplication factor for prescaler. @internal gui name="Prescaler multiplication factor" id="Multiplier" */
     pdb_trigger_src_t triggerInput; /*!< Select the trigger input source. @internal gui name="Trigger" id="Trigger" */
     bool continuousModeEnable; /*!< Enable the continuous mode. @internal gui name="Continuous mode" id="ContinuousMode" */
     bool dmaEnable; /*!< Enable the dma for timer. @internal gui name="DMA" id="DMA" */
@@ -159,16 +159,16 @@ extern "C" {
  * @brief Resets the PDB registers to a known state.
  *
  * This function resets the PDB registers to a known state. This state is
- * defined in a reference manual and is power on reset value.
+ * defined in a reference manual and is power-on-reset value.
  *
  * @param base Register base address for the module.
  */
 void PDB_HAL_Init(PDB_Type * base);
 
 /*!
- * @brief Configure the PDB timer.
+ * @brief Configures the PDB timer.
  *
- * This function configure the PDB's basic timer.
+ * This function configures the PDB basic timer.
  *
  * @param base Register base address for the module.
  * @param configPtr Pointer to configuration structure, see to "pdb_timer_config_t".
@@ -227,7 +227,7 @@ static inline bool PDB_HAL_GetTimerIntFlag(PDB_Type * base)
 /*!
  * @brief Clears the PDB delay interrupt flag.
  *
- * This function clears PDB delay interrupt flag.
+ * This function clears the PDB delay interrupt flag.
  *
  * @param base Register base address for the module.
  * @return Flat status, true if the flag is set.
@@ -245,7 +245,7 @@ static inline void PDB_HAL_ClearTimerIntFlag(PDB_Type * base)
  * DACINTx, and POyDLY with the values written to their buffers. The MOD, IDLY, 
  * CHnDLYm, DACINTx, and POyDLY take effect according to the load mode settings.
  *
- * After one is written to the LDOK bit, the values in the buffers of above mentioned registers 
+ * After one is written to the LDOK bit, the values in the buffers of the above mentioned registers 
  * are not effective and cannot be written until the values in the
  * buffers are loaded into their internal registers. 
  * The LDOK can be written only when the the PDB is enabled or as alone with it. It is
@@ -407,6 +407,7 @@ void PDB_HAL_ClearAdcPreTriggerSeqErrFlags(PDB_Type * base, uint32_t chn, uint32
  */
 void PDB_HAL_SetAdcPreTriggerDelayValue(PDB_Type * base, uint32_t chn, uint32_t preChn, uint32_t value);
 
+#if FSL_FEATURE_PDB_HAS_DAC
 /*!
  * @brief Switches to enable the DAC external trigger input.
  *
@@ -452,6 +453,7 @@ static inline void PDB_HAL_SetDacIntervalValue(PDB_Type * base, uint32_t dacChn,
     assert(dacChn < PDB_INT_COUNT);
     PDB_BWR_INT_INT(base, dacChn, value);
 }
+#endif
 
 /*!
  * @brief Switches to enable the pulse-out trigger.
@@ -459,7 +461,7 @@ static inline void PDB_HAL_SetDacIntervalValue(PDB_Type * base, uint32_t dacChn,
  * This function switches to enable the pulse-out trigger.
  *
  * @param base Register base address for the module.
- * @param pulseChnMask Pulse-out channle index mask for trigger.
+ * @param pulseChnMask Pulse-out channel index mask for trigger.
  * @param enable Switcher to assert the feature.
  */
 void PDB_HAL_SetCmpPulseOutEnable(PDB_Type * base, uint32_t pulseChnMask, bool enable);

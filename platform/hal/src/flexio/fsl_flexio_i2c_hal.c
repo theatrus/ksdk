@@ -30,6 +30,7 @@
 
 #include "fsl_flexio_i2c_hal.h"
 #include "fsl_flexio_hal.h"
+#include <string.h>
 #if FSL_FEATURE_SOC_FLEXIO_COUNT
 
 /*------------------------------------------------------------------------
@@ -46,6 +47,9 @@ flexio_status_t FLEXIO_I2C_HAL_ConfigMaster(flexio_i2c_dev_t *devPtr,
 {
     flexio_shifter_config_t mFlexioShfiterConfigStruct;
     flexio_timer_config_t mFlexioTimerConfigStruct;
+    memset(&mFlexioShfiterConfigStruct, 0, sizeof(mFlexioShfiterConfigStruct));
+    memset(&mFlexioTimerConfigStruct, 0, sizeof(mFlexioTimerConfigStruct));
+
     uint32_t timdiv = 0U, timcmp = 0U;
 
     if ( (!devPtr) || (!configPtr) )

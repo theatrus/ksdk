@@ -35,8 +35,6 @@
 
 void hardware_init(void) {
 
-  uint8_t i;
-
   /* enable clock for PORTs */
   CLOCK_SYS_EnablePortClock(PORTA_IDX);
   CLOCK_SYS_EnablePortClock(PORTB_IDX);
@@ -49,7 +47,7 @@ void hardware_init(void) {
   dbg_uart_init();
 
   // Configure SPI pins
-  configure_spi_pins(0);
+  configure_spi_pins(2);
 }
 
 /*!

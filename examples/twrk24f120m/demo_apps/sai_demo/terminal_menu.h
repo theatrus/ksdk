@@ -39,9 +39,15 @@
 // Standard C Included Files
 #include <stdint.h>
 // SDK Included Files
-#include "fsl_uart_driver.h"
 #include "fsl_debug_console.h"
 #include "board.h"
+#if (defined BOARD_USE_LPSCI)
+  #include "fsl_lpsci_driver.h"
+#elif (defined BOARD_USE_LPUART)
+  #include "fsl_lpuart_driver.h"
+#else
+  #include "fsl_uart_driver.h"
+#endif // BOARD_USE_LPSCI
 // Application Included Files
 #include "audio.h"
 

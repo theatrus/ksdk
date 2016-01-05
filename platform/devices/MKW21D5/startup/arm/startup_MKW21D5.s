@@ -4,7 +4,7 @@
 ; *            MKW21D5
 ; *  @version: 2.0
 ; *  @date:    2015-1-6
-; *  @build:   b150205
+; *  @build:   b150602
 ; * ---------------------------------------------------------------------------------------
 ; *
 ; * Copyright (c) 1997 - 2015 , Freescale Semiconductor, Inc.
@@ -478,7 +478,7 @@ Reset_Handler   PROC
                 IMPORT  __main
 
                 IF      :LNOT::DEF:RAM_TARGET
-                LDR R0, =FlashConfig    ; dummy read, workaround for flashConfig
+                REQUIRE FlashConfig
                 ENDIF
 
                 CPSID   I               ; Mask interrupts

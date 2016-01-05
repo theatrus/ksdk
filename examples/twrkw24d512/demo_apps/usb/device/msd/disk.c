@@ -53,20 +53,12 @@
 #endif
 
 #if SD_CARD_APP
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "sd_esdhc_kinetis.h"
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_sdhc_card.h"
 #include "fsl_gpio_driver.h"
 #include "gpio_pins.h"
 #include "board.h"
-#else
-#include "sd.h"
 #endif
-#endif
-
-#if USBCFG_DEV_COMPOSITE
-#error This application requires USBCFG_DEV_COMPOSITE defined zero in usb_device_config.h. Please recompile usbd with this option.
 #endif
 
 #if !USBCFG_DEV_MSC
@@ -84,15 +76,6 @@
 extern void Main_Task(uint32_t param);
 #define MAIN_TASK       10
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    { MAIN_TASK, Main_Task, 2 * 3000L, 9L, "Main", MQX_AUTO_START_TASK, 0, 0 },
-    { 0L, 0L, 0L, 0L, 0L, 0L, 0, 0 }
-};
-
-MQX_FILE_PTR g_sdcard_handle;
-#endif
 /*****************************************************************************
  * Constant and Macro's - None
  *****************************************************************************/
@@ -153,7 +136,7 @@ void Disk_App(void);
 sdhc_card_t card = {0};
 sdhc_host_t host = {0};
 #endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM || OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if ( OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 uint32_t g_msc_bulk_out_buff_temp[MSD_RECV_BUFFER_NUM][MSD_RECV_BUFFER_SIZE >> 2];
 uint32_t g_msc_bulk_in_buff_temp[MSD_SEND_BUFFER_SIZE >> 2];
 #endif
@@ -206,7 +189,7 @@ void free_write_buffer(uint32_t* buffer)
 }
 #endif
 
-#if MUTILE_BUFFER && (((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (USE_RTOS)) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX))
+#if MUTILE_BUFFER && (((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (USE_RTOS)))
 os_msgq_handle write_msg_handler;
 os_mutex_handle sdhc_mutex;
 
@@ -231,15 +214,11 @@ static void write_task(void *arg)
         OS_Mutex_lock(sdhc_mutex);
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
         error_code = SDCARD_DRV_WriteBlocks(&card, buff_ptr, offset >> SDCARD_BLOCK_SIZE_POWER, size >> SDCARD_BLOCK_SIZE_POWER);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        error_code = sd_write_device_sectors(g_sdcard_handle, offset >> SDCARD_BLOCK_SIZE_POWER, size >> SDCARD_BLOCK_SIZE_POWER, 3, buff_ptr, NULL);
 #endif
         OS_Mutex_unlock(sdhc_mutex);
         free_write_buffer((uint32_t*)buff_ptr);
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
         if (error_code != kStatus_SDHC_NoError)
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        if (error_code != MQX_OK)
 #endif
         {
             g_disk.read_write_error = 1;
@@ -429,9 +408,6 @@ uint8_t USB_App_Class_Callback
     uint8_t * prevent_removal_ptr;
     device_lba_info_struct_t* device_lba_info_ptr;
     uint8_t error = USB_OK;
-#if SD_CARD_APP && (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    _mqx_uint error_code = MQX_OK;
-#endif
 #if SD_CARD_APP && (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     sdhc_status_t error_code = kStatus_SDHC_NoError;
 #endif
@@ -452,10 +428,7 @@ uint8_t USB_App_Class_Callback
         free_write_buffer((uint32_t*)lba_data_ptr->buff_ptr);
         else
         {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            SD_Write_Block(lba_data_ptr);
-            free_write_buffer((uint32_t*)lba_data_ptr->buff_ptr);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if MUTILE_BUFFER && (USE_RTOS)
                     uint32_t msg[3] = {(uint32_t)lba_data_ptr->buff_ptr, lba_data_ptr->offset, lba_data_ptr->size};
             OS_MsgQ_send(write_msg_handler, (void*)(msg), 0);
@@ -524,9 +497,7 @@ uint8_t USB_App_Class_Callback
             *data = g_msc_bulk_in_buff;
         }
         lba_data_ptr->buff_ptr = g_msc_bulk_in_buff;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        SD_Read_Block(lba_data_ptr);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if MUTILE_BUFFER && (USE_RTOS)
         OS_Mutex_lock(sdhc_mutex);
 #endif
@@ -594,10 +565,7 @@ uint8_t USB_App_Class_Callback
         device_lba_info_ptr->total_lba_device_supports = TOTAL_LOGICAL_ADDRESS_BLOCKS_NORMAL;
         device_lba_info_ptr->length_of_each_lab_of_device = LENGTH_OF_EACH_LAB;
 #elif SD_CARD_APP
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        SD_Card_Info(&device_lba_info_ptr->total_lba_device_supports,
-        &device_lba_info_ptr->length_of_each_lab_of_device);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
         device_lba_info_ptr->total_lba_device_supports = card.blockCount;
         device_lba_info_ptr->length_of_each_lab_of_device = card.blockSize;
 #else
@@ -630,12 +598,9 @@ void APP_init(void)
 {
 #if SD_CARD_APP
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     g_msc_bulk_in_buff = (uint8_t*)g_msc_bulk_in_buff_temp;
     g_msc_bulk_out_buff = (uint8_t*)g_msc_bulk_out_buff_temp;
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    g_msc_bulk_in_buff = (uint8_t*)OS_Mem_alloc_uncached_align(MSD_SEND_BUFFER_SIZE, 32);
-    g_msc_bulk_out_buff = (uint8_t*)OS_Mem_alloc_uncached_align(MSD_RECV_BUFFER_SIZE * MSD_RECV_BUFFER_NUM, 32);
 #endif
 
 #endif
@@ -643,7 +608,7 @@ void APP_init(void)
     USB_PRINTF("Enter Testapp_init\n");
 #if SD_CARD_APP
     USB_PRINTF("Please insert SD card\n");
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM || OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #if USE_SDHC_PROTOCOL
     sdhc_detect_io_init();
 #endif
@@ -671,6 +636,8 @@ void APP_init(void)
     g_msd_config.vendor_req_callback = vend_req_callback;
     g_msd_config.class_specific_callback.callback = USB_App_Class_Callback;
     g_msd_config.class_specific_callback.arg = &g_disk.app_handle;
+    g_msd_config.board_init_callback.callback = usb_device_board_init;
+    g_msd_config.board_init_callback.arg = CONTROLLER_ID;
     g_msd_config.desc_callback_ptr = &desc_callback;
 
     g_disk.speed = USB_SPEED_FULL;
@@ -695,32 +662,6 @@ void APP_task()
     }
     Disk_App();
 }
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- * 
- * Function Name  : Main_Task
- * Returned Value : None
- * Comments       :
- *     First function called.  Calls Test_App
- *     callback functions.
- * 
- *END*--------------------------------------------------------------------*/
-void Main_Task
-(
-    uint32_t param
-    )
-{
-    UNUSED_ARGUMENT (param)
-    APP_init();
-#if MUTILE_BUFFER
-    /* write sdhc task */
-    sdhc_mutex = OS_Mutex_create();
-    write_msg_handler = OS_MsgQ_create((MSD_RECV_BUFFER_NUM), 3);/* msg_size = 12Bytes */
-    OS_Task_create(write_task, NULL, 8L, 2000L, "write_task", NULL);
-#endif
-}
-#endif
 
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
@@ -767,13 +708,13 @@ void main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
 
 #if MUTILE_BUFFER && (USE_RTOS)
     /* write sdhc task */
     sdhc_mutex = OS_Mutex_create();
     write_msg_handler = OS_MsgQ_create((MSD_RECV_BUFFER_NUM), 3);/* msg_size = 12Bytes */
-    OS_Task_create(write_task, NULL, 8L, 2000L, "write_task", NULL);
+    OS_Task_create(write_task, NULL, 3L, 2000L, "write_task", NULL);
 #endif
 
     OSA_Start();

@@ -34,6 +34,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fsl_rnga_hal.h"
+#include "fsl_os_abstraction.h"
+
 #if FSL_FEATURE_SOC_RNG_COUNT
 /*! 
  * @addtogroup rnga_driver
@@ -43,6 +45,11 @@
 /*******************************************************************************
  * Definitions
  *******************************************************************************/
+/*! @brief Enables/disables multi-thread support in RNGA driver. It is achieved by mutex locking of critical sections.
+ *   It is enabled by default for RTOS. It is optional and may be disabled if TRNG is used only by one RTOS task. */
+#ifndef RNGA_DRV_RTOS_MULTI_THREAD
+#define RNGA_DRV_RTOS_MULTI_THREAD  (USE_RTOS)
+#endif
 
 /*! @brief Table of base addresses for RNGA instances. */
 extern RNG_Type * const g_rngaBase[];
@@ -59,8 +66,8 @@ extern const IRQn_Type g_rngaIrqId[RNG_INSTANCE_COUNT];
  */
 typedef struct _rnga_user_config
 {
-   bool isIntMasked; /*!< Mask the triggering of error interrupt @internal gui name="Interrupt mask" id="isIntMasked" */
-   bool highAssuranceEnable; /*!< Enable notification of security violations @internal gui name="High assurance" id="highAssurance" */  
+   bool isIntMasked; /*!< Masks the triggering of error interrupt @internal gui name="Interrupt mask" id="isIntMasked" */
+   bool highAssuranceEnable; /*!< Enables notification of security violations @internal gui name="High assurance" id="highAssurance" */  
 } rnga_user_config_t;
 
 
@@ -122,21 +129,17 @@ static inline rnga_mode_t RNGA_DRV_GetMode(uint32_t instance)
     return RNGA_HAL_GetWorkMode(g_rngaBase[instance]);
 }
 
-
 /*!
  * @brief Gets random data.
  *
  * This function gets random data from the RNGA.
  *
  * @param instance, RNGA instance ID
- * @param data, pointer address used to store random data
- * @return one random data
+ * @param data pointer to user buffer to be filled by random data
+ * @data_size size of data in bytes
+ * @return RNGA status
  */
-static inline rnga_status_t RNGA_DRV_GetRandomData(uint32_t instance, uint32_t *data)
-{
-    return RNGA_HAL_GetRandomData(g_rngaBase[instance], data);
-}
-
+rnga_status_t RNGA_DRV_GetRandomData(uint32_t instance, void *data, uint32_t data_size);
 
 /*!
  * @brief Feeds the RNGA module.
@@ -149,7 +152,7 @@ static inline rnga_status_t RNGA_DRV_GetRandomData(uint32_t instance, uint32_t *
  */
 static inline void RNGA_DRV_Seed(uint32_t instance, uint32_t seed)
 {
-    RNGA_HAL_WriteSeed(g_rngaBase[instance],seed);
+    RNGA_HAL_WriteSeed(g_rngaBase[instance], seed);
 }
 
 /*!

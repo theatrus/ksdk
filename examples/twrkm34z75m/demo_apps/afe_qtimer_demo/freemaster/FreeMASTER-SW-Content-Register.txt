@@ -1,0 +1,8 @@
+Release Name: FreeMASTER Serial Communication Driver v1.8.1
+
+Example Code    
+Description: Freescale FreeMASTER driver and support code  
+Author: FSL
+License: Proprietary. See LICENSE.txt
+Format: source code
+Location: /freemaster

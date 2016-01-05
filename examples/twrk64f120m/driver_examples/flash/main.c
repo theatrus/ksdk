@@ -91,30 +91,30 @@ int main(void)
         error_trap();
     }
     // print welcome message
-    PRINTF("\n\r Flash Example Start \r\n");
+    PRINTF("\r\n Flash Example Start \r\n");
     // Print flash information - PFlash.
-    PRINTF("\n\r Flash Information: ");
-    PRINTF("\n\r Total Flash Size:\t%d KB, Hex: (0x%x)", (P_FLASH_SIZE/ONE_KB), P_FLASH_SIZE);
-    PRINTF("\n\r Flash Sector Size:\t%d KB, Hex: (0x%x) ", (FTFx_PSECTOR_SIZE/ONE_KB), FTFx_PSECTOR_SIZE);
+    PRINTF("\r\n Flash Information: ");
+    PRINTF("\r\n Total Flash Size:\t%d KB, Hex: (0x%x)", (P_FLASH_SIZE/ONE_KB), P_FLASH_SIZE);
+    PRINTF("\r\n Flash Sector Size:\t%d KB, Hex: (0x%x) ", (FTFx_PSECTOR_SIZE/ONE_KB), FTFx_PSECTOR_SIZE);
     // Check if DFlash exist on this device.
     if (flashSSDConfig.DFlashSize)
     {
-        PRINTF("\n\r Data Flash Size:\t%d KB,\tHex: (0x%x)", (int)(flashSSDConfig.DFlashSize/ONE_KB), (unsigned int)flashSSDConfig.DFlashSize);
-        PRINTF("\n\r Data Flash Base Address:\t0x%x", (unsigned int)flashSSDConfig.DFlashBase);
+        PRINTF("\r\n Data Flash Size:\t%d KB,\tHex: (0x%x)", (int)(flashSSDConfig.DFlashSize/ONE_KB), (unsigned int)flashSSDConfig.DFlashSize);
+        PRINTF("\r\n Data Flash Base Address:\t0x%x", (unsigned int)flashSSDConfig.DFlashBase);
     }
     else
     {
-      PRINTF("\n\r There is no D-Flash (FlexNVM) on this Device.");
+      PRINTF("\r\n There is no D-Flash (FlexNVM) on this Device.");
     }
     // Check if FlexMemory exist on this device.
     if (flashSSDConfig.EEESize)
     {
-        PRINTF("\n\r Enhanced EEPROM (EEE) Block Size:\t%d KB,\tHex: (0x%x)", (int)(flashSSDConfig.EEESize/ONE_KB), (unsigned int)flashSSDConfig.EEESize);
-        PRINTF("\n\r Enhanced EEPROM (EEE) Base Address:\t0x%x", (unsigned int)flashSSDConfig.EERAMBase);
+        PRINTF("\r\n Enhanced EEPROM (EEE) Block Size:\t%d KB,\tHex: (0x%x)", (int)(flashSSDConfig.EEESize/ONE_KB), (unsigned int)flashSSDConfig.EEESize);
+        PRINTF("\r\n Enhanced EEPROM (EEE) Base Address:\t0x%x", (unsigned int)flashSSDConfig.EERAMBase);
     }
     else
     {
-      PRINTF("\n\r There is no Enhanced EEPROM (EEE) on this Device.");
+      PRINTF("\r\n There is no Enhanced EEPROM (EEE) on this Device.");
     }
 
     // Check security status.
@@ -127,23 +127,23 @@ int main(void)
     switch(securityStatus)
     {
         case FLASH_NOT_SECURE:
-            PRINTF("\n\r Flash is UNSECURE!");
+            PRINTF("\r\n Flash is UNSECURE!");
             break;
         case FLASH_SECURE_BACKDOOR_ENABLED:
-            PRINTF("\n\r Flash is SECURE, BACKDOOR is ENABLED!");
+            PRINTF("\r\n Flash is SECURE, BACKDOOR is ENABLED!");
             break;
         case FLASH_SECURE_BACKDOOR_DISABLED:
-            PRINTF("\n\r Flash is SECURE, BACKDOOR is DISABLED!");
+            PRINTF("\r\n Flash is SECURE, BACKDOOR is DISABLED!");
             break;
         default:
             break;
     }
-    PRINTF("\n\r");
+    PRINTF("\r\n");
 
     // Debug message for user.
     // Erase several sectors on upper pflash block where there is no code
     // because we are running from Flash.
-    PRINTF("\n\r Erase a sector of flash");
+    PRINTF("\r\n Erase a sector of flash");
 
     // Set command to RAM.
     g_FlashLaunchCommand = (pFLASHCOMMANDSEQUENCE)RelocateFunction((uint32_t)ramFunc , LAUNCH_CMD_SIZE ,(uint32_t)FlashCommandSequence);
@@ -168,10 +168,10 @@ int main(void)
         }
     }
     // Print message for user.
-    PRINTF("\n\r Successfully Erased Sector 0x%x -> 0x%x\r\n", (unsigned int)destAdrss, (unsigned int)(destAdrss+FTFx_PSECTOR_SIZE));
+    PRINTF("\r\n Successfully Erased Sector 0x%x -> 0x%x\r\n", (unsigned int)destAdrss, (unsigned int)(destAdrss+FTFx_PSECTOR_SIZE));
 
     // Print message for user.
-    PRINTF("\n\r Program a buffer to a sector of flash ");
+    PRINTF("\r\n Program a buffer to a sector of flash ");
     // Prepare buffer.
     for (i = 0; i < BUFFER_SIZE_BYTE; i++)
     {
@@ -195,10 +195,10 @@ int main(void)
             error_trap();
         }
     }
-    PRINTF("\n\r Successfully Programmed and Verified Location 0x%x -> 0x%x \r\n", (unsigned int)destAdrss, (unsigned int)(destAdrss + BUFFER_SIZE_BYTE));
+    PRINTF("\r\n Successfully Programmed and Verified Location 0x%x -> 0x%x \r\n", (unsigned int)destAdrss, (unsigned int)(destAdrss + BUFFER_SIZE_BYTE));
 
     // Print finished message.
-    PRINTF("\n\r Flash Example End \r\n");
+    PRINTF("\r\n Flash Example End \r\n");
     while(1);
 }
 
@@ -208,7 +208,7 @@ int main(void)
 */
 void error_trap(void)
 {
-    PRINTF("\n\n\n\r\t---- HALTED DUE TO FLASH ERROR! ----");
+    PRINTF("\r\n\r\n\r\n\t---- HALTED DUE TO FLASH ERROR! ----");
     while (1)
     {}
 }

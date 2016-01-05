@@ -82,6 +82,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include "fsl_debug_console.h"
 
 
 /* Add a 16 bit unsigned value to a buffer pointed to by PTR */
@@ -262,12 +263,12 @@ pppoe_find_softc_by_hunique(u8_t *token, size_t len, struct netif *rcvif)
 
   /* should be safe to access *sc now */
   if (sc->sc_state < PPPOE_STATE_PADI_SENT || sc->sc_state >= PPPOE_STATE_SESSION) {
-    printf("%c%c%"U16_F": host unique tag found, but it belongs to a connection in state %d\n",
+    PRINTF("%c%c%"U16_F": host unique tag found, but it belongs to a connection in state %d\n",
       sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num, sc->sc_state);
     return NULL;
   }
   if (sc->sc_ethif != rcvif) {
-    printf("%c%c%"U16_F": wrong interface, not accepting host unique\n",
+    PRINTF("%c%c%"U16_F": wrong interface, not accepting host unique\n",
       sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num);
     return NULL;
   }
@@ -319,13 +320,13 @@ pppoe_dispatch_disc_pkt(struct netif *netif, struct pbuf *pb)
 #endif
   session = 0;
   if (pb->len - off < PPPOE_HEADERLEN) {
-    printf("pppoe: packet too short: %d\n", pb->len);
+    PRINTF("pppoe: packet too short: %d\n", pb->len);
     goto done;
   }
 
   ph = (struct pppoehdr *) (ethhdr + 1);
   if (ph->vertype != PPPOE_VERTYPE) {
-    printf("pppoe: unknown version/type packet: 0x%x\n", ph->vertype);
+    PRINTF("pppoe: unknown version/type packet: 0x%x\n", ph->vertype);
     goto done;
   }
   session = ntohs(ph->session);
@@ -333,7 +334,7 @@ pppoe_dispatch_disc_pkt(struct netif *netif, struct pbuf *pb)
   off += sizeof(*ph);
 
   if (plen + off > pb->len) {
-    printf("pppoe: packet content does not fit: data available = %d, packet size = %u\n",
+    PRINTF("pppoe: packet content does not fit: data available = %d, packet size = %u\n",
         pb->len - off, plen);
     goto done;
   }
@@ -348,7 +349,7 @@ pppoe_dispatch_disc_pkt(struct netif *netif, struct pbuf *pb)
     tag = ntohs(pt.tag);
     len = ntohs(pt.len);
     if (off + sizeof(pt) + len > pb->len) {
-      printf("pppoe: tag 0x%x len 0x%x is too long\n", tag, len);
+      PRINTF("pppoe: tag 0x%x len 0x%x is too long\n", tag, len);
       goto done;
     }
     switch (tag) {
@@ -395,9 +396,9 @@ pppoe_dispatch_disc_pkt(struct netif *netif, struct pbuf *pb)
         u16_t error_len = LWIP_MIN(len, sizeof(pppoe_error_tmp)-1);
         strncpy(pppoe_error_tmp, (char*)pb->payload + off + sizeof(pt), error_len);
         pppoe_error_tmp[error_len-1] = '\0';
-        printf("%s: %s: %s\n", devname, err_msg, pppoe_error_tmp);
+        PRINTF("%s: %s: %s\n", devname, err_msg, pppoe_error_tmp);
       } else {
-        printf("%s: %s\n", devname, err_msg);
+        PRINTF("%s: %s\n", devname, err_msg);
       }
       if (errortag) {
         goto done;
@@ -429,7 +430,7 @@ breakbreak:;
         }
       }
       if (sc == NULL) {
-        /* printf("pppoe: free passive interface is not found\n"); */
+        /* PRINTF("pppoe: free passive interface is not found\n"); */
         goto done;
       }
       if (hunique) {
@@ -455,19 +456,19 @@ breakbreak:;
        */
       if (ac_cookie == NULL) {
         /* be quiet if there is not a single pppoe instance */
-        printf("pppoe: received PADR but not includes ac_cookie\n");
+        PRINTF("pppoe: received PADR but not includes ac_cookie\n");
         goto done;
       }
       sc = pppoe_find_softc_by_hunique(ac_cookie, ac_cookie_len, netif);
       if (sc == NULL) {
         /* be quiet if there is not a single pppoe instance */
         if (!LIST_EMPTY(&pppoe_softc_list)) {
-          printf("pppoe: received PADR but could not find request for it\n");
+          PRINTF("pppoe: received PADR but could not find request for it\n");
         }
         goto done;
       }
       if (sc->sc_state != PPPOE_STATE_PADO_SENT) {
-        printf("%c%c%"U16_F": received unexpected PADR\n", sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num);
+        PRINTF("%c%c%"U16_F": received unexpected PADR\n", sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num);
         goto done;
       }
       if (hunique) {
@@ -493,12 +494,12 @@ breakbreak:;
       if (sc == NULL) {
         /* be quiet if there is not a single pppoe instance */
         if (pppoe_softc_list != NULL) {
-          printf("pppoe: received PADO but could not find request for it\n");
+          PRINTF("pppoe: received PADO but could not find request for it\n");
         }
         goto done;
       }
       if (sc->sc_state != PPPOE_STATE_PADI_SENT) {
-        printf("%c%c%"U16_F": received unexpected PADO\n", sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num);
+        PRINTF("%c%c%"U16_F": received unexpected PADO\n", sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num);
         goto done;
       }
       if (ac_cookie) {
@@ -532,11 +533,11 @@ breakbreak:;
       break;
     default:
       if(sc) {
-        printf("%c%c%"U16_F": unknown code (0x%"X16_F") session = 0x%"X16_F"\n",
+        PRINTF("%c%c%"U16_F": unknown code (0x%"X16_F") session = 0x%"X16_F"\n",
             sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num,
             (u16_t)ph->code, session);
       } else {
-        printf("pppoe: unknown code (0x%"X16_F") session = 0x%"X16_F"\n", (u16_t)ph->code, session);
+        PRINTF("pppoe: unknown code (0x%"X16_F") session = 0x%"X16_F"\n", (u16_t)ph->code, session);
       }
       break;
   }
@@ -580,18 +581,18 @@ pppoe_data_input(struct netif *netif, struct pbuf *pb)
   pb = pppSingleBuf (pb);
 
   if (pb->len <= PPPOE_HEADERLEN) {
-    printf("pppoe (data): dropping too short packet: %d bytes\n", pb->len);
+    PRINTF("pppoe (data): dropping too short packet: %d bytes\n", pb->len);
     goto drop;
   }
 
   if (pb->len < sizeof(*ph)) {
-    printf("pppoe_data_input: could not get PPPoE header\n");
+    PRINTF("pppoe_data_input: could not get PPPoE header\n");
     goto drop;
   }
   ph = (struct pppoehdr *)pb->payload;
 
   if (ph->vertype != PPPOE_VERTYPE) {
-    printf("pppoe (data): unknown version/type packet: 0x%x\n", ph->vertype);
+    PRINTF("pppoe (data): unknown version/type packet: 0x%x\n", ph->vertype);
     goto drop;
   }
   if (ph->code != 0) {
@@ -602,7 +603,7 @@ pppoe_data_input(struct netif *netif, struct pbuf *pb)
   sc = pppoe_find_softc_by_session(session, netif);
   if (sc == NULL) {
 #ifdef PPPOE_TERM_UNKNOWN_SESSIONS
-    printf("pppoe: input for unknown session 0x%x, sending PADT\n", session);
+    PRINTF("pppoe: input for unknown session 0x%x, sending PADT\n", session);
     pppoe_send_padt(netif, session, shost);
 #endif
     goto drop;
@@ -874,7 +875,7 @@ pppoe_do_disconnect(struct pppoe_softc *sc)
 static void
 pppoe_abort_connect(struct pppoe_softc *sc)
 {
-  printf("%c%c%"U16_F": could not establish connection\n", sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num);
+  PRINTF("%c%c%"U16_F": could not establish connection\n", sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num);
   sc->sc_state = PPPOE_STATE_CLOSING;
 
   sc->sc_linkStatusCB(sc->sc_pd, 0); /* notify upper layers */
@@ -1096,7 +1097,7 @@ pppoe_ifattach_hook(void *arg, struct pbuf **mp, struct netif *ifp, int dir)
     }
     if (sc->sc_sppp.pp_if.if_flags & IFF_UP) {
       sc->sc_sppp.pp_if.if_flags &= ~(IFF_UP|IFF_RUNNING);
-      printf("%c%c%"U16_F": ethernet interface detached, going down\n",
+      PRINTF("%c%c%"U16_F": ethernet interface detached, going down\n",
           sc->sc_ethif->name[0], sc->sc_ethif->name[1], sc->sc_ethif->num);
     }
     sc->sc_ethif = NULL;

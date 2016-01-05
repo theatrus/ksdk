@@ -4,7 +4,7 @@
 ; *            MKL14Z4
 ; *  @version: 2.3
 ; *  @date:    2015-2-19
-; *  @build:   b150224
+; *  @build:   b150602
 ; * ---------------------------------------------------------------------------------------
 ; *
 ; * Copyright (c) 1997 - 2015 , Freescale Semiconductor, Inc.
@@ -248,7 +248,7 @@ Reset_Handler   PROC
                 IMPORT  __main
 
                 IF      :LNOT::DEF:RAM_TARGET
-                LDR R0, =FlashConfig    ; dummy read, workaround for flashConfig
+                REQUIRE FlashConfig
                 ENDIF
 
                 CPSID   I               ; Mask interrupts

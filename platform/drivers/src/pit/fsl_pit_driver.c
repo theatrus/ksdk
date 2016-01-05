@@ -132,11 +132,14 @@ pit_status_t PIT_DRV_Deinit(uint32_t instance)
         return kStatus_PIT_Fail;
     }
 
-    /* Disable all PIT interrupts. */
+    /* Disable all PIT interrupts. Clear the chain bit if available */
     for (i=0; i < FSL_FEATURE_PIT_TIMER_COUNT; i++)
     {
         PIT_HAL_SetIntCmd(base, i, false);
         INT_SYS_DisableIRQ(g_pitIrqId[i]);
+#if FSL_FEATURE_PIT_HAS_CHAIN_MODE
+        PIT_HAL_SetTimerChainCmd(base, i, false);
+#endif
     }
 
     /* Disable PIT module clock*/

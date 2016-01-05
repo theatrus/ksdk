@@ -4,7 +4,7 @@
 **     Compiler:            IAR ANSI C/C++ Compiler for ARM
 **     Reference manual:    MKW2xDRM Rev.2  July 2014
 **     Version:             rev. 2.0, 2015-01-06
-**     Build:               b150205
+**     Build:               b150602
 **
 **     Abstract:
 **         Linker file for the IAR ANSI C/C++ Compiler for ARM
@@ -46,11 +46,11 @@
 define symbol m_interrupts_start       = 0x1FFF8000;
 define symbol m_interrupts_end         = 0x1FFF83FF;
 
-define symbol m_data_start             = 0x1FFF8400;
-define symbol m_data_end               = 0x1FFFFFFF;
+define symbol m_text_start             = 0x1FFF8400;
+define symbol m_text_end               = 0x1FFFFFFF;
 
-define symbol m_text_start             = 0x20000000;
-define symbol m_text_end               = 0x20007FFF;
+define symbol m_data_start             = 0x20000000;
+define symbol m_data_end               = 0x20007FFF;
 
 /* Sizes */
 if (isdefinedsymbol(__stack_size__)) {

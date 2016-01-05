@@ -28,22 +28,22 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -T${ProjDirPat
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -T${ProjDirPath}/../../../../../platform/devices/MK24F25612/linker/gcc/MK24FN256xxx12_flash.ld  -static")
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -51,14 +51,14 @@ SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
 # C MACRO
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DDEBUG")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DCPU_MK24FN256VDC12")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DPRINTF_FLOAT_ENABLE")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTWR_K24F120M")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DTOWER")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}  -DPRINTF_FLOAT_ENABLE")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DNDEBUG")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DCPU_MK24FN256VDC12")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DPRINTF_FLOAT_ENABLE")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTWR_K24F120M")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DTOWER")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}  -DPRINTF_FLOAT_ENABLE")
 
 # CXX MACRO
 
@@ -73,13 +73,12 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/system/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/utilities/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/src)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/composite/src/sdcard)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/composite/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/src/dspi)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/src/edma)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/osa/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/utilities/inc)
@@ -90,23 +89,29 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/hal/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/system/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/utilities/inc)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/src)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/composite/src/sdcard)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/composite/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/src/dspi)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/drivers/src/edma)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
 ENDIF()
 
 # ADD_EXECUTABLE
 ADD_EXECUTABLE(spi_sdcard_example 
     "${ProjDirPath}/../../../../../platform/utilities/src/fsl_misc_utilities.c"
     "${ProjDirPath}/../../../../../platform/devices/MK24F25612/startup/gcc/startup_MK24F25612.S"
-    "${ProjDirPath}/../../../../../platform/drivers/src/dspi/fsl_dspi_irq.c"
+    "${ProjDirPath}/../fsl_dspi_irq.c"
     "${ProjDirPath}/../main.c"
     "${ProjDirPath}/../fsl_gpio_irq.c"
     "${ProjDirPath}/../../../../../platform/composite/src/sdcard/fsl_sdcard_spi.c"
+    "${ProjDirPath}/../hardware_init.c"
+    "${ProjDirPath}/../../../gpio_pins.c"
+    "${ProjDirPath}/../../../gpio_pins.h"
+    "${ProjDirPath}/../../../pin_mux.c"
+    "${ProjDirPath}/../../../pin_mux.h"
+    "${ProjDirPath}/../../../board.c"
+    "${ProjDirPath}/../../../board.h"
     "${ProjDirPath}/../../../../../platform/utilities/src/fsl_debug_console.c"
     "${ProjDirPath}/../../../../../platform/utilities/inc/fsl_debug_console.h"
     "${ProjDirPath}/../../../../../platform/utilities/src/print_scan.c"
@@ -115,13 +120,6 @@ ADD_EXECUTABLE(spi_sdcard_example
     "${ProjDirPath}/../../../../../platform/devices/MK24F25612/startup/system_MK24F25612.h"
     "${ProjDirPath}/../../../../../platform/devices/startup.c"
     "${ProjDirPath}/../../../../../platform/devices/startup.h"
-    "${ProjDirPath}/../../../gpio_pins.c"
-    "${ProjDirPath}/../../../gpio_pins.h"
-    "${ProjDirPath}/../../../pin_mux.c"
-    "${ProjDirPath}/../../../pin_mux.h"
-    "${ProjDirPath}/../../../board.c"
-    "${ProjDirPath}/../../../board.h"
-    "${ProjDirPath}/../hardware_init.c"
 )
 SET_TARGET_PROPERTIES(spi_sdcard_example PROPERTIES OUTPUT_NAME "spi_sdcard_example.elf")
 

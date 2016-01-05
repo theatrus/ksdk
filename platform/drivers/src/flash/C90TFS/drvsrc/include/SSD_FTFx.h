@@ -1,5 +1,5 @@
 /****************************************************************************
- (c) Copyright 2010-2014 Freescale Semiconductor, Inc.
+ (c) Copyright 2010-2015 Freescale Semiconductor, Inc.
  ALL RIGHTS RESERVED.
 
  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,8 @@
 1.1.GA      09.25.2014      FPT Team      First version of SDK C90TFS Flash driver
                                           inherited from BM C90TFS Flash driver v1.02
                                           (08.04.2014, FPT Team)
+1.3.GA      06.23.2015      ROM Team      Added new features: check FAC protection status,
+                                          program FAC IFR and Erase All Blocks Unsecure command.
 *************************************************************************/
 #ifndef _SSD_FTFx_INTERNAL_H_
 #define _SSD_FTFx_INTERNAL_H_
@@ -132,6 +134,29 @@
     #define FTFx_SSD_FDPROT_OFFSET              0x00000017U
     /* EERAM Protection Register (FEPROT)  */
     #define FTFx_SSD_FEPROT_OFFSET              0x00000016U
+    /* P-Flash Flash Access Controller XAC regisers (XACCH0-3, XACCL0-3) */
+    #define FTFx_SSD_XACCH0_OFFSET              0x0000001BU
+    #define FTFx_SSD_XACCH1_OFFSET              0x0000001AU
+    #define FTFx_SSD_XACCH2_OFFSET              0x00000019U
+    #define FTFx_SSD_XACCH3_OFFSET              0x00000018U
+    #define FTFx_SSD_XACCL0_OFFSET              0x0000001FU
+    #define FTFx_SSD_XACCL1_OFFSET              0x0000001EU
+    #define FTFx_SSD_XACCL2_OFFSET              0x0000001DU
+    #define FTFx_SSD_XACCL3_OFFSET              0x0000001CU
+    /* P-Flash Flash Access Controller SAC regisers (SACCH0-3, SACCL0-3) */
+    #define FTFx_SSD_SACCH0_OFFSET              0x00000023U
+    #define FTFx_SSD_SACCH1_OFFSET              0x00000022U
+    #define FTFx_SSD_SACCH2_OFFSET              0x00000021U
+    #define FTFx_SSD_SACCH3_OFFSET              0x00000020U
+    #define FTFx_SSD_SACCL0_OFFSET              0x00000027U
+    #define FTFx_SSD_SACCL1_OFFSET              0x00000026U
+    #define FTFx_SSD_SACCL2_OFFSET              0x00000025U
+    #define FTFx_SSD_SACCL3_OFFSET              0x00000024U
+
+    /* P-Flash Access Segment Size register (FACSS) */
+    #define FTFx_SSD_FACSS_OFFSET               0x00000028U
+    /* P-Flash Access Segment Number register (FACSN) */
+    #define FTFx_SSD_FACSN_OFFSET               0x0000002BU
 #endif
 
 /* fccob offset address to store resource code */
@@ -157,6 +182,7 @@
 #define FTFx_ERASE_ALL_BLOCK            0x44U
 #define FTFx_SECURITY_BY_PASS           0x45U
 #define FTFx_PFLASH_SWAP                0x46U
+#define FTFx_ERASE_ALL_BLOCK_UNSECURE   0x49U
 #define FTFx_PROGRAM_PARTITION          0x80U
 #define FTFx_SET_EERAM                  0x81U
 
@@ -311,6 +337,66 @@ extern uint32_t PFlashGetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
 extern uint32_t PFlashSetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
                                   uint32_t  protectStatus);
 
+#if PFLASH_FAC_PRESENCE
+/*!
+ * @brief P-Flash Get FAC Execute Access protection.
+ *
+ * This API retrieves the current P-Flash FAC Exeucte Access protection status.
+ * Considering the  time  consumption  for getting protection is very  low and even can
+ * be  ignored. It is not necessary to utilize the Callback function to
+ * support the time-critical events.
+ *
+ * @param pSSDConfig:    The SSD configuration structure pointer.
+ * @param protectStatus: To return the current value of the P-Flash  FAC Execute Access Protection.
+ *                       Each bit is corresponding
+ *                       to protection of 1/64 of the total P-Flash. The least
+ *                       significant bit of protectStatus[0] is corresponding to the lowest
+ *                       address area of P-Flash. The most significant bit of protectStatus[7]
+ *                       is corresponding to the highest address area of P-
+ *                       Flash and so on. There are two possible cases as below:
+ *                       -  0: this area is protected.
+ *                       -  1: this area is unprotected.
+ * @param numberOfSegments: To return the number of program flash segments that are available for
+ *                          XACC and SACC permissions.
+ * @param segmentSize: To return segment size of program flash based on the available program size
+ *                     divided by numberOfSegments.
+ * @return Successful completion (FTFx_OK)
+ */
+extern uint32_t PFlashFacGetXAProtection(PFLASH_SSD_CONFIG pSSDConfig, \
+                                  uint8_t *protectStatus,\
+                                  uint8_t *numberOfSegments,\
+                                  uint32_t *segmentSize);
+
+/*!
+ * @brief P-Flash Get FAC Supervisor Access protection.
+ *
+ * This API retrieves the current P-Flash FAC Supervisor Access protection status.
+ * Considering the  time  consumption  for getting protection is very  low and even can
+ * be  ignored. It is not necessary to utilize the Callback function to
+ * support the time-critical events.
+ *
+ * @param pSSDConfig:    The SSD configuration structure pointer.
+ * @param protectStatus: To return the current value of the P-Flash  FAC Supervisor Access Protection.
+ *                       Each bit is corresponding
+ *                       to protection of 1/64 of the total P-Flash. The least
+ *                       significant bit of protectStatus[0] is corresponding to the lowest
+ *                       address area of P-Flash. The most significant bit of protectStatus[7]
+ *                       is corresponding to the highest address area of P-
+ *                       Flash and so on. There are two possible cases as below:
+ *                       -  0: this area is protected.
+ *                       -  1: this area is unprotected.
+ * @param numberOfSegments: To return the number of program flash segments that are available for
+ *                          XACC and SACC permissions.
+ * @param segmentSize: To return segment size of program flash based on the available program size
+ *                     divided by numberOfSegments.
+ * @return Successful completion (FTFx_OK)
+ */
+extern uint32_t PFlashFacGetSAProtection(PFLASH_SSD_CONFIG pSSDConfig,\
+                                  uint8_t *protectStatus,\
+                                  uint8_t *numberOfSegments,\
+                                  uint32_t *segmentSize);
+#endif // PFLASH_FAC_PRESENCE
+
 /*!
  * @brief Flash get security state.
  *
@@ -358,6 +444,23 @@ extern uint32_t FlashSecurityBypass(PFLASH_SSD_CONFIG pSSDConfig, \
  * @return Error value  (FTFx_ERR_PVIOL, FTFx_ERR_MGSTAT0, FTFx_ERR_ACCERR)
  */
 extern uint32_t FlashEraseAllBlock(PFLASH_SSD_CONFIG pSSDConfig, \
+                                 pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
+
+/*!
+ * @brief Flash erase all Blocks unsecure.
+ *
+ * This API  erases all Flash memory,  initializes  the FlexRAM, verifies
+ * all memory contents, program security byte to unsecure state, and then releases
+ * MCU security.
+ * Note: This API only applies to limited targets, please refer to FTFA/FTFE/FTFL chapter
+ *       and check the validity of this API.
+ *
+ * @param pSSDConfig:    The SSD configuration structure pointer.
+ * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
+ * @return Successful completion (FTFx_OK)
+ * @return Error value  (FTFx_ERR_MGSTAT0, FTFx_ERR_ACCERR)
+ */
+extern uint32_t FlashEraseAllBlockUnsecure(PFLASH_SSD_CONFIG pSSDConfig, \
                                  pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 
 /*!
@@ -452,7 +555,9 @@ extern uint32_t FlashEraseResume(PFLASH_SSD_CONFIG pSSDConfig);
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param recordIndex:   The record index will be read. It can be from 0x0
- *                       to 0x7 or from 0x0 to 0xF according to specific derivative.
+ *                       to 0x7 or other range according to specific derivative.
+ * @param size:          Byte count of data to be read. The value of size should
+ *                       be 4 or 8 according to specific derivative.
  * @param pDataArray:    Pointer to the array to return the data read by the read once command.
  * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
@@ -461,6 +566,7 @@ extern uint32_t FlashEraseResume(PFLASH_SSD_CONFIG pSSDConfig);
 extern uint32_t FlashReadOnce(PFLASH_SSD_CONFIG pSSDConfig, \
                             uint8_t recordIndex,\
                             uint8_t* pDataArray, \
+                            uint32_t size, \
                             pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 /*!
  * @brief Flash program once.
@@ -471,9 +577,11 @@ extern uint32_t FlashReadOnce(PFLASH_SSD_CONFIG pSSDConfig, \
  *
  * @param pSSDConfig:    The SSD configuration structure pointer.
  * @param recordIndex:   The record index will be read. It can be from 0x0
- *                       to 0x7 or from 0x0 to 0xF according to specific derivative.
+ *                       to 0x7 or other range according to specific derivative.
  * @param pDataArray:    Pointer to the array from which data will be
  *                       taken for program once command.
+ * @param size:          Byte count of data to be programmed. The value of size
+ *                       should be 4 or 8 according to specific derivative.
  * @param pFlashCommandSequence :     Pointer to the Flash command sequence function.
  * @return Successful completion (FTFx_OK)
  * @return Error value  (FTFx_ERR_ACCERR,FTFx_ERR_MGSTAT0)
@@ -481,6 +589,7 @@ extern uint32_t FlashReadOnce(PFLASH_SSD_CONFIG pSSDConfig, \
 extern uint32_t FlashProgramOnce(PFLASH_SSD_CONFIG pSSDConfig, \
                                uint8_t recordIndex,\
                                uint8_t* pDataArray, \
+                               uint32_t size,\
                                pFLASHCOMMANDSEQUENCE pFlashCommandSequence);
 /*!
  * @brief Flash read resource.
@@ -824,7 +933,7 @@ extern uint32_t DFlashSetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
  * The swap API provides to user with an ability to interfere in a swap progress by letting the
  * user code know about the swap state in each phase of the process. This is done via pSwapCallBack()
  * parameter. To stop at each intermediate swap state,  set the return value of
- * this callback function to FALSE. To complete swap process within a single call, 
+ * this callback function to FALSE. To complete swap process within a single call,
  * set the return value of this function to TRUE.
  *
  * Erase the non-active swap indicator  somewhere in the
@@ -867,7 +976,7 @@ extern uint32_t DFlashSetProtection(PFLASH_SSD_CONFIG pSSDConfig, \
  * in P-Flash block 0. If the P-Flash block has four logical blocks, the swap indicator can be in block
  * 0 or block 1. It must not be in the Flash configuration field.
  * The user must use the same swap indicator for all swap control code except report swap status once
- * swap system has been initialized. To refresh swap system to un-initialization state,  
+ * swap system has been initialized. To refresh swap system to un-initialization state,
  * use the FlashEraseAllBlock() to clean up the swap environment.
  *
  * @param   pSSDConfig                The SSD configuration structure pointer

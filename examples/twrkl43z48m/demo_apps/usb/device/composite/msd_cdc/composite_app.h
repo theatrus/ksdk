@@ -71,11 +71,8 @@ typedef struct composite_device_struct
 /*****************************************************************************
  * Global variables
  *****************************************************************************/
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-extern composite_device_struct_t* g_composite_device;
-#else
 extern composite_device_struct_t g_composite_device;
-#endif
+
 /*****************************************************************************
  * Global Functions
  *****************************************************************************/

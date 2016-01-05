@@ -53,12 +53,7 @@
 usb_event_struct_t g_f_event;
 bool g_control_pending=FALSE;
 #endif
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)) 
-static bool g_validate_request[MAX_STRD_REQ][3] =
-#else
 static uint8_t g_validate_request[MAX_STRD_REQ][3] =
-#endif
-
 { 
   {1,   1,   0,}, /*USB_Strd_Req_Get_Status*/
          /* configured state: valid for existing interfaces/endpoints
@@ -507,7 +502,7 @@ void* arg
     return;
 }
 
-#if USBCFG_DEV_DETACH_ENABLE
+#if USBCFG_DEV_VBUS_DETECT_ENABLE
 /**************************************************************************//*!
  *
  * @name  USB_Detach_Service
@@ -526,7 +521,7 @@ usb_event_struct_t* event,
 void* arg
 )
 {
-    volatile usb_class_fw_object_struct_t* usb_fw_ptr;
+    usb_class_fw_object_struct_t* usb_fw_ptr;
 
     usb_fw_ptr = (usb_class_fw_object_struct_t*)handle;
 
@@ -540,6 +535,7 @@ void* arg
 
     return;
 }
+
 #endif
 
 #if USBCFG_DEV_KHCI_ADVANCED_ERROR_HANDLING
@@ -1104,6 +1100,7 @@ uint32_t *size
 )
 {
     uint8_t error = USBERR_NULL_CALLBACK;
+    uint16_t interface_setting = 0;
     //UNUSED_ARGUMENT(data)
     *size=0;
 
@@ -1124,8 +1121,9 @@ uint32_t *size
 
     if (usb_fw_ptr->device_notify_callback != NULL)
     {
-        usb_fw_ptr->device_notify_callback(USB_DEV_EVENT_INTERFACE_CHANGED,
-        (void *)&setup_packet->value, usb_fw_ptr->device_notify_param);
+       interface_setting = (uint16_t)((uint16_t)(setup_packet->index & 0x00FF) <<8) | ((uint16_t)(setup_packet->value & 0xFF));
+       usb_fw_ptr->device_notify_callback(USB_DEV_EVENT_INTERFACE_CHANGED,
+        (void *)&interface_setting, usb_fw_ptr->device_notify_param);
     }
 
     return USB_OK;

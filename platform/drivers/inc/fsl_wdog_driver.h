@@ -83,6 +83,7 @@ extern "C" {
  * runs according to the requirements of the configuration.
  * 
  * @param userConfigPtr Watchdog user configure data structure, see #wdog_user_config_t.
+ * @return kStatus_WDOG_Success means success. Otherwise, means failure.
  *
  */
 wdog_status_t WDOG_DRV_Init(const wdog_config_t* userConfigPtr);
@@ -92,6 +93,7 @@ wdog_status_t WDOG_DRV_Init(const wdog_config_t* userConfigPtr);
  *
  * This function shuts down the WDOG. 
  *
+ * @return kStatus_WDOG_Success means success. Otherwise, means failure.
  */
 wdog_status_t WDOG_DRV_Deinit(void);
 
@@ -111,12 +113,12 @@ void WDOG_DRV_Refresh(void);
  *
  * This function gets the WDOG running status.
  *
- * @return watchdog running status, false means not running, true means running
+ * @return Watchdog running status, false means not running, true means running
  */
 bool WDOG_DRV_IsRunning(void);
 
 /*!
- * @brief Resets the MCU by the Watchdog.
+ * @brief Resets the MCU by using the Watchdog.
  *
  * This function resets the MCU by using the WDOG. 
  *

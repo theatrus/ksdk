@@ -168,7 +168,7 @@ static void ping_send(struct raw_pcb *raw, ip_addr_t *addr)
 
     LWIP_DEBUGF( PING_DEBUG, ("ping: send "));
     LWIP_DEBUGF( PING_DEBUG, ("%u.%u.%u.%u \r",((u8_t *)addr)[0],((u8_t *)addr)[1],((u8_t *)addr)[2],((u8_t *)addr)[3]));
-    LWIP_DEBUGF( PING_DEBUG, ("\n"));
+    LWIP_DEBUGF( PING_DEBUG, ("\r\n"));
     LWIP_ASSERT("ping_size <= 0xffff", ping_size <= 0xffff);
 
     p = pbuf_alloc(PBUF_IP, (u16_t)ping_size, PBUF_RAM);

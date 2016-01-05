@@ -132,8 +132,11 @@ void init_trigger_source(uint32_t adcInstance)
     PDB_DRV_LoadValuesCmd(0U);
 
     // Configure SIM for ADC hw trigger source PDB
-    SIM_HAL_SetAdcAlternativeTriggerCmd(gSimBase[0], adcInstance, false);
-
+#if defined(KM34Z7_SERIES)
+    SIM_HAL_SetAdcTrgSelMode(gSimBase[0], kSimAdcTrgSelPdb);
+#else
+	SIM_HAL_SetAdcAlternativeTriggerCmd(gSimBase[0], adcInstance, false);
+#endif
     // Trigger the PDB, let it go in continuous mode
     PDB_DRV_SoftTriggerCmd(0);
 }

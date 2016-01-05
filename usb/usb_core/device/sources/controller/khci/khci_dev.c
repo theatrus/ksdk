@@ -112,7 +112,7 @@
 static uint8_t *bdt;
 
 #if (FSL_FEATURE_USB_KHCI_USB_RAM == 0)
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
 #if defined( __ICCARM__ )
     #pragma data_alignment=512
     __no_init uint8_t g_khci_bdt_buffer[512];
@@ -121,15 +121,11 @@ static uint8_t *bdt;
 #else
     #error Unsupported compiler, please use IAR, Keil or arm gcc compiler and rebuild the project.
 #endif
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    uint8_t*                g_khci_bdt_ptr = NULL;
 #endif
 #endif
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     static usb_device_khci_data_t g_khci_data;
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    usb_device_khci_data_t* g_khci_data_ptr = NULL;
 #endif
 
 static bool g_zero_pkt_send = FALSE;
@@ -142,12 +138,13 @@ static uint8_t *_usb_khci_dev_swap_buf_ptr = NULL;
 
 extern usb_status _usb_device_call_service(uint8_t type, usb_event_struct_t* event);
 extern uint32_t soc_get_usb_base_address(uint8_t controller_id);
+extern uint32_t soc_get_usb_dev_int_level(uint8_t controller_id);
 
 #ifdef USBCFG_OTG
 extern usb_otg_handle * g_usb_otg_handle;
 #endif
 extern uint8_t soc_get_usb_vector_number(uint8_t controller_id);
-#if USBCFG_DEV_DETACH_ENABLE
+#if (USBCFG_DEV_VBUS_DETECT_ENABLE) && (FSL_FEATURE_USB_KHCI_VBUS_DETECT_ENABLED == 1)
 /*FUNCTION*-------------------------------------------------------------
  *
  *  Function Name  : usb_dci_khci_detach
@@ -169,7 +166,7 @@ void usb_dci_khci_detach(void)
     event.direction = 0;
 
     /* propagate control to upper layers for processing */
-    _usb_device_call_service(USB_SERVICE_DETACH, &event);
+    _usb_device_call_service(USB_DEV_SERVICE_DETACH, &event);
 }
 #endif
 
@@ -277,12 +274,9 @@ usb_status usb_dci_khci_init_xd
     xd_struct_t* xd_ptr;
     uint32_t j;
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     usb_dev_ptr->setup_buff = (uint8_t *)(&g_khci_data.setup_packet);
     usb_dev_ptr->xd_head = usb_dev_ptr->xd_base = (xd_struct_t*)(&g_khci_data.xd_base);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    usb_dev_ptr->setup_buff = (uint8_t *) g_khci_data_ptr->setup_packet;
-    usb_dev_ptr->xd_head = usb_dev_ptr->xd_base = (xd_struct_t*) g_khci_data_ptr->xd_base;
 #endif
 #if FSL_FEATURE_USB_KHCI_USB_RAM
     usb_dev_ptr->setup_buff = (uint8_t *)(usb_hal_khci_get_usbram_add(usb_dev_ptr->usbRegBase) + 480);
@@ -1152,11 +1146,11 @@ static void _usb_khci_service_stall_intr
     {
         if (state_ptr->ep_info[ep].endpoint_status == USB_STATUS_STALLED)
         {
-            usb_hal_khci_endpoint_clr_stall(state_ptr->usbRegBase, ep);
             usb_hal_khci_bdt_set_control((uint32_t )bdt, ep, USB_SEND, state_ptr->ep_info[ep].tx_buf_odd,
                 USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
             usb_hal_khci_bdt_set_control((uint32_t )bdt, ep, USB_RECV, state_ptr->ep_info[ep].rx_buf_odd,
                 USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
+            usb_hal_khci_endpoint_clr_stall(state_ptr->usbRegBase, ep);
         }
     }
 
@@ -1171,6 +1165,33 @@ static void _usb_khci_service_stall_intr
     }
 
 }
+
+
+
+#if (USBCFG_DEV_VBUS_DETECT_ENABLE) && (FSL_FEATURE_USB_KHCI_VBUS_DETECT_ENABLED == 1)
+/*FUNCTION*-------------------------------------------------------------
+ *
+ *  Function Name  : usb_dci_khci_detach
+ *  Returned Value : void
+ *  Comments       :
+ *        this function is called if device known it's detached.
+ *
+ *END*-----------------------------------------------------------------*/
+void _usb_khci_service_detach(usb_khci_dev_state_struct_t* state_ptr)
+{
+    usb_event_struct_t event;
+
+    /* Initialize the event structure to be passed to the upper layer*/
+    event.handle = (usb_device_handle)state_ptr->upper_layer_handle;
+    event.ep_num = 0;
+    event.setup = 0;
+    event.direction = 0;
+
+    /* propagate control to upper layers for processing */
+    _usb_device_call_service(USB_DEV_SERVICE_DETACH, &event);
+}
+#endif
+
 
 /**************************************************************************//*!
  *
@@ -1279,14 +1300,30 @@ static void _usb_khci_isr(usb_khci_dev_state_struct_t* state_ptr)
     {
         _usb_khci_service_attach_intr(state_ptr);
     }
-#endif    
+#endif
     /* In Target mode this interrupt comes when a STALL handshake is sent 
        by the SIE.*/
     if (usb_hal_khci_is_interrupt_issued(state_ptr->usbRegBase, INTR_STALL))
     {
         _usb_khci_service_stall_intr(state_ptr);
     }
-
+    
+#if (USBCFG_DEV_VBUS_DETECT_ENABLE) && (FSL_FEATURE_USB_KHCI_VBUS_DETECT_ENABLED == 1)
+    if(usb_hal_khci_is_attach_issued(state_ptr->usbRegBase))
+    {
+        usb_hal_khci_clear_vredg_en(state_ptr->usbRegBase);
+        usb_hal_khci_enable_dp_pull_up(state_ptr->usbRegBase);
+        usb_hal_khci_set_vfedg_en(state_ptr->usbRegBase);
+    }
+    
+    if(usb_hal_khci_is_detach_issued(state_ptr->usbRegBase))
+    {
+        usb_hal_khci_clear_vfedg_en(state_ptr->usbRegBase);
+        usb_hal_khci_disable_dp_pull_up(state_ptr->usbRegBase);
+        usb_hal_khci_set_vredg_en(state_ptr->usbRegBase);
+        _usb_khci_service_detach(state_ptr);
+    }
+#endif
     return;
 }
 /*****************************************************************************
@@ -1309,29 +1346,12 @@ usb_status usb_dci_khci_preinit
 {
     usb_khci_dev_state_struct_t* usb_dev_ptr = (usb_khci_dev_state_struct_t*)(&g_khci_dev[0]);
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    if (NULL == g_khci_data_ptr)
-    {
-        g_khci_data_ptr = OS_Mem_alloc_uncached(sizeof(usb_device_khci_data_t));
-    }
-
-#if (FSL_FEATURE_USB_KHCI_USB_RAM == 0)
-    if (NULL == g_khci_bdt_ptr)
-    {
-        g_khci_bdt_ptr = OS_Mem_alloc_uncached_align(512, 512);
-    }
-#endif
-
-#endif
-
     usb_dci_khci_init_xd((usb_device_handle)usb_dev_ptr);
 
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     _usb_khci_dev_swap_buf_ptr = g_khci_data.swap_buf;
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    _usb_khci_dev_swap_buf_ptr = g_khci_data_ptr->swap_buf;
 #endif
 
 #endif
@@ -1379,6 +1399,21 @@ usb_status usb_dci_khci_init
      */
     usb_hal_khci_clr_all_interrupts(usb_dev_ptr->usbRegBase);
     usb_hal_khci_disable_dp_pull_up(usb_dev_ptr->usbRegBase);
+#if (USBCFG_DEV_VBUS_DETECT_ENABLE) && (FSL_FEATURE_USB_KHCI_VBUS_DETECT_ENABLED == 1)
+    usb_hal_khci_set_vredg_en(usb_dev_ptr->usbRegBase);
+    usb_hal_khci_set_vfedg_en(usb_dev_ptr->usbRegBase);
+#endif
+
+    /* Weak pull downs */
+    usb_hal_khci_set_weak_pulldown(usb_dev_ptr->usbRegBase);
+    /* reset USB CTRL register */
+    usb_hal_khci_reset_control_register(usb_dev_ptr->usbRegBase);
+
+    /* Enable internal pull-up resistor */
+    usb_hal_khci_set_internal_pullup(usb_dev_ptr->usbRegBase);
+    usb_hal_khci_set_trc0(usb_dev_ptr->usbRegBase); /* Software must set this bit to 1 */
+    /* setup interrupt */
+    OS_intr_init((IRQn_Type)soc_get_usb_vector_number(controller_id), soc_get_usb_dev_int_level(controller_id), 0, TRUE);
 
 #ifndef USBCFG_OTG 
     /* Install the ISR
@@ -1397,10 +1432,8 @@ usb_status usb_dci_khci_init
     bdt = (uint8_t *)usb_hal_khci_get_usbram_add(usb_dev_ptr->usbRegBase);
 #else
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     bdt = g_khci_bdt_buffer;
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    bdt = g_khci_bdt_ptr;
 #endif
 
 #endif
@@ -1886,9 +1919,7 @@ usb_status usb_dci_khci_unstall_endpoint
         usb_hal_khci_endpoint_enable_handshake(state_ptr->usbRegBase, ep_num, 1);
         usb_hal_khci_endpoint_set_direction(state_ptr->usbRegBase, ep_num, 1);
         state_ptr->ep_info[ep_num].tx_data0 = 0;
-        /*BD_CTRL_TX(ep_num, state_ptr->ep_info[ep_num].tx_buf_odd) =
-            USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size) |
-            USB_BD_DTS | USB_BD_DATA01(0)));*/
+
         usb_hal_khci_bdt_set_control((uint32_t )bdt, ep_num, USB_SEND, state_ptr->ep_info[ep_num].tx_buf_odd,
             USB_LONG_LE_TO_HOST((uint32_t)(USB_BD_BC(state_ptr->ep_info[ep_num].max_packet_size)| USB_BD_DTS | USB_BD_DATA01(0))));
     }
@@ -2058,22 +2089,6 @@ usb_status usb_dci_khci_shutdown
     state_ptr->usb_state = USB_STATE_UNKNOWN;
     OS_Mutex_destroy(state_ptr->mutex);
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    if (NULL != g_khci_data_ptr)
-    {
-        OS_Mem_free(g_khci_data_ptr);
-        g_khci_data_ptr = NULL;
-    }
-
-#if (FSL_FEATURE_USB_KHCI_USB_RAM == 0)
-    if (NULL != g_khci_bdt_ptr)
-    {
-        OS_Mem_free(g_khci_bdt_ptr);
-        g_khci_bdt_ptr = NULL;
-    }
-#endif
-
-#endif
 #ifdef USBCFG_OTG
     otg_status_ptr->active_stack = USB_ACTIVE_STACK_NONE;
     usb_otg_struct_ptr->dev_inst_ptr = NULL;
@@ -2099,15 +2114,15 @@ usb_status usb_dci_khci_assert_resume
     usb_khci_dev_state_struct_t* state_ptr = (usb_khci_dev_state_struct_t*)handle;
 
     /* clear resume FLAG*/
-    usb_hal_khci_clr_interrupt(handle->usbRegBase, INTR_RESUME);
+    usb_hal_khci_clr_interrupt(state_ptr->usbRegBase, INTR_RESUME);
 
     /* Disable RESUME Interrupt */
 //    usb_ptr->INTEN &= ~USB_INTEN_RESUME_EN_MASK; //already done in RESUME interrupt
     /* continue processing */
-    usb_hal_khci_clr_token_busy(handle->usbRegBase);
+    usb_hal_khci_clr_token_busy(state_ptr->usbRegBase);
 
     /* Start RESUME signaling and make SUSPEND bit 0*/
-    usb_hal_khci_start_resume(handle->usbRegBase);
+    usb_hal_khci_start_resume(state_ptr->usbRegBase);
 
     /* Set RESUME line for 1-15 ms*/
     delay_count = ASSERT_RESUME_DELAY_COUNT;
@@ -2117,7 +2132,7 @@ usb_status usb_dci_khci_assert_resume
     }while (delay_count);
 
     /* Stop RESUME signaling */
-    usb_hal_khci_stop_resume(handle->usbRegBase);
+    usb_hal_khci_stop_resume(state_ptr->usbRegBase);
 
     return USB_OK;
 }

@@ -46,6 +46,12 @@
 #define CLOCK_INIT_CONFIG CLOCK_RUN
 #endif
 
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 75000000U
+#else
+#define CORE_CLOCK_FREQ 4000000U
+#endif
+
 /* OSC0 configuration. */
 #define OSC0_XTAL_FREQ           10000000U
 #define OSC0_SC2P_ENABLE_CONFIG  false
@@ -79,14 +85,14 @@
 #define BOARD_LOW_POWER_UART_BAUD       9600
 
 #define BOARD_USE_UART
-#define PM_DBG_UART_IRQ_HANDLER         MODULE_IRQ_HANDLER(UART0)
+#define PM_DBG_UART_IRQ_HANDLER         UART0_IRQHandler
 #define PM_DBG_UART_IRQn                UART0_IRQn
 
 /* Define the port interrupt number for the board switches */
 #define BOARD_SW_GPIO               kGpioSW1
 #define BOARD_SW_IRQ_NUM            PORTA_IRQn
 #define BOARD_SW_IRQ_HANDLER        PORTA_IRQHandler
-
+#define BOARD_SW_NAME               "SW1"
 /* Define print statement to inform user which switch to press for
  * power_manager_hal_demo and power_manager_rtos_demo
  */
@@ -107,17 +113,17 @@
 
 #define HWADC_INSTANCE               1
 #define ADC_IRQ_N                    ADC1_IRQn
-#if (defined FSL_RTOS_MQX)
-#define MQX_ADC_IRQHandler           MQX_ADC1_IRQHandler
-#endif
 
 /* The instances of peripherals used for dac_adc_demo */
 #define BOARD_DAC_DEMO_DAC_INSTANCE     0U
 #define BOARD_DAC_DEMO_ADC_INSTANCE     0U
 #define BOARD_DAC_DEMO_ADC_CHANNEL      5U
 
-/* The i2c instance used for i2c communication demo */
-#define BOARD_I2C_COMM_INSTANCE         0
+/* The i2c instance used for i2c connection by default */
+#define BOARD_I2C_INSTANCE              0
+
+/* The dspi instance used for dspi example */
+#define BOARD_DSPI_INSTANCE             0
 
 /* The Flextimer instance/channel used for board */
 #define BOARD_FTM_INSTANCE              0

@@ -87,7 +87,11 @@ void disable_writebuffer(void)
 /*!
  * @brief BusFault IRQ Handler
  */
+#if defined (KM34Z7_SERIES)
+void HardFault_Handler(void)
+#else
 void BusFault_Handler(void)
+#endif
 {
     mpu_low_masters_access_rights_t accessRights =
     {
@@ -169,7 +173,7 @@ int main(void)
     // Init MPU
     MPU_DRV_Init(MPU_INSTANCE, &userConfig1);
 
-    PRINTF("MPU example begin.\r\n\n");
+    PRINTF("MPU example begin.\r\n\r\n");
 
     // Initialize array
     for(uint32_t i = 0; i < ARRAY_SIZE; i++)
@@ -188,6 +192,12 @@ int main(void)
 
         // Cannot write here, bus fault occur
         regionArray[cnt] = cnt;
+        
+        // ISB to make sure the instruction execute sequence
+        __ISB();
+
+        // Add delay to avoid the check instruction to be done during the bus fault handler response period
+        for(volatile uint32_t i = 0; i < 10; i++); 
 
         if (false == busFaultFlag)
         {
@@ -206,7 +216,7 @@ int main(void)
         // Clear regionArray
         regionArray[cnt] = 0;
 
-        PRINTF("Press any key to continue\r\n\n");
+        PRINTF("Press any key to continue\r\n\r\n");
         GETCHAR();
 
         if (++cnt == ARRAY_SIZE)

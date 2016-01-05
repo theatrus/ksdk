@@ -45,12 +45,7 @@
 /* Functions */
 extern void* bsp_usb_otg_get_init_param(uint8_t controller_id);
 extern void _usb_dev_khci_isr(usb_khci_dev_state_struct_t* state_ptr);
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
-extern void _usb_host_khci_isr(usb_host_handle handle);
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 extern void _usb_host_khci_isr(void);
-#endif
 /* Parameters */
 extern usb_host_handle host_handle;
 /* global ogt_khci_call_ptr */
@@ -65,17 +60,10 @@ usb_otg_khci_call_struct_t * g_otg_khci_call_ptr;
  *  Comments       :
  *        Service all the interrupts in the kirin usb hardware
  *END*-----------------------------------------------------------------*/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))       
-static void _usb_otg_khci_isr
-(
-    void* otg_khci_call_ptr
-    )
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 static void _usb_otg_khci_isr
 (
 void
 )
-#endif
 {
     usb_otg_state_struct_t * usb_otg_struct_ptr = ((usb_otg_khci_call_struct_t *) g_otg_khci_call_ptr)->otg_handle_ptr;
     if (usb_otg_struct_ptr != NULL)
@@ -119,12 +107,7 @@ void
         {
             /* Host stack is current active stack */
             /* Call function to handle host interrupt*/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
-            _usb_host_khci_isr (NULL);
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
             _usb_host_khci_isr();
-#endif
         }
         else if (otg_status->active_stack == USB_ACTIVE_STACK_DEVICE)
         {
@@ -168,14 +151,7 @@ usb_status _usb_otg_khci_init
     usb_hal_khci_enable_otg_interrupts(usb_otg_struct_ptr->usbRegBase, USB_OTGICR_ONEMSECEN_MASK | USB_OTGICR_LINESTATEEN_MASK);
     otg_khci_call_ptr->init_param_ptr = (usb_khci_otg_int_struct_t*) bsp_usb_otg_get_init_param(controller_id);
     g_otg_khci_call_ptr = otg_khci_call_ptr;
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)) 
-    if (!OS_install_isr(otg_khci_call_ptr->init_param_ptr->vector, (void (*)(void *))_usb_otg_khci_isr, (void*)otg_khci_call_ptr))
-    {
-        return USBERR_INSTALL_ISR;
-    }
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     OS_install_isr(otg_khci_call_ptr->init_param_ptr->vector,(void(*)(void))_usb_otg_khci_isr,(void*)otg_khci_call_ptr);
-#endif
     return USB_OK;
 }
 

@@ -54,7 +54,7 @@
 usb_pin_detect_service_t device_pin_detect_service[USBCFG_DEV_EHCI_NUM];
 #endif
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
 
 #if defined( __ICCARM__ )
     #pragma data_alignment=2048
@@ -65,8 +65,6 @@ usb_pin_detect_service_t device_pin_detect_service[USBCFG_DEV_EHCI_NUM];
     #error Unsupported compiler, please use IAR, Keil or arm gcc compiler and rebuild the project.
 #endif
 
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    usb_device_ehci_data_t* g_ehci_data_ptr[USBCFG_DEV_EHCI_NUM] = {NULL};
 #endif
 
 /*****************************************************************************
@@ -84,13 +82,13 @@ usb_pin_detect_service_t device_pin_detect_service[USBCFG_DEV_EHCI_NUM];
 /*****************************************************************************
  * Local Types - None
  *****************************************************************************/
-
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 /*****************************************************************************
  * Local Functions
  *****************************************************************************/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
-    void _usb_dci_usbhs_isr(usb_device_handle handle);
-#endif
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 void _usb_dci_usbhs_isr
    (
@@ -109,7 +107,9 @@ void _usb_dci_usbhs_isr
 extern usb_status _usb_device_call_service(uint8_t type,usb_event_struct_t* event);
 extern uint8_t soc_get_usb_vector_number(uint8_t controller_id);
 extern uint32_t soc_get_usb_base_address(uint8_t controller_id);
-
+static usb_status _usb_dci_usbhs_update_dTD(usb_device_handle handle, uint8_t ep_num, uint8_t direction);
+extern uint32_t soc_get_usb_dev_int_level(uint8_t controller_id);
+extern usb_status usb_dev_ehci_phy_init( uint8_t controller_id);
 usb_ehci_dev_state_struct_t g_ehci_dev[USBCFG_DEV_EHCI_NUM];
 #if USBCFG_DEV_EHCI_PIN_DETECT_ENABLE 
 /*FUNCTION*-------------------------------------------------------------
@@ -161,6 +161,7 @@ uint8_t usb_pin_detector_get_id_status
 
 }
 #endif
+
 /*FUNCTION*-------------------------------------------------------------
 *
 *  Function Name  : _usb_khci_free_XD
@@ -217,6 +218,7 @@ void _usb_ehci_free_XD
     OS_Unlock();
 } /* Endbody */
 
+
 /*****************************************************************************
  * Global Functions
  *****************************************************************************/
@@ -244,23 +246,13 @@ usb_status usb_dci_usbhs_preinit
   
   usb_dev_state_ptr = (usb_dev_state_struct_t*)upper_layer_handle;
   usb_dev_ptr = (usb_ehci_dev_state_struct_t *) (&g_ehci_dev[usb_dev_state_ptr->controller_id - USB_CONTROLLER_EHCI_0]);
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-  for(j = 0; j < USBCFG_DEV_EHCI_NUM; j++)
-  {
-      if(NULL == g_ehci_data_ptr[j])
-      {
-          g_ehci_data_ptr[j] = OS_Mem_alloc_uncached_align(sizeof(usb_device_ehci_data_t), 2048);
-      }
-  }
-#endif    
+
   if (NULL != usb_dev_ptr)
   {
     usb_dev_ptr->controller_id = usb_dev_state_ptr->controller_id - USB_CONTROLLER_EHCI_0;
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     usb_dev_ptr->xd_base = (xd_struct_t*)(&g_ehci_data[usb_dev_ptr->controller_id].xd_base[0]);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    usb_dev_ptr->xd_base = (xd_struct_t*)g_ehci_data_ptr[usb_dev_ptr->controller_id]->xd_base;
 #endif
 
     usb_dev_ptr->xd_head = NULL;
@@ -317,6 +309,21 @@ usb_status usb_dci_usbhs_init
     usb_dev_ptr->usbRegBase = soc_get_usb_base_address(controller_id);
    
     usb_dev_ptr->cap_base_ptr = (void *)((uint8_t*)soc_get_usb_base_address(controller_id)+ 0x100);
+    usb_dev_ehci_phy_init(controller_id);
+    usb_hal_ehci_reset_controller(usb_dev_ptr->usbRegBase);
+    while (usb_hal_ehci_get_usb_cmd(usb_dev_ptr->usbRegBase) & USBHS_USBCMD_RST_MASK)
+    { /* delay while resetting USB controller */ }
+
+    usb_hal_ehci_set_controller_device_mode(usb_dev_ptr->usbRegBase);
+    /* Set interrupt threshold control = 0 */
+
+    usb_hal_ehci_clear_usb_cmd(usb_dev_ptr->usbRegBase, USBHS_USBCMD_ITC(0xFF));
+    /* Setup Lockouts Off */
+
+    usb_hal_ehci_disable_setup_lock(usb_dev_ptr->usbRegBase);
+
+    /* setup interrupt */
+    OS_intr_init((IRQn_Type)soc_get_usb_vector_number(controller_id), soc_get_usb_dev_int_level(controller_id), 0, TRUE);
    
     /* Get the maximum number of endpoints supported by this USB controller */
     usb_dev_ptr->max_endpoints =
@@ -332,21 +339,16 @@ usb_status usb_dci_usbhs_init
     /****************************************************************
      Assign QH base
      ****************************************************************/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     usb_dev_ptr->qh_base_ptr = (usb_ehc_dev_qh_struct_t *)(&g_ehci_data[controller_id - USB_CONTROLLER_EHCI_0].qh_base[0]);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    usb_dev_ptr->qh_base_ptr = (usb_ehc_dev_qh_struct_t *)g_ehci_data_ptr[controller_id - USB_CONTROLLER_EHCI_0]->qh_base;
 #endif
 
     /****************************************************************
      Assign DTD base
      ****************************************************************/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     usb_dev_ptr->dtd_base_ptr = (usb_ehci_dev_dtd_struct_t *)(&g_ehci_data[controller_id - USB_CONTROLLER_EHCI_0].dtd_base[0]);
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    usb_dev_ptr->dtd_base_ptr = (usb_ehci_dev_dtd_struct_t *)g_ehci_data_ptr[controller_id - USB_CONTROLLER_EHCI_0]->dtd_base;
 #endif
-
     /* Install the interrupt service routine */
 #if (OS_ADAPTER_ACTIVE_OS != OS_ADAPTER_SDK)
     if (!(OS_install_isr(usb_dev_ptr->dev_vec,_usb_dci_usbhs_isr,(void *)usb_dev_ptr)))
@@ -426,11 +428,7 @@ void _usb_dci_usbhs_chip_initialize
     for (i = 0; i < temp; i++)
     {
         /* Interrupt on Setup packet */
-        /*EHCI_MEM_WRITE((ep_queue_head_ptr + i)->MAX_PKT_LENGTH,
-            ((uint32_t)USB_MAX_CTRL_PAYLOAD <<
-                VUSB_EP_QUEUE_HEAD_MAX_PKT_LEN_POS)
-            | VUSB_EP_QUEUE_HEAD_IOS);
-            */
+
         usb_hal_ehci_set_max_packet_length((ep_queue_head_ptr + i),USB_MAX_CTRL_PAYLOAD);
         usb_hal_ehci_set_next_dtd_terminate((ep_queue_head_ptr + i));
     }
@@ -828,15 +826,14 @@ void _usb_dci_usbhs_process_tr_complete
     usb_device_handle         handle
 )
 {   /* Body */
-    usb_ehci_dev_state_struct_t *  usb_dev_ptr;
-    usb_ehci_dev_dtd_struct_t *    dTD_ptr;
-    usb_ehci_dev_dtd_struct_t *    temp_dTD_ptr;
+    usb_ehci_dev_state_struct_t *           usb_dev_ptr;
+    usb_ehci_dev_dtd_struct_t *             dTD_ptr;
+    usb_ehci_dev_dtd_struct_t *             temp_dTD_ptr;
     volatile usb_ehc_dev_qh_struct_t *      ep_queue_head_ptr;
     uint32_t                                remaining_length = 0;
-    uint32_t                                actual_transfer_length = 0;
     uint32_t                                errors = 0;
-    xd_struct_t*                   xd_ptr;
-    xd_struct_t*                   temp_xd_ptr = NULL;
+    xd_struct_t*                            xd_ptr;
+    xd_struct_t*                            temp_xd_ptr = NULL;
     usb_event_struct_t                      event;
     uint32_t                                bit_pos = 0;
     uint8_t                                 temp;
@@ -926,14 +923,13 @@ void _usb_dci_usbhs_process_tr_complete
                     {
                         /*No more dTDs to process. Next one is owned by VUSB*/
                         break;
-                    } /* Endif */
+                    }
 
                     /* Get the correct internal transfer descriptor */
                     xd_ptr = (xd_struct_t *)usb_hal_ehci_get_xd_for_this_dtd(dTD_ptr);
 
                     if (xd_ptr)
                     {
-                        actual_transfer_length = xd_ptr->wtotallength;
                         event.buffer_ptr = xd_ptr->wstartaddress;
                         temp_xd_ptr = xd_ptr;
                     } /* Endif */
@@ -950,7 +946,6 @@ void _usb_dci_usbhs_process_tr_complete
                         /* No errors */
                         /* Get the length of transfer from the current dTD */
                         remaining_length += usb_hal_ehci_get_tr_packet_size(dTD_ptr);
-                        actual_transfer_length -= remaining_length;
                     }
                     else
                     {
@@ -961,18 +956,20 @@ void _usb_dci_usbhs_process_tr_complete
                         } /* Endif */
                     } /* Endif */
 
-                    (void)usb_dci_usbhs_cancel_transfer(handle, ep_num,
-                        direction);
+                    (void)_usb_dci_usbhs_update_dTD(handle, ep_num, direction);
                     event.ep_num = ep_num;
                     event.setup = FALSE;
                     event.direction = direction;
-                    event.len = actual_transfer_length;
                     if (temp_dTD_ptr)
                     {
                         if((uint32_t)usb_hal_ehci_get_xd_for_this_dtd(temp_dTD_ptr) != (uint32_t)temp_xd_ptr)
                         {
-                            /* Transfer complete. Call the register service
-                                                function for the endpoint */
+                            if (xd_ptr != NULL)
+                            {
+                                _usb_ehci_free_XD(usb_dev_ptr, xd_ptr);
+                            }
+                            event.len = xd_ptr->wtotallength - remaining_length;
+                            /* Transfer complete. Call the register service function for the endpoint */
                             (void)_usb_device_call_service(ep_num,&event);
                             remaining_length = 0;
                         } /* Endif */
@@ -982,10 +979,9 @@ void _usb_dci_usbhs_process_tr_complete
                         if (xd_ptr != NULL)
                         {
                             _usb_ehci_free_XD(usb_dev_ptr, xd_ptr);
-							//USB_PRINTF("tf: %d\n\r",usb_dev_ptr->xd_entries);
                         }
-                        /* Transfer complete. Call the register service
-                           function for the endpoint */
+                        event.len = xd_ptr->wtotallength - remaining_length;
+                        /* Transfer complete. Call the register service function for the endpoint */
                         (void)_usb_device_call_service(ep_num,&event);
                         remaining_length = 0;
                     } /* Endif */
@@ -1144,12 +1140,6 @@ void _usb_dci_usbhs_process_port_change
     event.setup = 0;
     event.direction = 0;
 
-    if (usb_dev_ptr->bus_resetting)
-    {
-        /* Bus reset operation complete */
-        usb_dev_ptr->bus_resetting = FALSE;
-    } /* Endif */
-
     if (!(usb_hal_ehci_get_port_status(usb_dev_ptr->usbRegBase) &
         EHCI_PORTSCX_PORT_RESET))
     {
@@ -1165,7 +1155,21 @@ void _usb_dci_usbhs_process_port_change
         } /* Endif */
     } /* Endif */
 
-#if USBCFG_DEV_DETACH_ENABLE
+    if (usb_dev_ptr->bus_resetting)
+    {
+        /* Bus reset operation complete */
+        usb_dev_ptr->bus_resetting = FALSE;
+        event.handle = (usb_device_handle)usb_dev_ptr->upper_layer_handle;
+        event.ep_num = USB_CONTROL_ENDPOINT;
+        event.setup = FALSE;
+        event.direction = USB_RECV;
+        event.buffer_ptr = NULL;
+        event.len = ZERO_LENGTH;
+        /* Inform the application so that it can cancel all previously queued transfers */
+        _usb_device_call_service(USB_SERVICE_BUS_RESET,&event);
+    } /* Endif */
+
+#if USBCFG_DEV_EHCI_DETACH_ENABLE
     if ((!(usb_hal_ehci_get_port_status(usb_dev_ptr->usbRegBase) &
         EHCI_PORTSCX_CURRENT_CONNECT_STATUS)) &&
         (usb_dev_ptr->usb_state == USB_STATE_CONFIG))
@@ -1173,7 +1177,7 @@ void _usb_dci_usbhs_process_port_change
         event.len = ZERO_LENGTH;
         event.buffer_ptr = (uint8_t*)NULL;
         /* Inform the upper layers */
-        (void)_usb_device_call_service(USB_SERVICE_DETACH,&event);
+        (void)_usb_device_call_service(USB_DEV_SERVICE_DETACH,&event);
     } /* Endif */
 #endif
 
@@ -1236,9 +1240,6 @@ void _usb_dci_usbhs_process_error
 *        Services all the VUSB_HS interrupt sources
 *
 *END*-----------------------------------------------------------------*/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
-    void _usb_dci_usbhs_isr(usb_device_handle handle)
-#endif
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 void _usb_dci_usbhs_isr
    (
@@ -1476,7 +1477,7 @@ usb_status usb_dci_usbhs_init_endpoint
     /* before initializing cancel all transfers on EP as there may be calls
        for endpoint initialization more than once. This will free any allocated
        queue */
-    usb_dci_usbhs_cancel_transfer(handle, xd_ptr->ep_num, xd_ptr->bdirection);
+    usb_dci_usbhs_cancel(handle, xd_ptr->ep_num, xd_ptr->bdirection);
     /* Get the endpoint queue head address */
     ep_queue_head_ptr = (usb_ehc_dev_qh_struct_t *)
         usb_hal_ehci_get_eplist_address(usb_dev_ptr->usbRegBase) +
@@ -1549,7 +1550,7 @@ usb_status usb_dci_usbhs_deinit_endpoint
     usb_dev_ptr = (usb_ehci_dev_state_struct_t *)handle;
 
     /*before de-initializing cancel all transfers on EP */
-    usb_dci_usbhs_cancel_transfer(handle, ep_num, direction);
+    usb_dci_usbhs_cancel(handle, ep_num, direction);
     /* Ger the endpoint queue head address */
     ep_queue_head_ptr = (usb_ehc_dev_qh_struct_t *)
         usb_hal_ehci_get_eplist_address(usb_dev_ptr->usbRegBase) +
@@ -1621,16 +1622,149 @@ usb_status usb_dci_usbhs_get_transfer_status
 
     return (error);
 } /* EndBody */
+/*FUNCTION*-------------------------------------------------------------
+*
+*  Function Name  : usb_dci_usbhs_cancel
+*  Returned Value : USB_OK or error code
+*  Comments       :
+*        Cancels a endpoint transfer
+*
+*END*-----------------------------------------------------------------*/
+
+usb_status usb_dci_usbhs_cancel
+(
+    /* [IN] the USB_dev_initialize state structure */
+    usb_device_handle           handle,
+
+    /* [IN] the Endpoint number */
+    uint8_t                     ep_num,
+
+    /* [IN] direction */
+    uint8_t                     direction
+)
+{
+    usb_ehci_dev_state_struct_t *             usb_dev_ptr;
+    usb_ehci_dev_dtd_struct_t *               dTD_ptr;
+    usb_ehci_dev_dtd_struct_t *               check_dTD_ptr;
+    volatile usb_ehc_dev_qh_struct_t *        ep_queue_head_ptr;
+    xd_struct_t*                              xd_ptr;
+    uint32_t                                  temp;
+    uint32_t                                  bit_pos;
+    usb_event_struct_t                        event;
+
+    usb_dev_ptr = (usb_ehci_dev_state_struct_t *)handle;
+
+    bit_pos = (uint32_t)(1 << (16 * direction + ep_num));
+    temp = (uint32_t)(2*ep_num + direction);
+
+    ep_queue_head_ptr = (usb_ehc_dev_qh_struct_t *)
+        usb_hal_ehci_get_eplist_address(usb_dev_ptr->usbRegBase) +
+        temp;
+    if (usb_dev_ptr->dtd_heads == NULL)
+    {
+        return USB_OK;
+    }
+    /* Unlink the dTD */
+    dTD_ptr = usb_dev_ptr->dtd_heads[temp];
+
+    while (dTD_ptr)
+    {
+        check_dTD_ptr = (usb_ehci_dev_dtd_struct_t *)((uint32_t)usb_hal_ehci_get_next_dtd_address(dTD_ptr));
+        
+        /* the first QH dTD should be not active */
+        if (usb_hal_ehci_get_dtd_size_ioc_status(dTD_ptr) & USBHS_TD_STATUS_ACTIVE)
+        {
+            /* Flushing will halt the pipe */
+            /* Write 1 to the Flush register */
+            usb_hal_ehci_flush_endpoint_buffer(usb_dev_ptr->usbRegBase, bit_pos);
+            
+            /* Wait until flushing completed */
+            while (usb_hal_ehci_is_endpoint_transfer_flushed(usb_dev_ptr->usbRegBase, bit_pos))
+            {
+                /* ENDPTFLUSH bit should be cleared to indicate this
+                   operation is complete */
+            }
+
+            while (usb_hal_echi_get_endpoint_status(usb_dev_ptr->usbRegBase) & bit_pos)
+            {
+                /* Write 1 to the Flush register */
+                usb_hal_ehci_flush_endpoint_buffer(usb_dev_ptr->usbRegBase, bit_pos);
+
+                /* Wait until flushing completed */
+                while (usb_hal_ehci_is_endpoint_transfer_flushed(usb_dev_ptr->usbRegBase, bit_pos))
+                {
+                    /* ENDPTFLUSH bit should be cleared to indicate this
+                       operation is complete */
+                }
+            }
+        }
+
+        /* Retire the current dTD */
+        usb_hal_ehci_clear_size_ioc_sts(dTD_ptr);
+        usb_hal_ehci_set_next_dtd_invalid(dTD_ptr);
+
+        /* The transfer descriptor for this dTD */
+        xd_ptr = (xd_struct_t*)dTD_ptr->xd_for_this_dtd;
+        /* Free the dTD */
+        _usb_dci_usbhs_free_dTD(usb_dev_ptr, dTD_ptr);
+
+        /* Update the dTD head and tail for specific endpoint/direction */
+        if (!check_dTD_ptr)
+        {
+            usb_dev_ptr->dtd_heads[temp] = NULL;
+            usb_dev_ptr->dtd_tails[temp] = NULL;
+
+            if (xd_ptr)
+            {
+                /* Free the transfer descriptor */
+                _usb_ehci_free_XD(usb_dev_ptr, xd_ptr);
+                event.handle = (usb_device_handle)usb_dev_ptr->upper_layer_handle;
+                event.ep_num = ep_num;
+                event.setup = FALSE;
+                event.direction = direction;
+                event.len = 0xFFFFFFFF;
+                (void)_usb_device_call_service(ep_num,&event);
+            }
+
+            /* No other transfers on the queue */
+            usb_hal_ehci_set_next_dtd_terminate(ep_queue_head_ptr);
+            usb_hal_ehci_clear_size_ioc_int_sts(ep_queue_head_ptr);
+        }
+        else
+        {
+            usb_dev_ptr->dtd_heads[temp] = check_dTD_ptr;
+
+            if (xd_ptr)
+            {
+                if ((uint32_t)check_dTD_ptr->xd_for_this_dtd != (uint32_t)xd_ptr)
+                {
+                    /* Free the transfer descriptor */
+                    _usb_ehci_free_XD(usb_dev_ptr, xd_ptr);
+                    event.handle = (usb_device_handle)usb_dev_ptr->upper_layer_handle;
+                    event.ep_num = ep_num;
+                    event.setup = FALSE;
+                    event.direction = direction;
+                    event.len = 0xFFFFFFFF;
+                    (void)_usb_device_call_service(ep_num,&event);
+                }
+            }
+        }
+        dTD_ptr = check_dTD_ptr;
+    }
+
+    return USB_OK;
+}
+
 
 /*FUNCTION*-------------------------------------------------------------
 *
-*  Function Name  : usb_dci_usbhs_cancel_transfer
+*  Function Name  : _usb_dci_usbhs_update_dTD
 *  Returned Value : USB_OK or error code
 *  Comments       :
-*        Cancels a transfer
+*        Release a dTD
 *
 *END*-----------------------------------------------------------------*/
-usb_status usb_dci_usbhs_cancel_transfer
+static usb_status _usb_dci_usbhs_update_dTD
 (
     /* [IN] the USB_dev_initialize state structure */
     usb_device_handle           handle,
@@ -1642,11 +1776,10 @@ usb_status usb_dci_usbhs_cancel_transfer
     uint8_t                     direction
 )
 {   /* Body */
-    usb_ehci_dev_state_struct_t *    usb_dev_ptr;
-    usb_ehci_dev_dtd_struct_t *      dTD_ptr;
-    usb_ehci_dev_dtd_struct_t *      check_dTD_ptr;
+    usb_ehci_dev_state_struct_t *             usb_dev_ptr;
+    usb_ehci_dev_dtd_struct_t *               dTD_ptr;
+    usb_ehci_dev_dtd_struct_t *               check_dTD_ptr;
     volatile usb_ehc_dev_qh_struct_t *        ep_queue_head_ptr;
-    xd_struct_t*                     xd_ptr;
     uint32_t                                  temp;
     uint32_t                                  bit_pos;
 
@@ -1698,8 +1831,6 @@ usb_status usb_dci_usbhs_cancel_transfer
         usb_hal_ehci_clear_size_ioc_sts(dTD_ptr);
         usb_hal_ehci_set_next_dtd_invalid(dTD_ptr);
 
-        /* The transfer descriptor for this dTD */
-        xd_ptr = (xd_struct_t*)dTD_ptr->xd_for_this_dtd;
         /* Free the dTD */
         _usb_dci_usbhs_free_dTD(usb_dev_ptr, dTD_ptr);
 
@@ -1709,13 +1840,6 @@ usb_status usb_dci_usbhs_cancel_transfer
             usb_dev_ptr->dtd_heads[temp] = NULL;
             usb_dev_ptr->dtd_tails[temp] = NULL;
 
-            if (xd_ptr)
-            {
-                /* Free the transfer descriptor */
-                _usb_ehci_free_XD(usb_dev_ptr, xd_ptr);
-				//USB_PRINTF("cf: %d\n\r",usb_dev_ptr->xd_entries);
-            }
-
             /* No other transfers on the queue */
             usb_hal_ehci_set_next_dtd_terminate(ep_queue_head_ptr);
             usb_hal_ehci_clear_size_ioc_int_sts(ep_queue_head_ptr);
@@ -1723,18 +1847,8 @@ usb_status usb_dci_usbhs_cancel_transfer
         else
         {
             usb_dev_ptr->dtd_heads[temp] = check_dTD_ptr;
-
-            if (xd_ptr)
-            {
-                if ((uint32_t)check_dTD_ptr->\
-                    xd_for_this_dtd != (uint32_t)xd_ptr)
-                {
-                    /* Free the transfer descriptor */
-                    _usb_ehci_free_XD(usb_dev_ptr, xd_ptr);
-					//USB_PRINTF("cf: %d\n\r",usb_dev_ptr->xd_entries);
-                }
-            }
-
+            
+            /* prime the next dTD */
             if (usb_hal_ehci_get_dtd_size_ioc_status(check_dTD_ptr) & USBHS_TD_STATUS_ACTIVE)
             {
                 /* Start CR 1015 */
@@ -1802,13 +1916,6 @@ usb_status usb_dci_usbhs_shutdown
     /* Reset the controller to get default values */
     usb_hal_ehci_reset_controller(usb_dev_ptr->usbRegBase);
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    if(NULL != g_ehci_data_ptr[usb_dev_ptr->controller_id])
-    {
-        OS_Mem_free(g_ehci_data_ptr[usb_dev_ptr->controller_id]);
-        g_ehci_data_ptr[usb_dev_ptr->controller_id] = NULL;
-    }
-#endif
     return USB_OK;
 } /* EndBody */
 
@@ -2171,7 +2278,7 @@ usb_status usb_dci_usbhs_alloc_xd
     xd_struct_t* *    xd_ptr_ptr
 )
 {   /* Body */
-    volatile usb_ehci_dev_state_struct_t *   usb_dev_ptr = handle;
+    volatile usb_ehci_dev_state_struct_t *   usb_dev_ptr =(usb_ehci_dev_state_struct_t *)handle;
 
     if(!usb_dev_ptr)
     {
@@ -2210,6 +2317,9 @@ usb_status usb_dci_usbhs_alloc_xd
 
     return USB_OK;
 } /* Endbody */
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 /* EOF */

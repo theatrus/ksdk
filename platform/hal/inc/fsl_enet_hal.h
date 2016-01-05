@@ -92,10 +92,10 @@ typedef enum _enet_status
     kStatus_ENET_TxBufferNull,       /*!< Transmit data buffer Null*/
     kStatus_ENET_NoRxBufferLeft,       /*!< No more receive buffer left*/
     kStatus_ENET_UnknownCommand,     /*!< Invalid ENET PTP IOCTL command*/
-    kStatus_ENET_TimeOut,            /*!< ENET Timeout*/
+    kStatus_ENET_TimeOut,            /*!< ENET timeout*/
     kStatus_ENET_MulticastPointerNull, /*!< Null multicast group pointer*/
     kStatus_ENET_NoMulticastAddr,   /*!< No multicast group address*/
-    kStatus_ENET_AlreadyAddedMulticast, /*!< Have Already added to multicast group*/
+    kStatus_ENET_AlreadyAddedMulticast, /*!< Already added to multicast group*/
     kStatus_ENET_PHYAutoDiscoverFail /*!< Failed to automatically discover PHY*/
 } enet_status_t;
 
@@ -121,8 +121,8 @@ typedef enum _enet_rx_bd_control_status
 /*! @brief Defines the control extended region1 of the receive buffer descriptor.*/
 typedef enum _enet_rx_bd_control_extend0
 {  
-    kEnetRxBdIpv4                = 0x0100U,  /*!< Ipv4 frame*/
-    kEnetRxBdIpv6                = 0x0200U,  /*!< Ipv6 frame*/
+    kEnetRxBdIpv4                = 0x0100U,  /*!< IPv4 frame*/
+    kEnetRxBdIpv6                = 0x0200U,  /*!< IPv6 frame*/
     kEnetRxBdVlan                = 0x0400U,  /*!< VLAN*/
     kEnetRxBdProtocolChecksumErr = 0x1000U,  /*!< Protocol checksum error*/
     kEnetRxBdIpHeaderChecksumErr = 0x2000U,  /*!< IP header checksum error*/
@@ -305,16 +305,16 @@ typedef enum _enet_special_address_filter
     kEnetSpecialAddressDisable = 2U  /*!< Disables the special address filter.*/
 } enet_special_address_filter_t;
 
-/*! @brief Defines the 1588 timer channel numbers.*/
+/*! @brief Defines the IEEE 1588 timer channel numbers.*/
 typedef enum _enet_timer_channel
 {
-    kEnetTimerChannel1 = 0U,  /*!< 1588 timer Channel 1*/
-    kEnetTimerChannel2 = 1U,  /*!< 1588 timer Channel 2*/
-    kEnetTimerChannel3 = 2U,  /*!< 1588 timer Channel 3*/
-    kEnetTimerChannel4 = 3U   /*!< 1588 timer Channel 4*/
+    kEnetTimerChannel1 = 0U,  /*!< IEEE 1588 timer Channel 1*/
+    kEnetTimerChannel2 = 1U,  /*!< IEEE 1588 timer Channel 2*/
+    kEnetTimerChannel3 = 2U,  /*!< IEEE 1588 timer Channel 3*/
+    kEnetTimerChannel4 = 3U   /*!< IEEE 1588 timer Channel 4*/
 } enet_timer_channel_t;
 
-/*! @brief Defines the capture or compare mode for 1588 timer channels.*/
+/*! @brief Defines the capture or compare mode for IEEE 1588 timer channels.*/
 typedef enum _enet_timer_channel_mode
 {
     kEnetChannelDisable                 = 0U,  /*!< Disable timer channel*/
@@ -327,8 +327,8 @@ typedef enum _enet_timer_channel_mode
     kEnetChannelSetCompare              = 7U,  /*!< Set output on compare*/
     kEnetChannelClearCompareSetOverflow = 10U, /*!< Clear output on compare, set output on overflow*/
     kEnetChannelSetCompareClearOverflow = 11U, /*!< Set output on compare, clear output on overflow*/
-    kEnetChannelPulseLowonCompare       = 14U, /*!< Pulse output low on compare for one 1588 clock cycle*/
-    kEnetChannelPulseHighonCompare      = 15U  /*!< Pulse output high on compare for one 1588 clock cycle*/
+    kEnetChannelPulseLowonCompare       = 14U, /*!< Pulse output low on compare for one IEEE 1588 clock cycle*/
+    kEnetChannelPulseHighonCompare      = 15U  /*!< Pulse output high on compare for one IEEE 1588 clock cycle*/
 } enet_timer_channel_mode_t;
 
 /*! @brief Defines the RXFRAME/RXBYTE/TXFRAME/TXBYTE/MII/TSTIMER/TSAVAIL interrupt source for ENET.*/
@@ -353,13 +353,13 @@ typedef enum _enet_interrupt_request
     kEnetAllInterrupt           = 0x7FFFFFFFU   /*!< All interrupt*/
 } enet_interrupt_request_t;
 
-/* Internal irq number*/
+/* Internal IRQ number*/
 typedef enum _enet_irq_number
 {
-    kEnetTsTimerNumber  = 0,     /*!< ENET ts_timer irq number*/
-    kEnetReceiveNumber  = 1,     /*!< ENET receive irq number*/
-    kEnetTransmitNumber = 2,     /*!< ENET transmit irq number*/
-    kEnetMiiErrorNumber = 3      /*!< ENET mii error irq number*/
+    kEnetTsTimerNumber  = 0,     /*!< ENET ts_timer IRQ number*/
+    kEnetReceiveNumber  = 1,     /*!< ENET receive IRQ number*/
+    kEnetTransmitNumber = 2,     /*!< ENET transmit IRQ number*/
+    kEnetMiiErrorNumber = 3      /*!< ENET MII error IRQ number*/
 } enet_irq_number_t;
 
 /*! @brief Defines the ENET main constant.*/
@@ -383,7 +383,7 @@ typedef enum _enet_frame_max
 /*! @brief Defines the transmit accelerator configuration*/
 typedef enum _enet_txaccelerator_config
 {
-    kEnetTxAccelisShift16Enabled  = 0x01U,   /*!< Tx FIFO shift-16*/
+    kEnetTxAccelisShift16Enabled  = 0x01U,   /*!< Transmit FIFO shift-16*/
     kEnetTxAccelIpCheckEnabled    = 0x08U,   /*!< Insert IP header checksum */
     kEnetTxAccelProtoCheckEnabled = 0x10U    /*!< Insert protocol checksum*/
 } enet_txaccelerator_config_t;
@@ -395,7 +395,7 @@ typedef enum _enet_rxaccelerator_config
     kEnetRxAccelIpCheckEnabled    =  0x02U,  /*!< Discard with wrong IP header checksum */
     kEnetRxAccelProtoCheckEnabled =  0x04U,  /*!< Discard with wrong protocol checksum*/
     kEnetRxAccelMacCheckEnabled   =  0x40U,  /*!< Discard with Mac layer errors*/
-    kEnetRxAccelisShift16Enabled  =  0x80U   /*!< Rx FIFO shift-16*/
+    kEnetRxAccelisShift16Enabled  =  0x80U   /*!< Receive FIFO shift-16*/
 } enet_rxaccelerator_config_t;
 
 
@@ -403,28 +403,28 @@ typedef enum _enet_rxaccelerator_config
 typedef enum _enet_mac_control_flag
 {
     kEnetStopModeEnable           = 0x1U,  /*!< ENET Stop mode enable*/
-    kEnetDebugModeEnable          = 0x2U, /*! Enable MAC to enter hardware freeze when enter Debug mode*/
-    kEnetPayloadlenCheckEnable    = 0x4U, /*!< ENET receive payload length check Enable*/
+    kEnetDebugModeEnable          = 0x2U, /*! Enable MAC to enter hardware freeze when enter debug mode*/
+    kEnetPayloadlenCheckEnable    = 0x4U, /*!< ENET receive payload length check enable*/
     kEnetRxFlowControlEnable      = 0x8U, /*!< Enable ENET flow control*/
-    kEnetRxCrcFwdEnable           = 0x10U, /*!< Received frame crc is stripped from the frame*/
+    kEnetRxCrcFwdEnable           = 0x10U, /*!< Received frame CRC is stripped from the frame*/
     kEnetRxPauseFwdEnable         = 0x20U,/*!< Pause frames are forwarded to the user application*/
     kEnetRxPadRemoveEnable        = 0x40U, /*!< Padding is removed from received frames*/
     kEnetRxBcRejectEnable         = 0x80U, /*!< Broadcast frame reject*/
     kEnetRxPromiscuousEnable      = 0x100U, /*!< Promiscuous mode enabled*/
-    kEnetTxCrcFwdEnable           = 0x200U, /*!< Enable transmit frame with the crc from application*/
-    kEnetTxCrcBdEnable            = 0x400U,  /*!< When Tx CRC FWD disable, Tx buffer descriptor enable Transmit CRC*/
+    kEnetTxCrcFwdEnable           = 0x200U, /*!< Enable transmit frame with the CRC from application*/
+    kEnetTxCrcBdEnable            = 0x400U,  /*!< When transmit CRC FWD disable, transmit buffer descriptor enable transmit CRC*/
     kEnetMacAddrInsert            = 0x800U, /*!< Enable MAC address insert*/
     kEnetTxAccelEnable            = 0x1000U, /*!< Transmit accelerator enable*/
     kEnetRxAccelEnable            = 0x2000U, /*!< Transmit accelerator enable*/
     kEnetStoreAndFwdEnable        = 0x4000U, /*!< Switcher to enable store and forward*/
     kEnetMacMibEnable             = 0x8000U,  /*!< Disable MIB module*/
     kEnetSMIPreambleDisable       = 0x10000U, /*!< Enable SMI preamble*/
-    kEnetVlanTagEnabled           = 0x20000U,   /*!< Enable Vlan Tag*/
-    kEnetMacEnhancedEnable        = 0x40000U /*!< Enable enhanced MAC feature (1588 feature/enhanced buff descriptor)*/
+    kEnetVlanTagEnabled           = 0x20000U,   /*!< Enable VLAN Tag*/
+    kEnetMacEnhancedEnable        = 0x40000U /*!< Enable enhanced MAC feature (IEEE 1588 feature/enhanced buff descriptor)*/
 } enet_mac_control_flag_t;
 
 #if (!FSL_FEATURE_ENET_DMA_BIG_ENDIAN_ONLY) 
-/*! @brief Defines the buffer descriptor structure for the little-Endian system and endianness configurable IP.*/
+/*! @brief Defines the buffer descriptor structure for the little-endian system and endianness configurable IP.*/
 typedef struct ENETBdStruct
 {
     uint16_t  length;           /*!< Buffer descriptor data length*/
@@ -445,7 +445,7 @@ typedef struct ENETBdStruct
 } enet_bd_struct_t;
 
 #else
-/*! @brief Defines the buffer descriptors structure for the Big-Endian system.*/
+/*! @brief Defines the buffer descriptors structure for the Big-endian system.*/
 typedef struct ENETBdStruct
 {
     uint16_t  control;          /*!< Buffer descriptor control   */
@@ -472,11 +472,11 @@ typedef struct ENETConfigRMII
     enet_config_rmii_mode_t mode;      /*!< RMII/MII mode*/
     enet_config_speed_t speed;    /*!< 100M/10M Speed*/
     enet_config_duplex_t duplex;  /*!< Full/Duplex mode*/
-    bool isRxOnTxDisabled;        /*!< Disable rx and tx*/
+    bool isRxOnTxDisabled;        /*!< Disable receive and transmit*/
     bool isLoopEnabled;           /*!< MII loop mode*/
 } enet_config_rmii_t;
 
-/*! @brief Defines the configuration structure for the 1588 PTP timer.*/
+/*! @brief Defines the configuration structure for the IEEE 1588 PTP timer.*/
 typedef struct ENETConfigPtpTimer
 {
     bool isSlaveEnabled;        /*!< Master or slave PTP timer*/
@@ -495,7 +495,7 @@ typedef struct ENETConfigTxFifo
     bool isStoreForwardEnabled;   /*!< Transmit FIFO store and forward */
     uint8_t txFifoWrite; /*!< Transmit FIFO write. This should be set when isStoreForwardEnabled
                          is false. this field indicates the number of bytes in step of 64 bytes 
-                         written to the Tx FiFO before transmission of a frame begins*/
+                         written to the transmit FiFO before transmission of a frame begins*/
     uint8_t txEmpty;        /*!< Transmit FIFO section empty threshold, default zero*/
     uint8_t txAlmostEmpty;  /*!< Transmit FIFO section almost empty threshold, The minimum value of 4 should be set*/
     uint8_t txAlmostFull;   /*!< Transmit FIFO section almost full threshold, The minimum value of 6 is required
@@ -517,11 +517,11 @@ typedef struct ENETMibRxStat
     uint16_t rxPackets;       /*!< Receive packets*/
     uint16_t rxBroadcastPackets; /*!< Receive broadcast packets*/
     uint16_t rxMulticastPackets;  /*!< Receive multicast packets*/
-    uint16_t rxCrcAlignErrorPackets;  /*!< Receive packets with crc/align error*/
-    uint16_t rxUnderSizeGoodPackets;  /*!< Receive packets undersize and good crc*/
-    uint16_t rxUnderSizeBadPackets;  /*!< Receive packets undersize and bad crc*/
-    uint16_t rxOverSizeGoodPackets; /*!< Receive packets oversize and good crc*/
-    uint16_t rxOverSizeBadPackets;  /*!< Receive packets oversize and bad crc*/
+    uint16_t rxCrcAlignErrorPackets;  /*!< Receive packets with CRC/align error*/
+    uint16_t rxUnderSizeGoodPackets;  /*!< Receive packets undersize and good CRC*/
+    uint16_t rxUnderSizeBadPackets;  /*!< Receive packets undersize and bad CRC*/
+    uint16_t rxOverSizeGoodPackets; /*!< Receive packets oversize and good CRC*/
+    uint16_t rxOverSizeBadPackets;  /*!< Receive packets oversize and bad CRC*/
     uint16_t rxByte64Packets;       /*!< Receive packets 64-byte*/
     uint16_t rxByte65to127Packets;  /*!< Receive packets 65-byte to 127-byte*/
     uint16_t rxByte128to255Packets;  /*!< Receive packets 128-byte to 255-byte*/
@@ -530,12 +530,12 @@ typedef struct ENETMibRxStat
     uint16_t rxByte1024to2047Packets;  /*!< Receive packets 1024-byte to 2047-byte*/
     uint16_t rxByteOver2048Packets;  /*!< Receive packets over 2048-byte*/
     uint32_t rxOctets;              /*!< Receive octets*/
-    uint32_t ieeeOctetsrxFrameOk;   /*!< Receive octets of received Frames ok*/
-    uint16_t ieeerxFrameDrop;     /*!< Receive Frames dropped*/
-    uint16_t ieeerxFrameOk;      /*!< Receive Frames ok*/
-    uint16_t ieeerxFrameCrcErr;    /*!< Receive Frames with crc error*/
-    uint16_t ieeetxFrameAlignErr;  /*!< Receive Frames with align error*/
-    uint16_t ieeetxFrameMacErr;  /*!< Receive Frames with mac error*/
+    uint32_t ieeeOctetsrxFrameOk;   /*!< Receive octets of received frames OK*/
+    uint16_t ieeerxFrameDrop;     /*!< Receive frames dropped*/
+    uint16_t ieeerxFrameOk;      /*!< Receive frames OK*/
+    uint16_t ieeerxFrameCrcErr;    /*!< Receive frames with CRC error*/
+    uint16_t ieeetxFrameAlignErr;  /*!< Receive frames with align error*/
+    uint16_t ieeetxFrameMacErr;  /*!< Receive frames with Mac error*/
     uint16_t ieeetxFramePause;   /*!< Receive flow control pause frames*/
 } enet_mib_rx_stat_t;
 
@@ -545,11 +545,11 @@ typedef struct ENETMibTxStat
     uint16_t txPackets;      /*!< Transmit packets*/
     uint16_t txBroadcastPackets;  /*!< Transmit broadcast packets*/
     uint16_t txMulticastPackets;  /*!< Transmit multicast packets*/
-    uint16_t txCrcAlignErrorPackets;  /*!< Transmit packets with crc/align error*/
-    uint16_t txUnderSizeGoodPackets;  /*!< Transmit packets undersize and good crc*/
-    uint16_t txUnderSizeBadPackets;  /*!< Transmit packets undersize and bad crc*/
-    uint16_t txOverSizeGoodPackets;  /*!< Transmit packets oversize and good crc*/
-    uint16_t txOverSizeBadPackets;  /*!< Transmit packets oversize and bad crc*/
+    uint16_t txCrcAlignErrorPackets;  /*!< Transmit packets with CRC/align error*/
+    uint16_t txUnderSizeGoodPackets;  /*!< Transmit packets undersize and good CRC*/
+    uint16_t txUnderSizeBadPackets;  /*!< Transmit packets undersize and bad CRC*/
+    uint16_t txOverSizeGoodPackets;  /*!< Transmit packets oversize and good CRC*/
+    uint16_t txOverSizeBadPackets;  /*!< Transmit packets oversize and bad CRC*/
     uint16_t txCollision;          /*!< Transmit packets with collision*/
     uint16_t txByte64Packets;     /*!< Transmit packets 64-byte*/
     uint16_t txByte65to127Packets;   /*!< Transmit packets 65-byte to 127-byte*/
@@ -559,8 +559,8 @@ typedef struct ENETMibTxStat
     uint16_t txByte1024to2047Packets;  /*!< Transmit packets 1024-byte to 2047-byte*/
     uint16_t txByteOver2048Packets;   /*!< Transmit packets over 2048-byte*/
     uint32_t txOctets;            /*!< Transmit octets*/
-    uint32_t ieeeOctetstxFrameOk;  /*!< Transmit octets of transmitted frames ok*/
-    uint16_t ieeetxFrameOk;          /*!< Transmit frames ok*/
+    uint32_t ieeeOctetstxFrameOk;  /*!< Transmit octets of transmitted frames OK*/
+    uint16_t ieeetxFrameOk;          /*!< Transmit frames OK*/
     uint16_t ieeetxFrameOneCollision;  /*!< Transmit frames with single collision*/
     uint16_t ieeetxFrameMultiCollison;  /*!< Transmit frames with multicast collision*/
     uint16_t ieeetxFrameLateCollison;  /*!< Transmit frames with late collision*/ 
@@ -571,7 +571,7 @@ typedef struct ENETMibTxStat
     uint16_t ieeetxFramePause; /*!< Transmit flow control Pause frame*/
 } enet_mib_tx_stat_t;
 
-/*! @brief Define the special configure for Rx and Tx controller*/
+/*! @brief Define the special configure for receive and transmit controller*/
 typedef struct ENETSpecialMacConfig
 {
     uint16_t rxMaxFrameLen; /*!< Receive maximum frame length*/
@@ -586,7 +586,7 @@ typedef struct ENETMacConfig
     uint8_t *macAddr;    /*!< MAC hardware address*/
     enet_config_rmii_t *rmiiCfgPtr;/*!< RMII configure mode*/    
     uint32_t macCtlConfigure;/*!< Mac control configure, it is recommended to use enet_mac_control_flag_t 
-                      it is special control set for loop mode, sleep mode, crc forward/terminate etc*/
+                      it is special control set for loop mode, sleep mode, CRC forward/terminate, and so on*/
     enet_config_rx_fifo_t *rxFifoPtr;    /*!< Receive FIFO configuration, if NULL default values will be used*/
     enet_config_tx_fifo_t *txFifoPtr;    /*!< Transmit FIFO configuration, if NULL default values will be used*/
     uint8_t rxAccelerCfg; /*!< Receive accelerator configure, should be set when kEnetTxAccelEnable is set*/
@@ -594,7 +594,7 @@ typedef struct ENETMacConfig
     uint16_t pauseDuration;          /*!< Pause duration, should be set when kEnetRxFlowControlEnable is set*/
     enet_special_maccfg_t *macSpecialCfg;  /*!< special configure for MAC to instead of default configure*/
 #if FSL_FEATURE_ENET_SUPPORT_PTP
-    bool isSlaveMode;      /*!< PTP 1588 timer configuration*/
+    bool isSlaveMode;      /*!< PTP IEEE 1588 timer configuration*/
 #endif
 } enet_mac_config_t;
 
@@ -615,19 +615,19 @@ typedef struct ENETBdConfig
     uint32_t rxBuffSizeAlign;  /*!< The aligned receive transmit buffer size. */
 } enet_bd_config;
 
-/* The mask to get MIB RX static event counter */
+/* The mask to get MIB receive static event counter */
 #define ENET_GET_MIB_RX_STATIC_MASK           (1 << 0)
-/* The mask to get MIB TX static event counter */
+/* The mask to get MIB transmit static event counter */
 #define ENET_GET_MIB_TX_STATIC_MASK           (1 << 1)
-/* The mask to get TX pause frame status */
+/* The mask to get transmit pause frame status */
 #define ENET_GET_TX_PAUSE_MASK                (1 << 2)
-/* The mask to get RX pause frame status */
+/* The mask to get receive pause frame status */
 #define ENET_GET_RX_PAUSE_MASK                (1 << 3)
 /* The mask to get the SMI interface configuration status */
 #define ENET_GET_SMI_CONFIG_MASK              (1 << 4)
 /* The mask to get MIB updating status */
 #define ENET_GET_MIB_UPDATE_MASK              (1 << 5)
-/* The mask to get max frame length */
+/* The mask to get maximum frame length */
 #define ENET_GET_MAX_FRAME_LEN_MASK           (1 << 6)
 
 /* The status of the transmitted flow control frames
@@ -651,9 +651,9 @@ typedef struct ENETBdConfig
 /*! @brief The structure to save current status */
 typedef struct ENETCurStatus
 {
-    enet_mib_rx_stat_t rxStatic; /*!< The Rx static event counter */
-    enet_mib_tx_stat_t txStatic; /*!< The Tx static event counter */
-    uint16_t maxFrameLen;        /*!< The max frame length */
+    enet_mib_rx_stat_t rxStatic; /*!< The receive static event counter */
+    enet_mib_tx_stat_t txStatic; /*!< The transmit static event counter */
+    uint16_t maxFrameLen;        /*!< The maximum frame length */
     uint32_t statusFlags;        /*!< The status flag */
 }enet_cur_status_t;
 
@@ -689,7 +689,7 @@ typedef struct ENETCurStatus
 #define ENET_RX_BD_LEN_VIOLAT_FLAG_MASK      (1 << 15)
 /* Check if buffer descriptor Receive non-octet aligned frame flag is set. */
 #define ENET_RX_BD_NO_OCTET_FLAG_MASK        (1 << 16)
-/* Check if buffer descriptor Receive crc error flag is set. */
+/* Check if buffer descriptor Receive CRC error flag is set. */
 #define ENET_RX_BD_CRC_ERR_FLAG_MASK         (1 << 17)
 /* Check if buffer descriptor late collision frame discard flag is set. */ 
 #define ENET_RX_BD_COLLISION_FLAG_MASK       (1 << 18)
@@ -760,7 +760,7 @@ typedef enum EnetEnableDynamicalAct
 {
     kEnGraceSendStop,     /*!< Enable/disable mac to stop the sending process gracefully */ 
     kEnSendPauseFrame,    /*!< Enable/disable mac to send the pause frame after current data frame is sent */ 
-    kEnClearMibCounter,     /*!< Enable/disable mac to clear the mib counter */
+    kEnClearMibCounter,     /*!< Enable/disable mac to clear the MIB counter */
 }enet_en_dynamical_act_t;
   
 /*******************************************************************************
@@ -791,7 +791,7 @@ enet_status_t ENET_HAL_Init(ENET_Type * base);
  * @param base The ENET peripheral base address.
  * @param macCfgPtr MAC controller related configuration.
  * @param sysClk The system clock
- * @param bufDespConfig buffer descriptor related configuration
+ * @param bdConfig buffer descriptor related configuration
  */
 void ENET_HAL_Config(ENET_Type * base, const enet_mac_config_t *macCfgPtr, \
   const uint32_t sysClk, const enet_bd_config* bdConfig); 
@@ -840,7 +840,7 @@ uint8_t* ENET_HAL_GetBuffDescripData(volatile enet_bd_struct_t *curBd);
  * encountered some error in the receiving process.
  *
  * This interface mainly clears the status region and update the buffer pointer of 
- * the rx descriptor to a null buffer to ensure that the BD is  correctly available 
+ * the receive descriptor to a null buffer to ensure that the BD is  correctly available 
  * to receive data.
  *
  * @param rxBds The current receive buffer descriptor.
@@ -855,9 +855,9 @@ void ENET_HAL_ClrRxBdAfterHandled(volatile enet_bd_struct_t *rxBds, uint8_t *dat
 /*!
  * @brief Sets the transmit buffer descriptor flag before sending a frame.
  *
- * This interface mainly clears the status region of TX buffer descriptor to 
+ * This interface mainly clears the status region of the transmit buffer descriptor to 
  * ensure tat the BD is correctly available to send.
- * You should set the isTxtsCfged when the transmit timestamp feature is required. 
+ * Set the isTxtsCfged when the transmit timestamp feature is required. 
  *
  * @param txBds The current transmit buffer descriptor.
  * @param length The data length on buffer descriptor.
@@ -865,10 +865,9 @@ void ENET_HAL_ClrRxBdAfterHandled(volatile enet_bd_struct_t *rxBds, uint8_t *dat
  *        added to the transmit buffer descriptor when this flag is set.
  * @param isTxCrcEnable The flag to transmit CRC sequence after the data byte.
  *        - True the transmit controller transmits the CRC sequence after the data byte.
- *        if the transmit CRC forward from application is disabled this flag should be set
+ *        If the transmit CRC forward from application is disabled this flag should be set
  *        to add the CRC sequence.
  *        - False the transmit buffer descriptor does not transmit the CRC sequence after the data byte.
- *         if the transmit CRC forward from application.
  * @param isLastOne The last BD flag in a frame.
  *        - True the last BD in a frame.
  *        - False not the last BD in a frame.
@@ -938,7 +937,7 @@ static inline uint32_t ENET_HAL_GetSMIData(ENET_Type * base)
 }
 
 /*!
- * @brief Sets the SMI(serial Management interface) read command.
+ * @brief Sets the Serial Management interface (SMI) read command.
  *
  * @param base The ENET peripheral base address.
  * @param phyAddr The PHY address.
@@ -948,7 +947,7 @@ static inline uint32_t ENET_HAL_GetSMIData(ENET_Type * base)
 void ENET_HAL_SetSMIRead(ENET_Type * base, uint32_t phyAddr, uint32_t phyReg, enet_mii_read_t operation);
 
 /*!
- * @brief Sets the SMI(serial Management interface) write command.
+ * @brief Sets the SMI write command.
  *
  * @param base The ENET peripheral base address.
  * @param phyAddr The PHY address.
@@ -959,11 +958,11 @@ void ENET_HAL_SetSMIRead(ENET_Type * base, uint32_t phyAddr, uint32_t phyReg, en
 void ENET_HAL_SetSMIWrite(ENET_Type * base, uint32_t phyAddr, uint32_t phyReg, enet_mii_write_t operation, uint32_t data);
 
 /*!
- * @brief Enables/disables the MAC dynamical action.
+ * @brief Enables/disables the Mac dynamical action.
  *
  * @param base The ENET peripheral base address.
  * @param action The action which will be enabled/disabled.
- * @param enable The switch to enable/disable the action of the MAC.
+ * @param enable The switch to enable/disable the action of the Mac.
  */
 void ENET_HAL_EnDynamicalAct(ENET_Type * base, enet_en_dynamical_act_t action, bool enable);
 
@@ -992,7 +991,7 @@ static inline void ENET_HAL_Disable(ENET_Type * base)
 }
 
 /*!
- * @brief Enables/Disables the ENET interrupt.
+ * @brief Enables/disables the ENET interrupt.
  *
  * @param base The ENET peripheral base address.
  * @param source The interrupt sources.
@@ -1001,7 +1000,7 @@ static inline void ENET_HAL_Disable(ENET_Type * base)
 void ENET_HAL_SetIntMode(ENET_Type * base, enet_interrupt_request_t source, bool enable);
 
 /*!
- * @brief Clears  ENET interrupt events. 
+ * @brief Clears ENET interrupt events. 
  *
  * @param base The ENET peripheral base address.
  * @param source The interrupt source to be cleared. enet_interrupt_request_t 
@@ -1028,34 +1027,34 @@ static inline bool ENET_HAL_GetIntStatusFlag(ENET_Type * base, enet_interrupt_re
 }
 
 /*!
- * @brief Configures the 1588 timer and run the 1588 timer.
+ * @brief Configures the IEEE 1588 timer and runs the IEEE 1588 timer.
  *
- * This interface configures the 1588 timer and starts the 1588 timer.
- * After the timer starts the 1588 timer starts incrementing.
+ * This interface configures the IEEE 1588 timer and starts the IEEE 1588 timer.
+ * After the timer starts, the IEEE 1588 timer starts incrementing.
  *
  * @param base The ENET peripheral base address.
- * @param ptpCfgPtr The 1588 timer configuration structure pointer.
+ * @param ptpCfgPtr The IEEE 1588 timer configuration structure pointer.
  */
 void ENET_HAL_Start1588Timer(ENET_Type * base, enet_config_ptp_timer_t * ptpCfgPtr);
 
 /*!
- * @brief Stop the 1588 timer.
+ * @brief Stops the IEEE 1588 timer.
  *
- * This interface stop the 1588 timer and clear its count value.
+ * This interface stops the IEEE 1588 timer and clears its count value.
  *
  * @param base The ENET peripheral base address.
  */
 void ENET_HAL_Stop1588Timer(ENET_Type * base);
 
 /*!
- * @brief Adjusts the 1588 timer.
+ * @brief Adjusts the IEEE 1588 timer.
  *
- * Adjust the 1588 timer according to the increase and correction period
+ * Adjusts the IEEE 1588 timer according to the increase and correction period
  * of the configured correction.
  *
  * @param base The ENET peripheral base address.
- * @param increaseCorrection The increase correction for 1588 timer.
- * @param periodCorrection The period correction for 1588 timer.
+ * @param increaseCorrection The increase correction for IEEE 1588 timer.
+ * @param periodCorrection The period correction for IEEE 1588 timer.
  */
 static inline void ENET_HAL_Adjust1588Timer(ENET_Type * base, uint32_t increaseCorrection, uint32_t periodCorrection)
 {
@@ -1068,10 +1067,10 @@ static inline void ENET_HAL_Adjust1588Timer(ENET_Type * base, uint32_t increaseC
 }
 
 /*!
- * @brief Sets the 1588 timer.
+ * @brief Sets the IEEE 1588 timer.
  *
  * @param base The ENET peripheral base address.
- * @param nanSecond The nanosecond set to 1588 timer.
+ * @param nanSecond The nanosecond set to IEEE 1588 timer.
  */
 static inline void ENET_HAL_Set1588TimerNewTime(ENET_Type * base, uint32_t nanSecond)
 {
@@ -1079,13 +1078,13 @@ static inline void ENET_HAL_Set1588TimerNewTime(ENET_Type * base, uint32_t nanSe
 }
 
 /*!
- * @brief Gets the time from the 1588 timer.
+ * @brief Gets the time from the IEEE 1588 timer.
  *
- * Sets the capture command to the 1588 timer is used before reading the current
- * time register.After set timer capture, please wait for about 1us before read
+ * Sets the capture command to the IEEE 1588 timer before reading the current
+ * time register. After set timer capture, wait for about 1 µs before reading
  * the captured timer.
  * @param base The ENET peripheral base address.
- * @return the current time from 1588 timer.
+ * @return the current time from IEEE 1588 timer.
  */
 static inline uint32_t ENET_HAL_Get1588TimerCurrentTime(ENET_Type * base)
 {
@@ -1096,10 +1095,10 @@ static inline uint32_t ENET_HAL_Get1588TimerCurrentTime(ENET_Type * base)
 }
 
 /*!
- * @brief Gets the 1588 timer channel status.
+ * @brief Gets the IEEE 1588 timer channel status.
  *
  * @param base The ENET peripheral base address.
- * @param channel The 1588 timer channel number.
+ * @param channel The IEEE 1588 timer channel number.
  * @return Compare or capture operation status
  *         - True if the compare or capture has occurred.
  *         - False if the compare or capture has not occurred. 
@@ -1110,17 +1109,17 @@ static inline bool ENET_HAL_Get1588TimerChnStatus(ENET_Type * base, enet_timer_c
 }
 
 /*!
- * @brief Resets the 1588 timer compare value and clears the 1588 timer channel interrupt flag.
+ * @brief Resets the IEEE 1588 timer compare value and clears the IEEE 1588 timer channel interrupt flag.
  *
  * @param base The ENET peripheral base address.
- * @param channel The 1588 timer channel number.
- * @param compareValue Compare value for 1588 timer channel.
+ * @param channel The IEEE 1588 timer channel number.
+ * @param compareValue Compare value for IEEE 1588 timer channel.
  */
 static inline void ENET_HAL_Rst1588TimerCmpValAndClrFlag(ENET_Type * base, enet_timer_channel_t channel, uint32_t compareValue)
 {           
     ENET_WR_TCCR(base, channel, compareValue);   
-    ENET_SET_TCSR(base, channel, ENET_TCSR_TF_MASK);/* clear interrupt flag*/
-    ENET_WR_TGSR(base,(1U << channel));            /* clear channel flag*/
+    ENET_SET_TCSR(base, channel, ENET_TCSR_TF_MASK);/* clears interrupt flag*/
+    ENET_WR_TGSR(base,(1U << channel));            /* clears channel flag*/
 }
 
 /* @} */

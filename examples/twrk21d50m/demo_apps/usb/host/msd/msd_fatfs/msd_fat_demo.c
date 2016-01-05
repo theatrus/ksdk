@@ -32,9 +32,7 @@
 #include "ff.h"
 #include "msd_diskio.h"
 #include "usb_host_msd_ufi.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_clock_manager.h"
-#endif
 
 /* User-defined macros */
 #define DIR_OPERATION 1
@@ -1259,13 +1257,8 @@ int fat_throughput_test(void)
     OS_Time_delay(1000);
 
     /* get core clock */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    extern const TCpuClockConfiguration PE_CpuClockConfigurations[];
-    g_cpu_core_clk_khz = PE_CpuClockConfigurations[Cpu_GetClockConfiguration()].cpu_core_clk_hz / 1000;
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     CLOCK_SYS_GetFreq(kCoreClock, &g_cpu_core_clk_khz);
     g_cpu_core_clk_khz /= 1000;
-#endif
 
     DEMCR |= DEMCR_TRCENA; /* enable DWT module counter */
     TEST_TIME = sizeof(raw_size_arr) / sizeof(uint32_t);

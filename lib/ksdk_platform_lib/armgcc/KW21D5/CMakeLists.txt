@@ -22,16 +22,16 @@ SET(CMAKE_EXECUTABLE_LIBRARY_SUFFIX)
 SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft ")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft ")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft  -MMD  -MP")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft  -MMD  -MP")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft ")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft ")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft  -MMD  -MP")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=soft  -MMD  -MP")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -82,6 +82,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_cmp_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/cmt/fsl_cmt_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_cmt_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/cmt/fsl_cmt_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_cmt_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/cmt/fsl_cmt_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/crc/fsl_crc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_crc_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/crc/fsl_crc_driver.c"
@@ -98,6 +103,12 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_master_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_slave_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_slave_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_master_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_master_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_slave_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_slave_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_shared_function.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_shared_function.h"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_edma_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/edma/fsl_edma_hal.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_edma_driver.h"

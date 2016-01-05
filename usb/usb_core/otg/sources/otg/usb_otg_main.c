@@ -41,16 +41,15 @@
 
 /* OTG task parameters */
 #define USB_OTG_TASK_TEMPLATE_INDEX       0
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& (USE_RTOS))  
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& (USE_RTOS))  
 /* USB stack running on MQX */
 #define USB_OTG_TASK_ADDRESS              _usb_otg_task_stun
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& !(USE_RTOS)) 
+#else
 /* USB stack running on BM  */
 #define USB_OTG_TASK_ADDRESS              _usb_otg_task
 #endif
 
 #define USB_OTG_TASK_STACKSIZE            2000
-#define USBCFG_OTG_TASK_PRIORITY          9
 #define USB_OTG_TASK_NAME                 "OTG Task"
 #define USB_OTG_TASK_ATTRIBUTES           0
 #define USB_OTG_TASK_DEFAULT_TIME_SLICE   0
@@ -63,7 +62,7 @@ extern const usb_otg_api_functions_struct_t g_usb_otg_callback_table;
 /* Private functions prototypes ***********************************************/
 static usb_status _usb_otg_task_create(usb_otg_handle otg_handle);
 static void _usb_otg_task(void* otg_handle);
-extern usb_status bsp_usb_otg_init(uint8_t controller_id);
+extern usb_status usb_otg_soc_init(uint8_t controller_id);
 
 #ifdef __cplusplus
 extern "C"
@@ -84,7 +83,7 @@ int32_t g_otg_task_id;
  *  Comments       :
  *  
  *END*-----------------------------------------------------------------*/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& (USE_RTOS)))  
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& (USE_RTOS))  
 static void _usb_otg_task_stun(void* dev_inst_ptr)
 {
     while (1)
@@ -184,9 +183,11 @@ usb_status usb_otg_init
     uint8_t controller_id,
     /*[IN] address of the OTG initialization  structure */
     otg_int_struct_t * init_struct_ptr,
+    /* [IN] the USB otg board init handle */
+    otg_board_init  board_init_callback,   
     /* [OUT] the USB host handle */
     usb_otg_handle * handle
-    )
+)
 {
     usb_status error = USB_OK;
     const usb_otg_api_functions_struct_t * otg_api = NULL;
@@ -217,10 +218,19 @@ usb_status usb_otg_init
         }
     }
     g_usb_otg_handle = usb_otg_ptr;
-    usb_otg_ptr->otg_controller_api = otg_api;
-
-    error = bsp_usb_otg_init(controller_id);
-
+    usb_otg_ptr->otg_controller_api = otg_api; 
+    if( NULL !=board_init_callback )
+    {
+        error = (uint32_t)board_init_callback(controller_id);
+    }
+    else
+    {
+        error = USB_OK;
+    }
+    if(USB_OK == error)
+    {
+        error = usb_otg_soc_init(controller_id);
+    }
     if (error != USB_OK)
     {
         if (otg_api->otg_shutdown != NULL)
@@ -405,7 +415,7 @@ uint32_t usb_otg_device_hnp_enable
 static void _usb_otg_task(void* otg_handle)
 {
     usb_otg_state_struct_t * usb_otg_struct_ptr = (usb_otg_state_struct_t *) otg_handle;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& (USE_RTOS))  
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& (USE_RTOS))  
     OS_Event_wait(usb_otg_struct_ptr->otg_isr_event, USB_OTG_KHCI_ISR_EVENT | USB_OTG_MAX3353_ISR_EVENT, FALSE, 10);
     _usb_otg_callback_get_status((usb_otg_handle) otg_handle);
 #else

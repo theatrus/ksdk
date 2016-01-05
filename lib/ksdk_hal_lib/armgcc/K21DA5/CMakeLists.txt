@@ -22,16 +22,16 @@ SET(CMAKE_EXECUTABLE_LIBRARY_SUFFIX)
 SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99 ")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99 ")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99 ")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -67,6 +67,8 @@ ADD_LIBRARY(KsdkHalLib STATIC
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_adc16_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/cmp/fsl_cmp_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_cmp_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/cmt/fsl_cmt_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_cmt_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/crc/fsl_crc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_crc_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/dac/fsl_dac_hal.c"
@@ -113,6 +115,8 @@ ADD_LIBRARY(KsdkHalLib STATIC
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_smc_hal.h"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_uart_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/uart/fsl_uart_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/src/vref/fsl_vref_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_vref_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/wdog/fsl_wdog_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_wdog_hal.h"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_pmc_hal.h"

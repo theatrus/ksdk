@@ -184,16 +184,16 @@ typedef enum _lpsci_ir_tx_pulsewidth {
  * This provides constants for the LPSCI status flags for use in the LPSCI functions.
  */
 typedef enum _lpsci_status_flag {
-    kLpsciTxDataRegEmpty = 0U << LPSCI_SHIFT | UART0_S1_TDRE_SHIFT, /*!< Tx data register empty flag, sets when Tx buffer is empty */
+    kLpsciTxDataRegEmpty = 0U << LPSCI_SHIFT | UART0_S1_TDRE_SHIFT, /*!< Transmit data register empty flag, sets when Tx buffer is empty */
     kLpsciTxComplete     = 0U << LPSCI_SHIFT | UART0_S1_TC_SHIFT,   /*!< Transmission complete flag, sets when transmission activity complete */
-    kLpsciRxDataRegFull  = 0U << LPSCI_SHIFT | UART0_S1_RDRF_SHIFT, /*!< Rx data register full flag, sets when the receive data buffer is full */
+    kLpsciRxDataRegFull  = 0U << LPSCI_SHIFT | UART0_S1_RDRF_SHIFT, /*!< Receive data register full flag, sets when the receive data buffer is full */
     kLpsciIdleLineDetect = 0U << LPSCI_SHIFT | UART0_S1_IDLE_SHIFT, /*!< Idle line detect flag, sets when idle line detected */
     kLpsciRxOverrun      = 0U << LPSCI_SHIFT | UART0_S1_OR_SHIFT,   /*!< Rxr Overrun, sets when new data is received before data is read from receive register */
     kLpsciNoiseDetect    = 0U << LPSCI_SHIFT | UART0_S1_NF_SHIFT,   /*!< Rxr takes 3 samples of each received bit.  If any of these samples differ, noise flag sets */
     kLpsciFrameErr       = 0U << LPSCI_SHIFT | UART0_S1_FE_SHIFT,   /*!< Frame error flag, sets if logic 0 was detected where stop bit expected */
     kLpsciParityErr      = 0U << LPSCI_SHIFT | UART0_S1_PF_SHIFT,   /*!< If parity enabled, sets upon parity error detection */
     kLpsciLineBreakDetect    = 1U << LPSCI_SHIFT | UART0_S2_LBKDIF_SHIFT,  /*!< LIN break detect interrupt flag, sets when LIN break char detected and LIN circuit enabled */
-    kLpsciRxActiveEdgeDetect = 1U << LPSCI_SHIFT | UART0_S2_RXEDGIF_SHIFT, /*!< Rx pin active edge interrupt flag, sets when active edge detected */
+    kLpsciRxActiveEdgeDetect = 1U << LPSCI_SHIFT | UART0_S2_RXEDGIF_SHIFT, /*!< Receive pin active edge interrupt flag, sets when active edge detected */
     kLpsciRxActive           = 1U << LPSCI_SHIFT | UART0_S2_RAF_SHIFT,     /*!< Receiver Active Flag (RAF), sets at beginning of valid start bit */
 #if FSL_FEATURE_LPSCI_HAS_EXTENDED_DATA_REGISTER_FLAGS
     kLpsciNoiseInCurrentWord     = 2U << LPSCI_SHIFT | UART0_ED_NOISY_SHIFT,   /*!< NOISY bit, sets if noise detected in current data word */
@@ -202,13 +202,13 @@ typedef enum _lpsci_status_flag {
 } lpsci_status_flag_t;
 
 /*!
- * @brief LPSCI interrupt configuration structure, default settings are 0 (disabled).
+ * @brief LPSCI interrupt configuration structure; default settings are 0 (disabled).
  *
- * This structure contains the settings for all of the LPSCI interrupt configurations.
+ * This structure contains the settings for all LPSCI interrupt configurations.
  */
 typedef enum _lpsci_interrupt {
     kLpsciIntLinBreakDetect  = 0U << LPSCI_SHIFT | UART0_BDH_LBKDIE_SHIFT,  /*!< LIN break detect. */
-    kLpsciIntRxActiveEdge    = 0U << LPSCI_SHIFT | UART0_BDH_RXEDGIE_SHIFT, /*!< RX Active Edge. */
+    kLpsciIntRxActiveEdge    = 0U << LPSCI_SHIFT | UART0_BDH_RXEDGIE_SHIFT, /*!< Receive Active Edge. */
     kLpsciIntTxDataRegEmpty  = 1U << LPSCI_SHIFT | UART0_C2_TIE_SHIFT,      /*!< Transmit data register empty. */
     kLpsciIntTxComplete      = 1U << LPSCI_SHIFT | UART0_C2_TCIE_SHIFT,     /*!< Transmission complete. */
     kLpsciIntRxDataRegFull   = 1U << LPSCI_SHIFT | UART0_C2_RIE_SHIFT,     /*!< Receiver data register full. */
@@ -337,7 +337,7 @@ lpsci_status_t LPSCI_HAL_SetBaudRate(UART0_Type * base, uint32_t sourceClockInHz
  *
  * This function allows the user to program the baud rate divisor directly in situations
  * where the divisor value is known. In this case, the user may not want to call the
- * LPSCI_HAL_SetBaudRate() function, as the divisor is already known.
+ * LPSCI_HAL_SetBaudRate() function because the divisor is already known.
  *
  * @param   base LPSCI module base pointer.
  * @param   baudRateDivisor The baud rate modulo division "SBR" value.
@@ -346,12 +346,12 @@ void LPSCI_HAL_SetBaudRateDivisor(UART0_Type * base, uint16_t baudRateDivisor);
 
 #if FSL_FEATURE_LPSCI_HAS_BAUD_RATE_FINE_ADJUST_SUPPORT
 /*!
- * @brief Sets the LPSCI baud rate fine adjust. (Note: Feature available on select
- *        LPSCI bases used in conjunction with baud rate programming)
+ * @brief Sets the LPSCI baud rate fine adjust. Note that this feature is available on select
+ *        LPSCI bases used with baud rate programming.
  *
- * This function, which programs the baud rate fine adjust, is used together with
+ * This function, which programs the baud rate fine adjustment, is used with
  * programming the baud rate modulo divisor in situations where these divisors value are known.
- * In this case, the user may not want to call the LPSCI_HAL_SetBaudRate() function, as the
+ * In this case, the user may not want to call the LPSCI_HAL_SetBaudRate() function because the
  * divisors are already known.
  *
  * @param   base LPSCI module base pointer.
@@ -382,10 +382,10 @@ static inline void LPSCI_HAL_SetBitCountPerChar(UART0_Type * base,
 }
 
 /*!
- * @brief Configures the parity mode in LPSCI controller.
+ * @brief Configures the parity mode in the LPSCI controller.
  *
  * This function allows the user to configure the parity mode of the LPSCI controller to disable
- * it or enable it for even parity or for odd parity.
+ * or enable it for even parity or odd parity.
  *
  * @param   base LPSCI module base pointer.
  * @param   parityMode Parity mode setting (enabled, disable, odd, even - see
@@ -427,7 +427,7 @@ static inline void LPSCI_HAL_SetStopBitCount(UART0_Type * base, lpsci_stop_bit_c
 void LPSCI_HAL_SetIntMode(UART0_Type * base, lpsci_interrupt_t interrupt, bool enable);
 
 /*!
- * @brief Returns whether the LPSCI module interrupts is enabled/disabled.
+ * @brief Returns whether the LPSCI module interrupts are enabled/disabled.
  *
  * @param   base LPSCI module base pointer.
  * @param   interrupt LPSCI interrupt configuration data.
@@ -437,7 +437,7 @@ bool LPSCI_HAL_GetIntMode(UART0_Type * base, lpsci_interrupt_t interrupt);
 
 #if FSL_FEATURE_LPSCI_HAS_DMA_ENABLE
 /*!
- * @brief  Enable or disable LPSCI DMA request for Transmitter.
+ * @brief  Enables or disables the LPSCI DMA request for the transmitter.
  *
  * This function allows the user to configure the receive data register full
  * flag to generate a DMA request.
@@ -448,7 +448,7 @@ bool LPSCI_HAL_GetIntMode(UART0_Type * base, lpsci_interrupt_t interrupt);
 void LPSCI_HAL_SetTxDmaCmd(UART0_Type * base, bool enable);
 
 /*!
- * @brief  Enable or disable LPSCI DMA request for Receiver.
+ * @brief  Enables or disables the LPSCI DMA request for the receiver.
  *
  * This function allows the user to configure the receive data register full
  * flag to generate a DMA request.
@@ -459,9 +459,9 @@ void LPSCI_HAL_SetTxDmaCmd(UART0_Type * base, bool enable);
 void LPSCI_HAL_SetRxDmaCmd(UART0_Type * base, bool enable);
 
 /*!
- * @brief  Gets the LPSCI Transmit DMA request configuration setting.
+ * @brief  Gets the LPSCI transmit DMA request configuration setting.
  *
- * This function returns the configuration setting of the Transmit DMA request.
+ * This function returns the configuration setting of the transmit DMA request.
  *
  * @param   base LPSCI module base pointer.
  * @return  Transmit DMA request configuration setting (enable: true /disable: false).
@@ -472,9 +472,9 @@ static inline bool LPSCI_HAL_GetTxDmaCmd(UART0_Type * base)
 }
 
 /*!
- * @brief  Gets the LPSCI Receive DMA request configuration setting.
+ * @brief  Gets the LPSCI receive DMA request configuration setting.
  *
- * This function returns the configuration setting of the Receive DMA request.
+ * This function returns the configuration setting of the receive DMA request.
  *
  * @param   base LPSCI module base pointer.
  * @return  Receive DMA request configuration setting (enable: true /disable: false).
@@ -486,7 +486,7 @@ static inline bool LPSCI_HAL_GetRxDmaCmd(UART0_Type * base)
 #endif /* FSL_FEATURE_LPSCI_HAS_DMA_ENABLE */
 
 /*!
- * @brief  Get LPSCI tx/rx data register address.
+ * @brief  Gets the LPSCI transmit/receive data register address.
  *
  * This function is used for DMA transfer.
  *
@@ -560,7 +560,7 @@ void LPSCI_HAL_Getchar9(UART0_Type * base, uint16_t *readData);
 void LPSCI_HAL_Getchar10(UART0_Type * base, uint16_t *readData);
 
 /*!
- * @brief Send out multiple bytes of data using polling method.
+ * @brief Sends out multiple bytes of data using the polling method.
  *
  * This function only supports 8-bit transaction.
  *
@@ -571,14 +571,14 @@ void LPSCI_HAL_Getchar10(UART0_Type * base, uint16_t *readData);
 void LPSCI_HAL_SendDataPolling(UART0_Type * base, const uint8_t *txBuff, uint32_t txSize);
 
 /*!
- * @brief Receive multiple bytes of data using polling method.
+ * @brief Receives multiple bytes of data using the polling method.
  *
  * This function only supports 8-bit transaction.
  *
  * @param base LPSCI module base pointer.
  * @param rxBuff The buffer pointer which saves the data to be received.
  * @param rxSize Size of data need to be received in unit of byte.
- * @return Whether the transaction is success or rx overrun.
+ * @return Whether the transaction is success or receive overrun.
  */
 lpsci_status_t LPSCI_HAL_ReceiveDataPolling(UART0_Type * base, uint8_t *rxBuff, uint32_t rxSize);
 
@@ -588,7 +588,7 @@ lpsci_status_t LPSCI_HAL_ReceiveDataPolling(UART0_Type * base, uint8_t *rxBuff, 
  *         serial transmission.
  *
  * This function configures bit 10 or bit 9 to be the parity bit.  To configure bit 10 as the parity
- * bit, the function sets LPSCIx_C4[M10]; it also sets LPSCIx_C1[M] and LPSCIx_C1[PE] as required.
+ * bit, the function sets LPSCIx_C4[M10]. It also sets LPSCIx_C1[M] and LPSCIx_C1[PE] as required.
  *
  * @param base LPSCI module base pointer.
  * @param enable The setting to enable (true), which configures bit 10 as the parity bit or to
@@ -606,7 +606,7 @@ static inline void LPSCI_HAL_SetBit10AsParitybit(UART0_Type * base, bool enable)
  * @brief Gets the configuration of the LPSCI bit 10 (if enabled) or bit 9 (if disabled) as the
  *         parity bit in the serial transmission.
  *
- * This function returns true if bit 10 is configured as the parity bit, otherwise it returns
+ * This function returns true if bit 10 is configured as the parity bit. Otherwise it returns
  * false if bit 9 is configured as the parity bit.
  *
  * @param  base LPSCI module base pointer.
@@ -660,8 +660,9 @@ static inline bool LPSCI_HAL_IsCurrentDataWithParityError(UART0_Type * base)
 /*!
  * @brief  Gets all  LPSCI status flag states.
  *
- * @param   base LPSCI module base pointer.
- * @param   statusFlag Status flag name.
+ * @param base LPSCI module base pointer.
+ * @param statusFlag Status flag name.
+ * @return The status flag states.
  */
 bool LPSCI_HAL_GetStatusFlag(UART0_Type * base, lpsci_status_flag_t statusFlag);
 
@@ -685,32 +686,32 @@ lpsci_status_t LPSCI_HAL_ClearStatusFlag(UART0_Type * base, lpsci_status_flag_t 
  */
 
 /*!
- * @brief Configures the LPSCI to either operate or cease to operate in WAIT mode.
+ * @brief Configures the LPSCI to either operate or cease to operate in wait mode.
  *
- * The function configures the LPSCI to either operate or cease to operate when WAIT mode is
+ * The function configures the LPSCI to either operate or cease to operate when wait mode is
  * entered.
  *
  * @param   base LPSCI module base pointer.
- * @param   mode The LPSCI WAIT mode operation - operates or ceases to operate in WAIT mode.
+ * @param   mode The LPSCI wait mode operation - operates or ceases to operate in wait mode.
  */
 static inline void LPSCI_HAL_SetWaitModeOperation(UART0_Type * base, lpsci_operation_config_t mode)
 {
-	/*In CPU wait mode: 0 - lpsci is enabled; 1 - lpsci is disabled */
+	/*In CPU wait mode: 0 - LPSCI is enabled; 1 - LPSCI is disabled */
 	UART0_BWR_C1_DOZEEN(base, mode);
 }
 
 /*!
- * @brief Determines if the LPSCI operates or ceases to operate in WAIT mode.
+ * @brief Determines if the LPSCI operates or ceases to operate in wait mode.
  *
- * This function returns kLpsciOperates if the LPSCI has been configured to operate in WAIT mode.
- * Else it returns KLpsciStops if the LPSCI has been configured to cease-to-operate in WAIT mode.
+ * This function returns kLpsciOperates if the LPSCI has been configured to operate in wait mode.
+ * Else it returns KLpsciStops if the LPSCI has been configured to cease-to-operate in wait mode.
  *
  * @param   base LPSCI module base pointer.
  * @return The LPSCI WAIT mode operation configuration, returns either kLpsciOperates or KLpsciStops.
  */
 static inline lpsci_operation_config_t LPSCI_HAL_GetWaitModeOperation(UART0_Type * base)
 {
-    /*In CPU wait mode: 0 - lpsci is enabled; 1 - lpsci is disabled */
+    /*In CPU wait mode: 0 - LPSCI is enabled; 1 - LPSCI is disabled */
     return (lpsci_operation_config_t)UART0_BRD_C1_DOZEEN(base);
 }
 
@@ -764,13 +765,13 @@ static inline void LPSCI_HAL_SetTransmitterDir(UART0_Type * base, lpsci_singlewi
  * @brief  Places the LPSCI receiver in standby mode.
  *
  * This function, when called, places the LPSCI receiver into standby mode.
- * In some LPSCI bases, there are conditions that must be met before placing Rx in standby mode.
+ * In some LPSCI bases, there are conditions that must be met before placing the receive in standby mode.
  * Before placing LPSCI in standby, determine if receiver is set to
  * wake on idle, and if receiver is already in idle state.
  * NOTE: RWU should only be set with C1[WAKE] = 0 (wakeup on idle) if the channel is currently
  * not idle.
  * This can be determined by the S2[RAF] flag. If set to wake up FROM an IDLE event and the channel
- * is already idle, it is possible that the LPSCI will discard data because data must be received
+ * is already idle, it is possible that the LPSCI discards data because data must be received
  * (or a LIN break detect) after an IDLE is detected before IDLE is allowed to be reasserted.
  *
  * @param base LPSCI module base pointer.
@@ -794,8 +795,8 @@ static inline void LPSCI_HAL_PutReceiverInNormalMode(UART0_Type * base)
 /*!
  * @brief  Determines if the LPSCI receiver is currently in standby mode.
  *
- * This function determines the state of the LPSCI receiver. If it returns true, this means
- * that the LPSCI receiver is in standby mode; if it returns false, the LPSCI receiver
+ * This function determines the state of the LPSCI receiver. If it returns true,
+ * the LPSCI receiver is in standby mode. If it returns false, the LPSCI receiver
  * is in normal mode.
  *
  * @param   base LPSCI module base pointer.
@@ -841,7 +842,7 @@ static inline lpsci_wakeup_method_t LPSCI_HAL_GetReceiverWakeupMethod(UART0_Type
  *
  * This function allows the user to configure the LPSCI idle-line detect operation. There are two
  * separate operations for the user to configure, the idle line bit-count start and the receive
- * wake up affect on IDLE status bit. The user will pass in a structure of type
+ * wake up affect on IDLE status bit. The user passes in a structure of type
  * lpsci_idle_line_config_t.
  *
  * @param   base LPSCI module base pointer.
@@ -855,7 +856,7 @@ void LPSCI_HAL_ConfigIdleLineDetect(UART0_Type * base, uint8_t idleLine, uint8_t
 /*!
  * @brief  Configures the LPSCI break character transmit length.
  *
- * This function allows the user to configure the LPSCI break character transmit length. Refer to
+ * This function allows the user to configure the LPSCI break character transmit length. See
  * the typedef lpsci_break_char_length_t for setting options.
  * In some LPSCI bases it is required that the transmitter be disabled before calling
  * this function. This may be applied to all LPSCIs to ensure safe operation.
@@ -877,7 +878,7 @@ static inline void LPSCI_HAL_SetBreakCharTransmitLength(UART0_Type * base,
 /*!
  * @brief  Configures the LPSCI break character detect length.
  *
- * This function allows the user to configure the LPSCI break character detect length. Refer to
+ * This function allows the user to configure the LPSCI break character detect length. See
  * the typedef lpsci_break_char_length_t for setting options.
  *
  * @param base LPSCI module base pointer.
@@ -898,7 +899,7 @@ static inline void LPSCI_HAL_SetBreakCharDetectLength(UART0_Type * base,
  * @brief  Configures the LPSCI transmit send break character operation.
  *
  * This function allows the user to queue a LPSCI break character to send.  If true is passed into
- * the function, then a break character is queued for transmission.  A break character will
+ * the function, a break character is queued for transmission.  A break character is
  * continuously be queued until this function is called again when a false is passed into this
  * function.
  *
@@ -913,8 +914,8 @@ static inline void LPSCI_HAL_SetBreakCharCmd(UART0_Type * base, bool enable)
 }
 
 /*!
- * @brief  Configures the LPSCI match address mode control operation. (Note: Feature available on
- *         select LPSCI bases)
+ * @brief  Configures the LPSCI match address mode control operation. Note that this feature is available on
+ *         select LPSCI bases.
  *
  * The function allows the user to configure the LPSCI match address control operation. The user
  * has the option to enable the match address mode and to program the match address value. There
@@ -931,10 +932,10 @@ void LPSCI_HAL_SetMatchAddress(UART0_Type * base, bool matchAddrMode1, bool matc
 
 #if FSL_FEATURE_LPSCI_HAS_BIT_ORDER_SELECT
 /*!
- * @brief Configures the LPSCI to send data MSB first
- * (Note: Feature available on select LPSCI bases)
+ * @brief Configures the LPSCI to send data MSB first.
+ * Note that this feature is available on select LPSCI bases.
  *
- * The function allows the user to configure the LPSCI to send data MSB first or LSB first.
+ * The function allows the user to configure the LPSCI to send data either MSB first or LSB first.
  * In some LPSCI bases it is required that the transmitter/receiver be disabled
  * before calling this function.
  * This may be applied to all LPSCIs to ensure safe operation.

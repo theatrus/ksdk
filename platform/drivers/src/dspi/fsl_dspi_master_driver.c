@@ -309,7 +309,7 @@ dspi_status_t DSPI_DRV_MasterTransferBlocking(uint32_t instance,
     /* If the transfer count is zero, then return immediately.*/
     if (transferByteCount == 0)
     {
-        return error;
+        return kStatus_DSPI_InvalidParameter;
     }
 
     /* As this is a synchronous transfer, set up the sync status variable*/
@@ -377,7 +377,7 @@ dspi_status_t DSPI_DRV_MasterTransfer(uint32_t instance,
     /* If the transfer count is zero, then return immediately.*/
     if (transferByteCount == 0)
     {
-        return kStatus_DSPI_Success;
+        return kStatus_DSPI_InvalidParameter;
     }
 
     /* fill in members of the run-time state struct*/

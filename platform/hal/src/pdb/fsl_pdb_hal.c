@@ -42,8 +42,9 @@ void PDB_HAL_Init(PDB_Type * base)
 {
     uint32_t chn, preChn;
 
-    PDB_HAL_Enable(base);
-    PDB_WR_SC(base, 0U);
+    /* Note: The setting would take effect only when the PDBEN bit is set. */
+    PDB_WR_SC(base, PDB_SC_PDBEN_MASK);
+
     PDB_WR_MOD(base, 0xFFFFU);
     PDB_WR_IDLY(base, 0xFFFFU);
     /* For ADC trigger. */
@@ -56,12 +57,16 @@ void PDB_HAL_Init(PDB_Type * base)
             PDB_HAL_SetAdcPreTriggerDelayValue(base, chn, preChn, 0U);
         }
     }
+
+#if FSL_FEATURE_PDB_HAS_DAC
     /* For DAC trigger. */
     for (chn = 0U; chn < PDB_INTC_COUNT; chn++)
     {
         PDB_WR_INTC(base, chn, 0U);
         PDB_WR_INT(base ,chn, 0U);
     }
+#endif
+
     /* For Pulse out trigger. */
     PDB_WR_POEN(base, 0U);
     for (chn = 0U; chn < PDB_PODLY_COUNT; chn++)

@@ -1,0 +1,47 @@
+var group__sai__driver =
+[
+    [ "sai_data_format_t", "group__sai__driver.html#structsai__data__format__t", [
+      [ "sample_rate", "group__sai__driver.html#af8b42fd57c7fbf6345cda5925ca99cfb", null ],
+      [ "mclk", "group__sai__driver.html#a7c36792feaa8b1c933c00614969cd18f", null ],
+      [ "bits", "group__sai__driver.html#aac2038bf24a7da4fd85ef5d086fe1628", null ],
+      [ "mono_stereo", "group__sai__driver.html#ac8d9501e566d56fa977def056c84caff", null ]
+    ] ],
+    [ "sai_state_t", "group__sai__driver.html#structsai__state__t", null ],
+    [ "sai_user_config_t", "group__sai__driver.html#structsai__user__config__t", [
+      [ "mclk_source", "group__sai__driver.html#afc97f8332255251dbd4262decedcadad", null ],
+      [ "channel", "group__sai__driver.html#ac799d8c99a58430ce84a679c00bd66f8", null ],
+      [ "sync_mode", "group__sai__driver.html#aa7b542a660b72be9c2a4d6346e14cb11", null ],
+      [ "protocol", "group__sai__driver.html#a467e4ed525d0da943a69ec07d040c1bc", null ],
+      [ "slave_master", "group__sai__driver.html#aff044b2d91ffd9b62c800d563a40ca02", null ],
+      [ "bclk_source", "group__sai__driver.html#adb3e434c576decd4731177acea7c0b9b", null ],
+      [ "dma_source", "group__sai__driver.html#af4c2c4c50dc58b40884b9601e137d13a", null ]
+    ] ],
+    [ "sai_callback_t", "group__sai__driver.html#ga4e4216dd4ec10851cfa33f38cd11ae37", null ],
+    [ "sai_status_t", "group__sai__driver.html#ga3b3817c3d3d0d038d4e994481b723099", null ],
+    [ "SAI_DRV_TxInit", "group__sai__driver.html#ga08a2f270c536534b619d6ba575742164", null ],
+    [ "SAI_DRV_RxInit", "group__sai__driver.html#ga282660e882acb84d60bfcc67011e0f7a", null ],
+    [ "SAI_DRV_TxGetDefaultSetting", "group__sai__driver.html#ga968b499fdb5e07af619cd119f07079c1", null ],
+    [ "SAI_DRV_RxGetDefaultSetting", "group__sai__driver.html#gaacc5c92f78d491c2a8d63e2514f3270a", null ],
+    [ "SAI_DRV_TxDeinit", "group__sai__driver.html#ga0bdf2adb06b40d3300cd416571037093", null ],
+    [ "SAI_DRV_RxDeinit", "group__sai__driver.html#ga6a87b00d98b8ab62e9a0e87b46597b51", null ],
+    [ "SAI_DRV_TxConfigDataFormat", "group__sai__driver.html#ga1fe8dad95998d7be1d69a7a74710ba85", null ],
+    [ "SAI_DRV_RxConfigDataFormat", "group__sai__driver.html#gaf3a2e447006883bc38a6a6c0ddf5790d", null ],
+    [ "SAI_DRV_TxStartModule", "group__sai__driver.html#ga34b7e07a396824c0cfc757e342dff7f1", null ],
+    [ "SAI_DRV_RxStartModule", "group__sai__driver.html#ga33db4a1b41be75ee99bfad5b384a617d", null ],
+    [ "SAI_DRV_TxStopModule", "group__sai__driver.html#ga2259869ee8fda9b931aa20f05c499a65", null ],
+    [ "SAI_DRV_RxStopModule", "group__sai__driver.html#ga319b6dec659b0d5683a537affbdd2e96", null ],
+    [ "SAI_DRV_TxSetIntCmd", "group__sai__driver.html#ga3d01b8e2f96685d95e578ba72082fbf1", null ],
+    [ "SAI_DRV_RxSetIntCmd", "group__sai__driver.html#ga7ee83aed8b541aea0749ad41f9f7bdcc", null ],
+    [ "SAI_DRV_TxSetDmaCmd", "group__sai__driver.html#ga4f2f6e14c899281a68b5ec1f52d7d4a5", null ],
+    [ "SAI_DRV_RxSetDmaCmd", "group__sai__driver.html#gab6fb4cc34bc96c6a85afacfd10511dec", null ],
+    [ "SAI_DRV_TxGetFifoAddr", "group__sai__driver.html#ga7820275edc128c0ba6b423b9bdafac68", null ],
+    [ "SAI_DRV_RxGetFifoAddr", "group__sai__driver.html#gaac5ab669367bfc7f5e50b755ace31180", null ],
+    [ "SAI_DRV_SendDataInt", "group__sai__driver.html#ga0e734759be34a14de88c82380bf17d25", null ],
+    [ "SAI_DRV_ReceiveDataInt", "group__sai__driver.html#gac7e47dc2d1d27a5917a8324d521aa02b", null ],
+    [ "SAI_DRV_SendDataDma", "group__sai__driver.html#gaa92994bfaf1d310bfc853dbca1379a08", null ],
+    [ "SAI_DRV_ReceiveDataDma", "group__sai__driver.html#ga591a28750f09d7a66ce1e535b20f58da", null ],
+    [ "SAI_DRV_TxRegisterCallback", "group__sai__driver.html#gac83b00f3153d119e85c0998cf85b8c86", null ],
+    [ "SAI_DRV_RxRegisterCallback", "group__sai__driver.html#ga548bc0aa285eb8c18661c91af24d4bfa", null ],
+    [ "SAI_DRV_TxIRQHandler", "group__sai__driver.html#gabc2fa4205045dd5f65733a0c6b472b3d", null ],
+    [ "SAI_DRV_RxIRQHandler", "group__sai__driver.html#ga04b282267b8a8319a5876f22aff83189", null ]
+];

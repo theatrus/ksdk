@@ -175,61 +175,64 @@ void LMEM_HAL_SetCodeCacheRegionMode(LMEM_Type * base, lmem_cache_region_t regio
  *END**************************************************************************/
 uint32_t LMEM_HAL_GetCodeCacheRegionMode(LMEM_Type * base, lmem_cache_region_t region)
 {
+    uint32_t mode;
+
     switch (region)
     {
     case kCacheRegion0:
-        return LMEM_RD_PCCRMR_R0(base);
+        mode =  LMEM_RD_PCCRMR_R0(base);
         break;
     case kCacheRegion1:
-        return LMEM_RD_PCCRMR_R1(base);
+        mode = LMEM_RD_PCCRMR_R1(base);
         break;
     case kCacheRegion2:
-        return LMEM_RD_PCCRMR_R2(base);
+        mode = LMEM_RD_PCCRMR_R2(base);
         break;
     case kCacheRegion3:
-        return LMEM_RD_PCCRMR_R3(base);
+        mode = LMEM_RD_PCCRMR_R3(base);
         break;
     case kCacheRegion4:
-        return LMEM_RD_PCCRMR_R4(base);
+        mode = LMEM_RD_PCCRMR_R4(base);
         break;
     case kCacheRegion5:
-        return LMEM_RD_PCCRMR_R5(base);
+        mode = LMEM_RD_PCCRMR_R5(base);
         break;
     case kCacheRegion6:
-        return LMEM_RD_PCCRMR_R6(base);
+        mode = LMEM_RD_PCCRMR_R6(base);
         break;
     case kCacheRegion7:
-        return LMEM_RD_PCCRMR_R7(base);
+        mode = LMEM_RD_PCCRMR_R7(base);
         break;
     case kCacheRegion8:
-        return LMEM_RD_PCCRMR_R8(base);
+        mode = LMEM_RD_PCCRMR_R8(base);
         break;
     case kCacheRegion9:
-        return LMEM_RD_PCCRMR_R9(base);
+        mode = LMEM_RD_PCCRMR_R9(base);
         break;
     case kCacheRegion10:
-        return LMEM_RD_PCCRMR_R10(base);
+        mode = LMEM_RD_PCCRMR_R10(base);
         break;
     case kCacheRegion11:
-        return LMEM_RD_PCCRMR_R11(base);
+        mode = LMEM_RD_PCCRMR_R11(base);
         break;
     case kCacheRegion12:
-        return LMEM_RD_PCCRMR_R12(base);
+        mode = LMEM_RD_PCCRMR_R12(base);
         break;
     case kCacheRegion13:
-        return LMEM_RD_PCCRMR_R13(base);
+        mode = LMEM_RD_PCCRMR_R13(base);
         break;
     case kCacheRegion14:
-        return LMEM_RD_PCCRMR_R14(base);
+        mode = LMEM_RD_PCCRMR_R14(base);
         break;
     case kCacheRegion15:
-        return LMEM_RD_PCCRMR_R15(base);
+        mode = LMEM_RD_PCCRMR_R15(base);
         break;
     default:
+        mode = 0;
         break;
     }
 
-    return 0;
+    return mode;
 }
 
 #if FSL_FEATURE_LMEM_HAS_SYSTEMBUS_CACHE
@@ -363,43 +366,61 @@ void LMEM_HAL_SetSystemCacheRegionMode(LMEM_Type * base, lmem_cache_region_t reg
  *END**************************************************************************/
 uint32_t LMEM_HAL_GetSystemCacheRegionMode(LMEM_Type * base, lmem_cache_region_t region)
 {
+    uint32_t val = 0;
     switch (region)
     {
     case kCacheRegion0:
-        return LMEM_RD_PSCRMR_R0(base);
+        val = LMEM_RD_PSCRMR_R0(base);
+        break;
     case kCacheRegion1:
-        return LMEM_RD_PSCRMR_R1(base);
+        val = LMEM_RD_PSCRMR_R1(base);
+        break;
     case kCacheRegion2:
-        return LMEM_RD_PSCRMR_R2(base);
+        val = LMEM_RD_PSCRMR_R2(base);
+        break;
     case kCacheRegion3:
-        return LMEM_RD_PSCRMR_R3(base);
+        val = LMEM_RD_PSCRMR_R3(base);
+        break;
     case kCacheRegion4:
-        return LMEM_RD_PSCRMR_R4(base);
+        val = LMEM_RD_PSCRMR_R4(base);
+        break;
     case kCacheRegion5:
-        return LMEM_RD_PSCRMR_R5(base);
+        val = LMEM_RD_PSCRMR_R5(base);
+        break;
     case kCacheRegion6:
-        return LMEM_RD_PSCRMR_R6(base);
+        val = LMEM_RD_PSCRMR_R6(base);
+        break;
     case kCacheRegion7:
-        return LMEM_RD_PSCRMR_R7(base);
+        val = LMEM_RD_PSCRMR_R7(base);
+        break;
     case kCacheRegion8:
-        return LMEM_RD_PSCRMR_R8(base);
+        val = LMEM_RD_PSCRMR_R8(base);
+        break;
     case kCacheRegion9:
-        return LMEM_RD_PSCRMR_R9(base);
+        val = LMEM_RD_PSCRMR_R9(base);
+        break;
     case kCacheRegion10:
-        return LMEM_RD_PSCRMR_R10(base);
+        val = LMEM_RD_PSCRMR_R10(base);
+        break;
     case kCacheRegion11:
-        return LMEM_RD_PSCRMR_R11(base);
+        val = LMEM_RD_PSCRMR_R11(base);
+        break;
     case kCacheRegion12:
-        return LMEM_RD_PSCRMR_R12(base);
+        val = LMEM_RD_PSCRMR_R12(base);
+        break;
     case kCacheRegion13:
-        return LMEM_RD_PSCRMR_R13(base);
+        val = LMEM_RD_PSCRMR_R13(base);
+        break;
     case kCacheRegion14:
-        return LMEM_RD_PSCRMR_R14(base);
+        val = LMEM_RD_PSCRMR_R14(base);
+        break;
     case kCacheRegion15:
-        return LMEM_RD_PSCRMR_R15(base);
+        val = LMEM_RD_PSCRMR_R15(base);
+        break;
     default:
         break;
     }
+    return val;
 }
 
 #endif /* FSL_FEATURE_LMEM_HAS_SYSTEMBUS_CACHE */

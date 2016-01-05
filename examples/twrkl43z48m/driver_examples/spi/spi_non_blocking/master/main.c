@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,53 +28,44 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
+///////////////////////////////////////////////////////////////////////////////
+//  Includes
+///////////////////////////////////////////////////////////////////////////////
+// Standard C Included Files
+#include <stdio.h>
+ // SDK Included Files
+#include "board.h"
 #include "fsl_spi_master_driver.h"
-
-#if FSL_FEATURE_SPI_HAS_DMA_SUPPORT
-#include "fsl_spi_dma_master_driver.h"
-#endif
-
 #include "fsl_clock_manager.h"
 #include "fsl_debug_console.h"
-#include "board.h"
-#include <stdio.h>
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#if (defined FRDM_KL43Z) || (defined MRB_KW01)
-#define SPI_MASTER_INSTANCE          (1)                 /*! User change define to choose SPI instance */
-#else
-#define SPI_MASTER_INSTANCE          (0)                 /*! User change define to choose SPI instance */
-#endif
+#define SPI_MASTER_INSTANCE         BOARD_SPI_INSTANCE  /*! User change define to choose SPI instance */
 #define TRANSFER_SIZE               (64)
 #define TRANSFER_BAUDRATE           (500000U)           /*! Transfer baudrate - 500k */
 #define MASTER_TRANSFER_TIMEOUT     (5000U)             /*! Transfer timeout of master - 5s */
 
 /*******************************************************************************
- * Prototypes
- ******************************************************************************/
-
-/*******************************************************************************
  * Variables
  ******************************************************************************/
-
-/*!
- * @brief Buffer for storing data received by the SPI slave driver.
- */
+// Buffer for storing data received by the SPI.
 uint8_t s_spiSinkBuffer[TRANSFER_SIZE] = {0};
 
-/*!
- * @brief Buffer that supplies data to be transmitted with the SPI slave driver.
- */
+// Buffer that supplies data to be transmitted with the SPI.
 uint8_t s_spiSourceBuffer[TRANSFER_SIZE] = {0};
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
-
-// Setup the board as a spi master
+/*!
+ * @brief SPI master non-blocking.
+ *
+ * Thid function uses SPI master to send an array to slave
+ * and receive the array back from slave,
+ * then compare whether the two buffers are the same.
+ */
 int main (void)
 {
     uint8_t loopCount = 0;
@@ -84,26 +75,24 @@ int main (void)
     spi_master_state_t spiMasterState;
     spi_master_user_config_t userConfig =
     {
-    #if FSL_FEATURE_SPI_16BIT_TRANSFERS
+#if FSL_FEATURE_SPI_16BIT_TRANSFERS
         .bitCount       = kSpi8BitMode,
-    #endif
+#endif
         .polarity       = kSpiClockPolarity_ActiveHigh,
         .phase          = kSpiClockPhase_FirstEdge,
         .direction      = kSpiMsbFirst,
         .bitsPerSec     = TRANSFER_BAUDRATE
     };
+
     // init the hardware, this also sets up up the SPI pins for each specific SoC
     hardware_init();
-
+    // Init OSA layer.
     OSA_Init();
 
     PRINTF("\r\nSPI board to board non-blocking example");
     PRINTF("\r\nThis example run on instance %d", (uint32_t)SPI_MASTER_INSTANCE);
     PRINTF("\r\nBe sure master's SPI%d and slave's SPI%d are connected\r\n",
                     (uint32_t)SPI_MASTER_INSTANCE, (uint32_t)SPI_MASTER_INSTANCE);
-
-    //USER CONFIGURABLE OPTION FOR SPI INSTANCE
-    PRINTF("\r\nBaud rate in Hz is: %d\n\r", TRANSFER_BAUDRATE);
 
     // Init and setup baudrate for the master
     SPI_DRV_MasterInit(SPI_MASTER_INSTANCE, &spiMasterState);
@@ -116,6 +105,10 @@ int main (void)
     {
         PRINTF("\r**Something failed in the master bus config \r\n");
         return -1;
+    }
+    else
+    {
+        PRINTF("\r\nBaud rate in Hz is: %d\r\n", calculatedBaudRate);
     }
 
     while(1)
@@ -138,7 +131,6 @@ int main (void)
         {
             PRINTF("\r**ASync transfer failed \r\n");
         }
-
         while (SPI_DRV_MasterGetTransferStatus(SPI_MASTER_INSTANCE, NULL) == kStatus_SPI_Busy)
         {
         }
@@ -150,15 +142,15 @@ int main (void)
         if (SPI_DRV_MasterTransfer(SPI_MASTER_INSTANCE, NULL, NULL,
                              s_spiSinkBuffer, TRANSFER_SIZE) != kStatus_SPI_Success)
         {
-            PRINTF("\r**ASync transfer failed \r\n");
+            PRINTF("\r**Sync transfer failed \r\n");
         }
-
         while (SPI_DRV_MasterGetTransferStatus(SPI_MASTER_INSTANCE, NULL) == kStatus_SPI_Busy)
         {
         }
+
         // Verify the contents of the master sink buffer
         // refer to the slave driver for the expected data pattern
-        failCount = 0; /* reset failCount variable */
+        failCount = 0; // reset failCount variable
 
         for (j = 0; j < TRANSFER_SIZE; j++)
         {
@@ -168,51 +160,36 @@ int main (void)
             }
         }
 
+        // Print out transmit buffer.
+        PRINTF("\r\nMaster transmit:");
+        for (j = 0; j < TRANSFER_SIZE; j++)
+        {
+            // Print 16 numbers in a line.
+            if ((j & 0x0F) == 0)
+            {
+                PRINTF("\r\n    ");
+            }
+            PRINTF(" %02X", s_spiSourceBuffer[j]);
+        }
+        // Print out receive buffer.
+        PRINTF("\r\nMaster receive:");
+        for (j = 0; j < TRANSFER_SIZE; j++)
+        {
+            // Print 16 numbers in a line.
+            if ((j & 0x0F) == 0)
+            {
+                PRINTF("\r\n    ");
+            }
+            PRINTF(" %02X", s_spiSinkBuffer[j]);
+        }
+
         if (failCount == 0)
         {
-            PRINTF("\r\nMaster transmit:");
-            for (j = 0; j < TRANSFER_SIZE; j++)
-            {
-                if (j%16 == 0)
-                {
-                    PRINTF("\r\n    ");
-                }
-                PRINTF(" %02X", s_spiSourceBuffer[j]);
-            }
-            PRINTF("\r\nMaster receive:");
-            for (j = 0; j < TRANSFER_SIZE; j++)
-            {
-                if (j%16 == 0)
-                {
-                    PRINTF("\r\n    ");
-                }
-                PRINTF(" %02X", s_spiSinkBuffer[j]);
-            }
-            PRINTF("\r\n");
-            PRINTF("\r Spi master non-blocking transfer succeed! \r\n");
+            PRINTF("\r\n Spi master transfer succeed! \r\n");
         }
         else
         {
-            PRINTF("\r\nSource buffer:");
-            for (j = 0; j < TRANSFER_SIZE; j++)
-            {
-                if (j%16 == 0)
-                {
-                    PRINTF("\r\n    ");
-                }
-                PRINTF(" %02X", s_spiSourceBuffer[j]);
-            }
-            PRINTF("\r\nSink buffer:");
-            for (j = 0; j < TRANSFER_SIZE; j++)
-            {
-                if (j%16 == 0)
-                {
-                    PRINTF("\r\n    ");
-                }
-                PRINTF(" %02X", s_spiSinkBuffer[j]);
-            }
-            PRINTF("\r\n");
-            PRINTF("\r **failures detected in Spi master non-blocking transfer! \r\n");
+            PRINTF("\r\n **failures detected in Spi master transfer! \r\n");
         }
 
         // Wait for press any key.

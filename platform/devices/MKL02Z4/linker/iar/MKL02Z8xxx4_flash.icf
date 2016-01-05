@@ -4,7 +4,7 @@
 **     Compiler:            IAR ANSI C/C++ Compiler for ARM
 **     Reference manual:    KL02P32M48SF0RM Rev3.1, July 2013
 **     Version:             rev. 1.4, 2015-01-23
-**     Build:               b150416
+**     Build:               b150520
 **
 **     Abstract:
 **         Linker file for the IAR ANSI C/C++ Compiler for ARM

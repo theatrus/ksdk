@@ -76,7 +76,7 @@ static void FLEXIO_I2C_DRV_MasterCompleteTransferData(flexio_i2c_state_t *i2cSta
  *
  *END**************************************************************************/
 flexio_i2c_status_t FLEXIO_I2C_DRV_MasterInit(uint32_t instance, flexio_i2c_state_t *i2cState, 
-                                        flexio_i2c_userconfig_t *i2cMasterConfig)
+                                        const flexio_i2c_userconfig_t *i2cMasterConfig)
 {
     if((i2cState == NULL)||(i2cMasterConfig == NULL))
     {
@@ -113,7 +113,7 @@ flexio_i2c_status_t FLEXIO_I2C_DRV_MasterInit(uint32_t instance, flexio_i2c_stat
  * This function destroy the semaphores
  *
  *END**************************************************************************/
-void FLEXIO_I2C_DRV_Deinit(flexio_i2c_state_t *i2cState)
+void FLEXIO_I2C_DRV_MasterDeinit(flexio_i2c_state_t *i2cState)
 {
     /* Destroy transfer sema. */
     OSA_SemaDestroy(&i2cState->xIrqSync);
@@ -122,7 +122,7 @@ void FLEXIO_I2C_DRV_Deinit(flexio_i2c_state_t *i2cState)
  *
  * Function Name : FLEXIO_I2C_DRV_MasterInstallRxCallback
  * Description   : Install receive data callback function, pass in NULL pointer
- * as callback will unistall.
+ * as callback will uninstall.
  *
  *END**************************************************************************/
 flexio_i2c_rx_callback_t FLEXIO_I2C_DRV_MasterInstallRxCallback(flexio_i2c_state_t *i2cState,
@@ -146,7 +146,7 @@ flexio_i2c_rx_callback_t FLEXIO_I2C_DRV_MasterInstallRxCallback(flexio_i2c_state
  *END**************************************************************************/
 flexio_i2c_status_t FLEXIO_I2C_DRV_MasterSendDataBlocking(flexio_i2c_state_t *i2cState,
                                         uint16_t slaveAddr,
-					flexio_i2c_memrequest_t *memRequest,
+                                        flexio_i2c_memrequest_t *memRequest,
                                         uint8_t * txBuff,
                                         uint32_t txSize,
                                         uint32_t timeout)
@@ -199,7 +199,7 @@ flexio_i2c_status_t FLEXIO_I2C_DRV_MasterSendDataBlocking(flexio_i2c_state_t *i2
  *END**************************************************************************/
 flexio_i2c_status_t FLEXIO_I2C_DRV_MasterSendData(flexio_i2c_state_t *i2cState,
                                             uint16_t slaveAddr,
-					    flexio_i2c_memrequest_t *memRequest,
+                                            flexio_i2c_memrequest_t *memRequest,
                                             uint8_t * txBuff,
                                             uint32_t txSize)
 {
@@ -290,10 +290,10 @@ flexio_i2c_status_t FLEXIO_I2C_DRV_MasterAbortSendingData(flexio_i2c_state_t *i2
  *END**************************************************************************/
 flexio_i2c_status_t FLEXIO_I2C_DRV_MasterReceiveDataBlocking(flexio_i2c_state_t *i2cState, 
                                                        uint16_t slaveAddr,
-						       flexio_i2c_memrequest_t *memRequest,
+                                                       flexio_i2c_memrequest_t *memRequest,
                                                        uint8_t * rxBuff,
                                                        uint32_t rxSize, 
-						       uint32_t timeout)
+                                                       uint32_t timeout)
 {
     if((i2cState == NULL)||(rxBuff == NULL))
     {
@@ -332,7 +332,7 @@ flexio_i2c_status_t FLEXIO_I2C_DRV_MasterReceiveDataBlocking(flexio_i2c_state_t 
 /*FUNCTION**********************************************************************
  *
  * Function Name : FLEXIO_I2C_DRV_MasterReceiveData
- * Description   : This function gets (receives) data from the simluated I2C
+ * Description   : This function gets (receives) data from the simulated I2C
  * module using a non-blocking method.
  * A non-blocking (also known as synchronous) function means that the function
  * returns immediately after initiating the receive function. The application
@@ -344,7 +344,7 @@ flexio_i2c_status_t FLEXIO_I2C_DRV_MasterReceiveDataBlocking(flexio_i2c_state_t 
  *END**************************************************************************/
 flexio_i2c_status_t FLEXIO_I2C_DRV_MasterReceiveData(flexio_i2c_state_t *i2cState,
                                                uint16_t slaveAddr,
-					       flexio_i2c_memrequest_t *memRequest,
+                                               flexio_i2c_memrequest_t *memRequest,
                                                uint8_t * rxBuff,
                                                uint32_t rxSize)
 {
@@ -442,6 +442,15 @@ void FLEXIO_I2C_DRV_TX_IRQHandler(void *param)
     {
         return;
     }
+    if(FLEXIO_I2C_HAL_GetRxErrFlag(&(i2cState->i2cDev)))
+    {
+        /*Receive NACK from slave, send stop*/
+        FLEXIO_I2C_HAL_ClearRxErrFlag(&(i2cState->i2cDev));
+        FLEXIO_WR_TIMCFG_TIMDIS(g_flexioBase[0],(i2cState->i2cDev).timerIdx[0],4);
+        /* Send STOP condition. */
+        FLEXIO_I2C_DRV_MasterCompleteTransferData(i2cState);
+        return;
+    }
     /*Read rx shifter to avoid overrun.*/
    FLEXIO_I2C_HAL_GetData(&(i2cState->i2cDev));
     /* Handle transmit data register empty interrupt */
@@ -504,7 +513,7 @@ void FLEXIO_I2C_DRV_RX_IRQHandler(void *param)
     --i2cState->xSize;
     if(i2cState->xSize == 1)
     {
-	FLEXIO_I2C_HAL_ConfigSendNAck(&(i2cState->i2cDev));
+        FLEXIO_I2C_HAL_ConfigSendNAck(&(i2cState->i2cDev));
     }
     if(i2cState->xSize == 0)
     {
@@ -580,8 +589,8 @@ flexio_i2c_status_t FLEXIO_I2C_DRV_MasterSendAddress(flexio_i2c_state_t *i2cStat
     {
         for (uint8_t i = 0U; i < memRequest->memAddrSize; i++)
         {
+            FLEXIO_I2C_HAL_PutDataPolling(&(i2cState->i2cDev), *(memRequest->memAddress+i));
             while(!FLEXIO_I2C_HAL_GetRxBufferFullFlag(&(i2cState->i2cDev))){}
-            FLEXIO_I2C_HAL_PutData(&(i2cState->i2cDev), *(memRequest->memAddress+i));
             FLEXIO_I2C_HAL_GetData(&(i2cState->i2cDev));
         }
     }
@@ -590,7 +599,7 @@ flexio_i2c_status_t FLEXIO_I2C_DRV_MasterSendAddress(flexio_i2c_state_t *i2cStat
     if((direction == kFlexIOI2CRead)&&(memRequest||is10bitAddr))
     {
         /* Prepare for RESTART condition, no stop.*/
-        FLEXIO_I2C_HAL_PutData(&(i2cState->i2cDev), 0xFFFFFFFF);
+        FLEXIO_I2C_HAL_PutDataPolling(&(i2cState->i2cDev), 0xFFFFFFFF);
         FLEXIO_I2C_HAL_GetData(&(i2cState->i2cDev));
     }
 
@@ -625,9 +634,7 @@ static flexio_i2c_status_t FLEXIO_I2C_DRV_MasterStartSendData(flexio_i2c_state_t
     i2cState->xBuff = txBuff;
     i2cState->xSize = txSize;
     i2cState->isXBusy = true;
-    /* Make sure the transmit data register is empty and ready for data */
-    while(!FLEXIO_I2C_HAL_GetTxBufferEmptyFlag(&(i2cState->i2cDev))) { }
-	/*Calculate total bytes in the I2C frame*/
+    /*Calculate total bytes in the I2C frame*/
     bool is10bitAddr = ((slaveAddr >> 10U) == 0x1EU) ? true : false;
     uint32_t byteCount = txSize + 1;
     if(is10bitAddr)
@@ -636,10 +643,13 @@ static flexio_i2c_status_t FLEXIO_I2C_DRV_MasterStartSendData(flexio_i2c_state_t
     }
     else if(memRequest)
     {
-	byteCount += memRequest->memAddrSize;
+        byteCount += memRequest->memAddrSize;
     }
     /*Config total bytes in the I2C frame*/
-    FLEXIO_I2C_HAL_ConfigXferWordCountOnce(&(i2cState->i2cDev),byteCount);
+    if(FLEXIO_I2C_HAL_ConfigXferWordCountOnce(&(i2cState->i2cDev),byteCount) != kStatus_FLEXIO_Success)
+    {
+        return kStatus_FlexIO_I2C_InvalidParam;  
+    }
     /*Send slave address and memory address(if a memory request)*/
     result = FLEXIO_I2C_DRV_MasterSendAddress(i2cState, slaveAddr, kFlexIOI2CWrite, memRequest);
     if(result != kStatus_FlexIO_I2C_Success)
@@ -647,7 +657,7 @@ static flexio_i2c_status_t FLEXIO_I2C_DRV_MasterStartSendData(flexio_i2c_state_t
         return result;
     }
     /* Put the first data in shifter to start the transmission */
-    FLEXIO_I2C_HAL_PutData(&(i2cState->i2cDev), *(txBuff));
+    FLEXIO_I2C_HAL_PutDataPolling(&(i2cState->i2cDev), *(txBuff));
     /* Enable interrupt generation for tx shifter.  */
     
     FLEXIO_I2C_HAL_SetTxBufferEmptyIntCmd(&(i2cState->i2cDev), true);
@@ -696,21 +706,25 @@ static flexio_i2c_status_t FLEXIO_I2C_DRV_MasterStartReceiveData(flexio_i2c_stat
     uint32_t byteCount = 1;
     if(is10bitAddr)
     {
-	byteCount++;
+        byteCount++;
     }
     else 
     {
-	if(memRequest)
-	{
-	    byteCount += memRequest->memAddrSize;
-	}
-	else
-	{
-	    byteCount +=rxSize;
-	}
+    if(memRequest)
+    {
+        byteCount += memRequest->memAddrSize;
+    }
+    else
+    {
+        byteCount +=rxSize;
+    }
      }
     /*Config total bytes in the I2C frame*/
-    FLEXIO_I2C_HAL_ConfigXferWordCountOnce(&(i2cState->i2cDev),byteCount);
+    if(FLEXIO_I2C_HAL_ConfigXferWordCountOnce(&(i2cState->i2cDev),byteCount) != kStatus_FLEXIO_Success)
+    {
+        return kStatus_FlexIO_I2C_InvalidParam;  
+    }
+
     /*Send slave address and memory address(if a memory request)*/
     result = FLEXIO_I2C_DRV_MasterSendAddress(i2cState, slaveAddr, kFlexIOI2CRead, memRequest);
     while(!FLEXIO_I2C_HAL_GetRxBufferFullFlag(&(i2cState->i2cDev))){}
@@ -732,7 +746,11 @@ static flexio_i2c_status_t FLEXIO_I2C_DRV_MasterStartReceiveData(flexio_i2c_stat
     {
         byteCount = rxSize + 1 ;
         /*Config total bytes in the second I2C frame*/
-        FLEXIO_I2C_HAL_ConfigXferWordCountOnce(&(i2cState->i2cDev),byteCount);
+		if(FLEXIO_I2C_HAL_ConfigXferWordCountOnce(&(i2cState->i2cDev),byteCount) != kStatus_FLEXIO_Success)
+		{
+			return kStatus_FlexIO_I2C_InvalidParam;  
+		}
+
         /* Send address byte 1 again. */
         if(is10bitAddr)
         {
@@ -741,7 +759,7 @@ static flexio_i2c_status_t FLEXIO_I2C_DRV_MasterStartReceiveData(flexio_i2c_stat
         }
         else
         {
-            FLEXIO_I2C_HAL_PutData(&(i2cState->i2cDev), ((slaveAddr << 1)| 1U));
+            FLEXIO_I2C_HAL_PutData(&(i2cState->i2cDev), ((((uint32_t)slaveAddr) << 1)| 1U));
         }
         FLEXIO_I2C_HAL_GetData(&(i2cState->i2cDev));
         while(!FLEXIO_I2C_HAL_GetRxBufferFullFlag(&(i2cState->i2cDev))){}

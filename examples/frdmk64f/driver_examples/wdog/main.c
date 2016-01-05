@@ -64,7 +64,7 @@ static uint32_t is_key_pressed(void)
  * @brief Watchdog main routine
  * Run a simple application which enables watchdog, then
  * continuously refreshes the watchdog to prevent CPU reset
- * Upon SW1 button push, the watchdog will expire after
+ * Upon SW button push, the watchdog will expire after
  * approximately 2 seconds and issue reset
  */
 int main(void)
@@ -79,7 +79,9 @@ int main(void)
         .prescaler   = kWdogClkPrescalerDivide1, // Watchdog clock prescaler
         .updateEnable  = true, // Update register enabled
         .clkSrc           = kWdogLpoClkSrc, // Watchdog clock source is LPO 1KHz
+#if FSL_FEATURE_WDOG_HAS_WAITEN
         .workMode.kWdogEnableInWaitMode  = true, // Enable watchdog in wait mode
+#endif
         .workMode.kWdogEnableInStopMode  = true, // Enable watchdog in stop mode
         .workMode.kWdogEnableInDebugMode = false,// Disable watchdog in debug mode
     };
@@ -112,12 +114,12 @@ int main(void)
         PRINTF("\r\n WDOG reset occurred" );
     }
 
-    PRINTF("\r\n Press SW to expire watchdog ");
+    PRINTF("\r\n Press %s to expire watchdog ",BOARD_SW_NAME);
 
     // Continue to run in loop to refresh watchdog until SW is pushed
     while (1)
     {
-        // Check for SW1 button push.Pin is grounded when button is pushed.
+        // Check for SW button push.Pin is grounded when button is pushed.
         if (0 != is_key_pressed())
         {
             while (1)

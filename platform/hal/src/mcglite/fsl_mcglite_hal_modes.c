@@ -101,7 +101,7 @@ mcglite_mode_t CLOCK_HAL_GetMode(MCG_Type * base)
  *
  * Return value : MCGCLKOUT frequency (Hz) or error code
  *END***********************************************************************************/
-mcglite_mode_error_t CLOCK_HAL_SetHircMode(MCG_Type * base, uint32_t *outClkFreq)
+mcglite_mode_error_t CLOCK_HAL_SetHircMode(MCG_Type * base)
 {
     /* Enable HIRC. */
     CLOCK_HAL_SetHircCmd(base, true);
@@ -113,7 +113,6 @@ mcglite_mode_error_t CLOCK_HAL_SetHircMode(MCG_Type * base, uint32_t *outClkFreq
     while (CLOCK_HAL_GetClkSrcStat(base) != kMcgliteClkSrcHirc)
     {
     }
-    *outClkFreq = kMcgliteConst48M;
     return kMcgliteModeErrNone;
 }
 
@@ -130,8 +129,7 @@ mcglite_mode_error_t CLOCK_HAL_SetHircMode(MCG_Type * base, uint32_t *outClkFreq
  *END***********************************************************************************/
 mcglite_mode_error_t CLOCK_HAL_SetLircMode(MCG_Type * base,
                                mcglite_lirc_select_t lirc,
-                               mcglite_lirc_div_t div1,
-                               uint32_t *outClkFreq)
+                               mcglite_lirc_div_t div1)
 {
     /* Could not switch between LIRC8M and LIRC2M, so check current mode first. */
     mcglite_mode_t curMode = CLOCK_HAL_GetMode(base);
@@ -140,7 +138,7 @@ mcglite_mode_error_t CLOCK_HAL_SetLircMode(MCG_Type * base,
          ((kMcgliteModeLirc2M==curMode) && (kMcgliteLircSel8M==lirc)))
     {
         /* Change to HIRC mode if can not switch directly. */
-        CLOCK_HAL_SetHircMode(base, outClkFreq);
+        CLOCK_HAL_SetHircMode(base);
     }
 
     /* Select LIRC mode 2M or 8M. */
@@ -160,14 +158,6 @@ mcglite_mode_error_t CLOCK_HAL_SetLircMode(MCG_Type * base,
     {
     }
 
-    if (kMcgliteLircSel2M == lirc)
-    {
-        *outClkFreq = (kMcgliteConst2M >> div1);
-    }
-    else
-    {
-        *outClkFreq = (kMcgliteConst8M >> div1);
-    }
     return kMcgliteModeErrNone;
 }
 
@@ -181,7 +171,7 @@ mcglite_mode_error_t CLOCK_HAL_SetLircMode(MCG_Type * base,
  *
  * Return value : MCGCLKOUT frequency (Hz) or error code
  *END***********************************************************************************/
-mcglite_mode_error_t CLOCK_HAL_SetExtMode(MCG_Type * base, uint32_t *outClkFreq)
+mcglite_mode_error_t CLOCK_HAL_SetExtMode(MCG_Type * base)
 {
     if (0U == g_xtal0ClkFreq)
     {
@@ -201,7 +191,6 @@ mcglite_mode_error_t CLOCK_HAL_SetExtMode(MCG_Type * base, uint32_t *outClkFreq)
     {
     }
 
-    *outClkFreq = g_xtal0ClkFreq;
     return kMcgliteModeErrNone;
 }
 #endif

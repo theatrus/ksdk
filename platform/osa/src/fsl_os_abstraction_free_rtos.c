@@ -753,11 +753,23 @@ _Pragma ("diag_remark = PM138")
  * Description   : This function is used to ensure some code will not be preempted.
  *
  *END**************************************************************************/
+static uint32_t g_base_priority_array[OSA_MAX_ISR_CRITICAL_SECTION_DEPTH];
+static int32_t  g_base_priority_top = 0;
 void OSA_EnterCritical(osa_critical_section_mode_t mode)
 {
     if (kCriticalDisableInt == mode)
     {
-        portENTER_CRITICAL();
+        if (__get_IPSR())
+        {
+            assert(g_base_priority_top < OSA_MAX_ISR_CRITICAL_SECTION_DEPTH);
+
+            g_base_priority_array[g_base_priority_top] = portSET_INTERRUPT_MASK_FROM_ISR();
+            g_base_priority_top++;
+        }
+        else
+        {
+            portENTER_CRITICAL();
+        }
     }
     else
     {
@@ -775,7 +787,17 @@ void OSA_ExitCritical(osa_critical_section_mode_t mode)
 {
     if (kCriticalDisableInt == mode)
     {
-        portEXIT_CRITICAL();
+        if (__get_IPSR())
+        {
+            g_base_priority_top--;
+            assert(g_base_priority_top >= 0);
+
+            portCLEAR_INTERRUPT_MASK_FROM_ISR(g_base_priority_array[g_base_priority_top]);
+        }
+        else
+        {
+            portEXIT_CRITICAL();
+        }
     }
     else
     {

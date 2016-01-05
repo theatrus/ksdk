@@ -164,11 +164,11 @@
 #define DEVICE_DESC_DEVICE_CLASS             (0x00)
 #define DEVICE_DESC_DEVICE_SUBCLASS          (0x00)
 #define DEVICE_DESC_DEVICE_PROTOCOL          (0x00)
-#define DEVICE_DESC_NUM_CONFIG_SUPPOTED      (0x01)
+#define DEVICE_DESC_NUM_CONFIG_SUPPORTED      (0x01)
 /* Keep the following macro Zero if you don't Support Other Speed Configuration
  If you support Other Speeds make it 0x01 */
-#define DEVICE_OTHER_DESC_NUM_CONFIG_SUPPOTED  (0x00) 
-#define CONFIG_DESC_NUM_INTERFACES_SUPPOTED  (0x01)
+#define DEVICE_OTHER_DESC_NUM_CONFIG_SUPPORTED  (0x00) 
+#define CONFIG_DESC_NUM_INTERFACES_SUPPORTED  (0x01)
 #define CONFIG_DESC_CURRENT_DRAWN            (0x32)
 
 #define CONTROL_MAX_PACKET_SIZE              (64)

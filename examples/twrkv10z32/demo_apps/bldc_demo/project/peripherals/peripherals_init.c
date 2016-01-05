@@ -149,7 +149,7 @@ int ADC0_init(void)
   adcUserConfig.highSpeedEnable = true;
   adcUserConfig.hwTriggerEnable = false;
   // high-speed mode, 2 extra ADC clock cycles; 6 ADCK cycles sample time
-  adcUserConfig.longSampleCycleMode = kAdc16LongSampleCycleOf4;
+  adcUserConfig.longSampleCycleMode = kAdc16LongSampleCycleOf6;
   adcUserConfig.refVoltSrc = kAdc16RefVoltSrcOfVref;
   ADC16_HAL_ConfigConverter(ADC0_BASE_PTR, &adcUserConfig);
   /* calibration loop */
@@ -211,14 +211,16 @@ int ADC0_init(void)
     adcUserConfig.asyncClkEnable = false;
     adcUserConfig.continuousConvEnable = false;
     adcUserConfig.hwTriggerEnable = true;
-    adcUserConfig.longSampleCycleMode = kAdc16LongSampleCycleOf4;
+    adcUserConfig.longSampleCycleMode = kAdc16LongSampleCycleOf6;
     adcUserConfig.refVoltSrc = kAdc16RefVoltSrcOfVref;
 #if FSL_FEATURE_ADC16_HAS_DMA
     adcUserConfig.dmaEnable = false; //DMA disabled
 #endif /* FSL_FEATURE_ADC16_HAS_DMA */
     ADC16_HAL_ConfigConverter(ADC0_BASE_PTR, &adcUserConfig);
+#if FSL_FEATURE_ADC16_HAS_MUX_SELECT
     // H/W trigger
     ADC16_HAL_SetChnMuxMode(ADC0_BASE_PTR, kAdc16ChnMuxOfA);
+#endif /* FSL_FEATURE_ADC16_HAS_MUX_SELECT */
     /* Hardware compare. */
     /* Available range is between cmpValue1 and cmpValue2. */
     adcHwCmpConfig.hwCmpEnable            = false;
@@ -282,8 +284,8 @@ void PDB_init(void)
   PDB_HAL_ConfigTimer(PDB0_BASE_PTR,&pdbUserConfig);
   PDB_HAL_SetLoadValuesCmd(PDB0_BASE_PTR);
 
-  enable_irq(PDB0_IRQn);
-  set_irq_priority(PDB0_IRQn, ISR_PRIORITY_PDB0);
+  enable_irq(g_pdbIrqId[0]);
+  set_irq_priority(g_pdbIrqId[0], ISR_PRIORITY_PDB0);
 }
 
 /*************************************************************************
@@ -352,7 +354,7 @@ void FTM0_init(void)
   FTM_HAL_SetChnOutputMask(FTM0_BASE_PTR, 4, 1);
   FTM_HAL_SetChnOutputMask(FTM0_BASE_PTR, 5, 1);
 
-  FTM_HAL_SetCntinPwmSyncModeCmd(FTM0_BASE_PTR, true);//true means CNTIN register is updated by PWM synch\n
+  FTM_HAL_SetCounter(FTM0_BASE_PTR, 1U);         // update of FTM settings
   // no ISR, counting up, system clock, divide by 1
   FTM_HAL_SetClockSource(FTM0_BASE_PTR, kClock_source_FTM_SystemClk);
   
@@ -373,7 +375,11 @@ void FTM0_init(void)
   PORT_HAL_SetMuxMode(PORTC_BASE_PTR, 4, kPortMuxAlt4);
   PORT_HAL_SetMuxMode(PORTD_BASE_PTR, 4, kPortMuxAlt4);
   PORT_HAL_SetMuxMode(PORTD_BASE_PTR, 5, kPortMuxAlt4);
+#if defined(KV10Z7_SERIES)
   PORT_HAL_SetMuxMode(PORTE_BASE_PTR, 25, kPortMuxAlt3);
+#elif (defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES))
+  PORT_HAL_SetMuxMode(PORTC_BASE_PTR, 2, kPortMuxAlt4);
+#endif
 
   GPIO_HAL_SetPinDir(GPIOC_BASE_PTR, 1, kGpioDigitalOutput);
   GPIO_HAL_SetPinDir(GPIOC_BASE_PTR, 3, kGpioDigitalOutput);
@@ -381,7 +387,11 @@ void FTM0_init(void)
 
   GPIO_HAL_SetPinDir(GPIOD_BASE_PTR, 4, kGpioDigitalOutput);
   GPIO_HAL_SetPinDir(GPIOD_BASE_PTR, 5, kGpioDigitalOutput);
+#if defined(KV10Z7_SERIES)
   GPIO_HAL_SetPinDir(GPIOE_BASE_PTR, 25, kGpioDigitalOutput);
+#elif (defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES))
+  GPIO_HAL_SetPinDir(GPIOC_BASE_PTR, 2, kGpioDigitalOutput);
+#endif
 }
 
 /*************************************************************************
@@ -441,13 +451,22 @@ void SPI0_init(void)
   config.clkPolarity = kDspiClockPolarity_ActiveHigh;
   config.direction = kDspiMsbFirst;
 
+#if defined(KV10Z7_SERIES)
   PORT_HAL_SetMuxMode(PORTC_BASE_PTR,2,kPortMuxAsGpio);// MC33937 RESET
   GPIO_HAL_SetPinDir(GPIOC_BASE_PTR, 2, kGpioDigitalOutput);
   PORT_HAL_SetMuxMode(PORTD_BASE_PTR,7,kPortMuxAsGpio);// MC33937 DRV_EN
   GPIO_HAL_SetPinDir(GPIOD_BASE_PTR, 7, kGpioDigitalOutput);
+#elif (defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES))
+  PORT_HAL_SetMuxMode(PORTE_BASE_PTR,29,kPortMuxAsGpio);// MC33937 DRV_EN
+  GPIO_HAL_SetPinDir(GPIOE_BASE_PTR, 29, kGpioDigitalOutput);
+#endif
 
   GPIO_HAL_SetPinOutput(GPIOC_BASE_PTR, 2);//MC33937_RESET_HIGH;
+#if defined(KV10Z7_SERIES)
   GPIO_HAL_SetPinOutput(GPIOD_BASE_PTR, 7);//MC33937_ENABLE_HIGH;
+#elif (defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES))
+  GPIO_HAL_SetPinOutput(GPIOE_BASE_PTR, 29);
+#endif
 
   DSPI_HAL_StopTransfer(SPI0_BASE_PTR);// halt SPI before SPI setting
   DSPI_HAL_Enable(SPI0_BASE_PTR);//Enables the DSPI peripheral and sets the MCR MDIS to 0.
@@ -506,9 +525,15 @@ void UART1_init(void)
 
   UART_HAL_EnableTransmitter(UART1_BASE_PTR);
   UART_HAL_EnableReceiver(UART1_BASE_PTR);/* Enable uart operation */
+#if defined(KV10Z7_SERIES)
   // Configure UART1 port pins: PTD0, PTD1 - ALT5
   PORT_HAL_SetMuxMode(PORTD_BASE_PTR, 0, kPortMuxAlt5);
   PORT_HAL_SetMuxMode(PORTD_BASE_PTR, 1, kPortMuxAlt5);
+#elif (defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES))
+  // Configure UART1 port pins: PTE0, PTE1 - ALT3
+  PORT_HAL_SetMuxMode(PORTE_BASE_PTR, 0, kPortMuxAlt3);
+  PORT_HAL_SetMuxMode(PORTE_BASE_PTR, 1, kPortMuxAlt3);
+#endif
 }
 
 /*************************************************************************
@@ -531,11 +556,19 @@ void GPIO_init(void)
   GPIO_HAL_SetPinDir(GPIOD_BASE_PTR, 6, kGpioDigitalOutput);
   GPIO_HAL_SetPinOutput(GPIOD_BASE_PTR, 6);// Turn off LED
 
-  // Push buttons: PDB0 = SW2, PTA4 = SW1
+#if defined(KV10Z7_SERIES)
+  // Push buttons: PTA4 = SW1, PTB0 = SW2
   PORT_HAL_SetMuxMode(PORTA_BASE_PTR, 4, kPortMuxAsGpio);
   PORT_HAL_SetPullMode(PORTA_BASE_PTR, 4, kPortPullDown);
   PORT_HAL_SetMuxMode(PORTB_BASE_PTR, 0, kPortMuxAsGpio);
   PORT_HAL_SetPullMode(PORTB_BASE_PTR, 0, kPortPullDown);
+#elif (defined(KV10Z1287_SERIES) || defined(KV11Z7_SERIES))
+  // Push buttons: PTE20 = SW3, PTA4 = SW2
+  PORT_HAL_SetMuxMode(PORTE_BASE_PTR, 20, kPortMuxAsGpio);
+  PORT_HAL_SetPullMode(PORTE_BASE_PTR, 20, kPortPullDown);
+  PORT_HAL_SetMuxMode(PORTA_BASE_PTR, 4, kPortMuxAsGpio);
+  PORT_HAL_SetPullMode(PORTA_BASE_PTR, 4, kPortPullDown);
+#endif
 
 }
 

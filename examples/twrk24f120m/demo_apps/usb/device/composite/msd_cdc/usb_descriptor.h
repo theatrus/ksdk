@@ -50,7 +50,9 @@
 /******************************************************************************
  * Macro's
  *****************************************************************************/
+#ifndef HIGH_SPEED
 #define  HIGH_SPEED                      (0)
+#endif
 
 #define CDC_CC                           (0x02)
 #define DATA_CLASS_SUPPORT               (1)
@@ -241,8 +243,8 @@
 #define DEVICE_DESC_DEVICE_CLASS             (0x00)
 #define DEVICE_DESC_DEVICE_SUBCLASS          (0x00)
 #define DEVICE_DESC_DEVICE_PROTOCOL          (0x00)
-#define DEVICE_DESC_NUM_CONFIG_SUPPOTED      (0x01)
-#define CONFIG_DESC_NUM_INTERFACES_SUPPOTED  (0x01)
+#define DEVICE_DESC_NUM_CONFIG_SUPPORTED      (0x01)
+#define CONFIG_DESC_NUM_INTERFACES_SUPPORTED  (0x01)
 #define CONFIG_DESC_CURRENT_DRAWN            (0x32)
 
 /* mass storage specific macros */

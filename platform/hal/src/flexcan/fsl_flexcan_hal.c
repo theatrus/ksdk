@@ -861,7 +861,10 @@ void FLEXCAN_HAL_SetErrIntCmd(CAN_Type * base, flexcan_int_type_t errType, bool 
         {
             CAN_BWR_MCR_WAKMSK(base,0x1);
         }
-        CAN_SET_CTRL1(base,temp);
+        else
+        {
+            CAN_SET_CTRL1(base,temp);
+        }
     }
     else
     {
@@ -869,7 +872,10 @@ void FLEXCAN_HAL_SetErrIntCmd(CAN_Type * base, flexcan_int_type_t errType, bool 
         {
             CAN_BWR_MCR_WAKMSK(base,0x0);
         }
-        CAN_CLR_CTRL1(base,~temp);
+        else
+        {
+            CAN_CLR_CTRL1(base,temp);
+        }
     }
 }
 

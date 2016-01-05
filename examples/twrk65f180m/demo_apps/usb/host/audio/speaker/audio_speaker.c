@@ -32,15 +32,7 @@
 #include "usb_host_config.h"
 #include "usb.h"
 #include "usb_host_stack_interface.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "derivative.h"
-#include "hidef.h"
-#include "mem_util.h"
-#include "rtc_kinetis.h"
-#endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
 #include "fsl_debug_console.h"
@@ -59,25 +51,12 @@ extern void PIT_IRQHandler(void);
 extern void PIT0_IRQHandler(void);
 #endif
 
-#endif
 #include "usb_host_audio.h"
 
 #include "usb_host_hub_sm.h"
 
 #include "audio_speaker.h"
 #include "hidkeyboard.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#include "sd_card.h"
-#include <hwtimer.h>
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-#endif
 
 /***************************************
  **
@@ -102,10 +81,6 @@ static void USB_Prepare_Data(void);
  ****************************************/
 uint8_t                                      device_direction = USB_AUDIO_DEVICE_DIRECTION_UNDEFINE;
 uint8_t                                   wav_buff[MAX_ISO_PACKET_SIZE];
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-uint8_t                                   sd_buff_1[MAX_SD_READ]; /* sd card buffer */
-uint8_t                                   sd_buff_2[MAX_SD_READ];
-#endif
 uint32_t                           packet_size; /* number of bytes the host send to the device each mS */
 uint8_t                                   resolution_size;
 uint8_t                                   audio_state = AUDIO_IDLE;
@@ -139,13 +114,7 @@ extern os_event_handle                     usb_audio_fu_request;
 extern os_event_handle                     usb_keyboard_event;
 extern os_event_handle                     sd_card_event;
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-extern FILE_PTR                            file_ptr;
-HWTIMER                                    audio_timer;/* hwtimer handle */
-extern const HWTIMER_DEVIF_STRUCT          BSP_HWTIMER1_DEV;
-#define keyboard_task_fuc keyboard_task_stun
-#define timer_task_fuc timer_task_stun
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+
 extern const unsigned char wav_data[];
 extern const uint16_t wav_size;
 #if (USE_RTOS)
@@ -155,15 +124,7 @@ extern const uint16_t wav_size;
 #define keyboard_task_fuc keyboard_task
 #define timer_task_fuc timer_task
 #endif
-#else
-extern const unsigned char wav_data[];
-extern const uint16_t wav_size;
-#define keyboard_task_fuc keyboard_task
-#define timer_task_fuc timer_task
-static timer_object_t time_obj;
-static uint8_t time_index;
 
-#endif
 #define NUMBER_OF_BUFFER  0x5
 
 os_event_handle USB_ctr_Event;
@@ -324,18 +285,6 @@ os_event_handle usb_keyboard_event;
 os_event_handle sd_card_event;
 os_event_handle usb_timer_event;
 #define timer_out_event           0x01
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    {MAIN_TASK, main_task, 2000L, 8L, "Main", MQX_AUTO_START_TASK},
-    {HID_KEYB_TASK, keyboard_task_stun, 4000L, 9L, "Keyboard", MQX_USER_TASK},
-    {TIMER_TASK, timer_task_stun, 1000L, 10L, "Timer", MQX_USER_TASK},
-    {SDCARD_TASK, sdcard_task, 2000L, 11L, "Sdcard", MQX_USER_TASK},
-    {SHELL_TASK, shell_task, 2000L, 12L, "Shell", MQX_USER_TASK},
-    {0L, 0L, 0L, 0L, 0L, 0L}
-};
-#endif
 static int errcount = 0;
 #define AUDIO_SPEAKER_FREQUENCY (1000) /* Frequency in Hz*/
 /*FUNCTION*---------------------------------------------------------------
@@ -344,8 +293,6 @@ static int errcount = 0;
  * Comments  : Callback called by hwtimer every elapsed period
  *
  *END*----------------------------------------------------------------------*/
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 void audio_timer_isr(uint32_t channel)
 {
     OS_Event_set(usb_timer_event, timer_out_event);
@@ -409,12 +356,6 @@ void pit_single_timer_init()
     //PIT_DRV_InstallCallback(0, 0, audio_timer_isr);
 }
 
-#else
-void audio_timer_isr(void *p)
-{
-    OS_Event_set(usb_timer_event, timer_out_event);
-}
-#endif
 
 void timer_task(uint32_t param)
 {
@@ -474,7 +415,7 @@ void APP_init(void)
      ** host stack. This call will allow USB system to allocate memory for
      ** data structures, it uses later (e.g pipes etc.).
      */
-    status = usb_host_init(CONTROLLER_ID, /*  */
+    status = usb_host_init(CONTROLLER_ID,usb_host_board_init, /*  */
     &host_handle); /* Returned pointer */
     if (status != USB_OK)
     {
@@ -497,9 +438,6 @@ void APP_init(void)
     /* Create lwevents*/
     usb_keyboard_event = OS_Event_create(0);/* manually clear */
     usb_audio_fu_request = OS_Event_create(0);/* manually clear */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    sd_card_event = OS_Event_create(0);/* manually clear */
-#endif
 #if (defined _MCF51MM256_H) || (defined _MCF51JE256_H)
     usb_int_en();
 #endif     
@@ -542,34 +480,18 @@ void APP_init(void)
     USB_ctr_Event = OS_Event_create(0);
     usb_timer_event = OS_Event_create(0);
 
-    task_id = OS_Task_create((task_start_t)keyboard_task_fuc, (void*)host_handle, (uint32_t)10, 4000, (char*)"Keyboard", NULL);
+    task_id = OS_Task_create((task_start_t)keyboard_task_fuc, (void*)host_handle, (uint32_t)5, 4000, (char*)"Keyboard", NULL);
     if (task_id == 0)
     {
         return;
     }
 
-    task_id = OS_Task_create((task_start_t)timer_task_fuc, (void*)host_handle, (uint32_t)9, 2000, (char*)"timer", NULL);
+    task_id = OS_Task_create((task_start_t)timer_task_fuc, (void*)host_handle, (uint32_t)4, 2000, (char*)"timer", NULL);
     if (task_id == 0)
     {
         return;
     }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    task_id = OS_Task_create((task_start_t)sdcard_task, (void*)host_handle, 10, 2000L, "sd card", NULL);
-    if (task_id == 0)
-    {
-        return;
-    }
-
-    task_id = OS_Task_create((task_start_t)shell_task, (void*)host_handle, 11, 2000L, "shell", NULL);
-    if (task_id == 0)
-    {
-        return;
-    }
-
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)   
     pit_single_timer_init();
-#endif
 
     USB_PRINTF("USB Audio Speaker Host Demo\n\r");
     USB_PRINTF("\r\n");
@@ -639,15 +561,7 @@ void APP_task()
         audio_stream.dev_handle = NULL;
         audio_stream.intf_handle = NULL;
         audio_stream.dev_state = USB_DEVICE_DETACHED;
-#if  (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        audio_state = AUDIO_IDLE;
-        hwtimer_stop(&audio_timer);
-        USB_PRINTF("hwtimer_stop\n\r");
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        RemoveTimerQ(time_index);
-#else
         PIT_DRV_StopTimer(0,0);
-#endif    
 
     }
     if (USB_DEVICE_INUSE == audio_stream.dev_state)
@@ -815,26 +729,12 @@ void APP_task()
                 }
                 USB_PRINTF("   - Sample size    : %d bits\n\r", frm_type_desc->bbitresolution);
                 USB_PRINTF("   - Number of channels : %d channels\n\r", frm_type_desc->bnrchannels);
-#if  (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-                USB_PRINTF("Type play command to play audio files:\r\n");
-                for (bsamfreqtype_index = 0; bsamfreqtype_index < frm_type_desc->bsamfreqtype; bsamfreqtype_index++)
-                {
-                    USB_PRINTF("Type play a:\\%dk_%dbit_%dch.wav to play the file\n\r",
-                        (((frm_type_desc->tsamfreq[bsamfreqtype_index][2]) << 16) |
-                        ((frm_type_desc->tsamfreq[bsamfreqtype_index][1]) << 8) |
-                        ((frm_type_desc->tsamfreq[bsamfreqtype_index][0]) << 0)) / 1000,
-                        frm_type_desc->bbitresolution,
-                        frm_type_desc->bnrchannels);
-                }
-                //USB_PRINTF("\n\rCurrent physical volume: %d dB\n\r",physic_volume);
-#else
                 USB_PRINTF("USB Speaker example will loop playback %dk_%dbit_%dch format aduio.\r\n",
                 (((frm_type_desc->tsamfreq[0][2]) << 16) |
                 ((frm_type_desc->tsamfreq[0][1]) << 8) |
                 ((frm_type_desc->tsamfreq[0][0]) << 0))/1000,
                 frm_type_desc->bbitresolution,
                 frm_type_desc->bnrchannels);
-#endif
             }
             freq = ((frm_type_desc->tsamfreq[0][2]) << 16) |
             ((frm_type_desc->tsamfreq[0][1]) << 8) |
@@ -843,26 +743,9 @@ void APP_task()
             /* After get information of audio interface, make HID interface is ready to use */
             audio_stream.dev_state = USB_DEVICE_INUSE;
             packet_size = USB_Audio_Get_Packet_Size(frm_type_desc, 0);
-#if  (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-            if (USB_OK != hwtimer_init(&audio_timer, &BSP_HWTIMER1_DEV, BSP_HWTIMER1_ID, (BSP_DEFAULT_MQX_HARDWARE_INTERRUPT_LEVEL_MAX + 1)))
-            {
-                USB_PRINTF("\r\n hwtimer initialization failed.\r\n");
-                return;
-            }
-            hwtimer_set_freq(&audio_timer, BSP_HWTIMER1_SOURCE_CLK, AUDIO_SPEAKER_FREQUENCY);
-            hwtimer_callback_reg(&audio_timer, (HWTIMER_CALLBACK_FPTR)audio_timer_isr, NULL);
-
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-            USB_Prepare_Data();
-            TimerQInitialize(0);
-            time_obj.ms_count = 1;
-            time_obj.pfn_timer_callback = (pfntimer_callback_t)audio_timer_isr;
-            time_index = AddTimerQ(&time_obj, NULL);
-#else
             USB_Prepare_Data();
             PIT_DRV_StartTimer(0, 0);
 
-#endif 
             audio_statue = AUDIO_GET_MIN_VOLUME;
             break;
 
@@ -871,58 +754,6 @@ void APP_task()
 
         }
     }
-#if  (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    if (AUDIO_PLAYING == audio_state)
-    {
-        /* Check if SD card disconnected */
-        if ((SD_CARD_READY != sd_card_state) || read_data_err)
-        {
-            USB_PRINTF("  Error: Can't read audio file\n\r");
-            hwtimer_stop(&audio_timer);
-            audio_state = AUDIO_IDLE;
-            fclose(file_ptr);
-            OS_Event_set(sd_card_event, SD_CARD_EVENT_CLOSE);
-            file_open_count--;
-            read_data_err = FALSE;
-        }
-        else if (!feof(file_ptr))
-        {
-            /* Check if audio speaker disconnected */
-            if (USB_DEVICE_DETACHED == audio_stream.dev_state)
-            {
-                USB_PRINTF("    Error: Audio Speaker is disconnected\n\r");
-                hwtimer_stop(&audio_timer);
-                audio_state = AUDIO_IDLE;
-                fclose(file_ptr);
-                OS_Event_set(sd_card_event, SD_CARD_EVENT_CLOSE);
-                file_open_count--;
-            }
-            if (1 == buffer_1_free)
-            {
-                /* write data to buffer 1 */
-                if (fread(sd_buff_1, 1, MAX_SD_READ, file_ptr) < 0)
-                    read_data_err = TRUE;
-                buffer_1_free = 0;
-            }
-            if (1 == buffer_2_free)
-            {
-                /* write data to buffer 2 */
-                if (fread(sd_buff_2, 1, MAX_SD_READ, file_ptr) < 0)
-                    read_data_err = TRUE;
-                buffer_2_free = 0;
-            }
-        }
-        else
-        {
-            hwtimer_stop(&audio_timer);
-            USB_PRINTF("\n\rFinished");
-            audio_state = AUDIO_IDLE;
-            fclose(file_ptr);
-            file_open_count--;
-        }
-    }
-    OS_Time_delay(1);
-#endif  
 }
 /*FUNCTION*----------------------------------------------------------------
  *
@@ -955,42 +786,6 @@ void main_task(uint32_t param)
  *    This function prepares data to send.
  *
  *END*--------------------------------------------------------------------*/
-#if   (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-static void USB_Prepare_Data(void)
-{
-    static uint32_t read_count = 0;
-    static uint8_t index = 0;
-    uint32_t i;
-    for (i = 0; i < packet_size; i++)
-    {
-        if (1 == buffer_read) /* read data from buffer 1 */
-        {
-            wav_buff[index * packet_size + i] = sd_buff_1[read_count];
-            read_count++;
-            if (MAX_SD_READ == read_count)
-            {
-                read_count = 0;
-                buffer_1_free = 1;
-                buffer_read = 0;
-            }
-        }
-        else /* read data from buffer 2 */
-        {
-            wav_buff[index * packet_size + i] = sd_buff_2[read_count];
-            read_count++;
-            if (MAX_SD_READ == read_count)
-            {
-                read_count = 0;
-                buffer_2_free = 1;
-                buffer_read = 1;
-            }
-        }
-    }
-    index++;
-    if (index == NUMBER_OF_BUFFER)
-        index = 0;
-}
-#else
 static void USB_Prepare_Data(void)
 {
     uint32_t resolution_size = packet_size >> 5;
@@ -1008,11 +803,10 @@ static void USB_Prepare_Data(void)
     index ++;
     if(index == NUMBER_OF_BUFFER)
     index = 0;
-    if(audio_position >= 140000)
+    if(audio_position >= 112000)
     audio_position = 0;
 }
 
-#endif
 
 /*FUNCTION*----------------------------------------------------------------
  *
@@ -1620,30 +1414,7 @@ void audio_decrease_volume_command(uint8_t channel)
     //USB_PRINTF("\n\rCurrent physical volume: %d dB\n\r",physic_volume);
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : main (Main_Task if using MQX)
- * Returned Value : none
- * Comments       :
- *     Execution starts here
- *
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    APP_init();
-    /*
-     ** Infinite loop, waiting for events requiring action
-     */
-    for (;;)
-    {
-        APP_task();
-    } /* Endfor */
-} /* Endbody */
 
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
@@ -1682,12 +1453,11 @@ int main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 11L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 6L, 3000L, "task_start", NULL);
     OSA_Start();
 #if !defined(FSL_RTOS_MQX)
     return 1;
 #endif
 }
-#endif
 
 /* EOF */

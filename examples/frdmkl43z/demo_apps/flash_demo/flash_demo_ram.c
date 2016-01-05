@@ -110,38 +110,38 @@ int main(void)
     /****************************************/
     /* print welcome message for flash demo */
     /****************************************/
-    PRINTF("\n\n\n\r*****************************************************************");
-    PRINTF("\n\r*\t\tWelcome to the Flash Demo!");
-    PRINTF("\n\r*");
-    PRINTF("\n\r*  This demo will erase and program different regions of ");
-    PRINTF("\n\r*  flash memory, demonstrating flash driver functionality. ");    
-    PRINTF("\n\r*");
+    PRINTF("\r\n\r\n\r\n*****************************************************************");
+    PRINTF("\r\n*\t\tWelcome to the Flash Demo!");
+    PRINTF("\r\n*");
+    PRINTF("\r\n*  This demo will erase and program different regions of ");
+    PRINTF("\r\n*  flash memory, demonstrating flash driver functionality. ");    
+    PRINTF("\r\n*");
 #if (defined(FLASH_TARGET))
-    PRINTF("\n\r*\t- This demo is running from Flash Memory Space -");
+    PRINTF("\r\n*\t- This demo is running from Flash Memory Space -");
 #else
-    PRINTF("\n\r*\t- This demo is running from SRAM Memory Space -");
+    PRINTF("\r\n*\t- This demo is running from SRAM Memory Space -");
 #endif
-    PRINTF("\n\r*");
+    PRINTF("\r\n*");
         
     /***************************************************************/
     /* Print flash information - PFlash, DFlash, EEE if they exist */
     /***************************************************************/
-    PRINTF("\n\r*\tFlash Information: \n\r-----------------------------------------------------------------");
-    PRINTF("\n\r*\tTotal Flash Size:\t%d KB, Hex: (0x%x)", (PBLOCK_SIZE/ONE_KB), PBLOCK_SIZE);
-    PRINTF("\n\r*\tFlash Sector Size:\t%d KB, Hex: (0x%x)", (FTFx_PSECTOR_SIZE/ONE_KB), FTFx_PSECTOR_SIZE);
-    PRINTF("\n\r*");
+    PRINTF("\r\n*\tFlash Information: \r\n-----------------------------------------------------------------");
+    PRINTF("\r\n*\tTotal Flash Size:\t%d KB, Hex: (0x%x)", (PBLOCK_SIZE/ONE_KB), PBLOCK_SIZE);
+    PRINTF("\r\n*\tFlash Sector Size:\t%d KB, Hex: (0x%x)", (FTFx_PSECTOR_SIZE/ONE_KB), FTFx_PSECTOR_SIZE);
+    PRINTF("\r\n*");
     
     /*************************************/
     /* Does DFlash exist on this device? */
     /*************************************/
     if (flashSSDConfig.DFlashBlockSize) 
     {   
-      PRINTF("\n\r*\tData Flash Size:\t%d KB,\tHex: (0x%x)", (flashSSDConfig.DFlashBlockSize/ONE_KB), flashSSDConfig.DFlashBlockSize); 
-      PRINTF("\n\r*\tData Flash Base Address:\t0x%x", flashSSDConfig.DFlashBlockBase);
+      PRINTF("\r\n*\tData Flash Size:\t%d KB,\tHex: (0x%x)", (flashSSDConfig.DFlashBlockSize/ONE_KB), flashSSDConfig.DFlashBlockSize); 
+      PRINTF("\r\n*\tData Flash Base Address:\t0x%x", flashSSDConfig.DFlashBlockBase);
     }
     else
     {
-      PRINTF("\n\r*\tNo D-Flash (FlexNVM) Present on this Device..."); 
+      PRINTF("\r\n*\tNo D-Flash (FlexNVM) Present on this Device..."); 
     }
 
     /******************************************/
@@ -149,12 +149,12 @@ int main(void)
     /******************************************/
     if (flashSSDConfig.EEEBlockSize) 
     {   
-      PRINTF("\n\r*\tEnhanced EEPROM (EEE) Block Size:\t%d KB,\tHex: (0x%x)", (flashSSDConfig.EEEBlockSize/ONE_KB), flashSSDConfig.EEEBlockSize); 
-      PRINTF("\n\r*\tEnhanced EEPROM (EEE) Base Address:\t0x%x", flashSSDConfig.EERAMBlockBase);
+      PRINTF("\r\n*\tEnhanced EEPROM (EEE) Block Size:\t%d KB,\tHex: (0x%x)", (flashSSDConfig.EEEBlockSize/ONE_KB), flashSSDConfig.EEEBlockSize); 
+      PRINTF("\r\n*\tEnhanced EEPROM (EEE) Base Address:\t0x%x", flashSSDConfig.EERAMBlockBase);
     }
     else
     {
-      PRINTF("\n\r*\tNo Enhanced EEPROM (EEE) Present on this Device..."); 
+      PRINTF("\r\n*\tNo Enhanced EEPROM (EEE) Present on this Device..."); 
     }    
     
     /**************************************/
@@ -162,17 +162,17 @@ int main(void)
     /**************************************/
 #if (defined(SWAP))
     
-    PRINTF("\n\r*\tSwap is Supported on this Device...");
+    PRINTF("\r\n*\tSwap is Supported on this Device...");
 
 #else
     
-    PRINTF("\n\r*\tSwap is NOT Supported on this Device...");
+    PRINTF("\r\n*\tSwap is NOT Supported on this Device...");
 
 #endif     
     
-    PRINTF("\n\r*****************************************************************");
+    PRINTF("\r\n*****************************************************************");
     
-    PRINTF("\n\n\r....................Now Running Demo..................\n");   
+    PRINTF("\r\n\r\n....................Now Running Demo..................\r\n");   
     
     /*********************************************/
     /* END: print welcome message for flash demo */
@@ -186,13 +186,13 @@ int main(void)
     /**************************************************************************
     *                          FlashEraseAllBlock()                           *
     ***************************************************************************/
-    PRINTF("\n\n\r---->Running FlashEraseAllBlock()...");
+    PRINTF("\r\n\r\n---->Running FlashEraseAllBlock()...");
     ret = FlashEraseAllBlock(&flashSSDConfig, FlashCommandSequence);
     if (FTFx_OK != ret)
     {
         ErrorTrap(ret);
     }
-    PRINTF("\n\r\tSuccessfully Erased All Blocks, Address Range: 0x%x -> 0x%x", (flashSSDConfig.PFlashBlockBase), (flashSSDConfig.PFlashBlockBase + flashSSDConfig.PFlashBlockSize));
+    PRINTF("\r\n\tSuccessfully Erased All Blocks, Address Range: 0x%x -> 0x%x", (flashSSDConfig.PFlashBlockBase), (flashSSDConfig.PFlashBlockBase + flashSSDConfig.PFlashBlockSize));
     
     /**************************************************************************
     *                          FlashVerifyAllBlock()                          *
@@ -200,7 +200,7 @@ int main(void)
     /* Verify erase all blocks with normal and user margin levels */
     /* 0=Normal read level; 1=User Margin read          */
     /* Use Normal read level for regular usage, Margin for diagnostics */    
-    PRINTF("\n\n\r---->Running FlashVerifyAllBlock()...");
+    PRINTF("\r\n\r\n---->Running FlashVerifyAllBlock()...");
     for (margin_read_level = 0; margin_read_level < 0x2; margin_read_level++) 
     {
         ret = FlashVerifyAllBlock(&flashSSDConfig, margin_read_level, FlashCommandSequence);
@@ -209,7 +209,7 @@ int main(void)
             ErrorTrap(ret);
         }
     }
-    PRINTF("\n\r\tSuccessfully Verified All Blocks, Address Range: 0x%x -> 0x%x", (flashSSDConfig.PFlashBlockBase), (flashSSDConfig.PFlashBlockBase + flashSSDConfig.PFlashBlockSize));
+    PRINTF("\r\n\tSuccessfully Verified All Blocks, Address Range: 0x%x -> 0x%x", (flashSSDConfig.PFlashBlockBase), (flashSSDConfig.PFlashBlockBase + flashSSDConfig.PFlashBlockSize));
     
     /* Program the Security Byte in the Flash Configuration Field to an unsecure value */
     ret = FlashProgram(&flashSSDConfig, SECURITY_LOCATION, PGM_SIZE_BYTE, unsecure_key, FlashCommandSequence);
@@ -217,15 +217,15 @@ int main(void)
     {
         ErrorTrap(ret);
     }
-    PRINTF("\n\n\r---->Program the Security Byte 0xFE at Address: 0x40C");
-    PRINTF("\n\r\tNote:  This step is required or the device will be secured!");
-    PRINTF("\n\r\tNote:  See Flash FSEC register description for detail...");
+    PRINTF("\r\n\r\n---->Program the Security Byte 0xFE at Address: 0x40C");
+    PRINTF("\r\n\tNote:  This step is required or the device will be secured!");
+    PRINTF("\r\n\tNote:  See Flash FSEC register description for detail...");
                 
     
     /**************************************************************************
     *    FlashProgram() FlashCheckSum() and  FlashProgramCheck()        *
     ***************************************************************************/
-    PRINTF("\n\n\r---->Running FlashProgram(), FlashCheckSum() and FlashProgramCheck()...");
+    PRINTF("\r\n\r\n---->Running FlashProgram(), FlashCheckSum() and FlashProgramCheck()...");
     /* Initialize source buffer */
     for (i = 0; i < BUFFER_SIZE_BYTE; i++)
     {
@@ -244,7 +244,7 @@ int main(void)
     {
         ErrorTrap(ret);
     }
-    PRINTF("\n\r\tSuccessfully Programmed Flash at Location 0x%x -> 0x%x", destination, (destination + size));
+    PRINTF("\r\n\tSuccessfully Programmed Flash at Location 0x%x -> 0x%x", destination, (destination + size));
     
     /* Program Check for normal and user margin levels*/
     for (margin_read_level = 1; margin_read_level < 0x2; margin_read_level++)
@@ -257,7 +257,7 @@ int main(void)
         }
     }
     
-    PRINTF("\n\r\tSuccessfully Verified using FlashProgramCheck() at Location 0x%x -> 0x%x", destination, (destination + size));
+    PRINTF("\r\n\tSuccessfully Verified using FlashProgramCheck() at Location 0x%x -> 0x%x", destination, (destination + size));
        
     /*****************************************/
     /* Program to the end location of PFLASH */
@@ -285,13 +285,13 @@ int main(void)
             }
         }
         
-        PRINTF("\n\r\tSuccessfully Programmed and Verified Location 0x%x -> 0x%x", destination, (destination + size));
+        PRINTF("\r\n\tSuccessfully Programmed and Verified Location 0x%x -> 0x%x", destination, (destination + size));
         
         destination += BYTE2WORD(BUFFER_SIZE_BYTE);
     }   
 	
 #if (DEBLOCK_SIZE != 0)
-    PRINTF("\n\n\r---->Running D-Flash Programming...");
+    PRINTF("\r\n\r\n---->Running D-Flash Programming...");
     /* Program to the DFLASH block*/
     size = BUFFER_SIZE_BYTE;
     destination = flashSSDConfig.DFlashBlockBase + BYTE2WORD(flashSSDConfig.DFlashBlockSize - 4*FTFx_DSECTOR_SIZE) ;
@@ -316,7 +316,7 @@ int main(void)
             }
         }
         
-        PRINTF("\n\r\tSuccessfully Programmed and Verified D-Flash Location 0x%x -> 0x%x", destination, (destination + size));
+        PRINTF("\r\n\tSuccessfully Programmed and Verified D-Flash Location 0x%x -> 0x%x", destination, (destination + size));
         
         destination += BYTE2WORD(BUFFER_SIZE_BYTE);
     }
@@ -326,7 +326,7 @@ int main(void)
     /**************************************************************************
     *                     FlashEraseBlock() and FlashVerifyBlock()            *
     ***************************************************************************/
-    PRINTF("\n\n\r---->Running FlashEraseBlock() and FlashVerifyBlock()...");
+    PRINTF("\r\n\r\n---->Running FlashEraseBlock() and FlashVerifyBlock()...");
     /* Erase for each individual Pflash block */
     destination = flashSSDConfig.PFlashBlockBase;
     for (i = 0; i < PBLOCK_NUM; i ++)
@@ -346,7 +346,7 @@ int main(void)
             }
         }
         
-        PRINTF("\n\r\tSuccessfully Erased and Verified Location 0x%x -> 0x%x", destination, (destination + flashSSDConfig.PFlashBlockSize/PBLOCK_NUM));
+        PRINTF("\r\n\tSuccessfully Erased and Verified Location 0x%x -> 0x%x", destination, (destination + flashSSDConfig.PFlashBlockSize/PBLOCK_NUM));
         
         destination += BYTE2WORD(flashSSDConfig.PFlashBlockSize/PBLOCK_NUM);
     }
@@ -357,13 +357,13 @@ int main(void)
     {
         ErrorTrap(ret);
     }  
-    PRINTF("\n\n\r---->Program the Security Byte 0xFE at Address: 0x40C");
+    PRINTF("\r\n\r\n---->Program the Security Byte 0xFE at Address: 0x40C");
     
 #endif
     
 #if (DEBLOCK_SIZE != 0)
     
-    PRINTF("\n\n\r---->Running D-Flash Erase and Verify...");
+    PRINTF("\r\n\r\n---->Running D-Flash Erase and Verify...");
     
     /* On DFLASH */
     destination = flashSSDConfig.DFlashBlockBase;
@@ -385,7 +385,7 @@ int main(void)
 			}
 		}
         
-        PRINTF("\n\r\tSuccessfully Erased D-Flash Block 0x%x -> 0x%x", destination, (destination + flashSSDConfig.DFlashBlockSize);
+        PRINTF("\r\n\tSuccessfully Erased D-Flash Block 0x%x -> 0x%x", destination, (destination + flashSSDConfig.DFlashBlockSize);
         
 		destination += BYTE2WORD(flashSSDConfig.DFlashBlockSize/DBLOCK_NUM);
     }
@@ -395,7 +395,7 @@ int main(void)
     /**************************************************************************
     *                          FlashProgramSection()                          *
     ***************************************************************************/
-    PRINTF("\n\n\r---->Running FlashProgramSection using Acceleration RAM...");
+    PRINTF("\r\n\r\n---->Running FlashProgramSection using Acceleration RAM...");
     
     /* Write some values to Acceleration RAM */
     /* Note:  only 1K out of 4K of Acceleration RAM used */
@@ -416,7 +416,7 @@ int main(void)
             ErrorTrap(ret);
         }
         
-        PRINTF("\n\r\tSuccessfully Programmed Flash using EERAM 0x%x", destination);
+        PRINTF("\r\n\tSuccessfully Programmed Flash using EERAM 0x%x", destination);
         
         destination = flashSSDConfig.PFlashBlockBase + BYTE2WORD(i*flashSSDConfig.PFlashBlockSize/PBLOCK_NUM + flashSSDConfig.PFlashBlockSize/PBLOCK_NUM - number*PPGMSEC_ALIGN_SIZE);
         ret = FlashProgramSection(&flashSSDConfig, destination, number, FlashCommandSequence);
@@ -425,13 +425,13 @@ int main(void)
             ErrorTrap(ret);
         }
         
-        PRINTF("\n\r\tSuccessfully Programmed Flash Location 0x%x using Acceleration RAM", destination);
+        PRINTF("\r\n\tSuccessfully Programmed Flash Location 0x%x using Acceleration RAM", destination);
     }  
 #endif
     
 #if (DEBLOCK_SIZE != 0)
     
-    PRINTF("\n\n\r---->Running D-Flash Programming...");
+    PRINTF("\r\n\r\n---->Running D-Flash Programming...");
     /* Program the values to the 1st sector of DFLASH */
     number = FTFx_DSECTOR_SIZE/(DPGMSEC_ALIGN_SIZE*4);
     destination = flashSSDConfig.DFlashBlockBase;  
@@ -440,7 +440,7 @@ int main(void)
     {
         ErrorTrap(ret);
     }
-    PRINTF("\n\r\tSuccessfully Programmed D-Flash Block at 0x%x", destination);
+    PRINTF("\r\n\tSuccessfully Programmed D-Flash Block at 0x%x", destination);
     
     /* Program the values to the last sector of DFLASH */
     number = FTFx_DSECTOR_SIZE/(DPGMSEC_ALIGN_SIZE*4);
@@ -450,7 +450,7 @@ int main(void)
     {
         ErrorTrap(ret);
     }
-    PRINTF("\n\r\tSuccessfully Programmed D-Flash Block at 0x%x", destination);
+    PRINTF("\r\n\tSuccessfully Programmed D-Flash Block at 0x%x", destination);
     
 #endif /* DEBLOCK_SIZE */    
     
@@ -466,7 +466,7 @@ int main(void)
         ErrorTrap(ret);
     }
     p_data = (UINT32 *)&DataArray;
-    PRINTF("\n\r\tSuccessfully Read PFLASH IFR 0x%x:  0x%x", destination, *p_data);
+    PRINTF("\r\n\tSuccessfully Read PFLASH IFR 0x%x:  0x%x", destination, *p_data);
     
 #if (DEBLOCK_SIZE != 0)
     /* Read on D-Flash */
@@ -478,7 +478,7 @@ int main(void)
         ErrorTrap(ret);
     }
     p_data = (UINT32 *)&DataArray;
-    PRINTF("\n\r\tSuccessfully Read D-Flash IFR 0x%x:  0x%x", destination, *p_data);
+    PRINTF("\r\n\tSuccessfully Read D-Flash IFR 0x%x:  0x%x", destination, *p_data);
 #endif /* DEBLOCK_SIZE != 0 */
     
     /**************************************************************************
@@ -500,20 +500,20 @@ int main(void)
     {
       case 1:
       default:
-          PRINTF("\n\n\r---->Flash is UNSECURE!");
+          PRINTF("\r\n\r\n---->Flash is UNSECURE!");
           break;
       case 2:
-          PRINTF("\n\n\r---->Flash is SECURE, BACKDOOR is ENABLED!");
+          PRINTF("\r\n\r\n---->Flash is SECURE, BACKDOOR is ENABLED!");
           break;
       case 3:
-        PRINTF("\n\n\r---->Flash is SECURE, BACKDOOR is DISABLED!");
+        PRINTF("\r\n\r\n---->Flash is SECURE, BACKDOOR is DISABLED!");
         break;
     }
     
     /**************************************************************************
     *               FlashEraseSector()  and FlashVerifySection()              *
     ***************************************************************************/
-    PRINTF("\n\n\r---->Running FlashEraseSector() and FlashVerifySection()...");
+    PRINTF("\r\n\r\n---->Running FlashEraseSector() and FlashVerifySection()...");
     /* Erase serveral sectors on Pflash with different size*/
     i = 1;
     destination = flashSSDConfig.PFlashBlockBase;
@@ -539,7 +539,7 @@ int main(void)
             }
         }
         
-        PRINTF("\n\r\tSuccessfully Read PFLASH Location 0x%x -> 0x%x", destination, (destination+number));
+        PRINTF("\r\n\tSuccessfully Read PFLASH Location 0x%x -> 0x%x", destination, (destination+number));
         
         destination += BYTE2WORD(flashSSDConfig.PFlashBlockSize/PBLOCK_NUM - size);
         i++;
@@ -551,11 +551,11 @@ int main(void)
     {
         ErrorTrap(ret);
     }
-    PRINTF("\n\n\r---->Program the Security Byte 0xFE at Address: 0x40C");
+    PRINTF("\r\n\r\n---->Program the Security Byte 0xFE at Address: 0x40C");
     
 #if (DEBLOCK_SIZE != 0)    
     
-    PRINTF("\n\n\r---->Running D-Flash FlashEraseSector() and FlashVerifySection()...");
+    PRINTF("\r\n\r\n---->Running D-Flash FlashEraseSector() and FlashVerifySection()...");
     /* Erase several sectors on Dflash with different size*/
     i = 1;
     destination = flashSSDConfig.DFlashBlockBase;
@@ -581,7 +581,7 @@ int main(void)
             }
         }
         
-        PRINTF("\n\r\tSuccessfully Programmed and Verified D-Flash at Location 0x%x", destination, (destination+size));
+        PRINTF("\r\n\tSuccessfully Programmed and Verified D-Flash at Location 0x%x", destination, (destination+size));
         
         destination += BYTE2WORD(DEBLOCK_SIZE - size);
         i++;
@@ -591,7 +591,7 @@ int main(void)
 #if (DEBLOCK_SIZE != 0)
         
     /* Message to user */
-    PRINTF("\n\r---->Running DFlash and EEE Demo... ");    
+    PRINTF("\r\n---->Running DFlash and EEE Demo... ");    
     
     /**************************************************************************
     *                            DEFlashPartition()                           *
@@ -675,14 +675,14 @@ int main(void)
     }
     
     /* Message to user */
-    PRINTF("\n\r\tDFlash & EEE Demo Complete!");    
+    PRINTF("\r\n\tDFlash & EEE Demo Complete!");    
     
 #endif /* DEBLOCK_SIZE */    
        
     /* Message to user */
-    PRINTF("\n\n\n\r--------------------------------");
-    PRINTF("\n\r----- Flash Demo Complete! -----");
-    PRINTF("\n\r--------------------------------");           
+    PRINTF("\r\n\r\n\r\n--------------------------------");
+    PRINTF("\r\n----- Flash Demo Complete! -----");
+    PRINTF("\r\n--------------------------------");           
         
     while(1);
 }  
@@ -697,7 +697,7 @@ int main(void)
 *********************************************************************/
 void ErrorTrap(UINT32 ret)
 {
-  PRINTF("\n\n\n\t---- HALTED DUE TO FLASH ERROR! ----");  
+  PRINTF("\r\n\r\n\r\n\t---- HALTED DUE TO FLASH ERROR! ----");  
   while (1)
     {
         ;

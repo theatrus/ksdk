@@ -44,6 +44,9 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+/*! @brief Defines the maximum PHY address.*/ 
+#define ENET_PHY_MAX_ADDRESS     0x1FU
+
 /*! @brief Defines the PHY register.*/
 typedef enum _enet_phy_register
 {
@@ -53,7 +56,6 @@ typedef enum _enet_phy_register
     kEnetPhyId2 = 3U, /*!< PHY identification register 2*/
     kEnetPhyCt1 = 0x1eU, /*!< PHY control1 register*/
     kEnetPhyCt2 = 0x1fU, /*!< PHY control2 register*/
-    kEnetPhyRegAll = 0x20U   /*!< Total PHY register numbers*/
 } enet_phy_register_t;
 
 /*! @brief Defines the control flag in control register.*/

@@ -39,6 +39,33 @@ extern volatile uint32_t pdbIntCounter;
  * IRQ Handlers
  *****************************************************************************/
 /* PDB IRQ handler that would cover the same name's APIs in startup code. */
+#if FSL_FEATURE_PDB_HAS_SHARED_IRQ_HANDLER
+#include "fsl_clock_manager.h"
+
+void PDB0_PDB1_IRQHandler(void)
+{
+    if (CLOCK_SYS_GetPdbGateCmd(0U))
+    {
+      if ( PDB_DRV_GetTimerIntFlag(0U))
+      {
+        /* Add user-defined ISR for PDB0. */
+        pdbIntCounter++;
+        /* Clear Flag */
+        PDB_DRV_ClearTimerIntFlag(0U);
+      }
+    }
+    if (CLOCK_SYS_GetPdbGateCmd(1U))
+    {
+      if ( PDB_DRV_GetTimerIntFlag(1U))
+      {
+        /* Add user-defined ISR for PDB1. */
+      
+        /* Clear Flag */
+         PDB_DRV_ClearTimerIntFlag(1U);
+      }
+    }
+}
+#else
 void PDB0_IRQHandler(void)
 {
     /* Add user-defined ISR for PDB0. */
@@ -48,6 +75,13 @@ void PDB0_IRQHandler(void)
     {
         PDB_DRV_ClearTimerIntFlag(0U);
     }
+    /*
+     * Workaround for TWR-K81F150M: because write buffer is enabled, adding
+     * memory barrier instructions to make sure clearing interrupt flag completed
+     * before go out ISR
+     */
+    __DSB();
+    __ISB();
 }
 
 #if (PDB_INSTANCE_COUNT > 1)
@@ -60,8 +94,13 @@ void PDB1_IRQHandler(void)
     {
         PDB_DRV_ClearTimerIntFlag(1U);
     }
+    __DSB();
+    __ISB();
 }
 #endif
+
+#endif /* FSL_FEATURE_PDB_HAS_SHARED_IRQ_HANDLER */
+
 
 /*******************************************************************************
  * EOF

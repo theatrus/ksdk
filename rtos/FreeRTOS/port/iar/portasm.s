@@ -1,5 +1,6 @@
+/* IAR ARM Compiler */
 /*
-    FreeRTOS V8.0.0 - Copyright (C) 2014 Real Time Engineers Ltd.
+    FreeRTOS V8.2.0 - Copyright (C) 2015 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -63,7 +64,6 @@
     1 tab == 4 spaces!
 */
 
-/* IAR ARM Compiler */
 #include "FreeRTOSConfig.h"
 
 #define VECTOR_TABLE_OFFSET_REG     0xE000ED08 /* Vector Table Offset Register (VTOR) */
@@ -93,14 +93,10 @@
   PUBLIC vPortSetInterruptMask
   PUBLIC vPortClearInterruptMask
   PUBLIC vPortStartFirstTask
+  PUBLIC uxPortSetInterruptMaskFromISR
+  PUBLIC vPortClearInterruptMaskFromISR
 
-#if (defined(__ARMVFP__))
-#define USE_FPU 1
-#else
-#define USE_FPU 0
-#endif
-
-#if (configCPU_FAMILY==configCPU_FAMILY_ARM_M4F) && (USE_FPU) /* floating point unit */
+#if configCPU_FAMILY==configCPU_FAMILY_ARM_M4F /* floating point unit */
   PUBLIC vPortEnableVFP
 #endif
 /*-----------------------------------------------------------*/
@@ -135,12 +131,10 @@ vPortPendSVHandler:
     mrs r0, psp
     ldr  r3, =pxCurrentTCB      /* Get the location of the current TCB. */
     ldr  r2, [r3]
-  #if (configCPU_FAMILY==configCPU_FAMILY_ARM_M4F) /* floating point unit */
-  #if (USE_FPU)
+  #if configCPU_FAMILY==configCPU_FAMILY_ARM_M4F /* floating point unit */
     tst r14, #0x10              /* Is the task using the FPU context?  If so, push high vfp registers. */
     it eq
     vstmdbeq r0!, {s16-s31}
-  #endif
 
     stmdb r0!, {r4-r11, r14}    /* save remaining core registers */
   #else
@@ -156,13 +150,11 @@ vPortPendSVHandler:
     ldmia sp!, {r3, r14}
     ldr r1, [r3]               /* The first item in pxCurrentTCB is the task top of stack. */
     ldr r0, [r1]
-  #if (configCPU_FAMILY==configCPU_FAMILY_ARM_M4F) /* floating point unit */
+  #if configCPU_FAMILY==configCPU_FAMILY_ARM_M4F /* floating point unit */
     ldmia r0!, {r4-r11, r14}   /* Pop the core registers */
-  #if (USE_FPU)
     tst r14, #0x10             /* Is the task using the FPU context?  If so, pop the high vfp registers too. */
     it eq
     vldmiaeq r0!, {s16-s31}
-  #endif
   #else
     ldmia r0!, {r4-r11}        /* Pop the core registers. */
   #endif
@@ -236,6 +228,31 @@ vPortClearInterruptMask:
   bx r14
   nop
 /*-----------------------------------------------------------*/
+#if configCPU_FAMILY_IS_ARM_M4(configCPU_FAMILY)
+uxPortSetInterruptMaskFromISR:
+  mrs r0, BASEPRI
+  movs r1, #configMAX_SYSCALL_INTERRUPT_PRIORITY
+  msr BASEPRI, r1
+  bx r14
+  nop
+/*-----------------------------------------------------------*/
+vPortClearInterruptMaskFromISR:
+  msr BASEPRI, R0
+  bx r14
+  nop
+#endif
+#if configCPU_FAMILY == configCPU_FAMILY_ARM_M0P
+/*-----------------------------------------------------------*/
+uxPortSetInterruptMaskFromISR
+    mrs r0, PRIMASK
+    cpsid i
+    bx lr
+/*-----------------------------------------------------------*/
+vPortClearInterruptMaskFromISR
+    msr PRIMASK, r0
+    bx lr
+#endif
+/*-----------------------------------------------------------*/
 #if configPEX_KINETIS_SDK /* the SDK expects different interrupt handler names */
 SVC_Handler
 #else
@@ -296,7 +313,7 @@ vPortStartFirstTask:
   svc 0
   nop
 /*-----------------------------------------------------------*/
-#if (configCPU_FAMILY==configCPU_FAMILY_ARM_M4F) && (USE_FPU) /* floating point unit */
+#if configCPU_FAMILY==configCPU_FAMILY_ARM_M4F /* floating point unit */
 vPortEnableVFP:
   /* The FPU enable bits are in the CPACR. */
   ldr.w r0, =COPROCESSOR_ACCESS_REGISTER /* CAPCR, 0xE000ED88 */

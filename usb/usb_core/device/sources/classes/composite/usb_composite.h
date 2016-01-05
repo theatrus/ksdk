@@ -1,6 +1,6 @@
 /**HEADER********************************************************************
 * 
-* Copyright (c) 2004 -2010, 2013 - 2014 Freescale Semiconductor;
+* Copyright (c) 2004 -2010, 2013 - 2015 Freescale Semiconductor;
 * All Rights Reserved
 *
 *
@@ -53,7 +53,14 @@
 /*****************************************************************************
  * Local Functions
  *****************************************************************************/
-
+typedef struct _device_class_map
+{
+    device_class_init_call               class_init;             /*!< class driver initialization- entry  of the class driver */
+    device_class_deinit_call             class_deinit;           /*!< class driver de-initialization*/
+    device_class_event_callback          class_event_callback;   /*!< class driver pre-initialization*/
+    device_class_request_callback        class_request_callback; /*!< interface descriptor class, */
+    uint8_t                              type;                   /*!< class type*/
+} device_class_map_t;
 
 /* Structure holding HID class state information*/
 typedef struct composite_device_struct
@@ -61,8 +68,8 @@ typedef struct composite_device_struct
     usb_device_handle             handle;
     uint32_t                      user_handle;
     class_handle_t                class_handle;
-    class_config_struct_t*        class_app_callback;
-    usb_composite_info_struct_t*  class_composite_info;
+    class_config_struct_t         class_app_callback[CONFIG_MAX];
+    usb_composite_info_struct_t   class_composite_info;
     /* Number of class support */
     uint8_t                       cl_count;
 }composite_device_struct_t;

@@ -45,22 +45,24 @@
  * Definitions
  *******************************************************************************/
 
-/*! @brief Descriptes wdog clock source structure */
+/*! @brief Describes WDOG clock source structure */
 typedef enum _wdog_clk_src
 {
-    kWdogLpoClkSrc       = 0U,  /*!< wdog clock sourced from LPO @internal gui name="LPO clock" */
-    kWdogAlternateClkSrc = 1U   /*!< wdog clock sourced from alternate clock source @internal gui name="Bus clock" */
+    kWdogLpoClkSrc       = 0U,  /*!< WDOG clock sourced from the LPO @internal gui name="LPO clock" */
+    kWdogAlternateClkSrc = 1U   /*!< WDOG clock sourced from the alternate clock source @internal gui name="Bus clock" */
 }wdog_clk_src_t;
 
-/*! @brief Descriptes wdog work mode structure */
+/*! @brief Describes WDOG work mode structure */
 typedef struct _wdog_work_mode
 {
-    bool kWdogEnableInWaitMode;   /*!< Enables or disables wdog in wait mode  */
-    bool kWdogEnableInStopMode;   /*!< Enables or disables wdog in stop mode  */
-    bool kWdogEnableInDebugMode;  /*!< Enables or disables wdog in debug mode */
+#if FSL_FEATURE_WDOG_HAS_WAITEN
+    bool kWdogEnableInWaitMode;   /*!< Enables or disables WDOG in wait mode  */
+#endif
+    bool kWdogEnableInStopMode;   /*!< Enables or disables WDOG in stop mode  */
+    bool kWdogEnableInDebugMode;  /*!< Enables or disables WDOG in debug mode */
 }wdog_work_mode_t;
 
-/*! @brief Descripts the selection of the clock prescaler */
+/*! @brief Describes the selection of the clock prescaler */
 typedef enum _wdog_clk_prescaler {
     kWdogClkPrescalerDivide1 = 0x0U, /*!< Divided by 1 @internal gui name="1" */
     kWdogClkPrescalerDivide2 = 0x1U, /*!< Divided by 2 @internal gui name="2" */
@@ -72,23 +74,23 @@ typedef enum _wdog_clk_prescaler {
     kWdogClkPrescalerDivide8 = 0x7U  /*!< Divided by 8 @internal gui name="8" */
 } wdog_clk_prescaler_t;
 
-/*! @brief Descripts wdog configuration structure 
+/*! @brief Describes WDOG configuration structure 
     @internal gui name="Basic configuration" id="wdogCfg"
  */
 typedef struct _wdog_config
 {
-    bool                 wdogEnable;   /*!< Enables or disables wdog @internal gui name="Watchdog" id="Watchdog" */
+    bool                 wdogEnable;   /*!< Enables or disables WDOG @internal gui name="Watchdog" id="Watchdog" */
     wdog_clk_src_t       clkSrc;       /*!< Clock source select @internal gui name="Clock source" id="ClockSource" */
     wdog_clk_prescaler_t prescaler;    /*!< Clock prescaler value @internal gui name="Clock prescaler" id="ClockPrescaler" */
-    wdog_work_mode_t     workMode;     /*!< Configures wdog work mode in debug stop and wait mode @internal gui name="Work mode" id="WorkMode" */
+    wdog_work_mode_t     workMode;     /*!< Configures WDOG work mode in debug stop and wait mode @internal gui name="Work mode" id="WorkMode" */
     bool                 updateEnable; /*!< Update write-once register enable @internal gui name="Update write-once register" id="UpdateReg" */
-    bool                 intEnable;    /*!< Enables or disables wdog interrupt @internal gui name="Interrupt" id="Interrupt" */
-    bool                 winEnable;    /*!< Enables or disables wdog window mode @internal gui name="Window mode" id="WindowMode" */
-    uint32_t             windowValue;  /*!< Window value @internal gui name="Window value" id="WindowValue" */
-    uint32_t             timeoutValue; /*!< Timeout value @internal gui name="Timeout value" id="TimeoutValue" */
+    bool                 intEnable;    /*!< Enables or disables WDOG interrupt @internal gui name="Interrupt" id="Interrupt" */
+    bool                 winEnable;    /*!< Enables or disables WDOG window mode @internal gui name="Window mode" id="WindowMode" */
+    uint32_t             windowValue;  /*!< Window value @internal gui name="Window value" id="WindowValue" default="1" */
+    uint32_t             timeoutValue; /*!< Timeout value @internal gui name="Timeout value" id="TimeoutValue" default="1000" */
 }wdog_config_t;
 
-/*! @brief wdog status return codes.*/
+/*! @brief WDOG status return codes.*/
 typedef enum _wdog_status {
     kStatus_WDOG_Success         = 0x0U, /*!< WDOG operation Succeed      */
     kStatus_WDOG_Fail            = 0x1U, /*!< WDOG operation Failed       */
@@ -113,8 +115,8 @@ extern "C" {
  * @brief Enables the Watchdog module.
  *
  * This function enables the WDOG.
- * Make sure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
+ * Ensure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open, and that
+ * the WDOG_STCTRLH register is not written in this WCT while this function is called.
  *
  * @param base The WDOG peripheral base address
  */
@@ -127,8 +129,8 @@ static inline void WDOG_HAL_Enable(WDOG_Type * base)
  * @brief Disables the Watchdog module.
  * 
  * This function disables the WDOG.
- * Make sure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
+ * Ensure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open, and that
+ * the WDOG_STCTRLH register is not written in this WCT while this function is called.
  *
  * @param base The WDOG peripheral base address
  */
@@ -152,12 +154,12 @@ static inline bool WDOG_HAL_IsEnable(WDOG_Type * base)
 }
 
 /*!
- * @brief Sets the WDOG common configure.
+ * @brief Sets the WDOG common configuration.
  *
- * This function is used to set the WDOG common configure.
- * Make sure WDOG registers are unlocked by the WDOG_HAL_Unlock, the WCT window is still open and
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- * Make sure that the WDOG_STCTRLH.ALLOWUPDATE is 1 which means that the register update is enabled.
+ * This function is used to set the WDOG common configuration.
+ * Ensure WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open, and
+ * that the WDOG_STCTRLH register is not written in this WCT while this function is called.
+ * Additionally, ensure that the WDOG_STCTRLH.ALLOWUPDATE is 1, which means that the register update is enabled.
  * The common configuration is controlled by the WDOG_STCTRLH. This is a write-once register and this interface 
  * is used to set all field of the WDOG_STCTRLH registers at the same time. 
  * If only one field needs to be set, the API can be used. These API write to the WDOG_STCTRLH register:
@@ -174,9 +176,9 @@ void WDOG_HAL_SetConfig(WDOG_Type * base, const wdog_config_t *configPtr);
  * @brief Enables and disables the Watchdog interrupt.
  *
  * This function enables or disables the WDOG interrupt.
- * Make sure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open and that
- * the WDOG_STCTRLH register has not been written in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
+ * Ensure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open, and that
+ * the WDOG_STCTRLH register is not written in this WCT while this function is called.
+ * Additionally, ensure that the WDOG_STCTRLH.ALLOWUPDATE is 1, which means that the register update is enabled.
  *
  * @param base The WDOG peripheral base address
  * @param enable false means disable watchdog interrupt and true means enable watchdog interrupt.
@@ -212,14 +214,14 @@ static inline void WDOG_HAL_ClearIntStatusFlag(WDOG_Type * base)
 }
 
 /*!
- * @brief Set the Watchdog timeout value.
+ * @brief Sets the Watchdog timeout value.
  *
  * This function sets the WDOG_TOVAL value.
- * It should be ensured that the time-out value for the Watchdog is always greater than
+ * Ensure that the timeout value for the Watchdog is always greater than
  * 2xWCT time + 20 bus clock cycles.
- * Make sure WDOG registers are unlocked by the WDOG_HAL_Unlock , that the WCT window is still open and that
- * this API has not been called in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
+ * Additionally, ensure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open, and that
+ * the WDOG_STCTRLH register is not written in this WCT while this function is called.
+ * Make sure that the WDOG_STCTRLH.ALLOWUPDATE is 1, which means that the register update is enabled.
  *
  * @param base The WDOG peripheral base address
  * @param timeoutCount watchdog timeout value, count of watchdog clock tick.
@@ -247,9 +249,9 @@ static inline uint32_t WDOG_HAL_GetTimerOutputValue(WDOG_Type * base)
  * @brief Sets the Watchdog window value.
  *
  * This function sets the WDOG_WIN value.
- * Make sure WDOG registers are unlocked by the WDOG_HAL_Unlock , that the WCT window is still open and that
- * this API has not been called in this WCT while this function is called.
- * Make sure WDOG_STCTRLH.ALLOWUPDATE is 1 which means register update is enabled.
+ * Ensure that the WDOG registers are unlocked by the WDOG_HAL_Unlock, that the WCT window is still open, and that
+ * the WDOG_STCTRLH register is not written in this WCT while this function is called.
+ * Additionally, ensure that the WDOG_STCTRLH.ALLOWUPDATE is 1, which means that the register update is enabled.
  *
  * @param base The WDOG peripheral base address
  * @param windowValue watchdog window value.
@@ -265,7 +267,7 @@ static inline void WDOG_HAL_SetWindowValue(WDOG_Type * base,  uint32_t windowVal
  * 
  * This function unlocks the WDOG register written.
  * This function must be called before any configuration is set because watchdog register
- * will be locked automatically after a WCT(256 bus cycles).
+ * is locked automatically after a WCT(256 bus cycles).
  *
  * @param base The WDOG peripheral base address
  */

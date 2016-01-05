@@ -25,9 +25,6 @@
  *   Data of the sound
  *
  *END************************************************************************/
-#if (OS_ADAPTER_ACTIVE_OS != OS_ADAPTER_SDK)
-#include "user_config.h"
-#endif
 #include "usb_device_config.h"
 #include "usb.h"
 

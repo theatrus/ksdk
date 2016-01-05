@@ -43,13 +43,6 @@
 #include "fsl_usb_khci_hal.h"
 #define USB_ASYNC_MODE 0
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) && USB_ASYNC_MODE 
-#define TIMER_CALLBACK_ARG
-#define USED_PIT1
-#define USED_PIT0
-#include "rtc_kinetis.h"
-#endif
-
 #ifdef KHCI_DEBUG
 struct debug_messaging
 {
@@ -75,24 +68,17 @@ volatile static struct debug_messaging dm[1024] = { 0 }; /* note, the array is f
 // KHCI task parameters
 #define USB_KHCI_TASK_NUM_MESSAGES         16
 #define USB_KHCI_TASK_TEMPLATE_INDEX       0
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)            /* USB stack running on MQX */
-#define USB_KHCI_TASK_ADDRESS              _usb_khci_task_stun
 
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)        /* USB stack running on BM  */
-#define USB_KHCI_TASK_ADDRESS              _usb_khci_task
-
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)            /* USB stack running on uCOS */
 #if !(USE_RTOS)
 #define USB_KHCI_TASK_ADDRESS               _usb_khci_task
 #else
 #define USB_KHCI_TASK_ADDRESS              _usb_khci_task_stun
 #endif
-#endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)  || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && USE_RTOS) /* USB stack running on MQX */
+#if  ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && USE_RTOS) /* USB stack running on MQX */
 #define USB_NONBLOCKING_MODE 0
 
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS)) /* USB stack running on BM */
+#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS)) /* USB stack running on BM */
 #define USB_NONBLOCKING_MODE 1
 #endif
 
@@ -116,7 +102,6 @@ volatile static struct debug_messaging dm[1024] = { 0 }; /* note, the array is f
 #define KHCI_ATOM_TR_RESET       (-2048)
 #define KHCI_ATOM_TR_BUS_TIMEOUT (-4096)
 #define KHCI_ATOM_TR_INVALID     (-8192)
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
 #if defined( __ICCCF__ ) || defined( __ICCARM__ )
     #pragma segment="USB_BDT_Z"
     #pragma data_alignment=512
@@ -128,9 +113,7 @@ volatile static struct debug_messaging dm[1024] = { 0 }; /* note, the array is f
 #else
      #error Unsupported compiler, please use IAR, Keil or arm gcc compiler and rebuild the project.
 #endif  
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-     static uint8_t *bdt;
-#endif
+
 
 #if USBCFG_KHCI_4BYTE_ALIGN_FIX
 static uint8_t *_usb_khci_swap_buf_ptr = NULL;
@@ -157,7 +140,7 @@ static int32_t _usb_khci_atom_noblocking_tr(usb_khci_host_state_struct_t* usb_ho
 extern uint32_t OS_MsgQ_Is_Empty(os_msgq_handle msgq, void* msg);
 extern uint8_t soc_get_usb_vector_number(uint8_t controller_id);
 extern uint32_t soc_get_usb_base_address(uint8_t controller_id);
-
+extern uint32_t soc_get_usb_host_int_level(uint8_t controller_id);
 // KHCI event bits
 #define KHCI_EVENT_ATTACH       0x01
 #define KHCI_EVENT_RESET        0x02
@@ -206,19 +189,9 @@ static uint32_t _usb_khci_get_total_frame_count(usb_khci_host_state_struct_t* us
  *        Service all the interrupts in the kirin usb hardware
  *END*-----------------------------------------------------------------*/
 #ifdef USBCFG_OTG
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
-    void _usb_host_khci_isr(usb_host_handle handle)
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     void _usb_host_khci_isr(void)
-#endif
 #else
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
-    void _usb_khci_isr(usb_host_handle handle)
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     void _usb_khci_isr(void)
-#endif
 #endif
 {
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*)usb_host_global_handler;
@@ -258,10 +231,6 @@ static uint32_t _usb_khci_get_total_frame_count(usb_khci_host_state_struct_t* us
         {
             // atom transaction done - token done
             //USB_PRINTF("k\n");
-            /*if (usb_ptr->CTL & USB_CTL_TXSUSPENDTOKENBUSY_MASK)
-             {
-             USB_PRINTF("!!!!ERROR !!!!!! in ISR\n");
-             }*/
             OS_Event_set(usb_host_ptr->khci_event_ptr, KHCI_EVENT_TOK_DONE);
         }
 
@@ -269,6 +238,7 @@ static uint32_t _usb_khci_get_total_frame_count(usb_khci_host_state_struct_t* us
         {
             // usb reset
             //USB_PRINTF("r\n");
+            usb_hal_khci_disable_interrupts(usb_host_ptr->usbRegBase, INTR_USBRST);   
             OS_Event_set(usb_host_ptr->khci_event_ptr, KHCI_EVENT_RESET);
         }
     }
@@ -441,42 +411,6 @@ static int32_t _usb_khci_get_hot_tr(usb_khci_host_state_struct_t* usb_host_ptr, 
 
     return res;
 }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) && USB_ASYNC_MODE
-/*FUNCTION*-------------------------------------------------------------
- *
- *  Function Name  : _usb_khci_attach
- *  Returned Value : none
- *  Comments       :
- *        KHCI attach event
- *END*-----------------------------------------------------------------*/
-static void _usb_khci_attach_timer_callback(void* arg)
-{
-    usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*)arg;
-
-    switch (usb_host_ptr->device_attach_state)
-    {
-        case USB_ATTACH_STATE_BEGIN:
-            usb_host_ptr->device_attach_state = USB_ATTACH_STATE_SPEED_DETECTION;
-            break;
-
-        case USB_ATTACH_STATE_SPEED_DETECTION_BEGIN:
-            usb_host_ptr->device_attach_state = USB_ATTACH_STATE_SPEED_DETECTION_TIMEOUT;
-        break;
-
-        case USB_ATTACH_STATE_RESET:
-            usb_host_ptr->device_attach_state = USB_ATTACH_STATE_RESET_DONE;
-            break;
-
-        case USB_ATTACH_STATE_ENABLE_SOF:
-            usb_host_ptr->device_attach_state = USB_ATTACH_STATE_SOF_ENABLED;
-            break;
-
-        default:
-            break;
-    }
-    return;
-}
-#endif
 
 /*FUNCTION*-------------------------------------------------------------
  *
@@ -491,105 +425,6 @@ static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
     uint8_t temp;
     usb_device_instance_handle dev_handle;
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) && USB_ASYNC_MODE
-    static uint8_t index = 0;
-    timer_object_t timer;
-
-    switch (usb_host_ptr->device_attach_state)
-    {
-        case USB_ATTACH_STATE_IDLE:
-        {
-            TimerQInitialize(0);
-            usb_hal_khci_set_device_addr(usb_host_ptr->usbRegBase, 0);
-            timer.ms_count = 150;
-            timer.pfn_timer_callback = _usb_khci_attach_timer_callback;
-            timer.arg = usb_host_ptr;
-            usb_host_ptr->device_attach_state = USB_ATTACH_STATE_BEGIN;
-            AddTimerQ(&timer);
-            break;
-        }
-
-        case USB_ATTACH_STATE_SPEED_DETECTION:
-        {
-            // speed check, set
-            usb_host_ptr->speed = usb_hal_khci_get_line_status(usb_host_ptr->usbRegBase);
-            timer.ms_count = 5;
-            timer.pfn_timer_callback = _usb_khci_attach_timer_callback;
-            timer.arg = usb_host_ptr;
-            usb_host_ptr->device_attach_state = USB_ATTACH_STATE_SPEED_DETECTION_BEGIN;
-            AddTimerQ(&timer);
-            break;
-        }
-
-        case USB_ATTACH_STATE_SPEED_DETECTION_TIMEOUT:
-        {
-            temp = usb_hal_khci_get_line_status(usb_host_ptr->usbRegBase);
-            if (temp != usb_host_ptr->speed)
-            {
-                if (index < USB_KHCI_MAX_SPEED_DETECTION_COUNT)
-                {
-                    index++;
-                }
-                else
-                {
-                    index = 0;
-                    usb_host_ptr->device_attach_state = USB_ATTACH_STATE_IDLE;
-                    break;
-                }
-                usb_host_ptr->speed = temp;
-                timer.ms_count = 5;
-                timer.pfn_timer_callback = _usb_khci_attach_timer_callback;
-                timer.arg = usb_host_ptr;
-                usb_host_ptr->device_attach_state = USB_ATTACH_STATE_SPEED_DETECTION_BEGIN;
-                AddTimerQ(&timer);
-                break;
-            }
-
-            if (temp == USB_SPEED_FULL)
-            {
-                usb_hal_khci_disable_low_speed_support(usb_host_ptr->usbRegBase);
-            }
-            usb_hal_khci_clr_all_interrupts(usb_host_ptr->usbRegBase);   // clean each int flags
-            usb_hal_khci_disable_interrupts(usb_host_ptr->usbRegBase, (INTR_TOKDNE | INTR_USBRST));
-
-            // bus reset
-            usb_hal_khci_start_bus_reset(usb_host_ptr->usbRegBase);
-            timer.ms_count = 30;
-            timer.pfn_timer_callback = _usb_khci_attach_timer_callback;
-            timer.arg = usb_host_ptr;
-            usb_host_ptr->device_attach_state = USB_ATTACH_STATE_RESET;
-            AddTimerQ(&timer);
-            break;
-        }
-
-        case USB_ATTACH_STATE_RESET_DONE:
-        {
-            usb_hal_khci_stop_bus_reset(usb_host_ptr->usbRegBase);
-            // enable SOF sending
-            usb_hal_khci_enable_sof(usb_host_ptr->usbRegBase);
-            timer.ms_count = 100;
-            timer.pfn_timer_callback = _usb_khci_attach_timer_callback;
-            timer.arg = usb_host_ptr;
-            usb_host_ptr->device_attach_state = USB_ATTACH_STATE_ENABLE_SOF;
-            AddTimerQ(&timer);
-            break;
-        }
-
-        case USB_ATTACH_STATE_SOF_ENABLED:
-        {
-            usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, (INTR_TOKDNE | INTR_USBRST));
-            usb_host_ptr->device_attached ++;
-            usb_host_dev_mng_attach((void*)usb_host_ptr->upper_layer_handle, NULL, usb_host_ptr->speed, 0, 0, 1, &dev_handle);
-            usb_host_ptr->device_attach_state = USB_ATTACH_STATE_DONE;
-            break;
-        }
-
-        default:
-        break;
-    }
-
-    return;
-#else
     uint8_t index = 0;
 
     usb_hal_khci_set_device_addr(usb_host_ptr->usbRegBase, 0);
@@ -621,6 +456,11 @@ static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
     {
         usb_hal_khci_disable_low_speed_support(usb_host_ptr->usbRegBase);
     }
+    else if (speed == USB_SPEED_LOW)
+    {
+        usb_hal_khci_enable_communicate_low_speed_device(usb_host_ptr->usbRegBase);
+        usb_hal_khci_enable_low_speed_support(usb_host_ptr->usbRegBase);
+    }
     usb_hal_khci_clr_all_interrupts(usb_host_ptr->usbRegBase);   // clean each int flags
     usb_hal_khci_disable_interrupts(usb_host_ptr->usbRegBase, (INTR_TOKDNE | INTR_USBRST));
 
@@ -645,7 +485,6 @@ static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
     usb_host_ptr->device_attached ++;
 
     usb_host_dev_mng_attach((void*)usb_host_ptr->upper_layer_handle, 0, speed, 0, 0, 1, &dev_handle);
-#endif
 }
 
 /*FUNCTION*-------------------------------------------------------------
@@ -657,13 +496,19 @@ static void _usb_khci_attach(usb_khci_host_state_struct_t* usb_host_ptr)
  *END*-----------------------------------------------------------------*/
 static void _usb_khci_reset(usb_khci_host_state_struct_t* usb_host_ptr)
 {
+    volatile uint32_t  i = 0xf;
     // clear attach flag
     usb_hal_khci_clr_interrupt(usb_host_ptr->usbRegBase, INTR_ATTACH);
 
+    while(i--)
+    {
+        ;
+    }
     /* Test the presence of USB device */
-    if (usb_hal_khci_is_interrupt_issued(usb_host_ptr->usbRegBase, INTR_ATTACH))
+    if( usb_hal_khci_get_interrupt_status(usb_host_ptr->usbRegBase)&INTR_ATTACH)
     {
         /* device attached, so really normal reset was performed */
+        usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, INTR_USBRST);
         usb_hal_khci_set_device_addr(usb_host_ptr->usbRegBase,0);
         usb_hal_khci_endpoint_on_hub(usb_host_ptr->usbRegBase, 0);
     }
@@ -671,6 +516,7 @@ static void _usb_khci_reset(usb_khci_host_state_struct_t* usb_host_ptr)
     {
         /* device was detached, the reset event is false- never mind, notify about detach */
         //USB_PRINTF("d\n");
+        usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, INTR_ATTACH);
         OS_Event_set(usb_host_ptr->khci_event_ptr, KHCI_EVENT_DETACH);
     }
 }
@@ -705,7 +551,6 @@ static void _usb_khci_detach(usb_khci_host_state_struct_t* usb_host_ptr)
 
     //   usb_host_ptr->rx_bd = 1;
     /* Now, enable only USB interrupt attach for host mode */
-    usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, INTR_ATTACH);
 }
 
 void _usb_khci_handle_iso_msg(usb_khci_host_state_struct_t* usb_host_ptr, tr_msg_struct_t msg)
@@ -1095,8 +940,12 @@ static void _usb_khci_task(void* dev_inst_ptr)
             OS_Event_clear(usb_host_ptr->khci_event_ptr, KHCI_EVENT_ATTACH);
             usb_host_ptr->device_attach_phy = 1;
             _usb_khci_init_tr_que(usb_host_ptr);
+            usb_hal_khci_set_oddrst(usb_host_ptr->usbRegBase);
+            usb_hal_khci_set_host_mode(usb_host_ptr->usbRegBase);
             _usb_khci_attach(usb_host_ptr);
             tr_state = KHCI_TR_GET_MSG;
+             usb_host_ptr->tx_bd = 0;
+             usb_host_ptr->rx_bd = 0;
         }
 
         if (OS_Event_check_bit(usb_host_ptr->khci_event_ptr, KHCI_EVENT_RESET))
@@ -1267,7 +1116,7 @@ static void _usb_khci_task(void* dev_inst_ptr)
  *  Comments       :
  *        KHCI task
  *END*-----------------------------------------------------------------*/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (USE_RTOS))) 
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (USE_RTOS))
 static void _usb_khci_task_stun(void* dev_inst_ptr)
 {
     while (1)
@@ -1372,9 +1221,6 @@ usb_status usb_khci_init(uint8_t controller_id, usb_host_handle handle)
 {
     usb_khci_host_state_struct_t* usb_host_ptr = (usb_khci_host_state_struct_t*)handle;
     usb_status status = USB_OK;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    bdt = (uint8_t *)OS_Mem_alloc_uncached_align(512, 512);
-#endif
     usb_host_ptr->khci_event_ptr = OS_Event_create(0);
     if (usb_host_ptr->khci_event_ptr == NULL)
     {
@@ -1414,17 +1260,16 @@ usb_status usb_khci_init(uint8_t controller_id, usb_host_handle handle)
     _usb_khci_task_create(usb_host_ptr);
 
     usb_host_global_handler = usb_host_ptr;
+    /* set internal register pull down */
+    usb_hal_khci_set_weak_pulldown(usb_host_ptr->usbRegBase);
+    /* Reset USB CTRL register */
+    usb_hal_khci_reset_control_register(usb_host_ptr->usbRegBase);
+    /* setup interrupt */
+    OS_intr_init((IRQn_Type)soc_get_usb_vector_number(controller_id), soc_get_usb_host_int_level(controller_id), 0, TRUE);
 #ifndef USBCFG_OTG
     /* install isr */
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)) 
-    if (!(OS_install_isr(usb_host_ptr->vector_number, _usb_khci_isr, (void*)usb_host_ptr )))
-    {
-        return USBERR_INSTALL_ISR;
-    }
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
     OS_install_isr(usb_host_ptr->vector_number, _usb_khci_isr, (void*)usb_host_ptr);
-#endif
 #endif 
     usb_hal_khci_clr_all_interrupts(usb_host_ptr->usbRegBase);
     /* Enable week pull-downs, useful for detecting detach (effectively bus discharge) */
@@ -1444,6 +1289,10 @@ usb_status usb_khci_init(uint8_t controller_id, usb_host_handle handle)
 //    usb_ptr->OTGCTL = USB_OTGCTL_DMLOW_MASK | USB_OTGCTL_DPLOW_MASK | USB_OTGCTL_OTGEN_MASK;
     /* Wait for attach interrupt */
     usb_hal_khci_enable_interrupts(usb_host_ptr->usbRegBase, INTR_ATTACH| INTR_SOFTOK);
+
+#if defined (FSL_FEATURE_USB_KHCI_DYNAMIC_SOF_THRESHOLD_COMPARE_ENABLED) && (FSL_FEATURE_USB_KHCI_DYNAMIC_SOF_THRESHOLD_COMPARE_ENABLED == 1)
+    usb_hal_khci_enable_dynamic_sof_threshold(usb_host_ptr->usbRegBase);
+#endif
 
     return status;
 }
@@ -1501,13 +1350,6 @@ usb_host_handle handle
     if (NULL != _usb_khci_swap_buf_ptr)
     {
         OS_Mem_free(_usb_khci_swap_buf_ptr);
-    }
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    if (NULL != bdt)
-    {
-        OS_Mem_free(bdt);
-        bdt = NULL;
     }
 #endif
     return USB_OK;
@@ -2290,7 +2132,7 @@ uint32_t len
     speed = usb_host_dev_mng_get_speed(pipe_desc_ptr->dev_instance);
     address = usb_host_dev_mng_get_address(pipe_desc_ptr->dev_instance);
 
-    if(speed == 1)
+    if(speed == USB_SPEED_LOW)
     {
         usb_hal_khci_enable_low_speed_support(usb_host_ptr->usbRegBase);
     }
@@ -2327,6 +2169,20 @@ uint32_t len
 
     if (!res)
     {
+#if defined (FSL_FEATURE_USB_KHCI_DYNAMIC_SOF_THRESHOLD_COMPARE_ENABLED) && (FSL_FEATURE_USB_KHCI_DYNAMIC_SOF_THRESHOLD_COMPARE_ENABLED == 1)
+        if (speed == USB_SPEED_LOW)   //low speed
+        {
+            usb_host_ptr->sof_threshold = (len * 12 * 7 / 6 +KHCICFG_THSLD_DELAY)/8;
+
+            usb_hal_khci_set_sof_theshold(usb_host_ptr->usbRegBase, usb_host_ptr->sof_threshold);
+        }
+        else
+        {
+            usb_host_ptr->sof_threshold = (len * 7 / 6 + KHCICFG_THSLD_DELAY)/8;
+
+            usb_hal_khci_set_sof_theshold(usb_host_ptr->usbRegBase, usb_host_ptr->sof_threshold);
+        }
+#endif
 
         //USB_PRINTF("%d %d\n", pipe_desc_ptr->max_packet_size, usb_ptr->SOFTHLD);
         usb_hal_khci_clr_interrupt(usb_host_ptr->usbRegBase, INTR_SOFTOK);//clear SOF

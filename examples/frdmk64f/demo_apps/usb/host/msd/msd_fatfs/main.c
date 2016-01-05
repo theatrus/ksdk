@@ -40,24 +40,7 @@
 #include "usb_host_config.h"
 #include "usb.h"
 #include "usb_host_stack_interface.h"
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#include <mqx.h>
-#include <lwevent.h>
-#include <bsp.h>
-#include <mfs.h>
-#include <part_mgr.h>
-#include <usbmfs.h>
-#include "mfs_usb.h"
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include <types.h>
-#include "derivative.h"
-#include "hidef.h"
-#include "mem_util.h"
-#include "compiler.h"
 #include "msd_diskio.h"
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
-#include "msd_diskio.h"
-#endif
 
 #include "usb_host_hub_sm.h"
 #include "usb_host_msd_bo.h"
@@ -75,7 +58,13 @@
 #define  USB_DEVICE_OTHER                  (8)
 #define  USB_DEVICE_INTERFACE_CLOSED       (9)
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
+/* for state change */
+#define  USB_STATE_CHANGE_ATTACHED         (0x01)
+#define  USB_STATE_CHANGE_OPENED           (0x02)
+#define  USB_STATE_CHANGE_DETACHED         (0x04)
+#define  USB_STATE_CHANGE_IDLE             (0x08)
+
+
 #include "fsl_device_registers.h"
 #include "fsl_clock_manager.h"
 #include "fsl_debug_console.h"
@@ -83,21 +72,6 @@
 #include <stdlib.h>
 #include "board.h"
 #define DEBUG_UART_BAUD (115200)
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-
-extern device_struct_t g_mass_device[USBCFG_MAX_INSTANCE];
-extern uint8_t g_mass_device_new_index;
-#endif
 
 #if USBCFG_HOST_COMPLIANCE_TEST
 extern usb_status usb_test_mode_init (usb_device_instance_handle dev_handle);
@@ -173,35 +147,48 @@ usb_host_handle g_host_handle; /* global handle for calling host   */
 usb_device_interface_struct_t* g_interface_info[USBCFG_MAX_INSTANCE][USBCFG_HOST_MAX_INTERFACE_PER_CONFIGURATION];
 uint8_t g_interface_number[USBCFG_MAX_INSTANCE] = { 0 };
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)// || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (FSL_RTOS_MQX)))
-extern int mfs_unmount(uint8_t device_no);
-extern int mfs_mount(uint8_t device_no);
-
-#define SHELL_TASK_STACK_SIZE 4000
-#define USB_TASK_STACK_SIZE   2500
-
-#define MAIN_TASK             (10)
-#define SHELL_TASK            (11)
-/*
- ** MQX initialization information
- */
-
-const TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    /* Task Index, Function,   Stack,                   Priority,  Name,      Attributes,          Param, Time Slice */
-    { SHELL_TASK, Shell_Task, SHELL_TASK_STACK_SIZE, 10, "Shell", MQX_AUTO_START_TASK, 0, 0 },
-    { MAIN_TASK, Main_Task, USB_TASK_STACK_SIZE, 8, "Main", MQX_AUTO_START_TASK, 0, 0 },
-    { 0 }
-};
-
-#else
-
 extern int fat_demo(void);
 #if THROUGHPUT_TEST_ENABLE
 extern int fat_throughput_test(void);
 #endif
 
-#endif
+
+
+static void update_state(void)
+{
+    for (uint8_t i = 0; i < USBCFG_MAX_INSTANCE; i++)
+    {
+        if (g_mass_device[i].state_change != 0)
+        {
+            if (g_mass_device[i].state_change & USB_STATE_CHANGE_ATTACHED)
+            {
+                if (g_mass_device[i].dev_state == USB_DEVICE_IDLE)
+                {
+                    g_mass_device[i].dev_state = USB_DEVICE_ATTACHED;
+                }
+                g_mass_device[i].state_change &= ~(USB_STATE_CHANGE_ATTACHED);
+            }
+            if (g_mass_device[i].state_change & USB_STATE_CHANGE_OPENED)
+            {
+                if (g_mass_device[i].dev_state != USB_DEVICE_DETACHED)
+                {
+                    g_mass_device[i].dev_state = USB_DEVICE_INTERFACE_OPENED;
+                }
+                g_mass_device[i].state_change &= ~(USB_STATE_CHANGE_OPENED);
+            }
+            if (g_mass_device[i].state_change & USB_STATE_CHANGE_DETACHED)
+            {
+                g_mass_device[i].dev_state = USB_DEVICE_DETACHED;
+                g_mass_device[i].state_change &= ~(USB_STATE_CHANGE_DETACHED);
+            }
+            if (g_mass_device[i].state_change & USB_STATE_CHANGE_IDLE)
+            {
+                g_mass_device[i].dev_state = USB_DEVICE_IDLE;
+                g_mass_device[i].state_change &= ~(USB_STATE_CHANGE_IDLE);
+            }
+        }
+    }
+}
 
 usb_interface_descriptor_handle mass_get_interface(uint8_t num)
 {
@@ -224,7 +211,7 @@ void APP_init(void)
     usb_int_dis();
 #endif 
 
-    status = usb_host_init(CONTROLLER_ID, &g_host_handle);
+    status = usb_host_init(CONTROLLER_ID, usb_host_board_init, &g_host_handle);
     if (status != USB_OK)
     {
         USB_PRINTF("\r\nUSB Host Initialization failed! STATUS: 0x%x", status);
@@ -264,6 +251,9 @@ void APP_task(void)
     usb_status status = USB_OK;
     static uint8_t fat_task_flag[USBCFG_MAX_INSTANCE] = { 0 };
     uint8_t i = 0;
+    
+    /* update state for not app_task context */
+    update_state();
 
     /*----------------------------------------------------**
      ** Infinite loop, waiting for events requiring action **
@@ -277,7 +267,7 @@ void APP_task(void)
         case USB_DEVICE_ATTACHED:
             USB_PRINTF("Mass Storage Device Attached\r\n");
             g_mass_device[i].dev_state = USB_DEVICE_SET_INTERFACE_STARTED;
-            status = usb_host_open_dev_interface(g_host_handle, g_mass_device[i].dev_handle, g_mass_device[i].intf_handle, (usb_class_handle*) &g_mass_device[i].CLASS_HANDLE);
+            status = usb_host_open_dev_interface(g_host_handle, g_mass_device[i].dev_handle, g_mass_device[i].intf_handle, (usb_class_handle*) &g_mass_device[i].class_handle);
             if (status != USB_OK)
             {
                 USB_PRINTF("\r\nError in _usb_hostdev_open_interface: %x\r\n", status);
@@ -292,14 +282,10 @@ void APP_task(void)
             if (1 == fat_task_flag[i])
             {
                 g_mass_device_new_index = i;
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)))// && !(defined (FSL_RTOS_MQX))))
 #if THROUGHPUT_TEST_ENABLE
                 fat_throughput_test();
 #else
                 fat_demo();
-#endif
-#else
-                mfs_mount(i);
 #endif
             }
             /* Disable flag to run FAT task */
@@ -308,17 +294,13 @@ void APP_task(void)
         case USB_DEVICE_DETACHED:
             USB_PRINTF("\r\nMass Storage Device Detached\r\n");
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-            mfs_unmount(i);
-#endif
-
-            status = usb_host_close_dev_interface(g_host_handle, g_mass_device[i].dev_handle, g_mass_device[i].intf_handle, g_mass_device[i].CLASS_HANDLE);
+            status = usb_host_close_dev_interface(g_host_handle, g_mass_device[i].dev_handle, g_mass_device[i].intf_handle, g_mass_device[i].class_handle);
             if (status != USB_OK)
             {
                 USB_PRINTF("error in _usb_hostdev_close_interface %x\r\n", status);
             }
             g_mass_device[i].intf_handle = NULL;
-            g_mass_device[i].CLASS_HANDLE = NULL;
+            g_mass_device[i].class_handle = NULL;
             USB_PRINTF("Going to idle state\r\n");
             g_mass_device[i].dev_state = USB_DEVICE_IDLE;
             break;
@@ -332,30 +314,6 @@ void APP_task(void)
     }
 } /* Endbody */
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : main (Main_Task if using MQX)
- * Returned Value : none
- * Comments       :
- *     Execution starts here
- *
- *END*--------------------------------------------------------------------*/
-
-void Main_Task(uint32_t param)
-{
-    APP_init();
-
-    /*
-     ** Infinite loop, waiting for events requiring action
-     */
-    for (;;)
-    {
-        APP_task();
-        _time_delay(1);
-    } /* Endfor */
-} /* Endbody */
-#endif
 #if USBCFG_HOST_COMPLIANCE_TEST
 usb_status usb_host_test_device_event
 (
@@ -470,7 +428,7 @@ usb_status usb_host_mass_device_event
         {
             mass_device_ptr->dev_handle = dev_handle;
             mass_device_ptr->intf_handle = mass_get_interface(i);
-            mass_device_ptr->dev_state = USB_DEVICE_ATTACHED;
+            mass_device_ptr->state_change |= USB_STATE_CHANGE_ATTACHED;
         }
         else
         {
@@ -480,7 +438,7 @@ usb_status usb_host_mass_device_event
 
     case USB_INTF_OPENED_EVENT:
         USB_PRINTF("----- Interface opened Event -----\r\n");
-        mass_device_ptr->dev_state = USB_DEVICE_INTERFACE_OPENED;
+        mass_device_ptr->state_change |= USB_STATE_CHANGE_OPENED;
         break;
 
     case USB_DETACH_EVENT:
@@ -493,17 +451,16 @@ usb_status usb_host_mass_device_event
         USB_PRINTF("  SubClass = %d", intf_ptr->bInterfaceSubClass);
         USB_PRINTF("  Protocol = %d\r\n", intf_ptr->bInterfaceProtocol);
         g_interface_number[i] = 0;
-        mass_device_ptr->dev_state = USB_DEVICE_DETACHED;
+        mass_device_ptr->state_change |= USB_STATE_CHANGE_DETACHED;
         break;
     default:
         USB_PRINTF("Mass Storage Device state = %d??\r\n", mass_device_ptr->dev_state);
-        mass_device_ptr->dev_state = USB_DEVICE_IDLE;
+        mass_device_ptr->state_change |= USB_STATE_CHANGE_IDLE;
         break;
     } /* EndSwitch */
 
     return USB_OK;
 } /* Endbody */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)// && (!defined (FSL_RTOS_MQX))
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
 TASK_TEMPLATE_STRUCT MQX_template_list[] =
@@ -541,11 +498,10 @@ int main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 9L, 4000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 4000L, "task_start", NULL);
     OSA_Start();
 #if !defined(FSL_RTOS_MQX)
     return 1;
 #endif
 }
-#endif
 /* EOF */

@@ -4,7 +4,7 @@
 /*            MKV11Z7                                                                     */
 /*  @version: 1.0                                                                         */
 /*  @date:    2014-12-14                                                                  */
-/*  @build:   b150202                                                                     */
+/*  @build:   b150313                                                                     */
 /* ---------------------------------------------------------------------------------------*/
 /*                                                                                        */
 /* Copyright (c) 1997 - 2015 , Freescale Semiconductor, Inc.                              */
@@ -69,7 +69,7 @@ __isr_vector:
     .long   DMA_Error_IRQHandler                            /* DMA error interrupt channels 0-7*/
     .long   FTFA_IRQHandler                                 /* FTFA command complete and read collision*/
     .long   LVD_LVW_IRQHandler                              /* Low-voltage detect, low-voltage warning*/
-    .long   LLW_IRQHandler                                  /* Low Leakage Wakeup*/
+    .long   LLWU_IRQHandler                                 /* Low Leakage Wakeup*/
     .long   I2C0_IRQHandler                                 /* I2C0 interrupt*/
     .long   Reserved25_IRQHandler                           /* Reserved interrupt*/
     .long   SPI0_IRQHandler                                 /* SPI0 single interrupt vector for all sources*/
@@ -163,7 +163,7 @@ DefaultISR:
     def_irq_handler    DMA_Error_IRQHandler
     def_irq_handler    FTFA_IRQHandler
     def_irq_handler    LVD_LVW_IRQHandler
-    def_irq_handler    LLW_IRQHandler
+    def_irq_handler    LLWU_IRQHandler
     def_irq_handler    I2C0_IRQHandler
     def_irq_handler    Reserved25_IRQHandler
     def_irq_handler    SPI0_IRQHandler

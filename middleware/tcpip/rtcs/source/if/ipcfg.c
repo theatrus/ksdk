@@ -46,6 +46,8 @@ static unsigned char            ipcfg_empty_string[]                = "";
 static const char       ipcfg_task_name[]                   = IPCFG_TASK_NAME;
 static bool          ipcfg_task_run                      = FALSE;
 IPCFG_CONTEXT    ipcfg_data[IPCFG_DEVICE_COUNT]  = {0};
+static LWSEM_STRUCT     get_link_status_lock = {0};
+static unsigned char release_device_count = 0;
 
 
 /*FUNCTION*-------------------------------------------------------------
@@ -266,12 +268,20 @@ bool ipcfg_get_link_active
         uint32_t device
     )
 {
+    bool result = FALSE;
+
     if (device < IPCFG_DEVICE_COUNT)
     {
         if (ipcfg_data[device].actual_state != IPCFG_STATE_INIT)
-            return RTCS_if_get_link_status(ipcfg_data[device].ihandle);
+        {
+            /* only one enet device can access phy at a time */
+            _lwsem_wait(&get_link_status_lock);
+            result = RTCS_if_get_link_status(ipcfg_data[device].ihandle);
+            _lwsem_post(&get_link_status_lock);
+        }
     }
-    return FALSE;
+
+    return result;
 }
 
 
@@ -1646,7 +1656,9 @@ uint32_t ipcfg_init_device
     _enet_handle    ehandle;
     _rtcs_if_handle ihandle;
     uint32_t         error = 0;
-    
+
+    _lwsem_create(&get_link_status_lock, 1);
+
     error = ENET_initialize (device, mac, 0, &ehandle);
     
     if (error == RTCS_OK) 
@@ -1663,6 +1675,9 @@ uint32_t ipcfg_init_device
                 printf ("IPCFG init error: %08x\n", error);
 #endif
             }
+            else
+                if(release_device_count > 0)
+                    release_device_count--;
         }
         else 
         {
@@ -1716,6 +1731,12 @@ uint32_t ipcfg_release_device(uint32_t  device )
                 if (error == RTCS_OK)
                 {
                     error = ENET_shutdown (ehandle);
+                    release_device_count++;
+                    if(release_device_count == IPCFG_DEVICE_COUNT)
+                    {
+                        _lwsem_destroy(&get_link_status_lock);
+                        release_device_count = 0;
+                    }
                 }
             }
             return error;

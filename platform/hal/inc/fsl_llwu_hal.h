@@ -301,9 +301,9 @@ void LLWU_HAL_SetPinFilterMode(LLWU_Type * base, uint32_t filterNumber,
                                llwu_external_pin_filter_mode_t pinFilterMode);
 
 /*!
- * @brief Gets the filter detect flag.
+ * @brief Gets the filter detection flag.
  *
- * This function checks the filter detect flag to detect whether the external
+ * This function checks the filter detection flag to detect whether the external
  * pin selected by the specific filter is the wake up source.
  *
  * @param base      Register base address of LLWU
@@ -313,9 +313,9 @@ void LLWU_HAL_SetPinFilterMode(LLWU_Type * base, uint32_t filterNumber,
 bool LLWU_HAL_GetFilterDetectFlag(LLWU_Type * base, uint32_t filterNumber);
 
 /*!
- * @brief Clears the filter detect flag.
+ * @brief Clears the filter detection flag.
  *
- * This function will clear the filter detect flag.
+ * This function will clear the filter detection flag.
  *
  * @param base      Register base address of LLWU
  * @param filterNumber  filter number specified
@@ -325,9 +325,9 @@ void LLWU_HAL_ClearFilterDetectFlag(LLWU_Type * base, uint32_t filterNumber);
 
 #if FSL_FEATURE_LLWU_HAS_RESET_ENABLE
 /*!
- * @brief Sets the RESET pin mode.
+ * @brief Sets the reset pin mode.
  *
- * This function sets how the RESET pin is used as low leakage mode exit source.
+ * This function sets how the reset pin is used as a low leakage mode exit source.
  *
  * @param base         Register base address of LLWU
  * @param resetPinMode RESET pin mode defined in llwu_reset_pin_mode_t

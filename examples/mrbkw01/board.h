@@ -44,11 +44,19 @@
 #define CLOCK_NUMBER_OF_CONFIGURATIONS 3U
 
 #ifndef CLOCK_INIT_CONFIG
-#if defined(RTC_DEMO)
+#if defined(RTC_DEMO) || defined(POWER_DEMO)
   #define CLOCK_INIT_CONFIG CLOCK_XTAL
 #else
   #define CLOCK_INIT_CONFIG CLOCK_RUN
 #endif
+#endif
+
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 48000000U
+#elif (CLOCK_INIT_CONFIG == CLOCK_XTAL)
+#define CORE_CLOCK_FREQ 47972352U
+#else
+#define CORE_CLOCK_FREQ 4000000U
 #endif
 
 /* OSC0 configuration. */
@@ -87,24 +95,6 @@
 #define XTAL0_PIN    19
 #define XTAL0_PINMUX kPortPinDisabled
 
-/* RTC external clock configuration. */
-#define RTC_XTAL_FREQ   0U
-#define RTC_SC2P_ENABLE_CONFIG       false
-#define RTC_SC4P_ENABLE_CONFIG       false
-#define RTC_SC8P_ENABLE_CONFIG       false
-#define RTC_SC16P_ENABLE_CONFIG      false
-#if (CLOCK_INIT_CONFIG == CLOCK_XTAL)
-  #define RTC_OSC_ENABLE_CONFIG        true
-#else
-  #define RTC_OSC_ENABLE_CONFIG        false
-#endif
-#define RTC_CLK_OUTPUT_ENABLE_CONFIG false
-
-/* RTC_CLKIN PTC1 */
-#define RTC_CLKIN_PORT   PORTC
-#define RTC_CLKIN_PIN    1
-#define RTC_CLKIN_PINMUX kPortMuxAsGpio
-
 /* The UART to use for debug messages. */
 #ifndef BOARD_DEBUG_UART_INSTANCE
     #define BOARD_DEBUG_UART_INSTANCE   0
@@ -122,6 +112,7 @@
 #define BOARD_SW_GPIO               kGpioSW1
 #define BOARD_SW_IRQ_NUM            PORTC_PORTD_IRQn
 #define BOARD_SW_IRQ_HANDLER        PORTC_PORTD_IRQHandler
+#define BOARD_SW_NAME               "SW1"
 /* Define print statement to inform user which switch to press for
  * low_power_demo
  */
@@ -148,11 +139,16 @@
 #define BOARD_DAC_DEMO_ADC_INSTANCE     0U
 #define BOARD_DAC_DEMO_ADC_CHANNEL      23U
 
+#define HWADC_INSTANCE                  0
+
 /* The i2c instance used for i2c DAC demo */
 #define BOARD_DAC_I2C_INSTANCE          1
 
-/* The i2c instance used for i2c communication demo */
-#define BOARD_I2C_COMM_INSTANCE         1
+/* The i2c instance used for i2c connection by default */
+#define BOARD_I2C_INSTANCE              1
+
+/* The spi instance used for spi example */
+#define BOARD_SPI_INSTANCE              1
 
 /* The TPM instance/channel used for board */
 #define BOARD_TPM_INSTANCE              0
@@ -219,6 +215,9 @@ extern "C" {
 
 void hardware_init(void);
 void dbg_uart_init(void);
+/*This function to used for power manager demo*/
+void disable_unused_pins(void);
+void enable_unused_pins(void);
 /* Function to initialize clock base on board configuration. */
 void BOARD_ClockInit(void);
 

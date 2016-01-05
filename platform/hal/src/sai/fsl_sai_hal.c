@@ -758,13 +758,19 @@ void SAI_HAL_ReceiveDataBlocking(I2S_Type * base,uint32_t rx_channel,
     uint8_t *rxBuff, uint32_t size)
 {
     assert(rx_channel < FSL_FEATURE_SAI_CHANNEL_COUNT);
+    uint32_t bytes = (I2S_BRD_RCR5_WNW(base) + 1)/8;
+    uint32_t i =0, j = 0, data = 0;
     /* Wait while fifo is empty */
-    while(size --)
+    for (i = 0; i < (size/bytes); i ++)
     {
         while(!I2S_BRD_RCSR_FWF(base))
         {}
-        *rxBuff = I2S_RD_RDR(base,rx_channel);
-        rxBuff ++;
+        data = I2S_RD_RDR(base,rx_channel);
+        for (j = 0; j < bytes; j ++)
+        {
+            *rxBuff = (data >> (8U * j)) & 0xFF;
+            rxBuff ++;
+        }
     }
 }
 
@@ -778,13 +784,21 @@ void SAI_HAL_SendDataBlocking(I2S_Type * base,uint32_t tx_channel,
     uint8_t * txBuff, uint32_t size)
 {
     assert(tx_channel < FSL_FEATURE_SAI_CHANNEL_COUNT);
-    while (size --)
+    uint32_t bytes = (I2S_BRD_TCR5_WNW(base) + 1)/8;
+    uint32_t i =0, j = 0, data = 0, temp = 0;
+    /* Wait while fifo is empty */
+    for (i = 0; i < (size/bytes); i ++)
     {
-        /* Wait while fifo is empty */
         while(!I2S_BRD_TCSR_FWF(base))
         {}
-        I2S_WR_TDR(base, tx_channel, *txBuff);
-        txBuff ++;
+        for (j = 0; j < bytes; j ++)
+        {
+            temp = (uint32_t)(*txBuff);
+            data |= (temp << (8U * j));
+            txBuff ++;
+        }
+        I2S_WR_TDR(base, tx_channel, data);
+        data = 0;
     }
 }
 #endif

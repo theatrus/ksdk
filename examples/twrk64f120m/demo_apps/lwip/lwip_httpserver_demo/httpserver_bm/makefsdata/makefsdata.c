@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
             else if((argv[i][1] == 'f') && (argv[i][2] == ':'))
             {
                 strcpy(targetfile, &argv[i][3]);
-                PRINTF("Writing to file \"%s\"\n", targetfile);
+                PRINTF("Writing to file \"%s\"\r\n", targetfile);
             }
         }
         else
@@ -223,13 +223,13 @@ int main(int argc, char *argv[])
     data_file = fopen("fsdata.tmp", "wb");
     if (data_file == NULL)
     {
-        PRINTF("Failed to create file \"fsdata.tmp\"\n");
+        PRINTF("Failed to create file \"fsdata.tmp\"\r\n");
         exit(-1);
     }
     struct_file = fopen("fshdr.tmp", "wb");
     if (struct_file == NULL)
     {
-        PRINTF("Failed to create file \"fshdr.tmp\"\n");
+        PRINTF("Failed to create file \"fshdr.tmp\"\r\n");
         exit(-1);
     }
 
@@ -275,7 +275,7 @@ static void copy_file(const char *filename_in, FILE *fout)
     fin = fopen(filename_in, "rb");
     if (fin == NULL)
     {
-        PRINTF("Failed to open file \"%s\"\n", filename_in);
+        PRINTF("Failed to open file \"%s\"\r\n", filename_in);
         exit(-1);
     }
 
@@ -292,7 +292,7 @@ void concat_files(const char *file1, const char *file2, const char *targetfile)
     fout = fopen(targetfile, "wb");
     if (fout == NULL)
     {
-        PRINTF("Failed to open file \"%s\"\n", targetfile);
+        PRINTF("Failed to open file \"%s\"\r\n", targetfile);
         exit(-1);
     }
     copy_file(file1, fout);
@@ -358,7 +358,7 @@ int get_file_size(const char* filename)
     inFile = fopen(filename, "rb");
     if (inFile == NULL)
     {
-        PRINTF("Failed to open file \"%s\"\n", filename);
+        PRINTF("Failed to open file \"%s\"\r\n", filename);
         exit(-1);
     }
     fseek(inFile, 0, SEEK_END);
@@ -415,7 +415,7 @@ u16_t hdr_len, u16_t hdr_chksum)
     f = fopen(filename, "rb");
     if (f == INVALID_HANDLE_VALUE)
     {
-        PRINTF("Failed to open file \"%s\"\n", filename);
+        PRINTF("Failed to open file \"%s\"\r\n", filename);
         exit(-1);
     }
     if (hdr_len > 0)
@@ -606,7 +606,7 @@ u16_t *http_hdr_len, u16_t *http_hdr_chksum)
     }
     if((file_ext == NULL) || (*file_ext == 0))
     {
-        PRINTF("failed to get extension for file \"%s\", using default.\n", filename);
+        PRINTF("failed to get extension for file \"%s\", using default.\r\n", filename);
     }
     else
     {
@@ -620,7 +620,7 @@ u16_t *http_hdr_len, u16_t *http_hdr_chksum)
         }
         if (j >= NUM_HTTP_HEADERS)
         {
-            PRINTF("failed to get file type for extension \"%s\", using default.\n", file_ext);
+            PRINTF("failed to get file type for extension \"%s\", using default.\r\n", file_ext);
             file_type = HTTP_HDR_DEFAULT_TYPE;
         }
     }

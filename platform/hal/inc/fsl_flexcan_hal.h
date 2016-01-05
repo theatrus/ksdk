@@ -89,7 +89,7 @@ typedef enum _flexcan_operation_modes {
     kFlexCanDisableMode        /*!< Module disable mode @internal gui name="Disabled" */
 } flexcan_operation_modes_t;
 
-/*! @brief FlexCAN message buffer CODE for Rx buffers*/
+/*! @brief FlexCAN message buffer code for receive buffers*/
 typedef enum _flexcan_msgbuff_code_rx {
     kFlexCanRXInactive  = 0x0, /*!< MB is not active.*/
     kFlexCanRXFull      = 0x2, /*!< MB is full.*/
@@ -102,14 +102,14 @@ typedef enum _flexcan_msgbuff_code_rx {
     kFlexCanRXNotUsed   = 0xF  /*!< Not used*/
 } flexcan_msgbuff_code_rx_t;
 
-/*! @brief FlexCAN message buffer CODE FOR Tx buffers*/
+/*! @brief FlexCAN message buffer code for transmit buffers*/
 typedef enum _flexcan_msgbuff_code_tx {
     kFlexCanTXInactive  = 0x08, /*!< MB is not active.*/
     kFlexCanTXAbort     = 0x09, /*!< MB is aborted.*/
-    kFlexCanTXData      = 0x0C, /*!< MB is a TX Data Frame(MB RTR must be 0).*/
-    kFlexCanTXRemote    = 0x1C, /*!< MB is a TX Remote Request Frame (MB RTR must be 1).*/
-    kFlexCanTXTanswer   = 0x0E, /*!< MB is a TX Response Request Frame from.*/
-                                 /*!  an incoming Remote Request Frame.*/
+    kFlexCanTXData      = 0x0C, /*!< MB is a transmit data frame(MB RTR must be 0).*/
+    kFlexCanTXRemote    = 0x1C, /*!< MB is a transmit remote request frame (MB RTR must be 1).*/
+    kFlexCanTXTanswer   = 0x0E, /*!< MB is a transmit response request frame from.*/
+                                 /*!  an incoming remote request frame.*/
     kFlexCanTXNotUsed   = 0xF  /*!< Not used*/
 } flexcan_msgbuff_code_tx_t;
 
@@ -132,37 +132,37 @@ typedef enum _flexcan_rx_fifo_id_element_format {
                                      /*!  element.*/
     kFlexCanRxFifoIdElementFormatD  /*!< All frames rejected.*/
 } flexcan_rx_fifo_id_element_format_t;
-/*! @brief FlexCAN Rx FIFO filters number*/
+/*! @brief FlexCAN receive FIFO filters number*/
 typedef enum _flexcan_rx_fifo_id_filter_number {
-    kFlexCanRxFifoIDFilters_8   = 0x0,         /*!<   8 Rx FIFO Filters. @internal gui name="8 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_16  = 0x1,         /*!<  16 Rx FIFO Filters. @internal gui name="16 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_24  = 0x2,         /*!<  24 Rx FIFO Filters. @internal gui name="24 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_32  = 0x3,         /*!<  32 Rx FIFO Filters. @internal gui name="32 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_40  = 0x4,         /*!<  40 Rx FIFO Filters. @internal gui name="40 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_48  = 0x5,         /*!<  48 Rx FIFO Filters. @internal gui name="48 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_56  = 0x6,         /*!<  56 Rx FIFO Filters. @internal gui name="56 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_64  = 0x7,         /*!<  64 Rx FIFO Filters. @internal gui name="64 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_72  = 0x8,         /*!<  72 Rx FIFO Filters. @internal gui name="72 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_80  = 0x9,         /*!<  80 Rx FIFO Filters. @internal gui name="80 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_88  = 0xA,         /*!<  88 Rx FIFO Filters. @internal gui name="88 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_96  = 0xB,         /*!<  96 Rx FIFO Filters. @internal gui name="96 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_104 = 0xC,         /*!< 104 Rx FIFO Filters. @internal gui name="104 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_112 = 0xD,         /*!< 112 Rx FIFO Filters. @internal gui name="112 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_120 = 0xE,         /*!< 120 Rx FIFO Filters. @internal gui name="120 Rx FIFO Filters" */
-    kFlexCanRxFifoIDFilters_128 = 0xF          /*!< 128 Rx FIFO Filters. @internal gui name="128 Rx FIFO Filters" */
+    kFlexCanRxFifoIDFilters_8   = 0x0,         /*!<   8 receive FIFO Filters. @internal gui name="8 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_16  = 0x1,         /*!<  16 receive FIFO Filters. @internal gui name="16 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_24  = 0x2,         /*!<  24 receive FIFO Filters. @internal gui name="24 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_32  = 0x3,         /*!<  32 receive FIFO Filters. @internal gui name="32 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_40  = 0x4,         /*!<  40 receive FIFO Filters. @internal gui name="40 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_48  = 0x5,         /*!<  48 receive FIFO Filters. @internal gui name="48 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_56  = 0x6,         /*!<  56 receive FIFO Filters. @internal gui name="56 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_64  = 0x7,         /*!<  64 receive FIFO Filters. @internal gui name="64 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_72  = 0x8,         /*!<  72 receive FIFO Filters. @internal gui name="72 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_80  = 0x9,         /*!<  80 receive FIFO Filters. @internal gui name="80 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_88  = 0xA,         /*!<  88 receive FIFO Filters. @internal gui name="88 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_96  = 0xB,         /*!<  96 receive FIFO Filters. @internal gui name="96 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_104 = 0xC,         /*!< 104 receive FIFO Filters. @internal gui name="104 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_112 = 0xD,         /*!< 112 receive FIFO Filters. @internal gui name="112 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_120 = 0xE,         /*!< 120 receive FIFO Filters. @internal gui name="120 receive FIFO Filters" */
+    kFlexCanRxFifoIDFilters_128 = 0xF          /*!< 128 receive FIFO Filters. @internal gui name="128 receive FIFO Filters" */
 } flexcan_rx_fifo_id_filter_num_t;
 
-/*! @brief FlexCAN RX FIFO ID filter table structure*/
+/*! @brief FlexCAN receive FIFO ID filter table structure*/
 typedef struct FLEXCANIdTable {
     bool isRemoteFrame;      /*!< Remote frame*/
     bool isExtendedFrame;    /*!< Extended frame*/
-    uint32_t *idFilter;    /*!< Rx FIFO ID filter elements*/
+    uint32_t *idFilter;    /*!< Receive FIFO ID filter elements*/
 } flexcan_id_table_t;
 
-/*! @brief FlexCAN RX mask type.*/
+/*! @brief FlexCAN receive mask type.*/
 typedef enum _flexcan_rx_mask_type {
-    kFlexCanRxMaskGlobal,      /*!< Rx global mask*/
-    kFlexCanRxMaskIndividual   /*!< Rx individual mask*/
+    kFlexCanRxMaskGlobal,      /*!< Receive global mask*/
+    kFlexCanRxMaskIndividual   /*!< Receive individual mask*/
 } flexcan_rx_mask_type_t;
 
 /*! @brief FlexCAN Message Buffer ID type*/
@@ -179,8 +179,8 @@ typedef enum _flexcan_clk_source {
 
 /*! @brief FlexCAN error interrupt types*/
 typedef enum _flexcan_int_type {
-    kFlexCanIntRxwarning = CAN_CTRL1_RWRNMSK_MASK,     /*!< RX warning interrupt*/
-    kFlexCanIntTxwarning = CAN_CTRL1_TWRNMSK_MASK,     /*!< TX warning interrupt*/
+    kFlexCanIntRxwarning = CAN_CTRL1_RWRNMSK_MASK,     /*!< Receive warning interrupt*/
+    kFlexCanIntTxwarning = CAN_CTRL1_TWRNMSK_MASK,     /*!< Transmit warning interrupt*/
     kFlexCanIntErr = CAN_CTRL1_ERRMSK_MASK,           /*!< Error interrupt*/
     kFlexCanIntBusoff = CAN_CTRL1_BOFFMSK_MASK,       /*!< Bus off interrupt*/
     kFlexCanIntWakeup = CAN_MCR_WAKMSK_MASK          /*!< Wake up interrupt*/
@@ -194,7 +194,7 @@ typedef struct FLEXCANBuserrCounter {
 
 /*! @brief FlexCAN Message Buffer code and status for transmit and receive */
 typedef struct FLEXCANMsgBuffCodeStatus {
-    uint32_t code;                    /*!< MB code for TX or RX buffers.
+    uint32_t code;                    /*!< MB code for transmit or receive buffers.
                                         Defined by flexcan_mb_code_rx_t and flexcan_mb_code_tx_t */
     flexcan_msgbuff_id_type_t msgIdType; /*!< Type of message ID (standard or extended)*/
     uint32_t dataLen;             /*!< Length of Data in Bytes*/
@@ -282,7 +282,6 @@ flexcan_status_t FLEXCAN_HAL_Init(CAN_Type * base);
  *
  * @param   base The FlexCAN base address
  * @param   timeSeg    FlexCAN time segments, which need to be set for the bit rate.
- * @return  0 if successful; non-zero failed
  */
 void FLEXCAN_HAL_SetTimeSegments(CAN_Type * base, flexcan_time_segment_t *timeSeg);
 
@@ -291,15 +290,13 @@ void FLEXCAN_HAL_SetTimeSegments(CAN_Type * base, flexcan_time_segment_t *timeSe
  *
  * @param   base The FlexCAN base address
  * @param   timeSeg    FlexCAN time segments read for bit rate
- * @return  0 if successful; non-zero failed
  */
 void FLEXCAN_HAL_GetTimeSegments(CAN_Type * base, flexcan_time_segment_t *timeSeg);
 
 /*!
- * @brief Un freezes the FlexCAN module.
+ * @brief Unfreezes the FlexCAN module.
  *
  * @param   base     The FlexCAN base address
- * @return  0 if successful; non-zero failed.
  */
 void FLEXCAN_HAL_ExitFreezeMode(CAN_Type * base);
 
@@ -311,7 +308,7 @@ void FLEXCAN_HAL_ExitFreezeMode(CAN_Type * base);
 void FLEXCAN_HAL_EnterFreezeMode(CAN_Type * base);
 
 /*!
- * @brief Set operation mode.
+ * @brief Sets  operation mode.
  *
  * @param   base  The FlexCAN base address
  * @param   mode  Set an operation mode
@@ -322,7 +319,7 @@ flexcan_status_t FLEXCAN_HAL_SetOperationMode(
     flexcan_operation_modes_t mode);
 
 /*!
- * @brief Exit operation mode.
+ * @brief Exits operation mode.
  *
  * @param   base  The FlexCAN base address
  * @param   mode  Exit An operation mode
@@ -385,7 +382,7 @@ flexcan_status_t FLEXCAN_HAL_GetMsgBuff(
     flexcan_msgbuff_t *msgBuff);
 
 /*!
- * @brief Locks the FlexCAN Rx message buffer.
+ * @brief Locks the FlexCAN receive message buffer.
  *
  * @param   base  The FlexCAN base address
  * @param   msgBuffIdx       Index of the message buffer
@@ -396,7 +393,7 @@ flexcan_status_t FLEXCAN_HAL_LockRxMsgBuff(
     uint32_t msgBuffIdx);
 
 /*!
- * @brief Unlocks the FlexCAN Rx message buffer.
+ * @brief Unlocks the FlexCAN receive message buffer.
  *
  * @param   base     The FlexCAN base address
  * @return  0 if successful; non-zero failed
@@ -410,45 +407,45 @@ static inline uint32_t FLEXCAN_HAL_UnlockRxMsgBuff(CAN_Type * base)
 }
 
 /*!
- * @brief Enables the Rx FIFO.
+ * @brief Enables the receive FIFO.
  *
  * @param   base     The FlexCAN base address
- * @param   numOfFilters    The number of Rx FIFO filters
+ * @param   numOfFilters    The number of receive FIFO filters
  */
 void FLEXCAN_HAL_EnableRxFifo(CAN_Type * base, uint32_t numOfFilters);
 
 /*!
- * @brief Disables the Rx FIFO.
+ * @brief Disables the receive FIFO.
  *
  * @param   base     The FlexCAN base address
  */
 void FLEXCAN_HAL_DisableRxFifo(CAN_Type * base);
 
 /*!
- * @brief Sets the number of the Rx FIFO filters.
+ * @brief Sets the number of the receive FIFO filters.
  *
  * @param   base  The FlexCAN base address
- * @param   number       The number of Rx FIFO filters
+ * @param   number       The number of receive FIFO filters
  */
 void FLEXCAN_HAL_SetRxFifoFilterNum(CAN_Type * base, uint32_t number);
 
 /*!
- * @brief Sets  the maximum number of Message Buffers.
+ * @brief Sets  the number of the last message buffer.
  *
  * @param   base  The FlexCAN base address
- * @param   maxMsgBuffNum     Maximum number of message buffers
+ * @param   maxMsgBuffNum     Number of the last Message Buffer
  */
 void FLEXCAN_HAL_SetMaxMsgBuffNum(
     CAN_Type * base,
     uint32_t maxMsgBuffNum);
 
 /*!
- * @brief Sets the FlexCAN Rx FIFO fields.
+ * @brief Sets the FlexCAN receive FIFO fields.
  *
  * @param   base             The FlexCAN base address
- * @param   idFormat               The format of the Rx FIFO ID Filter Table Elements
+ * @param   idFormat               The format of the receive FIFO ID Filter Table Elements
  * @param   idFilterTable         The ID filter table elements which contain RTR bit, IDE bit,
- *                                  and RX message ID.
+ *                                  and receive message ID.
  * @return  0 if successful; non-zero failed.
  */
 flexcan_status_t FLEXCAN_HAL_SetRxFifoFilter(
@@ -457,7 +454,7 @@ flexcan_status_t FLEXCAN_HAL_SetRxFifoFilter(
     flexcan_id_table_t *idFilterTable);
 
 /*!
- * @brief Gets the FlexCAN Rx FIFO data.
+ * @brief Gets the FlexCAN receive FIFO data.
  *
  * @param   base  The FlexCAN base address
  * @param   rxFifo      The FlexCAN receive FIFO data
@@ -475,7 +472,7 @@ flexcan_status_t FLEXCAN_HAL_ReadRxFifo(
  */
 
 /*!
- * @brief Enables/Disables the FlexCAN Message Buffer interrupt.
+ * @brief Enables/disables the FlexCAN message buffer interrupt.
  *
  * @param   base  The FlexCAN base address
  * @param   msgBuffIdx       Index of the message buffer
@@ -487,7 +484,7 @@ flexcan_status_t FLEXCAN_HAL_SetMsgBuffIntCmd(
     uint32_t msgBuffIdx, bool enable);
 
 /*!
- * @brief Enables error interrupt of the FlexCAN module.
+ * @brief Enables the error interrupt of the FlexCAN module.
  * @param   base     The FlexCAN base address
  * @param   errType     The interrupt type
  * @param   enable       choose enable or disable
@@ -502,7 +499,7 @@ void FLEXCAN_HAL_SetErrIntCmd(CAN_Type * base, flexcan_int_type_t errType, bool 
  */
 
 /*!
- * @brief Gets the value of FlexCAN freeze ACK.
+ * @brief Gets the value of the FlexCAN freeze ACK.
  *
  * @param   base     The FlexCAN base address
  * @return  freeze ACK state (1-freeze mode, 0-not in freeze mode).
@@ -524,7 +521,7 @@ uint8_t FLEXCAN_HAL_GetMsgBuffIntStatusFlag(
     uint32_t msgBuffIdx);
 
 /*!
- * @brief Gets all FlexCAN Message Buffer interrupt flags.
+ * @brief Gets all FlexCAN message buffer interrupt flags.
  *
  * @param   base     The FlexCAN base address
  * @return  all MB interrupt flags
@@ -560,7 +557,7 @@ void FLEXCAN_HAL_GetErrCounter(
     flexcan_buserr_counter_t *errCount);
 
 /*!
- * @brief Gets error and status.
+ * @brief Gets an error and status.
  *
  * @param   base     The FlexCAN base address
  * @return  The current error and status
@@ -571,7 +568,7 @@ static inline uint32_t FLEXCAN_HAL_GetErrStatus(CAN_Type * base)
 }
 
 /*!
- * @brief Clears all other interrupts in ERRSTAT register (Error, Busoff, Wakeup).
+ * @brief Clears all other interrupts in ERRSTAT register (Error, Busoff, and Wakeup).
  *
  * @param   base     The FlexCAN base address
  */
@@ -585,15 +582,15 @@ void FLEXCAN_HAL_ClearErrIntStatusFlag(CAN_Type * base);
  */
 
 /*!
- * @brief Sets the Rx masking type.
+ * @brief Sets the receive masking type.
  *
  * @param   base  The FlexCAN base address
- * @param   type         The FlexCAN Rx mask type
+ * @param   type         The FlexCAN receive mask type
  */
 void FLEXCAN_HAL_SetRxMaskType(CAN_Type * base, flexcan_rx_mask_type_t type);
 
 /*!
- * @brief Sets the FlexCAN RX FIFO global standard mask.
+ * @brief Sets the FlexCAN receive FIFO global standard mask.
  *
  * @param   base  The FlexCAN base address
  * @param   stdMask     Standard mask
@@ -603,7 +600,7 @@ void FLEXCAN_HAL_SetRxFifoGlobalStdMask(
     uint32_t stdMask);
 
 /*!
- * @brief Sets the FlexCAN Rx FIFO global extended mask.
+ * @brief Sets the FlexCAN receive FIFO global extended mask.
  *
  * @param   base  The FlexCAN base address
  * @param   extMask     Extended mask
@@ -613,7 +610,7 @@ void FLEXCAN_HAL_SetRxFifoGlobalExtMask(
     uint32_t extMask);
 
 /*!
- * @brief Sets the FlexCAN Rx individual standard mask for ID filtering in the Rx MBs and the Rx FIFO.
+ * @brief Sets the FlexCAN receive individual standard mask for ID filtering in the receive MBs and the receive FIFO.
  *
  * @param   base  The FlexCAN base address
  * @param   msgBuffIdx       Index of the message buffer
@@ -626,7 +623,7 @@ flexcan_status_t FLEXCAN_HAL_SetRxIndividualStdMask(
     uint32_t stdMask);
 
 /*!
- * @brief Sets the FlexCAN Rx individual extended mask for ID filtering in the Rx Message Buffers and the Rx FIFO.
+ * @brief Sets the FlexCAN receive individual extended mask for ID filtering in the receive Message Buffers and the receive FIFO.
  *
  * @param   base  The FlexCAN base address
  * @param   msgBuffIdx       Index of the message buffer
@@ -639,7 +636,7 @@ flexcan_status_t FLEXCAN_HAL_SetRxIndividualExtMask(
     uint32_t extMask);
 
 /*!
- * @brief Sets the FlexCAN Rx Message Buffer global standard mask.
+ * @brief Sets the FlexCAN receive Message Buffer global standard mask.
  *
  * @param   base  The FlexCAN base address
  * @param   stdMask     Standard mask
@@ -649,7 +646,7 @@ void FLEXCAN_HAL_SetRxMsgBuffGlobalStdMask(
     uint32_t stdMask);
 
 /*!
- * @brief Sets the FlexCAN RX Message Buffer BUF14 standard mask.
+ * @brief Sets the FlexCAN receive Message Buffer BUF14 standard mask.
  *
  * @param   base  The FlexCAN base address
  * @param   stdMask     Standard mask
@@ -659,18 +656,17 @@ void FLEXCAN_HAL_SetRxMsgBuff14StdMask(
     uint32_t stdMask);
 
 /*!
- * @brief Sets the FlexCAN Rx Message Buffer BUF15 standard mask.
+ * @brief Sets the FlexCAN receive Message Buffer BUF15 standard mask.
  *
  * @param   base  The FlexCAN base address
  * @param   stdMask     Standard mask
- * @return  0 if successful; non-zero failed
  */
 void FLEXCAN_HAL_SetRxMsgBuff15StdMask(
     CAN_Type * base,
     uint32_t stdMask);
 
 /*!
- * @brief Sets the FlexCAN RX Message Buffer global extended mask.
+ * @brief Sets the FlexCAN receive Message Buffer global extended mask.
  *
  * @param   base  The FlexCAN base address
  * @param   extMask     Extended mask
@@ -680,7 +676,7 @@ void FLEXCAN_HAL_SetRxMsgBuffGlobalExtMask(
     uint32_t extMask);
 
 /*!
- * @brief Sets the FlexCAN RX Message Buffer BUF14 extended mask.
+ * @brief Sets the FlexCAN receive Message Buffer BUF14 extended mask.
  *
  * @param   base  The FlexCAN base address
  * @param   extMask     Extended mask
@@ -690,7 +686,7 @@ void FLEXCAN_HAL_SetRxMsgBuff14ExtMask(
     uint32_t extMask);
 
 /*!
- * @brief Sets the FlexCAN RX MB BUF15 extended mask.
+ * @brief Sets the FlexCAN receive MB BUF15 extended mask.
  *
  * @param   base  The FlexCAN base address
  * @param   extMask     Extended mask
@@ -700,10 +696,10 @@ void FLEXCAN_HAL_SetRxMsgBuff15ExtMask(
     uint32_t extMask);
 
 /*!
- * @brief Gets the FlexCAN ID acceptance filter hit indicator on Rx FIFO.
+ * @brief Gets the FlexCAN ID acceptance filter hit indicator on receive FIFO.
  *
  * @param   base  The FlexCAN base address
- * @return  RX FIFO information
+ * @return  receive FIFO information
  */
 static inline uint32_t  FLEXCAN_HAL_GetRxFifoHitIdAcceptanceFilter(CAN_Type * base)
 {

@@ -34,7 +34,7 @@
 #include "fsl_hwtimer.h"
 
 /*! @brief Instance of hwtimer_devif_t structure initialized
- * with pointers to API functions the  systick driver implements
+ * with pointers to API functions that the  Systick driver implements
  */
 extern const hwtimer_devif_t kSystickDevif;
 

@@ -7,14 +7,14 @@
 **                          MKV10Z128VLH7
 **
 **     Compiler:            Keil ARM C/C++ Compiler
-**     Reference manual:    KV11P64M75RM Rev.0, November 2014
+**     Reference manual:    KV11P64M75RM Rev.2, April 2015
 **     Version:             rev. 1.0, 2014-12-14
-**     Build:               b150317
+**     Build:               b150629
 **
 **     Abstract:
 **         Linker file for the Keil ARM C/C++ Compiler
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,

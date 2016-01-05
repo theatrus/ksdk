@@ -28,22 +28,22 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -T${ProjDirPat
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -T${ProjDirPath}/../../../../../platform/devices/MKW24D5/linker/gcc/MKW24D512xxx5_flash.ld  -static")
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -Xlinker --defsym=__ram_vector_table__=1  -mcpu=cortex-m4  -mfloat-abi=soft  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -mcpu=cortex-m4  -mfloat-abi=soft  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__ram_vector_table__=1  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -mcpu=cortex-m4  -mfloat-abi=soft  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Xlinker --defsym=__ram_vector_table__=1  -mcpu=cortex-m4  -mfloat-abi=soft  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -mcpu=cortex-m4  -mfloat-abi=soft  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__ram_vector_table__=1  -Xlinker --defsym=__stack_size__=0x2000  -Xlinker --defsym=__heap_size__=0x2000")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -78,7 +78,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/adapter/sources/sdk)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/hal)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/include/usbkw24d512)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/include/MKW24D5)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/classes/cdc)
@@ -90,7 +90,6 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/classes/phdc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/controller/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/controller)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/osa/inc)
@@ -107,7 +106,7 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/adapter/sources/sdk)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/hal)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/include)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/include/usbkw24d512)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/include/MKW24D5)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/classes/cdc)
@@ -119,7 +118,6 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/classes/phdc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/controller/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../usb/usb_core/device/sources/controller)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../platform/utilities/inc)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../..)
 ENDIF()
 
@@ -135,31 +133,31 @@ ADD_EXECUTABLE(adc_low_power
     "${ProjDirPath}/../../../../../platform/utilities/inc/fsl_debug_console.h"
     "${ProjDirPath}/../../../../../platform/utilities/src/print_scan.c"
     "${ProjDirPath}/../../../../../platform/utilities/src/print_scan.h"
-    "${ProjDirPath}/../../../../../platform/devices/MKW24D5/startup/system_MKW24D5.c"
-    "${ProjDirPath}/../../../../../platform/devices/startup.c"
-    "${ProjDirPath}/../../../../../platform/devices/startup.h"
+    "${ProjDirPath}/../main.c"
+    "${ProjDirPath}/../adc_low_power.h"
+    "${ProjDirPath}/../fsl_adc_irq.c"
+    "${ProjDirPath}/../lptmr_trigger.c"
+    "${ProjDirPath}/../hardware_init.c"
     "${ProjDirPath}/../../../gpio_pins.c"
     "${ProjDirPath}/../../../gpio_pins.h"
     "${ProjDirPath}/../../../pin_mux.c"
     "${ProjDirPath}/../../../pin_mux.h"
     "${ProjDirPath}/../../../board.c"
     "${ProjDirPath}/../../../board.h"
-    "${ProjDirPath}/../hardware_init.c"
-    "${ProjDirPath}/../main.c"
-    "${ProjDirPath}/../adc_low_power.h"
-    "${ProjDirPath}/../fsl_adc_irq.c"
-    "${ProjDirPath}/../lptmr_trigger.c"
+    "${ProjDirPath}/../../../../../platform/devices/MKW24D5/startup/system_MKW24D5.c"
+    "${ProjDirPath}/../../../../../platform/devices/startup.c"
+    "${ProjDirPath}/../../../../../platform/devices/startup.h"
 )
 SET_TARGET_PROPERTIES(adc_low_power PROPERTIES OUTPUT_NAME "adc_low_power.elf")
 
 TARGET_LINK_LIBRARIES(adc_low_power -Wl,--start-group)
 # LIBRARIES
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
-    TARGET_LINK_LIBRARIES(adc_low_power ${ProjDirPath}/../../../../../usb/usb_core/device/build/armgcc/usbd_sdk_usbkw24d512_bm/debug/libusbd_bm.a)
     TARGET_LINK_LIBRARIES(adc_low_power ${ProjDirPath}/../../../../../lib/ksdk_platform_lib/armgcc/KW24D5/debug/libksdk_platform.a)
+    TARGET_LINK_LIBRARIES(adc_low_power ${ProjDirPath}/../../../../../usb/usb_core/device/lib/bm/armgcc/MKW24D5/debug/libusbd_bm.a)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
-    TARGET_LINK_LIBRARIES(adc_low_power ${ProjDirPath}/../../../../../usb/usb_core/device/build/armgcc/usbd_sdk_usbkw24d512_bm/release/libusbd_bm.a)
     TARGET_LINK_LIBRARIES(adc_low_power ${ProjDirPath}/../../../../../lib/ksdk_platform_lib/armgcc/KW24D5/release/libksdk_platform.a)
+    TARGET_LINK_LIBRARIES(adc_low_power ${ProjDirPath}/../../../../../usb/usb_core/device/lib/bm/armgcc/MKW24D5/release/libusbd_bm.a)
 ENDIF()
 
 # SYSTEM LIBRARIES

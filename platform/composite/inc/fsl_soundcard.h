@@ -427,7 +427,7 @@ snd_status_t SND_SetVolume(sound_card_t *card, uint32_t volume);
 uint32_t SND_GetVolume(sound_card_t *card);
 
 #if defined(__cplusplus)
-extern "C" }
+}
 #endif
 
 /*! @} */

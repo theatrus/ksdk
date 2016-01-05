@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<workspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="workingsets.xsd">
-  <projects>
-  <project><name>ksdk_platform_lib_KV46F15</name><path>../../../../../lib/ksdk_platform_lib/kds/KV46F15</path><open>true</open><activeconfig>debug</activeconfig><buildreferences config="debug">false</buildreferences><activeconfig>release</activeconfig><buildreferences config="release">false</buildreferences></project><project><name>pit_example_twrkv46f150m</name><path>.</path><open>true</open><activeconfig>debug</activeconfig><buildreferences config="debug">false</buildreferences><activeconfig>release</activeconfig><buildreferences config="release">false</buildreferences></project></projects>
-  <workingsets>
-  <workingSet editPageId="org.eclipse.cdt.ui.CElementWorkingSetPage" id="1323268527287_1" label="pit_example" name="pit_example"><item factoryID="org.eclipse.cdt.ui.PersistableCElementFactory" path="/ksdk_platform_lib_KV46F15" type="4"/><item factoryID="org.eclipse.cdt.ui.PersistableCElementFactory" path="/pit_example_twrkv46f150m" type="4"/></workingSet></workingsets>
-  <cdtconfigurations>
-  <workingSet name="pit_example"><config name="debug"><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="ksdk_platform_lib_KV46F15" configName="debug"/><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="pit_example_twrkv46f150m" configName="debug"/></config><config name="release"><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="ksdk_platform_lib_KV46F15" configName="release"/><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="pit_example_twrkv46f150m" configName="release"/></config></workingSet></cdtconfigurations>
-</workspace>

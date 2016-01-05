@@ -39,11 +39,7 @@
 extern "C" {
 #endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)            /* USB stack running on MQX */
-#include "adapter_mqx.h"
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)        /* USB stack running on BM  */
-#include "adapter_bm.h"
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)        /* USB stack running on SDK  */
+#if(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)        /* USB stack running on SDK  */
 #include "adapter_sdk.h"
 #endif
 

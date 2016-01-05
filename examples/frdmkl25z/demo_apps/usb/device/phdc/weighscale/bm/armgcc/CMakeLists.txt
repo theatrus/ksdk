@@ -28,22 +28,22 @@ set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -T${ProjDirPat
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -T${ProjDirPath}/../../../../../../../../../platform/devices/MKL25Z4/linker/gcc/MKL25Z128xxx4_flash.ld  -static")
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG} -g  -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -Wno-format  -fno-strict-aliasing  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -Wno-format  -fno-strict-aliasing  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # DEBUG LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -Xlinker --defsym=__ram_vector_table__=1  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x0400  -Xlinker --defsym=__heap_size__=0x0400")
+SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g  -Xlinker --defsym=__ram_vector_table__=1  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x0400  -Xlinker --defsym=__heap_size__=0x0400")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE} -mcpu=cortex-m0plus  -mthumb  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wno-format  -fno-strict-aliasing  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mapcs  -std=gnu99")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -Wno-format  -fno-strict-aliasing  -mcpu=cortex-m0plus  -mthumb  -MMD  -MP  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mapcs  -std=gnu99")
 
 # RELEASE LD FLAGS
-SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Xlinker --defsym=__ram_vector_table__=1  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x0400  -Xlinker --defsym=__heap_size__=0x0400")
+SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Xlinker --defsym=__ram_vector_table__=1  --specs=nano.specs  -lm  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -Xlinker --gc-sections  -Xlinker -static  -Xlinker -z  -Xlinker muldefs  -Xlinker --defsym=__stack_size__=0x0400  -Xlinker --defsym=__heap_size__=0x0400")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -71,7 +71,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/adapter/sources)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/adapter/sources/sdk)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include/frdmkl25z)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include/MKL25Z4)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/cdc)
@@ -82,10 +82,11 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/include/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/msd)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/phdc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/video)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/hal)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include/frdmkl25z)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include/MKL25Z4)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/sources/classes/cdc)
@@ -114,7 +115,7 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../..)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/adapter/sources)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/adapter/sources/sdk)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include/frdmkl25z)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include/MKL25Z4)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/cdc)
@@ -125,10 +126,11 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/include/config)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/msd)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/phdc)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/classes/video)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller/khci)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/device/sources/controller)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/hal)
-    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include/frdmkl25z)
+    INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include/MKL25Z4)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/include)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/sources/classes/audio)
     INCLUDE_DIRECTORIES(${ProjDirPath}/../../../../../../../../../usb/usb_core/host/sources/classes/cdc)
@@ -153,20 +155,6 @@ ENDIF()
 ADD_EXECUTABLE(dev_phdc_weighscale_bm 
     "${ProjDirPath}/../../../../../../../../../platform/utilities/src/fsl_misc_utilities.c"
     "${ProjDirPath}/../../../../../../../../../platform/devices/MKL25Z4/startup/gcc/startup_MKL25Z4.S"
-    "${ProjDirPath}/../../../../../../../../../platform/utilities/src/fsl_debug_console.c"
-    "${ProjDirPath}/../../../../../../../../../platform/utilities/inc/fsl_debug_console.h"
-    "${ProjDirPath}/../../../../../../../../../platform/utilities/src/print_scan.c"
-    "${ProjDirPath}/../../../../../../../../../platform/utilities/src/print_scan.h"
-    "${ProjDirPath}/../../../../../../../../../platform/devices/MKL25Z4/startup/system_MKL25Z4.c"
-    "${ProjDirPath}/../../../../../../../../../platform/devices/startup.c"
-    "${ProjDirPath}/../../../../../../../../../platform/devices/startup.h"
-    "${ProjDirPath}/../../../../../../../gpio_pins.c"
-    "${ProjDirPath}/../../../../../../../gpio_pins.h"
-    "${ProjDirPath}/../../../../../../../pin_mux.c"
-    "${ProjDirPath}/../../../../../../../pin_mux.h"
-    "${ProjDirPath}/../../../../../../../board.h"
-    "${ProjDirPath}/../../../../../../../board.c"
-    "${ProjDirPath}/../../hardware_init.c"
     "${ProjDirPath}/../../ieee11073_nom_codes.h"
     "${ProjDirPath}/../../ieee11073_phd_types.h"
     "${ProjDirPath}/../../phd_com_model.c"
@@ -175,16 +163,30 @@ ADD_EXECUTABLE(dev_phdc_weighscale_bm
     "${ProjDirPath}/../../usb_descriptor.h"
     "${ProjDirPath}/../../weighscale.c"
     "${ProjDirPath}/../../weighscale.h"
+    "${ProjDirPath}/../../hardware_init.c"
+    "${ProjDirPath}/../../../../../../../gpio_pins.c"
+    "${ProjDirPath}/../../../../../../../gpio_pins.h"
+    "${ProjDirPath}/../../../../../../../pin_mux.c"
+    "${ProjDirPath}/../../../../../../../pin_mux.h"
+    "${ProjDirPath}/../../../../../../../board.h"
+    "${ProjDirPath}/../../../../../../../board.c"
+    "${ProjDirPath}/../../../../../../../../../platform/utilities/src/fsl_debug_console.c"
+    "${ProjDirPath}/../../../../../../../../../platform/utilities/inc/fsl_debug_console.h"
+    "${ProjDirPath}/../../../../../../../../../platform/utilities/src/print_scan.c"
+    "${ProjDirPath}/../../../../../../../../../platform/utilities/src/print_scan.h"
+    "${ProjDirPath}/../../../../../../../../../platform/devices/MKL25Z4/startup/system_MKL25Z4.c"
+    "${ProjDirPath}/../../../../../../../../../platform/devices/startup.c"
+    "${ProjDirPath}/../../../../../../../../../platform/devices/startup.h"
 )
 SET_TARGET_PROPERTIES(dev_phdc_weighscale_bm PROPERTIES OUTPUT_NAME "dev_phdc_weighscale_bm.elf")
 
 TARGET_LINK_LIBRARIES(dev_phdc_weighscale_bm -Wl,--start-group)
 # LIBRARIES
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
-    TARGET_LINK_LIBRARIES(dev_phdc_weighscale_bm ${ProjDirPath}/../../../../../../../../../usb/usb_core/device/build/armgcc/usbd_sdk_frdmkl25z_bm/debug/libusbd_bm.a)
+    TARGET_LINK_LIBRARIES(dev_phdc_weighscale_bm ${ProjDirPath}/../../../../../../../../../usb/usb_core/device/lib/bm/armgcc/MKL25Z4/debug/libusbd_bm.a)
     TARGET_LINK_LIBRARIES(dev_phdc_weighscale_bm ${ProjDirPath}/../../../../../../../../../lib/ksdk_platform_lib/armgcc/KL25Z4/debug/libksdk_platform.a)
 ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
-    TARGET_LINK_LIBRARIES(dev_phdc_weighscale_bm ${ProjDirPath}/../../../../../../../../../usb/usb_core/device/build/armgcc/usbd_sdk_frdmkl25z_bm/release/libusbd_bm.a)
+    TARGET_LINK_LIBRARIES(dev_phdc_weighscale_bm ${ProjDirPath}/../../../../../../../../../usb/usb_core/device/lib/bm/armgcc/MKL25Z4/release/libusbd_bm.a)
     TARGET_LINK_LIBRARIES(dev_phdc_weighscale_bm ${ProjDirPath}/../../../../../../../../../lib/ksdk_platform_lib/armgcc/KL25Z4/release/libksdk_platform.a)
 ENDIF()
 

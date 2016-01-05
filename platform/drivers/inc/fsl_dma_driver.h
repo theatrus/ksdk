@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -39,7 +39,7 @@
 #include "fsl_os_abstraction.h"
 #if FSL_FEATURE_SOC_DMA_COUNT
 
-/*! 
+/*!
  * @addtogroup dma_driver
  * @{
  */
@@ -52,7 +52,7 @@ extern DMA_Type * const g_dmaBase[DMA_INSTANCE_COUNT];
 /*! @brief Array for DMAMUX module register base address. */
 extern DMAMUX_Type * const g_dmamuxBase[DMAMUX_INSTANCE_COUNT];
 
-/*! @brief Two-dimensional array for EDMA channel interrupt vector number. */
+/*! @brief Two-dimensional array for eDMA channel interrupt vector number. */
 extern const IRQn_Type g_dmaIrqId[DMA_INSTANCE_COUNT][FSL_FEATURE_DMA_DMAMUX_CHANNELS];
 
 /*!
@@ -84,8 +84,8 @@ typedef void (*dma_callback_t)(void *parameter, dma_channel_status_t status);
 /*! @brief Data structure for the DMA channel management. */
 typedef struct DmaChannel {
     uint8_t channel;            /*!< Channel number */
-    uint8_t dmamuxModule;       /*!< Dmamux module index */
-    uint8_t dmamuxChannel;      /*!< Dmamux module channel */
+    uint8_t dmamuxModule;       /*!< DMAMUX module index */
+    uint8_t dmamuxChannel;      /*!< DMAMUX module channel */
     dma_callback_t callback;    /*!< Callback function for this channel */
     void *parameter;            /*!< Parameter for the callback function */
     volatile dma_channel_status_t status;/*!< Channel status */
@@ -107,7 +107,7 @@ typedef struct DmaState {
 extern "C" {
 #endif
 
-/*! 
+/*!
  * @name DMA Driver
  * @{
  */
@@ -128,12 +128,32 @@ dma_status_t DMA_DRV_Init(dma_state_t *state);
 dma_status_t DMA_DRV_Deinit(void);
 
 /*!
+ * @brief Updates the DMA destination transfer size.
+ *
+ * @param chn A handler for the DMA channel
+ * @param transferSize Size of destination at each transfer
+ *
+ * @return If successful, returns the kStatus_DMA_Success. Otherwise, it returns an error.
+ */
+dma_status_t DMA_DRV_SetDestTransferSize(dma_channel_t *chn, uint32_t transferSize);
+
+/*!
+ * @brief Updates the DMA source transfer size.
+ *
+ * @param chn A handler for the DMA channel
+ * @param transferSize Size of source at each transfer
+ *
+ * @return If successful, returns the kStatus_DMA_Success. Otherwise, it returns an error.
+ */
+dma_status_t DMA_DRV_SetSourceTransferSize(dma_channel_t *chn, uint32_t transferSize);
+
+/*!
  * @brief Registers the callback function and a parameter.
  *
  * The user registers the callback function and a parameter for a specified DMA channel. When the channel
  * interrupt or a channel error happens, the callback and the parameter are called.
  * The user parameter is also provided to give a channel status.
- * 
+ *
  * @param chn  A handler for the DMA channel
  * @param callback Callback function
  * @param para  A parameter for callback functions
@@ -168,8 +188,8 @@ dma_status_t DMA_DRV_ClaimChannel(
  * @brief Requests a DMA channel.
  *
  * This function provides two ways to allocate a DMA channel: static and dynamic allocation.
- * To allocate a channel dynamically, set the channel parameter with the value of 
- * kDmaAnyChannel. The driver searches all available free channels and assigns the first 
+ * To allocate a channel dynamically, set the channel parameter with the value of
+ * kDmaAnyChannel. The driver searches all available free channels and assigns the first
  * channel to the user.
  * To allocate the channel statically, set the channel parameter with the value of a specified
  * channel. If the channel is available, the driver assigns the channel.
@@ -193,8 +213,8 @@ uint32_t DMA_DRV_RequestChannel(
 /*!
  * @brief Frees DMA channel hardware and software resource.
  *
- * This function frees the relevant software and hardware resources. Both the request and the free operations need to 
- * be called as a pair. 
+ * This function frees the relevant software and hardware resources. Both the request and the free operations need to
+ * be called as a pair.
  *
  * @param chn Memory pointing to DMA channel.
  * @return If successful, returns the kStatus_DMA_Success. Otherwise, it returns an error.
@@ -224,7 +244,7 @@ dma_status_t DMA_DRV_StopChannel(dma_channel_t *chn);
 /*!
  * @brief Configures a transfer for the DMA.
  *
- * Configures a transfer for the DMA. 
+ * Configures a transfer for the DMA.
  *
  * @param chn Memory pointing to the DMA channel.
  * @param type Transfer type.
@@ -249,12 +269,11 @@ dma_status_t DMA_DRV_ConfigTransfer(
 dma_status_t DMA_DRV_ConfigChanLink(
         dma_channel_t *chn, dma_channel_link_config_t *link_config);
 
-
 /*!
  * @brief DMA IRQ handler for both an interrupt and an error.
  *
  * @param channel DMA channel number.
- * 
+ *
  */
 void DMA_DRV_IRQhandler(uint32_t channel);
 

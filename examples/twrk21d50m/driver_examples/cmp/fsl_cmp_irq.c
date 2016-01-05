@@ -28,6 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "fsl_clock_manager.h"
 #include "fsl_cmp_driver.h"
 
 
@@ -35,6 +36,57 @@ extern void CMP_UserIsr(void);
 /******************************************************************************
  * IRQ Handlers
  *****************************************************************************/
+#if defined (KM34Z7_SERIES)
+/* CMP IRQ handler that would cover the same name's APIs in startup code. */
+void CMP0_CMP1_CMP2_IRQHandler(void)
+{
+    if (CLOCK_SYS_GetCmpGateCmd(0))
+    {
+        /* Add user-defined ISR for CMP0. */
+        CMP_UserIsr();
+        /* Clear flags. */
+        if ( CMP_DRV_GetFlag(0U, kCmpFlagOfCoutRising) )
+        {
+            CMP_DRV_ClearFlag(0U, kCmpFlagOfCoutRising);
+        }
+        if ( CMP_DRV_GetFlag(0U, kCmpFlagOfCoutFalling) )
+        {
+            CMP_DRV_ClearFlag(0U, kCmpFlagOfCoutFalling);
+        }
+    }
+
+    if (CLOCK_SYS_GetCmpGateCmd(1))
+    {
+        /* Add user-defined ISR for CMP0. */
+        CMP_UserIsr();
+        /* Clear flags. */
+        if ( CMP_DRV_GetFlag(1U, kCmpFlagOfCoutRising) )
+        {
+            CMP_DRV_ClearFlag(1U, kCmpFlagOfCoutRising);
+        }
+        if ( CMP_DRV_GetFlag(1U, kCmpFlagOfCoutFalling) )
+        {
+            CMP_DRV_ClearFlag(1U, kCmpFlagOfCoutFalling);
+        }
+    }
+
+    if (CLOCK_SYS_GetCmpGateCmd(2))
+    {
+        /* Add user-defined ISR for CMP0. */
+        CMP_UserIsr();
+        /* Clear flags. */
+        if ( CMP_DRV_GetFlag(2U, kCmpFlagOfCoutRising) )
+        {
+            CMP_DRV_ClearFlag(2U, kCmpFlagOfCoutRising);
+        }
+        if ( CMP_DRV_GetFlag(2U, kCmpFlagOfCoutFalling) )
+        {
+            CMP_DRV_ClearFlag(2U, kCmpFlagOfCoutFalling);
+        }
+    }
+}
+
+#else
 /* CMP IRQ handler that would cover the same name's APIs in startup code. */
 void CMP0_IRQHandler(void)
 {
@@ -80,6 +132,7 @@ void CMP2_IRQHandler(void)
         CMP_DRV_ClearFlag(2U, kCmpFlagOfCoutFalling);
     }
 }
+#endif
 
 /*******************************************************************************
  * EOF

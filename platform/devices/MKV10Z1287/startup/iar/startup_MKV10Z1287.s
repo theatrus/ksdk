@@ -4,7 +4,7 @@
 ;            MKV10Z1287
 ;  @version: 1.0
 ;  @date:    2014-12-14
-;  @build:   b150202
+;  @build:   b150313
 ; ---------------------------------------------------------------------------------------
 ;
 ; Copyright (c) 1997 - 2015 , Freescale Semiconductor, Inc.
@@ -96,7 +96,7 @@ __vector_table_0x1c
         DCD     DMA_Error_IRQHandler                          ;DMA error interrupt channels 0-7
         DCD     FTFA_IRQHandler                               ;FTFA command complete and read collision
         DCD     LVD_LVW_IRQHandler                            ;Low-voltage detect, low-voltage warning
-        DCD     LLW_IRQHandler                                ;Low Leakage Wakeup
+        DCD     LLWU_IRQHandler                               ;Low Leakage Wakeup
         DCD     I2C0_IRQHandler                               ;I2C0 interrupt
         DCD     Reserved25_IRQHandler                         ;Reserved interrupt
         DCD     SPI0_IRQHandler                               ;SPI0 single interrupt vector for all sources
@@ -185,7 +185,7 @@ SysTick_Handler
         PUBWEAK DMA_Error_IRQHandler
         PUBWEAK FTFA_IRQHandler
         PUBWEAK LVD_LVW_IRQHandler
-        PUBWEAK LLW_IRQHandler
+        PUBWEAK LLWU_IRQHandler
         PUBWEAK I2C0_IRQHandler
         PUBWEAK Reserved25_IRQHandler
         PUBWEAK SPI0_IRQHandler
@@ -219,7 +219,7 @@ DMA3_DMA7_IRQHandler
 DMA_Error_IRQHandler
 FTFA_IRQHandler
 LVD_LVW_IRQHandler
-LLW_IRQHandler
+LLWU_IRQHandler
 I2C0_IRQHandler
 Reserved25_IRQHandler
 SPI0_IRQHandler

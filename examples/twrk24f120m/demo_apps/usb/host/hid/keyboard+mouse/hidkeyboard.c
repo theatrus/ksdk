@@ -43,17 +43,6 @@
 #include "usb_host_hub_sm.h"
 #include "mouse_keyboard.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-
-#endif
 /************************************************************************************
  **
  ** Globals
@@ -76,6 +65,7 @@ volatile uint32_t sleep_test = FALSE;
 #define USB_EVENT_DATA           (0x02)
 #define USB_EVENT_DATA_CORRUPTED (0x04)
 #define USB_EVEN_OUTPUT          (0x08)
+#define USB_EVENT_STATE_CHANGE   (0x10)
 
 void Keyboard_Task(void* param);
 void Long_Press_Task(uint32_t param);
@@ -150,7 +140,6 @@ uint32_t shift = 0;
 uint8_t buffer_timer[8] = { 0 };
 uint32_t g_current_time = 0;
 uint32_t flag_time[8] = { 0 };
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_hwtimer.h"
 hwtimer_t hwtimer;
 extern const hwtimer_devif_t kSystickDevif;
@@ -204,112 +193,57 @@ void time_init(void)
 
     OS_intr_init(HWTIMER_IRQ_NUM, HWTIMER_IRQ_PRI, 0, TRUE);
 }
-#elif(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-void Long_Press_Task ( uint32_t param )
+
+
+static void update_state(void)
 {
-
-    while((kbd_usb_event==NULL) || !OS_Event_check_bit(kbd_usb_event, USB_EVEN_INIT))
+    if (kbd_hid_device.state_change != 0)
     {
-        OS_Time_delay(250);
-    }
-
-    OS_Event_clear(kbd_usb_event, USB_EVEN_INIT);
-    while(1)
-    {
-        OS_Time_delay(10);
-        g_current_time++;
-        OS_Event_set(kbd_usb_event, USB_EVEN_OUTPUT);
-
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_ATTACHED)
+        {
+            if (kbd_hid_device.DEV_STATE == USB_DEVICE_IDLE)
+            {
+                kbd_hid_device.DEV_STATE = USB_DEVICE_ATTACHED;
+            }
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_ATTACHED);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_OPENED)
+        {
+            if (kbd_hid_device.DEV_STATE != USB_DEVICE_DETACHED)
+            {
+                kbd_hid_device.DEV_STATE = USB_DEVICE_INTERFACE_OPENED;
+            }
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_OPENED);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_DETACHED)
+        {
+            kbd_hid_device.DEV_STATE = USB_DEVICE_DETACHED;
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_DETACHED);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_IDLE)
+        {
+            kbd_hid_device.DEV_STATE = USB_DEVICE_IDLE;
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_IDLE);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_DESCRIPTOR_DONE)
+        {
+            if (kbd_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR)
+            {
+                kbd_hid_device.DEV_STATE = USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE;
+            }
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_DESCRIPTOR_DONE);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_INUSE)
+        {
+            if (kbd_hid_device.DEV_STATE == USB_DEVICE_SETTING_PROTOCOL)
+            {
+                kbd_hid_device.DEV_STATE = USB_DEVICE_INUSE;
+            }
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_INUSE);
+        }
     }
 }
-#elif(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "rtc_kinetis.h"
-static timer_object_t time_obj;
-static uint8_t time_index;
-void press_timer_isr()
-{
-    g_current_time ++;
-    OS_Event_set(kbd_usb_event, USB_EVEN_OUTPUT);;
-}
-void time_init(void)
-{
-#if !MAX_TIMER_OBJECTS
-    TimerQInitialize(0);
-#endif
-    time_obj.ms_count = 10;
-    time_obj.pfn_timer_callback = (pfntimer_callback_t)press_timer_isr;
-    time_index = AddTimerQ(&time_obj, NULL);
-}
 
-#endif
-static void update_state(uint32_t next_state)
-{
-    if (kbd_hid_device.STATE_MUTEX != NULL)
-    {
-        OS_Mutex_lock(kbd_hid_device.STATE_MUTEX);
-    }
-    else
-    {
-        printf("keyboard state mutex is NULL\r\n");
-    }
-    switch(next_state)
-    {
-    case USB_DEVICE_ATTACHED:
-        if (kbd_hid_device.DEV_STATE == USB_DEVICE_IDLE)
-        {
-            kbd_hid_device.DEV_STATE = next_state;
-        }
-        break;
-    case USB_DEVICE_SET_INTERFACE_STARTED:
-        if (kbd_hid_device.DEV_STATE == USB_DEVICE_ATTACHED)
-        {
-            kbd_hid_device.DEV_STATE = next_state;
-        }
-        break;
-    case USB_DEVICE_INTERFACE_OPENED:
-        if (kbd_hid_device.DEV_STATE == USB_DEVICE_SET_INTERFACE_STARTED)
-        {
-            kbd_hid_device.DEV_STATE = next_state;
-        }
-        break;
-    case USB_DEVICE_GET_REPORT_DESCRIPTOR:
-        if (kbd_hid_device.DEV_STATE == USB_DEVICE_INTERFACE_OPENED)
-        {
-            kbd_hid_device.DEV_STATE = next_state;
-        }
-        break;
-    case USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE:
-        if (kbd_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR)
-        {
-            kbd_hid_device.DEV_STATE = next_state;
-        }
-        break;
-    case USB_DEVICE_SETTING_PROTOCOL:
-        if (kbd_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE)
-        {
-            kbd_hid_device.DEV_STATE = next_state;
-        }
-        break;
-    case USB_DEVICE_INUSE:
-        if (kbd_hid_device.DEV_STATE == USB_DEVICE_SETTING_PROTOCOL)
-        {
-            kbd_hid_device.DEV_STATE = next_state;
-        }
-        break;
-    case USB_DEVICE_DETACHED:
-        kbd_hid_device.DEV_STATE = next_state;
-        break;
-    case USB_DEVICE_IDLE:
-        kbd_hid_device.DEV_STATE = next_state;
-        break;
-    default:
-        break;
-    }
-    if (kbd_hid_device.STATE_MUTEX != NULL)
-    {
-        OS_Mutex_unlock(kbd_hid_device.STATE_MUTEX);
-    }
-}
 /*FUNCTION*----------------------------------------------------------------
  *
  * Function Name  : kbd_hid_get_interface
@@ -417,7 +351,7 @@ void kbd_hid_get_report_descriptor(void)
                 return;
             }
 
-            update_state (USB_DEVICE_GET_REPORT_DESCRIPTOR);
+            kbd_hid_device.DEV_STATE = USB_DEVICE_GET_REPORT_DESCRIPTOR;
             kbd_hid_com->class_ptr = kbd_hid_device.CLASS_HANDLE;
             kbd_hid_com->callback_fn = usb_host_hid_keyboard_ctrl_callback;
             kbd_hid_com->callback_param = 0;
@@ -474,17 +408,10 @@ usb_status usb_host_hid_keyboard_event
     case USB_CONFIG_EVENT:
         if (kbd_hid_device.DEV_STATE == USB_DEVICE_IDLE)
         {
-            if (kbd_hid_device.STATE_MUTEX == NULL)
-            {
-                kbd_hid_device.STATE_MUTEX = OS_Mutex_create();
-                if (kbd_hid_device.STATE_MUTEX == NULL)
-                {
-                    USB_PRINTF("keyboard state mutex create fail\r\n");
-                }
-            }
             kbd_hid_device.DEV_HANDLE = dev_handle;
             kbd_hid_device.INTF_HANDLE = kbd_hid_get_interface();
-            update_state (USB_DEVICE_ATTACHED);
+            kbd_hid_device.state_change |= USB_STATE_CHANGE_ATTACHED;
+            OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         }
         else
         {
@@ -493,7 +420,8 @@ usb_status usb_host_hid_keyboard_event
         break;
 
     case USB_INTF_OPENED_EVENT:
-        update_state (USB_DEVICE_INTERFACE_OPENED);
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_OPENED;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("----- Interfaced Event -----\r\n");
         break;
 
@@ -508,11 +436,13 @@ usb_status usb_host_hid_keyboard_event
         USB_PRINTF("  Protocol = %d\r\n", intf_ptr->bInterfaceProtocol);
         kbd_interface_number = 0;
         detach = 1;
-        update_state (USB_DEVICE_DETACHED);
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_DETACHED;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         break;
     default:
         USB_PRINTF("HID Device state = %d??\r\n", kbd_hid_device.DEV_STATE);
-        update_state (USB_DEVICE_IDLE);
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_IDLE;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         break;
     }
 
@@ -559,12 +489,14 @@ void usb_host_hid_keyboard_ctrl_callback
 
     if (kbd_hid_device.DEV_STATE == USB_DEVICE_SETTING_PROTOCOL)
     {
-        update_state (USB_DEVICE_INUSE);
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_INUSE;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("setting protocol done\r\n");
     }
     else if (kbd_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR)
     {
-        update_state (USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE);
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_DESCRIPTOR_DONE;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("get report descriptor done\r\n");
     }
 
@@ -795,7 +727,12 @@ void Keyboard_Task(void* param)
     uint8_t j = 0;
 
     // Wait for insertion or removal event
-    OS_Event_wait(kbd_usb_event, USB_EVENT_CTRL | USB_EVENT_DATA | USB_EVENT_DATA_CORRUPTED | USB_EVEN_OUTPUT, FALSE, 0);
+    OS_Event_wait(kbd_usb_event, USB_EVENT_CTRL | USB_EVENT_DATA | USB_EVENT_DATA_CORRUPTED | USB_EVEN_OUTPUT | USB_EVENT_STATE_CHANGE, FALSE, 0);
+    if (OS_Event_check_bit(kbd_usb_event, USB_EVENT_STATE_CHANGE))
+    {
+        OS_Event_clear(kbd_usb_event, USB_EVENT_STATE_CHANGE);
+        update_state();
+    }
     if (OS_Event_check_bit(kbd_usb_event, USB_EVEN_OUTPUT))
     {
         OS_Event_clear(kbd_usb_event, USB_EVEN_OUTPUT);
@@ -835,7 +772,7 @@ void Keyboard_Task(void* param)
 
     case USB_DEVICE_ATTACHED:
         USB_PRINTF("\r\nKeyboard device attached\r\n");
-        update_state (USB_DEVICE_SET_INTERFACE_STARTED);
+        kbd_hid_device.DEV_STATE = USB_DEVICE_SET_INTERFACE_STARTED;
         status = usb_host_open_dev_interface(kbd_host_handle, kbd_hid_device.DEV_HANDLE, kbd_hid_device.INTF_HANDLE, (usb_class_handle*) &kbd_hid_device.CLASS_HANDLE);
         if (status != USB_OK)
         {
@@ -852,7 +789,7 @@ void Keyboard_Task(void* param)
         kbd_hid_get_buffer();
         USB_PRINTF("Keyboard interfaced, setting protocol...\r\n");
         /* now we will set the USB Hid standard boot protocol */
-        update_state (USB_DEVICE_SETTING_PROTOCOL);
+        kbd_hid_device.DEV_STATE = USB_DEVICE_SETTING_PROTOCOL;
 
         kbd_hid_com->class_ptr = kbd_hid_device.CLASS_HANDLE;
         kbd_hid_com->callback_fn = usb_host_hid_keyboard_ctrl_callback;
@@ -963,12 +900,8 @@ void Keyboard_Task(void* param)
             kbd_hid_device.INTF_HANDLE = NULL;
             kbd_hid_device.CLASS_HANDLE = NULL;
             USB_PRINTF("Going to idle state\r\n");
-            update_state (USB_DEVICE_IDLE);
-            if (kbd_hid_device.STATE_MUTEX != NULL)
-            {
-                OS_Mutex_destroy(kbd_hid_device.STATE_MUTEX);
-                kbd_hid_device.STATE_MUTEX = NULL;
-            }
+            kbd_hid_device.DEV_STATE = USB_DEVICE_IDLE;
+            
             if (kbd_reportDescriptor != NULL)
             {
                 OS_Mem_free(kbd_reportDescriptor);
@@ -1012,9 +945,6 @@ void Keyboard_Task(void* param)
             }
             OS_Event_set(kbd_usb_event, USB_EVENT_CTRL);
         }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        RemoveTimerQ (time_index);
-#endif
         break;
     case USB_DEVICE_OTHER:
         break;

@@ -42,8 +42,8 @@
 //  Consts
 ///////////////////////////////////////////////////////////////////////////////
 
-const uint8_t buffStart[] = "\n\r++++++++++++++ LPSCI-DMA Non Blocking Example ++++++++++++++++++\n\r";
-const uint8_t bufferData1[] = "\n\rType characters from keyboard, the board will receive and then echo them to terminal screen\n\r";
+const uint8_t buffStart[] = "\r\n++++++++++++++ LPSCI-DMA Non Blocking Example ++++++++++++++++++\r\n";
+const uint8_t bufferData1[] = "\r\nType characters from keyboard, the board will receive and then echo them to terminal screen\r\n";
 
 
 ///////////////////////////////////////////////////////////////////////////////

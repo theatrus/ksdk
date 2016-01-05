@@ -250,13 +250,14 @@ static inline void CLOCK_SYS_SetRtcOutSrc(clock_rtcout_src_t src)
     CLOCK_HAL_SetRtcClkOutSel(SIM, src);
 }
 
-/*FUNCTION**********************************************************************
+/*!
+* @brief Gets the clock frequency for TPM module.
 *
-* Function Name : CLOCK_SYS_GetTpmFreq
-* Description	 : Gets the clock frequency for TPM module.
 * This function gets the clock frequency for TPM module.
 *
-*END**************************************************************************/
+* @param instance IP instance.
+* @return Current frequency.
+*/
 uint32_t CLOCK_SYS_GetTpmFreq(uint32_t instance);
 
 /*!
@@ -720,12 +721,13 @@ void CLOCK_SYS_DisableLpuartClock(uint32_t instance);
 */
 bool CLOCK_SYS_GetLpuartGateCmd(uint32_t instance);
 
-/*FUNCTION**********************************************************************
+/*!
+* @brief Gets Tpm external clock frequency.
 *
-* Function Name : CLOCK_SYS_GetTpmExternalFreq
-* Description	 : Gets Tpm external clock frequency.
-*
-*END**************************************************************************/
+* This function will get the Tpm external clock frequency.
+* @param instance module device instance
+* @return Current frequency.
+*/
 uint32_t CLOCK_SYS_GetTpmExternalFreq(uint32_t instance);
 
 /*!
@@ -754,34 +756,33 @@ static inline sim_tpm_clk_sel_t CLOCK_SYS_GetTpmExternalSrc(uint32_t instance)
     return SIM_HAL_GetTpmExternalClkPinSelMode(SIM, instance);
 }
 
-/*FUNCTION**********************************************************************
-*
-* Function Name : CLOCK_SYS_EnableTpmClock
-* Description	 : Enable the clock for TPM module
-* This function enables the clock for TPM module
-*
-*END**************************************************************************/
+/*!
+ * @brief Enable the clock for TPM module
+ *
+ * This function enables the clock for TPM module
+ *
+ * @param instance IP instance.
+ */
 void CLOCK_SYS_EnableTpmClock(uint32_t instance);
 
-/*FUNCTION**********************************************************************
-*
-* Function Name : CLOCK_SYS_DisableTpmClock
-* Description	 : Disable the clock for TPM module
-* This function disables the clock for TPM module
-*
-*END**************************************************************************/
+/*!
+ * @brief Disable the clock for TPM module
+ *
+ * This function disables the clock for TPM module
+ *
+ * @param instance IP instance.
+ */
 void CLOCK_SYS_DisableTpmClock(uint32_t instance);
 
-/*FUNCTION**********************************************************************
-*
-* Function Name : CLOCK_SYS_GetTpmGateCmd
-* Description	 : Get the the clock gate state for TPM module
-* This function will get the clock gate state for TPM module.
-*
-*END**************************************************************************/
+/*!
+ * @brief Get the the clock gate state for TPM module
+ *
+ * This function will get the clock gate state for TPM module.
+ *
+ * @param instance IP instance.
+ * @return state true - ungated(Enabled), false - gated (Disabled)
+ */
 bool CLOCK_SYS_GetTpmGateCmd(uint32_t instance);
-
-
 
 /*!
  * @brief Set the TPM external clock frequency(TPM_CLKx).

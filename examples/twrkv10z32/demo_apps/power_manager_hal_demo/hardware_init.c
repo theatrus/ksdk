@@ -55,10 +55,6 @@ void hardware_init(void)
     CLOCK_SYS_EnablePortClock(PORTD_IDX);
     CLOCK_SYS_EnablePortClock(PORTE_IDX);
 
-#if FSL_FEATURE_SIM_OPT_HAS_RTC_CLOCK_OUT_SELECTION
-    configure_rtc_pins(BOARD_RTC_FUNC_INSTANCE);
-#endif
-
     if(PMC_HAL_GetAckIsolation(PMC_BASE_PTR) != 0)
     {
         PMC_HAL_ClearAckIsolation(PMC_BASE_PTR);

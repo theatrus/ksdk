@@ -409,7 +409,7 @@ uint8_t g_config_descriptor[CONFIG_DESC_SIZE] =
    /*Endpoint 1 - standard descriptor*/
    ENDP_ONLY_DESC_SIZE,             /* bLength (9) */
    USB_ENDPOINT_DESCRIPTOR,         /* Descriptor type (endpoint descriptor) */
-   0x02,                            /* OUT endpoint address 1 */
+   AUDIO_ISOCHRONOUS_ENDPOINT | (USB_RECV << 7),/* OUT endpoint address 1 */
    0x01,                            /* Isochronous endpoint */
    USB_uint_16_low(FS_ISO_OUT_ENDP_PACKET_SIZE),
    USB_uint_16_high(FS_ISO_OUT_ENDP_PACKET_SIZE),  /* size of packet: 64 Bytes */

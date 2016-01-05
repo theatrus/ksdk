@@ -515,28 +515,10 @@ static void show_card_info(sdspi_card_t *card, bool showDetail)
 /*!
  * @brief Function to indicate whether a card is detected or not
  */
-void sdhc_card_detection(bool inserted)
+void spiSDcard_card_detection(void)
 {
-    if (inserted)
-    {
-        card_inserted = 1;
-    }
-    else
-    {
-        card_inserted = 0;
-    }
+    card_inserted = BOARD_IsSDCardDetected();
     OSA_SemaPost(&cd);
-}
-
-/*!
- * @brief Function to be called from Card detection interrupt context etc.
- */
-void sdhc_cd_irqhandler(void)
-{
-    if (GPIO_DRV_ReadPinInput(kGpioSdcardCardDetection) == SDCARD_CARD_INSERTED)
-        sdhc_card_detection(true);
-    else
-        sdhc_card_detection(false);
 }
 
 /*!
@@ -558,7 +540,7 @@ static void demo_card_data_access(uint8_t instance)
     spi.ops = &ops;
 
     // wait for a card detection
-    sdhc_cd_irqhandler();
+    spiSDcard_card_detection();
 
     // card insertion is detected based on interrupt
     if (!card_inserted)
@@ -601,7 +583,7 @@ static void demo_card_data_access(uint8_t instance)
     if (DSPI_DRV_EdmaMasterConfigureBus(instance, &g_edmaDspiDevice, &calculatedBaudRate)
         != kStatus_DSPI_Success)
     {
-        PRINTF("\r  edma configure bus failed\n");
+        PRINTF("\r  edma configure bus failed\r\n");
 
     }
 

@@ -128,7 +128,7 @@
         <option>
           <name>GeneralMisraRules04</name>
           <version>0</version>
-          <state>011101010110111110111110110011011100111110101010110110010110101111010101111111110101101111101111111111110010110001111111010010111110111111111</state>
+          <state>011101011110111110111110110011011100111110101010110110010110101111010101111111110101101111101111111111110010110001111111010010111110111111111</state>
         </option>
         <option>
           <name>RTConfigPath2</name>
@@ -172,7 +172,7 @@
         <option>
           <name>CCDefines</name>
           
-        <state>DEBUG</state><state>CPU_MKL25Z128VLK4</state><state>FSL_RTOS_UCOSII</state><state>FRDM_KL25Z</state><state>FREEDOM</state></option>
+        <state>DEBUG</state><state>CPU_MKL25Z128VLK4</state><state>FSL_RTOS_UCOSII</state></option>
         <option>
           <name>CCPreprocFile</name>
           <state>0</state>
@@ -1113,7 +1113,7 @@
         <option>
           <name>CCDefines</name>
           
-        <state>NDEBUG</state><state>CPU_MKL25Z128VLK4</state><state>FSL_RTOS_UCOSII</state><state>FRDM_KL25Z</state><state>FREEDOM</state></option>
+        <state>NDEBUG</state><state>CPU_MKL25Z128VLK4</state><state>FSL_RTOS_UCOSII</state></option>
         <option>
           <name>CCPreprocFile</name>
           <state>0</state>
@@ -1173,7 +1173,7 @@
         <option>
           <name>CCAllowList</name>
           <version>1</version>
-          <state>00010000</state>
+          <state>11111110</state>
         </option>
         <option>
           <name>CCDebugInfo</name>

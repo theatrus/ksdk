@@ -46,7 +46,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-/*! @brief Error codes for the FLEXIO SPI driver. */
+/*! @brief Error codes for the FlexIO SPI driver. */
 typedef enum flexio_spi_status
 {
     kStatus_FlexIO_SPI_Success                  = 0x00U, 
@@ -86,7 +86,7 @@ typedef enum flexio_spi_data_bitcount_mode  {
 /*! @brief SPI receive callback function type */
 typedef void (* flexio_spi_rx_callback_t)(void * spiState);
 /*!
- * @brief Runtime state structure for FLEXIO SPI driver.
+ * @brief Runtime state structure for the FlexIO SPI driver.
  */ 
 typedef struct flexio_spi_state {
     flexio_spi_master_slave_mode_t mode;
@@ -103,28 +103,26 @@ typedef struct flexio_spi_state {
     volatile bool isTxBlocking;    /*!< True if transmit is blocking transaction. */
     volatile bool isRxBlocking;    /*!< True if receive is blocking transaction. */
     volatile bool isXBlocking;     /*!< True if transmit&receive is blocking transaction. */
-    semaphore_t txIrqSync;      /*!< Used to wait for ISR to complete its TX business. */
-    semaphore_t rxIrqSync;      /*!< Used to wait for ISR to complete its RX business. */
-    semaphore_t xIrqSync;      /*!< Used to wait for ISR to complete its TX&RX business. */
+    semaphore_t txIrqSync;      /*!< Used to wait for ISR to complete its transmit. */
+    semaphore_t rxIrqSync;      /*!< Used to wait for ISR to complete its receive. */
+    semaphore_t xIrqSync;      /*!< Used to wait for ISR to complete its transmit and receive. */
     flexio_spi_rx_callback_t rxCallback; /*!< Callback to invoke after receiving byte.*/
     void * rxCallbackParam;        /*!< Receive callback parameter pointer.*/
-    volatile bool isTxUseDma;    /*!< True if Tx DMA channel has already been configured. */
-    volatile bool isRxUseDma;    /*!< True if Rx DMA channel has already been configured. */
-    #if defined USING_EDMA
+    volatile bool isTxUseDma;    /*!< True if transmit DMA channel has already been configured. */
+    volatile bool isRxUseDma;    /*!< True if receive DMA channel has already been configured. */
+    #if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
     edma_chn_state_t edmaSpiTx;
     edma_chn_state_t edmaSpiRx;
-    edma_software_tcd_t edmaTxTcd;
-    edma_software_tcd_t edmaRxTcd;
     #else
-    dma_channel_t dmaSpiTx; /*!< DMA Tx channel structure */
-    dma_channel_t dmaSpiRx; /*!< DMA Rx channel structure. */
+    dma_channel_t dmaSpiTx; /*!< DMA transmit channel structure */
+    dma_channel_t dmaSpiRx; /*!< DMA receive channel structure. */
     #endif
 }flexio_spi_state_t;
 /*!
  * @brief FlexIO SPI hardware resource configuration.
  *
- * These constants define the hardware resource used by FlexIO SPI master/slave device and includes
- * the external pin and internal shifter and timer.
+ * These constants define the hardware resource used by the FlexIO SPI master/slave device and includes
+ * the external pin and the internal shifter and timer.
  * @internal gui name="SPI hardware configuration" id="spiHwCfg"
  */
 typedef struct flexio_spi_hwconfig{
@@ -172,7 +170,7 @@ extern "C" {
  * @brief Initializes a FlexIO-simulated SPI device.
  *
  * This function initializes the run-time state structure to keep track of
- * the on-going transfers and the module to user defined settings and 
+ * the ongoing transfers and the module to user-defined settings and 
  * default settings. It also configures the underlying FlexIO pin, shifter, and timer.
  * This is an example to set up the flexio_spi_state_t and the
  * flexio_spi_userconfig_t parameters and to call the FLEXIO_SPI_DRV_Init function
@@ -201,13 +199,13 @@ extern "C" {
  * @return An error code or kStatus_FlexIO_SPI_Success.
  */
 flexio_spi_status_t FLEXIO_SPI_DRV_Init(uint32_t instance, flexio_spi_state_t * spiState,
-                               flexio_spi_userconfig_t * spiConfig);
+                               const flexio_spi_userconfig_t * spiConfig);
 /*!
  * @brief Shuts down the FlexIO SPI.
  *
  * This function disables the FlexIO-simulated SPI trigger.
  *
- * @param spiState The run-time structure of FLEXIO simulated SPI.
+ * @param spiState The run-time structure of the FlexIO-simulated SPI.
  */
 void FLEXIO_SPI_DRV_Deinit(flexio_spi_state_t * spiState);
 
@@ -215,7 +213,7 @@ void FLEXIO_SPI_DRV_Deinit(flexio_spi_state_t * spiState);
  * @brief Sends (transmits) data out through the FlexIO-simulated SPI module using a 
  * blocking method.
  * @param spiState The run-time structure of FlexIO-simulated SPI.
- * @param txBuff A pointer to the source buffer containing 8-bit data chars to send.
+ * @param txBuff A pointer to the source buffer containing 8-bit data characters to send.
  * @param txSize The number of bytes to send.
  * @param timeout A timeout value for RTOS abstraction sync control in milliseconds (ms).
  * @return An error code or kStatus_FlexIO_SPI_Success.
@@ -263,7 +261,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_AbortSendingData(flexio_spi_state_t * spiStat
  * @brief Gets (receives) data from the FlexIO-simulated SPI module using a blocking method.
  *
  * @param spiState The run-time structure of FlexIO-simulated SPI.
- * @param rxBuff A pointer to the buffer containing 8-bit read data chars received.
+ * @param rxBuff A pointer to the buffer containing 8-bit read data characters received.
  * @param rxSize The number of bytes to receive.
  * @param timeout A timeout value for RTOS abstraction sync control in milliseconds (ms).
  * @return An error code or kStatus_FlexIO_SPI_Success.
@@ -276,7 +274,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_ReceiveDataBlocking(flexio_spi_state_t * spiS
  * @brief Gets (receives) data from the FlexIO-simulated SPI module using a non-blocking method.
  *
  * @param spiState The run-time structure of the FlexIO-simulated SPI.
- * @param rxBuff  A pointer to the buffer containing 8-bit read data chars received.
+ * @param rxBuff  A pointer to the buffer containing 8-bit read data characters received.
  * @param rxSize The number of bytes to receive.
  * @return An error code or kStatus_FlexIO_SPI_Success.
  */
@@ -310,9 +308,9 @@ flexio_spi_status_t FLEXIO_SPI_DRV_AbortReceivingData(flexio_spi_state_t * spiSt
  * @brief Transfers data through the FlexIO-simulated SPI module using a 
  * blocking method.
  * @param spiState The run-time structure of FlexIO-simulated SPI.
- * @param txBuff A pointer to the source buffer containing 8-bit data chars to send.
- * @param rxBuff A pointer to the buffer containing 8-bit read data chars received.
- * @param xSize The number of bytes to send&receive.
+ * @param txBuff A pointer to the source buffer containing 8-bit data characters to send.
+ * @param rxBuff A pointer to the buffer containing 8-bit read data characters received.
+ * @param xSize The number of bytes to send and receive.
  * @param timeout A timeout value for RTOS abstraction sync control in milliseconds (ms).
  * @return An error code or kStatus_FlexIO_SPI_Success.
  */
@@ -325,8 +323,8 @@ flexio_spi_status_t FLEXIO_SPI_DRV_TransferDataBlocking(flexio_spi_state_t * spi
  * @brief Transfers data through the FlexIO-simulated SPI module using a 
  * non-blocking method.
  * @param spiState The run-time structure of FlexIO-simulated SPI.
- * @param txBuff A pointer to the source buffer containing 8-bit data chars to send.
- * @param rxBuff A pointer to the buffer containing 8-bit read data chars received.
+ * @param txBuff A pointer to the source buffer containing 8-bit data characters to send.
+ * @param rxBuff A pointer to the buffer containing 8-bit read data characters received.
  * @param xSize The number of bytes to send.
  * @return An error code or kStatus_FlexIO_SPI_Success.
  */
@@ -335,20 +333,19 @@ flexio_spi_status_t FLEXIO_SPI_DRV_TransferData(flexio_spi_state_t * spiState,
                                    uint32_t xSize);
 
 /*!
- * @brief Interrupt handler for the FlexIO-simulated SPI Tx.
- * @param param The run-time structure of FlexIO simulated SPI.
+ * @brief Interrupt handler for the FlexIO-simulated SPI transmit.
+ * @param param The run-time structure of FlexIO-simulated SPI.
  */
 void FLEXIO_SPI_DRV_TX_IRQHandler(void *param);
 
 /*!
- * @brief Interrupt handler for the FlexIO-simulated SPI Rx.
- * @param param The run-time structure of FLEXIO simulated SPI.
+ * @brief Interrupt handler for the FlexIO-simulated SPI receive.
+ * @param param The run-time structure of the FlexIO-simulated SPI.
  */
 void FLEXIO_SPI_DRV_RX_IRQHandler(void *param);
-#if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
 /*!
- * @brief Sends (transmits) data out through the FlexIO-simulated SPI module using a 
- * EDMA blocking method.
+ * @brief Sends (transmits) data out through the FlexIO-simulated SPI module using an 
+ * eDMA blocking method.
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @param txBuff A pointer to the source buffer containing 8-bit data chars to send.
  * @param txSize The number of bytes to send.
@@ -372,7 +369,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaSendData(flexio_spi_state_t * spiState,
                                    const uint8_t * txBuff,
                                    uint32_t txSize);
 /*!
- * @brief Returns whether the previous FlexIO-simulated SPI-eDMA transmit has finished.
+ * @brief Returns whether the previous FlexIO-simulated SPI eDMA transmit is complete.
  *
  * @param spiState The run-time structure of the FlexIO-simulated SPI.
  * @param bytesRemaining A pointer to a value that is populated with the number of bytes that
@@ -385,7 +382,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaSendData(flexio_spi_state_t * spiState,
 flexio_spi_status_t FLEXIO_SPI_DRV_EdmaGetTransmitStatus(flexio_spi_state_t * spiState, 
                                    uint32_t * bytesRemaining);
 /*!
- * @brief Terminates a non-blocking FlexIO-simulated SPI-eDMA transmission early.
+ * @brief Terminates a non-blocking FlexIO-simulated SPI eDMA transmission early.
  *
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @return An error code or kStatus_FlexIO_SPI_Success.
@@ -420,7 +417,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaReceiveData(flexio_spi_state_t * spiState
                                       uint32_t rxSize);
 
 /*!
- * @brief Returns whether the previous FlexIO-simulated SPI-eDMA receive is complete.
+ * @brief Returns whether the previous FlexIO-simulated SPI eDMA receive is complete.
  *
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @param bytesRemaining A pointer to a value that is populated with the number of bytes 
@@ -433,9 +430,9 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaReceiveData(flexio_spi_state_t * spiState
 flexio_spi_status_t FLEXIO_SPI_DRV_EdmaGetReceiveStatus(flexio_spi_state_t * spiState, 
                                   uint32_t * bytesRemaining);
 /*!
- * @brief Terminates a non-blocking FlexIO-simulated SPI-eDMA receive early.
+ * @brief Terminates a non-blocking FlexIO-simulated SPI eDMA receive early.
  *
- * @param spiState The run-time structure of FlexIO-simulated SPI.
+ * @param spiState The run-time structure of the FlexIO-simulated SPI.
  * @return An error code or kStatus_SPI_Success.
  * @retval kStatus_FlexIO_SPI_Success The receive was successful.
  * @retval kStatus_FlexIO_SPI_NoTransmitInProgress No receive is currently in progress.
@@ -445,8 +442,8 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaAbortReceivingData(flexio_spi_state_t * s
  * @brief Transfers data through the FlexIO-simulated SPI module using an eDMA
  * blocking method.
  * @param spiState The run-time structure of FlexIO-simulated SPI.
- * @param txBuff A pointer to the source buffer containing 8-bit data chars to send.
- * @param rxBuff A pointer to the buffer containing 8-bit read data chars received.
+ * @param txBuff A pointer to the source buffer containing 8-bit data characters to send.
+ * @param rxBuff A pointer to the buffer containing 8-bit read data characters received.
  * @param xSize The number of bytes to send&receive.
  * @param timeout A timeout value for RTOS abstraction sync control in milliseconds (ms).
  * @return An error code or kStatus_FlexIO_SPI_Success.
@@ -457,8 +454,8 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaTransferDataBlocking(flexio_spi_state_t *
                                            uint32_t timeout);
 
 /*!
- * @brief Transfers data through the FlexIO-simulated SPI module using a 
- * EDMA non-blocking method.
+ * @brief Transfers data through the FlexIO-simulated SPI module using an 
+ * eDMA non-blocking method.
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @param txBuff A pointer to the source buffer containing 8-bit data characters to send.
  * @param rxBuff A pointer to the buffer containing 8-bit read data chars received.
@@ -468,7 +465,6 @@ flexio_spi_status_t FLEXIO_SPI_DRV_EdmaTransferDataBlocking(flexio_spi_state_t *
 flexio_spi_status_t FLEXIO_SPI_DRV_EdmaTransferData(flexio_spi_state_t * spiState,
                                    const uint8_t * txBuff, uint8_t *rxBuff,
                                    uint32_t xSize);
-#else
 /*!
  * @brief Sends (transmits) data out through the FlexIO-simulated SPI module using a 
  * DMA blocking method.
@@ -495,7 +491,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_DmaSendData(flexio_spi_state_t * spiState,
                                    const uint8_t * txBuff,
                                    uint32_t txSize);
 /*!
- * @brief Returns whether the previous FlexIO-simulated SPI-DMA transmit has finished.
+ * @brief Returns whether the previous FlexIO-simulated SPI DMA transmit has finished.
  *
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @param bytesRemaining A pointer to a value that is populated with the number of bytes 
@@ -508,7 +504,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_DmaSendData(flexio_spi_state_t * spiState,
 flexio_spi_status_t FLEXIO_SPI_DRV_DmaGetTransmitStatus(flexio_spi_state_t * spiState, 
                                    uint32_t * bytesRemaining);
 /*!
- * @brief Terminates a non-blocking FlexIO-simulated SPI-DMA transmission early.
+ * @brief Terminates a non-blocking FlexIO-simulated SPI DMA transmission early.
  *
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @return An error code or kStatus_FlexIO_SPI_Success.
@@ -543,7 +539,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_DmaReceiveData(flexio_spi_state_t * spiState,
                                       uint32_t rxSize);
 
 /*!
- * @brief Returns whether the previous FlexIO-simulated SPI-DMA receive is complete.
+ * @brief Returns whether the previous FlexIO-simulated SPI DMA receive is complete.
  *
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @param bytesRemaining A pointer to a value that is populated with the number of bytes 
@@ -556,7 +552,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_DmaReceiveData(flexio_spi_state_t * spiState,
 flexio_spi_status_t FLEXIO_SPI_DRV_DmaGetReceiveStatus(flexio_spi_state_t * spiState, 
                                   uint32_t * bytesRemaining);
 /*!
- * @brief Terminates a non-blocking FlexIO-simulated SPI-DMA receive early.
+ * @brief Terminates a non-blocking FlexIO-simulated SPI DMA receive early.
  *
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @return An error code or kStatus_SPI_Success.
@@ -569,7 +565,7 @@ flexio_spi_status_t FLEXIO_SPI_DRV_AbortDmaReceivingData(flexio_spi_state_t * sp
  * DMA blocking method.
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @param txBuff A pointer to the source buffer containing 8-bit data characters to send.
- * @param rxBuff A pointer to the buffer containing 8-bit read data chars received.
+ * @param rxBuff A pointer to the buffer containing 8-bit read data characters received.
  * @param xSize The number of bytes to send&receive.
  * @param timeout A timeout value for RTOS abstraction sync control in milliseconds (ms).
  * @return An error code or kStatus_FlexIO_SPI_Success.
@@ -584,14 +580,13 @@ flexio_spi_status_t FLEXIO_SPI_DRV_DmaTransferDataBlocking(flexio_spi_state_t * 
  * DMA non-blocking method.
  * @param spiState The run-time structure of FlexIO-simulated SPI.
  * @param txBuff A pointer to the source buffer containing 8-bit data characters to send.
- * @param rxBuff A pointer to the buffer containing 8-bit read data chars received.
+ * @param rxBuff A pointer to the buffer containing 8-bit read data characters received.
  * @param xSize The number of bytes to send.
  * @return An error code or kStatus_FlexIO_SPI_Success.
  */
 flexio_spi_status_t FLEXIO_SPI_DRV_DmaTransferData(flexio_spi_state_t * spiState,
                                    const uint8_t * txBuff, uint8_t *rxBuff,
                                    uint32_t xSize);
-#endif
 /*@}*/
 
 #if defined(__cplusplus)

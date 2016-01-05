@@ -39,7 +39,7 @@
 #include "fsl_flexio_driver.h"
 #include "fsl_flexio_uart_share.h"
 
-#if FSL_FEATURE_SOC_DMA_COUNT
+#if FSL_FEATURE_SOC_EDMA_COUNT
 
 /*!
  * @addtogroup flexio_uart_driver
@@ -49,9 +49,9 @@
 /*!
  * @brief User configuration structure for the FlexIO UART driver.
  *
- * Use an instance of this structure with the FLEXIO_UART_DRV_Init()function. This enables configuration of the
+ * Use an instance of this structure with the FLEXIO_UART_DRV_Init()function to enable configuration of the
  * settings of the FlexIO UART peripheral with a single function call. Settings include:
- * UART baud rate, the number of bits per data word, FlexIO UART mode, TX hardware resource and Rx hardware
+ * UART baud rate, the number of bits per data word, FlexIO UART mode, transmit hardware resource and receive hardware
  * resource.
  */
 typedef struct flexio_uartedma_userconfig{
@@ -64,7 +64,7 @@ typedef struct flexio_uartedma_userconfig{
 /*!
  * @brief Runtime state of the FlexIO UART driver.
  *
- * This structure holds data that are used by the FlexIO UART peripheral driver to
+ * This structure holds data that is used by the FlexIO UART peripheral driver to
  * communicate between the transfer function and the interrupt handler. The
  * interrupt handler also uses this information to keep track of its progress.
  * The user passes in the memory for the run-time state structure and the
@@ -78,10 +78,10 @@ typedef struct flexio_uart_edmastate{
     volatile bool isRxBusy;
     volatile bool isTxBlocking;    /*!< True if transmit is blocking transaction. */
     volatile bool isRxBlocking;    /*!< True if receive is blocking transaction. */
-    semaphore_t txIrqSync;         /*!< Used to wait for ISR to complete its TX business. */
-    semaphore_t rxIrqSync;         /*!< Used to wait for ISR to complete its RX business. */
-    edma_chn_state_t edmaUartTx; /*!< Structure definition for the EDMA channel */
-    edma_chn_state_t edmaUartRx; /*!< Structure definition for the EDMA channel */
+    semaphore_t txIrqSync;         /*!< Used to wait for ISR to complete the transmit. */
+    semaphore_t rxIrqSync;         /*!< Used to wait for ISR to complete the receive. */
+    edma_chn_state_t edmaUartTx; /*!< Structure definition for the eDMA channel */
+    edma_chn_state_t edmaUartRx; /*!< Structure definition for the eDMA channel */
 }flexio_uart_edmastate_t;
 /*******************************************************************************
  * API
@@ -101,8 +101,8 @@ extern "C" {
  *
  * This function initializes the run-time state structure to keep track of the on-going
  * transfers, initializes the module to user-defined settings and default settings, 
- * configures underlying FlexIO pin, shifter, and timer resource, and enables the FlexIO
- * simulated UART module eDMA interrupt.
+ * configures underlying FlexIO pin, shifter, and timer resource, and enables the
+ * FlexIO-simulated UART module eDMA interrupt.
  * This example shows how to set up the flexio_uartedma_state_t and the
  * flexio_uartedma_userconfig_t parameters and how to call the FLEXIO_UART_DRV_EdmaInit function 
  * by passing in these parameters:
@@ -128,14 +128,14 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaInit(uint32_t instance, flexio_uart_edm
 /*!
  * @brief Shuts down the FlexIO UART.
  *
- * This function disables the FlexIO-simulated UART-eDMA trigger.
+ * This function disables the FlexIO-simulated UART eDMA trigger.
  *
  * @param uartEdmaState The run-time structure of FlexIO-simulated UART.
  */
 void FLEXIO_UART_DRV_EdmaDeinit(flexio_uart_edmastate_t * uartEdmaState);
 
 /*!
- * @brief Sends (transmits) data out through the FlexIO-simulated UART-EDMA module using a 
+ * @brief Sends (transmits) data through the FlexIO-simulated UART eDMA module using a 
  * blocking method.
  * @param uartEdmaState The run-time structure of FlexIO-simulated UART.
  * @param txBuff A pointer to the source buffer containing 8-bit data chars to send.
@@ -149,7 +149,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaSendDataBlocking(flexio_uart_edmastate_
                                            uint32_t timeout);
 
 /*!
- * @brief Sends (transmits) data through the FlexIO-simulated UART-EDMA module using a 
+ * @brief Sends (transmits) data through the FlexIO-simulated UART eDMA module using a 
  * non-blocking method.
  * @param uartEdmaState The run-time structure of FlexIO-simulated UART.
  * @param txBuff A pointer to the source buffer containing 8-bit data chars to send.
@@ -160,7 +160,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaSendData(flexio_uart_edmastate_t * uart
                                    const uint8_t * txBuff,
                                    uint32_t txSize);
 /*!
- * @brief Returns whether the previous FlexIO-simulated UART-EDMA transmit has finished.
+ * @brief Returns whether the previous FlexIO-simulated UART eDMA transmit has finished.
  *
  * @param uartEdmaState The run-time structure of FlexIO-simulated UART.
  * @param bytesRemaining A pointer to a value that is populated with the number of bytes that
@@ -173,7 +173,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaSendData(flexio_uart_edmastate_t * uart
 flexio_uart_status_t FLEXIO_UART_DRV_EdmaGetTransmitStatus(flexio_uart_edmastate_t * uartEdmaState, 
                                    uint32_t * bytesRemaining);
 /*!
- * @brief Terminates a non-blocking FlexIO-simulated UART-eDMA transmission early.
+ * @brief Terminates a non-blocking FlexIO-simulated UART eDMA transmission early.
  *
  * @param uartEdmaState The run-time structure of FlexIO-simulated UART.
  * @return An error code or kStatus_FlexIO_UART_Success.
@@ -183,7 +183,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaGetTransmitStatus(flexio_uart_edmastate
 flexio_uart_status_t FLEXIO_UART_DRV_EdmaAbortSendingData(flexio_uart_edmastate_t * uartEdmaState);
 
 /*!
- * @brief Gets (receives) data from the FlexIO-simulated UART-eDMA module using a blocking method.
+ * @brief Gets (receives) data from the FlexIO-simulated UART eDMA module using a blocking method.
  *
  * @param uartEdmaState The run-time structure of FlexIO-simulated UART.
  * @param rxBuff A pointer to the buffer containing 8-bit read data chars received.
@@ -196,7 +196,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaReceiveDataBlocking(flexio_uart_edmasta
                                               uint32_t rxSize,
                                               uint32_t timeout);
 /*!
- * @brief Gets (receives) data from the FlexIO-simulated UART-eDMA module using a non-blocking method.
+ * @brief Gets (receives) data from the FlexIO-simulated UART eDMA module using a non-blocking method.
  *
  * @param uartEdmaState The run-time structure of FlexIO-simulated UART.
  * @param rxBuff  A pointer to the buffer containing 8-bit read data chars received.
@@ -208,7 +208,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaReceiveData(flexio_uart_edmastate_t * u
                                       uint32_t rxSize);
 
 /*!
- * @brief Returns whether the previous FlexIO-simulated UART-eDMA receive is complete.
+ * @brief Returns whether the previous FlexIO-simulated UART eDMA receive is complete.
  *
  * @param uartEdmaState The run-time structure of FlexIO-simulated UART.
  * @param bytesRemaining A pointer to a value that is populated with the number of bytes which
@@ -221,7 +221,7 @@ flexio_uart_status_t FLEXIO_UART_DRV_EdmaReceiveData(flexio_uart_edmastate_t * u
 flexio_uart_status_t FLEXIO_UART_DRV_EdmaGetReceiveStatus(flexio_uart_edmastate_t * uartEdmaState, 
                                   uint32_t * bytesRemaining);
 /*!
- * @brief Terminates a non-blocking FlexIO-simulated UART-eDMA receive early.
+ * @brief Terminates a non-blocking FlexIO-simulated UART eDMA receive early.
  *
  * @param uartEdmaState The run-time structure of FlexIO-simulated UART.
  * @return An error code or kStatus_UART_Success.

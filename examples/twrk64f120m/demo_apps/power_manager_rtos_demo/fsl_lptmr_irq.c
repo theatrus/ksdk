@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -32,8 +32,6 @@
 #include "board.h"
 #include "lpm_rtos.h"
 
-
-
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -46,12 +44,23 @@
  * Code
  ******************************************************************************/
 /*!
- * @brief override the RTC IRQ handler
+ * @brief override the LPTMR IRQ handler
  */
-void MODULE_IRQ_HANDLER(LPTMR0)(void)
+
+#if FSL_FEATURE_LPTMR_HAS_SHARED_IRQ_HANDLER
+void LPTMR0_LPTMR1_IRQHandler(void)
 {
     LPTMR_DRV_IRQHandler(PM_RTOS_DEMO_LPTMR_FUNC_INSTANCE);
 }
+
+#else
+
+void LPTMR0_IRQHandler(void)
+{
+    LPTMR_DRV_IRQHandler(PM_RTOS_DEMO_LPTMR_FUNC_INSTANCE);
+}
+
+#endif
 
 /*******************************************************************************
  * EOF

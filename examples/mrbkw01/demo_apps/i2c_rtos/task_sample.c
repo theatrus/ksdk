@@ -147,10 +147,7 @@ void task_sample(task_param_t param)
     ADC16_DRV_StructInitUserConfigDefault(&tempSnseAdcConfig);
     tempSnseAdcConfig.clkSrc = kAdc16ClkSrcOfAsynClk;
     tempSnseAdcConfig.resolution = kAdc16ResolutionBitOfSingleEndAs16;
-#if (  defined(FRDM_KL43Z)   /* CPU_MKL43Z256VLH4 */ \
-    || defined(TWR_KL43Z48M) /* CPU_MKL43Z256VLH4 */ \
-    || defined(FRDM_KL27Z)   /* CPU_MKL27Z64VLH4  */ \
-    )
+#if BOARD_ADC_USE_ALT_VREF
     tempSnseAdcConfig.refVoltSrc = kAdc16RefVoltSrcOfValt;
 #endif
     // Initialize ADC

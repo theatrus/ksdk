@@ -50,25 +50,9 @@
 #include <stdlib.h>
 #endif
 /* skip the inclusion in dependency stage */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#include <stdlib.h>
-#include <string.h>
-#endif
-
-#if USBCFG_DEV_COMPOSITE
-#error This application requires USBCFG_DEV_COMPOSITE defined zero in usb_device_config.h. Please recompile usbd with this option.
-#endif
 
 extern void Main_Task(uint32_t param);
 #define MAIN_TASK       10
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    { MAIN_TASK, Main_Task, 2000L, 7L, "Main", MQX_AUTO_START_TASK, 0, 0 },
-    { 0L, 0L, 0L, 0L, 0L, 0L, 0, 0 }
-};
-#endif
 
 /*****************************************************************************
  * Constant and Macro's - None
@@ -223,7 +207,7 @@ uint8_t USB_App_Class_Callback
     uint8_t error = USB_OK;
 
     uint8_t index = (uint8_t)((request - 2) & USB_HID_REQUEST_TYPE_MASK);
-    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID))
+    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID) && (*size != 0xFFFFFFFF))
     {
         if ((g_keyboard.keyboard_init) && (arg != NULL))
         {
@@ -238,7 +222,6 @@ uint8_t USB_App_Class_Callback
     }
 
     /* index == 0 for get/set idle, index == 1 for get/set protocol */
-    *size = 0;
     /* handle the class request */
     switch(request)
     {
@@ -248,10 +231,11 @@ uint8_t USB_App_Class_Callback
         break;
 
     case USB_HID_SET_REPORT_REQUEST:
-        for (index = 0; index < KEYBOARD_BUFF_SIZE; index++)
+        for (index = 0; index < (*size); index++)
         { /* copy the report sent by the host */
-            //            g_keyboard.rpt_buf[index] = *(*data + index);
+            //g_keyboard.rpt_buf[index] = *(*data + index);
         }
+        *size = 0;
         break;
 
     case USB_HID_GET_IDLE_REQUEST:
@@ -264,6 +248,7 @@ uint8_t USB_App_Class_Callback
         /* set the idle rate sent by the host */
         g_keyboard.app_request_params[index] = (uint8_t)((value & MSB_MASK) >>
         HIGH_BYTE_SHIFT);
+        *size = 0;
         break;
 
     case USB_HID_GET_PROTOCOL_REQUEST:
@@ -279,6 +264,7 @@ uint8_t USB_App_Class_Callback
          0 = Boot Protocol
          1 = Report Protocol*/
         g_keyboard.app_request_params[index] = (uint8_t)(value);
+        *size = 0;
         break;
     }
     return error;
@@ -303,20 +289,13 @@ void APP_init(void)
     OS_Mem_zero(&g_keyboard, sizeof(keyboard_global_variable_struct_t));
     OS_Mem_zero(&config_struct, sizeof(hid_config_struct_t));
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    g_keyboard.rpt_buf = (uint8_t*) OS_Mem_alloc_uncached_align(KEYBOARD_BUFF_SIZE, 32);
-    if (NULL == g_keyboard.rpt_buf)
-    {
-        USB_PRINTF("\nMalloc error in APP_init\n");
-        return;
-    }
-    OS_Mem_zero(g_keyboard.rpt_buf, KEYBOARD_BUFF_SIZE);
-#endif
     USB_PRINTF("\nbegin to test keyboard\n");
     config_struct.hid_application_callback.callback = USB_App_Device_Callback;
     config_struct.hid_application_callback.arg = &g_keyboard.app_handle;
     config_struct.class_specific_callback.callback = USB_App_Class_Callback;
     config_struct.class_specific_callback.arg = &g_keyboard.app_handle;
+    config_struct.board_init_callback.callback = usb_device_board_init;
+    config_struct.board_init_callback.arg = CONTROLLER_ID;
     config_struct.desc_callback_ptr = &g_desc_callback;
 
     g_keyboard.app_speed = USB_SPEED_FULL;
@@ -340,24 +319,6 @@ void APP_task()
 {
     USB_HID_Periodic_Task();
 }
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : Main_Task
- * Returned Value : None
- * Comments       :
- *     First function called.  Calls Test_App
- *     callback functions.
- *
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    UNUSED_ARGUMENT (param)
-    APP_init();
-}
-#endif
 
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
@@ -400,7 +361,7 @@ void main(void)
 #if !(USE_RTOS)
     APP_init();
 #else
-    OS_Task_create(Task_Start, NULL, 9L, 1000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 1000L, "task_start", NULL);
 #endif
 
     OSA_Start();

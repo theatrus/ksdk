@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Freescale Semiconductor, Inc.
+ * Copyright (c) 2015, Freescale Semiconductor, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -53,6 +53,8 @@
 #include "unistd.h"
 #endif
 
+#include "fsl_uart_driver.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,37 +68,41 @@
 #define TASK_LED_RTOS_STACK_SIZE     0x200U
 #define TASK_LED_CLOCK_STACK_SIZE    0x200U
 
+extern void * g_uartStatePtr[UART_INSTANCE_COUNT];
+extern void UART_DRV_IRQHandler(uint32_t instance);
+
+#if (defined FSL_RTOS_MQX)
+    void PM_MQX_DBG_UART_IRQ_HANDLER(void)
+#else
+    void PM_DBG_UART_IRQ_HANDLER(void)
+#endif
+{
+    UART_DRV_IRQHandler(BOARD_DEBUG_UART_INSTANCE);
+}
+
+#if (defined FSL_RTOS_MQX)
+extern void PM_MQX_DBG_UART_IRQ_HANDLER(void);
+#else
+extern void PM_DBG_UART_IRQ_HANDLER(void);
+#endif
+
 // task declare
 extern void task_lpm(task_param_t param);
 #if (!defined FSL_RTOS_BM)
 extern void task_led_rtos(task_param_t param);
-#if (!defined BOARD_HAS_ONLY_MULTIPLE_COLOR_LED)
 extern void task_led_clock(task_param_t param);
-#endif
 #endif
 
 // task define
 OSA_TASK_DEFINE(task_lpm, TASK_LPM_STACK_SIZE);
 #if (!defined FSL_RTOS_BM)
 OSA_TASK_DEFINE(task_led_rtos, TASK_LED_RTOS_STACK_SIZE);
-#if (!defined BOARD_HAS_ONLY_MULTIPLE_COLOR_LED)
 OSA_TASK_DEFINE(task_led_clock, TASK_LED_CLOCK_STACK_SIZE);
-#endif
 #endif
 ///////////////////////////////////////////////////////////////////////////////
 // Variables
 ///////////////////////////////////////////////////////////////////////////////
-#if (defined BOARD_USE_LPSCI)
-static lpsci_state_t s_dbgState;
-static lpsci_user_config_t s_dbgConfig;
-#elif (defined BOARD_USE_LPUART)
-static lpuart_state_t s_dbgState;
-static lpuart_user_config_t s_dbgConfig;
-#else
 static uart_state_t s_dbgState;
-static uart_user_config_t s_dbgConfig;
-#endif // BOARD_USE_LPSCI
-
 
 static osa_status_t s_result = kStatus_OSA_Error;
 static adc16_converter_config_t adcUserConfig;
@@ -146,24 +152,6 @@ const TASK_TEMPLATE_STRUCT  MQX_template_list[] =
 // Code
 ///////////////////////////////////////////////////////////////////////////////
 
-char getInput()
-{
-    char ch;
-    /* We use GETCHAR() for BM and UART Blocking technic for other RTOS. */
-#if (defined FSL_RTOS_BM) || ((defined FSL_RTOS_MQX)&&(MQX_COMMON_CONFIG != MQX_LITE_CONFIG))
-    ch = GETCHAR();
-#else
-#if (defined(BOARD_USE_LPSCI))
-    LPSCI_DRV_ReceiveDataBlocking(BOARD_DEBUG_UART_INSTANCE,(uint8_t*)(&ch),1,OSA_WAIT_FOREVER);
-#elif (defined(BOARD_USE_LPUART))
-    LPUART_DRV_ReceiveDataBlocking(BOARD_DEBUG_UART_INSTANCE,(uint8_t*)(&ch),1,OSA_WAIT_FOREVER);
-#else
-    UART_DRV_ReceiveDataBlocking(BOARD_DEBUG_UART_INSTANCE, (uint8_t*)(&ch), 1, OSA_WAIT_FOREVER);
-#endif
-#endif // FSL_RTOS_BM
-    return ch;
-}
-
 #if (defined FSL_RTOS_MQX) && (MQX_COMMON_CONFIG != MQX_LITE_CONFIG)
     void main_task(uint32_t param)
 #else /* (FSL_RTOS_MQX) && (MQX_COMMON_CONFIG != MQX_LITE_CONFIG) */
@@ -178,28 +166,19 @@ char getInput()
 #endif
 
     memset(&s_dbgState, 0, sizeof(s_dbgState));
-    memset(&s_dbgConfig, 0, sizeof(s_dbgConfig));
-    OSA_Init();
-    // init the uart module with base address and config structure
-    s_dbgConfig.baudRate = 9600;
-#if (defined BOARD_USE_LPSCI)
-    s_dbgConfig.bitCountPerChar = kLpsci8BitsPerChar;
-    s_dbgConfig.parityMode = kLpsciParityDisabled;
-    s_dbgConfig.stopBitCount = kLpsciOneStopBit;
-    LPSCI_DRV_Init(BOARD_DEBUG_UART_INSTANCE, &s_dbgState, &s_dbgConfig);
-#elif (defined BOARD_USE_LPUART)
-    s_dbgConfig.bitCountPerChar = kLpuart8BitsPerChar;
-    s_dbgConfig.parityMode = kLpuartParityDisabled;
-    s_dbgConfig.stopBitCount = kLpuartOneStopBit;
-    LPUART_DRV_Init(BOARD_DEBUG_UART_INSTANCE, &s_dbgState, &s_dbgConfig);
-#else
-    s_dbgConfig.bitCountPerChar = kUart8BitsPerChar;
-    s_dbgConfig.parityMode = kUartParityDisabled;
-    s_dbgConfig.stopBitCount = kUartOneStopBit;
-    UART_DRV_Init(BOARD_DEBUG_UART_INSTANCE, &s_dbgState, &s_dbgConfig);
-#endif // BOARD_USE_LPSCI
 
     hardware_init();
+    OSA_Init();
+
+#if (!defined FSL_RTOS_MQX)
+    //init the uart module with base address and config structure
+    g_uartStatePtr[BOARD_DEBUG_UART_INSTANCE] = &s_dbgState;
+    /* Init the interrupt sync object. */
+    OSA_SemaCreate(&s_dbgState.txIrqSync, 0);
+    OSA_SemaCreate(&s_dbgState.rxIrqSync, 0);
+    NVIC_EnableIRQ(g_uartRxTxIrqId[BOARD_DEBUG_UART_INSTANCE]);
+#endif
+
     // Initializes GPIO driver for LEDs and buttons
 #if (defined FSL_RTOS_BM)
     GPIO_DRV_Init(switchPins, 0);
@@ -209,22 +188,13 @@ char getInput()
 
     NVIC_SetPriority(PM_DBG_UART_IRQn, 6U);
 
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
     NVIC_SetPriority(RTC_IRQn, 6U);
-#endif
     NVIC_SetPriority(LPTMR0_IRQn, 6U);
     NVIC_SetPriority(ADC_IRQ_N, 6U);
     NVIC_SetPriority(LLWU_IRQn, 6U);
 
 #if (defined FSL_RTOS_MQX)
-    OSA_InstallIntHandler(PM_DBG_UART_IRQn, PM_DBG_UART_IRQ_HANDLER);
-
-#if (defined PM_RTOS_DEMO_RTC_FUNC_INSTANCE)
-    OSA_InstallIntHandler(RTC_IRQn, MQX_RTC_IRQHandler);
-#endif
-    OSA_InstallIntHandler(LPTMR0_IRQn, MQX_LPTMR0_IRQHandler);
-    OSA_InstallIntHandler(LLWU_IRQn, MQX_LLWU_IRQHandler);
-    OSA_InstallIntHandler(ADC_IRQ_N, MQX_ADC_IRQHandler);
+    OSA_InstallIntHandler(PM_DBG_UART_IRQn, PM_MQX_DBG_UART_IRQ_HANDLER);
 #endif
 
     adc16Init(&adcUserConfig, &adcChnConfig, &adcCalibraitionParam);
@@ -257,7 +227,6 @@ char getInput()
     {
         PRINTF("Failed to create led_rtos task\r\n");
     }
-#if (!defined BOARD_HAS_ONLY_MULTIPLE_COLOR_LED)
     s_result = OSA_TaskCreate(task_led_clock,
                 (uint8_t *)"led_clock",
                 TASK_LED_CLOCK_STACK_SIZE,
@@ -270,7 +239,6 @@ char getInput()
     {
         PRINTF("Failed to create led_clock task\r\n");
     }
-#endif
 #endif
 
     OSA_Start();

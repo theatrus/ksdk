@@ -75,16 +75,16 @@ typedef enum _cadc_diff_chn
 } cadc_diff_chn_t;
 
 /*!
- * @brief Defines the type of enumerating ADC channel in differential pair.
+ * @brief Defines the type of enumerating ADC channel in a differential pair.
  *
  * Note, "cadc_diff_chn_t" and "cadc_chn_sel_mode_t" can determine
  * selecting the single ADC sample channel.
  */
 typedef enum _cadc_chn_sel_mode
 {
-    kCAdcChnSelN = 0U, /*!< Select negative side channel. @internal gui name="Negative channel side" */
-    kCAdcChnSelP = 1U, /*!< Select positive side channel. @internal gui name="Positive channel side" */
-    kCAdcChnSelBoth = 2U /*!< Select both of them in differential mode.. @internal gui name="Both - differential mode" */
+    kCAdcChnSelN = 0U, /*!< Selects a negative side channel. @internal gui name="Negative channel side" */
+    kCAdcChnSelP = 1U, /*!< Selects a positive side channel. @internal gui name="Positive channel side" */
+    kCAdcChnSelBoth = 2U /*!< Selects  both channels in differential modes. @internal gui name="Both - differential mode" */
 } cadc_chn_sel_mode_t;
 
 /*!
@@ -148,7 +148,7 @@ typedef enum _cadc_conv_speed_mode
  * During sequential and simultaneous parallel scan modes, it selects between
  * end of scan for ConvA's scan and RDY status as the DMA source. During
  * non-simultaneous parallel scan mode it selects between end of scan for
- * converters A and B, and the RDY status as the DMA source
+ * converters A and B, and the RDY status as the DMA source.
  */
 typedef enum _cadc_dma_trigger_src
 {
@@ -178,7 +178,7 @@ typedef struct CAdcControllerConfig
 
     /* Power control. */
     bool autoStandbyEnable;     /*!< Auto standby mode enable. @internal gui name="Auto standby mode" */
-    uint16_t powerUpDelayCount; /*!< Power up delay. @internal gui name="Power up delay" */
+    uint16_t powerUpDelayCount; /*!< Power up delay. @internal gui name="Power up delay" range="0..63" default="26" */
     bool autoPowerDownEnable;   /*!< Auto power down mode enable. @internal gui name="Auto power down mode" */
 } cadc_controller_config_t;
 
@@ -217,7 +217,7 @@ typedef struct CAdcConverterConfig
     * A divider value must be chosen to prevent the ADC clock from exceeding the
     * maximum frequency.
     */
-    uint16_t clkDivValue;    /*!< ADC clock divider from the bus clock. @internal gui name="Clock divider" */
+    uint16_t clkDivValue;    /*!< ADC clock divider from the bus clock. @internal gui name="Clock divider" range="0..63" */
 
     bool useChnInputAsVrefH; /*!< Use input channel as high reference voltage, such as AN2. @internal gui name="Input channel as high voltage reference" */
     bool useChnInputAsVrefL; /*!< Use input channel as low reference voltage, such as AN3. @internal gui name="Input channel as low voltage reference" */
@@ -248,13 +248,13 @@ typedef struct CAdcConverterConfig
     * of "sampleWindowCount" corresponds to an additional ADC clock cycle of
     * sampling time with a maximum sampling time of 9 ADC clocks.
     */
-    uint16_t sampleWindowCount; /*!< Sample window count. @internal gui name="Sample window count" */
+    uint16_t sampleWindowCount; /*!< Sample window count. @internal gui name="Sample window count" range="0..7" */
 } cadc_converter_config_t;
 
 /*!
  * @brief Defines a structure to configure each input channel.
  *
- * This structure holds the configuration for each input channel. In CcylicADC
+ * This structure holds the configuration for each input channel. In CylicADC
  * module, the input channels are handled by a differential sample.
  * However, the user can still configure the function for each channel when
  * set to operate as a single end sample.
@@ -285,9 +285,9 @@ typedef struct CAdcSlotConfig
 
     /* Event detection mode. */
     cadc_zero_crossing_mode_t zeroCrossingMode; /*!< Select zero crossing detection mode. @internal gui name="Zero cross mode" */
-    uint16_t lowLimitValue; /*!< Select low limit for hardware compare. @internal gui name="Low limit compare value" */
-    uint16_t highLimitValue;/*!< Select high limit for hardware compare. @internal gui name="High limit compare value" */
-    uint16_t offsetValue;   /*!< Select sign change limit for hardware compare. @internal gui name="Offset value" */
+    uint16_t lowLimitValue; /*!< Select low limit for hardware compare. @internal gui name="Low limit compare value" range="0..32760" */
+    uint16_t highLimitValue;/*!< Select high limit for hardware compare. @internal gui name="High limit compare value" range="0..32760" */
+    uint16_t offsetValue;   /*!< Select sign change limit for hardware compare. @internal gui name="Offset value" range="0..32760" */
 } cadc_slot_config_t;
 
 #if defined(__cplusplus)
@@ -375,11 +375,6 @@ void CADC_HAL_ConfigSeqSlot(ADC_Type * base, uint32_t slotIdx, const cadc_slot_c
 static inline void CADC_HAL_SetConvAStartCmd(ADC_Type * base)
 {
     ADC_BWR_CTRL1_START0(base, 1U);
-/*
-    uint16_t ctrl1 = ADC_RD_CTRL1(base);
-    ctrl1 |= ADC_CTRL1_START0_MASK;
-    ADC_WR_CTRL1(base, ctrl1);
-*/
 }
 
 /*!
@@ -393,11 +388,6 @@ static inline void CADC_HAL_SetConvAStartCmd(ADC_Type * base)
 static inline void CADC_HAL_SetConvBStartCmd(ADC_Type * base)
 {
     ADC_BWR_CTRL2_START1(base, 1U);
-/*
-    uint16_t ctrl2 = ADC_RD_CTRL2(base);
-    ctrl2 |= ADC_CTRL2_START1_MASK;
-    ADC_WR_CTRL2(base, ctrl2);
-*/
 }
 
 /* Power switcher for converters. */
@@ -422,7 +412,7 @@ static inline void CADC_HAL_SetConvAPowerDownCmd(ADC_Type * base, bool enable)
  * The conversion stops immediately after calling this function.
  *
  * @param base Register base address for the module.
- * @param enable Swither to enable the feature or not.
+ * @param enable Switcher to enable the feature or not.
  */
 static inline void CADC_HAL_SetConvBPowerDownCmd(ADC_Type * base, bool enable)
 {

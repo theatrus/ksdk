@@ -47,6 +47,9 @@
  */
 
 /* Used to initialize USB controller */
+#ifndef HIGH_SPEED
+#define  HIGH_SPEED                        (0)
+#endif
 
 #define  USB_DEVICE_IDLE                   (0)
 #define  USB_DEVICE_ATTACHED               (1)
@@ -63,7 +66,14 @@
 #define  USB_DEVICE_SET_IDLE               (12)
 #define  USB_DEVICE_SETTING_IDLE           (13)
 
-#define  HIGH_SPEED                        (0)
+/* for changing state */
+#define  USB_STATE_CHANGE_ATTACHED         (0x01)
+#define  USB_STATE_CHANGE_OPENED           (0x02)
+#define  USB_STATE_CHANGE_DETACHED         (0x04)
+#define  USB_STATE_CHANGE_IDLE             (0x08)
+#define  USB_STATE_CHANGE_DESCRIPTOR_DONE  (0x10)
+#define  USB_STATE_CHANGE_INUSE            (0x20)
+#define  USB_STATE_CHANGE_SET_IDLE         (0x40)
 
 #if HIGH_SPEED
 #define CONTROLLER_ID                      USB_CONTROLLER_EHCI_0
@@ -80,11 +90,11 @@
 
 typedef struct device_struct
 {
-    uint32_t DEV_STATE; /* Attach/detach state */
-    usb_device_instance_handle DEV_HANDLE;
+    uint32_t                        DEV_STATE; /* Attach/detach state */
+    usb_device_instance_handle      DEV_HANDLE;
     usb_interface_descriptor_handle INTF_HANDLE;
-    usb_class_handle CLASS_HANDLE; /* Class-specific info */
-    os_mutex_handle STATE_MUTEX;
+    usb_class_handle                CLASS_HANDLE; /* Class-specific info */
+    uint32_t                        state_change;
 } device_struct_t;
 
 /* Alphabetical list of Function Prototypes */

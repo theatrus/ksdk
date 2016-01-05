@@ -22,16 +22,16 @@ SET(CMAKE_EXECUTABLE_LIBRARY_SUFFIX)
 SET(ProjDirPath ${CMAKE_CURRENT_SOURCE_DIR})
 
 # DEBUG ASM FLAGS
-SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16 ")
+SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16 ")
 
 # DEBUG C FLAGS
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -MMD  -MP")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g  -O0  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -MMD  -MP")
 
 # RELEASE ASM FLAGS
-SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16 ")
+SET(CMAKE_ASM_FLAGS_RELEASE "${CMAKE_ASM_FLAGS_RELEASE}  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16 ")
 
 # RELEASE C FLAGS
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -Os  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -MMD  -MP")
+SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os  -Wall  -fno-common  -ffunction-sections  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb  -mapcs  -std=gnu99  -mcpu=cortex-m4  -mfloat-abi=hard  -mfpu=fpv4-sp-d16  -MMD  -MP")
 
 # ASM MACRO
 SET(CMAKE_ASM_FLAGS_DEBUG "${CMAKE_ASM_FLAGS_DEBUG}  -DDEBUG")
@@ -82,6 +82,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_cmp_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/cmp/fsl_cmp_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/cmt/fsl_cmt_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_cmt_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/cmt/fsl_cmt_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_cmt_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/cmt/fsl_cmt_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/crc/fsl_crc_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_crc_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/src/crc/fsl_crc_driver.c"
@@ -103,6 +108,12 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_master_driver.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_slave_driver.h"
     "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_slave_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_master_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_master_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_slave_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_slave_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/src/dspi/fsl_dspi_edma_shared_function.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_dspi_edma_shared_function.h"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_edma_hal.h"
     "${ProjDirPath}/../../../../platform/hal/src/edma/fsl_edma_hal.c"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_edma_driver.h"
@@ -145,6 +156,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_i2c_slave_driver.h"
     "${ProjDirPath}/../../../../platform/hal/src/llwu/fsl_llwu_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_llwu_hal.h"
+    "${ProjDirPath}/../../../../platform/hal/src/lmem/fsl_lmem_cache_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_lmem_cache_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/lmem/fsl_lmem_common.c"
+    "${ProjDirPath}/../../../../platform/drivers/src/lmem/fsl_lmem_cache_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_lmem_cache_driver.h"
     "${ProjDirPath}/../../../../platform/hal/src/lptmr/fsl_lptmr_hal.c"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_lptmr_hal.h"
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_lptmr_driver.h"
@@ -205,6 +221,11 @@ ADD_LIBRARY(KsdkPlatformLib STATIC
     "${ProjDirPath}/../../../../platform/drivers/inc/fsl_sdhc.h"
     "${ProjDirPath}/../../../../platform/composite/inc/fsl_sdmmc_card.h"
     "${ProjDirPath}/../../../../platform/drivers/src/sdhc/fsl_sdhc_common.c"
+    "${ProjDirPath}/../../../../platform/hal/src/sdramc/fsl_sdramc_hal.c"
+    "${ProjDirPath}/../../../../platform/hal/inc/fsl_sdramc_hal.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/sdramc/fsl_sdramc_driver.c"
+    "${ProjDirPath}/../../../../platform/drivers/inc/fsl_sdramc_driver.h"
+    "${ProjDirPath}/../../../../platform/drivers/src/sdramc/fsl_sdramc_common.c"
     "${ProjDirPath}/../../../../platform/hal/src/sim/MK26F18/fsl_sim_hal_MK26F18.c"
     "${ProjDirPath}/../../../../platform/hal/src/sim/MK26F18/fsl_sim_hal_MK26F18.h"
     "${ProjDirPath}/../../../../platform/hal/inc/fsl_sim_hal.h"

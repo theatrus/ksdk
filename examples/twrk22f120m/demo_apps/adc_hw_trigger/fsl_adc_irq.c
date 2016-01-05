@@ -90,7 +90,7 @@ void ADC0_IRQHandler(void)
     ADC_TEST_IRQHandler(0U);
 }
 
-#if (HW_ADC_INSTANCE_COUNT > 1U)
+#if (ADC_INSTANCE_COUNT > 1U)
 void ADC1_IRQHandler(void)
 {
     // Add user-defined ISR for ADC1
@@ -98,7 +98,7 @@ void ADC1_IRQHandler(void)
 }
 #endif
 
-#if (HW_ADC_INSTANCE_COUNT > 2U)
+#if (ADC_INSTANCE_COUNT > 2U)
 void ADC2_IRQHandler(void)
 {
     // Add user-defined ISR for ADC2
@@ -106,7 +106,7 @@ void ADC2_IRQHandler(void)
 }
 #endif
 
-#if (HW_ADC_INSTANCE_COUNT > 3U)
+#if (ADC_INSTANCE_COUNT > 3U)
 void ADC3_IRQHandler(void)
 {
     // Add user-defined ISR for ADC3

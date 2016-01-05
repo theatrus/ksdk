@@ -3,4 +3,4 @@
   <SchemaVersion>1.0</SchemaVersion>
   <Header>### uVision Project, (C) Keil Software</Header>
   <WorkspaceName>WorkSpace</WorkspaceName>
-<project><PathAndName>../../../../../usb/usb_core/device/build/mdk/usbd_sdk_usbkw24d512_bm/usbd_sdk_usbkw24d512_bm.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../lib/ksdk_platform_lib/mdk/KW24D5/ksdk_platform_lib.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>adc_low_power.uvprojx</PathAndName><NodeIsActive>1</NodeIsActive></project></ProjectWorkspace>
+<project><PathAndName>../../../../../lib/ksdk_platform_lib/mdk/KW24D5/ksdk_platform_lib.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>../../../../../usb/usb_core/device/lib/bm/mdk/MKW24D5/usbd_sdk_bm_lib.uvprojx</PathAndName><NodeIsActive>0</NodeIsActive></project><project><PathAndName>adc_low_power.uvprojx</PathAndName><NodeIsActive>1</NodeIsActive></project></ProjectWorkspace>

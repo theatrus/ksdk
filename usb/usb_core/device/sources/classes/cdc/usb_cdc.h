@@ -76,7 +76,7 @@ typedef struct _cdc_queue_struct
     usb_device_handle handle;
     uint8_t channel;
     cdc_app_data_struct_t app_data;
-}cdc_queue_struct_t;
+} cdc_queue_struct_t;
 #endif
 
 /* USB class cdc endpoint data */
@@ -121,6 +121,7 @@ typedef struct _cdc_variable_struct
     os_mutex_handle send_mutex;
     os_mutex_handle recv_mutex;
     bool has_sent_state;
+    uint8_t controller_id;
 } cdc_device_struct_t;
 
 /******************************************************************************
@@ -144,7 +145,7 @@ usb_status USB_Pstn_Init
 (
     cdc_device_struct_t * cdc_obj_ptr,
     usb_application_callback_struct_t* pstn_cb
-    );
+);
 /**************************************************************************//*!
  *
  * @name  USB_Pstn_Deinit
@@ -162,7 +163,7 @@ usb_status USB_Pstn_Init
 usb_status USB_Pstn_Deinit
 (
     cdc_device_struct_t * cdc_obj_ptr
-    );
+);
 /**************************************************************************//*!
  *
  * @name  PSTN_Get_Line_Coding
@@ -179,9 +180,9 @@ usb_status USB_Pstn_Deinit
  *
  *****************************************************************************/
 extern usb_status PSTN_Get_Line_Coding(cdc_device_struct_t * cdc_obj_ptr,
-    usb_setup_struct_t * setup_packet,
-    uint8_t * *data,
-    uint32_t *size);
+                                       usb_setup_struct_t * setup_packet,
+                                       uint8_t * *data,
+                                       uint32_t *size);
 
 /**************************************************************************//*!
  *
@@ -199,9 +200,9 @@ extern usb_status PSTN_Get_Line_Coding(cdc_device_struct_t * cdc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status PSTN_Set_Line_Coding(cdc_device_struct_t * cdc_obj_ptr,
-    usb_setup_struct_t * setup_packet,
-    uint8_t * *data,
-    uint32_t *size);
+                                       usb_setup_struct_t * setup_packet,
+                                       uint8_t * *data,
+                                       uint32_t *size);
 
 /**************************************************************************//*!
  *
@@ -220,9 +221,9 @@ extern usb_status PSTN_Set_Line_Coding(cdc_device_struct_t * cdc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status PSTN_Set_Ctrl_Line_State(cdc_device_struct_t * cdc_obj_ptr,
-    usb_setup_struct_t * setup_packet,
-    uint8_t * *data,
-    uint32_t *size);
+        usb_setup_struct_t * setup_packet,
+        uint8_t * *data,
+        uint32_t *size);
 
 /**************************************************************************//*!
  *
@@ -241,9 +242,9 @@ extern usb_status PSTN_Set_Ctrl_Line_State(cdc_device_struct_t * cdc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status PSTN_Send_Break(cdc_device_struct_t * cdc_obj_ptr,
-    usb_setup_struct_t * setup_packet,
-    uint8_t * *data,
-    uint32_t *size);
+                                  usb_setup_struct_t * setup_packet,
+                                  uint8_t * *data,
+                                  uint32_t *size);
 
 /**************************************************************************//*!
  *
@@ -261,9 +262,9 @@ extern usb_status PSTN_Send_Break(cdc_device_struct_t * cdc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status PSTN_Get_Comm_Feature(cdc_device_struct_t * cdc_obj_ptr,
-    usb_setup_struct_t * setup_packet,
-    uint8_t * *data,
-    uint32_t *size);
+                                        usb_setup_struct_t * setup_packet,
+                                        uint8_t * *data,
+                                        uint32_t *size);
 
 /**************************************************************************//*!
  *
@@ -281,9 +282,9 @@ extern usb_status PSTN_Get_Comm_Feature(cdc_device_struct_t * cdc_obj_ptr,
  *
  *****************************************************************************/
 extern usb_status PSTN_Set_Comm_Feature(cdc_device_struct_t * cdc_obj_ptr,
-    usb_setup_struct_t * setup_packet,
-    uint8_t * *data,
-    uint32_t *size);
+                                        usb_setup_struct_t * setup_packet,
+                                        uint8_t * *data,
+                                        uint32_t *size);
 
 /**************************************************************************//*!
  *
@@ -326,9 +327,9 @@ extern void PSTN_Response_Available(cdc_device_struct_t * cdc_obj_ptr);
  *
  *****************************************************************************/
 extern usb_status PSTN_Rndis_Message_Set(cdc_device_struct_t * cdc_obj_ptr,
-usb_setup_struct_t * setup_packet,
-uint8_t * *data,
-uint32_t *size);
+        usb_setup_struct_t * setup_packet,
+        uint8_t * *data,
+        uint32_t *size);
 /**************************************************************************//*!
  *
  * @name  PSTN_Rndis_Message_Get
@@ -345,49 +346,49 @@ uint32_t *size);
  *
  *****************************************************************************/
 extern usb_status PSTN_Rndis_Message_Get(cdc_device_struct_t * cdc_obj_ptr,
-usb_setup_struct_t * setup_packet,
-uint8_t * *data,
-uint32_t *size);
+        usb_setup_struct_t * setup_packet,
+        uint8_t * *data,
+        uint32_t *size);
 
 extern void RNDIS_Initialize_Command
 (
-cdc_device_struct_t * cdc_obj_ptr,
-uint8_t * *data,
-uint32_t *size
+    cdc_device_struct_t * cdc_obj_ptr,
+    uint8_t * *data,
+    uint32_t *size
 );
 extern void RNDIS_Query_Command
 (
-cdc_device_struct_t * cdc_obj_ptr,
-uint8_t * *data,
-uint32_t *size
+    cdc_device_struct_t * cdc_obj_ptr,
+    uint8_t * *data,
+    uint32_t *size
 );
 extern void RNDIS_Set_Command
 (
-cdc_device_struct_t * cdc_obj_ptr,
-uint8_t * *data,
-uint32_t *size
+    cdc_device_struct_t * cdc_obj_ptr,
+    uint8_t * *data,
+    uint32_t *size
 );
 extern void RNDIS_Reset_Command
 (
-cdc_device_struct_t * cdc_obj_ptr,
-uint8_t * *data,
-uint32_t *size
+    cdc_device_struct_t * cdc_obj_ptr,
+    uint8_t * *data,
+    uint32_t *size
 );
 extern void RNDIS_Indicate_Status_Command
 (
-cdc_device_struct_t * cdc_obj_ptr,
-uint8_t * *data,
-uint32_t *size
+    cdc_device_struct_t * cdc_obj_ptr,
+    uint8_t * *data,
+    uint32_t *size
 );
 extern void RNDIS_Keepalive_Command
 (
-cdc_device_struct_t * cdc_obj_ptr,
-uint8_t * *data,
-uint32_t *size
+    cdc_device_struct_t * cdc_obj_ptr,
+    uint8_t * *data,
+    uint32_t *size
 );
 extern void RNDIS_Halt_Command
 (
-cdc_device_struct_t * cdc_obj_ptr
+    cdc_device_struct_t * cdc_obj_ptr
 );
 
 #endif/*endif CDC_RNDIS_SUPPORT*/
@@ -416,6 +417,35 @@ void USB_Cdc_Mutex_Lock(os_mutex_handle handle);
  *
  *****************************************************************************/
 void USB_Cdc_Mutex_Unlock(os_mutex_handle handle);
+
+/*************************************************************************//*!
+ *
+ * @name  USB_Cdc_Get_Desc_Info
+ *
+ * @brief The function gets the info of the descriptors. .
+ *
+ * @param handle  index in device array.
+ * @param type     descriptor type.
+ * @param object   store the returned value.
+ * @return returns USB_OK if successful.
+ *
+ *****************************************************************************/
+usb_status USB_Cdc_Get_Desc_Info(cdc_device_struct_t * cdc_obj_ptr, USB_DESC_INFO_T type, uint32_t * object);
+
+/**************************************************************************//*!
+ *
+ * @name  USB_Map_Ep_To_Struct_Index
+ *
+ * @brief The function maps the endpoint num to the index of the ep data
+ *           structure
+ *
+ * @param handle          handle to identify the controller
+ * @param ep_num          endpoint num
+ *
+ * @return index          mapped index
+ *
+ *****************************************************************************/
+uint8_t USB_Map_Ep_To_Struct_Index(cdc_device_struct_t * cdc_obj_ptr, uint8_t ep_num);
 #endif
 
 /* EOF */

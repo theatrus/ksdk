@@ -57,7 +57,7 @@ typedef struct _crc_user_config
 {
     crc_prot_width_t crcWidth;      /*!< Selects 16 or 32-bit CRC protocol @internal gui name="Width" id="crcWidth" */
     uint32_t seed;                  /*!< Value of the seed (initial) CRC value @internal gui name="Seed" id="seed" */
-    uint32_t polynomial;            /*!< Value of the polynomial for the CRC calculation @internal gui name="Polynomial" id="polynomial" */
+    uint32_t polynomial;            /*!< Value of the polynomial for the CRC calculation @n Example polynomial: 0x1021 = 1_0000_0010_0001 = x^12+x^5+1 @internal gui name="Polynomial" id="polynomial" */
     crc_transpose_t writeTranspose; /*!< Defines transpose configuration of the data written to the CRC data register @internal gui name="Write transpose" id="writeTranspose" */
     crc_transpose_t readTranspose;  /*!< Defines transpose configuration of the value read from the CRC data register @internal gui name="Read transpose" id="readTranspose" */
     bool complementRead;            /*!< Enables complement read of CRC data register @internal gui name="Complement read" id="complementRead" */

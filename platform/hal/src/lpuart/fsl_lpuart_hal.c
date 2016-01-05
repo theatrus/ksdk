@@ -45,9 +45,15 @@ void LPUART_HAL_Init(LPUART_Type * base)
     LPUART_WR_BAUD(base, 0x0F000004);
     LPUART_WR_STAT(base, 0xC01FC000);
     LPUART_WR_CTRL(base, 0x00000000);
+    // Add this code to ensure that the TE bit has been cleared.
+    while(LPUART_BRD_CTRL_TE(base)){}
     LPUART_WR_MATCH(base, 0x00000000);
 #if FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT
     LPUART_WR_MODIR(base, 0x00000000);
+#endif
+#if FSL_FEATURE_LPUART_HAS_FIFO
+    LPUART_WR_FIFO(base, 0x00000022);
+    LPUART_WR_WATER(base, 0x00000000);
 #endif
 }
 
@@ -73,6 +79,11 @@ lpuart_status_t LPUART_HAL_SetBaudRate(LPUART_Type * base,
      * First calculate the baud rate using the minimum OSR possible (4) */
     osr = 4;
     sbr = (sourceClockInHz/(desiredBaudRate * osr));
+    /*set sbr to 1 if the sourceClockInHz can not satisfy the desired baud rate*/
+    if(sbr == 0) 
+    {
+        sbr = 1;
+    }
     calculatedBaud = (sourceClockInHz / (osr * sbr));
 
     if (calculatedBaud > desiredBaudRate)
@@ -90,6 +101,11 @@ lpuart_status_t LPUART_HAL_SetBaudRate(LPUART_Type * base,
     {
         /* calculate the temporary sbr value   */
         sbrTemp = (sourceClockInHz/(desiredBaudRate * i));
+       /*set sbrTemp to 1 if the sourceClockInHz can not satisfy the desired baud rate*/
+        if(sbrTemp == 0)
+        {
+            sbrTemp = 1;
+        }
         /* calculate the baud rate based on the temporary osr and sbr values */
         calculatedBaud = (sourceClockInHz / (i * sbrTemp));
 
@@ -337,6 +353,11 @@ void LPUART_HAL_SetIntMode(LPUART_Type * base, lpuart_interrupt_t interrupt, boo
             enable ? LPUART_SET_MODIR(base, temp) : LPUART_CLR_MODIR(base, temp);
             break;
 #endif
+#if FSL_FEATURE_LPUART_HAS_FIFO
+        case LPUART_FIFO_REG_ID :
+            enable ? LPUART_SET_FIFO(base, temp) : LPUART_CLR_FIFO(base, temp);
+            break;
+#endif
         default :
             break;
     }
@@ -373,6 +394,11 @@ bool LPUART_HAL_GetIntMode(LPUART_Type * base, lpuart_interrupt_t interrupt)
 #if FSL_FEATURE_LPUART_HAS_MODEM_SUPPORT
         case LPUART_MODIR_REG_ID:
             retVal = LPUART_RD_MODIR(base) >> (uint32_t)(interrupt) & 1U;
+            break;
+#endif
+#if FSL_FEATURE_LPUART_HAS_FIFO
+        case LPUART_FIFO_REG_ID:
+            retVal = LPUART_RD_FIFO(base) >> (uint32_t)(interrupt) & 1U;
             break;
 #endif
         default :
@@ -559,6 +585,11 @@ bool LPUART_HAL_GetStatusFlag(LPUART_Type * base, lpuart_status_flag_t statusFla
             retVal = LPUART_RD_MODIR(base) >> (uint32_t)(statusFlag) & 1U;
             break;
 #endif
+#if FSL_FEATURE_LPUART_HAS_FIFO
+        case LPUART_FIFO_REG_ID:
+            retVal = LPUART_RD_FIFO(base) >> (uint32_t)(statusFlag) & 1U;
+            break;
+#endif
         default:
             break;
     }
@@ -589,6 +620,10 @@ lpuart_status_t LPUART_HAL_ClearStatusFlag(LPUART_Type * base,
 #if FSL_FEATURE_LPUART_HAS_EXTENDED_DATA_REGISTER_FLAGS
         case kLpuartNoiseInCurrentWord:
         case kLpuartParityErrInCurrentWord:
+#endif
+#if FSL_FEATURE_LPUART_HAS_FIFO
+        case kLpuartTxBuffEmpty:
+        case kLpuartRxBuffEmpty:
 #endif
             returnCode = kStatus_LPUART_ClearStatusFlagError;
             break;
@@ -629,6 +664,15 @@ lpuart_status_t LPUART_HAL_ClearStatusFlag(LPUART_Type * base,
             LPUART_WR_STAT(base, LPUART_STAT_MA2F_MASK);
             break;
 #endif
+#if FSL_FEATURE_LPUART_HAS_FIFO
+        case kLpuartTxBuffOverflow:
+            LPUART_WR_FIFO(base, LPUART_FIFO_TXOF_MASK);
+            break;
+
+        case kLpuartRxBuffUnderflow:
+            LPUART_WR_FIFO(base, LPUART_FIFO_RXUF_MASK);
+            break;
+#endif
         default:
             returnCode = kStatus_LPUART_ClearStatusFlagError;
             break;
@@ -636,6 +680,201 @@ lpuart_status_t LPUART_HAL_ClearStatusFlag(LPUART_Type * base,
 
     return (returnCode);
 }
+
+/*******************************************************************************
+ * UART FIFO Configurations
+ ******************************************************************************/
+#if FSL_FEATURE_LPUART_HAS_FIFO
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : LPUART_HAL_SetTxFifo
+ * Description   : Enable or disable the LPUART transmit FIFO.
+ * This function allows the user to enable or disable the LPUART transmit FIFO.
+ * It is required that the transmitter/receiver should be disabled before
+ * calling this function and when the FIFO is empty. Additionally, TXFLUSH and
+ * RXFLUSH commands should be issued after calling this function.
+ *
+ *END**************************************************************************/
+lpuart_status_t LPUART_HAL_SetTxFifoCmd(LPUART_Type * base, bool enable)
+{
+    /* before enabling the tx fifo, LPUARTx_CTRL[TE] (transmitter) and
+     * LPUARTx_CTRL[RE] (receiver) must be disabled.
+     * if not, return an error code */
+    uint8_t txEnable = LPUART_BRD_CTRL_TE(base);
+    uint8_t rxEnable = LPUART_BRD_CTRL_RE(base);
+
+    if (txEnable || rxEnable)
+    {
+        return kStatus_LPUART_TxOrRxNotDisabled;
+    }
+    else
+    {
+        LPUART_BWR_FIFO_TXFE(base, enable);
+        return kStatus_LPUART_Success;
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : LPUART_HAL_SetRxFifoCmd
+ * Description   : Enable or disable the LPUART receive FIFO.
+ * This function allows the user to enable or disable the LPUART receive FIFO.
+ * It is required that the transmitter/receiver should be disabled before calling
+ * this function and when the FIFO is empty. Additionally, TXFLUSH and RXFLUSH
+ * commands should be issued after calling this function.
+ *
+ *END**************************************************************************/
+lpuart_status_t LPUART_HAL_SetRxFifoCmd(LPUART_Type * base, bool enable)
+{
+    /* before enabling the tx fifo, LPUARTx_CTRL[TE] (transmitter) and
+     * LPUARTx_CTRL[RE] (receiver) must be disabled.
+     * if not, return an error code */
+    uint8_t txEnable = LPUART_BRD_CTRL_TE(base);
+    uint8_t rxEnable = LPUART_BRD_CTRL_RE(base);
+
+    if (txEnable || rxEnable)
+    {
+        return kStatus_LPUART_TxOrRxNotDisabled;
+    }
+    else
+    {
+        LPUART_BWR_FIFO_RXFE(base, enable);
+        return kStatus_LPUART_Success;
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : LPUART_HAL_FlushTxFifo
+ * Description   : Flush the LPUART transmit FIFO.
+ * This function allows you to flush the LPUART transmit FIFO for a particular
+ * module base. Flushing the FIFO may result in data loss. It is recommended
+ * that the transmitter should be disabled before calling this function.
+ *
+ *END**************************************************************************/
+lpuart_status_t LPUART_HAL_FlushTxFifo(LPUART_Type * base)
+{
+    /* in order to flush the tx fifo, LPUARTx_CTRL[TE] (transmitter) must be
+     * disabled. If not, return an error code */
+    if (LPUART_BRD_CTRL_TE(base) != 0)
+    {
+        return kStatus_LPUART_TxNotDisabled;
+    }
+    else
+    {
+        /* Set the bit to flush fifo*/
+        LPUART_BWR_FIFO_TXFLUSH(base, 1U);
+        return kStatus_LPUART_Success;
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : LPUART_HAL_FlushRxFifo
+ * Description   : Flush the LPUART receive FIFO.
+ * This function allows you to flush the LPUART receive FIFO for a particular
+ * module base. Flushing the FIFO may result in data loss. It is recommended
+ * that the receiver should be disabled before calling this function.
+ *
+ *END**************************************************************************/
+lpuart_status_t LPUART_HAL_FlushRxFifo(LPUART_Type * base)
+{
+    /* in order to flush the rx fifo, LPUARTx_CTRL[RE] (receiver) must be disabled
+     * if not, return an error code. */
+    if (LPUART_BRD_CTRL_RE(base) != 0)
+    {
+        return kStatus_LPUART_RxNotDisabled;
+    }
+    else
+    {
+        /* Set the bit to flush fifo*/
+        LPUART_BWR_FIFO_RXFLUSH(base, 1U);
+        return kStatus_LPUART_Success;
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : LPUART_HAL_SetRxIdleEmpty
+ * Description   : Configures the LPUART receiver idle empty enable value.
+ * This function configures assertion of RDRF when the receiver is idle for a number of idle characters.
+ * It is required that the transmitter/receiver should be disabled before calling
+ * this function and when the FIFO is empty.
+ *
+ *END**************************************************************************/
+lpuart_status_t LPUART_HAL_SetRxIdleEmpty(LPUART_Type * base, lpuart_rx_idle_empty_config_t config)
+{
+    /* before enabling the rx idle empty, LPUARTx_CTRL[TE] (transmitter) and
+     * LPUARTx_CTRL[RE] (receiver) must be disabled.
+     * if not, return an error code */
+    uint8_t txEnable = LPUART_BRD_CTRL_TE(base);
+    uint8_t rxEnable = LPUART_BRD_CTRL_RE(base);
+
+    if (txEnable || rxEnable)
+    {
+        return kStatus_LPUART_TxOrRxNotDisabled;
+    }
+    else
+    {
+        LPUART_BWR_FIFO_RXIDEN(base, config);
+        return kStatus_LPUART_Success;
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : LPUART_HAL_SetTxFifoWatermark
+ * Description   : Set the LPUART transmit FIFO watermark value.
+ * Programming the transmit watermark should be done when LPUART the transmitter is
+ * disabled and the value must be set less than the size obtained from
+ * LPUART_HAL_GetTxFifoSize.
+ *
+ *END**************************************************************************/
+lpuart_status_t LPUART_HAL_SetTxFifoWatermark(LPUART_Type * base, uint8_t watermark)
+{
+    /* in order to set the tx watermark, LPUARTx_CTRL[TE] (transmitter) must be
+     * disabled. If not, return an error code */
+    if (LPUART_BRD_CTRL_TE(base) != 0)
+    {
+        return kStatus_LPUART_TxNotDisabled;
+    }
+    else
+    {
+        /* Programming the transmit watermark should be done when the
+         * transmitter is disabled and the value must be set less than
+         * the size given in FIFO[TXFIFOSIZE] */
+        LPUART_BWR_WATER_TXWATER(base, watermark);
+        return kStatus_LPUART_Success;
+    }
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : LPUART_HAL_SetRxFifoWatermark
+ * Description   : Set the LPUART receive FIFO watermark value.
+ * Programming the receive watermark should be done when the receiver is disabled
+ * and the value must be set less than the size obtained from LPUART_HAL_GetRxFifoSize
+ * and greater than zero.
+ *
+ *END**************************************************************************/
+lpuart_status_t LPUART_HAL_SetRxFifoWatermark(LPUART_Type * base, uint8_t watermark)
+{
+    /* in order to set the rx watermark, UARTx_C2[RE] (receiver) must be disabled
+     * if not, return an error code. */
+    if (LPUART_BRD_CTRL_RE(base) != 0)
+    {
+        return kStatus_LPUART_RxNotDisabled;
+    }
+    else
+    {
+        /* Programming the receive watermark should be done when the receiver is
+         * disabled and the value must be set less than the size given in
+         * FIFO[RXFIFOSIZE] and greater than zero.  */
+        LPUART_BWR_WATER_RXWATER(base, watermark);
+        return kStatus_LPUART_Success;
+    }
+}
+#endif  /* FSL_FEATURE_LPUART_HAS_FIFO*/
 
 #endif /* FSL_FEATURE_SOC_LPUART_COUNT */
 /*******************************************************************************

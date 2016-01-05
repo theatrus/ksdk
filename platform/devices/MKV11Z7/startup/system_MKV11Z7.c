@@ -8,14 +8,14 @@
 **
 **     Reference manual:    KV11P64M75RM Rev.0, November 2014
 **     Version:             rev. 1.0, 2014-12-14
-**     Build:               b150202
+**     Build:               b150409
 **
 **     Abstract:
 **         Provides a system configuration function and a global variable that
 **         contains the system frequency. It configures the device and initializes
 **         the oscillator (PLL) that is part of the microcontroller device.
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -141,7 +141,7 @@ void SystemInit (void) {
   SIM->SOPT1 = ((SIM->SOPT1) & (uint32_t)(~(SIM_SOPT1_OSC32KSEL_MASK))) | ((SYSTEM_SIM_SOPT1_VALUE) & (SIM_SOPT1_OSC32KSEL_MASK)); /* Set 32 kHz clock source (ERCLK32K) */
 #if ((MCG_MODE == MCG_MODE_FEI) || (MCG_MODE == MCG_MODE_FBI) || (MCG_MODE == MCG_MODE_BLPI))
   /* Set MCG and OSC */
-#if  ((((SYSTEM_OSC0_CR_VALUE) & OSC_CR_ERCLKEN_MASK) != 0x00U) || (((SYSTEM_MCG_C5_VALUE) & MCG_C5__MASK) != 0x00U))
+#if  (((SYSTEM_OSC0_CR_VALUE) & OSC_CR_ERCLKEN_MASK) != 0x00U)
   /* SIM_SCGC5: PORTA=1 */
   SIM->SCGC5 |= SIM_SCGC5_PORTA_MASK;
   /* PORTA_PCR18: ISF=0,MUX=0 */
@@ -303,6 +303,5 @@ void SystemCoreClockUpdate (void) {
     return;
   } /* (!((MCG->C1 & MCG_C1_CLKS_MASK) == 0x80U)) */
   SystemCoreClock = (MCGOUTClock / (0x01U + ((SIM->CLKDIV1 & SIM_CLKDIV1_OUTDIV1_MASK) >> SIM_CLKDIV1_OUTDIV1_SHIFT)));
-
 
 }

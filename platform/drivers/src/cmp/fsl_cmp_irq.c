@@ -29,11 +29,36 @@
  */
 
 #include "fsl_cmp_driver.h"
+#include "fsl_clock_manager.h"
 #if FSL_FEATURE_SOC_CMP_COUNT
 
 /******************************************************************************
  * IRQ Handlers
  *****************************************************************************/
+#if defined (KM34Z7_SERIES)
+/* CMP IRQ handler that would cover the same name's APIs in startup code. */
+void CMP0_CMP1_CMP2_IRQHandler(void)
+{
+    for(uint32_t i=0; i < CMP_INSTANCE_COUNT; i++)
+    {
+        if (CLOCK_SYS_GetCmpGateCmd(i))
+        {
+            /* Add user-defined ISR for CMP. */
+
+            /* Clear flags. */
+            if ( CMP_DRV_GetFlag(i, kCmpFlagOfCoutRising) )
+            {
+                CMP_DRV_ClearFlag(i, kCmpFlagOfCoutRising);
+            }
+            if ( CMP_DRV_GetFlag(i, kCmpFlagOfCoutFalling) )
+            {
+                CMP_DRV_ClearFlag(i, kCmpFlagOfCoutFalling);
+            }
+        }
+    }
+}
+
+#else
 /* CMP IRQ handler that would cover the same name's APIs in startup code. */
 #if CMP_INSTANCE_COUNT > 0
 void CMP0_IRQHandler(void)
@@ -85,7 +110,8 @@ void CMP2_IRQHandler(void)
     }
 }
 #endif /* CMP_INSTANCE_COUNT > 2 */
-#endif
+#endif /* defined (KM34Z7_SERIES) */
+#endif /* FSL_FEATURE_SOC_CMP_COUNT */
 
 /*******************************************************************************
  * EOF

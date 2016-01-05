@@ -1,15 +1,19 @@
 /*
 ** ###################################################################
-**     Processor:           MKV10Z128VLH7
+**     Processors:          MKV10Z128VLC7
+**                          MKV10Z128VFM7
+**                          MKV10Z128VLF7
+**                          MKV10Z128VLH7
+**
 **     Compiler:            IAR ANSI C/C++ Compiler for ARM
-**     Reference manual:    KV11P64M75RM Rev.0, November 2014
+**     Reference manual:    KV11P64M75RM Rev.2, April 2015
 **     Version:             rev. 1.0, 2014-12-14
-**     Build:               b150202
+**     Build:               b150629
 **
 **     Abstract:
 **         Linker file for the IAR ANSI C/C++ Compiler for ARM
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,

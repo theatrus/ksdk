@@ -87,13 +87,9 @@ static usb_interfaces_struct_t usb_configuration[USB_CDC_CFG_MAX] = {
 static usb_class_struct_t usb_dec_class[USB_CDC_CLASS_MAX] =
 {
     {
-        USB_CLASS_CDC,
+        USB_CLASS_COMMUNICATION,
         USB_DESC_CONFIGURATION(USB_CDC_IF_MAX, usb_if),
     },
-    {
-        USB_CLASS_INVALID,
-        USB_DESC_CONFIGURATION(0, NULL),
-    }
 };
 
 uint8_t g_device_descriptor[DEVICE_DESCRIPTOR_SIZE] =
@@ -702,10 +698,10 @@ bool USB_Desc_Remote_Wakeup(uint32_t handle)
 
 /**************************************************************************//*!
  *
- * @name  USB_Set_Configation
+ * @name  USB_Set_Configuration
  *
- * @brief The function checks whether the configuration parameter
- *        input is valid or not
+ * @brief The function set the configuration value of device
+ *
  *
  * @param handle          handle
  * @param config_val      configuration value
@@ -713,18 +709,14 @@ bool USB_Desc_Remote_Wakeup(uint32_t handle)
  * @return TRUE           When Valid
  *         FALSE          When Error
  *****************************************************************************/
-uint8_t USB_Set_Configation
+uint8_t USB_Set_Configuration
 (
-	cdc_handle_t handle, uint8_t config
+    cdc_handle_t handle, uint8_t config
 
 )
 {
     UNUSED_ARGUMENT (handle)
-    uint32_t i;
-    for(i = 0; USB_CLASS_INVALID != usb_dec_class[i].type; i++)
-    {
-        usb_dec_class[i].interfaces = usb_configuration[config - 1]; /*config num starts from 1*/
-    }
+    usb_dec_class[0].interfaces = usb_configuration[config - 1]; /*config num starts from 1*/
     return USB_OK;
 }
 
@@ -758,7 +750,7 @@ usb_desc_request_notify_struct_t  desc_callback =
    USB_Desc_Get_Descriptor,
    USB_Desc_Get_Interface,
    USB_Desc_Set_Interface,
-   USB_Set_Configation,
+   USB_Set_Configuration,
    USB_Desc_Get_Entity
 };
 

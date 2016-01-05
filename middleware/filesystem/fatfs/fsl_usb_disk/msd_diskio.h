@@ -39,7 +39,9 @@
 //#include "derivative.h"
 #include "usb_host_msd_ufi.h"
 #include "diskio.h"
+#ifndef HIGH_SPEED
 #define  HIGH_SPEED                        (0)
+#endif
 
 #if HIGH_SPEED
 #define CONTROLLER_ID                      USB_CONTROLLER_EHCI_0
@@ -79,7 +81,8 @@ typedef struct device_struct
     uint32_t                        dev_state;  /* Attach/detach state */
     usb_device_instance_handle      dev_handle;
     usb_interface_descriptor_handle intf_handle;
-    usb_class_handle                     CLASS_HANDLE; /* Class-specific info */
+    usb_class_handle                class_handle; /* Class-specific info */
+    uint32_t                        state_change;
 } device_struct_t;
 
 extern  device_struct_t                        g_mass_device[USBCFG_MAX_INSTANCE];

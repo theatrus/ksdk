@@ -175,7 +175,7 @@ uint32_t DMA_DRV_RequestChannel(
 
         return kDmaInvalidChannel;
     }
- 
+
     /*static allocation */
     DMA_DRV_LOCK();
     if (!g_dma->dmaChan[channel])
@@ -328,8 +328,8 @@ void DMA_DRV_IRQhandler(uint32_t channel)
  *
  *END**************************************************************************/
 dma_status_t DMA_DRV_ConfigTransfer(
-        dma_channel_t *chn, dma_transfer_type_t type, uint32_t size,
-        uint32_t sourceAddr, uint32_t destAddr, uint32_t length)
+        dma_channel_t *chn, dma_transfer_type_t type, uint32_t size, uint32_t
+        sourceAddr, uint32_t destAddr, uint32_t length)
 {
     DMA_Type * dmaBaseAddr = g_dmaBase[chn->channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
     dma_transfer_size_t transfersize;
@@ -348,8 +348,11 @@ dma_status_t DMA_DRV_ConfigTransfer(
             return kStatus_DMA_InvalidArgument;
     }
 
-    DMA_HAL_ConfigTransfer(
-        dmaBaseAddr,chn->channel,transfersize,type,sourceAddr,destAddr,length);
+    /* Clear the DMA status. */
+    DMA_HAL_ClearStatus(dmaBaseAddr, chn->channel);
+
+    DMA_HAL_ConfigTransfer(dmaBaseAddr, chn->channel, transfersize,
+        type, sourceAddr, destAddr, length);
 
     return kStatus_DMA_Success;
 }
@@ -368,9 +371,71 @@ dma_status_t DMA_DRV_ConfigChanLink(
     DMA_HAL_SetChanLink(base, channel,link_config);
     return kStatus_DMA_Success;
 }
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : DMA_DRV_SetDestTransferSize
+ * Description   : Update DMA destination transfer size
+ *
+ *END**************************************************************************/
+dma_status_t DMA_DRV_SetDestTransferSize(dma_channel_t *chn, uint32_t transferSize)
+{
+    dma_transfer_size_t size;
+    uint32_t channel = chn->channel;
+    DMA_Type * base = g_dmaBase[channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+
+    switch (transferSize)
+    {
+        case 1:
+            size = kDmaTransfersize8bits;
+            break;
+        case 2:
+            size = kDmaTransfersize16bits;
+            break;
+        case 4:
+            size = kDmaTransfersize32bits;
+            break;
+        default:
+            return kStatus_DMA_InvalidArgument;
+    }
+
+    DMA_HAL_SetDestTransferSize(base, channel, size);
+    return kStatus_DMA_Success;
+}
+
+/*FUNCTION**********************************************************************
+ *
+ * Function Name : DMA_DRV_SetSourceTransferSize
+ * Description   : Update DMA source transfer size
+ *
+ *END**************************************************************************/
+dma_status_t DMA_DRV_SetSourceTransferSize(dma_channel_t *chn, uint32_t transferSize)
+{
+    dma_transfer_size_t size;
+    uint32_t channel = chn->channel;
+    DMA_Type * base = g_dmaBase[channel/FSL_FEATURE_DMA_DMAMUX_CHANNELS];
+
+    switch (transferSize)
+    {
+        case 1:
+            size = kDmaTransfersize8bits;
+            break;
+        case 2:
+            size = kDmaTransfersize16bits;
+            break;
+        case 4:
+            size = kDmaTransfersize32bits;
+            break;
+        default:
+            return kStatus_DMA_InvalidArgument;
+    }
+
+    DMA_HAL_SetSourceTransferSize(base, channel, size);
+    return kStatus_DMA_Success;
+}
+
 #endif
 
 /*******************************************************************************
  * EOF
  ******************************************************************************/
-

@@ -52,7 +52,7 @@
  ****************************************************************************/
 msc_device_struct_t g_msc_class[MAX_MSC_DEVICE];
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
 cbw_t g_msc_class_cbw;
 csw_t g_msc_class_csw;
 #endif
@@ -153,44 +153,47 @@ static msc_device_struct_t * USB_Msd_Get_Device_Ptr(msd_handle_t handle)
  *****************************************************************************/
 static usb_status USB_Msd_Get_Desc_Info(msc_device_struct_t * msc_dev_ptr,USB_MSD_DESC_INFO_T type, uint32_t * object)
 {
-#if USBCFG_DEV_COMPOSITE
-    uint32_t interface_index = 0xFF;
-#endif
+
     /* Get class info */
 
     switch(type)
     {
         case USB_MSD_INTERFACE_COUNT:
-#if USBCFG_DEV_COMPOSITE
-        *object = MAX_MSC_SUPPORTED_INTERFACES + 2;
-#else
-        *object = MAX_MSC_SUPPORTED_INTERFACES;
-#endif
-        break;
-#if USBCFG_DEV_COMPOSITE
-        case USB_MSD_CLASS_INFO:
+        if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(msc_dev_ptr->controller_id))
         {
-            uint32_t class_i;
-            usb_composite_info_struct_t* usbcompinfoPtr;
-            /* Get class info */
-            msc_dev_ptr->desc_callback.get_desc_entity((uint32_t)msc_dev_ptr->controller_handle,
-            USB_COMPOSITE_INFO,
-            (uint32_t *)&usbcompinfoPtr);
-            msc_dev_ptr->desc_callback.get_desc_entity((uint32_t)msc_dev_ptr,
-            USB_CLASS_INTERFACE_INDEX_INFO,
-            (uint32_t *)&interface_index);
-            *object = 0;
-            for (class_i = 0; class_i < usbcompinfoPtr->count; class_i++)
+            *object = MAX_MSC_SUPPORTED_INTERFACES + 2;
+        }
+        else
+        {
+            *object = MAX_MSC_SUPPORTED_INTERFACES;
+        }
+        break;
+        case USB_MSD_CLASS_INFO:
+        {  
+            if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(msc_dev_ptr->controller_id))
             {
-                if ((USB_CLASS_MSC == usbcompinfoPtr->class_handle[class_i].type) && (class_i == interface_index))
+                uint32_t interface_index = 0xFF;
+                uint32_t class_i;
+                usb_composite_info_struct_t* usbcompinfoPtr;
+                /* Get class info */
+                msc_dev_ptr->desc_callback.get_desc_entity((uint32_t)msc_dev_ptr,
+                USB_COMPOSITE_INFO,
+                (uint32_t *)&usbcompinfoPtr);
+                msc_dev_ptr->desc_callback.get_desc_entity((uint32_t)msc_dev_ptr,
+                USB_CLASS_INTERFACE_INDEX_INFO,
+                (uint32_t *)&interface_index);
+                *object = 0;
+                for (class_i = 0; class_i < usbcompinfoPtr->count; class_i++)
                 {
-                    *object = (uint32_t)&(usbcompinfoPtr->class_handle[class_i]);
-                    break;
+                    if ((USB_CLASS_MASS_STORAGE == usbcompinfoPtr->class_handle[class_i].type) && (class_i == interface_index))
+                    {
+                        *object = (uint32_t)&(usbcompinfoPtr->class_handle[class_i]);
+                        break;
+                    }
                 }
             }
         }
         break;
-#endif
         default :
         break;
     }
@@ -465,7 +468,7 @@ void USB_Service_Bulk_Out(usb_event_struct_t* event,void* arg)
     msc_device_struct_t * msc_obj_ptr;
     //uint32_t signature = USB_DCBWSIGNATURE;
     //USB_PRINTF("\nsignature is :%x",signature);
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS)) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS))
     uint8_t have_transfer = 0;
 #endif
 
@@ -540,7 +543,7 @@ void USB_Service_Bulk_Out(usb_event_struct_t* event,void* arg)
             )
             {
 //#ifdef MUTILE_BUFFER
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS)) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS))
                 lba_app_struct_t lba_data2;
                 if (msc_obj_ptr->transfer_remaining)
                 {
@@ -576,7 +579,7 @@ void USB_Service_Bulk_Out(usb_event_struct_t* event,void* arg)
                 msc_obj_ptr->class_specific_callback.callback(USB_DEV_EVENT_DATA_RECEIVED,
                 USB_REQ_VAL_INVALID,NULL,(uint32_t *)&lba_data1, msc_obj_ptr->class_specific_callback.arg);
             }
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS)) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS))
             if((msc_obj_ptr->transfer_remaining) && (have_transfer == 0))
 #else
             if(msc_obj_ptr->transfer_remaining)
@@ -668,6 +671,11 @@ void USB_Service_Bulk_Out(usb_event_struct_t* event,void* arg)
         /* set flag if send is going to send data in coming transaction */
         msc_obj_ptr->in_flag = (bool)(( (cbw_ptr->flag & USB_CBW_DIRECTION_BIT)
         && (cbw_ptr->data_length))?TRUE:FALSE);
+        /* if bulk_in has been stalled */
+        if ((0 != msc_obj_ptr->in_flag) && (0 != msc_obj_ptr->in_stall_flag))
+        {
+            return;
+        }
         /* Process the command */
         error = process_mass_storage_command(msc_obj_ptr, cbw_ptr,
         &(msc_obj_ptr->csw_ptr->residue), &(msc_obj_ptr->csw_ptr->csw_status));
@@ -769,15 +777,18 @@ void USB_Class_MSC_Event(uint8_t event, void* val,void* arg)
 #endif  
             return;
         }
-#if USBCFG_DEV_COMPOSITE
-        /* Get class info */
-        USB_Msd_Get_Desc_Info(msc_dev_ptr, USB_MSD_CLASS_INFO, (uint32_t *)&usbclassPtr);
-        USB_Msd_Get_Desc_Info(msc_dev_ptr, USB_MSD_INTERFACE_COUNT, &msc_dev_ptr->usb_max_suported_interfaces);
-#else
-        msc_dev_ptr->desc_callback.get_desc_entity((uint32_t)msc_dev_ptr->controller_handle,
-        USB_CLASS_INFO, (uint32_t*)&usbclassPtr);
-        USB_Msd_Get_Desc_Info(msc_dev_ptr, USB_MSD_INTERFACE_COUNT, &msc_dev_ptr->usb_max_suported_interfaces);
-#endif
+        if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(msc_dev_ptr->controller_id))
+        {
+            /* Get class info */
+            USB_Msd_Get_Desc_Info(msc_dev_ptr, USB_MSD_CLASS_INFO, (uint32_t *)&usbclassPtr);
+            USB_Msd_Get_Desc_Info(msc_dev_ptr, USB_MSD_INTERFACE_COUNT, &msc_dev_ptr->usb_max_suported_interfaces);
+        }
+        else
+        {
+            msc_dev_ptr->desc_callback.get_desc_entity((uint32_t)msc_dev_ptr->controller_handle,
+            USB_CLASS_INFO, (uint32_t*)&usbclassPtr);
+            USB_Msd_Get_Desc_Info(msc_dev_ptr, USB_MSD_INTERFACE_COUNT, &msc_dev_ptr->usb_max_suported_interfaces);
+        }
         if(usbclassPtr == NULL)
         {
             USB_PRINTF("not find msd interface\n");
@@ -1086,6 +1097,7 @@ void* arg
                 msc_dev_ptr->cbw_prime_flag = FALSE;
                 msc_dev_ptr->csw_prime_flag = FALSE;
                 msc_dev_ptr->need_to_prepare_next = TRUE;
+                msc_dev_ptr->stall_status = 0;
 //                    usb_device_recv_data(msc_dev_ptr->controller_handle, 
 //                        msc_dev_ptr->bulk_out_endpoint, (uint8_t*)msc_dev_ptr->cbw_ptr, MSC_CBW_LENGTH);
             }
@@ -1132,10 +1144,9 @@ void* arg
  ******************************************************************************/
 usb_status USB_Class_MSC_Init
 (
-uint8_t controller_id,
-msc_config_struct_t* msd_config_ptr,
-msd_handle_t * msd_handle
-
+    uint8_t controller_id,
+    msc_config_struct_t* msd_config_ptr,
+    msd_handle_t * msd_handle
 )
 {
 #if _DEBUG
@@ -1158,50 +1169,9 @@ msd_handle_t * msd_handle
         return error;
     }
 
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK))
     devicePtr->cbw_ptr = &g_msc_class_cbw; /* Initializing */
     devicePtr->csw_ptr = &g_msc_class_csw;
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    devicePtr->cbw_ptr = (cbw_t *)OS_Mem_alloc_uncached_align(sizeof(cbw_t), 32);
-    if (NULL == devicePtr->cbw_ptr)
-    {
-#if _DEBUG
-        USB_PRINTF("6: USB_Class_MSC_Init: Memalloc failed\n");
-#endif
-        error = USBERR_ALLOC;
-        if(NULL != devicePtr->csw_ptr)
-        {
-            OS_Mem_free(devicePtr->csw_ptr);
-            devicePtr->csw_ptr = NULL;
-        }
-        if(NULL != devicePtr->cbw_ptr)
-        {
-            OS_Mem_free(devicePtr->cbw_ptr);
-            devicePtr->cbw_ptr = NULL;
-        }
-        *msd_handle = (unsigned long)0;
-        return error;
-    }
-    devicePtr->csw_ptr = (csw_t *)OS_Mem_alloc_uncached_align(sizeof(csw_t), 32);
-    if (NULL == devicePtr->csw_ptr)
-    {
-#if _DEBUG
-        USB_PRINTF("7: USB_Class_MSC_Init: Memalloc failed\n");
-#endif  
-        error = USBERR_ALLOC;
-        if(NULL != devicePtr->csw_ptr)
-        {
-            OS_Mem_free(devicePtr->csw_ptr);
-            devicePtr->csw_ptr = NULL;
-        }
-        if(NULL != devicePtr->cbw_ptr)
-        {
-            OS_Mem_free(devicePtr->cbw_ptr);
-            devicePtr->cbw_ptr = NULL;
-        }
-        *msd_handle = (unsigned long)0;
-        return error;
-    }
 #endif
     OS_Mem_zero(devicePtr->cbw_ptr, MSC_CBW_LENGTH);
     OS_Mem_zero(devicePtr->csw_ptr, MSC_CSW_LENGTH);
@@ -1226,78 +1196,62 @@ msd_handle_t * msd_handle
         devicePtr->msc_application_callback.callback(USB_MSC_DEVICE_GET_SEND_BUFF_INFO, &devicePtr->msd_buff.msc_bulk_in_size , NULL);
         devicePtr->msc_application_callback.callback(USB_MSC_DEVICE_GET_RECV_BUFF_INFO, &devicePtr->msd_buff.msc_bulk_out_size , NULL);
     }
-#if USBCFG_DEV_COMPOSITE
-    devicePtr->class_handle = USB_Class_Get_Class_Handle();
+    
+    devicePtr->controller_id = controller_id;
+    if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(devicePtr->controller_id))
+    {
+        devicePtr->class_handle = USB_Class_Get_Class_Handle(devicePtr->controller_id);
 
-    devicePtr->controller_handle = (usb_device_handle)USB_Class_Get_Ctrler_Handle(devicePtr->class_handle);
-    if(NULL == devicePtr->controller_handle)
-    {
+        devicePtr->controller_handle = (usb_device_handle)USB_Class_Get_Ctrler_Handle(devicePtr->class_handle);
+        if(NULL == devicePtr->controller_handle)
+        {
+            error = USBERR_ERROR;
 #if _DEBUG
-        USB_PRINTF("4: USB_Class_MSC_Init: call USB_Class_Get_Ctrler_Handle failed\n");
+            USB_PRINTF("3: USB_Class_MSC_Init: call USB_Class_Get_Ctrler_Handle failed\n");
 #endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        if(NULL != devicePtr->csw_ptr)
-        {
-            OS_Mem_free(devicePtr->csw_ptr);
-            devicePtr->csw_ptr = NULL;
+            *msd_handle = (unsigned long)0;
+            USB_Msd_Free_Handle(devicePtr);
+            return error;
         }
-        if(NULL != devicePtr->cbw_ptr)
+   }
+   else
+   {
+        /* Initialize the device layer*/
+        error = usb_device_init(controller_id, (void* )&msd_config_ptr->board_init_callback, (&devicePtr->controller_handle));
+        /* +1 is for Control Endpoint */
+        if(error != USB_OK)
         {
-            OS_Mem_free(devicePtr->cbw_ptr);
-            devicePtr->cbw_ptr = NULL;
-        }
-#endif
-        *msd_handle = (unsigned long)0;
-        return error;
-    }
-#else
-    /* Initialize the device layer*/
-    error = usb_device_init(controller_id,(&devicePtr->controller_handle));
-    /* +1 is for Control Endpoint */
-    if(error != USB_OK)
-    {
 #if _DEBUG
-        USB_PRINTF("4: USB_Class_MSC_Init: call usb_device_init failed\n");
+            USB_PRINTF("4: USB_Class_MSC_Init: call usb_device_init failed\n");
 #endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        if(NULL != devicePtr->csw_ptr)
-        {
-            OS_Mem_free(devicePtr->csw_ptr);
-            devicePtr->csw_ptr = NULL;
+            *msd_handle = (unsigned long)0;
+            USB_Msd_Free_Handle(devicePtr);
+            return error;
         }
-        if(NULL != devicePtr->cbw_ptr)
-        {
-            OS_Mem_free(devicePtr->cbw_ptr);
-            devicePtr->cbw_ptr = NULL;
+        /* Initialize the generic class functions */
+        devicePtr->class_handle = USB_Class_Init(devicePtr->controller_handle,USB_Class_MSC_Event,
+        USB_MSC_Requests,(void *)devicePtr,msd_config_ptr->desc_callback_ptr);
+        if((class_handle_t)NULL == devicePtr->class_handle)
+        {   
+            error = USBERR_ERROR;
+    #if _DEBUG
+            USB_PRINTF("5: USB_Class_MSC_Init: USB_Class_Init failed\n");
+    #endif
+            *msd_handle = (unsigned long)0;
+            USB_Msd_Free_Handle(devicePtr);
+            return error;
         }
-#endif
-        *msd_handle = (unsigned long)0;
-        return error;
-    }
-    /* Initialize the generic class functions */
-    devicePtr->class_handle = USB_Class_Init(devicePtr->controller_handle,USB_Class_MSC_Event,
-    USB_MSC_Requests,(void *)devicePtr,msd_config_ptr->desc_callback_ptr);
-#endif
+   }
 
     devicePtr->desc_callback.get_desc_entity((uint32_t)devicePtr,USB_MSC_LBA_INFO, (uint32_t *)&usb_msd_lba_info_ptr);
     if(NULL == usb_msd_lba_info_ptr)
-    {
+    {   
+        error = USBERR_ERROR;
 #if _DEBUG
-        USB_PRINTF("9: USB_Class_MSC_Init: get msd lba info failed\n");
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        if(NULL != devicePtr->csw_ptr)
-        {
-            OS_Mem_free(devicePtr->csw_ptr);
-            devicePtr->csw_ptr = NULL;
-        }
-        if(NULL != devicePtr->cbw_ptr)
-        {
-            OS_Mem_free(devicePtr->cbw_ptr);
-            devicePtr->cbw_ptr = NULL;
-        }
+        USB_PRINTF("6: USB_Class_MSC_Init: get msd lba info failed\n");
 #endif
         *msd_handle = (unsigned long)0;
+        USB_Msd_Free_Handle(devicePtr);
         return error;
     }
     devicePtr->device_info.length_of_each_lab_of_device = usb_msd_lba_info_ptr->length_of_each_lab_of_device;
@@ -1314,21 +1268,10 @@ msd_handle_t * msd_handle
     if(error != USB_OK)
     {
 #if _DEBUG
-        USB_PRINTF("10: USB_Class_MSC_Init: call USB_MSC_SCSI_Init failed\n");
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        if(NULL != devicePtr->csw_ptr)
-        {
-            OS_Mem_free(devicePtr->csw_ptr);
-            devicePtr->csw_ptr = NULL;
-        }
-        if(NULL != devicePtr->cbw_ptr)
-        {
-            OS_Mem_free(devicePtr->cbw_ptr);
-            devicePtr->cbw_ptr = NULL;
-        }
+        USB_PRINTF("7: USB_Class_MSC_Init: call USB_MSC_SCSI_Init failed\n");
 #endif
         *msd_handle = (unsigned long)0;
+        USB_Msd_Free_Handle(devicePtr);
         return error;
     }
 
@@ -1337,9 +1280,10 @@ msd_handle_t * msd_handle
 
     *msd_handle = (unsigned long)devicePtr;
     devicePtr->msc_handle = *msd_handle;
-#if !USBCFG_DEV_COMPOSITE 
-    usb_device_postinit(controller_id,devicePtr->controller_handle);
-#endif
+    if(USB_UNINITIALIZED_VAL_32 == USB_Class_Get_Class_Handle(devicePtr->controller_id))
+    {
+        usb_device_postinit(controller_id,devicePtr->controller_handle);
+    }
     return USB_OK;
 }
 
@@ -1380,32 +1324,21 @@ msd_handle_t msd_handle /*[IN]*/
         error = USB_MSC_SCSI_Deinit(devicePtr);
     }
 
-#if !USBCFG_DEV_COMPOSITE
-    if(error == USB_OK)
+    if(USB_UNINITIALIZED_VAL_32 != USB_Class_Get_Class_Handle(devicePtr->controller_id))
     {
-        /* De-initialize the generic class functions */
-        error = USB_Class_Deinit(devicePtr->controller_handle,devicePtr->class_handle);
+        if(error == USB_OK)
+        {
+            /* De-initialize the generic class functions */
+            error = USB_Class_Deinit(devicePtr->controller_handle,devicePtr->class_handle);
+        }
+        if(error == USB_OK)
+        {
+            /* De-initialize the device layer*/
+            error = usb_device_deinit(devicePtr->controller_handle);
+        }
     }
     if(error == USB_OK)
     {
-        /* De-initialize the device layer*/
-        error = usb_device_deinit(devicePtr->controller_handle);
-    }
-#endif
-    if(error == USB_OK)
-    {
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-        if(NULL != devicePtr->csw_ptr)
-        {
-            OS_Mem_free(devicePtr->csw_ptr);
-            devicePtr->csw_ptr = NULL;
-        }
-        if(NULL != devicePtr->cbw_ptr)
-        {
-            OS_Mem_free(devicePtr->cbw_ptr);
-            devicePtr->cbw_ptr = NULL;
-        }
-#endif
         USB_Msd_Free_Handle(devicePtr);
     }
     return error;

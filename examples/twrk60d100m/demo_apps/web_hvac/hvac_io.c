@@ -259,7 +259,7 @@ void HVAC_InitializeADC(void) {
     calibrateParams();
     if (init_adc(ADC_0))
     {
-        PRINTF("Failed to do the ADC init\n");
+        PRINTF("Failed to do the ADC init\r\n");
     }
     // setup the HW trigger source
     init_trigger_source(ADC_0);

@@ -61,34 +61,28 @@ usb_pin_detect_service_t host_pin_detect_service[MAX_EHCI_DEV_NUM];
 #define EHCI_EVENT_SYS_ERROR    0x20
 #define EHCI_EVENT_ID_CHANGE    0x40
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)             /* USB stack running on MQX */
-#define USB_EHCI_HOST_TASK_ADDRESS                    _usb_ehci_host_task_stun
+//qtd software default timeout is 30*100ms = 3S
+#define QTD_TIMEOUT_DEFAULT  100
 
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)            /* USB stack running on BM  */
-#define USB_EHCI_HOST_TASK_ADDRESS                    _usb_ehci_host_task
 
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)           /* USB stack running on uCOS */
 #if !(USE_RTOS)
 #define USB_EHCI_HOST_TASK_ADDRESS                    _usb_ehci_host_task
 #else
 #define USB_EHCI_HOST_TASK_ADDRESS                    _usb_ehci_host_task_stun
 #endif
-#endif
 
-#define USB_EHCI_HOST_TASK_PRIORITY                    (6)
 #define USB_EHCI_HOST_TASK_STACKSIZE                   1600
 #define USB_EHCI_HOST_TASK_NAME                        "EHCI HOST Task"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)  || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && USE_RTOS) /* USB stack running on MQX */
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && USE_RTOS) /* USB stack running on MQX */
 #define USB_NONBLOCKING_MODE 0
 
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS)) /* USB stack running on BM */
+#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (!USE_RTOS)) /* USB stack running on BM */
 #define USB_NONBLOCKING_MODE 1
 #endif
 
 #endif
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 #if defined( __ICCARM__ )
     #pragma data_alignment=4096
@@ -99,7 +93,6 @@ usb_pin_detect_service_t host_pin_detect_service[MAX_EHCI_DEV_NUM];
     #error Unsupported compiler, please use IAR, Keil or arm gcc compiler and rebuild the project.
 #endif
 
-#endif
 
 
 
@@ -112,11 +105,13 @@ extern usb_host_state_struct_t g_usb_host[2];
 
 static uint8_t uframe_max[8] = {125, 125, 125, 125, 125, 125, 125, 25};
 
-
+#define USBHS_USBMODE_CM_HOST_MASK    USBHS_USBMODE_CM(3)
 #if USBCFG_EHCI_HS_DISCONNECT_ENABLE
 extern void bsp_usb_hs_disconnect_detection_disable(uint8_t controller_id);
 extern void bsp_usb_hs_disconnect_detection_enable(uint8_t controller_id);
 #endif
+extern usb_status usb_host_ehci_phy_init( uint8_t controller_id);
+
 static usb_status _usb_ehci_commit_high_speed_bandwidth(usb_host_handle handle, ehci_pipe_struct_t* pipe_descr_ptr);
 static usb_status _usb_ehci_commit_split_bandwidth(usb_host_handle handle, ehci_pipe_struct_t* pipe_descr_ptr);
 static usb_status _usb_ehci_commit_split_iso_bandwidth(usb_host_handle handle, ehci_pipe_struct_t* pipe_descr_ptr);
@@ -154,10 +149,11 @@ void _usb_ehci_get_qh(usb_host_handle handle, ehci_qh_struct_t** qh_ptr);
 
 void _usb_ehci_free_qh(usb_host_handle handle, ehci_qh_struct_t* qh);
 
-void init_the_volatile_struct_to_zero(volatile void* struct_ptr, uint32_t size);
+void init_the_volatile_struct_to_zero(void* struct_ptr, uint32_t size);
 
 extern uint8_t soc_get_usb_vector_number(uint8_t controller_id);
 extern uint32_t soc_get_usb_base_address(uint8_t controller_id);
+extern uint32_t soc_get_usb_host_int_level(uint8_t controller_id);
 
 #if USBCFG_EHCI_PIN_DETECT_ENABLE
 /*FUNCTION*-------------------------------------------------------------
@@ -312,7 +308,7 @@ static void test_suspend_resume(usb_device_instance_handle dev_handle)
 {
     dev_instance_t*          dev_ptr = (dev_instance_t*)dev_handle;
     usb_host_state_struct_t* host_ptr = (usb_host_state_struct_t*)dev_ptr->host;
-
+    OS_Time_delay(15000);
     _usb_ehci_bus_suspend (host_ptr->controller_handle);
     OS_Time_delay(15000);    /* Wait for 15s */
     _usb_ehci_bus_resume (host_ptr->controller_handle);
@@ -1032,6 +1028,8 @@ void _usb_ehci_init_qtd
     /* Zero the QTD. Leave the scratch pointer */
     init_the_volatile_struct_to_zero(qtd_ptr, sizeof(ehci_qtd_struct_t));
 
+    qtd_ptr->qtd_timer = QTD_TIMEOUT_DEFAULT;
+
     /* Set the Terminate bit */
     usb_hal_ehci_set_qtd_terminate_bit(qtd_ptr);
 
@@ -1388,12 +1386,7 @@ uint32_t _usb_ehci_add_interrupt_xfer_to_periodic_list
     if (!pipe_descr_ptr->actived)
     {
         qh_ptr->pipe     = (void*)pipe_descr_ptr;
-        //qh_ptr->qtd_head = (void*)first_qtd_ptr;
-      //  qh_ptr->next     = NULL;
-     //  qh_ptr->interval = pipe_descr_ptr->common.interval;
         
-        /*_usb_ehci_init_qh(handle, pipe_descr_ptr, qh_ptr, 0);*/
-
         _usb_ehci_link_qtd_to_qh(handle, qh_ptr, first_qtd_ptr);
         
         //_usb_ehci_link_qh_to_active_list(handle, qh_ptr, 1);
@@ -1527,7 +1520,6 @@ bool _usb_ehci_process_port_change
             /* Attach on port i */
             /* send change report to the hub-driver */
             /* The hub driver does GetPortStatus and identifies the new connect */
-            /* usb_host_ptr->ROOT_HUB_DRIVER(handle, hub_num, GET_PORT_STATUS); */
             /* reset and enable the port */
             _usb_ehci_reset_and_enable_port(handle, i);
 #if USBCFG_EHCI_HS_DISCONNECT_ENABLE
@@ -1540,7 +1532,6 @@ bool _usb_ehci_process_port_change
          } else {
             /* Detach on port i */
             /* send change report to the hub-driver */
-            /* usb_host_ptr->ROOT_HUB_DRIVER(handle, hub_num, GET_PORT_STATUS); */
 
 #if USBCFG_EHCI_HS_DISCONNECT_ENABLE
             /* disable HS disconnect detection */
@@ -1563,7 +1554,7 @@ bool _usb_ehci_process_port_change
 #else
             usb_host_dev_mng_detach((void*)usb_host_ptr->upper_layer_handle, 0, (uint8_t)((i + 1)));
 #endif
-
+            usb_hal_ehcit_gpt_timer_stop(usb_host_ptr->usbRegBase,0);
             /* Endif */
 
             if (!i) {
@@ -1702,6 +1693,7 @@ void _usb_host_process_reset_recovery_done
    ** stops the timer to count 125 usecs
    */
    usb_hal_ehci_disable_interrupts(usb_host_ptr->usbRegBase, EHCI_INTR_SOF_UFRAME_EN);
+   usb_hal_ehcit_gpt_timer_run(usb_host_ptr->usbRegBase, 0);
    
 } /* EndBody */
 
@@ -1713,25 +1705,16 @@ void _usb_host_process_reset_recovery_done
 *  Comments       :
 *        Service all the interrupts in the VUSB1.1 hardware
 *END*-----------------------------------------------------------------*/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))             /* USB stack running on MQX */
-    void _usb_ehci_isr(usb_host_handle handle)
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 void _usb_ehci_isr
    (
       /* [IN] the USB Host state structure */
       void
    )
-#endif
 { /* Body */
    usb_ehci_host_state_struct_t*      usb_host_ptr;
    uint32_t                           status;
 
-#if (OS_ADAPTER_ACTIVE_OS != OS_ADAPTER_SDK)
-     usb_host_ptr = (usb_ehci_host_state_struct_t*)handle;
-#else
      usb_host_ptr = (usb_ehci_host_state_struct_t*)(g_usb_host[0].controller_handle);
-#endif
 
    /* We use a while loop to process all the interrupts while we are in the
    ** loop so that we don't miss any interrupts
@@ -1935,7 +1918,7 @@ static void _usb_ehci_host_task(void* handle)
 *  Comments       :
 *        KHCI task
 *END*-----------------------------------------------------------------*/
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (USE_RTOS)))
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (USE_RTOS))
 static void _usb_ehci_host_task_stun(void* handle)
 {
     while (1)
@@ -1957,7 +1940,7 @@ uint32_t ehci_host_task_id;
 static usb_status _usb_ehci_host_task_create(usb_host_handle handle) {
     //usb_status status;
     //ehci_host_task_id = _task_create_blocked(0, 0, (uint32_t)&task_template);
-    ehci_host_task_id = OS_Task_create(USB_EHCI_HOST_TASK_ADDRESS, (void*)handle, (uint32_t)USB_EHCI_HOST_TASK_PRIORITY, USB_EHCI_HOST_TASK_STACKSIZE, USB_EHCI_HOST_TASK_NAME, NULL);
+    ehci_host_task_id = OS_Task_create(USB_EHCI_HOST_TASK_ADDRESS, (void*)handle, (uint32_t)USBCFG_HOST_EHCI_TASK_PRIORITY, USB_EHCI_HOST_TASK_STACKSIZE, USB_EHCI_HOST_TASK_NAME, NULL);
     
     if (ehci_host_task_id == (uint32_t)OS_TASK_ERROR) 
     {
@@ -2054,8 +2037,6 @@ usb_status  usb_ehci_init(uint8_t controller_id, usb_host_handle handle)
    //    return USBERR_INIT_DATA;
    
 
-   /* timer_dev_ptr = (vusb20_reg_struct_t*) param->TIMER_BASE_PTR;*/
-
    /* Get the base address of the VUSB_HS registers */
    usb_host_ptr->usbRegBase = soc_get_usb_base_address(controller_id);
    usb_host_ptr->controller_id = controller_id;
@@ -2079,8 +2060,21 @@ usb_status  usb_ehci_init(uint8_t controller_id, usb_host_handle handle)
 
     _usb_ehci_host_task_create(usb_host_ptr);
 #endif
-    
+    usb_host_ehci_phy_init(controller_id);
+    temp = usb_hal_ehci_get_usb_cmd(usb_host_ptr->usbRegBase);
+    temp |= USBHS_USBCMD_RST_MASK;
+    usb_hal_ehci_set_usb_cmd(usb_host_ptr->usbRegBase, temp);
 
+    while (usb_hal_ehci_get_usb_cmd(usb_host_ptr->usbRegBase) & USBHS_USBCMD_RST_MASK)
+    { /* delay while resetting USB controller */
+    }
+
+    usb_hal_ehci_set_usb_mode(usb_host_ptr->usbRegBase, USBHS_USBMODE_CM_HOST_MASK);
+
+    temp = USBHS_USBCMD_ASP(3) | USBHS_USBCMD_ITC(0);
+    usb_hal_ehci_set_usb_cmd(usb_host_ptr->usbRegBase, temp);
+    /* setup interrupt */
+    OS_intr_init((IRQn_Type)soc_get_usb_vector_number(controller_id), soc_get_usb_host_int_level(controller_id), 0, TRUE);
    /* Stop the controller */
    usb_hal_ehci_initiate_detach_event(usb_host_ptr->usbRegBase);
 
@@ -2100,13 +2094,7 @@ usb_status  usb_ehci_init(uint8_t controller_id, usb_host_handle handle)
        port_control[i] = usb_hal_ehci_get_port_status(usb_host_ptr->usbRegBase);
    }
 #ifndef __USB_OTG__
-#if (OS_ADAPTER_ACTIVE_OS != OS_ADAPTER_SDK)
-   if (!(OS_install_isr(vector, _usb_ehci_isr, (void *)usb_host_ptr))) {
-      return USB_log_error(__FILE__,__LINE__,USBERR_INSTALL_ISR);
-   } /* Endbody */
-#else
    OS_install_isr(vector, _usb_ehci_isr, (void *)usb_host_ptr);
-#endif
 #endif /* __USB_OTG__ */
 
    while (!(usb_hal_ehci_get_usb_interrupt_status(usb_host_ptr->usbRegBase) & EHCI_STS_HC_HALTED)) {
@@ -2210,30 +2198,21 @@ usb_status  usb_ehci_init(uint8_t controller_id, usb_host_handle handle)
    
 
    /* allocate space for frame list aligned at 4kB boundary */
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
    usb_host_ptr->periodic_list_base_addr = (void*)usbhs_perodic_list;
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-   usb_host_ptr->periodic_list_base_addr = (void*)OS_Mem_alloc_uncached_align(sizeof(ehci_frame_list_element_pointer) * usb_host_ptr->frame_list_size, 4096);
-#endif
    if (!usb_host_ptr->periodic_list_base_addr)
    {
       OS_Mem_free(usb_host_ptr->xtd_struct_base_addr);
       return USB_log_error(__FILE__,__LINE__,USBERR_ALLOC);
    }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM) || (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
       /* memzero the whole memory */
       OS_Mem_zero(usb_host_ptr->periodic_list_base_addr, sizeof(usbhs_perodic_list));
-#elif (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-      /* memzero the whole memory */
-      OS_Mem_zero(usb_host_ptr->periodic_list_base_addr, sizeof(ehci_frame_list_element_pointer) * usb_host_ptr->frame_list_size);
-#endif
 
    /*
    **   NON-PERIODIC MEMORY DISTRIBUTION STUFF
    */
    usb_host_ptr->async_list_base_addr = usb_host_ptr->qh_base_ptr =
-      (void *)USB_MEM64_ALIGN((uint32_t)usb_host_ptr->xtd_struct_base_addr);
+      (ehci_qh_struct_t*)USB_MEM64_ALIGN((uint32_t)usb_host_ptr->xtd_struct_base_addr);
 
    usb_host_ptr->qtd_base_ptr = (ehci_qtd_struct_t*)((uint32_t)usb_host_ptr->qh_base_ptr + (USBCFG_EHCI_MAX_QH_DESCRS * sizeof(ehci_qh_struct_t)));
 
@@ -2262,10 +2241,6 @@ usb_status  usb_ehci_init(uint8_t controller_id, usb_host_handle handle)
    /* Enqueue all the QTDs */
    for (i = 0; i < USBCFG_EHCI_MAX_QTD_DESCRS; i++)
    {
-      /*
-      usb_host_ptr->qtd_node_link[i].qtd      = qtd_ptr;
-      usb_host_ptr->qtd_node_link[i].occupied = 0;
-      */
       _usb_ehci_free_qtd((usb_host_handle)usb_host_ptr, qtd_ptr);
       qtd_ptr++;
    } /* Endfor */
@@ -2288,9 +2263,6 @@ usb_status  usb_ehci_init(uint8_t controller_id, usb_host_handle handle)
    if (!usb_host_ptr->periodic_frame_list_bw_ptr)
    {
       OS_Mem_free(usb_host_ptr->xtd_struct_base_addr);
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-      OS_Mem_free(usb_host_ptr->periodic_list_base_addr);
-#endif
       return USB_log_error(__FILE__,__LINE__,USBERR_ALLOC);
    }
 
@@ -2320,15 +2292,12 @@ usb_status  usb_ehci_init(uint8_t controller_id, usb_host_handle handle)
    /* memory for doubly link list of nodes that keep active ITDs. Head and Tail point to
    same place when list is empty */
    usb_host_ptr->active_iso_itd_periodic_list_head_ptr = 
-   (void*)OS_Mem_alloc_uncached(sizeof(list_node_struct_t) * USBCFG_EHCI_MAX_ITD_DESCRS);
+   (list_node_struct_t*)OS_Mem_alloc_uncached(sizeof(list_node_struct_t) * USBCFG_EHCI_MAX_ITD_DESCRS);
    usb_host_ptr->active_iso_itd_periodic_list_tail_ptr = usb_host_ptr->active_iso_itd_periodic_list_head_ptr;
 
    if (!usb_host_ptr->active_iso_itd_periodic_list_head_ptr)
    {
       OS_Mem_free(usb_host_ptr->xtd_struct_base_addr);
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-      OS_Mem_free(usb_host_ptr->periodic_list_base_addr);
-#endif
 #if EHCI_BANDWIDTH_RECORD_ENABLE
       OS_Mem_free(usb_host_ptr->periodic_frame_list_bw_ptr);
 #endif
@@ -2360,15 +2329,12 @@ usb_status  usb_ehci_init(uint8_t controller_id, usb_host_handle handle)
 
    /* memory for doubly link list of nodes that keep active SITDs. Head and Tail point to
    same place when list is empty */
-   usb_host_ptr->active_iso_sitd_periodic_list_head_ptr = (void*)OS_Mem_alloc_uncached(sizeof(list_node_struct_t) * USBCFG_EHCI_MAX_SITD_DESCRS);
+   usb_host_ptr->active_iso_sitd_periodic_list_head_ptr = (list_node_struct_t*)OS_Mem_alloc_uncached(sizeof(list_node_struct_t) * USBCFG_EHCI_MAX_SITD_DESCRS);
    usb_host_ptr->active_iso_sitd_periodic_list_tail_ptr = usb_host_ptr->active_iso_sitd_periodic_list_head_ptr;
 
    if (!usb_host_ptr->active_iso_sitd_periodic_list_head_ptr)
    {
       OS_Mem_free(usb_host_ptr->xtd_struct_base_addr);
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-      OS_Mem_free(usb_host_ptr->periodic_list_base_addr);
-#endif
 #if EHCI_BANDWIDTH_RECORD_ENABLE
       OS_Mem_free(usb_host_ptr->periodic_frame_list_bw_ptr);
 #endif
@@ -2425,13 +2391,15 @@ usb_status  usb_ehci_init(uint8_t controller_id, usb_host_handle handle)
    usb_hal_ehci_disable_otg_interrupts(usb_host_ptr->usbRegBase, 0xff000000);
    usb_hal_ehci_enable_otg_interrupts(usb_host_ptr->usbRegBase, USBHS_OTGSC_IDIE_MASK);
 #endif   
+   usb_hal_ehci_set_gpt_timer(usb_host_ptr->usbRegBase, 0, 100);
    return USB_OK;
 
 } /* EndBody */
 
-void init_the_volatile_struct_to_zero(volatile void* struct_ptr, uint32_t size)
+void init_the_volatile_struct_to_zero(void* struct_ptr, uint32_t size)
 {
-    volatile uint32_t* temp_ptr = (volatile void* )struct_ptr;
+    volatile uint32_t* temp_ptr;
+    temp_ptr = (uint32_t*)struct_ptr;
     size = size/4;
     while(size-- > 0)
     {
@@ -2799,7 +2767,7 @@ void _usb_ehci_process_qh_list_tr_complete
     tr_struct_t*                      pipe_tr_struct_ptr = NULL;
     uint32_t                          req_bytes = 0;
     uint32_t                          remaining_bytes = 0;
-    uint32_t                          status = 0;
+    uint32_t                          status = 0, qtd_timeout;
     uint8_t*                          buffer_ptr = NULL;
 
     /* Check all transfer descriptors on all active queue heads */
@@ -2810,18 +2778,23 @@ void _usb_ehci_process_qh_list_tr_complete
         /* Get the first QTD for this Queue head */
         qtd_ptr = active_qh_node_list->qtd_head;
 
-#if 0
-        if (!(active_list_member_ptr->TIME))
-           expired = 1;
+
+        if (!(qtd_ptr->qtd_timer))
+        {
+           qtd_timeout = 1;
+        }
         else
-           expired = 0;
-#endif
-        pipe_descr_ptr = active_qh_node_list->pipe;
+        {
+           qtd_timeout = 0;
+        }
+
+        pipe_descr_ptr = (ehci_pipe_struct_t*)active_qh_node_list->pipe;
         active_qh_node_list = active_qh_node_list->next;
         while ((!(((uint32_t)qtd_ptr) & EHCI_QTD_T_BIT)) && (qtd_ptr != NULL))
         {
             /* This is a valid qTD */
-            if (!(usb_hal_ehci_get_qtd_token(qtd_ptr) & EHCI_QTD_STATUS_ACTIVE)) {
+            if ((!(usb_hal_ehci_get_qtd_token(qtd_ptr) & EHCI_QTD_STATUS_ACTIVE)) || qtd_timeout) {
+                    qtd_ptr->qtd_timer = 0;
 
 #if 0
             uint32_t token = usb_hal_ehci_get_qtd_token(g_usb_instance_echi.instance,QTD_ptr);
@@ -2838,7 +2811,7 @@ void _usb_ehci_process_qh_list_tr_complete
 #endif
 
                 /* Get the pipe descriptor for this transfer */
-                pipe_tr_struct_ptr = qtd_ptr->tr;
+                pipe_tr_struct_ptr = (tr_struct_t*)qtd_ptr->tr;
                 
                 if (pipe_tr_struct_ptr == NULL)
                 {
@@ -2959,6 +2932,10 @@ void _usb_ehci_process_qh_list_tr_complete
                     else
                     {
                         pipe_tr_struct_ptr->status = USB_OK;
+                    }
+                    if(qtd_timeout == 1)
+                    {
+                        pipe_tr_struct_ptr->status = USBERR_TR_FAILED;
                     }
                 }
 
@@ -3505,19 +3482,40 @@ void _usb_ehci_process_timer
       usb_host_handle                 handle
    )
 {
-#if 0
+
    usb_ehci_host_state_struct_t*               usb_host_ptr;
-   ACTIVE_QH_MGMT_STRUCT_PTR                    active_list_member;
+   ehci_qh_struct_t*                 qh_ptr;
+   ehci_qh_struct_t*                 active_qh_node_list;
+   ehci_qtd_struct_t*                 qtd_ptr;
 
    usb_host_ptr = (usb_ehci_host_state_struct_t*)handle;
+   active_qh_node_list = usb_host_ptr->active_async_list_ptr;
+   
+    do
+    {
+        if(active_qh_node_list == NULL)
+        {
+            break;
+        }
+        /* Get the queue head from the active list */
+        qh_ptr = active_qh_node_list;
+        /* Get the first QTD for this Queue head */
+        qtd_ptr = qh_ptr->qtd_head;
 
-   for (active_list_member = usb_host_ptr->active_async_list_ptr; active_list_member != NULL; active_list_member = active_list_member->NEXT_ACTIVE_QH_MGMT_STRUCT_PTR)
-   {
-      if (active_list_member->TIME > 0)
-         if (!--active_list_member->TIME)
-            _usb_ehci_process_qh_list_tr_complete(handle, usb_host_ptr->active_async_list_ptr);
-   }
-#endif
+        active_qh_node_list = active_qh_node_list->next;
+        while ((!(((uint32_t)qtd_ptr) & EHCI_QTD_T_BIT)) && (qtd_ptr != NULL))
+        {
+            if (qtd_ptr->qtd_timer > 0)
+            {
+                if (!--qtd_ptr->qtd_timer)
+                {
+                    _usb_ehci_process_qh_list_tr_complete(handle, usb_host_ptr->active_async_list_ptr);
+                }
+            }
+            qtd_ptr = (ehci_qtd_struct_t*)usb_hal_ehci_get_next_qtd_ptr( qtd_ptr);
+        }
+    } while (active_qh_node_list);
+
 }
 
 /*FUNCTION*-------------------------------------------------------------
@@ -3988,9 +3986,9 @@ usb_status _usb_ehci_init_periodic_list
         for (i=0; i<USBCFG_EHCI_MAX_ITD_DESCRS; i++)
         {
             /* Set the dTD to be invalid */
-        usb_hal_ehci_set_ITD_terminate_bit(itd_ptr);
+        	usb_hal_ehci_set_ITD_terminate_bit(itd_ptr);
             /* Set the Reserved fields to 0 */
-            itd_ptr->scratch_ptr = (void *)usb_host_ptr;
+            itd_ptr->scratch_ptr = (ehci_itd_struct_t *)usb_host_ptr;
             _usb_ehci_free_ITD((usb_host_handle)usb_host_ptr, itd_ptr);
             itd_ptr++;
         }
@@ -4004,7 +4002,7 @@ usb_status _usb_ehci_init_periodic_list
             temp_itd_node_ptr->next_active = FALSE;
  
             /* previous node connection */
-            temp_itd_node_ptr->prev = prev_ptr;
+            temp_itd_node_ptr->prev = (list_node_struct_t *)prev_ptr;
  
             /* move pointer */
             prev_ptr =  temp_itd_node_ptr;
@@ -4032,15 +4030,15 @@ usb_status _usb_ehci_init_periodic_list
         for (i = 0; i < USBCFG_EHCI_MAX_SITD_DESCRS; i++)
         {
             /* Set the dTD to be invalid */
-        usb_hal_ehci_set_sitd_next_link_terminate_bit(sitd_ptr);
+        	usb_hal_ehci_set_sitd_next_link_terminate_bit(sitd_ptr);
             /* Set the Reserved fields to 0 */
-            sitd_ptr->scratch_ptr = (void *)usb_host_ptr;
+            sitd_ptr->scratch_ptr = (ehci_sitd_struct_t*)usb_host_ptr;
             _usb_ehci_free_SITD((usb_host_handle)usb_host_ptr, sitd_ptr);
             sitd_ptr++;
         }
 
         /* initialize all nodes and link them */
-        temp_sitd_node_ptr = (list_node_struct_t*) usb_host_ptr->active_iso_sitd_periodic_list_head_ptr;
+        temp_sitd_node_ptr = (list_node_struct_t*)usb_host_ptr->active_iso_sitd_periodic_list_head_ptr;
         prev_ptr = NULL;
         for(i = 0; i < USBCFG_EHCI_MAX_SITD_DESCRS; i++)
         {
@@ -4048,7 +4046,7 @@ usb_status _usb_ehci_init_periodic_list
             temp_sitd_node_ptr->next_active = FALSE;
 
             /* previous node connection */
-            temp_sitd_node_ptr->prev = prev_ptr;
+            temp_sitd_node_ptr->prev = (list_node_struct_t*)prev_ptr;
 
             /* move pointer */
             prev_ptr =  temp_sitd_node_ptr;
@@ -4782,7 +4780,7 @@ static usb_status _usb_ehci_commit_split_iso_bandwidth
                                                        i);
                     if (status != USB_OK)
                     {
-                        continue;
+                        break; /* fail */
                     }
                 }
             }
@@ -4791,7 +4789,7 @@ static usb_status _usb_ehci_commit_split_iso_bandwidth
                 tmp = frame_index * 8 + uframe_index;
                 for (i = 0; i < 8; ++i)
                 {
-                    bandwidth_slots_cs[i] = 0;
+                    bandwidth_slots_ss[i] = 0;
                 }
                 
                 for (i = tmp; ((i < (tmp + num_fsls)) && (i < (frame_index * 8 + 8))); ++i)
@@ -4799,12 +4797,12 @@ static usb_status _usb_ehci_commit_split_iso_bandwidth
                     status = _usb_ehci_allocate_high_speed_bandwidth(
                                                        handle,
                                                        pipe_descr_ptr,
-                                                       time_for_cs,
-                                                       bandwidth_slots_cs,
+                                                       time_for_ss,
+                                                       bandwidth_slots_ss,
                                                        i);
                     if (status != USB_OK)
                     {
-                        continue;
+                        break; /* fail */
                     }
                 }
             }
@@ -4837,7 +4835,8 @@ static usb_status _usb_ehci_commit_split_iso_bandwidth
     {
         pipe_descr_ptr->fsls_bwidth[i] = 0;
     }
-    for (i = uframe_index + 1; i <= uframe_index + num_fsls_result; ++i)
+    /* ISO occupies all occupied uframe bandwidth except for the last uframe */
+    for (i = uframe_index + 1; i < uframe_index + num_fsls_result; ++i)
     {
         pipe_descr_ptr->fsls_bwidth[i] = uframe_max[i];
     }
@@ -4984,7 +4983,7 @@ static usb_status _usb_ehci_commit_split_interrupt_bandwidth
                                                    frame_index * 8 + i);
                 if (status != USB_OK)
                 {
-                    continue;
+                    break; /* fail */
                 }
             }
             if (status == USB_OK)
@@ -6186,7 +6185,6 @@ usb_status _usb_ehci_link_structure_in_periodic_list (
                   itd_ptr->frame_list_ptr = transfer_data_struct_ptr;
                      
                   /* save the next one */
-                  /*next_data_struct  =  (*transfer_data_struct_ptr);*/
 
                                           
                   /*restore the previous link back */
@@ -6471,7 +6469,7 @@ usb_status _usb_ehci_add_ITD
         space is available in the queue because itd_ptr was allocated and
         number of nodes available always match the number of ITD_ENTRIES
         **********************************************************************/
-        EHCI_ACTIVE_QUEUE_ADD_NODE(usb_host_ptr->active_iso_itd_periodic_list_tail_ptr,itd_ptr);
+        EHCI_ACTIVE_QUEUE_ADD_NODE(usb_host_ptr->active_iso_itd_periodic_list_tail_ptr,(void* )itd_ptr);
         USB_EHCI_Host_unlock();
         /*********************************************************************
         Zero the ITD. Leave everything else expect first 16 int bytes (which are
@@ -6482,7 +6480,7 @@ usb_status _usb_ehci_add_ITD
         /* Initialize the ITD private fields*/
         itd_ptr->pipe_descr_for_this_itd = pipe_descr_ptr;
         itd_ptr->pipe_tr_descr_for_this_itd = pipe_tr_ptr;
-        itd_ptr->scratch_ptr = handle;
+        itd_ptr->scratch_ptr = (ehci_itd_struct_t*)handle;
 
         /* Set the Terminate bit */
         usb_hal_ehci_set_ITD_terminate_bit(itd_ptr);
@@ -6766,14 +6764,14 @@ usb_status _usb_ehci_add_SITD
         /* Initialize the scratch pointer inside SITD */
         sitd_ptr->pipe_descr_for_this_sitd = pipe_descr_ptr;
         sitd_ptr->pipe_tr_descr_for_this_sitd = pipe_tr_ptr;
-        sitd_ptr->scratch_ptr = handle;
+        sitd_ptr->scratch_ptr = (ehci_sitd_struct_t*)handle;
 
         /*********************************************************************
         Add the SITD to the list of active SITDS (note that it is assumed that
         space is available in the queue because sitd_ptr was allocated and
         number of nodes available always match the number of SITD_ENTRIES
         **********************************************************************/
-         EHCI_ACTIVE_QUEUE_ADD_NODE(usb_host_ptr->active_iso_sitd_periodic_list_tail_ptr,sitd_ptr);
+         EHCI_ACTIVE_QUEUE_ADD_NODE(usb_host_ptr->active_iso_sitd_periodic_list_tail_ptr,(void *)sitd_ptr);
         
          /* Set the Terminate bit */
          usb_hal_ehci_set_sitd_next_link_terminate_bit(sitd_ptr);
@@ -6796,7 +6794,6 @@ usb_status _usb_ehci_add_SITD
                      (uint32_t)pipe_descr_ptr->complete_split << EHCI_SITD_COMPLETE_SPLIT_MASK_BIT_POS | pipe_descr_ptr->start_split);
                                        
         /*store the buffer pointer 1 and offset*/
-        /*EHCI_MEM_WRITE(sitd_ptr->buffer_ptr_0,(uint32_t)buff_ptr);*/
 
         /*********************************************************************
         One SITD can only carry a max of 1023 bytes so two page pointers are
@@ -7026,7 +7023,7 @@ void _usb_ehci_process_itd_tr_complete
           || ((node_ptr->prev == NULL) && (node_ptr->member != NULL)))
    {
       
-        itd_ptr = node_ptr->member;
+        itd_ptr = (ehci_itd_struct_t*)node_ptr->member;
 #ifdef  __USB_OTG__
 
 #ifdef HOST_TESTING
@@ -7124,7 +7121,6 @@ void _usb_ehci_process_itd_tr_complete
 
             }
             
-         /* EHCI_MEM_WRITE((*EHCI_MEM_READ(itd_ptr->prev_data_struct_ptr)),EHCI_MEM_READ(itd_ptr->next_data_struct_value));*/
            #ifdef  __USB_OTG__ 
               #ifdef HOST_TESTING
                         usb_otg_state_struct_ptr->status[usb_otg_state_struct_ptr->LOG_ITD_COUNT]
@@ -7256,7 +7252,7 @@ void _usb_ehci_process_sitd_tr_complete
           || ((node_ptr->prev == NULL) && (node_ptr->member != NULL)))
    {
       
-      sitd_ptr = node_ptr->member;
+      sitd_ptr = (ehci_sitd_struct_t*)node_ptr->member;
       
       pipe_tr_struct_ptr = (tr_struct_t*) sitd_ptr->pipe_tr_descr_for_this_sitd;
       
@@ -7532,9 +7528,9 @@ void _usb_ehci_close_isochronous_pipe (
         while (node_ptr->member != NULL)
         {
        
-            itd_ptr = node_ptr->member;
+            itd_ptr = (ehci_itd_struct_t*)node_ptr->member;
 
-            pipe_tr_struct_ptr =  itd_ptr->pipe_tr_descr_for_this_itd;
+            pipe_tr_struct_ptr =  (tr_struct_t*)itd_ptr->pipe_tr_descr_for_this_itd;
             //pipe_descr_ptr = (ehci_pipe_struct_t*) itd_ptr->pipe_descr_for_this_sitd;
 
             if(itd_ptr->pipe_descr_for_this_itd == pipe_descr_ptr)
@@ -7630,9 +7626,9 @@ void _usb_ehci_close_isochronous_pipe (
         while (node_ptr->member != NULL)
         {
        
-            sitd_ptr = node_ptr->member;
+            sitd_ptr = (ehci_sitd_struct_t*)node_ptr->member;
 
-            pipe_tr_struct_ptr = sitd_ptr->pipe_tr_descr_for_this_sitd;
+            pipe_tr_struct_ptr = (tr_struct_t*)sitd_ptr->pipe_tr_descr_for_this_sitd;
 
             //pipe_descr_ptr = (ehci_pipe_struct_t*) sitd_ptr->pipe_descr_for_this_sitd;
        
@@ -7844,13 +7840,6 @@ usb_status usb_ehci_shutdown
       OS_Mem_free((void *)usb_host_ptr->xtd_struct_base_addr);
    }
    
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-   if(NULL != usb_host_ptr->periodic_list_base_addr)
-   {
-      /* Free all controller non-periodic specific memory */
-      OS_Mem_free((void *)usb_host_ptr->periodic_list_base_addr);
-   }
-#endif
 
 #if EHCI_BANDWIDTH_RECORD_ENABLE
    if(NULL != usb_host_ptr->periodic_frame_list_bw_ptr)
@@ -7980,7 +7969,7 @@ void _usb_ehci_bus_suspend
    including the OTG state machine which is still running assuming that
    Host is alive.
    
-   EHCI_REG_CLEAR_BITS(dev_ptr->REGISTERS.OPERATIONAL_HOST_REGISTERS.USB_CMD,EHCI_CMD_RUN_STOP);
+   EHCI_REG_CLEAR_BITS(dev_ptr->REGISTERS.OPERATIONAL_HOST_REGISTERS.USB_CMD,EHCI_CMD_RUN_STOP)
    */   
       
    USB_EHCI_Host_unlock();
@@ -8025,7 +8014,7 @@ void _usb_ehci_bus_resume
    /* 
     S Garg: This should not be done. See comments in suspend.
       Restart the controller   
-      EHCI_REG_SET_BITS(dev_ptr->REGISTERS.OPERATIONAL_HOST_REGISTERS.USB_CMD,EHCI_CMD_RUN_STOP);
+      EHCI_REG_SET_BITS(dev_ptr->REGISTERS.OPERATIONAL_HOST_REGISTERS.USB_CMD,EHCI_CMD_RUN_STOP)
      */
 
    USB_EHCI_Host_unlock();

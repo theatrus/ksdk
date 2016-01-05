@@ -47,6 +47,14 @@
 #define CLOCK_INIT_CONFIG CLOCK_HSRUN
 #endif
 
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 80000000U
+#elif (CLOCK_INIT_CONFIG == CLOCK_HSRUN)
+#define CORE_CLOCK_FREQ 120000000U
+#else
+#define CORE_CLOCK_FREQ 4000000U
+#endif
+
 /* OSC0 configuration. */
 #define OSC0_XTAL_FREQ 8000000U
 #define OSC0_SC2P_ENABLE_CONFIG  false
@@ -74,7 +82,6 @@
 #define RTC_SC8P_ENABLE_CONFIG       false
 #define RTC_SC16P_ENABLE_CONFIG      false
 #define RTC_OSC_ENABLE_CONFIG        true
-#define RTC_CLK_OUTPUT_ENABLE_CONFIG true
 
 #define BOARD_RTC_CLK_FREQUENCY     32768U;
 
@@ -92,7 +99,7 @@
 
 #define BOARD_USE_UART
 
-#define PM_DBG_UART_IRQ_HANDLER         MODULE_IRQ_HANDLER(UART1_RX_TX)
+#define PM_DBG_UART_IRQ_HANDLER         UART1_RX_TX_IRQHandler
 
 #define PM_DBG_UART_IRQn                UART1_RX_TX_IRQn
 
@@ -100,6 +107,7 @@
 #define BOARD_SW_GPIO               kGpioSW3
 #define BOARD_SW_IRQ_NUM            PORTB_IRQn
 #define BOARD_SW_IRQ_HANDLER        PORTB_IRQHandler
+#define BOARD_SW_NAME               "SW3"
 /* Define feature for the low_power_demo */
 #define FSL_FEATURE_HAS_VLLS2 (1)
 
@@ -123,9 +131,7 @@
 
 #define HWADC_INSTANCE               1
 #define ADC_IRQ_N                    ADC1_IRQn
-#if (defined FSL_RTOS_MQX)
-#define MQX_ADC_IRQHandler           MQX_ADC1_IRQHandler
-#endif
+
 /* The instances of peripherals used for dac_adc_demo */
 #define BOARD_DAC_DEMO_DAC_INSTANCE     0U
 #define BOARD_DAC_DEMO_ADC_INSTANCE     0U
@@ -134,12 +140,27 @@
 /* The i2c instance used for i2c DAC demo */
 #define BOARD_DAC_I2C_INSTANCE          0
 
-/* The i2c instance used for i2c communication demo */
-#define BOARD_I2C_COMM_INSTANCE         0
+/* The i2c instance used for i2c connection by default */
+#define BOARD_I2C_INSTANCE              0
+
+/* The dspi instance used for dspi example */
+#define BOARD_DSPI_INSTANCE             0
 
 /* The Flextimer instance/channel used for board */
 #define BOARD_FTM_INSTANCE              0
 #define BOARD_FTM_CHANNEL               5
+#define BOARD_FTM_BASE                  FTM0
+#define BOARD_FTM_X_CHANNEL             0
+#define BOARD_FTM_Y_CHANNEL             1
+#define BOARD_FTM_PERIOD_HZ             100
+#define BOARD_FTM_IRQ_HANDLER           FTM0_IRQHandler
+#define BOARD_FTM_IRQ_VECTOR            FTM0_IRQn
+
+/* The bubble level demo information */
+#define BOARD_FXOS8700_ADDR             0x1C
+#define BOARD_ACCEL_ADDR                BOARD_FXOS8700_ADDR
+#define BOARD_ACCEL_BAUDRATE            100
+#define BOARD_ACCEL_I2C_INSTANCE        0
 
 /* board led color mapping */
 #define BOARD_GPIO_LED_RED              kGpioLED2
@@ -189,6 +210,9 @@
 /* The rtc instance used for rtc_func */
 #define BOARD_RTC_FUNC_INSTANCE         0
 
+/* The usb use native port  */
+#define USBCFG_HOST_PORT_NATIVE         (1)
+
 #if defined(__cplusplus)
 extern "C" {
 #endif /* __cplusplus */
@@ -206,6 +230,10 @@ void BOARD_InitOsc0(void);
 
 /* Function to initialize RTC external clock base on board configuration. */
 void BOARD_InitRtcOsc(void);
+/*Function to handle board-specified initialization*/
+uint8_t usb_device_board_init(uint8_t controller_id);
+/*Function to handle board-specified initialization*/
+uint8_t usb_host_board_init(uint8_t controller_id);
 
 #if defined(__cplusplus)
 }

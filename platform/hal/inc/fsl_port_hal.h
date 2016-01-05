@@ -43,10 +43,10 @@
 /*!
  * @file
  *
- * The port features such as "digital filter", "pull", etc will be valid when
- * it's available in one of the pins. But, that doesn't mean all pins have the
- * capabilities to use such features. Please refer related reference manual for
- * accuracy pin features.
+ * The port features such as digital filter, pull, and so on are valid when
+ * they are available in one of the pins. However, that doesn't mean that all pins have the
+ * capabilities to use such features. Please see the related reference manual for
+ * accurate pin features.
  */
 
 /*******************************************************************************
@@ -54,32 +54,32 @@
  ******************************************************************************/
 /*! @brief Internal resistor pull feature selection*/
 typedef enum _port_pull {
-    kPortPullDown = 0U,  /*!< internal pull-down resistor is enabled. @internal gui name="Down"*/
-    kPortPullUp   = 1U   /*!< internal pull-up resistor is enabled. @internal gui name="Up"*/
+    kPortPullDown = 0U,  /*!< Internal pull-down resistor is enabled. @internal gui name="Down"*/
+    kPortPullUp   = 1U   /*!< Internal pull-up resistor is enabled. @internal gui name="Up"*/
 } port_pull_t;
 
 /*! @brief Slew rate selection*/
 typedef enum _port_slew_rate {
-    kPortFastSlewRate = 0U,  /*!< fast slew rate is configured. @internal gui name="Fast"*/
-    kPortSlowSlewRate = 1U   /*!< slow slew rate is configured. @internal gui name="Slow" */
+    kPortFastSlewRate = 0U,  /*!< Fast slew rate is configured. @internal gui name="Fast"*/
+    kPortSlowSlewRate = 1U   /*!< Slow slew rate is configured. @internal gui name="Slow" */
 } port_slew_rate_t;
 
 /*! @brief Configures the drive strength.*/
 typedef enum _port_drive_strength {
-    kPortLowDriveStrength  = 0U, /*!< low drive strength is configured. @internal gui name="Low"*/
-    kPortHighDriveStrength = 1U  /*!< high drive strength is configured. @internal gui name="High"*/
+    kPortLowDriveStrength  = 0U, /*!< Low drive strength is configured. @internal gui name="Low"*/
+    kPortHighDriveStrength = 1U  /*!< High drive strength is configured. @internal gui name="High"*/
 } port_drive_strength_t;
 
 /*! @brief Pin mux selection*/
 typedef enum _port_mux {
-    kPortPinDisabled = 0U,   /*!< corresponding pin is disabled, but is used as an analog pin.*/
-    kPortMuxAsGpio   = 1U,   /*!< corresponding pin is configured as GPIO.*/
-    kPortMuxAlt2     = 2U,   /*!< chip-specific*/
-    kPortMuxAlt3     = 3U,   /*!< chip-specific*/
-    kPortMuxAlt4     = 4U,   /*!< chip-specific*/
-    kPortMuxAlt5     = 5U,   /*!< chip-specific*/
-    kPortMuxAlt6     = 6U,   /*!< chip-specific*/
-    kPortMuxAlt7     = 7U    /*!< chip-specific*/
+    kPortPinDisabled = 0U,   /*!< Corresponding pin is disabled, but is used as an analog pin.*/
+    kPortMuxAsGpio   = 1U,   /*!< Corresponding pin is configured as GPIO.*/
+    kPortMuxAlt2     = 2U,   /*!< Chip-specific*/
+    kPortMuxAlt3     = 3U,   /*!< Chip-specific*/
+    kPortMuxAlt4     = 4U,   /*!< Chip-specific*/
+    kPortMuxAlt5     = 5U,   /*!< Chip-specific*/
+    kPortMuxAlt6     = 6U,   /*!< Chip-specific*/
+    kPortMuxAlt7     = 7U    /*!< Chip-specific*/
 } port_mux_t;
 
 /*! @brief Digital filter clock source selection*/
@@ -258,7 +258,7 @@ static inline void PORT_HAL_SetMuxMode(PORT_Type * base,
 
 #if FSL_FEATURE_PORT_HAS_PIN_CONTROL_LOCK
 /*!
- * @brief Locks or unlocks the pin control register bits[15:0].
+ * @brief Locks or unlocks the pin control register bits [15:0].
  *
  * @param base  port base pointer
  * @param pin  port pin number
@@ -277,7 +277,7 @@ static inline void PORT_HAL_SetPinCtrlLockCmd(PORT_Type * base,
 
 #if FSL_FEATURE_PORT_HAS_DIGITAL_FILTER
 /*!
- * @brief Enables or disables the digital filter in one single port.
+ * @brief Enables or disables the digital filter in a single port.
  *        Each bit of the 32-bit register represents one pin.
  *
  * @param base  port base pointer
@@ -339,7 +339,7 @@ static inline void PORT_HAL_SetDigitalFilterWidth(PORT_Type * base, uint8_t widt
 void PORT_HAL_SetLowGlobalPinCtrl(PORT_Type * base, uint16_t lowPinSelect, uint16_t config);
 
 /*!
- * @brief Configures the high half of pin control register for the same settings.
+ * @brief Configures the high half of the pin control register for the same settings.
  *        This function operates pin 16 -31 of one specific port.
  *
  * @param base  port base pointer

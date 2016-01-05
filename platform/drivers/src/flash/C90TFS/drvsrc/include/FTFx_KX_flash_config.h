@@ -1,5 +1,5 @@
 /************************************************************************
- (c) Copyright 2012-2014 Freescale Semiconductor, Inc.
+ (c) Copyright 2012-2015 Freescale Semiconductor, Inc.
  ALL RIGHTS RESERVED.
 
  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,8 @@
 1.1.GA      09.25.2014      FPT Team      First version of SDK C90TFS flash driver
                                           inherited from BM C90TFS flash driver v1.02
                                           (08.04.2014, FPT Team)
+1.3.GA     06.23.2015       ROM Team      Support FAC presence detection
+
 *************************************************************************/
 
 #ifndef _FTFx_KX_flash_config_H_
@@ -199,6 +201,10 @@
 #define PGM_SIZE_BYTE           FSL_FEATURE_FLASH_PFLASH_BLOCK_WRITE_UNIT_SIZE
 /*! @brief Resume wait count used in FlashResume function */
 #define RESUME_WAIT_CNT         0x20U
+
+
+/*! @brief PFlash FAC presence */
+#define PFLASH_FAC_PRESENCE        FSL_FEATURE_FLASH_HAS_ACCESS_CONTROL
 
 /*@}*/
 

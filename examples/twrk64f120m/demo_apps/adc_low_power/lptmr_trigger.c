@@ -37,6 +37,9 @@
 #include "fsl_gpio_hal.h"
 #include "fsl_port_hal.h"
 #include "fsl_sim_hal.h"
+#if defined(KM34Z7_SERIES)
+#include "fsl_xbar_driver.h"
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -77,9 +80,18 @@ void init_trigger_source(uint32_t adcInstance)
     LPTMR_DRV_Start(0);
 
     // Configure SIM for ADC hw trigger source selection
+#if defined(KM34Z7_SERIES)
+    /* Configure ADC trigger clock to ADC asynchronous Clock */
+    CLOCK_HAL_SetSAdcTrgClkSel(gSimBase[0], kSimSAdcTrgClksel1);
+    SIM_HAL_EnableClock(gSimBase[0], kSimClockGateXbar0);
+    SIM_HAL_SetAdcTrgSelMode(gSimBase[0], kSimAdcTrgSelXbar);
+    XBAR_DRV_ConfigSignalConnection(kXbaraInputLPTMR0_Output, kXbaraOutputADC_TRGA);
+#else
     SIM_HAL_SetAdcAlternativeTriggerCmd(gSimBase[0], adcInstance, true);
     SIM_HAL_SetAdcPreTriggerMode(gSimBase[0], adcInstance, kSimAdcPretrgselA);
     SIM_HAL_SetAdcTriggerMode(gSimBase[0], adcInstance, kSimAdcTrgSelLptimer);
+#endif
+	
 }
 
 /* disable the trigger source */

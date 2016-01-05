@@ -149,6 +149,20 @@ typedef enum _sim_hal_status {
 
 #elif (defined(K70F15_SERIES))
 
+#elif (defined(K80F25615_SERIES))
+
+/* Clock System Level API header file */
+#include "../src/sim/MK80F25615/fsl_sim_hal_MK80F25615.h"
+
+#elif (defined(K81F25615_SERIES))
+
+/* Clock System Level API header file */
+#include "../src/sim/MK81F25615/fsl_sim_hal_MK81F25615.h"
+
+#elif (defined(K82F25615_SERIES))
+
+/* Clock System Level API header file */
+#include "../src/sim/MK82F25615/fsl_sim_hal_MK82F25615.h"
 
 #elif (defined(KL02Z4_SERIES))
 #include "../src/sim/MKL02Z4/fsl_sim_hal_MKL02Z4.h"
@@ -204,6 +218,12 @@ typedef enum _sim_hal_status {
 #elif (defined(KL16Z4_SERIES))
 #include "../src/sim/MKL16Z4/fsl_sim_hal_MKL16Z4.h"
 
+#elif (defined (KL13Z644_SERIES))
+#include "../src/sim/MKL13Z644/fsl_sim_hal_MKL13Z644.h"
+
+#elif (defined (KL33Z644_SERIES))
+#include "../src/sim/MKL33Z644/fsl_sim_hal_MKL33Z644.h"
+
 #elif (defined(KL26Z4_SERIES))
 #include "../src/sim/MKL26Z4/fsl_sim_hal_MKL26Z4.h"
 
@@ -214,6 +234,11 @@ typedef enum _sim_hal_status {
 
 /* Clock System Level API header file */
 #include "../src/sim/MKL46Z4/fsl_sim_hal_MKL46Z4.h"
+
+#elif (defined(KM34Z7_SERIES))
+
+/* Clock System Level API header file */
+#include "../src/sim/MKM34Z7/fsl_sim_hal_MKM34Z7.h"
 
 #elif (defined(KV30F12810_SERIES))
 /* Clock System Level API header file */
@@ -259,6 +284,14 @@ typedef enum _sim_hal_status {
 
 #include "../src/sim/MKV10Z7/fsl_sim_hal_MKV10Z7.h"
 
+#elif (defined(KV10Z1287_SERIES))
+
+#include "../src/sim/MKV10Z1287/fsl_sim_hal_MKV10Z1287.h"
+
+#elif (defined(KV11Z7_SERIES))
+
+#include "../src/sim/MKV11Z7/fsl_sim_hal_MKV11Z7.h"
+
 #elif (defined(KW01Z4_SERIES))
 /* Clock System Level API header file */
 #include "../src/sim/MKW01Z4/fsl_sim_hal_MKW01Z4.h"
@@ -271,7 +304,9 @@ typedef enum _sim_hal_status {
 
 #include "../src/sim/MK21DA5/fsl_sim_hal_MK21DA5.h"
 
+#elif (defined(KW20Z4_SERIES))
 
+#include "../src/sim/MKW20Z4/fsl_sim_hal_MKW20Z4.h"
 
 #elif (defined(KW21D5_SERIES))
 
@@ -287,8 +322,20 @@ typedef enum _sim_hal_status {
 
 #include "../src/sim/MKW24D5/fsl_sim_hal_MKW24D5.h"
 
+#elif (defined(KW30Z4_SERIES))
+
+#include "../src/sim/MKW30Z4/fsl_sim_hal_MKW30Z4.h"
+
+#elif (defined(KW40Z4_SERIES))
+
+#include "../src/sim/MKW40Z4/fsl_sim_hal_MKW40Z4.h"
+
 #elif (defined(K21FA12_SERIES))
 #include "../src/sim/MK21FA12/fsl_sim_hal_MK21FA12.h"
+
+#elif (defined(K22FA12_SERIES))
+#include "../src/sim/MK22FA12/fsl_sim_hal_MK22FA12.h"
+
 #if FSL_FEATURE_SOC_SIM_COUNT
 #else
 #error "No valid CPU defined!"

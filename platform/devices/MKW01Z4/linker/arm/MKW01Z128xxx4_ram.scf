@@ -5,7 +5,7 @@
 **     Compiler:            Keil ARM C/C++ Compiler
 **     Reference manual:    MKW01xxRM, Rev.1, December 2013
 **     Version:             rev. 1.1, 2015-01-13
-**     Build:               b150317
+**     Build:               b150629
 **
 **     Abstract:
 **         Linker file for the Keil ARM C/C++ Compiler

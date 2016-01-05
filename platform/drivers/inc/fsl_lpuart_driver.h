@@ -65,20 +65,21 @@ typedef void (* lpuart_tx_callback_t)(uint32_t instance, void * lpuartState);
 /*!
  * @brief Runtime state of the LPUART driver.
  *
- * Note that the caller provides memory for the driver state structures during
+ * Note that the caller must provide memory for the driver state structures during
  * initialization because the driver does not statically allocate memory.
  */
 typedef struct LpuartState {
+    uint8_t txFifoEntryCount;        /*!< Number of data word entries in transmit FIFO. */
     const uint8_t * txBuff;          /*!< The buffer of data being sent.*/
-	uint8_t * rxBuff;                /*!< The buffer of received data.*/
+    uint8_t * rxBuff;                /*!< The buffer of received data.*/
     volatile size_t txSize;          /*!< The remaining number of bytes to be transmitted. */
     volatile size_t rxSize;          /*!< The remaining number of bytes to be received. */
     volatile bool isTxBusy;          /*!< True if there is an active transmit.*/
     volatile bool isRxBusy;          /*!< True if there is an active receive.*/
     volatile bool isTxBlocking;      /*!< True if transmit is blocking transaction. */
     volatile bool isRxBlocking;      /*!< True if receive is blocking transaction. */
-    semaphore_t txIrqSync;           /*!< Used to wait for ISR to complete its Tx business.*/
-    semaphore_t rxIrqSync;           /*!< Used to wait for ISR to complete its Rx business.*/
+    semaphore_t txIrqSync;           /*!< Used to wait for ISR to complete transmit.*/
+    semaphore_t rxIrqSync;           /*!< Used to wait for ISR to complete receive.*/
     lpuart_rx_callback_t rxCallback; /*!< Callback to invoke after receiving byte.*/
     void * rxCallbackParam;          /*!< Receive callback parameter pointer.*/
     lpuart_tx_callback_t txCallback; /*!< Callback to invoke after transmitting byte.*/
@@ -127,6 +128,9 @@ lpuart_status_t LPUART_DRV_Init(uint32_t instance, lpuart_state_t * lpuartStateP
 /*!
  * @brief Shuts down the LPUART by disabling interrupts and transmitter/receiver.
  *
+ * This function disables the LPUART interrupts, the transmitter and receiver, and
+ * flushes the FIFOs (for modules that support FIFOs). 
+ *  
  * @param instance  LPUART instance number
  * @return An error code or kStatus_LPUART_Success
  */
@@ -173,7 +177,7 @@ lpuart_tx_callback_t LPUART_DRV_InstallTxCallback(uint32_t instance,
  *  Blocking means that the function does not return until the transmission is complete.
  *
  * @param instance  LPUART instance number
- * @param txBuff  source buffer containing 8-bit data chars to send
+ * @param txBuff  source buffer containing 8-bit data characters to send
  * @param txSize the number of bytes to send
  * @param timeout timeout value for RTOS abstraction sync control
  * @return An error code or kStatus_LPUART_Success
@@ -191,7 +195,7 @@ lpuart_status_t LPUART_DRV_SendDataBlocking(uint32_t instance,
  *  The application has to get the transmit status to know when the transmit is complete.
  *
  * @param instance  LPUART instance number
- * @param txBuff  source buffer containing 8-bit data chars to send
+ * @param txBuff  source buffer containing 8-bit data characters to send
  * @param txSize  the number of bytes to send
  * @return An error code or kStatus_LPUART_Success
  */
@@ -226,7 +230,7 @@ lpuart_status_t LPUART_DRV_AbortSendingData(uint32_t instance);
  *  receive is complete.
  *
  * @param instance  LPUART instance number
- * @param rxBuff  buffer containing 8-bit read data chars received
+ * @param rxBuff  buffer containing 8-bit read data characters received
  * @param rxSize the number of bytes to receive
  * @param timeout timeout value for RTOS abstraction sync control
  * @return An error code or kStatus_LPUART_Success
@@ -244,7 +248,7 @@ lpuart_status_t LPUART_DRV_ReceiveDataBlocking(uint32_t instance,
  *  The application has to get the receive status to know when the receive is complete.
  *
  * @param instance  LPUART instance number
- * @param rxBuff  buffer containing 8-bit read data chars received
+ * @param rxBuff  buffer containing 8-bit read data characters received
  * @param rxSize  the number of bytes to receive
  * @return An error code or kStatus_LPUART_Success
  */

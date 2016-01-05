@@ -138,8 +138,8 @@ typedef struct CmpComparatorConfig
 #endif /* FSL_FEATURE_CMP_HAS_DMA */
     bool risingIntEnable; /*!< Enable using CMPO rising interrupt. @internal gui name="Rising interrupt" id="RisingInt" */
     bool fallingIntEnable; /*!< Enable using CMPO falling interrupt. @internal gui name="Falling interrupt" id="FallingInt" */
-    cmp_chn_mux_mode_t plusChnMux; /*!< Set the Plus side input to comparator. @internal gui name="Positive channel" id="PositiveChannel" */
-    cmp_chn_mux_mode_t minusChnMux; /*!< Set the Minus side input to comparator. @internal gui name="Negative channel" id="NegativeChannel" */
+    cmp_chn_mux_mode_t plusChnMux; /*!< Set the Plus side input to comparator. @internal gui name="Positive channel" id="PositiveChannel" default="0" */
+    cmp_chn_mux_mode_t minusChnMux; /*!< Set the Minus side input to comparator. @internal gui name="Negative channel" id="NegativeChannel" default="1" */
 #if FSL_FEATURE_CMP_HAS_TRIGGER_MODE
     bool triggerEnable; /*!< Enable triggering mode. @internal gui name="Trigger mode" id="TriggerMode" */
 #endif /* FSL_FEATURE_CMP_HAS_TRIGGER_MODE */
@@ -212,7 +212,7 @@ typedef struct CmpDacConfig
 {
     bool dacEnable; /*!< Enable the internal 6-bit DAC. @internal gui name="D/A converter" id="DacEnable" */
     cmp_dac_ref_volt_src_mode_t refVoltSrcMode; /*!< Select the reference voltage source for internal DAC. @internal gui name="Input reference" id="Reference" */
-    uint8_t dacValue; /*!< Set the value for internal DAC. @internal gui name="Output level value" id="DacValue" */
+    uint8_t dacValue; /*!< Set the value for internal DAC. @internal gui name="Output level value" id="DacValue" range="0..63" */
 } cmp_dac_config_t;
 
 /*******************************************************************************

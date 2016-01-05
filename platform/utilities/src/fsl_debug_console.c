@@ -202,7 +202,7 @@ debug_console_status_t DbgConsole_Init(
                 /* Set the funciton pointer for send and receive for this kind of device. */
                 s_debugConsole.ops.tx_union.UART0_Send = LPSCI_HAL_SendDataPolling;
                 s_debugConsole.ops.rx_union.UART0_Receive = LPSCI_HAL_ReceiveDataPolling;
-            }     
+            }
             break;
 #endif
 #if defined(LPUART_INSTANCE_COUNT)
@@ -274,12 +274,17 @@ debug_console_status_t DbgConsole_DeInit(void)
              CLOCK_SYS_DisableLpuartClock(s_debugConsole.instance);
             break;
 #endif
+#if (defined(USB_INSTANCE_COUNT) && defined(BOARD_USE_VIRTUALCOM))
+        case kDebugConsoleUSBCDC:
+             VirtualCom_Deinit();
+             CLOCK_SYS_DisableUsbfsClock(0);
+            break;
+#endif
         default:
             return kStatus_DEBUGCONSOLE_InvalidDevice;
     }
 
     s_debugConsole.type = kDebugConsoleNone;
-
     return kStatus_DEBUGCONSOLE_Success;
 }
 
@@ -543,7 +548,7 @@ int debug_scanf(const char  *fmt_ptr, ...)
 
         temp_buf[i + 1] = '\0';
     }
-   
+
     result = scan_prv(temp_buf, (char *)fmt_ptr, ap);
     va_end(ap);
 

@@ -71,7 +71,7 @@ const clock_manager_user_config_t g_defaultClockConfigVlpr =
     }
 };
 
-/* Configuration for enter RUN mode. Core clock = 120MHz. */
+/* Configuration for enter RUN mode. Core clock = 96MHz. */
 const clock_manager_user_config_t g_defaultClockConfigRun =
 {
     .mcgConfig =
@@ -138,10 +138,24 @@ void BOARD_InitRtcOsc(void)
         .enableCapacitor8p   = RTC_SC8P_ENABLE_CONFIG,
         .enableCapacitor16p  = RTC_SC16P_ENABLE_CONFIG,
         .enableOsc           = RTC_OSC_ENABLE_CONFIG,
-        .enableClockOutput   = RTC_CLK_OUTPUT_ENABLE_CONFIG,
     };
 
     CLOCK_SYS_RtcOscInit(0U, &rtcOscConfig);
+}
+
+static void CLOCK_SetBootConfig(clock_manager_user_config_t const* config)
+{
+    CLOCK_SYS_SetSimConfigration(&config->simConfig);
+
+    CLOCK_SYS_SetOscerConfigration(0, &config->oscerConfig);
+
+#if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
+    CLOCK_SYS_BootToBlpi(&config->mcgConfig);
+ #else
+    CLOCK_SYS_BootToPee(&config->mcgConfig);
+ #endif
+
+    SystemCoreClock = CORE_CLOCK_FREQ;
 }
 
 /* Initialize clock. */
@@ -162,10 +176,26 @@ void BOARD_ClockInit(void)
 
     /* Set system clock configuration. */
 #if (CLOCK_INIT_CONFIG == CLOCK_VLPR)
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigVlpr);
+    CLOCK_SetBootConfig(&g_defaultClockConfigVlpr);
 #else
-    CLOCK_SYS_SetConfiguration(&g_defaultClockConfigRun);
+    CLOCK_SetBootConfig(&g_defaultClockConfigRun);
 #endif
+}
+
+/* The function to indicate whether a card is detected or not */
+bool BOARD_IsSDCardDetected(void)
+{
+    GPIO_Type * gpioBase = g_gpioBase[GPIO_EXTRACT_PORT(kGpioSdhc0Cd)];
+    uint32_t pin = GPIO_EXTRACT_PIN(kGpioSdhc0Cd);
+
+    if(GPIO_HAL_ReadPinInput(gpioBase, pin) == false)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void dbg_uart_init(void)
@@ -173,6 +203,90 @@ void dbg_uart_init(void)
     configure_uart_pins(BOARD_DEBUG_UART_INSTANCE);
 
     DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, BOARD_DEBUG_UART_BAUD, kDebugConsoleUART);
+}
+/******************************************************************************
+ *
+ *   @name      usb_device_board_init
+ *
+ *   @brief     This function is to handle board-specified initialization
+ *
+ *   @param     controller_id:        refer to CONTROLLER_INDEX defined in usb_misc.h
+ *                                    "0" stands for USB_CONTROLLER_KHCI_0.
+ *   @return    status
+ *                                    0 : successful
+ *                                    1 : failed
+ **
+ *****************************************************************************/
+uint8_t usb_device_board_init(uint8_t controller_id)
+{
+    int8_t ret = 0;
+
+    if (0 == controller_id)
+    {
+        /* TO DO */
+        /*add board initialization code if have*/
+    }
+    else
+    {
+        ret = 1;
+    }
+
+    return ret;
+
+}
+
+
+/******************************************************************************
+ *
+ *   @name        usb_host_board_init
+ *
+ *   @brief       This function is to handle board-specified initialization
+ *
+ *   @param     controller_id:        refer to CONTROLLER_INDEX defined in usb_misc.h
+ *                                    "0" stands for USB_CONTROLLER_KHCI_0.
+ *   @return         status
+ *                                    0 : successful
+ *                                    1 : failed
+ **
+ *****************************************************************************/
+uint8_t usb_host_board_init(uint8_t controller_id)
+{
+    int8_t ret = 0;
+    /*"0" stands for USB_CONTROLLER_KHCI_0 */
+    if (0 == controller_id)
+    {
+        /* TO DO */
+        /*add board initialization code if have*/
+    }
+    else
+    {
+       ret = 1;
+    }
+
+    return ret;
+
+
+}
+/******************************************************************************
+ *
+ *   @name      usb_otg_board_init
+ *
+ *   @brief     This function is to handle board-specified initialization
+ *
+ *   @param     controller_id:        refer to CONTROLLER_INDEX defined in usb_misc.h
+ *                                    "0" stands for USB_CONTROLLER_KHCI_0
+ *   @return    status
+ *                                    0 : successful
+ *                                    1 : failed
+ **
+ *****************************************************************************/
+uint8_t usb_otg_board_init(uint8_t controller_id)
+{
+    uint8_t error = 0;
+    /* TO DO */
+    /*add board initialization code if have*/
+
+    return error;
 }
 
 /*******************************************************************************

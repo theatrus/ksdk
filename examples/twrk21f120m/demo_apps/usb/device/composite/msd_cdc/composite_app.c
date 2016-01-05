@@ -39,10 +39,6 @@
 #include <stdlib.h>
 #endif
 
-#if ! USBCFG_DEV_COMPOSITE
-#error This application requires USBCFG_DEV_COMPOSITE defined non-zero in usb_device_config.h. Please recompile usbd with this option.
-#endif
-
 /*****************************************************************************
  * Constant and Macro's - None
  *****************************************************************************/
@@ -55,21 +51,9 @@
  * Global Variables
  ****************************************************************************/
 extern usb_desc_request_notify_struct_t desc_callback;
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-composite_device_struct_t* g_composite_device = NULL;
-#else
-composite_device_struct_t g_composite_device;
-#endif
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-extern void Main_Task(uint32_t param);
-#define MAIN_TASK       10
 
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    { MAIN_TASK, Main_Task, 2 * 3000L, 7L, "Main", MQX_AUTO_START_TASK, 0, 0 },
-    { 0L, 0L, 0L, 0L, 0L, 0L, 0, 0 }
-};
-#endif
+composite_device_struct_t g_composite_device;
+
 /*****************************************************************************
  * Local Types - None
  *****************************************************************************/
@@ -103,51 +87,16 @@ void APP_init()
 
     cdc_vcom_preinit();
     msc_disk_preinit();
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-    if (NULL == g_composite_device)
-    {
-        g_composite_device = OS_Mem_alloc_uncached_zero(sizeof(composite_device_struct_t));
-    }
-
-    /* cdc vcom device */
-    cdc_vcom_config_callback_handle = &g_composite_device->composite_device_config_list[CDC_VCOM_INTERFACE_INDEX];
-    cdc_vcom_config_callback_handle->composite_application_callback.callback = VCom_USB_App_Device_Callback;
-    cdc_vcom_config_callback_handle->composite_application_callback.arg = &g_composite_device->cdc_vcom;
-    cdc_vcom_config_callback_handle->class_specific_callback.callback = (usb_class_specific_handler_func) VCom_USB_App_Class_Callback;
-    cdc_vcom_config_callback_handle->class_specific_callback.arg = &g_composite_device->cdc_vcom;
-    cdc_vcom_config_callback_handle->desc_callback_ptr = &desc_callback;
-    cdc_vcom_config_callback_handle->type = USB_CLASS_CDC;
-
-    /* msc disk device */
-    msc_disk_config_callback_handle = &g_composite_device->composite_device_config_list[MSC_DISK_INTERFACE_INDEX];
-    msc_disk_config_callback_handle->composite_application_callback.callback = Disk_USB_App_Device_Callback;
-    msc_disk_config_callback_handle->composite_application_callback.arg = &g_composite_device->msc_disk;
-    msc_disk_config_callback_handle->class_specific_callback.callback = (usb_class_specific_handler_func) Disk_USB_App_Class_Callback;
-    msc_disk_config_callback_handle->class_specific_callback.arg = &g_composite_device->msc_disk;
-    msc_disk_config_callback_handle->desc_callback_ptr = &desc_callback;
-    msc_disk_config_callback_handle->type = USB_CLASS_MSC;
-    OS_Mem_zero(&g_composite_device->msc_disk, sizeof(disk_struct_t));
-
-    g_composite_device->composite_device_config_callback.count = 2;
-    g_composite_device->composite_device_config_callback.class_app_callback = g_composite_device->composite_device_config_list;
-
-    msc_disk_init(&g_composite_device->msc_disk);
-
-    /* Initialize the USB interface */
-    USB_Composite_Init(CONTROLLER_ID, &g_composite_device->composite_device_config_callback, &g_composite_device->composite_device);
-
-    g_composite_device->cdc_vcom = (cdc_handle_t) g_composite_device->composite_device_config_list[CDC_VCOM_INTERFACE_INDEX].class_handle;
-    g_composite_device->msc_disk.app_handle = (msd_handle_t) g_composite_device->composite_device_config_list[MSC_DISK_INTERFACE_INDEX].class_handle;
-    cdc_vcom_init(&g_composite_device->cdc_vcom);
-#else   
     /* cdc vcom device */
     cdc_vcom_config_callback_handle = &g_composite_device.composite_device_config_list[CDC_VCOM_INTERFACE_INDEX];
     cdc_vcom_config_callback_handle->composite_application_callback.callback = VCom_USB_App_Device_Callback;
     cdc_vcom_config_callback_handle->composite_application_callback.arg = &g_composite_device.cdc_vcom;
     cdc_vcom_config_callback_handle->class_specific_callback.callback = (usb_class_specific_handler_func)VCom_USB_App_Class_Callback;
     cdc_vcom_config_callback_handle->class_specific_callback.arg = &g_composite_device.cdc_vcom;
+    cdc_vcom_config_callback_handle->board_init_callback.callback = usb_device_board_init;
+    cdc_vcom_config_callback_handle->board_init_callback.arg = CONTROLLER_ID;
     cdc_vcom_config_callback_handle->desc_callback_ptr = &desc_callback;
-    cdc_vcom_config_callback_handle->type = USB_CLASS_CDC;
+    cdc_vcom_config_callback_handle->type = USB_CLASS_COMMUNICATION;
 
     /* msc disk device */
     msc_disk_config_callback_handle = &g_composite_device.composite_device_config_list[MSC_DISK_INTERFACE_INDEX];
@@ -155,8 +104,10 @@ void APP_init()
     msc_disk_config_callback_handle->composite_application_callback.arg = &g_composite_device.msc_disk;
     msc_disk_config_callback_handle->class_specific_callback.callback = (usb_class_specific_handler_func)Disk_USB_App_Class_Callback;
     msc_disk_config_callback_handle->class_specific_callback.arg = &g_composite_device.msc_disk;
+    msc_disk_config_callback_handle->board_init_callback.callback = usb_device_board_init;
+    msc_disk_config_callback_handle->board_init_callback.arg = CONTROLLER_ID;
     msc_disk_config_callback_handle->desc_callback_ptr = &desc_callback;
-    msc_disk_config_callback_handle->type = USB_CLASS_MSC;
+    msc_disk_config_callback_handle->type = USB_CLASS_MASS_STORAGE;
     OS_Mem_zero(&g_composite_device.msc_disk, sizeof(disk_struct_t));
 
     g_composite_device.composite_device_config_callback.count = 2;
@@ -170,7 +121,7 @@ void APP_init()
     g_composite_device.cdc_vcom = (cdc_handle_t)g_composite_device.composite_device_config_list[CDC_VCOM_INTERFACE_INDEX].class_handle;
     g_composite_device.msc_disk.app_handle = (msd_handle_t)g_composite_device.composite_device_config_list[MSC_DISK_INTERFACE_INDEX].class_handle;
     cdc_vcom_init(&g_composite_device.cdc_vcom);
-#endif
+
 }
 /*****************************************************************************
  *  
@@ -190,25 +141,6 @@ void APP_task()
         cdc_vcom_task();
     }
 }
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-/*FUNCTION*----------------------------------------------------------------
- * 
- * Function Name  : Main_Task
- * Returned Value : None
- * Comments       :
- *     First function called.  Calls the Test_App
- *     callback functions.
- * 
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    UNUSED_ARGUMENT (param)
-    APP_init();
-    APP_task();
-}
-#endif
 
 #if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
@@ -244,7 +176,7 @@ void main(void)
     OSA_Init();
     dbg_uart_init();
 
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
 
     OSA_Start();
 #if (!defined(FSL_RTOS_MQX))&(defined(__CC_ARM) || defined(__GNUC__))

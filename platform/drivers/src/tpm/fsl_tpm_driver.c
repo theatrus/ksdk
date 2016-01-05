@@ -93,7 +93,7 @@ tpm_status_t TPM_DRV_Init(uint32_t instance, const tpm_general_config_t * info)
  * It will also set the clock divider.
  *
  *END**************************************************************************/
-void TPM_DRV_SetClock(uint32_t instance, tpm_clock_source_t clock, tpm_clock_ps_t clockPs)
+void TPM_DRV_SetClock(uint32_t instance, tpm_clock_mode_t clock, tpm_clock_ps_t clockPs)
 {
     assert(instance < TPM_INSTANCE_COUNT);
 
@@ -102,27 +102,7 @@ void TPM_DRV_SetClock(uint32_t instance, tpm_clock_source_t clock, tpm_clock_ps_
     /*Clock prescaler*/
     TPM_HAL_SetClockDiv(tpmBase, clockPs);
 
-    if (clock == kTpmClockSourcNone)
-    {
-        s_tpmClockSource = kTpmClockSourceNoneClk;
-    }
-    else if ((clock == kTpmClockSourceModuleOSCERCLK) || (clock == kTpmClockSourceModuleHighFreq) ||
-             (clock == kTpmClockSourceModuleMCGIRCLK))
-    {
-        CLOCK_SYS_SetTpmSrc(instance, (clock_tpm_src_t)clock);
-        s_tpmClockSource = kTpmClockSourceModuleClk;
-    }
-    else if ((clock == kTpmClockSourceExternalCLKIN0) || (clock == kTpmClockSourceExternalCLKIN1))
-
-    {
-        CLOCK_SYS_SetTpmExternalSrc(instance, (sim_tpm_clk_sel_t)(clock - 4));
-        s_tpmClockSource = kTpmClockSourceExternalClk;
-    }
-    else
-    {
-        s_tpmClockSource = kTpmClockSourceReservedClk;
-    }
-
+    s_tpmClockSource = clock;
 }
 
 /*FUNCTION**********************************************************************

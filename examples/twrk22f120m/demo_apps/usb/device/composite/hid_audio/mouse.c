@@ -204,7 +204,7 @@ uint8_t Hid_USB_App_Class_Callback
     uint8_t error = USB_OK;
     //uint8_t direction =  (uint8_t)((request & USB_HID_REQUEST_DIR_MASK) >>3);
     uint8_t index = (uint8_t)((request - 2) & USB_HID_REQUEST_TYPE_MASK);
-    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID))
+    if ((request == USB_DEV_EVENT_SEND_COMPLETE) && (value == USB_REQ_VAL_INVALID) && (*size != 0xFFFFFFFF))
     {
         if ((g_hid_mouse_ptr->mouse_init) && (arg != NULL))
         {

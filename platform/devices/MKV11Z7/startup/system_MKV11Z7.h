@@ -8,14 +8,14 @@
 **
 **     Reference manual:    KV11P64M75RM Rev.0, November 2014
 **     Version:             rev. 1.0, 2014-12-14
-**     Build:               b150202
+**     Build:               b150409
 **
 **     Abstract:
 **         Provides a system configuration function and a global variable that
 **         contains the system frequency. It configures the device and initializes
 **         the oscillator (PLL) that is part of the microcontroller device.
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -115,7 +115,6 @@ extern "C" {
 #define CPU_XTAL_CLK_HZ                10000000u           /* Value of the external crystal or oscillator clock frequency in Hz */
 #define CPU_INT_SLOW_CLK_HZ            32768u              /* Value of the slow internal oscillator clock frequency in Hz  */
 #define CPU_INT_FAST_CLK_HZ            4000000u            /* Value of the fast internal oscillator clock frequency in Hz  */
-#define CPU_INT_IRC_CLK_HZ             48000000u           /* Value of the 48M internal oscillator clock frequency in Hz  */
 
 /* Low power mode enable */
 
@@ -228,7 +227,6 @@ extern "C" {
 #else
   #define DEFAULT_SYSTEM_CLOCK          20971520UL         /* Default System clock value */
 #endif
-
 
 
 /**

@@ -47,6 +47,14 @@
 #define CLOCK_INIT_CONFIG CLOCK_RUN
 #endif
 
+#if (CLOCK_INIT_CONFIG == CLOCK_RUN)
+#define CORE_CLOCK_FREQ 120000000U
+#elif (CLOCK_INIT_CONFIG == CLOCK_HSRUN)
+#define CORE_CLOCK_FREQ 180000000U
+#else
+#define CORE_CLOCK_FREQ 4000000U
+#endif
+
 /* OSC0 configuration. */
 #define OSC0_XTAL_FREQ 16000000U
 #define OSC0_SC2P_ENABLE_CONFIG  false
@@ -74,7 +82,6 @@
 #define RTC_SC8P_ENABLE_CONFIG       false
 #define RTC_SC16P_ENABLE_CONFIG      false
 #define RTC_OSC_ENABLE_CONFIG        true
-#define RTC_CLK_OUTPUT_ENABLE_CONFIG true
 
 #define BOARD_RTC_CLK_FREQUENCY     32768U;
 /* The UART to use for debug messages. */
@@ -90,7 +97,7 @@
 #define BOARD_LOW_POWER_UART_BAUD       9600
 
 #define BOARD_USE_UART
-#define PM_DBG_UART_IRQ_HANDLER         MODULE_IRQ_HANDLER(UART2_RX_TX)
+#define PM_DBG_UART_IRQ_HANDLER         UART2_RX_TX_IRQHandler
 #define PM_DBG_UART_IRQn                UART2_RX_TX_IRQn
 
 /* Define feature for the low_power_demo */
@@ -100,6 +107,7 @@
 #define BOARD_SW_GPIO               kGpioSW1
 #define BOARD_SW_IRQ_NUM            PORTA_IRQn
 #define BOARD_SW_IRQ_HANDLER        PORTA_IRQHandler
+#define BOARD_SW_NAME               "SW1"
 /* Define print statement to inform user which switch to press for
  * low_power_demo
  */
@@ -108,6 +116,11 @@
 
 #define PRINT_LLWU_SW_NUM \
   PRINTF("SW3")
+
+#define BOARD_MAX3353_INT_PORT       (PORTE_BASE)        /* BOARD_MAX3353_INT_PORT */
+#define BOARD_MAX3353_INT_PIN        (27U)               /* BOARD_MAX3353_INT_PIN */
+#define BOARD_MAX3353_INT_VECTOR     (PORTE_IRQn)        /* BOARD_MAX3353_INT_VECTOR */
+#define BOARD_MAX3353_GPIO_INT       GPIO_MAKE_PIN(GPIOE_IDX, BOARD_MAX3353_INT_PIN)
 
 /* Defines the llwu pin number for board switch which is used in power_manager_demo. */
 #define BOARD_SW_HAS_LLWU_PIN        1
@@ -123,9 +136,6 @@
 
 #define HWADC_INSTANCE               1
 #define ADC_IRQ_N                    ADC1_IRQn
-#if (defined FSL_RTOS_MQX)
-#define MQX_ADC_IRQHandler           MQX_ADC1_IRQHandler
-#endif
 
 /* The instances of peripherals used for dac_adc_demo */
 #define BOARD_DAC_DEMO_DAC_INSTANCE     0U
@@ -138,8 +148,15 @@
 /* The i2c instance used for i2c DAC demo */
 #define BOARD_DAC_I2C_INSTANCE          1
 
-/* The i2c instance used for i2c communication demo */
-#define BOARD_I2C_COMM_INSTANCE         0
+/* The i2c instance used for OTG demo */
+#define BOARD_MAX3353_I2C_INSTANCE      0
+#define BOARD_MAX3353_I2C_VECTOR        I2C0_IRQn
+
+/* The i2c instance used for i2c connection by default */
+#define BOARD_I2C_INSTANCE              0
+
+/* The dspi instance used for dspi example */
+#define BOARD_DSPI_INSTANCE             2
 
 /* The Flextimer instance/channel used for board */
 #define BOARD_FTM_INSTANCE              0
@@ -211,7 +228,8 @@
                            LED4_OFF;
 
 /* The SDHC instance/channel used for board */
-#define BOARD_SDHC_INSTANCE             0
+#define BOARD_SDHC_INSTANCE                   0
+#define BOARD_SDHC_CD_GPIO_IRQ_HANDLER        PORTA_IRQHandler
 
 /* The CMP instance used for board. */
 #define BOARD_CMP_INSTANCE              2
@@ -250,6 +268,15 @@ void BOARD_InitOsc0(void);
 
 /* Function to initialize RTC external clock base on board configuration. */
 void BOARD_InitRtcOsc(void);
+/*Function to handle board-specified initialization*/
+uint8_t usb_device_board_init(uint8_t controller_id);
+/*Function to handle board-specified initialization*/
+uint8_t usb_host_board_init(uint8_t controller_id);
+/*Function to handle board-specified initialization*/
+uint8_t usb_otg_board_init(uint8_t controller_id);
+
+/* Function to indicate whether a card is detected or not */
+bool BOARD_IsSDCardDetected(void);
 
 #if defined(__cplusplus)
 }

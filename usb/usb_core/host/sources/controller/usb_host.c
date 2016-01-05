@@ -59,11 +59,11 @@ extern usb_status usb_ehci_test_mode_init (usb_device_instance_handle dev_handle
 #endif
 
 usb_host_state_struct_t g_usb_host[USBCFG_HOST_NUM];
-extern usb_status bsp_usb_host_init(uint8_t controller_id);
+extern usb_status usb_host_soc_init(uint8_t controller_id);
 extern void* _usb_host_dev_get_instance(usb_host_handle handle, uint8_t hub_no, uint8_t port_no, uint8_t removed);
 #ifdef USBCFG_OTG
 extern usb_otg_handle * g_usb_otg_handle;
-extern usb_status bsp_usb_otg_host_init(uint8_t controller_id);
+extern usb_status usb_otg_host_soc_init(uint8_t controller_id);
 #endif
 usb_status USB_log_error(char* file, uint32_t line, usb_status error)
 {
@@ -165,7 +165,6 @@ tr_struct_t* tr_ptr
 {
     pipe_struct_t* pipe_ptr;
     tr_struct_t* tr_list;
-    usb_host_handle usb_host_ptr;
 
     pipe_ptr = (pipe_struct_t*)pipe_handle;
 #ifdef _HOST_DEBUG_
@@ -181,8 +180,6 @@ tr_struct_t* tr_ptr
         return USB_log_error(__FILE__,__LINE__,USBERR_INVALID_PIPE_HANDLE);
     }
 
-    usb_host_ptr = usb_host_dev_mng_get_host(pipe_ptr->dev_instance);
-    USB_Host_lock();
     tr_list = pipe_ptr->tr_list_ptr;
     if (tr_list == NULL)
     {
@@ -201,7 +198,7 @@ tr_struct_t* tr_ptr
         /* now tr_list is the last one in the list */
         tr_list->next = tr_ptr;
     }
-    USB_Host_unlock();
+
     return USB_OK;
 } /* EndBody */
 
@@ -410,7 +407,8 @@ usb_status usb_host_init
 (
 /* [IN] the USB device controller to initialize */
 uint8_t controller_id,
-
+/* [IN] the USB host board init handle */
+host_board_init board_init_callback,
 /* [OUT] the USB host handle */
 usb_host_handle * handle
 )
@@ -501,9 +499,20 @@ usb_host_handle * handle
     usb_host_ptr->hub_task = 0xFFFFFFFF;
 
 #ifndef USBCFG_OTG
-    error = bsp_usb_host_init(controller_id);
+    if (board_init_callback != NULL)
+    {
+        error = (uint32_t)board_init_callback(controller_id);
+    }
+    else
+    {
+        error = USB_OK;
+    }
+    if(USB_OK == error)
+    {
+        error = usb_host_soc_init(controller_id);
+    }
 #else
-    error = bsp_usb_otg_host_init(controller_id);
+    error = usb_otg_host_soc_init(controller_id);
 #endif
     if (error != USB_OK)
     {
@@ -725,10 +734,12 @@ tr_struct_t* tr_ptr
     {
         return USBERR_PIPE_OPENED_FAILED;
     }
-
+    
+    OS_Lock();
     status = usb_hostdev_validate (pipe_ptr->dev_instance);
     if (status != USB_OK)
     {
+        OS_Unlock();
         return status;
     }
 
@@ -738,7 +749,7 @@ tr_struct_t* tr_ptr
 #ifdef _HOST_DEBUG_
         DEBUG_LOG_TRACE("_usb_host_send_data failed to queue transfer");
 #endif
-
+        OS_Unlock();
         return USB_log_error(__FILE__,__LINE__,status);
     } /* Endif */
 
@@ -759,6 +770,7 @@ tr_struct_t* tr_ptr
 #endif
         status = host_api->host_send(usb_host_ptr->controller_handle, pipe_ptr, tr_ptr);
     }
+    OS_Unlock();
     if (status != USB_OK)
     {
         /* mark the transaction as unused */
@@ -814,9 +826,11 @@ tr_struct_t* tr_ptr
         return USBERR_PIPE_OPENED_FAILED;
     }
 
+    OS_Lock();
     status = usb_hostdev_validate (pipe_ptr->dev_instance);
     if (status != USB_OK)
     {
+        OS_Unlock();
         return status;
     }
 
@@ -827,7 +841,7 @@ tr_struct_t* tr_ptr
 #ifdef _HOST_DEBUG_
         DEBUG_LOG_TRACE("usb_host_send_setup error status");
 #endif
-
+        OS_Unlock();
         return status;
     }
 
@@ -862,6 +876,7 @@ tr_struct_t* tr_ptr
 #endif 
         status = host_api->host_send_setup(usb_host_ptr->controller_handle, pipe_ptr, tr_ptr);
     }
+    OS_Unlock();
     if (status == USB_OK)
     {
 #ifdef _HOST_DEBUG_
@@ -918,9 +933,11 @@ tr_struct_t* tr_ptr
         return USBERR_PIPE_OPENED_FAILED;
     }
 
+    OS_Lock();    
     status = usb_hostdev_validate (pipe_ptr->dev_instance);
     if (status != USB_OK)
     {
+        OS_Unlock();
         return status;
     }
 
@@ -930,6 +947,7 @@ tr_struct_t* tr_ptr
 #ifdef _HOST_DEBUG_
         DEBUG_LOG_TRACE("_usb_host_recv_data transfer queue failed");
 #endif
+        OS_Unlock();
         return USB_log_error(__FILE__,__LINE__,status);
     }
 
@@ -956,7 +974,7 @@ tr_struct_t* tr_ptr
 #ifdef _HOST_DEBUG_
     DEBUG_LOG_TRACE("_usb_host_recv_data SUCCESSFUL");
 #endif
-
+    OS_Unlock();
     if (status == USB_OK)
     {
         return USB_OK;
@@ -1328,7 +1346,7 @@ usb_class_handle * class_handle_ptr
 
 /*FUNCTION*----------------------------------------------------------------
  *
- * Function Name  : usb_host_open_dev_alternate_interface
+ * Function Name  : usb_host_set_dev_alternate_interface
  * Returned Value : interface struct + USB_OK, or error status
  * Comments       :
  *     Function to tear down old interface, and set up
@@ -1339,7 +1357,7 @@ usb_class_handle * class_handle_ptr
  *     several alternates of that interface).
  *
  *END*--------------------------------------------------------------------*/
-usb_status usb_host_open_dev_alternate_interface
+usb_status usb_host_set_dev_alternate_interface
 (
 /* [IN] the USB Host state structure */
 usb_host_handle handle,

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<workspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="workingsets.xsd">
+  <projects>
+  <project><name>ksdk_platform_lib_KV11Z7</name><path>../../../../../lib/ksdk_platform_lib/kds/KV11Z7</path><open>true</open><activeconfig>debug</activeconfig><buildreferences config="debug">false</buildreferences><activeconfig>release</activeconfig><buildreferences config="release">false</buildreferences></project><project><name>dac_adc_demo_twrkv11z75m</name><path>.</path><open>true</open><activeconfig>debug</activeconfig><buildreferences config="debug">false</buildreferences><activeconfig>release</activeconfig><buildreferences config="release">false</buildreferences></project></projects>
+  <workingsets>
+  <workingSet editPageId="org.eclipse.cdt.ui.CElementWorkingSetPage" id="1323268527287_1" label="dac_adc_demo" name="dac_adc_demo"><item factoryID="org.eclipse.cdt.ui.PersistableCElementFactory" path="/ksdk_platform_lib_KV11Z7" type="4"/><item factoryID="org.eclipse.cdt.ui.PersistableCElementFactory" path="/dac_adc_demo_twrkv11z75m" type="4"/></workingSet></workingsets>
+  <cdtconfigurations>
+  <workingSet name="dac_adc_demo"><config name="debug"><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="ksdk_platform_lib_KV11Z7" configName="debug"/><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="dac_adc_demo_twrkv11z75m" configName="debug"/></config><config name="release"><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="ksdk_platform_lib_KV11Z7" configName="release"/><project config="com.freescale.arm.cdt.toolchain.config.arm.release.695495605" name="dac_adc_demo_twrkv11z75m" configName="release"/></config></workingSet></cdtconfigurations>
+</workspace>

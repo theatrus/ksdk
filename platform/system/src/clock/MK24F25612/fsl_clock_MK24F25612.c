@@ -58,35 +58,11 @@ uint32_t g_ftmClkFreq[FTM_EXT_CLK_COUNT];      /* FTM_CLK     */
 
 /*FUNCTION**********************************************************************
  *
- * Function Name : CLOCK_SYS_FllStableDelay
- * Description   : This funtion is used to delay for FLL stable.
- * According to datasheet, every time the FLL reference source or reference
- * divider is changed, trim value is changed, DMX32 bit is changed, DRS bits
- * are changed, or changing from FLL disabled (BLPE, BLPI) to FLL enabled
- * (FEI, FEE, FBE, FBI), there should be 1ms delay for FLL stable. Please
- * check datasheet for t(fll_aquire).
- *
- *END**************************************************************************/
-static void CLOCK_SYS_FllStableDelay(void)
-{
-    uint32_t coreClk = CLOCK_SYS_GetCoreClockFreq();
-
-    coreClk /= 3000U;
-
-    // Delay 1 ms.
-    while (coreClk--)
-    {
-        __asm ("nop");
-    }
-}
-
-/*FUNCTION**********************************************************************
- *
  * Function Name : CLOCK_SYS_SetSimConfigration
  * Description   : This funtion sets the SIM registers for clock transitiom.
  *
  *END**************************************************************************/
-static void CLOCK_SYS_SetSimConfigration(sim_config_t const *simConfig)
+void CLOCK_SYS_SetSimConfigration(sim_config_t const *simConfig)
 {
     CLOCK_HAL_SetOutDiv(SIM,
                         simConfig->outdiv1,
@@ -112,12 +88,12 @@ clock_manager_error_code_t CLOCK_SYS_SetConfiguration(clock_manager_user_config_
     assert(NULL != config);
 
     /* Set outdiv for safe output clock frequency. */
-    /* system/core clock < 120M, bus clock < 60M;  */
-    /* flash clock < 25M;     */
+    /* system/core clock < 120M, bus clock < 60M.  */
+    /* flash clock < 25M.     */
     CLOCK_HAL_SetOutDiv(SIM, 0U, 1U, 2U, 4U);
 
     /* Set MCG mode. */
-    CLOCK_SYS_SetMcgMode(&config->mcgConfig, CLOCK_SYS_FllStableDelay);
+    CLOCK_SYS_SetMcgMode(&config->mcgConfig);
 
     /* Set SIM setting. */
     CLOCK_SYS_SetSimConfigration(&config->simConfig);

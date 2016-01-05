@@ -39,92 +39,10 @@
 #define  USB_SERVICE_SYSTEM_ERROR            (0x02)
 #define  USB_SERVICE_SPEED                   (0x03)
 #define  USB_SERVICE_ATTACH                  (0x04)
-#define  USB_SERVICE_DETACH                  (0x05)
+#define  USB_HOST_SERVICE_DETACH                  (0x05)
 #define  USB_SERVICE_STALL_PACKET            (0x06)
 #define  USB_SERVICE_ENUMERATION_DONE        (0x07)
 #define  USB_SERVICE_1MS_TIMER               (0x08)
-
-/*------------------------------**
- ** Class / SubClass / Protocol  **
- **------------------------------*/
-
-#define  USB_CLASS_AUDIO            1
-#define  USB_SUBCLASS_UNDEFINED     0
-#define  USB_SUBCLASS_AUD_CONTROL   1
-#define  USB_SUBCLASS_AUD_STREAMING 2
-#define  USB_SUBCLASS_AUD_MIDI_STRM 3
-#define  USB_PROTOCOL_UNDEFINED     0
-
-#define  USB_CLASS_COMMUNICATION    2
-#define  USB_SUBCLASS_COM_DIRECT    1
-#define  USB_SUBCLASS_COM_ABSTRACT  2
-#define  USB_SUBCLASS_COM_TELEPHONE 3
-#define  USB_SUBCLASS_COM_MULTICHAN 4
-#define  USB_SUBCLASS_COM_CAPI      5
-#define  USB_SUBCLASS_COM_ETHERNET  6
-#define  USB_SUBCLASS_COM_ATM_NET   7
-#define  USB_PROTOCOL_COM_NOSPEC    0
-#define  USB_PROTOCOL_COM_V25       1
-#define  USB_PROTOCOL_COM_HAYES     1
-#define  USB_PROTOCOL_COM_AT        1
-#define  USB_PROTOCOL_COM_VENDOR    0xFF
-
-#define  USB_CLASS_PRINTER          7
-#define  USB_SUBCLASS_PRINTER       1
-#define  USB_PROTOCOL_PRT_UNIDIR   1
-#define  USB_PROTOCOL_PRT_BIDIR     2
-#define  USB_PROTOCOL_PRT_1284      3
-
-#define  USB_CLASS_MASS_STORAGE     8
-#define  USB_SUBCLASS_MASS_RBC      1
-#define  USB_SUBCLASS_MASS_ATAPI    2
-#define  USB_SUBCLASS_MASS_QIC157   3
-#define  USB_SUBCLASS_MASS_UFI      4
-#define  USB_SUBCLASS_MASS_SFF8070I 5
-#define  USB_SUBCLASS_MASS_SCSI     6
-#define  USB_PROTOCOL_MASS_IRRPT    0
-#define  USB_PROTOCOL_MASS_NOIRRPT  1
-#define  USB_PROTOCOL_MASS_BULK     0x50
-
-#define  USB_CLASS_HID              3
-#define  USB_SUBCLASS_HID_NONE      0
-#define  USB_SUBCLASS_HID_BOOT      1
-#define  USB_PROTOCOL_HID_NONE      0
-#define  USB_PROTOCOL_HID_KEYBOARD  1
-#define  USB_PROTOCOL_HID_MOUSE     2
-#define  USB_PROTOCOL_HID_BOOT_E    0
-#define  USB_PROTOCOL_HID_REPORT_E  1
-
-#define  USB_CLASS_HUB              9
-#define  USB_SUBCLASS_HUB_NONE      0
-#define  USB_PROTOCOL_HUB_LS        0
-#define  USB_PROTOCOL_HUB_FS        0
-#define  USB_PROTOCOL_HUB_HS_SINGLE 1
-#define  USB_PROTOCOL_HUB_HS_MULTI  2
-#define  USB_PROTOCOL_HUB_ALL       0xFF
-
-#define  USB_CLASS_DATA             0x0A
-/* No data subclasses, set to 0 */
-#define  USB_PROTOCOL_DATA_I430     0x30
-#define  USB_PROTOCOL_DATA_HDLC     0x31
-#define  USB_PROTOCOL_DATA_TRANS    0x32
-#define  USB_PROTOCOL_DATA_Q921M    0x50
-#define  USB_PROTOCOL_DATA_Q921     0x51
-#define  USB_PROTOCOL_DATA_Q921TM   0x52
-#define  USB_PROTOCOL_DATA_V42BIS   0x90
-#define  USB_PROTOCOL_DATA_EUROISDN 0x91
-#define  USB_PROTOCOL_DATA_V120     0x92
-#define  USB_PROTOCOL_DATA_CAPI20   0x93
-#define  USB_PROTOCOL_DATA_HOST     0xFE
-#define  USB_PROTOCOL_DATA_CDC      0xFE
-#define  USB_PROTOCOL_DATA_VENDOR   0xFF
-
-#define  USB_CLASS_VIDEO                          0x0E
-#define  USB_SUBCLASS_VIDEO_UNDEFINED             0x00
-#define  USB_SUBCLASS_VIDEO_CONTROL               0x01
-#define  USB_SUBCLASS_VIDEO_STREAMING             0x02
-#define  USB_SUBCLASS_VIDEO_INFERFACE_COLLECTION  0x03
-#define  USB_PROTOCOL_VIDEO_UNDEFINED             0x00
 
 typedef void * usb_class_handle;
 
@@ -188,6 +106,12 @@ typedef void (_CODE_PTR_ iso_tr_callback)(struct pipe_struct * pipe_ptr, struct 
  **   uint32_t                           code (attach etc.). **
  **---------------------------------------------------------*/
 typedef usb_status (_CODE_PTR_ event_callback)(usb_device_instance_handle dev_handle, usb_interface_descriptor_handle intf_handle, uint32_t event_code);
+
+/*---------------------------------------------------------**
+  ** host_board_init  parameters:                            **
+  **    controller_id     controller ID   **
+  **---------------------------------------------------------*/
+typedef uint8_t (_CODE_PTR_ host_board_init)(uint8_t controller_id);
 
 /*!
  * @brief USB setup packet structure.
@@ -344,7 +268,7 @@ extern "C"
      * @param handle host handle
      * @return USB_OK-Success/Others-Fail
      */
-    usb_status usb_host_init(uint8_t controller_id, usb_host_handle * handle);
+    usb_status usb_host_init(uint8_t controller_id, host_board_init board_init_callback, usb_host_handle * handle);
 
     /*!
      * @brief Un-Initialize usb host.
@@ -580,7 +504,7 @@ extern "C"
      * @return USB_OK-Success/Others-Fail
      */
     usb_status usb_host_cancel(usb_host_handle handle, usb_pipe_handle pipe_handle, tr_struct_t* tr_ptr);
-    usb_status usb_host_open_dev_alternate_interface(usb_host_handle handle, usb_device_instance_handle dev_handle, usb_interface_descriptor_handle intf_handle, uint8_t alternate_setting);
+    usb_status usb_host_set_dev_alternate_interface(usb_host_handle handle, usb_device_instance_handle dev_handle, usb_interface_descriptor_handle intf_handle, uint8_t alternate_setting);
     usb_status usb_host_get_dev_descriptor(usb_interface_descriptor_handle intf_handle, uint8_t descriptor_type, uint32_t* param1, uint32_t* param2, void** descriptor);
 
     /*!

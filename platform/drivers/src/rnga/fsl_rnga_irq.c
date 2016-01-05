@@ -33,16 +33,37 @@
 #include "fsl_rnga_driver.h"
 #if FSL_FEATURE_SOC_RNG_COUNT
 
+/*******************************************************************************
+ * Variables
+ ******************************************************************************/
+#define RNGA_INSTANCE      0U
+
 /******************************************************************************
  * Code
  *****************************************************************************/
-/* RNGA_IRQHandler IRQ handler that would cover the same name's APIs in startup code */
-void RNG_IRQHandler(void)
-{
-    RNGA_DRV_IRQHandler(0);
-}
+#if FSL_RTOS_MQX
+    /* MQX RTOS require instalation of interrupt handlers by application. */
+    void MQX_RNGA0_IRQHandler(void)
+    {
+        RNGA_DRV_IRQHandler(RNGA_INSTANCE);
+    }
+#else /* FSL_RTOS_MQX */
+    #if defined(KM34Z7_SERIES)
+    /* RNGA_IRQHandler IRQ handler that would cover the same name's APIs in startup code */
+    void RNGA0_IRQHandler(void)
+    {
+        RNGA_DRV_IRQHandler(RNGA_INSTANCE);
+    }
+    #else
+    /* RNGA_IRQHandler IRQ handler that would cover the same name's APIs in startup code */
+    void RNG0_IRQHandler(void)
+    {
+        RNGA_DRV_IRQHandler(RNGA_INSTANCE);
+    }
+    #endif
 #endif
 
+#endif /* FSL_FEATURE_SOC_RNG_COUNT */
 /******************************************************************************
  * EOF
  *****************************************************************************/

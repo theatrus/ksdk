@@ -44,7 +44,6 @@
 
 #include "hidkeyboard.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 //#include "MK70F12_port.h"
 //#include "fsl_usb_features.h"
@@ -55,20 +54,8 @@
 #include "fsl_port_hal.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "fsl_uart_driver.h"
-#endif
+//#include "fsl_uart_driver.h"
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-
-#if ! BSPCFG_ENABLE_IO_SUBSYSTEM
-#error This application requires BSPCFG_ENABLE_IO_SUBSYSTEM defined non-zero in user_config.h. Please recompile BSP with this option.
-#endif
-
-#ifndef BSP_DEFAULT_IO_CHANNEL_DEFINED
-#error This application requires BSP_DEFAULT_IO_CHANNEL to be not NULL. Please set corresponding BSPCFG_ENABLE_TTYx to non-zero in user_config.h and recompile BSP with this option.
-#endif
-
-#endif
 /************************************************************************************
  **
  ** Globals
@@ -93,6 +80,7 @@ volatile uint32_t sleep_test = FALSE;
 #define USB_EVENT_DATA_CORRUPTED (0x04)
 #define USB_EVEN_OUTPUT          (0x08)
 #define USB_EVEN_INIT            (0x10)
+#define USB_EVENT_STATE_CHANGE   (0x20)
 
 static void usb_host_hid_keyboard_ctrl_callback(void* unused, void* user_parm, uint8_t *buffer, uint32_t buflen, usb_status status);
 static void usb_host_hid_keyboard_recv_callback(void* unused, void* user_parm, uint8_t *buffer, uint32_t buflen, usb_status status);
@@ -129,19 +117,6 @@ static usb_host_driver_info_t DriverInfoTable[] = {
         NULL
     },
 };
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-#define MAIN_TASK                (10)
-#define PRESS_TASK               (9)
-void Main_Task(uint32_t param);
-void Long_Press_Task(uint32_t param);
-TASK_TEMPLATE_STRUCT MQX_template_list[] =
-{
-    { MAIN_TASK, Main_Task, 3000L, 9L, "Main", MQX_AUTO_START_TASK },
-    { PRESS_TASK, Long_Press_Task, 1000L, 7L, "press_task", MQX_AUTO_START_TASK },
-    { 0L, 0L, 0L, 0L, 0L, 0L }
-};
-#endif
 
 #define MAX_SUPPORTED_USAGE_ID 57
 
@@ -210,7 +185,6 @@ uint32_t shift = 0;
 uint8_t buffer_timer[8] = { 0 };
 uint32_t g_current_time = 0;
 uint32_t flag_time[8] = { 0 };
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 #include "fsl_hwtimer.h"
 hwtimer_t hwtimer;
 extern const hwtimer_devif_t kSystickDevif;
@@ -221,6 +195,55 @@ extern const IRQn_Type g_pitIrqId[];
 #define HWTIMER_IRQ_NUM     (g_pitIrqId[HWTIMER_LL_ID]) 
 #define HWTIMER_IRQ_PRI     (6) 
 #define HWTIMER_PERIOD      1000*10        /*10 ms interval*/
+
+static void update_state(void)
+{
+    if (kbd_hid_device.state_change != 0)
+    {
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_ATTACHED)
+        {
+            if (kbd_hid_device.DEV_STATE == USB_DEVICE_IDLE)
+            {
+                kbd_hid_device.DEV_STATE = USB_DEVICE_ATTACHED;
+            }
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_ATTACHED);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_OPENED)
+        {
+            if (kbd_hid_device.DEV_STATE != USB_DEVICE_DETACHED)
+            {
+                kbd_hid_device.DEV_STATE = USB_DEVICE_INTERFACE_OPENED;
+            }
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_OPENED);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_DETACHED)
+        {
+            kbd_hid_device.DEV_STATE = USB_DEVICE_DETACHED;
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_DETACHED);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_IDLE)
+        {
+            kbd_hid_device.DEV_STATE = USB_DEVICE_IDLE;
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_IDLE);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_DESCRIPTOR_DONE)
+        {
+            if (kbd_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR)
+            {
+                kbd_hid_device.DEV_STATE = USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE;
+            }
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_DESCRIPTOR_DONE);
+        }
+        if (kbd_hid_device.state_change & USB_STATE_CHANGE_INUSE)
+        {
+            if (kbd_hid_device.DEV_STATE == USB_DEVICE_SETTING_PROTOCOL)
+            {
+                kbd_hid_device.DEV_STATE = USB_DEVICE_INUSE;
+            }
+            kbd_hid_device.state_change &= ~(USB_STATE_CHANGE_INUSE);
+        }
+    }
+}
 
 /*FUNCTION*----------------------------------------------------------------
  *
@@ -266,44 +289,6 @@ void time_init(void)
     
     OS_intr_init(HWTIMER_IRQ_NUM, HWTIMER_IRQ_PRI, 0, TRUE);    
 }
-#elif(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-void Long_Press_Task ( uint32_t param )
-{
-
-    while((kbd_usb_event==NULL) || !OS_Event_check_bit(kbd_usb_event, USB_EVEN_INIT))
-    {
-        OS_Time_delay(250);
-    }
-
-    OS_Event_clear(kbd_usb_event, USB_EVEN_INIT);
-    while(1)
-    {
-        OS_Time_delay(10);
-        g_current_time++;
-        OS_Event_set(kbd_usb_event, USB_EVEN_OUTPUT);
-
-    }
-}
-#elif(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-#include "rtc_kinetis.h"
-static timer_object_t time_obj;
-static uint8_t time_index;
-void press_timer_isr()
-{
-    g_current_time ++;
-    OS_Event_set(kbd_usb_event, USB_EVEN_OUTPUT);;
-}
-void time_init(void)
-{
-#if !MAX_TIMER_OBJECTS
-    TimerQInitialize(0);
-#endif
-    time_obj.ms_count = 10;
-    time_obj.pfn_timer_callback = (pfntimer_callback_t)press_timer_isr;
-    time_index = AddTimerQ(&time_obj, NULL);
-}
-
-#endif
 /*FUNCTION*----------------------------------------------------------------
  *
  * Function Name  : kbd_hid_get_interface
@@ -470,7 +455,8 @@ static usb_status usb_host_hid_keyboard_event
         {
             kbd_hid_device.DEV_HANDLE = dev_handle;
             kbd_hid_device.INTF_HANDLE = kbd_hid_get_interface();
-            kbd_hid_device.DEV_STATE = USB_DEVICE_ATTACHED;
+            kbd_hid_device.state_change |= USB_STATE_CHANGE_ATTACHED;
+            OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         }
         else
         {
@@ -480,7 +466,8 @@ static usb_status usb_host_hid_keyboard_event
 
     case USB_INTF_OPENED_EVENT:
         USB_PRINTF("----- Interfaced Event -----\r\n");
-        kbd_hid_device.DEV_STATE = USB_DEVICE_INTERFACE_OPENED;
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_OPENED;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         break;
 
     case USB_DETACH_EVENT:
@@ -493,12 +480,14 @@ static usb_status usb_host_hid_keyboard_event
         USB_PRINTF("  SubClass = %d", intf_ptr->bInterfaceSubClass);
         USB_PRINTF("  Protocol = %d\r\n", intf_ptr->bInterfaceProtocol);
         kbd_interface_number = 0;
-        kbd_hid_device.DEV_STATE = USB_DEVICE_DETACHED;
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_DETACHED;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         detach = 1;
         break;
     default:
         USB_PRINTF("HID Device state = %d??\r\n", kbd_hid_device.DEV_STATE);
-        kbd_hid_device.DEV_STATE = USB_DEVICE_IDLE;
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_IDLE;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         break;
     }
 
@@ -545,12 +534,14 @@ static void usb_host_hid_keyboard_ctrl_callback
 
     if (kbd_hid_device.DEV_STATE == USB_DEVICE_SETTING_PROTOCOL)
     {
-        kbd_hid_device.DEV_STATE = USB_DEVICE_INUSE;
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_INUSE;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("setting protocol done\r\n");
     }
     else if (kbd_hid_device.DEV_STATE == USB_DEVICE_GET_REPORT_DESCRIPTOR)
     {
-        kbd_hid_device.DEV_STATE = USB_DEVICE_GET_REPORT_DESCRIPTOR_DONE;
+        kbd_hid_device.state_change |= USB_STATE_CHANGE_DESCRIPTOR_DONE;
+        OS_Event_set(kbd_usb_event, USB_EVENT_STATE_CHANGE);
         USB_PRINTF("get report descriptor done\r\n");
     }
 
@@ -811,7 +802,7 @@ void APP_init(void)
 {
     usb_status status = USB_OK;
 
-    status = usb_host_init(CONTROLLER_ID, &host_handle);
+    status = usb_host_init(CONTROLLER_ID, usb_host_board_init, &host_handle);
     if (status != USB_OK)
     {
         USB_PRINTF("\nUSB Host Initialization failed! STATUS: 0x%x", status);
@@ -848,9 +839,7 @@ void APP_init(void)
         USB_PRINTF("\r\nkbd_hid_com allocate failed!\r\n");
         return;
     }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK | OS_ADAPTER_ACTIVE_OS==OS_ADAPTER_BM)
     time_init();
-#endif
 
     USB_PRINTF("\fUSB HID Keyboard\r\nWaiting for USB Keyboard to be attached...\r\n");
 }
@@ -869,7 +858,12 @@ void APP_task(void)
     static uint8_t i = 0;
     uint8_t j = 0;
     // Wait for insertion or removal event
-    OS_Event_wait(kbd_usb_event, USB_EVENT_CTRL | USB_EVENT_DATA | USB_EVENT_DATA_CORRUPTED | USB_EVEN_OUTPUT, FALSE, 0);
+    OS_Event_wait(kbd_usb_event, USB_EVENT_CTRL | USB_EVENT_DATA | USB_EVENT_DATA_CORRUPTED | USB_EVEN_OUTPUT | USB_EVENT_STATE_CHANGE, FALSE, 0);
+    if (OS_Event_check_bit(kbd_usb_event, USB_EVENT_STATE_CHANGE))
+    {
+        OS_Event_clear(kbd_usb_event, USB_EVENT_STATE_CHANGE);
+        update_state();
+    }
     if (OS_Event_check_bit(kbd_usb_event, USB_EVEN_OUTPUT))
     {
         OS_Event_clear(kbd_usb_event, USB_EVEN_OUTPUT);
@@ -1084,9 +1078,7 @@ void APP_task(void)
             }
             OS_Event_set(kbd_usb_event, USB_EVENT_CTRL);
         }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM)
-        RemoveTimerQ (time_index);
-#endif
+
         break;
     case USB_DEVICE_OTHER:
         break;
@@ -1095,30 +1087,7 @@ void APP_task(void)
     } /* Endswitch */
 }
 
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)
-/*FUNCTION*----------------------------------------------------------------
- *
- * Function Name  : main (Main_Task if using MQX)
- * Returned Value : none
- * Comments       :
- *     Execution starts here
- *
- *END*--------------------------------------------------------------------*/
-void Main_Task(uint32_t param)
-{
-    APP_init();
 
-    /*
-     ** Infinite loop, waiting for events requiring action
-     */
-    for (;;)
-    {
-        APP_task();
-    } /* Endfor */
-} /* Endbody */
-#endif
-
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)
 
 #if defined(FSL_RTOS_MQX)
 void Main_Task(uint32_t param);
@@ -1157,11 +1126,10 @@ int main(void)
     APP_init();
 #endif
 
-    OS_Task_create(Task_Start, NULL, 9L, 3000L, "task_start", NULL);
+    OS_Task_create(Task_Start, NULL, 4L, 3000L, "task_start", NULL);
     OSA_Start();
 #if !defined(FSL_RTOS_MQX)
     return 1;
 #endif
 }
-#endif
 

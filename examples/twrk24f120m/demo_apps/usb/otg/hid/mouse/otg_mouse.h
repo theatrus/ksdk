@@ -34,6 +34,11 @@
 #ifndef _OTG_MOUSE_H
 #define _OTG_MOUSE_H
 
+#define MAX3353_INT_LEVEL                   (4)
+
+/* struct contains max3353 init params */
+#define MAX3353_I2C_ADDRESS                 (0x2C)                              /* I2C Address */
+
 #define OTG_LOAD_DEVICE                     ((uint32_t)0x1000)
 #define OTG_UNLOAD_DEVICE                   ((uint32_t)0x2000)
 #define OTG_LOAD_HOST                       ((uint32_t)0x4000)
@@ -44,7 +49,7 @@
 #define OTG_A_B_STATE_EVENT_MARK            ((uint32_t)0xFFFF0FFF)
 #endif
 #define OTG_LOAD_UNLOAD_EVENT_MARK          ((uint32_t)0x0000F000)
-
+#define USBCFG_DEFAULT_OTG_CONTROLLER 0
 #endif
 /* EOF */
 

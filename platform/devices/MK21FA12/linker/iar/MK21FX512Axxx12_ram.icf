@@ -6,13 +6,13 @@
 **
 **     Compiler:            IAR ANSI C/C++ Compiler for ARM
 **     Reference manual:    K21P144M120SF5V2RM, Rev.3, Apr 2014
-**     Version:             rev. 1.0, 2014-07-15
-**     Build:               b141113
+**     Version:             rev. 1.1, 2015-02-19
+**     Build:               b150602
 **
 **     Abstract:
 **         Linker file for the IAR ANSI C/C++ Compiler for ARM
 **
-**     Copyright (c) 2014 Freescale Semiconductor, Inc.
+**     Copyright (c) 2015 Freescale Semiconductor, Inc.
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,
@@ -46,14 +46,14 @@
 ** ###################################################################
 */
 
-define symbol m_interrupts_start       = 0x1FFF8000;
-define symbol m_interrupts_end         = 0x1FFF83FF;
+define symbol m_interrupts_start       = 0x1FFF0000;
+define symbol m_interrupts_end         = 0x1FFF03FF;
 
-define symbol m_data_start             = 0x1FFF8400;
-define symbol m_data_end               = 0x1FFFFFFF;
+define symbol m_text_start             = 0x1FFF0400;
+define symbol m_text_end               = 0x1FFFFFFF;
 
-define symbol m_text_start             = 0x20000000;
-define symbol m_text_end               = 0x20007FFF;
+define symbol m_data_start             = 0x20000000;
+define symbol m_data_end               = 0x2000FFFF;
 
 /* Sizes */
 if (isdefinedsymbol(__stack_size__)) {

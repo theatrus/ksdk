@@ -40,7 +40,7 @@ void hardware_init(void) {
 
   /* Init board clock */
   BOARD_ClockInit();
-
+  CLOCK_SYS_SetOutDiv4(1); 
   configure_lpsci_pins(0);
 }
 

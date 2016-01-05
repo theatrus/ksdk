@@ -275,7 +275,6 @@ typedef union
 typedef struct
 {
     /* Each CDC subclass must start with a USB_CDC_GENERAL_CLASS struct */
-    /*USB_CDC_GENERAL_CLASS                     CDC_G;*/
     usb_cdc_desc_acm_t *                      acm_desc;
     usb_cdc_desc_cm_t *                       cm_desc;
     usb_cdc_desc_header_t *                   header_desc;
@@ -302,7 +301,6 @@ typedef void (*_usb_cdc_callback)(void * param);
 typedef struct
 {
     /* Each CDC subclass must start with a USB_CDC_GENERAL_CLASS struct */
-    /*USB_CDC_GENERAL_CLASS                     CDC_G;*/
     /* Address of bound control interface */
     cdc_class_call_struct_t *                     BOUND_CONTROL_INTERFACE;
 

@@ -46,11 +46,11 @@
 uint32_t g_dev_app_task_id = 0;
 /* KHCI task parameters */
 #define USB_DEV_HID_TASK_TEMPLATE_INDEX       0
-#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX)||((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS))  
+#if ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)&& USE_RTOS)
 /* USB stack running on OS */
 #define USB_DEV_HID_TASK_ADDRESS              DEV_APP_task_stun
 /* USB stack running on BM  */
-#elif ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK)||(OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_BM))
+#else
 #define USB_DEV_HID_TASK_ADDRESS              DEV_APP_task
 #endif
 #define USB_DEV_HID_TASK_STACKSIZE            1600
@@ -371,7 +371,7 @@ void DEV_APP_uninit(void)
         g_dev_app_task_id = 0;
     }
 }
-#if (OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_MQX) || ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (USE_RTOS)))
+#if  ((OS_ADAPTER_ACTIVE_OS == OS_ADAPTER_SDK) && (defined (USE_RTOS)))
 
 /*FUNCTION*----------------------------------------------------------------
 *
